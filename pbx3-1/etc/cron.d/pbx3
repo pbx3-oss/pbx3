@@ -1,0 +1,39 @@
+
+. /opt/pbx3/scripts/bashconfig
+
+#  timer
+* * * * * root php $GENERATOR/timer.php >/dev/null 2>&1 
+
+#  queue mover in ARC
+*/5 * * * * root perl $SCRIPTS/cronqmove.pl >/dev/null 2>&1
+
+#  spin off regression copies
+0 4 * * * root sh $SCRIPTS/spin.sh >/dev/null 2>&1
+
+#  age snap/backup regressions
+0 4 * * * root sh $SCRIPTS/age.sh >/dev/null 2>&1
+
+# HotDesk pruning (disabled) - enable if needed
+#  HotDesk pruning enable if needed
+#01 * * * * root perl $SCRIPTS/aelhdlon.pl prune >/dev/null 2>&1
+
+#  VMAIL ageing
+01 * * * * root sh $SCRIPTS/agevmail.sh >/dev/null 2>&1
+
+# age call recordings daily at 2:00AM
+0 2 * * * root bash $SCRIPTS/agerecordings.sh >/dev/null 2>&1
+
+# age grace recordings daily at 3:00AM
+0 3 * * * root sh $SCRIPTS/agegracerecordings.sh >/dev/null 2>&1
+
+# calculate recordings storage used by each tenant daily
+0 3 * * * root php $GENERATOR/ManageRecs.php >/dev/null 2>&1
+
+#recording offload every 10 minutes
+*/10 * * * * root sh $SCRIPTS/offload_simple.sh >/dev/null 2>&1
+
+#fetch manufacturer MAC list once a week
+0 0 * * 0 root sh $SCRIPTS/getmaclist.sh
+
+#refresh phone images once a week
+0 0 * * 0 root sh $SCRIPTS/getimages.sh

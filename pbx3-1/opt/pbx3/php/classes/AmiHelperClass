@@ -1,0 +1,429 @@
+<?php
+//
+// Developed by CoCo
+// Copyright (C) 2016 KoKoSoft
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
+require_once __DIR__ . "/../config.php";
+
+require_once ASTMANAGER;
+require_once HELPER;
+
+
+class amiHelper {
+
+protected $amiHdle;
+protected $helper;
+
+
+/**
+ * @return Array of IAX peers  or False if none
+ */
+public function get_iax_array() {
+
+	if ( ! $this->amiHelperLogin()) {
+		return false;
+	}
+
+	$iax_peers = array(); 	
+	$amisiprets = $this->amiHdle->getIaxPeers();
+	$iax_peers = $this->build_peer_array($amisiprets);
+	$this->amiHdle->logout();
+	return $iax_peers;
+
+}
+    /**
+     * Get array for all PJSIP endpoints
+     * PJSIP does not return what we want when we ask for all endpoints.   
+     * Instead, we must recirsively call the AMI for each indivdual endpoint
+     * and amalgamate the results into our final peer array
+     * @return string|bool
+     */
+public function get_pjsip_array($endpoints) {
+
+	$this->helper = new helper;
+	if (empty($endpoints)) {
+		$this->helper->logit("bad call to " . __FUNCTION__);
+		return false;
+	}
+
+	if ( ! $this->amiHelperLogin()) {
+		return false;
+	}
+	
+	$sip_peers = array();
+	$sip_work = array();
+
+	foreach ($endpoints as $extrow) {
+		$this->helper->logit(json_encode($extrow));
+		if (empty($extrow['pkey'])) {
+//			$this->helper->logit(json_encode($extrow));
+			continue;
+		}
+		if ($extrow['active'] == 'NO') {
+			continue;
+		}
+		if ($extrow['technology'] != 'SIP') {
+			continue;
+		}
+				
+		$amisiprets = $this->amiHdle->getPjsipPeer($extrow['pkey']);
+		$sip_work = $this->build_pjsip_array($amisiprets,$extrow['pkey']);
+		$sip_peers[$extrow['pkey']]  = $sip_work[$extrow['pkey']];
+	}
+	$this->amiHdle->logout();
+	$this->helper->logit(json_encode($sip_peers));
+	return $sip_peers;
+}
+
+public function get_pjsip_endpoint($endpoint) {
+
+	if ( ! $this->amiHelperLogin()) {
+		return false;
+	}
+	$this->helper = new helper;
+	$sip_peers = array();
+	$sip_work = array();
+	$amisiprets = $this->amiHdle->getPjsipPeer($endpoint);
+	$sip_peers = $this->build_pjsip_array($amisiprets,$endpoint);
+
+	$this->amiHdle->logout();
+	$this->helper->logit(json_encode($sip_peers));
+	return $sip_peers;
+}
+
+    /**
+     * return an IP address if we can
+     * the peer table may have been built from either chan_sip or PJsip and they differ in their naming
+     * conventions so we just have to figure it out
+     *
+     * @return string
+     */
+ 
+public function getIpAddressFromPeer($key,$peers) {
+		
+
+		if (!empty($peers [$key]['URI'])) {
+			preg_match("/^sip:.*@(.*):/",$peers [$key]['URI'],$matches);
+			if (!empty($matches[1])) {
+				return $matches[1];
+			}
+		}
+		if (!empty($peers [$key]['Match'])) {
+			$match_parts = explode('/',$peers [$key]['Match']);
+			if (!empty($match_parts[0])) {
+				return $match_parts[0];
+			}
+		}						
+
+		return 'Unknown';
+
+}
+
+    /**
+     * Return the endpoint RTT (latency) as observed from the PBX
+     * the peer table may have been built from either chan_sip or PJsip and they differ in their naming
+     * conventions so we just have to figure it out
+     *
+     * @return string
+     */
+
+public function getLatencyFromPeer($key,$peers) {
+
+		if (!empty($peers [$key]['RoundtripUsec'])) {
+			if (is_numeric($peers [$key]['RoundtripUsec'])) {
+				return "OK (" . round($peers [$key]['RoundtripUsec']/1000) . " ms)";	
+			}
+		}
+ 
+		return 'Unknown';
+
+}
+
+/**
+ * [getUaFromPeer description]
+ * @param  str $key   endpoint ID]
+ * @param  array $peers peer array
+ * @return array        array from UA (see below)
+ */
+public function getUaFromPeer($key,$peers) {
+
+/*
+ * PJSIP
+ */
+		if (!empty($peers [$key]['UserAgent'])) {
+			return $this->getUaElementsFromPeer($peers [$key]['UserAgent']);	
+		}
+ 
+		return False;
+}
+
+private function getUaElementsFromPeer($ua) {
+
+	$uaArray = array (
+		"manuf" => 'N/A',
+		"model" => 'N/A'
+	);
+
+	$delimArray = array(
+		"snom" => '/',
+		"Panasonic" => '_',
+		"Yealink" => ' ',
+		"yealink" => ' '
+	);
+
+	if (preg_match('/(Snom|Panasonic|Yealink|Polycom|Fanvil|Cisco|Gigaset|Grandstream)/i',$ua,$matches)) {
+			$uaArray['manuf'] = $matches[1];
+			switch ($uaArray['manuf']) {
+				case "snom": 
+					$uastring = explode ('/',$ua);
+					$uaArray['model'] = substr($uastring[0],4); 
+					break;
+				case "Yealink":
+				case "yealink":
+					if (preg_match('/(W\d\d)/i',$ua,$matches)) {
+						$uaArray['model'] = $matches[1];
+						return $uaArray;
+					}
+					$uastring = explode ('-',$ua);
+					$uaArray['model'] = substr($uastring[1],0,3); 					
+			}
+
+			return $uaArray;
+	}
+	return False;
+}
+
+public function get_coreShowChannels() {
+
+	if ( ! $this->amiHelperLogin()) {
+		return false;
+	}
+	
+	$amisiprets = $this->amiHdle->getCoreShowChannels();
+	$this->amiHdle->logout();
+	return $amisiprets;
+}
+
+public function get_database($pkey,&$cfim,&$cfbs,&$ringdelay,&$twin) {
+/*
+ * It turns out the AMI is very slow in processing AstDB tuples
+ * so we use an asterisk -rx call instead.   It is much quicker.
+ * the AMI code has been left here in case the AMI ever gets 
+ * this fixed.
+ * 
+	
+	if ( ! $this->amiHelperLogin()) {
+		return false;
+	}
+	$cfim = $this->amiHdle->GetDB('cfim', $pkey);
+	$cfbs = $this->amiHdle->GetDB('cfbs', $pkey);
+	$ringdelay = $this->amiHdle->GetDB('ringdelay', $pkey);
+	$twin = $this->amiHdle->GetDB('srktwin', $pkey);
+	$this->amiHdle->logout();
+*/
+
+	$rets = trim(`sudo asterisk -rx "database get cfim $pkey"`);
+	preg_match("/^Value:\s*(\d+)$/",$rets,$matches);
+	if (isset($matches[1])) {
+		$cfim =  $matches[1];
+	}
+
+	$rets = trim(`sudo asterisk -rx "database get cfbs $pkey"`);
+	preg_match("/^Value:\s*(\d+)$/",$rets,$matches);
+	if (isset($matches[1])) {
+		$cfbs =  $matches[1];
+	}	
+
+	$rets = trim(`sudo asterisk -rx "database get ringdelay $pkey"`);
+	preg_match("/^Value:\s*(\d+)$/",$rets,$matches);
+	if (isset($matches[1])) {
+		$ringdelay =  $matches[1];
+	}
+
+	$rets = trim(`sudo asterisk -rx "database get srktwin $pkey"`);
+	preg_match("/^Value:\s*(.*)$/",$rets,$matches);
+	if (isset($matches[1])) {
+		$twin =  $matches[1];
+	}		
+
+	return;
+}
+
+public function put_database($newkey) {
+
+/*	
+	if ( ! $this->amiHelperLogin()) {
+		return false;
+	}
+*/			
+	if (isset($_POST['cfim'])) {
+		$cfim			= strip_tags($_POST['cfim']);
+		if ($cfim) {
+//			$this->amiHdle->PutDB('cfim', $newkey, $cfim);
+			`sudo asterisk -rx "database put cfim $newkey $cfim"`;
+		}
+		else {
+//			$this->amiHdle->DelDB('cfim', $newkey);
+			`sudo asterisk -rx "database del cfim $newkey "`;
+		}
+	}
+	if (isset($_POST['cfbs'])) {
+		$cfbs			= strip_tags($_POST['cfbs']);
+		if ($cfbs) {
+//			$this->amiHdle->PutDB('cfbs', $newkey, $cfbs);
+			`sudo asterisk -rx "database put cfbs $newkey $cfbs"`;
+		}
+		else {
+//			$this->amiHdle->DelDB('cfbs', $newkey);
+			`sudo asterisk -rx "database del cfbs $newkey "`;
+		}					
+	}
+	if (isset($_POST['ringdelay'])) {
+		$ringdelay		= strip_tags($_POST['ringdelay']);	
+		if ($ringdelay) {
+//			$this->amiHdle->PutDB('ringdelay', $newkey, $ringdelay);
+			`sudo asterisk -rx "database put ringdelay $newkey $ringdelay"`;
+		}
+		else {
+//			$this->amiHdle->DelDB('ringdelay', $newkey);
+			`sudo asterisk -rx "database del ringdelay $newkey "`;
+		}				
+	}
+	if (isset($_POST['celltwin'])) {
+		if ($_POST['celltwin'] == 'ON') {
+			$twin = strip_tags($_POST['cellphone']);
+//			$this->amiHdle->PutDB('srktwin', $newkey, $twin);
+			`sudo asterisk -rx "database put srktwin $newkey $twin"`;
+		}
+		else {
+//			$this->amiHdle->DelDB('srktwin', $newkey);
+			`sudo asterisk -rx "database del srktwin $newkey "`;
+		}	
+	}
+									
+//	$this->amiHdle->logout();
+
+}	
+
+public function amiHelperLogin() {
+	$params = array('server' => '127.0.0.1', 'port' => '5038');
+	$astrunning=false;
+	$helper = new helper;
+	if ( $helper->check_pid() ) {	
+		$astrunning = true;
+	}
+	if ( $astrunning ) {			
+		$this->amiHdle = new ami($params);
+		$amiconrets = $this->amiHdle->connect();
+		if ( !$amiconrets ) {
+			return false;
+		}
+		else {
+			$this->amiHdle->login('sark','mysark');
+		}	
+	}
+	return true;
+}
+	
+public function amiHelperLogout() {
+	$params = array('server' => '127.0.0.1', 'port' => '5038');
+	$astrunning=false;
+	$helper = new helper;
+	if ( $helper->check_pid() ) {	
+		$astrunning = true;
+	}
+	if ( $astrunning ) {			
+		$this->amiHdle = new ami($params);
+		$this->amiHdle->logout();
+	}
+	return true;
+}
+
+private function build_peer_array($amirets) {
+/*
+ * build an array of peers by cleaning up the AMI output
+ * (which contains stuff we don't want).
+ */ 
+	$peer_array=array();
+	$lines = explode("\r\n",$amirets);	
+	$peer = 0;
+	foreach ($lines as $line) {
+		// ignore lines that aren't couplets
+		if (!preg_match(' /:/ ',$line)) { 
+				continue;
+		}
+		
+		// parse the couplet	
+		$couplet = explode(': ', $line);
+		
+		// ignore events and ListItems
+		if ($couplet[0] == 'Event' || $couplet[0] == 'ListItems') {
+			continue;
+		}
+		
+		//check for a new peer and set a new key if we have one
+		if ($couplet[0] == 'ObjectName') {
+			preg_match(' /^(.*)\// ',$couplet[1],$matches);
+			if (isset($matches[1])) {
+				$peer = $matches[1];
+			}
+			else {
+				$peer = $couplet[1];
+			}
+		}
+		else {
+			if (!$peer) {
+				continue;
+			}
+			else {
+				$peer_array [$peer][$couplet[0]] = $couplet[1];
+			}
+		}
+	}
+	return $peer_array;	
+}
+
+private function build_pjsip_array($amirets,$peer) {
+/*
+ * build an array of peers by cleaning up the AMI output
+ * (which contains stuff we don't want).
+ */ 
+	$peer_array=array();
+	$lines = explode("\r\n",$amirets);	
+	foreach ($lines as $line) {
+		// ignore lines that aren't couplets
+		if (!preg_match(' /:/ ',$line)) { 
+				continue;
+		}
+		
+		// parse the couplet	
+		$couplet = explode(': ', $line);
+		
+		// ignore events and ListItems
+		if ($couplet[0] == 'Event' || $couplet[0] == 'ListItems'
+			|| $couplet[0] == 'EventList' || $couplet[0] == 'ObjectType'
+			|| $couplet[0] == 'ObjectName' ) {
+			continue;
+		}
+		$peer_array [$peer][$couplet[0]] = $couplet[1];
+	}
+	return $peer_array;	
+}
+
+
+}
+?>

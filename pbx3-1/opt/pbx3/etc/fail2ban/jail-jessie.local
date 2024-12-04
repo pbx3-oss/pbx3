@@ -1,0 +1,9 @@
+[DEFAULT]
+
+banaction = shorewall
+
+[asterisk-tcp]
+enabled  = true
+
+[asterisk-udp]
+enabled  = true
