@@ -4,12 +4,12 @@
  * System
  */
 
-define('SYSNAME',                       'sipblocks');
+define('SYSNAME',                       'pbx3');
 define('KEYTYPE',                       'pkey');
-define('SYSAGI',                        'gcsagi');
+define('SYSAGI',                        'pbx3agi');
 
 define('SYSROOT',                       '/opt');
-define('SYSPREFIX',                     '/gcs');
+define('SYSPREFIX',                     '/pbx3');
 define('SYSPATH',                       SYSROOT . SYSPREFIX);
 
 define('INSTANCEID',                    SYSPATH . '/etc/identity/instance-id.txt');
