@@ -31,7 +31,7 @@ function pdfTable($header, $data, $w) {
 	$this->colWidths = $w;
 	$this->AliasNbPages('{totalPages}');
     // Colors, line width and bold font
-    $this->SetTitle("SARK PBX PDF print");
+    $this->SetTitle("PBX3 PDF print");
     $this->SetFillColor(255,0,0);
     $this->SetTextColor(255);
     $this->SetDrawColor(128,0,0);
@@ -105,8 +105,8 @@ function Footer()
     // Select Arial italic 8
     $this->SetFont('Arial','I',8);
     // Print centered page number
-    $this->Cell(0,10,'Printed by SARK PBX - ' . $currentDate . ', Page '.$this->PageNo() . "/{totalPages}",0,0,'R');
-//    $pdf->Cell(0, 5, "SARK PBX -  Page " . $pdf->PageNo() . "/{totalPages}", 0, 1);
+    $this->Cell(0,10,'Printed by PBX3 - ' . $currentDate . ', Page '.$this->PageNo() . "/{totalPages}",0,0,'R');
+//    $pdf->Cell(0, 5, "PBX3 -  Page " . $pdf->PageNo() . "/{totalPages}", 0, 1);
 }
 
 }

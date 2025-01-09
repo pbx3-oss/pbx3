@@ -19,13 +19,13 @@
 // Calculate disk recording storage used by each tenant and store it into the tenant record
 //
 
-include("localvars.php");
+require_once __DIR__ . "/../config.php";
 $recvals = array();
 
 try {
     /*** connect to SQLite database ***/
 
-    $dbh = new PDO($sarkdb);
+    $dbh = new PDO(SYSDB);
 
     /*** set the error reporting attribute ***/
     $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -36,7 +36,7 @@ try {
 	$sql = "SELECT * FROM cluster";
     foreach ($dbh->query($sql) as $row) {
         $recvals[ $row['pkey']] ['recused'] = 0;
-        $cmd = 'du -ch /opt/sark/media/recordings/*/*' . $row['pkey'] . '*|grep -i total';
+        $cmd = 'du -ch /opt/pbx3/media/recordings/*/*' . $row['pkey'] . '*|grep -i total';
         $ret = `$cmd`;
         preg_match(" /^(\d*\.?\d[1,2]?\w)/ ",$ret,$matches); 
         if ($matches[1]) {

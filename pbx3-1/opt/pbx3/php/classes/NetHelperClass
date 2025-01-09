@@ -124,16 +124,16 @@ public function set_staticIPV4($oldIp, $newIp) {
 		$this->helper->request_syscmd ("ip a delete $oldIp/32 dev " . $this->interfaceName);
 	}
 /* network commands
-	$this->helper->request_syscmd ("rm /etc/network/if-up.d/gcs_staticipV4");
+	$this->helper->request_syscmd ("rm /etc/network/if-up.d" . SYSPREFIX . "_staticipV4");
 */
 	if (!empty($newIp)) { 
 		sleep(1);
 		$this->helper->request_syscmd ("ip a add $newIp dev " .  $this->interfaceName);
 /* network commands
-		$this->helper->request_syscmd ("echo '#!/bin/bash' > /etc/network/if-up.d/gcs_staticipV4");
+		$this->helper->request_syscmd ("echo '#!/bin/bash' > /etc/network/if-up.d" . SYSPREFIX . "_staticipV4");
 		$ipcmd = "ip a add $newIp dev " . $this->interfaceName;
-		$this->helper->request_syscmd ("echo $ipcmd >> /etc/network/if-up.d/gcs_staticipV4");
-		$this->helper->request_syscmd ("chmod +x  /etc/network/if-up.d/gcs_staticipV4");
+		$this->helper->request_syscmd ("echo $ipcmd >> /etc/network/if-up.d" . SYSPREFIX . "_staticipV4");
+		$this->helper->request_syscmd ("chmod +x  /etc/network/if-up.d" . SYSPREFIX . "_staticipV4");
 */
 	}
 	$this->helper->commitOn();
@@ -283,12 +283,12 @@ public function restartFirewall() {
 			$rc = $this->helper->request_syscmd ("echo '#' > /etc/shorewall/gcs_inline_fqdn");
 		}
 	
-		$file = '/opt/sark/templates/shorewall/sark_inline_limit';
+		$file = SYSPATH . '/templates/shorewall/pbx3_inline_limit';
 		if (file_exists($file) && $res['SIPFLOOD'] == 'YES') {
 			$rc = $this->helper->request_syscmd ("cp $file /etc/shorewall");
 		}
 		else {
-			$rc = $this->helper->request_syscmd ("echo '#' > /etc/shorewall/gcsinline_limit");
+			$rc = $this->helper->request_syscmd ("echo '#' > /etc/shorewall/pbx3_inline_limit");
 		}		
 			
 	}

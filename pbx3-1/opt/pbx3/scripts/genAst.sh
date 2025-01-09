@@ -1,7 +1,7 @@
 #!/bin/bash
 
-. /opt/gcs/scripts/bashconfig
-[ ! -e /opt/gcs/db/sqlite.db ] && exit 4
+. /opt/pbx3/scripts/bashconfig
+[ ! -e $SYSDB ] && exit 4
 
 /usr/bin/logger Regenerating Asterisk
 

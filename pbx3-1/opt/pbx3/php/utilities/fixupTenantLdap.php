@@ -20,9 +20,9 @@
  * read through the tenant (cluster) table and attempt to create an LDAP OU and simplesecurity object for each.
  */
 
- include("/opt/sark/php/srkLDAPHelperClass");
- include("/opt/sark/php/srkHelperClass");
- include("/opt/sark/php/srkDbClass");
+ include(LDAPHELPER);
+ include(HELPER);
+ include(DBCLASS);
 
 $helper = new helper;
 $ldap = new ldaphelper;

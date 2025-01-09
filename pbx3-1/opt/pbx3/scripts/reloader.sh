@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. /opt/gcs/scripts/bashconfig
+. /opt/pbx3/scripts/bashconfig
 
 echo "createdb is $CREATEDB"
 
@@ -137,9 +137,9 @@ chmod 664 $SYSDB
 
 # clean the firewall up
 echo Running firewall sanitizer
-php /opt/sark/generator/sanitize-firewall.php
+php $SYSPATH$GENERATOR/sanitize-firewall.php
 echo Firewall rules are as follows
-cat /etc/shorewall/sark_rules
+cat $FW_RULES
 echo running firewall check
 if sudo /sbin/shorewall check ;then
 	echo "\nfirewall rules checked out OK...\n\n"

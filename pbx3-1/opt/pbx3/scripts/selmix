@@ -5,6 +5,7 @@
 #	This is no longer needed since we do everything in mixmonitor now.
 #   However, we need to make a decision about OTR and OTRR and whether we
 #   continue to support them in these days of cheap storage space
+#   !!!!! NO MORE OTR/OTRR !!!!!
 
 
 # uncomment next line for syslog debug output
@@ -24,7 +25,7 @@
     MONITOROUT=/var/spool/asterisk/monout
 	MONITORSTAGE=/var/spool/asterisk/monstage
 	
-	if [ -e /opt/sark/.noqueues ]; then
+	if [ -e $SYSPATH/.noqueues ]; then
 		MONITORSTAGE=/var/spool/asterisk/monout
 	fi
 
@@ -32,14 +33,14 @@
 
 	if [ "$LEFT" = "mixmon" ]; then
 		[ $DEBUG ] && logger MOVING MIXMON $RIGHT
-		if [ -e /opt/sark/otrr/$RIGHT ]; then
-			/bin/rm -rf /opt/sark/otrr/$RIGHT
-//			/usr/bin/test ! -r  /opt/sark/.recone && exit 0
+		if [ -e $SYSPATH/otrr/$RIGHT ]; then
+			/bin/rm -rf $SYSPATH/otrr/$RIGHT
+//			/usr/bin/test ! -r  $SYSPATH/.recone && exit 0
 			/bin/mv $RIGHT $MONITOROUT
 			exit 0
 		fi
-		if [ -e /opt/sark/mixmon/$RIGHT ]; then
-			/bin/rm -rf /opt/sark/mixmon/$RIGHT
+		if [ -e $SYSPATH/mixmon/$RIGHT ]; then
+			/bin/rm -rf $SYSPATH/mixmon/$RIGHT
 			/usr/bin/test ! -r $RIGHT && exit 22
 			/bin/mv $RIGHT $MONITOROUT
 			exit 0

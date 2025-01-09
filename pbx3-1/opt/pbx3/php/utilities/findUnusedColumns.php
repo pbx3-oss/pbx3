@@ -21,8 +21,6 @@ require_once __DIR__ . "/../config.php";
      
 $prefix='/finder_'; 
 
-$db = SYSDB;
-
 
 if (isset ($argv[1])) {
 	$db = $argv[1];
@@ -35,10 +33,10 @@ if (isset ($argv[1])) {
 		
     /*** connect to SQLite database ***/
     try {
-		$dbh = new PDO($db);
+		$dbh = new PDO(SYSDB);
 	}
 	catch (Exception $e) {
-		echo "Oops failed to open DB $sarkdb" . " $e\n";
+		echo "Oops failed to open DB SYSDB" . " $e\n";
 		exit(4);
 	}
 
@@ -96,7 +94,7 @@ if (isset ($argv[1])) {
 /**
  * 	lookup column name in drop list	
  */ 			
-			$grep = "grep -r '" . $col['name'] . "' /opt/sark/php | wc -l";
+			$grep = "grep -r '" . $col['name'] . "' PHP | wc -l";
 			$ret = rtrim(`$grep`);
 			if ($ret == 0) {
 				echo '"' . $col['name'] . '",' . "\n"; 

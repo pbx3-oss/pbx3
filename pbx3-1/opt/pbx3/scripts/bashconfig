@@ -1,4 +1,4 @@
-SYSNAME=pbx3
+SYSPREFIX=pbx3
 KEYTYPE=pkey
 SYSAGI=pbx3agi
 SYSROOT=/opt

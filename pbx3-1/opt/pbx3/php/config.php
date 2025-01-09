@@ -4,7 +4,7 @@
  * System
  */
 
-define('SYSNAME',                       'pbx3');
+define('CODENAME',                      'pbx3');
 define('KEYTYPE',                       'pkey');
 define('SYSAGI',                        'pbx3agi');
 
@@ -35,7 +35,10 @@ define('READONLY_DB',				    DBPATH .  '/sqlite.rdonly.db');
 define('COPY_DB',				        DBPATH .  '/sqlite.copy.db');
 
 define ('AMIHELPER',                    CLASSES . '/AmiHelperClass');
+define ('AMIUID',                       CLASSES . 'pbx3');
+define ('AMIPWD',                       CLASSES . 'bgth7rf!');
 define ('ASTMANAGER',                   CLASSES . '/AsteriskManager.php');
+
 define ('DBCLASS',                      CLASSES . '/DbClass');
 define ('GENCLASS',                     CLASSES . '/GenClass');
 define ('HELPER',                       CLASSES . '/HelperClass');
@@ -118,18 +121,24 @@ define('PJSIP_READY_TRUNKS',            ASTLOCALCONF . '/pjsip_ready_trunks.conf
 define('SOUNDIR',                       '/usr/share/asterisk' . SYSPREFIX . '/sounds/');
 
 /**
+ * Shorewall
+ */
+define('FW_RULES',                      '/etc/shorewall/pbx3_rules');
+
+
+/**
  * BASH params
  */
 
-define('LASTDB',                        DBPATH . '/db_vx_last.db');    //sark db previous iteration
-define('CLEANDB',                       DBPATH . '/db_vx_clean.db');	//factory reset copy of the db 
+define('LASTDB',                        DBPATH . '/last.db');               //pbx3 db previous iteration
+define('CLEANDB',                       DBPATH . '/db_vx_clean.db');	    //factory reset copy of the db 
 define('CREATEDB',                      DBPATH . '/db_vx_create.sql');	    //installed db create
 define('SYSTEMDB',                      DBPATH . '/db_vx_system.sql');		//installed db system data
 define('SYSMSGDB',                      DBPATH . '/db_vx_message.sql');	    //installed db system messages
 define('SYSINIDB',                      DBPATH . '/db_vx_inidat.sql');		//installed db defaults
 define('SYSDEVICE',                     DBPATH . '/db_vx_device.sql');	    //installed db device table
 define('SYSONCE',                       SYSPATH . '/once');				    //once directory
-define('SYSALWAYS',                     SYSPATH . '/always');					//always directory
+define('SYSALWAYS',                     SYSPATH . '/always');				//always directory
 define('SYSONCEDONE',                   SYSPATH . '/oncedone');				//applied once files
 define('CUSTDATA',                      DBPATH . '/last_data.sql');			//customer data previous iteration
 define('LASTDEVICE',                    DBPATH . '/last_device.sql');			//device table previous iteration      

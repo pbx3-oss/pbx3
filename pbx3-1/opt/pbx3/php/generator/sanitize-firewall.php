@@ -16,14 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-// take pre 5.0 sark rules and format to suit
+. /opt/pbx3/scripts/bashconfig
+// take pre 5.0 PBX rules and format to suit
 
 $OUT = NULL;
-$file = "/etc/shorewall/sark_rules";
+$file = "/etc/shorewall/PBX_rules";
 
 	if (!file_exists($file)) {
-		die ("No sark rules found");
+		die ("No PBX rules found");
 	}
 
 	$rec = file($file, FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES) or die('Could not read file!');

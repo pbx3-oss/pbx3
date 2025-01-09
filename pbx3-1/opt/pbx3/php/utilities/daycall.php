@@ -1,7 +1,7 @@
 <?php
 #
 #----------------------------------------------------------------------
-# heading     : GCS PBX
+# heading     : CODENAME
 # description : Daycall
 # Copyright   (c) kokokraft.com       2024  
 #
@@ -26,14 +26,14 @@
 # Please visit our web site www.selintra.com/ for details.
 #----------------------------------------------------------------------
 #
-//include("ip_helper_functions.php"); 
 include("generated_file_banner.php");
 include("localvars.php");
+include __DIR__ . "/../config.php"
 
 try {
     /*** connect to SQLite database ***/
 
-    $dbh = new PDO($sarkdb);
+    $dbh = new PDO(SYSDB);
 
     /*** set the error reporting attribute ***/
     $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

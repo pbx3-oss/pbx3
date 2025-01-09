@@ -6,15 +6,15 @@
 #
 # N.B. MUST be run explicitly with the bash shell - e.g. sudo bash .....
 #
-RECDIR=/opt/gcs/media/$RECORDINGS
-RECDELDIR=/opt/gcs/media/$DELETES
+RECDIR=/opt/px3/media/$RECORDINGS
+RECDELDIR=/opt/px3/media/$DELETES
 
 mkdir -p $RECDELDIR`date +%d%m%y`;
 
 #
 # Get the set of tenant keys and their recmaxage column from the table cluster
 #
-RECAGEARRAY=`sqlite3 /opt/gcs/db/sqlite.db "select pkey,recmaxage from cluster;"`
+RECAGEARRAY=`sqlite3 /opt/px3/db/sqlite.db "select pkey,recmaxage from cluster;"`
 
 #
 # Iterate over the table array and delete as necessary using find/mv to move the deleted files to the bin (DELDIR)

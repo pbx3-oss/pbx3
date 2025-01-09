@@ -618,30 +618,6 @@ class ami
 	return FALSE;
 }
 
-/*	Haven't done this yet - sark doesn't need it
- * 
-	public function GetFamilyDB($family) {
-	$wrets = $this->Query("Action: Command\r\nCommand: database show $family\r\n\r\n");
-	if ($wrets) {
-		$value_start = strpos($wrets, "Response: Follows\r\n") + 19;
-		$value_stop = strpos($wrets, "--END COMMAND--\r\n", $value_start);
-		if ($value_start > 18) {
-			$wrets = substr($wrets, $value_start, $value_stop - $value_start);
-		}
-		$lines = explode("\n", $wrets);
-		foreach($lines as $line) {
-			if (strlen($line) > 4) {
-				$value_start = strpos($line, ": ") + 2;
-				$value_stop = strpos($line, " ", $value_start);
-				$key = trim(substr($line, strlen($family) + 2, strpos($line, " ") - strlen($family) + 2));
-				$value = trim(substr($line, $value_start));
-			}
-		}
-		return $value;
-	}
-	return FALSE;
-}
-*/ 
 }
 
 ?>
