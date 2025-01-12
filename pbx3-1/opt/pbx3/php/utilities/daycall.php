@@ -26,9 +26,11 @@
 # Please visit our web site www.selintra.com/ for details.
 #----------------------------------------------------------------------
 #
+## untested in p3!!!!!!!!!!!
+#
 include("generated_file_banner.php");
 include("localvars.php");
-include __DIR__ . "/../config.php"
+include __DIR__ . "/../config.php";
 
 try {
     /*** connect to SQLite database ***/
@@ -82,7 +84,7 @@ if (!$emailaddr) {
 $to = "To: ".$emailaddr;
 //$exten =~ /(^\d{4}$)/;
 //$exten = $1;
-$footer = "\n\tPrinted by SARK PBX\n";
+$footer = "\n\tPrinted by PBX3\n";
 $outbound .= "OUTBOUND CALLS\n";
 $outbound .= sprintf ("\t%15s\t %15s\t %14s\t\t %4s\n\n", 'FROM', 'TO', 'TIME', 'DURATION');
 $inbound .= "\n\n";

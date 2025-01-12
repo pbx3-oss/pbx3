@@ -6,9 +6,9 @@
 # Default-Start:     S
 # Default-Stop:      0 6
 # Short-Description: Configure the firewall LAN variable at boot time
-# Description:       Configure the firewall LAN setting for SARK according to the rules specified in
+# Description:       Configure the firewall LAN setting for PBX3 according to the rules specified in
 #                    /etc/shorewall
 ### END INIT INFO
-php /opt/gcs/generator/setip.php
+php /opt/php/generator/setip.php
 
 

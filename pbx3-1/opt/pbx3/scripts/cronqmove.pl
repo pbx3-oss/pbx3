@@ -1,6 +1,6 @@
 #! /usr/bin/perl -w
 #
-#
+#	rewrite in php using array_reverse - simples :-)
 #
 #	Copyright Aelintra Telecom Limited(2008-23), all rights reserved
 #  
@@ -29,10 +29,10 @@ sub SQLiteGet($$) {
     return $out;
 }
 
-my $dbh = DBI->connect( "dbi:SQLite:dbname=/opt/gcs/db/sqlite.db","", "", { RaiseError => 1, AutoCommit => 1 });
+my $dbh = DBI->connect( "dbi:SQLite:dbname=/opt/pbx3/db/sqlite.db","", "", { RaiseError => 1, AutoCommit => 1 });
 
-my $monitorstage =  SQLiteGet($dbh, "SELECT MONITORSTAGE FROM globals where pkey = 'global'") || "/home/gcs/monstage";
-my $monitorout = SQLiteGet($dbh, "SELECT MONITOROUT FROM globals where pkey = 'global'") || "/home/gcs/monout";
+my $monitorstage =  SQLiteGet($dbh, "SELECT MONITORSTAGE FROM globals where pkey = 'global'") || "/home/pbx3/monstage";
+my $monitorout = SQLiteGet($dbh, "SELECT MONITOROUT FROM globals where pkey = 'global'") || "/home/pbx3/monout";
 my $recqsearchlim = SQLiteGet($dbh, "SELECT RECQSEARCHLIM FROM globals where pkey = 'global'") || 400;
 my $recqdither = SQLiteGet($dbh, "SELECT RECQDITHER FROM globals where pkey = 'global'") || 1;
 my $rfdlim = SQLiteGet($dbh, "SELECT RECFILEDLIM FROM globals where pkey = 'global'") || '_-_';

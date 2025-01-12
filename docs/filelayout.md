@@ -6,7 +6,7 @@ This layout is a bit fluid and it will change but most of it is pretty solid
     docs/
         index.md  # The documentation homepage.
         ...       # Other markdown pages, images and other files.
-    sipblocks/
+    pnx3-1/
         debian/   # debian package builder
         etc/      # package installation code
         opt/      # code & wprkspaces
@@ -22,7 +22,11 @@ This layout is a bit fluid and it will change but most of it is pretty solid
                            generator/       # object generator for Asterisk files
                            utilities/       # various useful scripts 
                            provisioning/    # endpoint provisioning engine
-                           scripts/         # bash stuff
-                           service/         # runit tasks
-        user/
+                    config.php              # config file
+                scripts/         # bash stuff
+                service/         # runit tasks
+        usr/
             share/
+                    asterisk/
+                        agi-bin
+                            kwakeup         # wakeup call php agi

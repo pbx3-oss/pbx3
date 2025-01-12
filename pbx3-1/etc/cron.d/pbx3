@@ -13,10 +13,6 @@
 #  age snap/backup regressions
 0 4 * * * root sh $SCRIPTS/age.sh >/dev/null 2>&1
 
-# HotDesk pruning (disabled) - enable if needed
-#  HotDesk pruning enable if needed
-#01 * * * * root perl $SCRIPTS/aelhdlon.pl prune >/dev/null 2>&1
-
 #  VMAIL ageing
 01 * * * * root sh $SCRIPTS/agevmail.sh >/dev/null 2>&1
 

@@ -6,7 +6,7 @@
 
 require_once __DIR__ . "/../config.php";
 
-$msgFile = file("/opt/sark/db/db_v4_system.sql");
+$msgFile = file("DBPATH/db_create_sql/db_vx_message.sql");
 $targetList = array();
 foreach ($msgFile as $msg) {
 // ignore non message rows	
@@ -20,7 +20,7 @@ foreach ($msgFile as $msg) {
 		continue;
 	}
 // OK, we have a value to work on
-	$grep = "grep -r '" . $matches[1] . "' /opt/sark/php";
+	$grep = "grep -r '" . $matches[1] . "' " . PHPDIR ;
 	$ret = `$grep`;
 	if ( ! $ret ) {
 		$rows = explode (PHP_EOL,$ret);

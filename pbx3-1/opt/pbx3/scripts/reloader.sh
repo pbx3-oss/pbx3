@@ -122,7 +122,7 @@ sqlite3 $Fullpathtargetdb 'PRAGMA journal_mode=DELETE;' >/dev/null 2>&1
 
 #patch sipiaxfriend for nat and transport here using sipiaxfix
 echo Running V6 extension fixup
-# FIX THIS!!!
+# FIX THIS!!!!!!!!!!!!!!!!!!!!!!!!!
 # php $SIPFIX
 
 # run the generator

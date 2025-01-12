@@ -14,11 +14,13 @@
 // | Author: KoKoSoft
 // +-----------------------------------------------------------------------+
 //
+// N.B. !!!!!!! NEEDS UPDATE FOR PBX3 !!!!!
+//
 // Incident module
 //
 // Originate calls to conference rooms and/or send sms messages to targets
 //
-// build a set of callfiles according to /etc/asterisk/sark_mcstcnf.conf
+// build a set of callfiles according to /etc/asterisk/pbx3_mcstcnf.conf
 // Once built, move them to the asterisk outgoing spool file for despatch
 // After the calls have been sent away (if there were any)
 // send any sms messages using the specified sms service.  
@@ -58,7 +60,7 @@ $smsvars=array();
  */ 
 $options = getopt("n:r::");
 syslog(LOG_WARNING, "Multicast caller invoked with params " . var_export($options, TRUE));
-$conf = parse_ini_file('/etc/asterisk/sark_mcstcnf.conf',1);
+$conf = parse_ini_file('/etc/asterisk/pbx3_mcstcnf.conf',1);
 syslog(LOG_WARNING, var_export($conf, TRUE));
 // check that a short code has been passed as -n
 if (!$options ["n"]) {

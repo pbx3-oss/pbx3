@@ -15,13 +15,13 @@ define('SYSPATH',                       SYSROOT . SYSPREFIX);
 define('INSTANCEID',                    SYSPATH . '/etc/identity/instance-id.txt');
 define('DOMAINID',                      SYSPATH . '/etc/identity/domain-id.txt');
 
-define('PHP',                           SYSPATH . '/php');                   
+define('PHPDIR',                        SYSPATH . '/php');                   
 define('SCRIPTS',                       SYSPATH . '/scripts');
 define('BASHCONFIG',                    SCRIPTS . '/bashconfig');
 
-define('CLASSES',                       PHP . '/classes');
-define('GENERATOR',                     PHP . '/generator');
-define('UTILITIES',                     PHP . '/utilities');        
+define('CLASSES',                       PHPDIR . '/classes');
+define('GENERATOR',                     PHPDIR . '/generator');
+define('UTILITIES',                     PHPDIR . '/utilities');        
 
 define('SNAPSHOTS', 			        SYSPATH . '/snap');
 define('BACKUPS', 						SYSPATH . '/bkup');
@@ -47,14 +47,14 @@ define ('NETHELPER',                    CLASSES . '/NetHelperClass');
 
 define('EXEC_DB_RELOAD',				SCRIPTS . '/reloader.sh');
 
-define('ASTCONF',                       '/etc/asterisk');
-define('ASTMPL',                        SYSPATH . ASTCONF . '/templates');
-define('ASTLOCALCONF',                  SYSPATH . ASTCONF . '/configs');
-define('ASTENDPOINTS',                  SYSPATH . ASTCONF . '/endpoints');
-define('ASTQUEUES',                     SYSPATH . ASTCONF . '/queues');
-define('ASTTRUNKS',                     SYSPATH . ASTCONF . '/trunks');
-define('ASTIAX',                        SYSPATH . ASTCONF . '/iax_trunks');
-define('ASTPARKS',                      SYSPATH . ASTCONF . '/callparks');
+define('ASTPATH',                       '/etc/asterisk');
+define('ASTMPL',                        SYSPATH . ASTPATH . '/templates');
+define('ASTLOCALCONF',                  SYSPATH . ASTPATH . '/configs');
+define('ASTENDPOINTS',                  SYSPATH . ASTPATH . '/endpoints');
+define('ASTQUEUES',                     SYSPATH . ASTPATH . '/queues');
+define('ASTTRUNKS',                     SYSPATH . ASTPATH . '/trunks');
+define('ASTIAX',                        SYSPATH . ASTPATH . '/iax_trunks');
+define('ASTPARKS',                      SYSPATH . ASTPATH . '/callparks');
 
 define('QUEUE',                         'queue.conf');
 define('QUEUE_TEMPLATE',                ASTMPL . '/queue.tmpl');
@@ -123,7 +123,9 @@ define('SOUNDIR',                       '/usr/share/asterisk' . SYSPREFIX . '/so
 /**
  * Shorewall
  */
+define('SHOREWALL',                      '/etc/shorewall');
 define('FW_RULES',                      '/etc/shorewall/pbx3_rules');
+
 
 
 /**
@@ -133,6 +135,7 @@ define('FW_RULES',                      '/etc/shorewall/pbx3_rules');
 define('LASTDB',                        DBPATH . '/last.db');               //pbx3 db previous iteration
 define('CLEANDB',                       DBPATH . '/db_vx_clean.db');	    //factory reset copy of the db 
 define('CREATEDB',                      DBPATH . '/db_vx_create.sql');	    //installed db create
+define('SIPLOG',                        DBPATH . '/var/log/siplog');	    //installed db create
 define('SYSTEMDB',                      DBPATH . '/db_vx_system.sql');		//installed db system data
 define('SYSMSGDB',                      DBPATH . '/db_vx_message.sql');	    //installed db system messages
 define('SYSINIDB',                      DBPATH . '/db_vx_inidat.sql');		//installed db defaults

@@ -94,7 +94,7 @@ if (isset ($argv[1])) {
 /**
  * 	lookup column name in drop list	
  */ 			
-			$grep = "grep -r '" . $col['name'] . "' PHP | wc -l";
+			$grep = "grep -r '" . $col['name'] . "' PHPDIR | wc -l";
 			$ret = rtrim(`$grep`);
 			if ($ret == 0) {
 				echo '"' . $col['name'] . '",' . "\n"; 

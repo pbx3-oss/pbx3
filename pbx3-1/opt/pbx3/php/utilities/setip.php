@@ -78,10 +78,10 @@ else {
 		`sed -i 's/^;dateformat=%F %T /dateformat=%F %T/' /etc/asterisk/logger.conf`;
 		`sed -i '/^messages/c \messages => security,notice,warning,error' /etc/asterisk/logger.conf`;
 		# set localnet values for Asterisk
-		`[ -e /etc/asterisk/sark_sip_localnet.conf ] && /usr/bin/dos2unix /etc/asterisk/sark_sip_localnet.conf`;
-		`echo localnet=$netaddress/$msk >> /etc/asterisk/sark_sip_localnet.conf`;
-		`awk '!_[\$0]++'  /etc/asterisk/sark_sip_localnet.conf > /tmp/localnet.tmp`;
-		`mv /tmp/localnet.tmp /etc/asterisk/sark_sip_localnet.conf`;
+		`[ -e /etc/asterisk/CODENAME_sip_localnet.conf ] && /usr/bin/dos2unix /etc/asterisk/CODENAME_sip_localnet.conf`;
+		`echo localnet=$netaddress/$msk >> /etc/asterisk/CODENAME_sip_localnet.conf`;
+		`awk '!_[\$0]++'  /etc/asterisk/CODENAME_sip_localnet.conf > /tmp/localnet.tmp`;
+		`mv /tmp/localnet.tmp /etc/asterisk/CODENAME_sip_localnet.conf`;
 		`chown asterisk:asterisk /etc/asterisk/*`;
 		`chmod 664 /etc/asterisk/*`;
 		`asterisk -rx 'reload' > /dev/null`;

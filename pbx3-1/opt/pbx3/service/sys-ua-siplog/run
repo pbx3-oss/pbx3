@@ -1,10 +1,11 @@
 #!/bin/sh
 
-[ ! -e /var/log/siplog ] && mkdir /var/log/siplog
+. /opt/pbx3/scripts/bashconfig
 
-FILES=$(sqlite3 /opt/gcs/db/sqlite.db "SELECT LOGSIPNUMFILES from globals")
-FILESIZE=$(sqlite3 /opt/gcs/db/sqlite.db "SELECT LOGSIPFILESIZE from globals")
+[ ! -e $SIPLOG ] && mkdir $SIPLOG
+
+FILES=$($SYSDB "SELECT LOGSIPNUMFILES from globals")
+FILESIZE=$($SYSDB "SELECT LOGSIPFILESIZE from globals")
 
 exec 2>&1
-exec /usr/bin/dumpcap -b filesize:$FILESIZE -b files:$FILES -f "port 5060" -w /var/log/siplog/siplog.pcap > /dev/null 2>&1 
-
+exec /usr/bin/dumpcap -b filesize:$FILESIZE -b files:$FILES -f "port 5060" -w $SIPLOG/siplog.pcap > /dev/null 2>&1 
