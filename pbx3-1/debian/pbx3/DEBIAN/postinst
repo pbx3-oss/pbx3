@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#Install date
+date --iso-8601=minutes > /opt/pbx3/.install-date

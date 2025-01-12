@@ -1,0 +1,14 @@
+[Unit]
+Description=Setup GCS
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/php /opt/gcs/generator/setip.php
+RemainAfterExit=false
+#ExecStop=/opt/foo/teardown-foo.sh
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target

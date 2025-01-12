@@ -1,0 +1,29 @@
+---
+# AWS credentials
+# access-key-id:     AKIAxxxxxxxxxxxxxxxx
+# secret-access-key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/xxxxxxxxx
+
+# dbs:
+#  - path: /path/to/primary/db            # Database to replicate from
+#    replicas:
+#      - path: /path/to/replica           # File-based replication
+#      - url:  s3://my.bucket.com/db      # S3-based replication
+# AWS credentials
+access-key-id:     devuser
+secret-access-key: devuserpwd
+
+dbs:
+  - path: /opt/gcs/db/sqlite.db            # Database to replicate from
+    replicas:
+      - type: s3
+        path: instances/inuse-pool/2ouZHQauul4nylmQuh4iR2AqptI/db/sqlite.db
+        endpoint: http://miniotest.vcloudpbx.com:9000
+        bucket: aelintra-test1-6cf9f11c-bb97-45a0-8305-db7de436449
+
+dbs:
+  - path: /var/lib/asterisk/astdb.sqlite3            # Database to replicate from
+    replicas:
+      - type: s3
+        path: instances/inuse-pool/2ouZHQauul4nylmQuh4iR2AqptI/db/astdb.sqlite3
+        endpoint: http://miniotest.vcloudpbx.com:9000
+        bucket: aelintra-test1-6cf9f11c-bb97-45a0-8305-db7de436449
