@@ -1,240 +1,180 @@
 <?php
 
-/*
-    MIT License
-
-    Copyright (c) 2016 WebsiteBeaver.com
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-*/
-
-
 require 'aws/aws-autoloader.php'; //path to autoloader.php
 require '../s3_config.php'; //file to be created outside the root to store aws key + secret
+
 use Aws\S3\S3Client;
+use Aws\Exception\AwsException;
+
 class S3 {
-  private $bucket;
-  private $client;
-  public function __construct($bucket, $region, $verify = TRUE) {
-    $this->bucket = $bucket;
-    $this->client = new S3Client([
-      'version'   => 'latest',
-      'region'    => $region,
-      'http'    => [
-          'verify' => $verify
-      ],
-      'credentials' => [
-        'key'       => AWS_KEY,
-        'secret'    => AWS_SECRET
-      ]
-    ]);
-    if(!$this->client->doesBucketExist($bucket)) 
-      throw new Exception('Bucket does not exist.');
-  }
-  public function uploadFile($path, $tmpFile, $contentType, $allowOverwrite = FALSE, $cacheLength = 31536000) {
-    $client = $this->client;
-    $bucket = $this->bucket;
-    //check if object exists to prevent overwriting, unless specificed in parameter
-    if($client->doesObjectExist($bucket, $path) && !$allowOverwrite) { 
-      echo "File: '$path' already exists. This is to prevent overwriting it.";
-      return false;
-    }
-    //upload file
-    $client->putObject(array(
-      'Bucket' => $bucket,
-      'Key'    => $path, //name in s3
-      'Body'   => fopen($tmpFile, 'r+'),
-      'CacheControl' => "max-age=$cacheLength", //caches file for 1 year by default
-      'ContentType' => $contentType
-    ));
-    if($client->doesObjectExist($bucket, $path)) return true;
-    else { 
-      echo "File: '$path' failed to upload";
-      return false;
-    }
-  }
-  public function downloadFile($path) {
-    $client = $this->client;
-    $bucket = $this->bucket;
-    $filename = substr(strrchr($path, '/' ), 1);
-    if(!$client->doesObjectExist($bucket, $path)) {
-      echo "File: '$path' does not exist";
-      return false;
-    }
-    $cmd = $client->getCommand('GetObject', [
-      'Bucket' => $bucket,
-      'Key'    => $path,
-      'ResponseContentDisposition' => "attachment; filename='$filename'"
-    ]);
-    $request = $client->createPresignedRequest($cmd, '+20 minutes');
-    $presignedUrl = (string) $request->getUri();
-    header('Location: ' . $presignedUrl);
-    return true;
-  }
-  public function downloadFolder($dir) {
-    if($this->downloadBucket($dir)) return true;
-    else return false;
-  }
-  public function downloadBucket($dir = NULL) {
-    $client = $this->client;
-    $bucket = $this->bucket;
-    //check to see directory exists at all; i.e. if at most one key exists
-    if(!empty($dir)) {
-      $results = $client->getPaginator('ListObjects', array(
-        'Bucket' => $bucket,
-        'Prefix' => "$dir/",
-        'MaxKeys' => 1
-      ));
-      foreach ($results as $result) {
-        if(empty($result['Contents'])) {
-          echo "Folder: '$dir/' does not exist.";
-          return false;
+    private $bucket;
+    private $client;
+
+    public function __construct($bucket, $region, $verify = true) {
+        $this->bucket = $bucket;
+        $this->client = new S3Client([
+            'version' => 'latest',
+            'region' => $region,
+            'http' => ['verify' => $verify],
+            'credentials' => [
+                'key' => AWS_KEY,
+                'secret' => AWS_SECRET
+            ]
+        ]);
+
+        if (!$this->client->doesBucketExistV2(['Bucket' => $bucket])) {
+            throw new Exception('Bucket does not exist.');
         }
-      }
-      //account for subfolders
-      if(strstr($dir, '/')) $dirForZip = substr(strrchr($dir, '/' ), 1);
-      else $dirForZip = $dir;
     }
-    $source = (!empty($dir) ? "s3://$bucket/$dir" : "s3://$bucket"); //full bucket or just a folder to download
-    $nameOfZipFile = (!empty($dir) ? $dirForZip : $bucket);
-    $dest = sys_get_temp_dir() . "/tmp-folder-s3-files"; //creates folder in tmp directory
-    if(!mkdir($dest, 0775)) {
-      echo "Error creating temporary folder on server: '$dest'";
-      return false;
+
+    public function uploadFile($path, $tmpFile, $contentType, $allowOverwrite = false, $cacheLength = 31536000) {
+        if ($this->client->doesObjectExist($this->bucket, $path) && !$allowOverwrite) {
+            throw new Exception("File: '$path' already exists. This is to prevent overwriting it.");
+        }
+
+        $result = $this->client->putObject([
+            'Bucket' => $this->bucket,
+            'Key' => $path,
+            'Body' => fopen($tmpFile, 'r+'),
+            'CacheControl' => "max-age=$cacheLength",
+            'ContentType' => $contentType
+        ]);
+
+        return $result !== null;
     }
-    $manager = new \Aws\S3\Transfer($client, $source, $dest);
-    $manager->transfer();
-    //creates a .tar.gz file to download automatically
-    $a = new PharData("$dest/$nameOfZipFile.tar");
-    $a->buildFromDirectory($dest);
-    $a->compress(Phar::GZ);
-    //set content stuff in order to download
-    header('Content-Description: File Transfer');
-    header('Content-Type: application/octet-stream');
-    header('Content-Length: ' . filesize("$dest/$nameOfZipFile.tar.gz"));
-    header("Content-Disposition: attachment; filename=$nameOfZipFile.tar.gz");
-    readfile("$dest/$nameOfZipFile.tar.gz");
-    //remove temporary folder and its contents created in the server; BE CAREFUL, COULD BE DANGEROUS OPERATION
-    $files = new RecursiveIteratorIterator(
-    new RecursiveDirectoryIterator($dest, RecursiveDirectoryIterator::SKIP_DOTS),
-    RecursiveIteratorIterator::CHILD_FIRST
-    );
-    foreach ($files as $fileinfo) {
-      $todo = ($fileinfo->isDir() ? 'rmdir' : 'unlink');
-      $todo($fileinfo->getRealPath());
+
+    public function downloadFile($path) {
+        if (!$this->client->doesObjectExist($this->bucket, $path)) {
+            throw new Exception("File: '$path' does not exist");
+        }
+
+        $filename = basename($path);
+        $cmd = $this->client->getCommand('GetObject', [
+            'Bucket' => $this->bucket,
+            'Key' => $path,
+            'ResponseContentDisposition' => "attachment; filename='$filename'"
+        ]);
+
+        $request = $this->client->createPresignedRequest($cmd, '+20 minutes');
+        $presignedUrl = (string) $request->getUri();
+        header('Location: ' . $presignedUrl);
+        return true;
     }
-    if(rmdir($dest)) return true;
-    else {
-      echo "Error removing temporary folder on server: '$dest'";
-      return false;
+
+    public function downloadFolder($dir) {
+        return $this->downloadBucket($dir);
     }
-  }
-  public function deleteFile($path) {
-    $client = $this->client;
-    $bucket = $this->bucket;
-    if(!$client->doesObjectExist($bucket, $path)) {
-      echo "File: '$path' does not exist";
-      return false;
+
+    public function downloadBucket($dir = null) {
+        $source = $this->getSource($dir);
+        $nameOfZipFile = $this->getZipFileName($dir);
+        $dest = sys_get_temp_dir() . "/tmp-folder-s3-files";
+
+        if (!mkdir($dest, 0775)) {
+            throw new Exception("Error creating temporary folder on server: '$dest'");
+        }
+
+        $manager = new \Aws\S3\Transfer($this->client, $source, $dest);
+        $manager->transfer();
+
+        $this->createTarGz($dest, $nameOfZipFile);
+        $this->sendFileToClient("$dest/$nameOfZipFile.tar.gz");
+
+        $this->removeTemporaryFolder($dest);
+        return true;
     }
-    $client->deleteObject(array(
-      'Bucket' => $bucket,
-      'Key'    => $path
-    ));
-    if(!$client->doesObjectExist($bucket, $path)) return true;
-    else { 
-      echo "Error deleting: '$path'";
-      return false;
+
+    public function deleteFile($path) {
+        if (!$this->client->doesObjectExist($this->bucket, $path)) {
+            throw new Exception("File: '$path' does not exist");
+        }
+
+        $this->client->deleteObject(['Bucket' => $this->bucket, 'Key' => $path]);
+        return !$this->client->doesObjectExist($this->bucket, $path);
     }
-  }
-  public function deleteFolder($dir) {
-    $client = $this->client;
-    $bucket = $this->bucket;
-    $allFilesDeletedSuccess = true;
-    $results = $client->getPaginator('ListObjects', array(
-      'Bucket' => $bucket,
-      'Prefix' => "$dir/"
-    ));
-    foreach ($results as $result) {
-      if(empty($result['Contents'])) {
-        echo "Folder: '$dir/' does not exist.";
-        return false;
-      }
-      foreach ($result['Contents'] as $object) {
-        if(!$this->deleteFile($object['Key'])) $allFilesDeletedSuccess = false;
-      }
+
+    public function deleteFolder($dir) {
+        $results = $this->client->getPaginator('ListObjects', ['Bucket' => $this->bucket, 'Prefix' => "$dir/"]);
+        foreach ($results as $result) {
+            if (empty($result['Contents'])) {
+                throw new Exception("Folder: '$dir/' does not exist.");
+            }
+            foreach ($result['Contents'] as $object) {
+                $this->deleteFile($object['Key']);
+            }
+        }
+        return true;
     }
-    if($allFilesDeletedSuccess) return true;
-    else return false;
-  }
-  public function renameFile($oldName, $newName) {
-    $client = $this->client;
-    $bucket = $this->bucket;
-    if(!$client->doesObjectExist($bucket, $oldName)) {
-      echo "File: '$oldName' does not exist";
-      return false;
+
+    public function renameFile($oldName, $newName) {
+        if (!$this->client->doesObjectExist($this->bucket, $oldName)) {
+            throw new Exception("File: '$oldName' does not exist");
+        }
+        if ($oldName === $newName) {
+            throw new Exception("New name is same as old name on File: '$oldName'");
+        }
+        if ($this->client->doesObjectExist($this->bucket, $newName)) {
+            throw new Exception("File: '$newName' already exists. This is to prevent overwriting it.");
+        }
+
+        $this->client->copyObject([
+            'Bucket' => $this->bucket,
+            'Key' => $newName,
+            'CopySource' => "$this->bucket/$oldName"
+        ]);
+
+        return $this->client->doesObjectExist($this->bucket, $newName) && $this->deleteFile($oldName);
     }
-    if($oldName === $newName) {
-      echo "New name is same as old name on File: '$oldName'";
-      return false;
+
+    public function renameFolder($oldName, $newName) {
+        if ($oldName === $newName) {
+            throw new Exception("New name is same as old name on File: '$oldName'");
+        }
+
+        $results = $this->client->getPaginator('ListObjects', ['Bucket' => $this->bucket, 'Prefix' => "$oldName/"]);
+        foreach ($results as $result) {
+            if (empty($result['Contents'])) {
+                throw new Exception("Folder: '$oldName/' does not exist.");
+            }
+            foreach ($result['Contents'] as $object) {
+                $newNameFull = str_replace($oldName, $newName, $object['Key']);
+                $this->renameFile($object['Key'], $newNameFull);
+            }
+        }
+        return true;
     }
-    if($client->doesObjectExist($bucket, $newName)) {
-      echo nl2br("File: '$newName' already exists. This is to prevent overwriting it. \n");
-      return false;
+
+    private function getSource($dir) {
+        return !empty($dir) ? "s3://$this->bucket/$dir" : "s3://$this->bucket";
     }
-    $client->copyObject(array(
-      'Bucket'     => $bucket,
-      'Key'        => $newName, //new file name
-      'CopySource' => "$bucket/$oldName" //old file name
-    ));
-    //check if object exists, delete file and confirm that it is successful
-    if($client->doesObjectExist($bucket, $newName) && $this->deleteFile($oldName))
-      return true;
-    else {
-      echo "Failed to rename File: '$oldName' to '$newName'";
-      return false;
+
+    private function getZipFileName($dir) {
+        return !empty($dir) ? basename($dir) : $this->bucket;
     }
-  }
-  public function renameFolder($oldName, $newName) {
-    $client = $this->client;
-    $bucket = $this->bucket;
-    $allFilesRenamedSuccess = true;
-    if($oldName === $newName) {
-      echo "New name is same as old name on File: '$oldName'";
-      return false;
+
+    private function createTarGz($dest, $nameOfZipFile) {
+        $a = new PharData("$dest/$nameOfZipFile.tar");
+        $a->buildFromDirectory($dest);
+        $a->compress(Phar::GZ);
     }
-    $results = $client->getPaginator('ListObjects', array(
-      'Bucket' => $bucket,
-      'Prefix' => "$oldName/"
-    ));
-    foreach ($results as $result) {
-      if(empty($result['Contents'])) {
-        echo "Folder: '$oldName/' does not exist.";
-        return false;
-      }
-      foreach ($result['Contents'] as $object) {
-        $newNameFull = str_replace($oldName, $newName, $object['Key']);
-        //rename file, set variable to false if unsuccessful for even one file
-        if(!$this->renameFile($object['Key'], $newNameFull)) $allFilesRenamedSuccess = false;
-      }
+
+    private function sendFileToClient($filePath) {
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Length: ' . filesize($filePath));
+        header("Content-Disposition: attachment; filename=" . basename($filePath));
+        readfile($filePath);
     }
-    if($allFilesRenamedSuccess) return true;
-    else return false;
-  }
+
+    private function removeTemporaryFolder($dest) {
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dest, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($files as $fileinfo) {
+            $todo = ($fileinfo->isDir() ? 'rmdir' : 'unlink');
+            $todo($fileinfo->getRealPath());
+        }
+        rmdir($dest);
+    }
 }
-?>

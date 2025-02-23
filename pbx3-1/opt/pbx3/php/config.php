@@ -1,12 +1,20 @@
 <?php
 
 /**
+ * PBX3 system config file
+ * N.B. !!!!
+ * If you make changes to this config you MUST run 
+ *  php genbashconfig.php 
+ * to ripple the changes into the bash equivalent config
+ */
+
+/**
  * System
  */
 
 define('CODENAME',                      'pbx3');
 define('KEYTYPE',                       'pkey');
-define('SYSAGI',                        'pbx3agi');
+define('SYSAGI',                        'swarmcore');
 
 define('SYSROOT',                       '/opt');
 define('SYSPREFIX',                     '/pbx3');
@@ -28,16 +36,19 @@ define('BACKUPS', 						SYSPATH . '/bkup');
 define('CACHE', 						SYSPATH . '/cache');
 
 define('DBPATH', 						SYSPATH . '/db');
-define('DBNAME', 						'/sqlite.db');
-define('SYSDB',						    DBPATH .  DBNAME); 
+define('DBNAME', 						'sqlite.db');
+
+define('SYSDB',						    DBPATH .  "/" . DBNAME); 
+define('DBDUMPS',						DBPATH .  '/db_database_dumps');
+define('DBTABLEDUMPS',					DBPATH .  '/db_table_dumps');
+define('DBSQL',						    DBPATH .  '/db_sql');
+define('DBINSTANCESQL',				    DBSQL .  '/sqlite_create_instance.sql');
+define('DBTENANTSQL',				    DBSQL .  '/sqlite_create_tenant.sql');
+define('DBLEGACYSQL',				    DBSQL .  '/sqlite_create_legacy.sql');
+define('DBMESSAGE',					    DBSQL .  '/sqlite_message.sql');
 
 define('READONLY_DB',				    DBPATH .  '/sqlite.rdonly.db');
 define('COPY_DB',				        DBPATH .  '/sqlite.copy.db');
-
-define ('AMIHELPER',                    CLASSES . '/AmiHelperClass');
-define ('AMIUID',                       CLASSES . 'pbx3');
-define ('AMIPWD',                       CLASSES . 'bgth7rf!');
-define ('ASTMANAGER',                   CLASSES . '/AsteriskManager.php');
 
 define ('DBCLASS',                      CLASSES . '/DbClass');
 define ('GENCLASS',                     CLASSES . '/GenClass');
@@ -45,7 +56,13 @@ define ('HELPER',                       CLASSES . '/HelperClass');
 define ('LDAPHELPER',                   CLASSES . '/LDAPHelperClass');
 define ('NETHELPER',                    CLASSES . '/NetHelperClass');
 
-define('EXEC_DB_RELOAD',				SCRIPTS . '/reloader.sh');
+define('RELOADER',				        SCRIPTS . '/reloader.sh');
+
+define ('AMIHELPER',                    CLASSES . '/AmiHelperClass');
+define ('ASTMANAGER',                   CLASSES . '/AsteriskManager.php');
+define ('AMIUID',                       'pbx3');
+define ('AMIPWD',                       'bgth7rf!');
+
 
 define('ASTPATH',                       '/etc/asterisk');
 define('ASTMPL',                        SYSPATH . ASTPATH . '/templates');
@@ -123,30 +140,30 @@ define('SOUNDIR',                       '/usr/share/asterisk' . SYSPREFIX . '/so
 /**
  * Shorewall
  */
-define('SHOREWALL',                      '/etc/shorewall');
+define('SHOREWALL',                     '/etc/shorewall');
 define('FW_RULES',                      '/etc/shorewall/pbx3_rules');
-
-
 
 /**
  * BASH params
  */
 
-define('LASTDB',                        DBPATH . '/last.db');               //pbx3 db previous iteration
-define('CLEANDB',                       DBPATH . '/db_vx_clean.db');	    //factory reset copy of the db 
-define('CREATEDB',                      DBPATH . '/db_vx_create.sql');	    //installed db create
-define('SIPLOG',                        DBPATH . '/var/log/siplog');	    //installed db create
-define('SYSTEMDB',                      DBPATH . '/db_vx_system.sql');		//installed db system data
-define('SYSMSGDB',                      DBPATH . '/db_vx_message.sql');	    //installed db system messages
-define('SYSINIDB',                      DBPATH . '/db_vx_inidat.sql');		//installed db defaults
-define('SYSDEVICE',                     DBPATH . '/db_vx_device.sql');	    //installed db device table
+define('LASTDB',                        DBDUMPS . '/last.db');               //pbx3 db previous iteration
+define('CLEANDB',                       DBSQL . '/sqlite_clean.db');	    //factory reset copy of the db 
+define('LEGACY_DB',                     DBSQL . '/sqlite_create_legacy.sql');	    //old db create
+define('INSTANCE_DB',                   DBSQL . '/sqlite_create_instance.sql');	    //installed db create
+define('TENANT_DB',                     DBSQL . '/sqlite_create_tenant.sql');	    //installed db create
+define('SYSTEMDB',                      DBSQL . '/sqlite_system.sql');		//installed db system data
+define('SYSMSGDB',                      DBSQL . '/sqlite_message.sql');	    //installed db system messages
+define('SYSINIDB',                      DBSQL . '/sqlite_inidat.sql');		//installed db defaults
+define('SYSDEVICE',                     DBSQL . '/sqlite_device.sql');	    //installed db device table
 define('SYSONCE',                       SYSPATH . '/once');				    //once directory
 define('SYSALWAYS',                     SYSPATH . '/always');				//always directory
 define('SYSONCEDONE',                   SYSPATH . '/oncedone');				//applied once files
-define('CUSTDATA',                      DBPATH . '/last_data.sql');			//customer data previous iteration
-define('LASTDEVICE',                    DBPATH . '/last_device.sql');			//device table previous iteration      
-define('CUSTDEVICE',                    DBPATH . '/last_custdevice.sql');	    //customer devices previous iteration
-define('DUMPER',                        GENERATOR . '/dumper.php'); 	//loc. of the dumper
+define('CUSTDATA',                      DBDUMPS . '/last_data.sql');		//customer data previous iteration
+define('LASTDEVICE',                    DBDUMPS . '/last_device.sql');		//device table previous iteration      
+define('CUSTDEVICE',                    DBDUMPS . '/last_custdevice.sql');	//customer devices previous iteration
+define('SIPLOG',                        DBPATH . '/var/log/siplog');	    //installed db create
+define('DUMPER',                        UTILITIES . '/dumper.php'); 	    //loc. of the dumper
 define('ASTGEN',                        GENERATOR . '/runAstGen.php');
 define('SIPFIX',                        UTILITIES . '/sipiaxfix.php'); 	//loc. of the V6 sipiaxfixup routine
 define('GENAST',                        SCRIPTS . '/genAst.sh');		//loc. of the generator

@@ -43,7 +43,6 @@ require_once HELPER;
     	$holarray[$row['pkey']] = array (
 			'cluster' => $row['pkey'],
 			'route' => NULL,
-			'routeclass' => NULL
 		);
     }
     	
@@ -64,7 +63,6 @@ require_once HELPER;
 			$holarray[$row['cluster']] = array (
 				'cluster' => $row['cluster'],
 				'route' => $row['route'],
-				'routeclass' => $row['routeclass']
 			);
 		}
     }
@@ -77,7 +75,7 @@ require_once HELPER;
 // now we can set any holidays into the cluster table
     foreach ($holarray as $k) {
 //		print "K[cluster] IS " . $k['cluster'] . " \n";
-		$res = $dbh->query("SELECT pkey,routeoverride,routeclassoverride from cluster where pkey ='" . $k['cluster'] . "'")->fetch(PDO::FETCH_ASSOC);
+		$res = $dbh->query("SELECT pkey,routeoverride from cluster where pkey ='" . $k['cluster'] . "'")->fetch(PDO::FETCH_ASSOC);
 		if ($debug) {
 			print_r($res);
 		}
@@ -88,7 +86,6 @@ require_once HELPER;
 			
 		$tuple['pkey'] = $k['cluster'];
 		$tuple['routeoverride'] = $k['route'];
-		$tuple['routeclassoverride'] = $k['routeclass'];
         $ret = $helper->setTuple('cluster',$tuple);
         $helper->logit("Updated Cluster " . $tuple['pkey'] . " with route " . $tuple['routeoverride'] , 0 );
         $dbupdated = true;

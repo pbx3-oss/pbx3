@@ -56,7 +56,7 @@ function __construct() {
 //	staticIPV4
     $this->dbh = DB::getInstance();
 	$res = $this->dbh->query("SELECT STATICIPV4 FROM globals where pkey = 'global'")->fetch(PDO::FETCH_ASSOC);
-	if ($res['STATICIPV4']) {
+	if (isset($res['STATICIPV4'])) {
 		$this->staticIPV4 = $res['STATICIPV4'];
     }
 // localIPV4 & CIDR IPV4

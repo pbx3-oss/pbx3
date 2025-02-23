@@ -1,4 +1,0 @@
-#!/bin/sh
-. /opt/pbx3/scripts/bashconfig
-exec 2>&1
-exec $SCRIPTS/syshelper.pl --nofork

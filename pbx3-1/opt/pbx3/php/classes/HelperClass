@@ -19,6 +19,7 @@
 //
 //
 
+// require_once __DIR__ . "/../config.php";
 
 /**
  *  A bunch of primarily db and/or backend, helpers
@@ -606,7 +607,7 @@ public function setLinks()
 			continue;
 		}
 
-		$astFile =  ASTCONF . "/" . $file->getFilename();
+		$astFile =  ASTPATH . "/" . $file->getFilename();
 		$localFile = ASTLOCALCONF . "/" . $file->getFilename();
 		echo "local file is $localFile \n";
 		echo "Ast file is $astFile \n";
@@ -636,23 +637,21 @@ public function checkXref($key,$cluster=false) {
 /*
  *  find key clashes
  *	Checks a full key or a shortkey (no cluster ID prefix) with a cluster name qualifier
+ *	MUST run on the OLD database structure when master_xref still exists
  */	
-	
 	$dbh = DB::getInstance();
 	
 	$sql = "SELECT * FROM master_xref where pkey = '$key'";
 	if ($cluster) {
 		$sql .= " AND cluster = '$cluster'";
 	}
-	
+
 	$res = $dbh->query($sql)->fetch(PDO::FETCH_ASSOC);
 	if (empty($res)) {
-		$res = NULL;
-		return 0;
+		return false;
 	}	
 	$foundKey = $res['pkey'];
 	$relation = $res['relation'];
-	$res = NULL;
 
 	switch ($relation) {
 		case "IPphone":
@@ -960,64 +959,6 @@ public function delTuple($tab,$pkey) {
  return 'OK';
 
 }
-
-public function delTupleById($tab,$id) {
-/*
- * general tuple delete by id - takes a table name and an id
- */
-	$dbh = DB::getInstance();
-/*
- *  check for pkey
- */ 
-	if ( ! isset($id)) {
-		return "Delete failed - no id given!";
-	}	
-/*
- * Check the row exists 
- */
-	$sql = $dbh->prepare("SELECT id FROM $tab WHERE id = ?");
-	$sql->execute(array($id));
-	$res = $sql->fetch();	
-	if ( ! isset($res['id']) ) { 
-		return "Row (" . $id . " ) doesn't exist!";
-	}  
- 
-
- $sql = $dbh->prepare("DELETE FROM $tab WHERE id =?");
- $sql->execute(array($id));
- $this->commitOn();
- $this->logit("I'm deleting $tab id $id", 5 );
- return 'OK';
-
-}
-
-
-/**
- * predDelTuple
- * 
- * Predicated delete
- * Deletes row(s) in a table ($tab) where some column name ($srch) has some value ($val)
- *
- * @param  mixed $tab - table
- * @param  mixed $srch - column name
- * @param  mixed $val - column value
- * @return void
- */
-public function predDelTuple($tab,$srch,$val) {
-
-	$dbh = DB::getInstance();
-
-	$sql = $dbh->prepare("DELETE FROM $tab WHERE $srch = ?");
-	$sql->execute(array($val));
-	$this->logit("I'm predicate deleting T = $tab S = $srch K = $val", 5 );
-	return 'OK';
-
-} 	
-
-private function setCluster(&$rec) {
-//disabled 
-	return;
-}
                                                	
 /**
  * logIt
@@ -1035,6 +976,14 @@ public function logIt($someText, $userloglevel=0) {
 	}
 }
 
+/**
+ * resetPassword
+ *
+ * @param [type] $user
+ * @return void
+ * 
+ * NOT USED IN THIS RELEASE
+ */
 public function resetPassword ($user) {
 
 	$dbh = DB::getInstance();
@@ -1053,7 +1002,110 @@ public function resetPassword ($user) {
 	$ret = $this->setTuple('user',$tuple);
 
 }
+/**
+ * getDirectDial
+ *
+ * @param string $route
+ * @param string $routename
+ * @param integer $routeclass
+ * @return integer dialable number (or false if not found)
+ */
+public function getDirectDial($route,$routeclass,&$dialstring,&$msg,&$rc) {
+	$dbh = DB::getInstance();
+	$table = null;
+	$dialstring = null;
+	switch ($routeclass) {
+		case 1: 
+			// nothing to do, already dialable
+			$dialstring = $route;
+			$msg =  "202 Appl Row $route is already dialable";
+			$rc = 202;
+			return true;
+		case 2:
+			//IVR
+			$table = "ivrmenu";
+			$sql = $dbh->prepare("SELECT pkey FROM ivrmenu WHERE name = ?");
+			$sql->execute(array($route));
+			$res = $sql->fetch();	
+			if ( ! isset($res['pkey']) ) { 
+				$msg =  "401 IVR Row $route doesn't exist!";
+				$rc = 401;
+				return false;
+			}  
+			$rc = 200;
+			$dialstring = $res['pkey'];
+			return true;
+			break;
+		case 4:
+			//Queue
+			$table = "queue";  
+			$sql = $dbh->prepare("SELECT pkey FROM queue WHERE name = ?");
+			$sql->execute(array($route));
+			$res = $sql->fetch();	
+			if ( ! isset($res['pkey']) ) { 
+				$msg =  "401 Queue Row $route doesn't exist!";
+				$rc = 401;
+				return false;
+			} 
+			$dialstring = $res['pkey'];
+			$rc = 200;
+			return true; 			
+			break;
+		case 10:
+			//custom app 
+			$table = "appl";
+			$table = "queue";  
+			$sql = $dbh->prepare("SELECT pkey FROM appl WHERE name = ?");
+			$sql->execute(array($route));
+			$res = $sql->fetch();	
+			if ( ! isset($res['pkey']) ) { 
+				$msg =  "401 Appl Row $route doesn't exist!";
+				$rc = 401;
+				return false;
+			}
+			$dialstring = $res['pkey'];
+			$rc = 200;
+			return true;  						
+			break;
+		case 20:
+			//retrieve voicemail - set target to *51* 
+			$dialstring = "*51*";
+			return true;
+		case 100:
+			//Operator
+			$dialstring = 100;
+			return true;
+		case 101:
+			//Hangup
+			$dialstring = 101;
+			return true;
 
+		case 0: 
+		// nothing to do - should never happen
+
+		case 3:
+			//Never used
+		case 5:
+			//DISA - not implemented - insecure
+		case 6:
+			//CALLBACK - old feature not used
+		case 7:
+			//Never used
+		case 8:
+			//sibling - not used by IVR
+		case 9:
+			//trunk name - not used by IVR
+		case 11:
+			//trunk group - not used by IVR
+		case 21:
+			//leave voicemail - not used by IVR
+		default:
+		$dialstring = "None";
+			$msg =  "\n502 returned RC $routeclass for $route not implemented - set to 'None'\n\n";
+			$rc = 502;
+			return false;
+	}
+}
 
   
 }

@@ -1,0 +1,7 @@
+BEGIN TRANSACTION;
+INSERT OR IGNORE INTO greeting(id,pkey,cname,cluster,type) values ('2ry5zwc3pEWJPszwMAJuMRFpAIT','usergreeting1123','usergreeting1123','2ry5zwQN15fB6x4CnV3GGyDpP6z','wav');
+INSERT OR IGNORE INTO greeting(id,pkey,cname,cluster,type) values ('2ry5zwMLC4DIOpmCV1jAhSqEWEN','usergreeting1124','usergreeting1124','2ry5zwQN15fB6x4CnV3GGyDpP6z','wav');
+INSERT OR IGNORE INTO greeting(id,pkey,cname,cluster,type) values ('2ry5ztJXsqVNqqX2VeBALd9yj3q','usergreeting3456','usergreeting3456','2ry5zwQN15fB6x4CnV3GGyDpP6z','wav');
+INSERT OR IGNORE INTO greeting(id,pkey,cname,cluster,type) values ('2ry5zwFv4hpLa3VT3wJQ8U6iIQB','usergreeting4001','usergreeting4001','2ry5zslSoZNalhQPo2MdmVylg45','wav');
+INSERT OR IGNORE INTO greeting(id,pkey,cname,cluster,type) values ('2ry5ztin8Axx2hD2hz4XZfjwzdP','usergreeting4003','usergreeting4003','2ry5zrifVhf2Z1ZsTIEa2hVlV5c','wav');
+COMMIT;

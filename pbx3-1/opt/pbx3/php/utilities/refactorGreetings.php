@@ -16,40 +16,51 @@
 //
 //
 
-// This will patch the existing extensions and replace pickup and callgroup with their named equivalents
-// Probs take a backup before you begin, huh?
 //
 
 require_once __DIR__ . "/../config.php";
+require_once DBCLASS;
+require_once HELPER;
 
-try {
-    /*** connect to SQLite database ***/
+$helper = new helper;
+$dbh = DB::getInstance();
 
-    $dbh = new PDO(SYSDB);
-
-    /*** set the error reporting attribute ***/
-    $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
-//
-//  SIP extensions (phones)
-//
-	$sql = "SELECT * FROM IPphone order by pkey";
-    foreach ($dbh->query($sql) as $row) {
-    	$sipiaxfriend = $row['sipiaxfriend'];     
-		$sipiaxfriend = preg_replace ( '/callgroup=\d+/', 'namedcallgroup=' . $row['cluster'], $sipiaxfriend);
-		$sipiaxfriend = preg_replace ( '/pickupgroup=\d+/', 'namedpickupgroup=' . $row['cluster'], $sipiaxfriend);
-		if ($sipiaxfriend != $row['sipiaxfriend']) {
-    		$sql = $dbh->prepare("UPDATE ipphone SET sipiaxfriend=? WHERE pkey=?");
-    		$sql->execute(array($sipiaxfriend,$row['pkey']));
-    	}
-	}
-   
-    /*** close the database connection ***/
-    $dbh = null; 
+if (file_exists(__DIR__ . "/.refactorGreetingsDone")) {
+    echo "Greetings refactor alredy done for this Database \n\n";
+    return 0;
 }
 
-catch(PDOException $e) {
-    echo $e->getMessage();
-}    
+/**
+ *  Clean up greetings
+ *  pkey moves to filename
+ *  pkey becomes /\d{4}$/
+ *  
+ */
+$greetings = $helper->getTable("greeting");
 
-?>		
+
+foreach ($greetings as $greeting) {
+    if (is_numeric($greeting['pkey'])) {
+        continue;
+    }
+    $filename = $greeting['pkey'];
+    preg_match('/.*(\d{4})$/',$greeting['pkey'],$matches);
+    if (!is_numeric($matches[1])) {
+        echo "Greeting pkey last 4 not numeric - ignoring for " .  $greeting['pkey'] . "\n";
+        continue;
+    } 
+//    echo "matches is " . $matches[1] . "\n";
+    $sql = $dbh->prepare("UPDATE greeting SET pkey=?,filename=? WHERE pkey=?");
+    $sql->execute(array($matches[1],$filename,$filename));
+}
+
+/*** close the database connection ***/
+$dbh = null; 
+/**
+ * Mark the job as done
+ */
+$Greetingsdone = __DIR__ . "/.refactorGreetingsDone";
+fopen($Greetingsdone,"w") 
+    or die( "couldn't open $Greetingsdone");
+    
+return;		

@@ -16,40 +16,45 @@
 //
 //
 
-// This will patch the existing extensions and replace pickup and callgroup with their named equivalents
-// Probs take a backup before you begin, huh?
-//
-
 require_once __DIR__ . "/../config.php";
+require_once DBCLASS;
+require_once HELPER;
 
-try {
-    /*** connect to SQLite database ***/
+$helper = new helper;
+$dbh = DB::getInstance();
 
-    $dbh = new PDO(SYSDB);
+if (file_exists(__DIR__ . "/.refactorAppsDone")) {
+    echo "Apps refactor alredy done for this Database";
+    return 0;
+} 
 
-    /*** set the error reporting attribute ***/
-    $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
 //
-//  SIP extensions (phones)
+//  Clean up the apps 
 //
-	$sql = "SELECT * FROM IPphone order by pkey";
-    foreach ($dbh->query($sql) as $row) {
-    	$sipiaxfriend = $row['sipiaxfriend'];     
-		$sipiaxfriend = preg_replace ( '/callgroup=\d+/', 'namedcallgroup=' . $row['cluster'], $sipiaxfriend);
-		$sipiaxfriend = preg_replace ( '/pickupgroup=\d+/', 'namedpickupgroup=' . $row['cluster'], $sipiaxfriend);
-		if ($sipiaxfriend != $row['sipiaxfriend']) {
-    		$sql = $dbh->prepare("UPDATE ipphone SET sipiaxfriend=? WHERE pkey=?");
-    		$sql->execute(array($sipiaxfriend,$row['pkey']));
-    	}
-	}
-   
-    /*** close the database connection ***/
-    $dbh = null; 
+$apps = $helper->getTable("appl");
+
+foreach ($apps as $app) {
+    if (! is_numeric($app['pkey'])) {
+        $app['name'] = $app['pkey'];
+    }
+
+    do {
+        $newkey = rand(50000,80000);            
+    }
+    while ($helper->checkXref($newkey,$app['cluster'])); 
+
+    $sql = $dbh->prepare("UPDATE appl SET name=?,pkey=? WHERE pkey=?");
+    $sql->execute(array($app['name'],$newkey,$app['pkey']));
 }
 
-catch(PDOException $e) {
-    echo $e->getMessage();
-}    
+
+/*** close the database connection ***/
+$dbh = null; 
+/**
+ * Mark the job as done
+ */
+$Appsdone = __DIR__ . "/.refactorAppsDone";
+fopen($Appsdone,"w") 
+    or die( "couldn't open $Appsdone");
 
 ?>		

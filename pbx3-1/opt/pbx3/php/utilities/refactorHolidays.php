@@ -16,40 +16,46 @@
 //
 //
 
-// This will patch the existing extensions and replace pickup and callgroup with their named equivalents
-// Probs take a backup before you begin, huh?
-//
-
 require_once __DIR__ . "/../config.php";
+require_once DBCLASS;
+require_once HELPER;
 
-try {
-    /*** connect to SQLite database ***/
+$helper = new helper;
+$dbh = DB::getInstance();
 
-    $dbh = new PDO(SYSDB);
+if (file_exists(__DIR__ . "/.refactorHolidayDone")) {
+    echo "Holiday refactor alredy done for this Database";
+    return 0;
+} 
 
-    /*** set the error reporting attribute ***/
-    $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
 //
-//  SIP extensions (phones)
+//  Clean up the holidays 
 //
-	$sql = "SELECT * FROM IPphone order by pkey";
-    foreach ($dbh->query($sql) as $row) {
-    	$sipiaxfriend = $row['sipiaxfriend'];     
-		$sipiaxfriend = preg_replace ( '/callgroup=\d+/', 'namedcallgroup=' . $row['cluster'], $sipiaxfriend);
-		$sipiaxfriend = preg_replace ( '/pickupgroup=\d+/', 'namedpickupgroup=' . $row['cluster'], $sipiaxfriend);
-		if ($sipiaxfriend != $row['sipiaxfriend']) {
-    		$sql = $dbh->prepare("UPDATE ipphone SET sipiaxfriend=? WHERE pkey=?");
-    		$sql->execute(array($sipiaxfriend,$row['pkey']));
-    	}
-	}
-   
-    /*** close the database connection ***/
-    $dbh = null; 
+
+$holidays = $helper->getTable("holiday");
+$tuple = array();
+foreach ($holidays as $holiday) {
+    $routeclass = $holiday['routeclass'];
+    $route = $holiday['route'];
+    $dialstring = null;
+    $returnkey=null;
+    $msg=null;
+    $rc=null;
+    $helper->getDirectDial($route,$routeclass,$dialstring,$msg,$rc);
+    if (empty($dialstring)) {
+        $dialstring = 'None';
+    }
+    $sql = $dbh->prepare("UPDATE holiday SET route=? WHERE pkey=?");
+    $sql->execute(array($dialstring,$holiday['pkey']));
 }
 
-catch(PDOException $e) {
-    echo $e->getMessage();
-}    
+/*** close the database connection ***/
+$dbh = null; 
+/**
+ * Mark the job as done
+ */
+$Holidaysdone = __DIR__ . "/.refactorHolidaysDone";
+fopen($Holidaysdone,"w") 
+    or die( "couldn't open $Holidaysdone");
 
 ?>		

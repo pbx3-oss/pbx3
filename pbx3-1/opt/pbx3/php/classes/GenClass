@@ -18,6 +18,8 @@
 //
 
 require_once NETHELPER;
+require_once __DIR__ . "/../config.php";
+
 
 /**
  *  Asterisk object generator
@@ -30,7 +32,7 @@ class genAsteriskObjects
 	private $helper;
 	private $nethelper;
 	private $dbh;	
-	private $agi;
+//	private $agi;      --not used
 	private $globals;
 	private $cluster;
 	private $appl;
@@ -187,7 +189,7 @@ class genAsteriskObjects
 	{
 		$this->OUT = NULL;
 
-		$lineio = $this->helper->getTable("lineio", null, false);
+		$trunks = $this->helper->getTable("trunks", null, false);
 /**
  *  Bind to the static IP if we are using one
  */
@@ -201,7 +203,7 @@ class genAsteriskObjects
 /**
  *  Registrations have to be in the [globals] section of iax.conf
  */
-		foreach ($lineio as $row) {
+		foreach ($trunks as $row) {
 			if ($row['register'] != "") {                
 
 				if ($row['technology'] == "IAX2") {
@@ -222,7 +224,7 @@ class genAsteriskObjects
 		$iaxReadyTrunks = $this->genFileBanner();
 		$iaxTrunkBuff = NULL;
 
-		foreach ($lineio as $row) {
+		foreach ($trunks as $row) {
 
 			if ($row['active'] != "YES") {
 				continue;
@@ -413,12 +415,12 @@ class genAsteriskObjects
 	private function genPjsipTrunks()
 	{
 
-		$lineio = $this->helper->getTable("lineio", null, false);
+		$trunks = $this->helper->getTable("trunks", null, false);
 
 		$pjsipReadyTrunks = $this->genFileBanner();
 		$pjsipTrunkBuff = NULL;
 
-		foreach ($lineio as $row) {
+		foreach ($trunks as $row) {
 
 			if ($row['technology'] != "SIP") {
 				continue;
@@ -570,7 +572,7 @@ class genAsteriskObjects
 		$this->checkFileIsWriteable($targetFile);
 
 /*
-* Now write the trunk definitions to it (if there are any)
+* Now write the queue definitions to it (if there are any)
 */
 		if ($readyQueues) {
 			$fh = fopen($targetFile, 'w') or die("Could not open file $targetFile!");
@@ -745,11 +747,6 @@ BANNEREND;
 			return $errorMsg;
 		}
 */
-
-
-
-
-
 
         $this->genExtensionsGlobals();
 		$this->genExtensionsCoS();
@@ -1005,7 +1002,7 @@ HERE;
         $this->OUT .= "\n";
 
 		try {
-			$sql = "SELECT * FROM lineIO WHERE cluster='" . $row['id'] . "' ORDER BY pkey";
+			$sql = "SELECT * FROM trunks WHERE cluster='" . $row['id'] . "' ORDER BY pkey";
 			$qRes = $this->dbh->query($sql);
 			$trunk = $qRes->fetchAll();
 			$qRes = NULL;
@@ -1343,16 +1340,16 @@ HERE;
     }
 
 	try {
-		$sql = "select * from lineIO WHERE technology='DiD' OR technology='CLID' order by pkey ";
+		$sql = "select * from inroutes order by pkey ";
 		$qRes = $this->dbh->query($sql);
-		$lineio = $qRes->fetchAll();
+		$inroutes = $qRes->fetchAll();
 		$qRes = NULL;
 	} catch (PDOException $e) {
 		$errorMsg = $e->getMessage();
 		return $errorMsg;
 	}
 
-    foreach ($lineio as $row) {
+    foreach ($inroutes as $row) {
         $this->OUT .= "\texten => " . $row['pkey'] . ",1,agi(" . SYSAGI . ",Ingress," . $row['pkey'] . ",,," . $row['cluster'] . ")\n";
     }
     $this->OUT .= <<<HERE

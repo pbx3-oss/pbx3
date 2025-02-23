@@ -2,138 +2,144 @@
 
 . /opt/pbx3/scripts/bashconfig
 
-echo "createdb is $CREATEDB"
+#echo "createdb is $CREATEDB"
 
-Targetdb=$SYSDB
-Fullpathtargetdb=$SYSDB
-Fullpathlastdb=$LASTDB
 Prefix="last_";
 
 
-while getopts ":hs:d:" option; do
+while getopts ":hsL" option; do
 	case $option in
 		h) # display Help
 			echo "Syntax: reloader.sh [-s -d -h]"
 			echo "s     source file prefixes."
-			echo "d     destination db."
+#ToDo		echo "d     destination db."
+			echo "L     create legacy destination db."
 			echo "h     print this help."
-			exit;;
+			exit ;;
 
 		s) # source files prefix
-			Prefix=$OPTARG;;
-			
-		d) # destination db
-			Targetdb=$OPTARG;;
-						
+			Prefix=$OPTARG ;;
+
+		L) # legacy
+			legacy=true ;;
+
 		\?) # Invalid option
-			echo "Error: Invalid option"
-			exit;;
+			echo "Error: Invalid option: -$OPTARG"
+			exit ;;
 	esac
 done
 
-if [ "$Targetdb" = "$SYSDB" ]; then
-	echo "No -d parameter given, using $SYSDB as target"
-else
-	Fullpathtargetdb="$DBPATH/$Targetdb"
-	Fullpathlastdb="$DBPATH/last_$Targetdb"	
-
-	if [ -e "$Fullpathtargetdb" ]; then
-		echo "Saving existing database as $Fullpathlastdb"
-		cp -a $Fullpathtargetdb $Fullpathlastdb 
-	else
-		echo "Destination database $Fullpathtargetdb does not exist, creating it" 
-		touch $Fullpathtargetdb
-	fi
-fi
-
-echo "Saving existing database $Fullpathtargetdb as $Fullpathlastdb"
-cp -a $Fullpathtargetdb $Fullpathlastdb 
+echo "Saving existing database $SYSDB as $LASTDB"
+cp -a $SYSDB $LASTDB
 
 
-echo "Deleting existing db $Fullpathtargetdb"
-rm $Fullpathtargetdb
+echo "Deleting existing db $SYSDB"
+rm $SYSDB
 
-Customerdata=$DBPATH/$Prefix
+
+Customerdata=$DBDUMPS/$Prefix
 Customerdata="${Customerdata}data.sql"
-echo "Building for target $Fullpathtargetdb with data $Customerdata"
+echo "Building for target $SYSDB with data $Customerdata"
 
 NEWINSTALL=true
 
-sqlite3 $Fullpathtargetdb 'PRAGMA synchronous=0;'
-sqlite3 $Fullpathtargetdb 'PRAGMA journal_mode=MEMORY;' >/dev/null 2>&1
+sqlite3 $SYSDB 'PRAGMA synchronous=0;'
+sqlite3 $SYSDB 'PRAGMA journal_mode=MEMORY;' >/dev/null 2>&1
 
-#create the db from the system files
-echo "Creating new database $Fullpathtargetdb from $CREATEDB"
-sqlite3 $Fullpathtargetdb < $CREATEDB
+if [ "$legacy" = "true" ]; then
+	echo "L parameter given, creating $SYSDB from $LEGACY_DB"
+	sqlite3 $SYSDB < $LEGACY_DB
+else
+	#create the db from the system files
+	echo "Creating new database $SYSDB from $INSTANCE_DB and $TENANT_DB"
+	sqlite3 $SYSDB < $INSTANCE_DB
+	sqlite3 $SYSDB < $TENANT_DB
+fi
 
-#Load the system messages 
+#Load the system messages
 if [ -e $SYSMSGDB ]; then
 	echo Loading system messages
-	sqlite3 $Fullpathtargetdb < $SYSMSGDB
+	sqlite3 $SYSDB < $SYSMSGDB
 fi
 
 #Reload any saved customer data
 
 if [ -e $Customerdata ]; then
 	echo Loading customer data from $Customerdata
-	sqlite3 $Fullpathtargetdb < $Customerdata
+	sqlite3 $SYSDB < $Customerdata
 fi
 
 
 #run the once files
-echo Running ONCE files..
 if [ ! -e $SYSONCEDONE ] ; then
 	echo Creating oncedone directory $STSONCEDONE
 	mkdir $SYSONCEDONE
 fi
 
-if [ "$(ls -A $SYSONCE)" ]; then
-	for file in $(ls $SYSONCE/) ; do
-		if [ ! -e $SYSONCEDONE/$file ]; then
-			echo "Applying oncefile $file to $Fullpathtargetdb"
-			sqlite3 $Fullpathtargetdb < $SYSONCE/$file
-			cp -a $SYSONCE/$file $SYSONCEDONE/$file
-		else 
-			echo "Skipping oncefile $file because it is already applied"
-		fi	
-	done
-else 
-	echo "No ONCE files to apply - Directory is empty"
+
+if [ -d "$SYSONCE" ]; then
+	echo Running ONCE files..
+	if [ "$(ls -A $SYSONCE)" ]; then
+		for file in $(ls $SYSONCE/) ; do
+			if [ ! -e $SYSONCEDONE/$file ]; then
+				echo "Applying oncefile $file to $SYSDB"
+				sqlite3 $SYSDB < $SYSONCE/$file
+				cp -a $SYSONCE/$file $SYSONCEDONE/$file
+			else
+				echo "Skipping oncefile $file because it is already applied"
+			fi
+		done
+	else
+		echo "No ONCE files to apply - Directory is empty"
+	fi
+else
+	echo "No ONCE Directory - skipping"
 fi
 
 #run the always files
-echo Running ALWAYS files..
-if [ "$(ls -A $SYSALWAYS)" ]; then
-	for file in $(ls $SYSALWAYS/) ; do
-		echo "Applying alwaysfile $file to $Fullpathtargetdb"
-		sqlite3 $Fullpathtargetdb < $SYSALWAYS/$file
-	done
-else 
-	echo "No ALWAYS files to apply - Directory is empty"
+
+if [ -d "$SYSALWAYS" ]; then
+	echo Running ALWAYS files..
+	if [ "$(ls -A $SYSALWAYS)" ]; then
+		for file in $(ls $SYSALWAYS/) ; do
+			echo "Applying alwaysfile $file to $SYSDB"
+			sqlite3 $SYSDB < $SYSALWAYS/$file
+		done
+	else
+		echo "No $SYSALWAYS files to apply - Directory is empty"
+	fi
+else
+	echo "No ALWAYS Directory - skipping"
 fi
 
-sqlite3 $Fullpathtargetdb 'PRAGMA synchronous=1;'
-sqlite3 $Fullpathtargetdb 'PRAGMA journal_mode=DELETE;' >/dev/null 2>&1
+sqlite3 $SYSDB 'PRAGMA synchronous=1;'
+sqlite3 $SYSDB 'PRAGMA journal_mode=DELETE;' >/dev/null 2>&1
 
+exit
 
 # save a copy of the original installed database (for factory reset)
 #[ "$NEWINSTALL" = true ] && cp $SYSDB $CLEANDB
 
 
 #patch sipiaxfriend for nat and transport here using sipiaxfix
-echo Running V6 extension fixup
+#echo Running V6 extension fixup
 # FIX THIS!!!!!!!!!!!!!!!!!!!!!!!!!
 # php $SIPFIX
 
 # run the generator
-echo Running the Generator
-sh $GENAST
+
+if [ "$legacy" != "true" ]; then
+	echo Running the Generator
+	sh $GENAST
+fi
 
 #set db ownership
 chown $HTTPOWNER $DBPATH/*
 
 #set db perms q
 chmod 664 $SYSDB
+
+exit 0
 
 # clean the firewall up
 echo Running firewall sanitizer
