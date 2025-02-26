@@ -1,6 +1,6 @@
 /DEBIAN/*
 /.DS_Store
-*sqlite*
+*sqlite.db
 /.phpunit.cache
 /node_modules
 /public/build
