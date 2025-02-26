@@ -51,8 +51,9 @@ if [ "$legacy" = "true" ]; then
 	sqlite3 $SYSDB < $LEGACY_DB
 else
 	#create the db from the system files
-	echo "Creating new database $SYSDB from $INSTANCE_DB and $TENANT_DB"
+	echo "Creating new database $SYSDB from $INSTANCE_DB, $LARAVEl_DB and $TENANT_DB"
 	sqlite3 $SYSDB < $INSTANCE_DB
+	sqlite3 $SYSDB < $LARAVEL_DB
 	sqlite3 $SYSDB < $TENANT_DB
 fi
 
