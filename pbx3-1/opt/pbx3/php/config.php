@@ -152,6 +152,7 @@ define('CLEANDB',                       DBSQL . '/sqlite_clean.db');	    //facto
 define('LEGACY_DB',                     DBSQL . '/sqlite_create_legacy.sql');	    //old db create
 define('INSTANCE_DB',                   DBSQL . '/sqlite_create_instance.sql');	    //installed db create
 define('TENANT_DB',                     DBSQL . '/sqlite_create_tenant.sql');	    //installed db create
+define('LARAVEL_DB',                    DBSQL . '/sqlite_create_laravel.sql');	    //installed db create
 define('SYSTEMDB',                      DBSQL . '/sqlite_system.sql');		//installed db system data
 define('SYSMSGDB',                      DBSQL . '/sqlite_message.sql');	    //installed db system messages
 define('SYSINIDB',                      DBSQL . '/sqlite_inidat.sql');		//installed db defaults
