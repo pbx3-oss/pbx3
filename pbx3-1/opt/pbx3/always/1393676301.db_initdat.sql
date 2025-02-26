@@ -1,7 +1,6 @@
 BEGIN TRANSACTION;
 
-
-INSERT OR IGNORE INTO Route(pkey,active,auth,cluster,cname,dialplan,path1,path2,path3,path4) values ('DEFAULT','YES','NO','default','DEFAULT TRUNK','_XXXX.','None','None','None','None');
+/* SYSTEM TABLES - these are not backed up as part of a cluster backup */
 INSERT OR IGNORE INTO users (id,name,email,password,role) VALUES ('1','admin','admin@pbx3.com','$2y$12$IHbfUfGA3TOj2hnGld7TM.2gMqhyvQnWoAVmMwX3N5Uo7WNvaW85K','isAdmin');
 
 /* This needs work abd should be in Always section */
