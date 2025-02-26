@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS globals (
 "SIPFLOOD" TEXT DEFAULT 'NO',			-- detect SIP flood YES/NO
 "SIPDRIVER" TEXT DEFAULT 'PJSIP',		-- SIP backend now PJSIP
 "SITENAME" TEXT,                      -- Common name for this site 
-"STATICIPV"4 TEXT DEFAULT NULL,		   -- Static IP to be started
+"STATICIPV4" TEXT DEFAULT NULL,		   -- Static IP to be started
 "SYSOP" INTEGER DEFAULT 100,				-- system operator real extension
 "SYSPASS" INTEGER DEFAULT 4444,			-- password for sysops **MOVED** BUT....
 "TLSPORT"	INTEGER DEFAULT 5061,		-- TLS port (default 5061)
