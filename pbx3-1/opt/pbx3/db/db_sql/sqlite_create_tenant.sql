@@ -216,15 +216,10 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "devicerec" TEXT DEFAULT 'default',      -- recopts
     "dvrvmail" TEXT,                         -- mailbox
     "extalert" TEXT,                         -- alert info
-    "firstseen" TEXT,						      -- first date provisioned (or NULL)
-    "lastseen" TEXT,							      -- last date provisioned (or NULL)
     "macaddr" TEXT,                          -- mac address
     "passwd" TEXT,                           -- asterisk password
     "protocol" DEFAULT 'IPV4',			      -- IPV4/IPV6
     "pjsipuser" TEXT,						      -- Asterisk PJSIP string							
-    "provision" TEXT,                        -- provisioning string 
-    "provisionwith" TEXT DEFAULT 'IP',	      -- how to provision my id - IP address or FQDN   
-    "sndcreds" TEXT DEFAULT 'Always',        -- send creds with provisioning
     "stealtime" INTEGER,                     -- epoch time this extension was stolen by HD
     "stolen" TEXT,                           -- HD thief 
     "technology" TEXT,                       -- SIP/IAX2/DiD/CLiD/Class

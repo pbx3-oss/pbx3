@@ -74,53 +74,48 @@ foreach ($queues as $queue) {
     if (!is_numeric($ringgroup['pkey'])) {
         continue;
     }
-    
-     $tuple['id'] = $ringgroup['id'];
-     $tuple['pkey'] = $ringgroup['pkey'];
-     $tuple['cluster'] = $ringgroup['cluster'];
-     $tuple['description'] = $ringgroup['longdesc'];
-     $tuple['name'] = $ringgroup['pkey'];
-     $tuple['devicerec'] = $ringgroup['devicerec'];
-     $tuple['divert'] = $ringgroup['divert'];
-     $tuple['members'] = $ringgroup['out'];
-     $tuple['alertinfo'] = $ringgroup['speedalert'];
-     switch($ringgroup['grouptype']) {
-         case "Ring":
-             $tuple['strategy'] = "ringall";
-             break;
-         case "Hunt":
-             $tuple['strategy'] = "linear";
-             break;
-         case "Page":
-             $tuple['strategy'] = "page";
-             break;            
-     }
+    echo 'considering ring group ' . $ringgroup['pkey'] . "\n";
+    $tuple['id'] = $ringgroup['id'];
+    $tuple['pkey'] = $ringgroup['pkey'];
+    $tuple['cluster'] = $ringgroup['cluster'];
+    $tuple['description'] = $ringgroup['longdesc'];
+    $tuple['name'] = $ringgroup['pkey'];
+    $tuple['devicerec'] = $ringgroup['devicerec'];
+    $tuple['divert'] = $ringgroup['divert'];
+    $tuple['members'] = $ringgroup['out'];
+    $tuple['alertinfo'] = $ringgroup['speedalert'];
+    switch($ringgroup['grouptype']) {
+        case "Ring":
+            $tuple['strategy'] = "ringall";
+            break;
+        case "Hunt":
+            $tuple['strategy'] = "linear";
+            break;
+        case "Page":
+            $tuple['strategy'] = "page";
+        break;            
+    }
 
-     /**
-      * Handle outcome and outcomerouteclass
-      */
+    /**
+     * Handle outcome and outcomerouteclass
+    */
 
-      $routeclass = $ringgroup['outcomerouteclass'];
-      $route = $ringgroup['outcome'];
-      $dialstring = null;
-      $returnkey=null;
-      $msg=null;
-      $rc=null;
-      $helper->getDirectDial($route,$routeclass,$dialstring,$msg,$rc);
-        if (!empty($dialstring)) {
-            $tuple['outcome'] = $dialstring;
-        }
-        else {
-            $tuple['outcome'] = 'None';
-        }
+    $routeclass = $ringgroup['outcomerouteclass'];
+    $route = $ringgroup['outcome'];
+    $dialstring = null;
+    $returnkey=null;
+    $msg=null;
+    $rc=null;
+    $helper->getDirectDial($route,$routeclass,$dialstring,$msg,$rc);
+    if (!empty($dialstring)) {
+        $tuple['outcome'] = $dialstring;
+    }
+    else {
+        $tuple['outcome'] = 'None';
+    }
+    $helper->createTuple("queue",$tuple,true,true);
+    unset ($tuple);
   }
-
-/**
- * need to make this immutable with presence test
- */
-
-$helper->createTuple("queue",$tuple,true,true);
-unset ($tuple);
 
 /**
  * Finally drop the old speed table

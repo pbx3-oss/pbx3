@@ -218,12 +218,16 @@
 //				"desc",
 				"dialstring",
 				"externalip",
+				"lastseen",
+				"firstseen",
 				"location",
 				"newformat",
+				"provision",
+				"provisionwith",
+				"sndcreds",
 				"openfirewall",
 				"sipiaxfriend",
 				"twin"
-				
 			),
 		"ivrmenu" => array (
 
