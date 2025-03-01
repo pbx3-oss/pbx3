@@ -2,6 +2,10 @@
 
 . /opt/pbx3/scripts/bashconfig
 
+# Need to create the work directories in etc/asterisk:-
+# callparks, endpoints, iax_trunks, queues, trunks
+
+
 setvcl() {
 # turn on VCL in Globals
     echo "AWS instance detected, setting cloud flags"
@@ -48,13 +52,11 @@ chmod 755 -R $SYSPATH/generator
 chmod 755 -R $SYSPATH/scripts
  
 chmod +x $SYSPATH/service/sys-ua-helper/run 
-chmod +x $SYSPATH/service/sys-ua-responder/run
 chmod +x $SYSPATH/service/sys-ua-siplog/run
 
 
 # link the helpers if they don't exist 
 [ ! -L /etc/service/sys-ua-helper ] && ln -s $SYSPATH/service/sys-ua-helper /etc/service
-[ ! -L /etc/service/sys-ua-responder ] && ln -s $SYSPATH/service/sys-ua-responder /etc/service
 [ ! -L /etc/service/sys-ua-siplog ] && ln -s $SYSPATH/service/sys-ua-siplog /etc/service
 
 # 

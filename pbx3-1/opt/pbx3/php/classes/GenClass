@@ -868,8 +868,8 @@ private function genExtensionsEndpoints()
             $this->OUT .= "[" . $row['id'] . "]\n";
         }
         $this->OUT .= "\tinclude => park-" . $row['pkey'] . "\n";
-        $this->OUT .= "\tinclude => internal-presets\n";
-        $this->OUT .= "\tinclude => extensions_withhold_clid\n";
+        $this->OUT .= "\tinclude => extensions_presets.conf\n";
+        $this->OUT .= "\tinclude => extensions_withhold_clid.conf\n";
 
         $this->OUT .= "\n";
 		
