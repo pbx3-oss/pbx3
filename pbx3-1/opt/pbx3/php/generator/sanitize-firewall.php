@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-. /opt/pbx3/scripts/bashconfig
+// - this looks like an error . /opt/pbx3/scripts/bashconfig
 // take pre 5.0 PBX rules and format to suit
 
 $OUT = NULL;
