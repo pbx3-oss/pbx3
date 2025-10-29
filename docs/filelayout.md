@@ -11,7 +11,7 @@ This layout is a bit fluid and it will change but most of it is pretty solid
         etc/      # package installation code
         opt/      # code & wprkspaces
             pbx3/
-                always/    # SQL always applied
+                always/    # SQL always applied when the DB is rebuilt
                 cache/     # build elements
                 db/        # the database
                 dbtabledumps/    #workspace for backups  

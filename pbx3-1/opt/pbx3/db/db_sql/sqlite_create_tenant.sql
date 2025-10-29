@@ -3,7 +3,8 @@ BEGIN TRANSACTION;
 
 /* agent */
 CREATE TABLE IF NOT EXISTS agent (
-    "id" TEXT PRIMARY KEY,	
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid	
     "pkey" INTEGER NOT NULL,
     "cluster" TEXT DEFAULT 'default',
     "conf" TEXT,
@@ -26,7 +27,8 @@ CREATE TABLE IF NOT EXISTS agent (
 
 /* Custom app */
 CREATE TABLE IF NOT EXISTS appl (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid 
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
     "cluster" TEXT DEFAULT 'default',
@@ -45,7 +47,8 @@ CREATE TABLE IF NOT EXISTS appl (
 
 /* Class of service */
 CREATE TABLE IF NOT EXISTS cos (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
     "cluster" TEXT,
@@ -63,7 +66,8 @@ CREATE TABLE IF NOT EXISTS cos (
 
 /* Tenant/Cluster */
 CREATE TABLE IF NOT EXISTS cluster (
-    "id" TEXT PRIMARY KEY,	
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid	
     "pkey" TEXT NOT NULL,
     "abstimeout" INTEGER DEFAULT 14400,
     "acl" boolean DEFAULT false,
@@ -151,7 +155,8 @@ CREATE TABLE IF NOT EXISTS cluster (
 
 /* open/closed automation */
 CREATE TABLE IF NOT EXISTS dateseg (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" INTEGER UNIQUE,             -- candidate to be removed
     "cluster" TEXT DEFAULT 'default',
     "datemonth" TEXT DEFAULT '*',
@@ -167,7 +172,8 @@ CREATE TABLE IF NOT EXISTS dateseg (
 
 /* system greetings */
 CREATE TABLE IF NOT EXISTS greeting (
-    "id" TEXT PRIMARY KEY,	
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid	
     "pkey" TEXT,
     "cname" TEXT,
     "filename" TEXT,
@@ -181,7 +187,8 @@ CREATE TABLE IF NOT EXISTS greeting (
 
 /* Holiday overrides */
 CREATE TABLE IF NOT EXISTS holiday (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT,								      -- not really used but satisfies tuple builder
     "cluster" TEXT DEFAULT 'default',			-- tenant
     "cname" TEXT,
@@ -197,6 +204,7 @@ CREATE TABLE IF NOT EXISTS holiday (
 /* Extensions */
 CREATE TABLE IF NOT EXISTS ipphone (
     "id" TEXT,
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT, 
     "abstimeout" INTEGER DEFAULT 1440,
     "active" TEXT DEFAULT 'YES',			      -- Active/inactive flag
@@ -258,7 +266,8 @@ CREATE TABLE IF NOT EXISTS ipphonecosclosed (
 
 /* IVR menus */
 CREATE TABLE IF NOT EXISTS ivrmenu (
-    "id" TEXT,	
+    "id" TEXT,
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid	
     "pkey" TEXT NOT NULL,
     "alert0" TEXT,						-- Alertinfo for each keypress
     "alert1" TEXT,
@@ -313,6 +322,7 @@ CREATE TABLE IF NOT EXISTS ivrmenu (
 /* inbound Routes (DiDs and CLIDs) */
 CREATE TABLE IF NOT EXISTS inroutes (
     "id" TEXT,
+    "hrkey" TEXT UNIQUE,            -- human readable 8 char uid
     "pkey" TEXT PRIMARY KEY,
     "active" TEXT DEFAULT 'YES',	-- Active/inactive flag
     "alertinfo" TEXT,				-- distinctive ring
@@ -362,7 +372,8 @@ CREATE TABLE IF NOT EXISTS page (
 
 /* conference rooms */
 CREATE TABLE IF NOT EXISTS meetme (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" INTEGER,
     "cluster" TEXT DEFAULT 'default',
     "cname" TEXT,
@@ -378,6 +389,7 @@ CREATE TABLE IF NOT EXISTS meetme (
 /* call queues */
 CREATE TABLE IF NOT EXISTS queue (
     "id" TEXT,
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT,
     "active" TEXT DEFAULT 'YES',
     "alertinfo" TEXT,
@@ -407,7 +419,8 @@ CREATE TABLE IF NOT EXISTS queue (
 
 /* Outbound routing */
 CREATE TABLE IF NOT EXISTS route (
-    "id" TEXT PRIMARY KEY,	
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "hrkey" TEXT UNIQUE,                  -- human readable 8 char uid	
     "pkey" TEXT,
     "active" TEXT DEFAULT 'YES',
     "alternate" TEXT,               -- alternate dial for desk to desk shortdial

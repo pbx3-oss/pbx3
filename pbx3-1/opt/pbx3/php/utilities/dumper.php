@@ -24,6 +24,8 @@
 
  require_once __DIR__ . "/../config.php";
 
+ require_once HELPER;
+
  /**
  *  Set the prefix to create test output.  Default setting is "/last_"
  */
@@ -197,6 +199,17 @@ $tablesdirectory=DBTABLEDUMPS . $prefix .'tabledumps';
 						if (!preg_match("/^[a-zA-Z0-9]{27}$/",$row[$col['name']])) {
 // set the ksuid
 							$row[$col['name']] = trim(`ksuid`);	
+						}					
+					}
+				} 
+// Deal with HRKEYs - allocate an hrkey to any table with an hrkey column (unless its an autoincrement ID or it already has a ksuid)
+				if ($col['name'] == 'hrkey') {
+// Check for autoincrement
+					if (!preg_match ('/autoincrement/', $sql)) {
+// Check format - we don't want to overwrite a previously issued hrke
+						if (!preg_match("/^[a-zA-Z0-9]{8}$/",$row[$col['name']])) {
+// set the hrkey
+							$row[$col['name']] = trim(helper::generate());	
 						}					
 					}
 				} 

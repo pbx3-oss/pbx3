@@ -38,6 +38,36 @@ function __construct(){
 	
 }
 
+/**
+ * Human readable 8 digit uid(ish) generator (hrkey in the DB)
+ * lifted from GpsLab Base64UID
+ * see - https://github.com/gpslab/base64uid
+ */
+
+private static $DEFAULT_CHARSET = 
+'0123456789bcdfghjkmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ';
+/* this is a cleaned up character set with no vowels and no similar looking 
+ * characters (e.g. 0/O, 1/I/l) and little chance of a rude word being accidentally formed.
+ */
+
+
+/**
+ * @param int    $length
+ * @param string $charset
+ *
+ * @return string
+ */
+public static function generate($length = 8, $charset = '')
+{
+	$charset = $charset ?: self::$DEFAULT_CHARSET;
+	$charset_size = strlen($charset);
+	$uid = '';
+	while ($length-- > 0) {
+		$uid .= $charset[random_int(0, $charset_size - 1)];
+	}
+
+	return $uid;
+}
 
 /**
  * [sysCommit perform a system Commit - i.e. generate from local to live]

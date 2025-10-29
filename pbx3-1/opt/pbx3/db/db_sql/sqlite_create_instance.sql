@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS globals (
 /* trunks/gateways */
 CREATE TABLE IF NOT EXISTS trunks (
 "id" TEXT,
+"hrkey" TEXT UNIQUE,                  -- human readable key
 "pkey" TEXT PRIMARY KEY,
 "active" TEXT DEFAULT 'YES',	-- Active/inactive flag
 "alertinfo" TEXT,				-- distinctive ring
