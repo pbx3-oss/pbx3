@@ -100,11 +100,10 @@ ldapou text DEFAULT 'contacts',     -- LDAP OU **MOVED**
 ldapuser text DEFAULT 'admin',		-- LDAP user **MOVED**
 ldappass text DEFAULT 'sarkadmin',	-- LDAP password **MOVED**
 ldaptls DEFAULT 'off',              -- LDAP TLS mode(off/on)
-leasehdtimeE INTEGER DEFAULT 43200,		-- Hot desk
+leasedhdtime INTEGER DEFAULT 43200,		-- Hot desk
 localarea TEXT,                        -- local area code
 localdplan TEXT,                       -- local number dialplan
 lterm INTEGER DEFAULT 0,			   -- late termination flag
-leasedhdtime INTEGER DEFAULT 43200,		-- Hot desk lease time
 masteroclo TEXT,
 maxin INTEGER DEFAULT 30,          -- max inbound calls allowed to be up
 maxout INTEGER DEFAULT 30,          -- max inbound calls allowed to be up
@@ -568,7 +567,7 @@ CREATE TABLE IF NOT EXISTS "migrations"(
   "batch" integer not null
 );
 CREATE TABLE IF NOT EXISTS "users"(
-  "id" integer primary key,
+  "id" integer primary key autoincrement not null,
   /* cluster added to handle cluster migration */
   "cluster" varchar DEFAULT "default",
   "name" varchar not null,

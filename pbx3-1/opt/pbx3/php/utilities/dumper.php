@@ -202,16 +202,13 @@ $tablesdirectory=DBTABLEDUMPS . $prefix .'tabledumps';
 						}					
 					}
 				} 
-// Deal with HRKEYs - allocate an hrkey to any table with an hrkey column (unless its an autoincrement ID or it already has a ksuid)
-				if ($col['name'] == 'hrkey') {
-// Check for autoincrement
-					if (!preg_match ('/autoincrement/', $sql)) {
-// Check format - we don't want to overwrite a previously issued hrke
+// Deal with shortuids - allocate a shortuid to any table with a shortuid column (unless its an autoincrement ID or it already has an shortuid)
+				if ($col['name'] == 'shortuid') {
+// Check format - we don't want to overwrite a previously issued shortuid
 						if (!preg_match("/^[a-zA-Z0-9]{8}$/",$row[$col['name']])) {
-// set the hrkey
+// set the shortuid
 							$row[$col['name']] = trim(helper::generate());	
 						}					
-					}
 				} 
 				$myData = $row[$col['name']];
 				$myCol = $col['name'];

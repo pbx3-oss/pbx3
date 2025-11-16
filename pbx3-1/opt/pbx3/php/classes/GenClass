@@ -17,22 +17,58 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-require_once NETHELPER;
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+ini_set('error_log', '/var/log/syslog');
+error_reporting(E_ALL);
+
 require_once __DIR__ . "/../config.php";
 
+require_once NETHELPER;
+require_once DBCLASS;
 
 /**
  *  Asterisk object generator
  *  It reads the database, generates
  *  the various Asterisk objects and then calls a reload
  */
+
+/**
+ * ABOUT KEYS
+ * 
+ * Almost all rows within the PBX3 database have three keys:-
+ * 
+ * pkey is only context-wide unique.   It is usually use for diallable numbers which can repeat
+ * in other contexts (e.g. two clusters can each have an Ext 301 or a queue 200 etc.)
+ * 
+ * shortuid is an 8 character ID which will be unique within the PBX3 instance.
+ * It is used to uniquely identify objects to Asterisk (endpoints, trunks etc.)
+ *  
+ * ksuid is a uuid, it is usually the id field within the database row.   
+ * It is not generally used within the generator except for database integrity and some DB references when calling the AGI
+ * 
+ */
+
+/**
+ * THE AGI PARAMETER LIST
+ * There are 6 parameters
+ * 
+ * #define PARM_CMD *(myargv+1) - usually the command to be executed but sometimes a feature key (*nn*)
+ * #define PARM_KEY *(myargv+2) - usually the local key	(shortuid) of the object to be referenced 
+ * #define PARM_CLUSTER *(myargv+3) - The cluster the row belongs to
+ * #define PARM_PM1 *(myargv+4) - caller defined parameter 1
+ * #define PARM_PM2 *(myargv+5) - caller defined parameter 2
+ * #define PARM_PM3 *(myargv+6) - caller defined parameter 3
+ * 
+ * The generator only uses the first three parameters
+ */
+
 class genAsteriskObjects
 {
 
 	private $helper;
 	private $nethelper;
 	private $dbh;	
-//	private $agi;      --not used
 	private $globals;
 	private $cluster;
 	private $appl;
@@ -43,21 +79,49 @@ class genAsteriskObjects
 	public function genAsterisk()
 	{
 
-		$this->dbh = DB::getInstance();
+//		$this->dbh = DB::getInstance();
 		$this->helper = new helper;
 		$this->nethelper = new nethelper;
 
+		$this->helper->logit(" commit - starting AstGen", 0);
 
+/*** connect to SQLite database ***/
+    try {
+		$this->dbh = new PDO("sqlite:" . SYSDB);
+	}
+	catch (Exception $e) {
+		$this->helper->logit("Oops failed to open SYSDB", 0);
+		exit(4);
+	}
+		
+/**
+ * Get the cluster table 
+ */
 		try {
-			$sql = $this->dbh->prepare("select * from globals WHERE pkey = ?");
-			$sql->execute(array('global'));
-			$this->globals = $sql->fetch();
-			$sql = NULL;
+			$sql = "select * from cluster";
+			$res = $this->dbh->query($sql);
+			$this->helper->logit("First query", 0);
+			$this->cluster = $res->fetchAll();
+			$res = NULL;
+		} catch (PDOException $e) {
+			$errorMsg = $e->getMessage();
+			$this->helper->logit(" commit - Fetching clusters failed: " . $errorMsg, 1);
+			return $errorMsg;
+		}
+		$this->helper->logit(" commit - Fetching Globals", 0);
+/**
+ * Get globals
+ */
+		try {
+			$sql = "select * from globals";
+			$res = $this->dbh->query($sql);
+			$this->globals = $res->fetch();
+			$res = NULL;
 		} catch (PDOException $e) {
 			$errorMsg = $e->getMessage();
 			return $errorMsg;
 		}
-		$this->helper->logit(" commit - starting commit", 5);
+		$this->helper->logit(" commit - starting procedures", 0);
 
 	
 		$this->genMoh();
@@ -73,9 +137,9 @@ class genAsteriskObjects
 		$this->genExtensions();
 		$this->moveDb();
 
-		$dbh = NULL;
+		$this->dbh = NULL;
 
-
+		$this->helper->logit(" commit - ending AstGen", 1);
 /*
  * take a snapshot
  */
@@ -116,17 +180,16 @@ class genAsteriskObjects
 	private function genMoh()
 	{
 		$this->OUT = $this->genFileBanner();
-		$res  = $this->helper->getTable("cluster", null, false);
-//		$res = $this->dbh->query('SELECT pkey,id from cluster');
-		foreach ($res as $row) {
-			if (!file_exists(ASTSHARE . "/moh-" . $row[KEYTYPE])) {
-				$rc = $this->helper->request_syscmd("mkdir " . ASTSHARE . "/moh-" . $row[KEYTYPE]);
+
+		foreach ($this->cluster as $row) {
+			if (!file_exists(ASTSHARE . "/moh-" . $row['shortuid'])) {
+				$rc = $this->helper->request_syscmd("mkdir " . ASTSHARE . "/moh-" . $row['shortuid']);
 			}
-			$this->OUT .= "\n; Tenant - " . $row['pkey'] . "\n";
-			$this->OUT .= "[" . $row[KEYTYPE] . "]\n";
+			$this->OUT .= "\n; Tenant - " . $row['shortuid'] . "\n";
+			$this->OUT .= "[" . $row['pkey'] . "]\n";
 			
 			$this->OUT .= "mode=files\n";
-			$this->OUT .= "directory=moh-" . $row[KEYTYPE] . "\n";
+			$this->OUT .= "directory=moh-" . $row['shortuid'] . "\n";
 			$this->OUT .= "sort=random\n";
 		}
 		if (!empty($this->OUT)) {
@@ -134,6 +197,7 @@ class genAsteriskObjects
 			fwrite($fh, $this->OUT) or die('Could not write to file moh_extra.conf');
 			fclose($fh);
 		}
+
 	}
 
 /**
@@ -144,21 +208,19 @@ class genAsteriskObjects
 	private function genParks()
 	{
 		
-		$result = $this->helper->getTable("cluster", null, false);
-
 		$readyParks = $this->genFileBanner();
 		$Pbuff = NULL;
-		foreach ($result as $row) {
+		foreach ($this->cluster as $row) {
 			if (!empty($row['active'])) {
 				if ($row['active'] != "YES") {
 					continue;
 				}
 			}
-
+/* !!!!!!   CHECK THIS !!!!!! */
 			$Pbuff .= $this->helper->getParkInstance($row['pkey']);
 			if ($Pbuff) {
 				$Pbuff = preg_replace('/\$clstkey/', $row['pkey'], $Pbuff);
-				$Pbuff = preg_replace('/\$clst/', $row['id'], $Pbuff);
+				$Pbuff = preg_replace('/\$clst/', $row['shortuid'], $Pbuff);
 			}
 
 			$readyParks .= $Pbuff;
@@ -172,7 +234,7 @@ class genAsteriskObjects
 		$this->checkFileIsWriteable($targetFile);
 
 /*
-* Now write the trunk definitions to it (if there are any)
+* Now write the definitions to it (if there are any)
 */
 		if ($readyParks) {
 			$fh = fopen($targetFile, 'w') or die("Could not open file $targetFile!");
@@ -291,7 +353,7 @@ class genAsteriskObjects
 		$pjsipBuff = preg_replace('/\$externip/', $myExternip, $pjsipBuff);
 
 /* 
- * N.B. deal with cert/key location here also
+ * N.B. ToDo - deal with cert/key location here also
  */
 		$this->OUT .= $pjsipBuff;
 		$this->OUT .= "\n";
@@ -328,8 +390,8 @@ class genAsteriskObjects
 			}
 
 			$pjsipPhoneBuff .= "\n; Tenant - " . $row['cluster'] . "\n";
-			$pjsipPhoneBuff .= "; Phone - " . $row['pkey'] . "\n;\n";
-			$pjsipPhoneBuff .= $this->helper->getPjsipPhoneInstance($row['pkey']);
+			$pjsipPhoneBuff .= "; Phone - " . $row['shortuid'] . " (" . $row['pkey'] . ")\n";
+			$pjsipPhoneBuff .= $this->helper->getPjsipPhoneInstance($row['shortuid']);
 
 			if ($pjsipPhoneBuff) {
 				$this->xlatePjsipBuff($pjsipPhoneBuff, $row);
@@ -477,7 +539,8 @@ class genAsteriskObjects
  */
 	private function xlatePjsipBuff(&$buffer, $row)
 	{
-		$buffer = preg_replace('/\$id/', $row['id'], $buffer);
+//		$buffer = preg_replace('/\$id/', $row['id'], $buffer);
+		$buffer = preg_replace('/\$id/', $row['shortuid'], $buffer);
 		$buffer = preg_replace('/\$pkey/', $row['pkey'], $buffer);
 		$buffer = preg_replace('/\$trunk/', $row['pkey'], $buffer);
 		$buffer = preg_replace('/\$ext/', $row['pkey'], $buffer);
@@ -701,8 +764,8 @@ BANNEREND;
 		$transitdb = DBPATH . "/system.copy.db";
 		$rdonlydb = READONLY_DB;
 
-		`/bin/cp $sourcedb $transitdb`;
-		`/bin/mv $transitdb $rdonlydb`;
+		shell_exec("/bin/cp $sourcedb $transitdb");
+		shell_exec("/bin/mv $transitdb $rdonlydb");
 	}
 
 	private function genFileBanner()
@@ -735,18 +798,6 @@ BANNEREND;
             $vers = $matches[1];
         }
         echo 'Asterisk version is ' . $vers . "\n";
-		$this->cluster  = $this->helper->getTable("cluster", null, false);
-/*		
-		try {
-			$sql = "select * from Cluster order by pkey";
-			$res = $this->dbh->query($sql);
-			$this->cluster = $res->fetchAll();
-			$res = NULL;
-		} catch (PDOException $e) {
-			$errorMsg = $e->getMessage();
-			return $errorMsg;
-		}
-*/
 
         $this->genExtensionsGlobals();
 		$this->genExtensionsFeatures();
@@ -862,12 +913,10 @@ private function genExtensionsEndpoints()
 
     foreach ($this->cluster as $row) {
         $this->OUT .= "\n; Tenant - " . $row['pkey'] . "\n";
-        if ($row['pkey'] == "default") {
-            $this->OUT .= "[qrxvtmny]\n";
-        } else {
-            $this->OUT .= "[" . $row['id'] . "]\n";
-        }
-        $this->OUT .= "\tinclude => park-" . $row['pkey'] . "\n";
+
+        $this->OUT .= "[" . $row['shortuid'] . "]\n";
+
+        $this->OUT .= "\tinclude => park-" . $row['shortuid'] . "\n";
         $this->OUT .= "\tinclude => internal-presets\n";
         $this->OUT .= "\tinclude => withhold_clid\n";
 
@@ -944,22 +993,22 @@ HERE;
 HERE;
 
         $this->OUT .= "\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",hint,Custom:" . $row[KEYTYPE] . "\n\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",1,Set(state=\${DB(" . $row[KEYTYPE] . "/OCSTAT)})\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",n,GoToIf(\$[\"\${state}\" = \"AUTO\"]?" . $row[KEYTYPE] . "close:" . $row[KEYTYPE] . "open)\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",hint,Custom:" . $row['pkey'] . "\n\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",1,Set(state=\${DB(" . $row['pkey'] . "/OCSTAT)})\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",n,GoToIf(\$[\"\${state}\" = \"AUTO\"]?" . $row['pkey'] . "close:" . $row['pkey'] . "open)\n";
         $this->OUT .= "\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",n(" . $row[KEYTYPE] . "close),Set(DB(" . $row[KEYTYPE] . "/OCSTAT)=CLOSED)\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",n,Set(DEVICE_STATE(Custom:" . $row[KEYTYPE] . ")=INUSE)\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",n,Playback(activated)\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",n,Hangup\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",n(" . $row['pkey'] . "close),Set(DB(" . $row['pkey'] . "/OCSTAT)=CLOSED)\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Set(DEVICE_STATE(Custom:" . $row['pkey'] . ")=INUSE)\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Playback(activated)\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Hangup\n";
         $this->OUT .= "\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",n(" . $row[KEYTYPE] . "open),Set(DB(" . $row[KEYTYPE] . "/OCSTAT)=AUTO)\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",n,Set(DEVICE_STATE(Custom:" . $row[KEYTYPE] . ")=NOT_INUSE)\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",n,Playback(de-activated)\n";
-        $this->OUT .= "\texten => " . $row[KEYTYPE] . ",n,Hangup\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",n(" . $row['pkey'] . "open),Set(DB(" . $row['pkey'] . "/OCSTAT)=AUTO)\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Set(DEVICE_STATE(Custom:" . $row['pkey'] . ")=NOT_INUSE)\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Playback(de-activated)\n";
+        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Hangup\n";
         $this->OUT .= "\n";
-        $this->OUT .= "\texten => *33*,1,GoTo(" . $row[KEYTYPE] . ',' . $row[KEYTYPE] . "open)\n";
-        $this->OUT .= "\texten => *34*,1,GoTo(" . $row[KEYTYPE] . ',' . $row[KEYTYPE] . "close)\n";
+        $this->OUT .= "\texten => *33*,1,GoTo(" . $row['pkey'] . ',' . $row['pkey'] . "open)\n";
+        $this->OUT .= "\texten => *34*,1,GoTo(" . $row['pkey'] . ',' . $row['pkey'] . "close)\n";
         $this->OUT .= "\n";
     //
     //  pickup marks
@@ -1038,19 +1087,19 @@ HERE;
 
             $this->OUT .= "\n;   Name: " . $qrow['name'] . " - " .$qrow['description']. "\n";
             $this->OUT .= "\texten => " . $qrow['pkey'] . ",1,Answer()\n";
-            $this->OUTstring =  "\texten => " . $qrow['pkey'] . ",n,Queue(";
-            $this->OUTstring .= $qrow['pkey'];
-            $this->OUTstring .= ',';
-            $this->OUTstring .= $qrow['options'];
-            $this->OUTstring .= ',,,,';
+            $OUTstring =  "\texten => " . $qrow['pkey'] . ",n,Queue(";
+            $OUTstring .= $qrow['pkey'];
+            $OUTstring .= ',';
+            $OUTstring .= $qrow['options'];
+            $OUTstring .= ',,,,';
             if ($qrow['devicerec'] != 'None') {
-                $this->OUTstring .= SYSAGI;
+                $OUTstring .= SYSAGI;
             }
-            $this->OUTstring .= ")\n";
+            $OUTstring .= ")\n";
             if ($qrow['greetnum'] != 'None') {
                 $this->OUT .= "\texten => " . $qrow['pkey'] . ",n,Playback(" . SOUNDIR . $row['pkey'] . "/usergreeting" . $qrow['greetnum'] . ")\n";
             }
-            $this->OUT .= $this->OUTstring;
+            $this->OUT .= $OUTstring;
 
 // outcome processing...  If there is a dialable outcome in the tuple then use it.
             if (is_numeric($qrow['outcome'])) {
@@ -1246,8 +1295,8 @@ HERE;
 					}
 				}
 
-				$this->OUT .= "\tinclude => " . $myCluster . $IPphone[KEYTYPE] . "Cosend\n";
-				$this->OUT .= "[" . $myCluster . $IPphone[KEYTYPE] . "closedcos]\n";
+				$this->OUT .= "\tinclude => " . $myCluster . $IPphone['pkey'] . "Cosend\n";
+				$this->OUT .= "[" . $myCluster . $IPphone['pkey'] . "closedcos]\n";
 				
 				foreach ($orideclosedarray as $key => $value) {
 					$this->OUT .= "\tinclude => " . $key . "\n";

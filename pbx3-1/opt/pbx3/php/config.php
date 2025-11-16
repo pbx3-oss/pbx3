@@ -14,8 +14,31 @@
 
 define('CODENAME',                      'pbx3');
 define('KEYTYPE',                       'pkey');
-define('HRKEY',                         'hrkey');
+/* Options are:
+ * pkey - primary key from the database
+ * shortuid - short human readable uid(ish) 
+ * id - integer id from the database
+ */
+
+define('LOCALID',                       'pkey');
+/* This is the locally unique key to the Asterisk context in which it appears
+ * This includes things like diallable extension numbers, queues, parks etc.
+ */
+
+define('SHORTUID',                      'shortuid');
+/* This is the short human readable uuid(ish) key from the database
+ * used to uniquly define objects in the Asterisk configs, e.g. endpoints, trunks etc.
+ */
+
+define('KSUID',                         'id');
+/* This is the integer primary key for the record.
+ * Used to uniquely identify the row in the database
+ */
+
 define('SYSAGI',                        'swarmcore');
+/*
+ * The callable name of the AGI script in Asterisk
+ */  
 
 define('SYSROOT',                       '/opt');
 define('SYSPREFIX',                     '/pbx3');
@@ -29,7 +52,6 @@ define('SCRIPTS',                       SYSPATH . '/scripts');
 define('BASHCONFIG',                    SCRIPTS . '/bashconfig');
 
 define('CLASSES',                       PHPDIR . '/classes');
-define('GENERATOR',                     PHPDIR . '/generator');
 define('UTILITIES',                     PHPDIR . '/utilities');        
 
 define('SNAPSHOTS', 			        SYSPATH . '/snap');
