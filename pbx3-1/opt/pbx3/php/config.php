@@ -17,7 +17,7 @@ define('KEYTYPE',                       'pkey');
 /* Options are:
  * pkey - primary key from the database
  * shortuid - short human readable uid(ish) 
- * id - integer id from the database
+ * id - ksuid from the database
  */
 
 define('LOCALID',                       'pkey');

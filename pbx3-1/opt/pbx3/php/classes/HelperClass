@@ -39,7 +39,7 @@ function __construct(){
 }
 
 /**
- * Human readable 8 digit uid(ish) generator (hrkey in the DB)
+ * Human readable 8 digit uid(ish) generator (shortuid in the DB)
  * lifted from GpsLab Base64UID
  * see - https://github.com/gpslab/base64uid
  */
