@@ -3,14 +3,16 @@ BEGIN TRANSACTION;
 
 /* agent */
 CREATE TABLE IF NOT EXISTS agent (
-    "id" TEXT PRIMARY KEY,	
-    "pkey" INTEGER NOT NULL,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid	
+    "pkey" TEXT NOT NULL,
     "cluster" TEXT DEFAULT 'default',
     "conf" TEXT,
     "extlen" INTEGER,
     -- name is deprecated and will be dropped in a near release use cname instead
     "name" TEXT DEFAULT '*NEW agent*', 
     "cname" TEXT DEFAULT '*NEW agent*',
+    "description" TEXT,
     "num" TEXT,
     "passwd" TEXT,				
     "queue1" TEXT DEFAULT 'None',
@@ -23,10 +25,10 @@ CREATE TABLE IF NOT EXISTS agent (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* Custom app */
 CREATE TABLE IF NOT EXISTS appl (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid 
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
     "cluster" TEXT DEFAULT 'default',
@@ -42,10 +44,10 @@ CREATE TABLE IF NOT EXISTS appl (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* Class of service */
 CREATE TABLE IF NOT EXISTS cos (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
     "cluster" TEXT,
@@ -60,13 +62,14 @@ CREATE TABLE IF NOT EXISTS cos (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* Tenant/Cluster */
 CREATE TABLE IF NOT EXISTS cluster (
-    "id" TEXT PRIMARY KEY,	
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid	
     "pkey" TEXT NOT NULL,
     "abstimeout" INTEGER DEFAULT 14400,
-    "acl" boolean DEFAULT false,
+    "acl" BOOLEAN DEFAULT FALSE,
+    "active" TEXT DEFAULT 'YES',
     "allow_hash_xfer"  TEXT DEFAULT 'enabled',                 -- Allow asterisk non-SIP xfer
     "blind_busy" TEXT,                     -- blind transfer busy bounce
     "bounce_alert" TEXT,
@@ -78,6 +81,7 @@ CREATE TABLE IF NOT EXISTS cluster (
     "cfwd_answer"   TEXT DEFAULT 'enabled',  -- take call off-hook before forward to external
     "clusterclid" TEXT,
     "chanmax" INTEGER DEFAULT 3,             -- maximum up channels for this tenant
+    "cname" TEXT,                      -- common name
     "countrycode" INTEGER DEFAULT 44,			-- countrycode
     "dynamicfeatures" TEXT DEFAULT NULL,  -- Asterisk DYNAMIC_FEATURES string		
     "description" TEXT,       
@@ -88,37 +92,35 @@ CREATE TABLE IF NOT EXISTS cluster (
     "ext_lim" INTEGER DEFAULT 0,             -- extlim for this tenant
     "ext_len" INTEGER DEFAULT 3,             -- extlen for this cluster
     "fqdn" TEXT DEFAULT NULL,                --TRANSFORM!
-    "fqdninspect" boolean default false,     --TRANSFORM!
+    "fqdninspect" BOOLEAN DEFAULT FALSE,     --TRANSFORM!
     "include" TEXT,                          -- list of other tenants which may be short-dialled
     "int_ring_delay" INTEGER DEFAULT 20,		-- ring time before voicemail
     "ivr_key_wait" INTEGER DEFAULT 6,        -- how long to wait after keypress
     "ivr_digit_wait" INTEGER DEFAULT 6000,   -- how long to wait for another digit
     "language" TEXT DEFAULT 'en-gb',         -- used in extensions.conf 
     "ldapanonbind" TEXT DEFAULT 'YES',       -- anonymous bind YES/NO **MOVED**
-    "ldapbase" text DEFAULT 'dc=sark,dc=local',  -- LDAP base **MOVED**
+    "ldapbase" TEXT DEFAULT 'dc=sark,dc=local',  -- LDAP base **MOVED**
     "ldaphost" TEXT DEFAULT '127.0.0.1',  -- LDAP host **MOVED**
-    "ldapou" text DEFAULT 'contacts',     -- LDAP OU **MOVED**
-    "ldapuser" text DEFAULT 'admin',		-- LDAP user **MOVED**
-    "ldappass" text DEFAULT 'sarkadmin',	-- LDAP password **MOVED**
-    "ldaptls" DEFAULT 'off',              -- LDAP TLS mode(off/on)
-    "leasehdtimeE" INTEGER DEFAULT 43200,		-- Hot desk
+    "ldapou" TEXT DEFAULT 'contacts',     -- LDAP OU **MOVED**
+    "ldapuser" TEXT DEFAULT 'admin',		-- LDAP user **MOVED**
+    "ldappass" TEXT DEFAULT 'sarkadmin',	-- LDAP password **MOVED**
+    "ldaptls" TEXT DEFAULT 'off',              -- LDAP TLS mode(off/on)
     "localarea" TEXT,                        -- local area code
     "localdplan" TEXT,                       -- local number dialplan
     "lterm" INTEGER DEFAULT 0,			   -- late termination flag
     "leasedhdtime" INTEGER DEFAULT 43200,		-- Hot desk lease time
     "masteroclo" TEXT,
     "maxin" INTEGER DEFAULT 30,          -- max inbound calls allowed to be up
-    "maxout" INTEGER DEFAULT 30,          -- max inbound calls allowed to be up
+    "maxout" INTEGER DEFAULT 30,          -- max outbound calls allowed to be up
     "mixmonitor" TEXT,                    -- force mixmonitor on all recordings
     "monitor_out" TEXT DEFAULT '/var/spool/asterisk/monout/', -- monitorout folder
     "monitor_stage" TEXT DEFAULT '/var/spool/asterisk/monstage/', -- monstage folder - delete
     "name" TEXT,
-    "cname" TEXT,                         -- cname replaces Name
     "number_range_regex" TEXT,
     "oclo" TEXT,
     "operator" INTEGER DEFAULT 100,
-    "padminpass" INTEGER DEFAULT 44068,	-- phone browser ADMIN passord - NOT HERE
-    "puserpass" INTEGER DEFAULT 31524,	   -- phone browser USER passord - NOT HERE
+    "padminpass" INTEGER DEFAULT 44068,	-- phone browser ADMIN password - NOT HERE
+    "puserpass" INTEGER DEFAULT 31524,	   -- phone browser USER password - NOT HERE
     "pickupgroup" TEXT,
     "play_beep" INTEGER DEFAULT 1,		-- play beep on failover
     "play_busy" INTEGER DEFAULT 1,		-- play busy message or tones
@@ -148,12 +150,14 @@ CREATE TABLE IF NOT EXISTS cluster (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* open/closed automation */
 CREATE TABLE IF NOT EXISTS dateseg (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" INTEGER UNIQUE,             -- candidate to be removed
+    "active" TEXT DEFAULT 'YES',
     "cluster" TEXT DEFAULT 'default',
+    "cname" TEXT,
     "datemonth" TEXT DEFAULT '*',
     "dayofweek" TEXT DEFAULT '*',
     "description" TEXT DEFAULT '*NEW RULE*',
@@ -164,10 +168,10 @@ CREATE TABLE IF NOT EXISTS dateseg (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* system greetings */
 CREATE TABLE IF NOT EXISTS greeting (
-    "id" TEXT PRIMARY KEY,	
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid	
     "pkey" TEXT,
     "cname" TEXT,
     "filename" TEXT,
@@ -178,10 +182,10 @@ CREATE TABLE IF NOT EXISTS greeting (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* Holiday overrides */
 CREATE TABLE IF NOT EXISTS holiday (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT,								      -- not really used but satisfies tuple builder
     "cluster" TEXT DEFAULT 'default',			-- tenant
     "cname" TEXT,
@@ -193,10 +197,10 @@ CREATE TABLE IF NOT EXISTS holiday (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* Extensions */
 CREATE TABLE IF NOT EXISTS ipphone (
-    "id" TEXT,
+    "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT, 
     "abstimeout" INTEGER DEFAULT 1440,
     "active" TEXT DEFAULT 'YES',			      -- Active/inactive flag
@@ -204,13 +208,13 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "callerid" TEXT,                         -- CLID
     "callbackto" INTEGER DEFAULT 100,        -- who we callback (ext/cell)
     "cname" TEXT,                            -- common name
-    "callmax" TEXT DEFAULT 3,				      -- PJSIP does not support call-limit so we have to do it using GROUP
+    "callmax" INTEGER DEFAULT 3,				      -- PJSIP does not support call-limit so we have to do it using GROUP
     "cellphone" TEXT,						      -- cellphone twin
     "celltwin" TEXT,							      -- cell twin on/off
     "cluster" TEXT DEFAULT 'default',        -- Tenant
     -- desc is deprecated, use cname instead
-    "desc" TEXT,
-    "description" TEXT,                      -- asterisk username
+    "desc" TEXT,                             -- asterisk username
+    "description" TEXT,                      
     "device" TEXT,                           -- device vendor
     "devicemodel" TEXT,						      -- Harvested model number
     "devicerec" TEXT DEFAULT 'default',      -- recopts
@@ -218,7 +222,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "extalert" TEXT,                         -- alert info
     "macaddr" TEXT,                          -- mac address
     "passwd" TEXT,                           -- asterisk password
-    "protocol" DEFAULT 'IPV4',			      -- IPV4/IPV6
+    "protocol" TEXT DEFAULT 'IPV4',			      -- IPV4/IPV6
     "pjsipuser" TEXT,						      -- Asterisk PJSIP string							
     "stealtime" INTEGER,                     -- epoch time this extension was stolen by HD
     "stolen" TEXT,                           -- HD thief 
@@ -228,38 +232,38 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "vmailfwd" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system',
-    PRIMARY KEY (pkey,cluster)
+    "z_updater" TEXT DEFAULT 'system'
 );
-
 /* Class of service */
 CREATE TABLE IF NOT EXISTS ipphonecosopen (
     "id" TEXT,
     "cluster" TEXT,
+    "active" TEXT DEFAULT 'YES',
     "IPphone_pkey" TEXT,
     "COS_pkey" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
-    PRIMARY KEY (IPphone_pkey, COS_pkey)
+    PRIMARY KEY (cluster,IPphone_pkey,COS_pkey)
 );
-
 /* Class of service */
 CREATE TABLE IF NOT EXISTS ipphonecosclosed (
     "id" TEXT,
+    "active" TEXT DEFAULT 'YES',
     "cluster" TEXT,
     "IPphone_pkey" TEXT,
     "COS_pkey" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
-    PRIMARY KEY (IPphone_pkey, COS_pkey)
+    PRIMARY KEY (cluster,IPphone_pkey,COS_pkey)
 );
-
 /* IVR menus */
 CREATE TABLE IF NOT EXISTS ivrmenu (
-    "id" TEXT,	
+    "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid	
     "pkey" TEXT NOT NULL,
+    "active" TEXT DEFAULT 'YES',
     "alert0" TEXT,						-- Alertinfo for each keypress
     "alert1" TEXT,
     "alert10" TEXT,
@@ -273,12 +277,12 @@ CREATE TABLE IF NOT EXISTS ivrmenu (
     "alert8" TEXT,
     "alert9" TEXT,
     "cluster" TEXT,
+    "cname" TEXT,                            -- common name
     "description" TEXT DEFAULT 'None',
     "greetnum" TEXT DEFAULT 'None',			-- greeting number to play
     "listenforext" TEXT DEFAULT 'NO',
     -- name is deprecated and will be dropped in a near release use cname instead
     "name" TEXT,
-    "cname" TEXT,                            -- common name
     "option0" TEXT DEFAULT 'None',						      -- routed name for each keypress
     "option1" TEXT DEFAULT 'None',
     "option10" TEXT DEFAULT 'None',
@@ -306,14 +310,13 @@ CREATE TABLE IF NOT EXISTS ivrmenu (
     "timeout" TEXT,			               -- timeout name 					
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system',
-    PRIMARY KEY (pkey,cluster)
+    "z_updater" TEXT DEFAULT 'system'
 );
-
 /* inbound Routes (DiDs and CLIDs) */
 CREATE TABLE IF NOT EXISTS inroutes (
-    "id" TEXT,
-    "pkey" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
+    "shortuid" TEXT UNIQUE,            -- human readable 8 char uid
+    "pkey" TEXT NOT NULL,           -- inbound number, CLID or mask (in Asterisk format)
     "active" TEXT DEFAULT 'YES',	-- Active/inactive flag
     "alertinfo" TEXT,				-- distinctive ring
     "callback" TEXT,				-- denotes callback trunk
@@ -348,22 +351,26 @@ CREATE TABLE IF NOT EXISTS inroutes (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* page groups */
 CREATE TABLE IF NOT EXISTS page (
-    "pkey" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
+    "pkey" TEXT NOT NULL,
+    "active" TEXT DEFAULT 'YES',
     "cluster" TEXT,
     "cname" TEXT,
+    "description" TEXT,
     "pagegroup" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* conference rooms */
 CREATE TABLE IF NOT EXISTS meetme (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" INTEGER,
+    "active" TEXT DEFAULT 'YES',
     "cluster" TEXT DEFAULT 'default',
     "cname" TEXT,
     "adminpin" TEXT DEFAULT 'None',
@@ -374,14 +381,15 @@ CREATE TABLE IF NOT EXISTS meetme (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* call queues */
 CREATE TABLE IF NOT EXISTS queue (
-    "id" TEXT,
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "shortuid" TEXT UNIQUE,               -- human readable 8 char uid
     "pkey" TEXT,
     "active" TEXT DEFAULT 'YES',
     "alertinfo" TEXT,
     "cluster" TEXT,
+    "cname" TEXT,
     "description" TEXT, 
     "devicerec" TEXT,
     "divert" INTEGER,
@@ -389,7 +397,6 @@ CREATE TABLE IF NOT EXISTS queue (
     "greeting" TEXT DEFAULT 'None',       --N.B. will replace greetnum
     -- name is deprecated and will be dropped in a near release use cname instead
     "name" TEXT,                      --Human readable name
-    "cname" TEXT,                            -- common name
     "members" TEXT,                       --N.B. will replace OUT in speed
     "options" TEXT DEFAULT 'CiIknrtT',
     "musicclass" TEXT,
@@ -401,13 +408,12 @@ CREATE TABLE IF NOT EXISTS queue (
     "timeout" INTEGER DEFAULT 30,
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system',
-    PRIMARY KEY (pkey,cluster)
+    "z_updater" TEXT DEFAULT 'system'
 );
-
 /* Outbound routing */
 CREATE TABLE IF NOT EXISTS route (
-    "id" TEXT PRIMARY KEY,	
+    "id" TEXT PRIMARY KEY,                -- 27 char ksuid
+    "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid	
     "pkey" TEXT,
     "active" TEXT DEFAULT 'YES',
     "alternate" TEXT,               -- alternate dial for desk to desk shortdial
@@ -426,47 +432,45 @@ CREATE TABLE IF NOT EXISTS route (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 /* trunks/gateways */
 CREATE TABLE IF NOT EXISTS trunks (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
     "shortuid" TEXT UNIQUE,         -- human readable key
     "pkey" TEXT,
-    "active" TEXT DEFAULT 'YES',        -- Active/inactive flag
-    "alertinfo" TEXT,                           -- distinctive ring
-    "callback" TEXT,                            -- denotes callback trunk
-    "callerid" TEXT,                            -- high-order (weak) CLID
-    "callprogress" TEXT DEFAULT 'YES',          -- send progress tones on dial
-    "closeroute" TEXT,                  -- closed inbound route
-    "cluster" TEXT,                             -- cluster (Tenant) this trunk belongs to
+    "active" TEXT DEFAULT 'YES',	-- Active/inactive flag
+    "alertinfo" TEXT,				-- distinctive ring
+    "callback" TEXT,				-- denotes callback trunk
+    "callerid" TEXT,				-- high-order (weak) CLID
+    "callprogress" TEXT DEFAULT 'YES',		-- send progress tones on dial
+    "closeroute" TEXT,			-- closed inbound route
+    "cluster" TEXT,				-- cluster (Tenant) this trunk belongs to
     "cname" TEXT,
-    "description" TEXT,                 -- weak Asterisk username 
-    "devicerec" TEXT,                   -- RECOPTS
-    "disa" TEXT,                                        -- DISA capable trunk
-    "disapass" TEXT,                            -- DISA password
-    "host" TEXT,                                        -- Host IP address
-    "iaxreg" TEXT DEFAULT NULL, -- Asterisk IAX registration (SND/RCV/NULL)             
-    "inprefix" TEXT,                            -- prepend prefix on inbound
-    "match" TEXT,                                       -- trunk seize sequence
-    "moh" TEXT DEFAULT 'NO',    -- play moh instead of ring
-    "openroute" TEXT,                   -- open inbound route
-    "password" TEXT,                            -- far end password
-    "peername" TEXT,                            -- strong Asterisk username
-    "pjsipreg" TEXT DEFAULT NULL,       -- Asterisk pjsip registration (SND/RCV/NULL)                                                                   
-    "privileged" TEXT,                  -- privileged ingress 
-    "register" TEXT,                            -- registration string
-    "swoclip" TEXT DEFAULT 'YES',       -- Switch On CLIP
-    "tag" TEXT,                                 -- Alpha tag
+    "description" TEXT,			-- weak Asterisk username 
+    "devicerec" TEXT,			-- RECOPTS
+    "disa" TEXT,					-- DISA capable trunk
+    "disapass" TEXT,				-- DISA password
+    "host" TEXT,					-- Host IP address
+    "iaxreg" TEXT DEFAULT NULL,	-- Asterisk IAX registration (SND/RCV/NULL)		
+    "inprefix" TEXT,				-- prepend prefix on inbound
+    "match" TEXT,					-- trunk seize sequence
+    "moh" TEXT DEFAULT 'NO',	-- play moh instead of ring
+    "openroute" TEXT,			-- open inbound route
+    "password" TEXT,				-- far end password
+    "peername" TEXT,				-- strong Asterisk username
+    "pjsipreg" TEXT DEFAULT NULL,	-- Asterisk pjsip registration (SND/RCV/NULL)									
+    "privileged" TEXT,			-- privileged ingress 
+    "register" TEXT,				-- registration string
+    "swoclip" TEXT DEFAULT 'YES',	-- Switch On CLIP
+    "tag" TEXT,					-- Alpha tag
     "technology" TEXT,           -- SIP/IAX2/DiD/CLiD/Class
-    "transform" TEXT,                           -- Transformation mask
+    "transform" TEXT,				-- Transformation mask
     "transport" TEXT DEFAULT 'udp',
-    "trunkname" TEXT,                           -- freeform trunkname
-    "username" TEXT,                            -- far end username
+    "trunkname" TEXT,				-- freeform trunkname
+    "username" TEXT,				-- far end username
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 
 COMMIT;
 

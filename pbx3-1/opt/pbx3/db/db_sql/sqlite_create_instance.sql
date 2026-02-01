@@ -51,7 +51,6 @@ CREATE TABLE IF NOT EXISTS globals (
 "z_updater" TEXT DEFAULT 'system'
 );
 
-
 /* messages table */
 CREATE TABLE IF NOT EXISTS tt_help_core (
 "pkey" TEXT PRIMARY KEY,

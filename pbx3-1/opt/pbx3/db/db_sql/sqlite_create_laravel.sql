@@ -1,7 +1,6 @@
 
 BEGIN TRANSACTION;
 
-
 /* Laravel tables - these live with the instance and are universal to the instance */
 
 CREATE TABLE IF NOT EXISTS "migrations"(
@@ -9,6 +8,7 @@ CREATE TABLE IF NOT EXISTS "migrations"(
   "migration" varchar not null,
   "batch" integer not null
 );
+CREATE TABLE sqlite_sequence(name,seq);
 CREATE TABLE IF NOT EXISTS "users"(
   "id" integer primary key autoincrement not null,
   /* cluster added to handle cluster migration */
@@ -22,8 +22,7 @@ CREATE TABLE IF NOT EXISTS "users"(
   "created_at" datetime,
   "updated_at" datetime
 );
-CREATE UNIQUE INDEX IF NOT EXISTS "users_email_unique" on "users"("email");
-
+CREATE UNIQUE INDEX "users_email_unique" on "users"("email");
 CREATE TABLE IF NOT EXISTS "password_reset_tokens"(
   "email" varchar not null,
   "token" varchar not null,
@@ -41,7 +40,6 @@ CREATE TABLE IF NOT EXISTS "sessions"(
 );
 CREATE INDEX "sessions_user_id_index" on "sessions"("user_id");
 CREATE INDEX "sessions_last_activity_index" on "sessions"("last_activity");
-
 CREATE TABLE IF NOT EXISTS "cache"(
   "key" varchar not null,
   "value" text not null,
