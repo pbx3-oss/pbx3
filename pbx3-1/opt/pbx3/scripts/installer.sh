@@ -9,7 +9,7 @@
 setvcl() {
 # turn on VCL in Globals
     echo "AWS instance detected, setting cloud flags"
-    /usr/bin/sqlite3 $SYSDB "update globals set VCL=1"
+    /usr/bin/sqlite3 $SYSDB "update globals set vcl=1"
 # open 80,443 and 22 in the firewall (otherwise we'll be locked out)
     echo "WARNING!!!  Ports 80, 443 and 22 have been opened to prevent AWS lockout - you should review these and set sensible values"
     sed -i 's/ACCEPT net:$LAN $FW tcp 80/ACCEPT net $FW tcp 80/' $FW_RULES
@@ -35,19 +35,14 @@ usermod -a -G www-data asterisk
 
 [ -e /etc/ssmtp/ssmtp.conf ] && chown www-data:www-data /etc/ssmtp/ssmtp.conf && chmod 660 /etc/ssmtp/ssmtp.conf
 
-chown -R www-data:www-data $SYSPATH/www
-chown -R www-data:www-data $SYSPATH/db
-chown -R www-data:www-data $SYSPATH/cache
-
-chown -R asterisk:asterisk $ASTPATH/*
+[ -d $ASTPATH ] && chown -R asterisk:asterisk $ASTPATH
 chown -R asterisk:asterisk /var/lib/asterisk
 chown -R asterisk:asterisk /usr/share/asterisk/sounds
 chown -R asterisk:asterisk /var/log/asterisk
 chown -R asterisk:asterisk /var/spool/asterisk
 
-chmod 664 -R $ASTPATH/*
-chmod +x $ASTPATH/manager.d
-chmod 755 -R $SYSPATH/www
+[ -d $ASTPATH ] && chmod -R 664 $ASTPATH
+[ -e $ASTPATH/manager.d ] && chmod +x $ASTPATH/manager.d
 chmod 755 -R $SYSPATH/generator
 chmod 755 -R $SYSPATH/scripts
  
@@ -119,16 +114,18 @@ systemctl start apache2.service
 [ ! -L $ASTPATH/res_parking.conf ] && ln -s $ASTLOCALCONF/res_parking.conf $ASTPATH/res_parking.conf
 
 #handle multiple NICs
-if [ ! -e /etc/network/interfaces.d ]; then
+if [ ! -d /etc/network/interfaces.d ]; then
     mkdir -p /etc/network/interfaces.d
-    echo "source /etc/network/interfaces.d/*" >> /etc/network/interfaces
 fi
+# idempotent: add source line only if not already present
+grep -q 'source /etc/network/interfaces.d' /etc/network/interfaces 2>/dev/null || echo "source /etc/network/interfaces.d/*" >> /etc/network/interfaces
     
-# set correct Asterisk dateformat in logger.conf
-sed -i 's/^;dateformat=%F %T /dateformat=%F %T/' $ASTPATH/logger.conf
-# set security logging for Ast11 
-sed -i '/^messages/c \messages => security,notice,warning,error' $ASTPATH/logger.conf;
-/usr/sbin/asterisk -rx 'logger reload'
+# set correct Asterisk dateformat in logger.conf (idempotent: only when present)
+if [ -f $ASTPATH/logger.conf ]; then
+    sed -i 's/^;dateformat=%F %T /dateformat=%F %T/' $ASTPATH/logger.conf
+    sed -i '/^messages/c \messages => security,notice,warning,error' $ASTPATH/logger.conf
+    /usr/sbin/asterisk -rx 'logger reload' 2>/dev/null || true
+fi
 
 #Shorewall setup
 if [ -d $SHOREWALL ]; then
@@ -150,6 +147,12 @@ if [ -d $SHOREWALL ]; then
     chown www-data:www-data $SHOREWALL/pbx3_inline_fqdn
     chown www-data:www-data $SHOREWALL/pbx3_inline_limit
 fi
+
+# Regenerate bashconfig from config.php (source of truth)
+php $SYSPATH/php/utilities/genbashconfig.php 2>/dev/null || true
+
+# Create initial DB if missing (fresh install)
+[ ! -e "$SYSDB" ] && /bin/sh $SCRIPTS/create.initial.db
 
 #Rebuild the database
 /bin/sh $SCRIPTS/reloader.sh
@@ -177,10 +180,9 @@ fi
 #run shorewall's own fix routines
 shorewall update
 
-# F2b setup
-[ -e /etc/fail2ban/jail.local ] && rm -rf /etc/fail2ban/jail.local && echo "replacing F2B jail.local" 
-ln -s $SYSPATH/etc/fail2ban/jail-stretch.local /etc/fail2ban/jail.local
-[ ! -e /etc/fail2ban/action.d/shorewall.local ] && [ -e $SYSPATH/etc/fail2ban/action.d/shorewall-jessie.local ] && ln -s $SYSPATH/etc/fail2ban/action.d/shorewall-jessie.local /etc/fail2ban/action.d/shorewall.local
+# F2b setup — Ubuntu 24.04 LTS (idempotent: force symlinks)
+ln -sf $SYSPATH/etc/fail2ban/jail.local /etc/fail2ban/jail.local
+ln -sf $SYSPATH/etc/fail2ban/action.d/shorewall.local /etc/fail2ban/action.d/shorewall.local
 
 
 
@@ -208,17 +210,6 @@ systemctl enable shorewall6.service
 [ -e $SYSPATH/cache/1520813339.db_v4_admin_perms2 ] && mv $SYSPATH/cache/1520813339.db_v4_admin_perms2 $SYSPATH/always/
 
 
-
-#Make the public directories if they aren't there
-[ ! -d $SYSPATH/public ] && mkdir $SYSPATH/public && chown www-data:www-data $SYSPATH/public
-[ ! -d $SYSPATH/public/aastra ] && mkdir $SYSPATH/public/aastra && chown www-data:www-data $SYSPATH/public/aastra
-[ ! -d $SYSPATH/public/cisco ] && mkdir $SYSPATH/public/cisco && chown www-data:www-data $SYSPATH/public/cisco
-[ ! -d $SYSPATH/public/panasonic ] && mkdir $SYSPATH/public/panasonic && chown www-data:www-data $SYSPATH/public/panasonic
-[ ! -d $SYSPATH/public/polycom ] && mkdir $SYSPATH/public/polycom && chown www-data:www-data $SYSPATH/public/polycom
-[ ! -d $SYSPATH/public/snom ] && mkdir $SYSPATH/public/snom && chown www-data:www-data $SYSPATH/public/snom
-[ ! -d $SYSPATH/public/vtech ] && mkdir $SYSPATH/public/vtech && chown www-data:www-data $SYSPATH/public/vtech
-[ ! -d $SYSPATH/public/yealink ] && mkdir $SYSPATH/public/yealink && chown www-data:www-data $SYSPATH/public/yealink
-
 # call recording 
 [ ! -d $SYSPATH/media/recordings/default ] && mkdir -p $SYSPATH/media/recordings/default
 
@@ -228,8 +219,8 @@ sv d sys-ua-helper
 sleep 1
 sv u sys-ua-helper
 
-#add definitions to MySQL
-mysql -u root < $SYSPATH/cache/cdr-mysql-setup.sql
+#add definitions to MySQL (if MySQL is installed)
+command -v mysql >/dev/null 2>&1 && mysql -u root < $SYSPATH/cache/cdr-mysql-setup.sql 2>/dev/null || true
 
 #stop systemd.resolved - it interferes with dnsmasq
 systemctl stop systemd-resolved
@@ -238,8 +229,8 @@ systemctl disable systemd-resolved
 systemctl enable dnsmasq
 systemctl restart dnsmasq
 
-if [ -d $SYSPATH/recmnt ]; then 
+if [ ! -d $SYSPATH/recmnt ]; then 
     mkdir $SYSPATH/recmnt
     chown www-data:www-data $SYSPATH/recmnt
-    chmod 664 $SYSPATH/recmnt
+    chmod 755 $SYSPATH/recmnt
 fi
