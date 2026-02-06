@@ -57,6 +57,7 @@ define ('LDAPHELPER',                   CLASSES . '/LDAPHelperClass');
 define ('NETHELPER',                    CLASSES . '/NetHelperClass');
 
 define('RELOADER',				        SCRIPTS . '/reloader.sh');
+define('EXEC_DB_RELOAD',				RELOADER);		// alias for backward compatibility
 
 define ('AMIHELPER',                    CLASSES . '/AmiHelperClass');
 define ('ASTMANAGER',                   CLASSES . '/AsteriskManager.php');
@@ -156,7 +157,6 @@ define('LARAVEL_DB',                    DBSQL . '/sqlite_create_laravel.sql');	 
 define('SYSTEMDB',                      DBSQL . '/sqlite_system.sql');		//installed db system data
 define('SYSMSGDB',                      DBSQL . '/sqlite_message.sql');	    //installed db system messages
 define('SYSINIDB',                      DBSQL . '/sqlite_inidat.sql');		//installed db defaults
-define('SYSDEVICE',                     DBSQL . '/sqlite_device.sql');	    //installed db device table
 define('SYSONCE',                       SYSPATH . '/once');				    //once directory
 define('SYSALWAYS',                     SYSPATH . '/always');				//always directory
 define('SYSONCEDONE',                   SYSPATH . '/oncedone');				//applied once files
@@ -168,4 +168,4 @@ define('DUMPER',                        UTILITIES . '/dumper.php'); 	    //loc. 
 define('ASTGEN',                        GENERATOR . '/runAstGen.php');
 define('SIPFIX',                        UTILITIES . '/sipiaxfix.php'); 	//loc. of the V6 sipiaxfixup routine
 define('GENAST',                        SCRIPTS . '/genAst.sh');		//loc. of the generator
-define('HTTPOWNER',                     'www-data:www-data');		//apache user/group (Deb/Ubu)q
+define('HTTPOWNER',                     'www-data:www-data');		//HTTP server user/group (Apache/nginx + PHP-FPM for API)

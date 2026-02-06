@@ -160,7 +160,7 @@ Phases can be reordered or split; dependencies: B and C are largely independent.
   - Migration-from-old-system code (e.g. **migrateLegacyDb.sh** and related scripts) stays in this repo for now. Fix issues in Phase B (RELOADER variable, refactorOldDb.php); document migration path for users migrating from old (sark/pbx3) installs.
 
 - **Device provisioning:**  
-  - **public/** (aastra, cisco, polycom, etc.) – decide where device provisioning lives (pbx3, pbx3api, or future) and document; remove or keep dirs accordingly in Phase D/E.
+  - **public/** (aastra, cisco, polycom, etc.) – **Removed for now.** Device provisioning directories and references have been removed from the codebase. Future provisioning (if needed) will be handled separately.
 
 - **Supported versions (optional):**  
   - Document or pin supported versions (PHP, SQLite, Asterisk, OS) in Phase F or in docs so installers and operators know the target stack.

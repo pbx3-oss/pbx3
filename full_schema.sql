@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS "personal_access_tokens"(
   "tokenable_id" integer not null,
   "name" varchar not null,
   "token" varchar not null,
-  "abilities" text,
+  "abilities" varchar,
   "last_used_at" datetime,
   "expires_at" datetime,
   "created_at" datetime,

@@ -8,7 +8,7 @@ sudo sh $RELOADER -L
 sudo sqlite3 $SYSDB < $DBSQL/sqlite_fix_lineio.sql
 sudo php $UTILITIES/refactorGreetings.php
 
-sudo php $UTILITIES/refactorOldDb.php
+sudo php $UTILITIES/refactorOldDB.php
 
 sudo php $DUMPER
 sudo rm $SYSDB
