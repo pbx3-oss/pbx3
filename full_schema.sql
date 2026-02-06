@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS "users"(
   "email_verified_at" datetime,
   "password" varchar not null,
   "role" varchar DEFAULT null,
+  "endpoint" varchar DEFAULT NULL,
   "remember_token" varchar,
   "created_at" datetime,
   "updated_at" datetime
