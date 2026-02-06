@@ -13,7 +13,7 @@ access-key-id:     devuser
 secret-access-key: devuserpwd
 
 dbs:
-  - path: /opt/gcs/db/sqlite.db            # Database to replicate from
+  - path: /opt/pbx3/db/sqlite.db            # Database to replicate from
     replicas:
       - type: s3
         path: instances/inuse-pool/2ouZHQauul4nylmQuh4iR2AqptI/db/sqlite.db

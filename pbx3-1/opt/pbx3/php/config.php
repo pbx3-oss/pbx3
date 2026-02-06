@@ -148,7 +148,7 @@ define('FW_RULES',                      '/etc/shorewall/pbx3_rules');
  */
 
 define('LASTDB',                        DBDUMPS . '/last.db');               //pbx3 db previous iteration
-define('CLEANDB',                       DBSQL . '/sqlite_clean.db');	    //factory reset copy of the db 
+define('CLEANDB',                       DBSQL . '/sqlite_clean.db');	    //factory reset copy of the db (created on first install, not in repo) 
 define('LEGACY_DB',                     DBSQL . '/sqlite_create_legacy.sql');	    //old db create
 define('INSTANCE_DB',                   DBSQL . '/sqlite_create_instance.sql');	    //installed db create
 define('TENANT_DB',                     DBSQL . '/sqlite_create_tenant.sql');	    //installed db create

@@ -3,10 +3,12 @@
 # delete grace recordings older than $RECGRACE days
 # 
 
+. /opt/pbx3/scripts/bashconfig
+
 #
 # no longer necessary with S3
 # 
 
-RECGRACE=`/usr/bin/sqlite3 $SYSDB "select RECGRACE from globals;"`
+RECGRACE=`/usr/bin/sqlite3 $SYSDB "select recgrace from globals;"`
 
-find /opt/sark/media/recordings/deletes  -mtime +$RECGRACE -type f -exec rm -rf {} +
+find $RECORDINGS$DELETES -mtime +$RECGRACE -type f -exec rm -rf {} +

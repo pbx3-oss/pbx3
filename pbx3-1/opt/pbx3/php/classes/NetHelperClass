@@ -260,31 +260,30 @@ public function restartFirewall() {
 	public function copyFirewallTemplates() {
 	
 		$this->dbh = DB::getInstance();
-		$res = $this->dbh->query("SELECT BINDPORT,FQDN,FQDNINSPECT,SIPFLOOD FROM globals where pkey = 'global'")->fetch(PDO::FETCH_ASSOC);
-		$file = '/opt/gcs/etc/shorewall/gcs_inline_fqdn';
-		if ($res['FQDNINSPECT'] == 'YES') {
+		$res = $this->dbh->query("SELECT bindport,fqdn,fqdninspect,sipflood FROM globals where pkey = 'global'")->fetch(PDO::FETCH_ASSOC);
+		if ($res['fqdninspect'] == 'YES') {
 			$rule = "'INLINE(ACCEPT) net \$FW tcp ";
-			$rule .= $res['BINDPORT'];
+			$rule .= $res['bindport'];
 			$rule .= '; -m string --algo bm --to 500 --string "';
-			$rule .= $res['FQDN'];
+			$rule .= $res['fqdn'];
 			$rule .= '"';
 			$rule .= "'";
-			$rc = $this->helper->request_syscmd ("echo $rule > /etc/shorewall/gcs_inline_fqdn");
+			$rc = $this->helper->request_syscmd ("echo $rule > /etc/shorewall/pbx3_inline_fqdn");
 	
 			$rule = "'INLINE(ACCEPT) net \$FW udp ";
-			$rule .= $res['BINDPORT'];
+			$rule .= $res['bindport'];
 			$rule .= '; -m string --algo bm --to 500 --string "';
-			$rule .= $res['FQDN'];
+			$rule .= $res['fqdn'];
 			$rule .= '"';
 			$rule .= "'";
-			$rc = $this->helper->request_syscmd ("echo $rule >> /etc/shorewall/gcs_inline_fqdn");
+			$rc = $this->helper->request_syscmd ("echo $rule >> /etc/shorewall/pbx3_inline_fqdn");
 		}
 		else {
-			$rc = $this->helper->request_syscmd ("echo '#' > /etc/shorewall/gcs_inline_fqdn");
+			$rc = $this->helper->request_syscmd ("echo '#' > /etc/shorewall/pbx3_inline_fqdn");
 		}
 	
 		$file = SYSPATH . '/templates/shorewall/pbx3_inline_limit';
-		if (file_exists($file) && $res['SIPFLOOD'] == 'YES') {
+		if (file_exists($file) && $res['sipflood'] == 'YES') {
 			$rc = $this->helper->request_syscmd ("cp $file /etc/shorewall");
 		}
 		else {

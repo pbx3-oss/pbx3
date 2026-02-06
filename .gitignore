@@ -1,4 +1,7 @@
 /DEBIAN/*
+**/.debhelper/
+**/*.debhelper.log
+**/*.substvars
 /.DS_Store
 *sqlite.db
 *sqlite.rdonly.db
