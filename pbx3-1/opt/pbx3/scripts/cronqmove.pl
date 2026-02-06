@@ -31,11 +31,11 @@ sub SQLiteGet($$) {
 
 my $dbh = DBI->connect( "dbi:SQLite:dbname=/opt/pbx3/db/sqlite.db","", "", { RaiseError => 1, AutoCommit => 1 });
 
-my $monitorstage =  SQLiteGet($dbh, "SELECT MONITORSTAGE FROM globals where pkey = 'global'") || "/home/pbx3/monstage";
-my $monitorout = SQLiteGet($dbh, "SELECT MONITOROUT FROM globals where pkey = 'global'") || "/home/pbx3/monout";
-my $recqsearchlim = SQLiteGet($dbh, "SELECT RECQSEARCHLIM FROM globals where pkey = 'global'") || 400;
-my $recqdither = SQLiteGet($dbh, "SELECT RECQDITHER FROM globals where pkey = 'global'") || 1;
-my $rfdlim = SQLiteGet($dbh, "SELECT RECFILEDLIM FROM globals where pkey = 'global'") || '_-_';
+my $monitorstage =  SQLiteGet($dbh, "SELECT MONITORSTAGE FROM globals LIMIT 1") || "/home/pbx3/monstage";
+my $monitorout = SQLiteGet($dbh, "SELECT MONITOROUT FROM globals LIMIT 1") || "/home/pbx3/monout";
+my $recqsearchlim = SQLiteGet($dbh, "SELECT RECQSEARCHLIM FROM globals LIMIT 1") || 400;
+my $recqdither = SQLiteGet($dbh, "SELECT RECQDITHER FROM globals LIMIT 1") || 1;
+my $rfdlim = SQLiteGet($dbh, "SELECT RECFILEDLIM FROM globals LIMIT 1") || '_-_';
 
 $dbh->disconnect;
 

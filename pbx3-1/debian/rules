@@ -21,6 +21,10 @@ binary-arch: build
 	dh_installdocs
 	dh_installchangelogs
 
+# Build ksuid binary (Go) for bash/scripts; PHP uses tuupola/ksuid via API
+	mkdir -p opt/pbx3/bin
+	(cd tools/ksuid && go build -o ../../opt/pbx3/bin/ksuid .)
+
 # Copy the packages's files.
 	find . -maxdepth 1 -mindepth 1 -not -name debian -print0 | \
 		xargs -0 -r -i cp -a {} debian/$(PACKAGE)

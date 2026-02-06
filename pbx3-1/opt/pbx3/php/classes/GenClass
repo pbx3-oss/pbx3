@@ -49,9 +49,8 @@ class genAsteriskObjects
 
 
 		try {
-			$sql = $this->dbh->prepare("select * from globals WHERE pkey = ?");
-			$sql->execute(array('global'));
-			$this->globals = $sql->fetch();
+			$sql = $this->dbh->query("SELECT * FROM globals LIMIT 1");
+			$this->globals = $sql ? $sql->fetch() : null;
 			$sql = NULL;
 		} catch (PDOException $e) {
 			$errorMsg = $e->getMessage();

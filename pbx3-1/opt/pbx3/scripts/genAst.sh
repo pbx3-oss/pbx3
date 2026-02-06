@@ -12,4 +12,4 @@ php $ASTGEN
 /bin/mv $COPY_DB $READONLY_DB
 #
 /usr/bin/logger Regenerating Asterisk Finished
-#/usr/bin/sqlite3 $SYSDB "UPDATE globals SET MYCOMMIT='NO' WHERE pkey='global';"
+#/usr/bin/sqlite3 $SYSDB "UPDATE globals SET MYCOMMIT='NO';"

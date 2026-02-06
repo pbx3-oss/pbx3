@@ -999,7 +999,7 @@ public function delTuple($tab,$pkey) {
  */
 public function logIt($someText, $userloglevel=0) {
 	$dbh = DB::getInstance();
-	$res = $dbh->query("SELECT LOGLEVEL FROM globals where pkey = 'global'")->fetch(PDO::FETCH_ASSOC);
+	$res = $dbh->query("SELECT LOGLEVEL FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
 	$dbloglevel = $res['LOGLEVEL'];
 	if ($userloglevel <= $dbloglevel) {
 		syslog(LOG_WARNING, $_SERVER['PHP_SELF'] . ' ' . $someText . "\n");	
@@ -1018,7 +1018,7 @@ public function resetPassword ($user) {
 
 	$dbh = DB::getInstance();
 
-	$res = $dbh->query("SELECT USEROTP FROM globals where pkey = 'global'")->fetch(PDO::FETCH_ASSOC);
+	$res = $dbh->query("SELECT USEROTP FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
     $newpass = $res['USEROTP']; 
     $this->logit("Reset password to $newpass for $user", 5 );
 	$salt = dechex(mt_rand(0, 2147483647)) . dechex(mt_rand(0, 2147483647));

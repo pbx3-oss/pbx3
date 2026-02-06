@@ -3,7 +3,7 @@
 # Delete opened voicemail older than globals['VMAILAGE'] days
 #
 ZERO=0
-VMAILAGE=`/usr/bin/sqlite3 $SYSDB "SELECT VMAILAGE FROM globals WHERE pkey='global'"`
+VMAILAGE=`/usr/bin/sqlite3 $SYSDB "SELECT VMAILAGE FROM globals LIMIT 1"`
 #echo deleting vmail older than $VMAILAGE days
 if [ ! -z $VMAILAGE ]; then
 	if [ $VMAILAGE -gt $ZERO ]; then

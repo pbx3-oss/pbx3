@@ -218,7 +218,8 @@ require_once HELPER;
         
     if ($dbupdated == true) {
 		$helper->logit(" CODENAME TIMER MODIFY", 10 );
-		`/usr/bin/sqlite3 SYSDB "UPDATE globals SET MYCOMMIT='NO' WHERE pkey='global';"`;
+		$cmd = '/usr/bin/sqlite3 '.SYSDB.' "UPDATE globals SET MYCOMMIT=\'NO\';"';
+		`$cmd`;
 		$rc = `/bin/cp SYSDB COPY_DB`;
 		$rc = `/bin/mv COPY_DB READONLYDB`;
 #		$rc = `/bin/chown www:www READONLYDB`;  

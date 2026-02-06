@@ -1,0 +1,9 @@
+# ksuid — K-Sortable Unique ID generator (CLI)
+
+Used by bash scripts and PHP (via backtick) to generate 27-char base62 IDs for the database (e.g. globals.pkey instance id, and id columns in tenant tables).
+
+- **Build:** Requires Go. From this directory: `go build -o ../../opt/pbx3/bin/ksuid .`
+- **Debian package:** Built automatically in `debian/rules` (Build-Depends: golang-go). Binary is installed at `/opt/pbx3/bin/ksuid`.
+- **Library:** [github.com/segmentio/ksuid](https://github.com/segmentio/ksuid)
+
+PHP uses `tuupola/ksuid` (Composer) in the API; this CLI is for bash and for PHP scripts that call out to shell (e.g. dumper.php, dumpInstances.php).
