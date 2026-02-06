@@ -68,12 +68,12 @@ CREATE TABLE IF NOT EXISTS "users"(
   "name" varchar not null,
   "email" varchar not null,
   "email_verified_at" datetime,
-  "password" varchar not null,
-  "role" varchar DEFAULT null,
   "endpoint" varchar DEFAULT NULL,
+  "password" varchar not null,
+  "abilities" text,
   "remember_token" varchar,
   "created_at" datetime,
-  "updated_at" datetime
+  "updated_at" datetime"
 );
 CREATE UNIQUE INDEX "users_email_unique" on "users"("email");
 CREATE TABLE IF NOT EXISTS "password_reset_tokens"(

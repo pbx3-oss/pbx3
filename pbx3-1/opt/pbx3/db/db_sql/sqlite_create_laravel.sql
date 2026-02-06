@@ -11,8 +11,10 @@ CREATE TABLE IF NOT EXISTS "migrations"(
 CREATE TABLE sqlite_sequence(name,seq);
 CREATE TABLE IF NOT EXISTS "users"(
   "id" integer primary key autoincrement not null,
+  "abilities" varchar DEFAULT null,
   /* cluster added to handle cluster migration */
   "cluster" varchar DEFAULT "default",
+  "endpoint" varchar DEFAULT null,
   "name" varchar not null,
   "email" varchar not null,
   "email_verified_at" datetime,
