@@ -2,7 +2,12 @@
 #
 # create an initial empty database.  Run as sudo
 
-. /opt/gcs/scripts/bashconfig
+. /opt/pbx3/scripts/bashconfig
 
 [ -e $SYSDB ] && rm -rf $SYSDB
-sqlite3 $SYSDB < $DBPATH/db_vx_create.sql
+
+# Apply schema files in order: instance (system) → laravel (auth) → tenant (data) → message
+sqlite3 $SYSDB < $DBSQL/sqlite_create_instance.sql
+sqlite3 $SYSDB < $DBSQL/sqlite_create_laravel.sql
+sqlite3 $SYSDB < $DBSQL/sqlite_create_tenant.sql
+sqlite3 $SYSDB < $DBSQL/sqlite_message.sql

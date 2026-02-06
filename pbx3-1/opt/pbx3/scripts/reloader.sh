@@ -135,6 +135,7 @@ if [ "$legacy" != "true" ]; then
 fi
 
 #set db ownership
+# HTTPOWNER (www-data) is the user that runs the HTTP server (Apache/nginx + PHP-FPM) for the API
 chown $HTTPOWNER $DBPATH/*
 
 #set db perms q

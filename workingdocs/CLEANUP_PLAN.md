@@ -37,7 +37,7 @@ PBX3 was hacked out of the old system to get something running as a basis for fu
 | Phase | Focus | Outcome |
 |-------|--------|--------|
 | **A** | Docs & quick fixes | Correct typos, fix MkDocs nav, align docs with “backend only, API + SPA” |
-| **B** | Scripts & config | Fix create.initial.db, SYSAGI; ensure bashconfig matches config.php; migration code → move to dedicated repo (Phase E), not fix here |
+| **B** | Scripts & config | Fix create.initial.db, migrateLegacyDb.sh (RELOADER, refactorOldDb), SYSAGI; ensure bashconfig matches config.php |
 | **C** | Schema & DB | Align Laravel schema with pbx3api (users.abilities as JSON/text); sync full_schema.sql; document role as unused |
 | **D** | Legacy web & paths | **HTTP server (Apache or nginx) hosts the API.** Remove sark admin sites and www from *code/config*; fix sark/gcs paths in scripts and Asterisk configs (no installer rewrite yet) |
 | **E** | Naming & leftovers | Replace or document sark/gcs/sail references; drop dead paths and files; tidy .gitignore and packaging |
@@ -65,7 +65,7 @@ Phases can be reordered or split; dependencies: B and C are largely independent.
 - **migrateLegacyDb.sh**  
   - **Issue 1:** Uses `$RELOADER`; bashconfig defines `EXEC_DB_RELOAD`, not `RELOADER`. Script effectively runs `sh` with no argument.  
   - **Issue 2:** Calls `refactorOldDb.php` which does not exist.  
-  - **Plan:** Migration-from-old-system code will be **moved to a dedicated repo** (Phase E). In pbx3: either remove this script and related migration code once the dedicated repo exists, or document that migration lives in the other repo and remove/archive the copy here. Do not fix and maintain migration in pbx3 long-term.
+  - **Fix:** Use `EXEC_DB_RELOAD` in the script (or add `RELOADER` to bashconfig aligned with config.php). Remove the call to `refactorOldDb.php` or implement it. Migration code stays in this repo for now.
 
 - **config.php vs bashconfig**  
   - **Issue:** SYSAGI is `swarmcore` in config.php, `pbx3agi` in bashconfig.  
@@ -157,7 +157,7 @@ Phases can be reordered or split; dependencies: B and C are largely independent.
   - Review **cron.d/pbx3** and any scripts it calls for legacy paths (sark/gcs) and relevance; fix or document.
 
 - **Migration from existing installs:**  
-  - Migration-from-old-system code (e.g. **migrateLegacyDb.sh** and related scripts) **exists in this repo** but we will **move it out into its own dedicated repo**, for users who wish to migrate from an old (sark/pbx3) install. In pbx3: remove or stop maintaining that code; the dedicated repo is where migration lives. Document the move and where to find the migration repo.
+  - Migration-from-old-system code (e.g. **migrateLegacyDb.sh** and related scripts) stays in this repo for now. Fix issues in Phase B (RELOADER variable, refactorOldDb.php); document migration path for users migrating from old (sark/pbx3) installs.
 
 - **Device provisioning:**  
   - **public/** (aastra, cisco, polycom, etc.) – decide where device provisioning lives (pbx3, pbx3api, or future) and document; remove or keep dirs accordingly in Phase D/E.
@@ -177,7 +177,7 @@ Phases can be reordered or split; dependencies: B and C are largely independent.
 - [ ] Phase F: Document deployment options (deb vs clone+installer) and installer rewrite scope.  
 - [ ] Phase F: Document Let's Encrypt approach (certbot, renewal, paths) and ensure HTTP server config uses it; remove or don’t assume purchased wildcard certs.
 - [ ] Review cron.d/pbx3 and referenced scripts for legacy paths and relevance.
-- [ ] Move migration-from-old-system code to dedicated repo; document where to find it; remove or archive from pbx3.
+- [ ] Fix migrateLegacyDb.sh issues (RELOADER variable, refactorOldDb.php); document migration path.
 - [ ] Decide device provisioning ownership (public/ dirs); document.
 - [ ] List where secrets/credentials live (config.php, .env, etc.) and document how they are set (Phase E/F).
 

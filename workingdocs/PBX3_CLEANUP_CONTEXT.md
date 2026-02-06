@@ -69,13 +69,13 @@ Items to address during the cleanup exercise.
 - **Reality:** Schema is split into sqlite_create_instance.sql, sqlite_create_laravel.sql, sqlite_create_tenant.sql, sqlite_create_legacy.sql.
 - **Action:** Either introduce a single `db_vx_create.sql` (or script) that applies the split SQL files in the correct order, or change create.initial.db to run the existing SQL files in sequence.
 
-### 2. migrateLegacyDb.sh – wrong/missing variables and script; migration → dedicated repo
+### 2. migrateLegacyDb.sh – wrong/missing variables and script
 
 - **File:** `pbx3-1/opt/pbx3/scripts/migrateLegacyDb.sh`
 - **Issues:**
   - Uses **`$RELOADER`** – bashconfig defines **`EXEC_DB_RELOAD`**, not `RELOADER`; `refactorOldDb.php` does not exist.
-  - **Plan:** Migration-from-old-system code will be **moved to its own dedicated repo** for users who wish to migrate (Phase E). In pbx3: remove or archive this script once the dedicated repo exists; do not fix and maintain migration here.
-- **Action:** Document that migration lives in the dedicated repo; remove or archive migrateLegacyDb.sh (and related migration code) from pbx3 when the move is done.
+  - **Plan:** Migration code stays in this repo for now. Fix the RELOADER variable issue and remove or implement refactorOldDb.php call.
+- **Action:** Use `EXEC_DB_RELOAD` (or add RELOADER to bashconfig to match config.php). Remove or implement the refactorOldDb.php step.
 
 ### 3. Docs – filelayout typo
 
