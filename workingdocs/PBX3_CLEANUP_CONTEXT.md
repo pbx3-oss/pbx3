@@ -77,17 +77,23 @@ Items to address during the cleanup exercise.
   - **Plan:** Migration code stays in this repo for now. Fix the RELOADER variable issue and remove or implement refactorOldDb.php call.
 - **Action:** Use `EXEC_DB_RELOAD` (or add RELOADER to bashconfig to match config.php). Remove or implement the refactorOldDb.php step.
 
-### 3. Docs – filelayout typo
+### 3. Docs – filelayout typo ✅ COMPLETE
 
 - **File:** `docs/filelayout.md`
 - **Issue:** Directory name written as **pnx3-1/**; should be **pbx3-1/**.
-- **Action:** Fix typo to pbx3-1.
+- **Status:** ✅ Fixed – typo corrected to pbx3-1.
 
-### 4. MkDocs – broken nav link
+### 4. MkDocs – broken nav link ✅ COMPLETE
 
 - **File:** `mkdocs.yml`
 - **Issue:** Nav includes “Creating your site: Page1.md”; **Page1.md** does not exist in docs/ (only index.md, filelayout.md, config.md, featureKeys.md).
-- **Action:** Add Page1.md or point the nav to an existing page / remove the broken link.
+- **Status:** ✅ Fixed – nav updated to point to "File layout: filelayout.md".
+
+### 4a. Docs – index.md backend description ✅ COMPLETE
+
+- **File:** `docs/index.md`
+- **Issue:** Should clearly state that pbx3 is backend only, has no HTML front-end, and is driven by pbx3api; admin is a separate SPA.
+- **Status:** ✅ Fixed – now states: "pbx3 is a small back end worker instance. It has no conventional HTML front-end and can only be used via its API, pbx3api. Administration is a separate SPA that talks to the API."
 
 ### 5. config.php vs bashconfig – SYSAGI mismatch
 
