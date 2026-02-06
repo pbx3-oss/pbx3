@@ -55,9 +55,9 @@ function __construct() {
 
 //	staticIPV4
     $this->dbh = DB::getInstance();
-	$res = $this->dbh->query("SELECT STATICIPV4 FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-	if (isset($res['STATICIPV4'])) {
-		$this->staticIPV4 = $res['STATICIPV4'];
+	$res = $this->dbh->query("SELECT staticipv4 FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+	if (isset($res['staticipv4'])) {
+		$this->staticIPV4 = $res['staticipv4'];
     }
 // localIPV4 & CIDR IPV4
 	$iprets = shell_exec( "ip addr show dev " . $this->interfaceName);
@@ -260,8 +260,8 @@ public function restartFirewall() {
 	public function copyFirewallTemplates() {
 	
 		$this->dbh = DB::getInstance();
-		$res = $this->dbh->query("SELECT bindport,fqdn,fqdninspect,sipflood FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-		if ($res['fqdninspect'] == 'YES') {
+		$res = $this->dbh->query("SELECT bindport, fqdn, fqdninspect, sipflood FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+		if (!empty($res) && $res['fqdninspect'] == 'YES') {
 			$rule = "'INLINE(ACCEPT) net \$FW tcp ";
 			$rule .= $res['bindport'];
 			$rule .= '; -m string --algo bm --to 500 --string "';

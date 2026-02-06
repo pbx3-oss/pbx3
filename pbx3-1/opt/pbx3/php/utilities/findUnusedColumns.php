@@ -59,7 +59,7 @@ if (isset ($argv[1])) {
  */		
 	foreach ($tables as $table) {
 // ignore old tables and system tables		
-		if ($table['name'] == 'IPphoneCOSopen'  ||  $table['name'] == 'IPphoneCOSclosed' 
+		if ($table['name'] == 'ipphonecosopen' || $table['name'] == 'ipphonecosclosed' 
 		  || $table['name'] == 'UserPanel' 	||  $table['name'] == 'PanelGroupPanel'
 		  || $table['name'] == 'IPphone_FKEY' ||  $table['name'] == 'Device_FKEY' 
 		  || $table['name'] == 'tt_help_core' ||  $table['name'] == 'master_audit'

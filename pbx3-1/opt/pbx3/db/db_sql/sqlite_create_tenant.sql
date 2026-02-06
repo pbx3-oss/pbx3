@@ -239,24 +239,24 @@ CREATE TABLE IF NOT EXISTS ipphonecosopen (
     "id" TEXT,
     "cluster" TEXT,
     "active" TEXT DEFAULT 'YES',
-    "IPphone_pkey" TEXT,
-    "COS_pkey" TEXT,
+    "ipphone_pkey" TEXT,
+    "cos_pkey" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
-    PRIMARY KEY (cluster,IPphone_pkey,COS_pkey)
+    PRIMARY KEY (cluster, ipphone_pkey, cos_pkey)
 );
 /* Class of service */
 CREATE TABLE IF NOT EXISTS ipphonecosclosed (
     "id" TEXT,
     "active" TEXT DEFAULT 'YES',
     "cluster" TEXT,
-    "IPphone_pkey" TEXT,
-    "COS_pkey" TEXT,
+    "ipphone_pkey" TEXT,
+    "cos_pkey" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
-    PRIMARY KEY (cluster,IPphone_pkey,COS_pkey)
+    PRIMARY KEY (cluster, ipphone_pkey, cos_pkey)
 );
 /* IVR menus */
 CREATE TABLE IF NOT EXISTS ivrmenu (

@@ -4,8 +4,8 @@
 
 [ ! -e $SIPLOG ] && mkdir $SIPLOG
 
-FILES=$($SYSDB "SELECT LOGSIPNUMFILES from globals")
-FILESIZE=$($SYSDB "SELECT LOGSIPFILESIZE from globals")
+FILES=$(sqlite3 $SYSDB "SELECT logsipnumfiles FROM globals LIMIT 1")
+FILESIZE=$(sqlite3 $SYSDB "SELECT logsipfilesize FROM globals LIMIT 1")
 
 exec 2>&1
 exec /usr/bin/dumpcap -b filesize:$FILESIZE -b files:$FILES -f "port 5060" -w $SIPLOG/siplog.pcap > /dev/null 2>&1 

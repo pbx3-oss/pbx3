@@ -9,6 +9,6 @@
 # no longer necessary with S3
 # 
 
-RECGRACE=`/usr/bin/sqlite3 $SYSDB "select recgrace from globals;"`
+RECGRACE=`/usr/bin/sqlite3 $SYSDB "SELECT recgrace FROM globals LIMIT 1"`
 
 find $RECORDINGS$DELETES -mtime +$RECGRACE -type f -exec rm -rf {} +

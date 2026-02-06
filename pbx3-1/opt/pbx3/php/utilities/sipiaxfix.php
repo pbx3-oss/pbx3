@@ -32,7 +32,7 @@ try {
 //
 //  SIP extensions (phones) fixup for V6
 // 
-	$sql = "SELECT * FROM IPphone order by pkey";
+	$sql = "SELECT * FROM ipphone ORDER BY pkey";
     foreach ($dbh->query($sql) as $row) {
     	$sipiaxfriend = $row['sipiaxfriend'];
     	if (! preg_match(' /nat=/ ', $sipiaxfriend)) {
@@ -46,7 +46,7 @@ try {
             $sipiaxfriend .= "\n" . 'encryption=$encryption';
         }        
     	if ($sipiaxfriend != $row['sipiaxfriend']) {
-    		$sql = $dbh->prepare("UPDATE ipphone SET sipiaxfriend=? WHERE pkey=?");
+    		$sql = $dbh->prepare("UPDATE ipphone SET sipiaxfriend = ? WHERE pkey = ?");
     		$sql->execute(array($sipiaxfriend,$row['pkey']));
     	}
     }

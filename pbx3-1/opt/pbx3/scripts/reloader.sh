@@ -87,8 +87,8 @@ fi
 
 #run the once files
 if [ ! -e $SYSONCEDONE ] ; then
-	echo Creating oncedone directory $STSONCEDONE
-	mkdir $SYSONCEDONE
+	echo Creating oncedone directory $SYSONCEDONE
+	mkdir -p $SYSONCEDONE
 fi
 
 

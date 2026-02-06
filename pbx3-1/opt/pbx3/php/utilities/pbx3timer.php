@@ -75,7 +75,7 @@ require_once HELPER;
 // now we can set any holidays into the cluster table
     foreach ($holarray as $k) {
 //		print "K[cluster] IS " . $k['cluster'] . " \n";
-		$res = $dbh->query("SELECT pkey,routeoverride from cluster where pkey ='" . $k['cluster'] . "'")->fetch(PDO::FETCH_ASSOC);
+		$res = $dbh->query("SELECT pkey, routeoverride FROM cluster WHERE pkey = '" . $k['cluster'] . "'")->fetch(PDO::FETCH_ASSOC);
 		if ($debug) {
 			print_r($res);
 		}
@@ -218,7 +218,7 @@ require_once HELPER;
         
     if ($dbupdated == true) {
 		$helper->logit(" CODENAME TIMER MODIFY", 10 );
-		$cmd = '/usr/bin/sqlite3 '.SYSDB.' "UPDATE globals SET MYCOMMIT=\'NO\';"';
+		$cmd = '/usr/bin/sqlite3 '.SYSDB.' "UPDATE globals SET mycommit=\'NO\';"';
 		`$cmd`;
 		$rc = `/bin/cp SYSDB COPY_DB`;
 		$rc = `/bin/mv COPY_DB READONLYDB`;

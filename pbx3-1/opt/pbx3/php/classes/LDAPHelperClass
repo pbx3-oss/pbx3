@@ -35,14 +35,17 @@ Class ldaphelper {
 function __construct() {
 	$this->helper = new helper; 
 	$this->dbh = DB::getInstance();
-	$res = $this->dbh->query("SELECT LDAPBASE,LDAPOU,LDAPUSER,LDAPPASS FROM globals")->fetch(PDO::FETCH_ASSOC);
-	$this->user = 'cn=' . $res['LDAPUSER'];
-	$this->password = $res['LDAPPASS'];
-	$this->base = $res['LDAPBASE']; 
-	$this->baseou = $res['LDAPOU'];
+	$res = $this->dbh->query("SELECT ldapbase, ldapou, ldapuser, ldappass FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+	if (empty($res)) {
+		$res = array('ldapuser' => '', 'ldappass' => '', 'ldapbase' => '', 'ldapou' => '');
+	}
+	$this->user = 'cn=' . $res['ldapuser'];
+	$this->password = $res['ldappass'];
+	$this->base = $res['ldapbase'];
+	$this->baseou = $res['ldapou'];
 
 	if (empty($this->addressbook)) {
-		$this->addressbook = 'ou=' . $res['LDAPOU'];
+		$this->addressbook = 'ou=' . $res['ldapou'];
 	}
 }
 

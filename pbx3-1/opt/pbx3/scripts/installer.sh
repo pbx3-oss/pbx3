@@ -9,7 +9,7 @@
 setvcl() {
 # turn on VCL in Globals
     echo "AWS instance detected, setting cloud flags"
-    /usr/bin/sqlite3 $SYSDB "update globals set vcl=1"
+    /usr/bin/sqlite3 $SYSDB "UPDATE globals SET vcl=1"
 # open 80,443 and 22 in the firewall (otherwise we'll be locked out)
     echo "WARNING!!!  Ports 80, 443 and 22 have been opened to prevent AWS lockout - you should review these and set sensible values"
     sed -i 's/ACCEPT net:$LAN $FW tcp 80/ACCEPT net $FW tcp 80/' $FW_RULES
