@@ -62,7 +62,7 @@ extra:
   nav:
      - Home: index.md
      - Getting started:
-        - Creating your site: Page1.md
+        - File layout: filelayout.md
 
 # Extensions
 markdown_extensions:
