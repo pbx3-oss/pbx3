@@ -5,7 +5,7 @@ After=network.target network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/php /opt/pbx3/generator/setip.php
+ExecStart=/usr/bin/php /opt/pbx3/php/utilities/setip.php
 RemainAfterExit=false
 #ExecStop=/opt/foo/teardown-foo.sh
 StandardOutput=journal

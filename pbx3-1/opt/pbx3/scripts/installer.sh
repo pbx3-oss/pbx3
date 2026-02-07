@@ -109,8 +109,10 @@ if [ -d $SHOREWALL ]; then
     chown www-data:www-data $SHOREWALL/pbx3_inline_limit
 fi
 
-# Regenerate bashconfig from config.php (source of truth)
-php $SYSPATH/php/utilities/genbashconfig.php 2>/dev/null || true
+# Regenerate bashconfig from config.php when PHP is available (package ships bashconfig so install works without PHP)
+if command -v php >/dev/null 2>&1; then
+    php $SYSPATH/php/utilities/genbashconfig.php 2>/dev/null || true
+fi
 
 # Create initial DB if missing (fresh install)
 [ ! -e "$SYSDB" ] && /bin/sh $SCRIPTS/create.initial.db

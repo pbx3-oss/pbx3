@@ -6,7 +6,7 @@ Build-Depends: debhelper-compat (= 13)
 
 Package: pbx3
 Architecture: all
-Depends: ${misc:Depends},ngrep,sqlite3,lsb-release,asterisk,asterisk-mp3,asterisk-mysql,libdbi-perl,libdbd-sqlite3-perl,libio-socket-multicast-perl,libfile-readbackwards-perl,sox,nmap,zip,shorewall,shorewall6,fail2ban,sudo,dos2unix,dnsmasq,tshark,vim,less,hostname,ipcalc,slapd,ldap-utils,tcpdump,rsync,dnsutils,sysstat,curl,dmidecode,runit,ifupdown,mariadb-server,ksuid
+Depends: ${misc:Depends},ngrep,sqlite3,lsb-release,asterisk,asterisk-mp3,asterisk-mysql,libdbi-perl,libdbd-sqlite3-perl,libio-socket-multicast-perl,libfile-readbackwards-perl,sox,nmap,zip,shorewall,shorewall6,fail2ban,sudo,dos2unix,dnsmasq,tshark,vim,less,hostname,ipcalc,slapd,ldap-utils,tcpdump,rsync,dnsutils,sysstat,curl,dmidecode,runit,ifupdown,mariadb-server,ksuid,php-cli,php-sqlite3
 Description: PBX3 - API-driven configurator for Asterisk
  PBX3 is a backend-only worker: Asterisk config, DB, scripts. No HTTP
  server. Target: Ubuntu 24.04 LTS (Noble). Run
