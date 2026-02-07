@@ -219,8 +219,17 @@ sv d sys-ua-helper
 sleep 1
 sv u sys-ua-helper
 
-#add definitions to MySQL (if MySQL is installed)
-command -v mysql >/dev/null 2>&1 && mysql -u root < $SYSPATH/cache/cdr-mysql-setup.sql 2>/dev/null || true
+# CDR MySQL: create asterisk DB and cdr table for Asterisk CDR records (run when MySQL/MariaDB is present)
+if command -v mysql >/dev/null 2>&1; then
+    echo "Setting up MySQL database for Asterisk CDR..."
+    if mysql -u root < $SYSPATH/cache/cdr-mysql-setup.sql 2>/dev/null; then
+        echo "CDR MySQL setup done (database asterisk, user asterisk)."
+    else
+        echo "CDR MySQL setup skipped or failed (e.g. root password required). Run manually: mysql -u root -p < $SYSPATH/cache/cdr-mysql-setup.sql" >&2
+    fi
+else
+    echo "MySQL/MariaDB not found; CDR-to-MySQL skipped. Install mysql-server or mariadb-server and run: mysql -u root -p < $SYSPATH/cache/cdr-mysql-setup.sql"
+fi
 
 #stop systemd.resolved - it interferes with dnsmasq
 systemctl stop systemd-resolved

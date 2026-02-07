@@ -6,6 +6,6 @@ Build-Depends: golang-go
 
 Package: pbx3
 Architecture: all
-Depends: ${misc:Depends},ngrep,sqlite3,lsb-release,asterisk,asterisk-mp3,asterisk-mysql,apache2,php,php-mbstring,php-gd,php-sqlite3,php-curl,php-mysql,php-pear,php-ldap,php-zip,libapache2-mod-php,libdbi-perl,libdbd-sqlite3-perl,libio-socket-multicast-perl,libfile-readbackwards-perl,sox,nmap,zip,shorewall,shorewall6,fail2ban,sudo,dos2unix,dnsmasq,tshark,vim,less,hostname,ipcalc,slapd,ldap-utils,tcpdump,rsync,dnsutils,sysstat,curl,dmidecode,runit,ifupdown
+Depends: ${misc:Depends},ngrep,sqlite3,lsb-release,asterisk,asterisk-mp3,asterisk-mysql,apache2,php,php-mbstring,php-gd,php-sqlite3,php-curl,php-mysql,php-pear,php-ldap,php-zip,libapache2-mod-php,libdbi-perl,libdbd-sqlite3-perl,libio-socket-multicast-perl,libfile-readbackwards-perl,sox,nmap,zip,shorewall,shorewall6,fail2ban,sudo,dos2unix,dnsmasq,tshark,vim,less,hostname,ipcalc,slapd,ldap-utils,tcpdump,rsync,dnsutils,sysstat,curl,dmidecode,runit,ifupdown,mariadb-server
 Description: PBX3 - A fast, API driven, lightweight configurator for Asterisk
  Backend code to configure and build Asterisk dialplans on the fly.
