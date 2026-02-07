@@ -2,8 +2,13 @@ Source: pbx3
 Section: network
 Priority: extra
 Maintainer: KOKO <admin@aelintra.com>
+Build-Depends: debhelper-compat (= 13)
+
 Package: pbx3
 Architecture: all
 Depends: ${misc:Depends},ngrep,sqlite3,lsb-release,asterisk,asterisk-mp3,asterisk-mysql,apache2,php,php-mbstring,php-gd,php-sqlite3,php-curl,php-mysql,php-pear,php-ldap,php-zip,libapache2-mod-php,libdbi-perl,libdbd-sqlite3-perl,libio-socket-multicast-perl,libfile-readbackwards-perl,sox,nmap,zip,shorewall,shorewall6,fail2ban,sudo,dos2unix,dnsmasq,tshark,vim,less,hostname,ipcalc,slapd,ldap-utils,tcpdump,rsync,dnsutils,sysstat,curl,dmidecode,runit,ifupdown,mariadb-server,ksuid
-Description: PBX3 - A fast, API driven, lightweight configurator for Asterisk
- Backend code to configure and build Asterisk dialplans on the fly.
+Description: PBX3 - API-driven configurator for Asterisk
+ PBX3 provides backend code to configure and build Asterisk dialplans
+ on the fly. Target: Ubuntu 24.04 LTS (Noble). Run
+ /opt/pbx3/scripts/installer.sh after install for full setup (Apache,
+ fail2ban, DB, CDR MySQL, instance id).

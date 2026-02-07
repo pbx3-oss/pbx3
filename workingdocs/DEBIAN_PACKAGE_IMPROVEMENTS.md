@@ -1,7 +1,8 @@
 # Debian package builder: improvement recommendations
 
 **Path:** `pbx3-1/debian/`  
-**Context:** Long-used package builder; reviewed 2025-02-05. These are recommendations only; no changes have been applied.
+**Context:** Long-used package builder; reviewed 2025-02-05.  
+**Applied:** 2025-02-06 — compat 13, prerm fix, copyright, changelog 1.0.1, postinst note, postrm (no removal of /opt/pbx3; working files preserved). Rules (copy approach) and optional install file left unchanged.
 
 ---
 
@@ -109,7 +110,7 @@ This runs the symlink target as a command instead of removing the symlink.
 **Recommendation:**
 
 - If postinst is ever updated to run the full installer, keep `installer.sh` idempotent.
-- Optionally add a `postrm` to clean up `/opt/pbx3` (and any other package-owned state) on **purge**, if a full removal is desired.
+- ~~Optionally add a `postrm` to clean up `/opt/pbx3` on purge.~~ **Not done:** `/opt/pbx3` holds working files (DB, recordings, config); removing it on purge or upgrade would wipe them. Admin removes manually if desired.
 
 ---
 

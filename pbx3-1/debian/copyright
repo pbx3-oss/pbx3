@@ -1,25 +1,21 @@
-This package was debianized by the alien program by converting
-a binary .rpm package on Tue, 23 Oct 2012 00:15:52 +0100
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: pbx3
+Source: https://github.com/aelintra/pbx3 (or project repository)
 
-Copyright: GPL
+Files: *
+Copyright: Aelintra Telecom Limited
+License: GPL-2.0-or-later
 
-Information from the binary package:
-Name        : pbx3
-Version     : 1.0
-Release     : 1
-Architecture: noarch
-Install Date: (not installed)
-Group       : Networking/Daemons
-Size        : 15977851
-License     : GPL
-Signature   : (none)
-Source RPM  : pbx3-1.0.0-1.src.rpm
-Build Date  : Sun 01 Jan 2025 09:01:07 BST
-Build Host  : pbx3.aelintra.local
-Relocations : (not relocatable)
-Packager    : KoKo  <admin@aelintra.com>
-Vendor      : Aelintra Telecom Limited
-Summary     : PBX3 - A fast, lightweight code generator for Asterisk
-Description :
-PBX3.  Admin and backend code to configure and build Asterisk
-  dialplans on the fly for Deb/Ubu distributions.
+License: GPL-2.0-or-later
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <https://www.gnu.org/licenses/>.

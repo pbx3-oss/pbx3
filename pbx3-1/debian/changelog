@@ -1,4 +1,13 @@
-pbx3 (1.0.0-1) UNRELEASED; urgency=low
+pbx3 (0.0.2-1) noble; urgency=medium
 
-   - First build
-  
+  * Debhelper compat 13; fix prerm (remove symlinks, drop bad asterisk.conf line)
+  * Copyright: proper Format 1.0, GPL-2.0-or-later, Aelintra upstream
+  * postinst: document that full setup is /opt/pbx3/scripts/installer.sh
+  * postrm: do not remove /opt/pbx3 (working files preserved)
+  * Description: extended; target Ubuntu 24.04, installer note
+
+ -- KOKO <admin@aelintra.com>  Thu, 06 Feb 2025 12:00:00 +0000
+
+pbx3 (0.0.1-1) UNRELEASED; urgency=low
+
+   - First build (dev)
