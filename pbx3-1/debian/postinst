@@ -1,5 +1,5 @@
 #!/bin/bash
-# Full setup (Apache, fail2ban, DB, CDR MySQL, instance id) is done by
+# Full setup (fail2ban, DB, CDR MySQL, instance id) is done by
 # running /opt/pbx3/scripts/installer.sh (idempotent). Not run from here.
 
 # Install date

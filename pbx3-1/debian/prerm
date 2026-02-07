@@ -7,8 +7,7 @@
 sv d sys-ua-responder
 sv d sys-ua-helper
 
-rm -rf /etc/apache2/sites-enabled/pbx3*
-rm -rf /etc/apache2/sites-available/pbx3*
+# nginx/API site cleanup is done by pbx3api package when it is removed
 
 [ -L /etc/cron.d/pbx3 ] && rm -rf /etc/cron.d/pbx3
 

@@ -6,9 +6,9 @@ Build-Depends: debhelper-compat (= 13)
 
 Package: pbx3
 Architecture: all
-Depends: ${misc:Depends},ngrep,sqlite3,lsb-release,asterisk,asterisk-mp3,asterisk-mysql,apache2,php,php-mbstring,php-gd,php-sqlite3,php-curl,php-mysql,php-pear,php-ldap,php-zip,libapache2-mod-php,libdbi-perl,libdbd-sqlite3-perl,libio-socket-multicast-perl,libfile-readbackwards-perl,sox,nmap,zip,shorewall,shorewall6,fail2ban,sudo,dos2unix,dnsmasq,tshark,vim,less,hostname,ipcalc,slapd,ldap-utils,tcpdump,rsync,dnsutils,sysstat,curl,dmidecode,runit,ifupdown,mariadb-server,ksuid
+Depends: ${misc:Depends},ngrep,sqlite3,lsb-release,asterisk,asterisk-mp3,asterisk-mysql,libdbi-perl,libdbd-sqlite3-perl,libio-socket-multicast-perl,libfile-readbackwards-perl,sox,nmap,zip,shorewall,shorewall6,fail2ban,sudo,dos2unix,dnsmasq,tshark,vim,less,hostname,ipcalc,slapd,ldap-utils,tcpdump,rsync,dnsutils,sysstat,curl,dmidecode,runit,ifupdown,mariadb-server,ksuid
 Description: PBX3 - API-driven configurator for Asterisk
- PBX3 provides backend code to configure and build Asterisk dialplans
- on the fly. Target: Ubuntu 24.04 LTS (Noble). Run
- /opt/pbx3/scripts/installer.sh after install for full setup (Apache,
- fail2ban, DB, CDR MySQL, instance id).
+ PBX3 is a backend-only worker: Asterisk config, DB, scripts. No HTTP
+ server. Target: Ubuntu 24.04 LTS (Noble). Run
+ /opt/pbx3/scripts/installer.sh after install. HTTP/API is provided
+ by pbx3api (nginx + PHP-FPM); install pbx3api for the API.

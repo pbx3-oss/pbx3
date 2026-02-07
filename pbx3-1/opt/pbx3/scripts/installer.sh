@@ -54,50 +54,11 @@ chmod +x $SYSPATH/service/sys-ua-siplog/run
 [ ! -L /etc/service/sys-ua-helper ] && ln -s $SYSPATH/service/sys-ua-helper /etc/service
 [ ! -L /etc/service/sys-ua-siplog ] && ln -s $SYSPATH/service/sys-ua-siplog /etc/service
 
-# 
-# deal with Apache (API only on 44300; no colocated admin UI)
-# 
-
-# disable default sites
-a2dissite 000-default 2>/dev/null || true
-a2dissite default-ssl.conf 2>/dev/null || true
-
-# remove any previous sark/pbx3 site links (cleanup)
-rm -f /etc/apache2/sites-enabled/sark*
-rm -f /etc/apache2/sites-enabled/pbx3.conf
-rm -f /etc/apache2/sites-available/sark*
-
-# set key permissions so Apache and Asterisk can read certs
-chmod 751 /etc/ssl/private
-usermod -a -G ssl-cert www-data
-usermod -a -G ssl-cert asterisk
-
-# install pbx3 API site (only site we use)
-if [ ! -e /etc/apache2/sites-available/pbx3.conf ]; then
-    ln -s $SYSPATH/etc/apache2/sites-available/pbx3.conf /etc/apache2/sites-available/pbx3.conf
-fi
-# optional: install snakeoil cert fragment if we want to Include it from pbx3.conf later
-if [ ! -e /etc/apache2/sites-available/pbx3-snakeoil.conf ]; then
-    ln -s $SYSPATH/etc/apache2/sites-available/snakeoil-certs.conf /etc/apache2/sites-available/pbx3-snakeoil.conf 2>/dev/null || true
-fi
-
-# enable only the pbx3 API site (HTTPS on 44300)
-a2ensite pbx3.conf
-
-# required modules
-a2enmod rewrite >/dev/null 2>&1
-a2enmod ssl
-a2enmod proxy >/dev/null 2>&1
-a2enmod proxy_http >/dev/null 2>&1
-
-# ensure port 44300 is allowed in ports.conf (pbx3.conf uses Listen [::]:44300)
-if ! grep -q 'Listen.*44300' /etc/apache2/ports.conf 2>/dev/null; then
-    echo "Listen [::]:44300" >> /etc/apache2/ports.conf
-fi
-
-systemctl enable apache2.service
-systemctl stop apache2.service
-systemctl start apache2.service
+# HTTP server (nginx) and API site are installed by pbx3api; see pbx3api docs.
+# Ensure Asterisk (and later www-data for pbx3api) can read TLS certs (e.g. Let's Encrypt).
+chmod 751 /etc/ssl/private 2>/dev/null || true
+usermod -a -G ssl-cert asterisk 2>/dev/null || true
+usermod -a -G ssl-cert www-data 2>/dev/null || true
 
 # Use our versions of asterisk/modules, asterisk/http & asterisk/pjsip
 
