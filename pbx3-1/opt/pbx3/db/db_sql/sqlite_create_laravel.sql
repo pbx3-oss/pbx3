@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS "migrations"(
   "migration" varchar not null,
   "batch" integer not null
 );
-CREATE TABLE sqlite_sequence(name,seq);
 CREATE TABLE IF NOT EXISTS "users"(
   "id" integer primary key autoincrement not null,
   /* cluster added to handle cluster migration */

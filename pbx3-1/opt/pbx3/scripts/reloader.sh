@@ -29,6 +29,7 @@ while getopts ":hsL" option; do
 	esac
 done
 
+mkdir -p "$DBDUMPS"
 echo "Saving existing database $SYSDB as $LASTDB"
 cp -a $SYSDB $LASTDB
 
