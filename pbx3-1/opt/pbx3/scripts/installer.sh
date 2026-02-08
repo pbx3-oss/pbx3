@@ -175,16 +175,15 @@ systemctl disable debsetlan.service 2>/dev/null || true
 rm -f /etc/systemd/system/debsetlan.service
 systemctl daemon-reload 2>/dev/null || true
 
-#Shorewall6 setup
-if [ -d /etc/shorewall6 ]; then
-# the rules file always gets refreshed
-# 
+# Shorewall6 setup (create /etc/shorewall6 if missing so service can start)
+if [ -d "$SYSPATH/etc/shorewall6" ]; then
+    mkdir -p /etc/shorewall6
     cp -f $SYSPATH/etc/shorewall6/rules /etc/shorewall6
-    sed -i 's/startup=0/startup=1/' /etc/default/shorewall6
-    for file in `ls $SYSPATH/etc/shorewall6/` ; do
-                [ ! -e /etc/shorewall6/$file ] && cp -f $SYSPATH/etc/shorewall6/$file /etc/shorewall6            
-    done    
-    chown www-data:www-data /etc/shorewall6/pbx3_rules6
+    [ -f /etc/default/shorewall6 ] && sed -i 's/startup=0/startup=1/' /etc/default/shorewall6
+    for file in $(ls $SYSPATH/etc/shorewall6/); do
+        [ ! -e "/etc/shorewall6/$file" ] && cp -f "$SYSPATH/etc/shorewall6/$file" /etc/shorewall6
+    done
+    [ -f /etc/shorewall6/pbx3_rules6 ] && chown www-data:www-data /etc/shorewall6/pbx3_rules6
 fi
 
 #run shorewall's own fix routines
