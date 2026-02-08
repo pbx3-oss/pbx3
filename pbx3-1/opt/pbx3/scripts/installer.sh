@@ -43,7 +43,7 @@ chown -R asterisk:asterisk /var/spool/asterisk
 
 [ -d $ASTPATH ] && chmod -R 664 $ASTPATH
 [ -e $ASTPATH/manager.d ] && chmod +x $ASTPATH/manager.d
-chmod 755 -R $SYSPATH/generator
+[ -d "$GENERATOR" ] && chmod -R 755 "$GENERATOR"
 chmod 755 -R $SYSPATH/scripts
  
 chmod +x $SYSPATH/service/sys-ua-helper/run 
@@ -115,7 +115,7 @@ normalize_fqdn() {
     echo "$1" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
 }
 valid_fqdn() {
-    [ -n "$1" ] && [[ "$1" == *.* ]]
+    [ -n "$1" ] && case "$1" in *.*) true ;; *) false ;; esac
 }
 if [ -n "$INSTANCE_FQDN" ]; then
     INSTANCE_FQDN=$(normalize_fqdn "$INSTANCE_FQDN")
@@ -123,7 +123,8 @@ if [ -n "$INSTANCE_FQDN" ]; then
 fi
 if [ -z "$INSTANCE_FQDN" ] && [ -t 0 ]; then
     while true; do
-        read -r -p "Instance FQDN (e.g. node1.pbx3.com): " INSTANCE_FQDN
+        printf "Instance FQDN (e.g. node1.pbx3.com): " >&2
+        read -r INSTANCE_FQDN
         INSTANCE_FQDN=$(normalize_fqdn "$INSTANCE_FQDN")
         if valid_fqdn "$INSTANCE_FQDN"; then
             break
@@ -155,11 +156,14 @@ if [ -n "$INSTANCE_FQDN" ]; then
     fi
 fi
 
-# enable setlan
-echo running setlan to resolve IP addresses
-systemctl enable debsetlan.service
-systemctl start debsetlan.service
-sleep 10
+# Run setip once (network detection, shorewall/fail2ban/Asterisk localnet, /etc/issue)
+# Previously a systemd oneshot at boot; we run it here so the installer does not depend on it.
+echo running setip to resolve IP addresses
+/usr/bin/php $SYSPATH/php/utilities/setip.php
+# Remove the systemd unit so it is not loaded at boot (setip is run once by the installer only)
+systemctl disable debsetlan.service 2>/dev/null || true
+rm -f /etc/systemd/system/debsetlan.service
+systemctl daemon-reload 2>/dev/null || true
 
 #Shorewall6 setup
 if [ -d /etc/shorewall6 ]; then

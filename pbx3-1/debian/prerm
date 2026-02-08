@@ -16,4 +16,5 @@ rm -rf /etc/service/sys*
 [ -L /etc/fail2ban/jail.local ] && rm -f /etc/fail2ban/jail.local
 [ -L /etc/fail2ban/action.d/shorewall.local ] && rm -f /etc/fail2ban/action.d/shorewall.local
 
-systemctl disable debsetlan
+# debsetlan (setip) is no longer a systemd service; installer runs setip directly
+# systemctl disable debsetlan 2>/dev/null || true
