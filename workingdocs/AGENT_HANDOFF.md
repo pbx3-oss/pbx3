@@ -47,7 +47,7 @@
 
 - Build the .deb from the **pbx3** repo (e.g. `dpkg-buildpackage` or project’s build script). Package files are under `pbx3-1/`.
 - Install: `apt install ./pbx3_*.deb` (or equivalent).
-- After install, run **once:** `sudo /opt/pbx3/scripts/installer.sh` (idempotent; creates DB, shorewall, setip, CDR MySQL, etc.).
+- After install, run **once:** `sudo /opt/pbx3/scripts/installer.sh` (idempotent; prompts for **instance FQDN** e.g. node1.pbx3.com, stores in globals.fqdn, sets hostname to 3LD e.g. node1; creates DB, shorewall, setip, CDR MySQL, etc.).
 
 ---
 
@@ -65,6 +65,7 @@
 | File | Use when |
 |------|----------|
 | **APACHE_CONFIG_TO_PBX3API.md** | HTTP vs backend split, TLS/LE ownership, nginx in pbx3api, phases |
+| **LETSENCRYPT_PLAN.md** | Let's Encrypt: HTTP-01 vs DNS-01, port 80, deploy hook, installer, Asterisk/nginx paths, implementation order |
 | **PBX3API_INSTALLER_NGINX_ADDITIONS.md** | What pbx3api installer needs to add (nginx, site config) |
 | **nginx-api-site-reference.conf** | Reference nginx server block for API (e.g. 44300) |
 | **PHP_SCRIPTS_AND_MODULES.md** | Which PHP scripts exist, who calls them, php-cli/php-sqlite3 and extensions |

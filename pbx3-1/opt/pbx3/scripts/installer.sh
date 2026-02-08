@@ -109,6 +109,29 @@ if [ -d $SHOREWALL ]; then
     chown www-data:www-data $SHOREWALL/pbx3_inline_limit
 fi
 
+# Instance FQDN: prompt (or use INSTANCE_FQDN env); store in globals.fqdn and set hostname to 3LD
+# e.g. node1.pbx3.com -> fqdn=node1.pbx3.com, hostname=node1
+normalize_fqdn() {
+    echo "$1" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
+}
+valid_fqdn() {
+    [ -n "$1" ] && [[ "$1" == *.* ]]
+}
+if [ -n "$INSTANCE_FQDN" ]; then
+    INSTANCE_FQDN=$(normalize_fqdn "$INSTANCE_FQDN")
+    valid_fqdn "$INSTANCE_FQDN" || INSTANCE_FQDN=""
+fi
+if [ -z "$INSTANCE_FQDN" ] && [ -t 0 ]; then
+    while true; do
+        read -r -p "Instance FQDN (e.g. node1.pbx3.com): " INSTANCE_FQDN
+        INSTANCE_FQDN=$(normalize_fqdn "$INSTANCE_FQDN")
+        if valid_fqdn "$INSTANCE_FQDN"; then
+            break
+        fi
+        echo "Please enter a full FQDN (e.g. node1.pbx3.com)." >&2
+    done
+fi
+
 # Regenerate bashconfig from config.php when PHP is available (package ships bashconfig so install works without PHP)
 if command -v php >/dev/null 2>&1; then
     php $SYSPATH/php/utilities/genbashconfig.php 2>/dev/null || true
@@ -121,6 +144,16 @@ fi
 /bin/sh $SCRIPTS/reloader.sh
 chmod 775 $DBPATH
 chmod 664 $SYSDB
+
+# Store instance FQDN in globals and set system hostname to 3LD (e.g. node1.pbx3.com -> hostname node1)
+if [ -n "$INSTANCE_FQDN" ]; then
+    sqlite3 $SYSDB "UPDATE globals SET fqdn='$(echo "$INSTANCE_FQDN" | sed "s/'/''/g")' WHERE pkey=(SELECT pkey FROM globals LIMIT 1);"
+    INSTANCE_3LD="${INSTANCE_FQDN%%.*}"
+    if [ -n "$INSTANCE_3LD" ]; then
+        hostnamectl set-hostname "$INSTANCE_3LD" 2>/dev/null || echo "$INSTANCE_3LD" > /etc/hostname
+        echo "Set globals.fqdn to $INSTANCE_FQDN and hostname to $INSTANCE_3LD"
+    fi
+fi
 
 # enable setlan
 echo running setlan to resolve IP addresses

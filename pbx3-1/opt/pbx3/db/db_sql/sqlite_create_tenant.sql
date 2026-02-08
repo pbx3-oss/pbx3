@@ -99,11 +99,11 @@ CREATE TABLE IF NOT EXISTS cluster (
     "ivr_digit_wait" INTEGER DEFAULT 6000,   -- how long to wait for another digit
     "language" TEXT DEFAULT 'en-gb',         -- used in extensions.conf 
     "ldapanonbind" TEXT DEFAULT 'YES',       -- anonymous bind YES/NO **MOVED**
-    "ldapbase" TEXT DEFAULT 'dc=sark,dc=local',  -- LDAP base **MOVED**
+    "ldapbase" TEXT DEFAULT 'dc=pbx3,dc=local',  -- LDAP base **MOVED**
     "ldaphost" TEXT DEFAULT '127.0.0.1',  -- LDAP host **MOVED**
     "ldapou" TEXT DEFAULT 'contacts',     -- LDAP OU **MOVED**
     "ldapuser" TEXT DEFAULT 'admin',		-- LDAP user **MOVED**
-    "ldappass" TEXT DEFAULT 'sarkadmin',	-- LDAP password **MOVED**
+    "ldappass" TEXT DEFAULT 'pbx3admin',	-- LDAP password **MOVED**
     "ldaptls" TEXT DEFAULT 'off',              -- LDAP TLS mode(off/on)
     "localarea" TEXT,                        -- local area code
     "localdplan" TEXT,                       -- local number dialplan
