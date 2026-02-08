@@ -17,13 +17,17 @@
 ## 2. Current state (recent work completed)
 
 - **Backend-only:** Apache and HTTP config removed from pbx3. HTTP/API is pbx3api’s responsibility (see `APACHE_CONFIG_TO_PBX3API.md`).
-- **setip / debsetlan:** systemd unit `debsetlan.service` runs `php/utilities/setip.php` (path fixed to `php/utilities/`). Package Depends: **php-cli**, **php-sqlite3** so setip and installer can run.
-- **Installer** runs manually (`sudo /opt/pbx3/scripts/installer.sh`), **not** from postinst. Fixes applied:
+- **setip:** No longer a systemd service. Installer runs `php/utilities/setip.php` **once** directly; `debsetlan.service` was removed from the package. Installer also disables/removes the unit if present. Package Depends: **php-cli**, **php-sqlite3** so setip and installer can run.
+- **Installer** runs manually (`sudo /opt/pbx3/scripts/installer.sh`), **not** from postinst. Script is written to work under **sh** (dash) or bash (POSIX case/printf; no `[[` or `read -p`). Fixes and behaviour:
+  - **Instance FQDN:** Prompts for instance FQDN (e.g. node1.pbx3.com) or uses `INSTANCE_FQDN` env; stores in `globals.fqdn`; sets hostname to 3LD (e.g. node1) via hostnamectl or fallback; updates `/etc/hosts` so `127.0.1.1` points to the new hostname.
   - **db_database_dumps:** `reloader.sh` does `mkdir -p "$DBDUMPS"` before copying DB to `last.db`.
-  - **sqlite_sequence:** Removed `CREATE TABLE sqlite_sequence` from `sqlite_create_laravel.sql` (reserved by SQLite).
-  - **Shorewall:** Shipped `etc/shorewall/pbx3_inline_fqdn` is comment-only so `$FQDN` is not undefined at compile; API/NetHelper overwrites it when fqdninspect is enabled.
-  - **CDR MySQL:** Installer uses `mysql -u root --socket=...` so it uses socket auth (same as `sudo mysql -u root`).
-- **genbashconfig.php** in installer is optional: run only if `php` is available; otherwise use shipped `scripts/bashconfig`.
+  - **sqlite_sequence:** Removed from `sqlite_create_laravel.sql` (reserved by SQLite).
+  - **Shorewall:** Shipped `pbx3_inline_fqdn` is comment-only; API/NetHelper overwrites when fqdninspect enabled.
+  - **CDR MySQL:** Installer uses `mysql -u root --socket=...` for socket auth.
+  - **Shorewall6:** Installer runs `mkdir -p /etc/shorewall6` when templates exist so the service can start even if the package didn’t create the dir.
+  - **generator:** chmod uses `$GENERATOR` (`/opt/pbx3/php/generator`), not `$SYSPATH/generator`.
+- **genbashconfig.php** in installer is optional (run only if `php` is available).
+- **setip.php:** dpkg-query and `/etc/issue` use **CODENAME** (pbx3), not SYSPREFIX (/pbx3).
 
 ---
 
@@ -33,9 +37,9 @@
 |------|------|
 | Installer | `pbx3-1/opt/pbx3/scripts/installer.sh` |
 | Reloader (DB rebuild) | `pbx3-1/opt/pbx3/scripts/reloader.sh` |
-| setip (network/shorewall/asterisk) | `pbx3-1/opt/pbx3/php/utilities/setip.php` |
-| systemd setip unit | `pbx3-1/etc/systemd/system/debsetlan.service` |
+| setip (network/shorewall/asterisk) | `pbx3-1/opt/pbx3/php/utilities/setip.php` (run once by installer; no systemd unit) |
 | Path/config source of truth | `pbx3-1/opt/pbx3/php/config.php` → `scripts/bashconfig` (via genbashconfig.php) |
+| Shorewall6 templates | `pbx3-1/opt/pbx3/etc/shorewall6/` (installer creates /etc/shorewall6 if missing) |
 | Debian packaging | `pbx3-1/debian/` (control, postinst, prerm, rules) |
 | SQL schemas | `pbx3-1/opt/pbx3/db/db_sql/` (instance, laravel, tenant, message) |
 | Shorewall templates | `pbx3-1/opt/pbx3/etc/shorewall/` |
@@ -47,7 +51,7 @@
 
 - Build the .deb from the **pbx3** repo (e.g. `dpkg-buildpackage` or project’s build script). Package files are under `pbx3-1/`.
 - Install: `apt install ./pbx3_*.deb` (or equivalent).
-- After install, run **once:** `sudo /opt/pbx3/scripts/installer.sh` (idempotent; prompts for **instance FQDN** e.g. node1.pbx3.com, stores in globals.fqdn, sets hostname to 3LD e.g. node1; creates DB, shorewall, setip, CDR MySQL, etc.).
+- After install, run **once:** `sudo /opt/pbx3/scripts/installer.sh` (idempotent; prompts for **instance FQDN** or use `INSTANCE_FQDN=node1.pbx3.com`; stores in globals.fqdn, sets hostname and `/etc/hosts` 127.0.1.1; runs setip once; creates DB, shorewall, shorewall6 dir if needed, CDR MySQL, etc.). Works when invoked as `sh installer.sh` or `./installer.sh`.
 
 ---
 
@@ -86,4 +90,4 @@
 
 - **config.php** is the PHP source of truth for paths; run `php utilities/genbashconfig.php` to regenerate `scripts/bashconfig` after editing config.php (or rely on shipped bashconfig if PHP not needed).
 - **reloader.sh** rebuilds the SQLite DB (saves current to `db_database_dumps/last.db`, then recreates from SQL files). It **exits** partway through; code after that (e.g. genAst, sanitize-firewall) is currently dead.
-- **setip.php** needs NetHelperClass (and DbClass for static IP from DB); both need php-sqlite3.
+- **setip.php** needs NetHelperClass (and DbClass for static IP from DB); both need php-sqlite3. Uses **CODENAME** (pbx3) for dpkg-query and `/etc/issue`, not SYSPREFIX.
