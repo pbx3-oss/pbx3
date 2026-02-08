@@ -90,9 +90,9 @@ else {
 /*
         Set an IP in /etc/issue for CPE systems
  */
-	$sysrlse = trim(system("dpkg-query -W -f '\${version}\n' " . SYSPREFIX));
+	$sysrlse = trim(shell_exec("dpkg-query -W -f '\${version}\n' " . CODENAME . " 2>/dev/null") ?: '');
 	$osrelease = trim (`lsb_release -d --short`);
-	`echo "$osrelease/" . SYSPREFIX . " $sysrlse running at $ip/$cidr" > /etc/issue`;
+	`echo "$osrelease/" . CODENAME . " $sysrlse running at $ip/$cidr" > /etc/issue`;
 }
 
 function logit ($someText) {

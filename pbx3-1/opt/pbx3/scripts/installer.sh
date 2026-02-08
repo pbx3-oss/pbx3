@@ -149,9 +149,19 @@ chmod 664 $SYSDB
 # Store instance FQDN in globals and set system hostname to 3LD (e.g. node1.pbx3.com -> hostname node1)
 if [ -n "$INSTANCE_FQDN" ]; then
     sqlite3 $SYSDB "UPDATE globals SET fqdn='$(echo "$INSTANCE_FQDN" | sed "s/'/''/g")' WHERE pkey=(SELECT pkey FROM globals LIMIT 1);"
-    INSTANCE_3LD="${INSTANCE_FQDN%%.*}"
+    INSTANCE_3LD=$(echo "$INSTANCE_FQDN" | cut -d. -f1)
     if [ -n "$INSTANCE_3LD" ]; then
-        hostnamectl set-hostname "$INSTANCE_3LD" 2>/dev/null || echo "$INSTANCE_3LD" > /etc/hostname
+        if /usr/bin/hostnamectl set-hostname "$INSTANCE_3LD" 2>/dev/null; then
+            :
+        else
+            echo "$INSTANCE_3LD" > /etc/hostname
+            hostname "$INSTANCE_3LD" 2>/dev/null || true
+        fi
+        # Update /etc/hosts so 127.0.1.1 points to the new hostname (replace existing or add)
+        if [ -f /etc/hosts ]; then
+            sed -i 's/^127\.0\.1\.1[[:space:]].*/127.0.1.1\t'"$INSTANCE_3LD"'/' /etc/hosts
+            grep -q '^127\.0\.1\.1[[:space:]]' /etc/hosts || sed -i '2i 127.0.1.1\t'"$INSTANCE_3LD" /etc/hosts
+        fi
         echo "Set globals.fqdn to $INSTANCE_FQDN and hostname to $INSTANCE_3LD"
     fi
 fi
@@ -205,9 +215,8 @@ fi
 systemctl enable shorewall.service
 systemctl enable shorewall6.service
 
-
-# suppress CDR menu generation for Deb 9 and ubuntu 
-[ -e $SYSPATH/cache/1520813339.db_v4_admin_perms2 ] && mv $SYSPATH/cache/1520813339.db_v4_admin_perms2 $SYSPATH/always/
+systemctl start shorewall.service
+systemctl start shorewall6.service
 
 
 # call recording 
