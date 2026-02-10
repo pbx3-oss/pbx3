@@ -1,4 +1,5 @@
 /DEBIAN/*
+__pycache__/
 **/.debhelper/
 **/*.debhelper.log
 **/*.substvars
