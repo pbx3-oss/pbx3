@@ -71,9 +71,16 @@ if [ -e $Customerdata ]; then
 	sqlite3 $SYSDB < $Customerdata
 fi
 
-# Instance identity: ensure globals has exactly one row with pkey = ksuid (fresh install or no globals in backup)
+# Instance identity: ensure globals has exactly one row with pkey = ksuid (idempotent: keep existing pkey if present)
 GCOUNT=$(sqlite3 $SYSDB "SELECT COUNT(*) FROM globals;" 2>/dev/null || echo "0")
-if [ "$GCOUNT" -eq 0 ]; then
+if [ "$GCOUNT" -ge 1 ]; then
+	EXISTING_PKEY=$(sqlite3 $SYSDB "SELECT pkey FROM globals LIMIT 1" 2>/dev/null)
+	if [ -n "$EXISTING_PKEY" ]; then
+		mkdir -p "$(dirname "$INSTANCEID")"
+		echo "$EXISTING_PKEY" > "$INSTANCEID"
+		echo "Instance id already set (globals.pkey): $EXISTING_PKEY"
+	fi
+elif [ "$GCOUNT" -eq 0 ]; then
 	KSUID=$(ksuid 2>/dev/null)
 	if [ -n "$KSUID" ]; then
 		sqlite3 $SYSDB "INSERT INTO globals(pkey) VALUES ('$KSUID');"

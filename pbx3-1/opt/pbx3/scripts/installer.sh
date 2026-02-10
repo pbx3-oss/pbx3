@@ -109,7 +109,7 @@ if [ -d $SHOREWALL ]; then
     chown www-data:www-data $SHOREWALL/pbx3_inline_limit
 fi
 
-# Instance FQDN: prompt (or use INSTANCE_FQDN env); store in globals.fqdn and set hostname to 3LD
+# Instance FQDN: use env, else existing globals.fqdn, else prompt (idempotent: skip prompt if already set)
 # e.g. node1.pbx3.com -> fqdn=node1.pbx3.com, hostname=node1
 normalize_fqdn() {
     echo "$1" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
@@ -120,6 +120,11 @@ valid_fqdn() {
 if [ -n "$INSTANCE_FQDN" ]; then
     INSTANCE_FQDN=$(normalize_fqdn "$INSTANCE_FQDN")
     valid_fqdn "$INSTANCE_FQDN" || INSTANCE_FQDN=""
+fi
+if [ -z "$INSTANCE_FQDN" ] && [ -e "$SYSDB" ]; then
+    existing_fqdn=$(sqlite3 "$SYSDB" "SELECT fqdn FROM globals WHERE fqdn IS NOT NULL AND fqdn != '' LIMIT 1" 2>/dev/null)
+    existing_fqdn=$(normalize_fqdn "$existing_fqdn")
+    valid_fqdn "$existing_fqdn" && INSTANCE_FQDN="$existing_fqdn"
 fi
 if [ -z "$INSTANCE_FQDN" ] && [ -t 0 ]; then
     while true; do
