@@ -2,7 +2,7 @@ CONNECT mysql;
 
 CREATE DATABASE IF NOT EXISTS asterisk; 
 
-CREATE USER 'asterisk'@'localhost' IDENTIFIED BY 'aster1sk';
+CREATE USER IF NOT EXISTS 'asterisk'@'localhost' IDENTIFIED BY 'aster1sk';
 
 GRANT ALL ON asterisk.* TO asterisk@localhost; 
 
