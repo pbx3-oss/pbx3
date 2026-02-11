@@ -90,18 +90,14 @@ catch (Exception $e) {
  * get a list of tenants
  */
 try { 
-	$tenants = $dbh->query("select id,pkey from cluster")->fetchall();
+	$tenants = $dbh->query("select id from cluster")->fetchall();
 }
 catch (Exception $e) {
 	echo "Oops on tenant list fetch " . " $e\n";
 	exit(8);
 }
  
-foreach($tenants as $tenant) {
-// ignore the default tenant - it always belongs to the instance
-	if ($tenant['pkey'] == "default") {
-		continue;
-	}	
+foreach($tenants as $tenant) {	
 	$backupDb = establishTenantFolders($tenant['id']);
 	createTenantMiniDb($dbh,$backupDb,$tenant['id']);
 }
@@ -137,9 +133,7 @@ function createTenantMiniDb($dbh,$backupDb,$tenant) {
 		"page",
 		"meetme",
 		"queue",
-		"route",
-		"trunks",
-		"users"
+		"route"
 	);
 
 /**

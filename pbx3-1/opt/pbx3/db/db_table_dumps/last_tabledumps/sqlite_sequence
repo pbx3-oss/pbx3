@@ -1,0 +1,3 @@
+BEGIN TRANSACTION;
+INSERT OR IGNORE INTO sqlite_sequence(name,seq) values ('users','1');
+COMMIT;

@@ -1,0 +1,3 @@
+BEGIN TRANSACTION;
+INSERT OR IGNORE INTO users(id,cluster,name,email,password,role) values ('1','default','admin','admin@pbx3.com','$2y$12$IHbfUfGA3TOj2hnGld7TM.2gMqhyvQnWoAVmMwX3N5Uo7WNvaW85K','isAdmin');
+COMMIT;

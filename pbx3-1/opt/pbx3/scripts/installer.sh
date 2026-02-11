@@ -2,14 +2,10 @@
 
 . /opt/pbx3/scripts/bashconfig
 
-# Need to create the work directories in etc/asterisk:-
-# callparks, endpoints, iax_trunks, queues, trunks
-
-
 setvcl() {
 # turn on VCL in Globals
     echo "AWS instance detected, setting cloud flags"
-    /usr/bin/sqlite3 $SYSDB "UPDATE globals SET vcl=1"
+    /usr/bin/sqlite3 $SYSDB "update globals set VCL=1"
 # open 80,443 and 22 in the firewall (otherwise we'll be locked out)
     echo "WARNING!!!  Ports 80, 443 and 22 have been opened to prevent AWS lockout - you should review these and set sensible values"
     sed -i 's/ACCEPT net:$LAN $FW tcp 80/ACCEPT net $FW tcp 80/' $FW_RULES
@@ -35,58 +31,116 @@ usermod -a -G www-data asterisk
 
 [ -e /etc/ssmtp/ssmtp.conf ] && chown www-data:www-data /etc/ssmtp/ssmtp.conf && chmod 660 /etc/ssmtp/ssmtp.conf
 
-[ -d $ASTPATH ] && chown -R asterisk:asterisk $ASTPATH
+chown -R www-data:www-data $SYSPATH/www
+chown -R www-data:www-data $SYSPATH/db
+chown -R www-data:www-data $SYSPATH/cache
+
+chown -R asterisk:asterisk $ASTPATH/*
 chown -R asterisk:asterisk /var/lib/asterisk
 chown -R asterisk:asterisk /usr/share/asterisk/sounds
 chown -R asterisk:asterisk /var/log/asterisk
 chown -R asterisk:asterisk /var/spool/asterisk
 
-[ -d $ASTPATH ] && chmod -R 664 $ASTPATH
-[ -e $ASTPATH/manager.d ] && chmod +x $ASTPATH/manager.d
-[ -d "$GENERATOR" ] && chmod -R 755 "$GENERATOR"
+chmod 664 -R $ASTPATH/*
+chmod +x $ASTPATH/manager.d
+chmod 755 -R $SYSPATH/www
+chmod 755 -R $SYSPATH/generator
 chmod 755 -R $SYSPATH/scripts
  
 chmod +x $SYSPATH/service/sys-ua-helper/run 
+chmod +x $SYSPATH/service/sys-ua-responder/run
 chmod +x $SYSPATH/service/sys-ua-siplog/run
 
 
 # link the helpers if they don't exist 
 [ ! -L /etc/service/sys-ua-helper ] && ln -s $SYSPATH/service/sys-ua-helper /etc/service
+[ ! -L /etc/service/sys-ua-responder ] && ln -s $SYSPATH/service/sys-ua-responder /etc/service
 [ ! -L /etc/service/sys-ua-siplog ] && ln -s $SYSPATH/service/sys-ua-siplog /etc/service
 
-# HTTP server (nginx) and API site are installed by pbx3api; see pbx3api docs.
-# Ensure Asterisk (and later www-data for pbx3api) can read TLS certs (e.g. Let's Encrypt).
-chmod 751 /etc/ssl/private 2>/dev/null || true
-usermod -a -G ssl-cert asterisk 2>/dev/null || true
-usermod -a -G ssl-cert www-data 2>/dev/null || true
+# 
+# deal with Apache
+# 
+
+# disable defaults
+a2dissite 000-default
+a2dissite default-ssl.conf
+
+# set the key permissions so Apache and Asterisk can read the key
+chmod 751 /etc/ssl/private
+usermod -a -G ssl-cert www-data
+usermod -a -G ssl-cert asterisk
+
+# remove any previous sark references
+rm -rf /etc/apache2/sites-enabled/sark*
+rm -rf /etc/apache2/sites-available/sark*
+
+# link our sites
+[ ! -L /etc/apache2/sites-available/sark-certs.conf ] && ln -s $SYSPATH/etc/apache2/sites-available/sark-certs.conf /etc/apache2/sites-available
+[ ! -L /etc/apache2/sites-available/sark-default-ssl.conf ] && ln -s $SYSPATH/etc/apache2/sites-available/sark-default-ssl.conf /etc/apache2/sites-available
+[ ! -L /etc/apache2/sites-available/sark-http.conf ] && ln -s $SYSPATH/etc/apache2/sites-available/sark-http.conf /etc/apache2/sites-available
+[ ! -L /etc/apache2/sites-available/sark-name.conf ] && ln -s $SYSPATH/etc/apache2/sites-available/sark-name.conf /etc/apache2/sites-available
+[ ! -L /etc/apache2/sites-available/sark-ssl.conf ] && ln -s $SYSPATH/etc/apache2/sites-available/sark-ssl.conf /etc/apache2/sites-available
+[ ! -L /etc/apache2/sites-available/sark-prov-ssl.conf ] && ln -s $SYSPATH/etc/apache2/sites-available/sark-prov-ssl.conf /etc/apache2/sites-available
 
 # Use our versions of asterisk/modules, asterisk/http & asterisk/pjsip
 
-[ ! -e $ASTPATH/modules.conf_installed ] && mv $ASTPATH/modules.conf $ASTPATH/modules.conf_installed
-[ ! -L $ASTPATH/modules.conf ] && ln -s $ASTLOCALCONF/modules.conf $ASTPATH/modules.conf
-[ ! -e $ASTPATH/http.conf_installed ] && mv $ASTPATH/http.conf $ASTPATH/http.conf_installed
-[ ! -L $ASTPATH/http.conf ] && ln -s $ASTLOCALCONF/http.conf $ASTPATH/http.conf
-[ ! -e $ASTPATH/pjsip.conf_installed ] && mv $ASTPATH/pjsip.conf $ASTPATH/pjsip.conf_installed
-[ ! -L $ASTPATH/pjsip.conf ] && ln -s $ASTLOCALCONF/pjsip.conf $ASTPATH/pjsip.conf
+[ ! -e $ASTPATH/modules.install.conf ] && mv $ASTPATH/modules.conf $ASTPATH/modules.install.conf
+[ ! -L $ASTPATH/modules.conf ] && ln -s $ASTPATH/sark_modules.conf $ASTPATH/modules.conf
+[ ! -e $ASTPATH/http.install.conf ] && mv $ASTPATH/http.conf $ASTPATH/http.install.conf
+[ ! -L $ASTPATH/http.conf ] && ln -s $ASTPATH/sark_http.conf $ASTPATH/http.conf
+[ ! -e $ASTPATH/pjsip.install.conf ] && mv $ASTPATH/pjsip.conf $ASTPATH/pjsip.install.conf
+[ ! -L $ASTPATH/pjsip.conf ] && ln -s $ASTPATH/sark_pjsip.conf $ASTPATH/pjsip.conf
 
-# Asterisk 11+ call parks
 
-[ ! -e $ASTPATH/res_parking.conf_installed ] && mv $ASTPATH/res_parking.conf $ASTPATH/res_parking.conf_installed
-[ ! -L $ASTPATH/res_parking.conf ] && ln -s $ASTLOCALCONF/res_parking.conf $ASTPATH/res_parking.conf
+# enable sark apache fragments
+a2ensite sark-http
+a2ensite sark-ssl
+a2ensite sark-name
+
+# enable sark opional fragments for certificates 
+if [ -e /etc/ssl/certs/ssl-cert-sark-customer.pem ]; then
+    a2ensite sark-certs
+    a2dissite sark-default-ssl
+else 
+    a2ensite sark-default-ssl
+fi
+
+if [ -e /etc/ssl/3pcerts/3pcerts.pem ]; then
+    a2ensite sark-prov-ssl
+else 
+    a2dissite sark-prov-ssl
+fi
+
+#HTTPD
+a2enmod rewrite > /dev/null 2>&1
+a2enmod proxy > /dev/null 2>&1
+a2enmod proxy_http > /dev/null 2>&1
+
+#HTTPS
+a2enmod ssl
+
+#enable listening on IPV6 for apache
+sed -i 's/Listen 80/Listen [::]:80/' /etc/apache2/ports.conf
+sed -i 's/Listen 443/Listen [::]:443/' /etc/apache2/ports.conf
+
+[ ! -e /etc/ssl/3pcerts ] && mkdir /etc/ssl/3pcerts 
+
+systemctl enable apache2.service
+systemctl stop apache2.service
+systemctl start apache2.service
+
 
 #handle multiple NICs
-if [ ! -d /etc/network/interfaces.d ]; then
+if [ ! -e /etc/network/interfaces.d ]; then
     mkdir -p /etc/network/interfaces.d
+    echo "source /etc/network/interfaces.d/*" >> /etc/network/interfaces
 fi
-# idempotent: add source line only if not already present
-grep -q 'source /etc/network/interfaces.d' /etc/network/interfaces 2>/dev/null || echo "source /etc/network/interfaces.d/*" >> /etc/network/interfaces
     
-# set correct Asterisk dateformat in logger.conf (idempotent: only when present)
-if [ -f $ASTPATH/logger.conf ]; then
-    sed -i 's/^;dateformat=%F %T /dateformat=%F %T/' $ASTPATH/logger.conf
-    sed -i '/^messages/c \messages => security,notice,warning,error' $ASTPATH/logger.conf
-    /usr/sbin/asterisk -rx 'logger reload' 2>/dev/null || true
-fi
+# set correct Asterisk dateformat in logger.conf
+sed -i 's/^;dateformat=%F %T /dateformat=%F %T/' $ASTPATH/logger.conf
+# set security logging for Ast11 
+sed -i '/^messages/c \messages => security,notice,warning,error' $ASTPATH/logger.conf;
+/usr/sbin/asterisk -rx 'logger reload'
 
 #Shorewall setup
 if [ -d $SHOREWALL ]; then
@@ -95,112 +149,58 @@ if [ -d $SHOREWALL ]; then
     echo 'INCLUDE local.lan' > $SHOREWALL/params
     echo 'INCLUDE local.if1' >> $SHOREWALL/params
 
-    cp -f $SYSPATH/etc/shorewall/rules $SHOREWALL/rules
-    cp -f $SYSPATH/etc/shorewall/pbx3_rules $SHOREWALL/pbx3_rules
+    cp -f $SYSPATH$SHOREWALLrules $SHOREWALL
+    [ ! -e $FW_RULES ] && cp $FW_RULES $SHOREWALL
     #for pre 5.x upgrades check that 443 is open (otherwise they won't be able to login)
     grep  -q "tcp\s*443\s*" $FW_RULES
     if [  "$?" -ne "0" ] ; then
         echo ACCEPT net:\$LAN \$FW tcp 443 - - >> $FW_RULES 
     fi
-    cp -f $SYSPATH/etc/shorewall/pbx3_inline_fqdn $SHOREWALL/pbx3_inline_fqdn
-    cp -f $SYSPATH/etc/shorewall/pbx3_inline_limit $SHOREWALL/pbx3_inline_limit
+    touch $SHOREWALL/$SYSPREFIX_inline_fqdn
+    touch $SHOREWALL/$SYSPREFIX_inline_limit
     chown www-data:www-data $FW_RULES
-    chown www-data:www-data $SHOREWALL/pbx3_inline_fqdn
-    chown www-data:www-data $SHOREWALL/pbx3_inline_limit
+    chown www-data:www-data $SHOREWALL/$SYSPREFIX_inline_fqdn
+    chown www-data:www-data $SHOREWALL/$SYSPREFIX_inline_limit
 fi
-
-# Instance FQDN: use env, else existing globals.fqdn, else prompt (idempotent: skip prompt if already set)
-# e.g. node1.pbx3.com -> fqdn=node1.pbx3.com, hostname=node1
-normalize_fqdn() {
-    echo "$1" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
-}
-valid_fqdn() {
-    [ -n "$1" ] && case "$1" in *.*) true ;; *) false ;; esac
-}
-if [ -n "$INSTANCE_FQDN" ]; then
-    INSTANCE_FQDN=$(normalize_fqdn "$INSTANCE_FQDN")
-    valid_fqdn "$INSTANCE_FQDN" || INSTANCE_FQDN=""
-fi
-if [ -z "$INSTANCE_FQDN" ] && [ -e "$SYSDB" ]; then
-    existing_fqdn=$(sqlite3 "$SYSDB" "SELECT fqdn FROM globals WHERE fqdn IS NOT NULL AND fqdn != '' LIMIT 1" 2>/dev/null)
-    existing_fqdn=$(normalize_fqdn "$existing_fqdn")
-    valid_fqdn "$existing_fqdn" && INSTANCE_FQDN="$existing_fqdn"
-fi
-if [ -z "$INSTANCE_FQDN" ] && [ -t 0 ]; then
-    while true; do
-        printf "Instance FQDN (e.g. node1.pbx3.com): " >&2
-        read -r INSTANCE_FQDN
-        INSTANCE_FQDN=$(normalize_fqdn "$INSTANCE_FQDN")
-        if valid_fqdn "$INSTANCE_FQDN"; then
-            break
-        fi
-        echo "Please enter a full FQDN (e.g. node1.pbx3.com)." >&2
-    done
-fi
-
-# Regenerate bashconfig from config.php when PHP is available (package ships bashconfig so install works without PHP)
-if command -v php >/dev/null 2>&1; then
-    php $SYSPATH/php/utilities/genbashconfig.php 2>/dev/null || true
-fi
-
-# Create initial DB if missing (fresh install)
-[ ! -e "$SYSDB" ] && /bin/sh $SCRIPTS/create.initial.db
 
 #Rebuild the database
 /bin/sh $SCRIPTS/reloader.sh
 chmod 775 $DBPATH
 chmod 664 $SYSDB
 
-# Store instance FQDN in globals and set system hostname to 3LD (e.g. node1.pbx3.com -> hostname node1)
-if [ -n "$INSTANCE_FQDN" ]; then
-    sqlite3 $SYSDB "UPDATE globals SET fqdn='$(echo "$INSTANCE_FQDN" | sed "s/'/''/g")' WHERE pkey=(SELECT pkey FROM globals LIMIT 1);"
-    INSTANCE_3LD=$(echo "$INSTANCE_FQDN" | cut -d. -f1)
-    if [ -n "$INSTANCE_3LD" ]; then
-        if /usr/bin/hostnamectl set-hostname "$INSTANCE_3LD" 2>/dev/null; then
-            :
-        else
-            echo "$INSTANCE_3LD" > /etc/hostname
-            hostname "$INSTANCE_3LD" 2>/dev/null || true
-        fi
-        # Update /etc/hosts so 127.0.1.1 points to the new hostname (replace existing or add)
-        if [ -f /etc/hosts ]; then
-            sed -i 's/^127\.0\.1\.1[[:space:]].*/127.0.1.1\t'"$INSTANCE_3LD"'/' /etc/hosts
-            grep -q '^127\.0\.1\.1[[:space:]]' /etc/hosts || sed -i '2i 127.0.1.1\t'"$INSTANCE_3LD" /etc/hosts
-        fi
-        echo "Set globals.fqdn to $INSTANCE_FQDN and hostname to $INSTANCE_3LD"
-    fi
-fi
+# enable setlan
+echo running setlan to resolve IP addresses
+systemctl enable debsetlan.service
+systemctl start debsetlan.service
+sleep 10
 
-# Run setip once (network detection, shorewall/fail2ban/Asterisk localnet, /etc/issue)
-# Previously a systemd oneshot at boot; we run it here so the installer does not depend on it.
-echo running setip to resolve IP addresses
-/usr/bin/php $SYSPATH/php/utilities/setip.php
-# Remove the systemd unit so it is not loaded at boot (setip is run once by the installer only)
-systemctl disable debsetlan.service 2>/dev/null || true
-rm -f /etc/systemd/system/debsetlan.service
-systemctl daemon-reload 2>/dev/null || true
-
-# Shorewall6 setup (create /etc/shorewall6 if missing so service can start)
-if [ -d "$SYSPATH/etc/shorewall6" ]; then
-    mkdir -p /etc/shorewall6
+#Shorewall6 setup
+if [ -d /etc/shorewall6 ]; then
+# the rules file always gets refreshed
+# 
     cp -f $SYSPATH/etc/shorewall6/rules /etc/shorewall6
-    [ -f /etc/default/shorewall6 ] && sed -i 's/startup=0/startup=1/' /etc/default/shorewall6
-    for file in $(ls $SYSPATH/etc/shorewall6/); do
-        [ ! -e "/etc/shorewall6/$file" ] && cp -f "$SYSPATH/etc/shorewall6/$file" /etc/shorewall6
-    done
-    [ -f /etc/shorewall6/pbx3_rules6 ] && chown www-data:www-data /etc/shorewall6/pbx3_rules6
+    sed -i 's/startup=0/startup=1/' /etc/default/shorewall6
+    for file in `ls $SYSPATH/etc/shorewall6/` ; do
+                [ ! -e /etc/shorewall6/$file ] && cp -f $SYSPATH/etc/shorewall6/$file /etc/shorewall6            
+    done    
+    chown www-data:www-data /etc/shorewall6/$SYSPREFIX_rules6
 fi
 
 #run shorewall's own fix routines
 shorewall update
 
-# F2b setup — Ubuntu 24.04 LTS (idempotent: force symlinks)
-ln -sf $SYSPATH/etc/fail2ban/jail.local /etc/fail2ban/jail.local
-ln -sf $SYSPATH/etc/fail2ban/action.d/shorewall.local /etc/fail2ban/action.d/shorewall.local
+# F2b setup
+[ -e /etc/fail2ban/jail.local ] && rm -rf /etc/fail2ban/jail.local && echo "replacing F2B jail.local" 
+ln -s $SYSPATH/etc/fail2ban/jail-stretch.local /etc/fail2ban/jail.local
+[ ! -e /etc/fail2ban/action.d/shorewall.local ] && [ -e $SYSPATH/etc/fail2ban/action.d/shorewall-jessie.local ] && ln -s $SYSPATH/etc/fail2ban/action.d/shorewall-jessie.local /etc/fail2ban/action.d/shorewall.local
 
 
-
-
+# Asterisk 11+ call parks
+[ ! -e $ASTPATH/res_parking.conf ] && touch $ASTPATH/res_parking.conf
+grep -q '#include sark_res_parking.conf' $ASTPATH/res_parking.conf
+if [  "$?" -ne "0" ] ; then
+    echo "#include sark_res_parking.conf" >> $ASTPATH/res_parking.conf
+fi
 
 #Check if I am an AWS instance and set defaults accordingly
 
@@ -215,13 +215,25 @@ else
 fi
 
 # enable shorewall
-[ -e $SHOREWALL/routestopped ] && mv $SHOREWALL/routestopped $SHOREWALL/routestopped.bak
+[ -e  $SHOREWALLroutestopped ] && mv $SHOREWALLroutestopped $SHOREWALLroutestopped.bak
 systemctl enable shorewall.service
 systemctl enable shorewall6.service
 
-systemctl start shorewall.service
-systemctl start shorewall6.service
 
+# suppress CDR menu generation for Deb 9 and ubuntu 
+[ -e $SYSPATH/cache/1520813339.db_v4_admin_perms2 ] && mv $SYSPATH/cache/1520813339.db_v4_admin_perms2 $SYSPATH/always/
+
+
+
+#Make the public directories if they aren't there
+[ ! -d $SYSPATH/public ] && mkdir $SYSPATH/public && chown www-data:www-data $SYSPATH/public
+[ ! -d $SYSPATH/public/aastra ] && mkdir $SYSPATH/public/aastra && chown www-data:www-data $SYSPATH/public/aastra
+[ ! -d $SYSPATH/public/cisco ] && mkdir $SYSPATH/public/cisco && chown www-data:www-data $SYSPATH/public/cisco
+[ ! -d $SYSPATH/public/panasonic ] && mkdir $SYSPATH/public/panasonic && chown www-data:www-data $SYSPATH/public/panasonic
+[ ! -d $SYSPATH/public/polycom ] && mkdir $SYSPATH/public/polycom && chown www-data:www-data $SYSPATH/public/polycom
+[ ! -d $SYSPATH/public/snom ] && mkdir $SYSPATH/public/snom && chown www-data:www-data $SYSPATH/public/snom
+[ ! -d $SYSPATH/public/vtech ] && mkdir $SYSPATH/public/vtech && chown www-data:www-data $SYSPATH/public/vtech
+[ ! -d $SYSPATH/public/yealink ] && mkdir $SYSPATH/public/yealink && chown www-data:www-data $SYSPATH/public/yealink
 
 # call recording 
 [ ! -d $SYSPATH/media/recordings/default ] && mkdir -p $SYSPATH/media/recordings/default
@@ -232,22 +244,8 @@ sv d sys-ua-helper
 sleep 1
 sv u sys-ua-helper
 
-# CDR MySQL: create asterisk DB and cdr table for Asterisk CDR records (run when MySQL/MariaDB is present)
-# cdr-mysql-setup.sql is idempotent; safe to run on every install.
-# Use Unix socket so root connects with socket auth (same as interactive "sudo mysql -u root")
-if command -v mysql >/dev/null 2>&1; then
-    echo "Setting up MySQL database for Asterisk CDR..."
-    MYSQL_SOCK="${MYSQL_SOCK:-/var/run/mysqld/mysqld.sock}"
-    if [ -S "$MYSQL_SOCK" ] && mysql -u root --socket="$MYSQL_SOCK" < "$SYSPATH/cache/cdr-mysql-setup.sql" 2>/dev/null; then
-        echo "CDR MySQL setup done (database asterisk, user asterisk)."
-    elif mysql -u root < "$SYSPATH/cache/cdr-mysql-setup.sql" 2>/dev/null; then
-        echo "CDR MySQL setup done (database asterisk, user asterisk)."
-    else
-        echo "CDR MySQL setup skipped or failed (e.g. root password required). Run manually: mysql -u root -p < $SYSPATH/cache/cdr-mysql-setup.sql" >&2
-    fi
-else
-    echo "MySQL/MariaDB not found; CDR-to-MySQL skipped. Install mysql-server or mariadb-server and run: mysql -u root -p < $SYSPATH/cache/cdr-mysql-setup.sql"
-fi
+#add definitions to MySQL
+mysql -u root < $SYSPATH/cache/cdr-mysql-setup.sql
 
 #stop systemd.resolved - it interferes with dnsmasq
 systemctl stop systemd-resolved
@@ -256,8 +254,8 @@ systemctl disable systemd-resolved
 systemctl enable dnsmasq
 systemctl restart dnsmasq
 
-if [ ! -d $SYSPATH/recmnt ]; then 
+if [ -d $SYSPATH/recmnt ]; then 
     mkdir $SYSPATH/recmnt
     chown www-data:www-data $SYSPATH/recmnt
-    chmod 755 $SYSPATH/recmnt
+    chmod 664 $SYSPATH/recmnt
 fi

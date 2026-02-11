@@ -152,7 +152,6 @@ CREATE TABLE `Cluster` (
   `ldapuser` text DEFAULT 'admin',
   `ldappass` text DEFAULT 'sarkadmin',
   `ldaptls` text DEFAULT 'off',
-  `leasehdtimeE` int(11) DEFAULT 43200,
   `localarea` text DEFAULT NULL,
   `localdplan` text DEFAULT NULL,
   `lterm` int(11) DEFAULT 0,

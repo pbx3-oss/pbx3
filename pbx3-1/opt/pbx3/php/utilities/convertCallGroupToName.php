@@ -33,13 +33,13 @@ try {
 //
 //  SIP extensions (phones)
 //
-	$sql = "SELECT * FROM ipphone ORDER BY pkey";
+	$sql = "SELECT * FROM IPphone order by pkey";
     foreach ($dbh->query($sql) as $row) {
     	$sipiaxfriend = $row['sipiaxfriend'];     
 		$sipiaxfriend = preg_replace ( '/callgroup=\d+/', 'namedcallgroup=' . $row['cluster'], $sipiaxfriend);
 		$sipiaxfriend = preg_replace ( '/pickupgroup=\d+/', 'namedpickupgroup=' . $row['cluster'], $sipiaxfriend);
 		if ($sipiaxfriend != $row['sipiaxfriend']) {
-    		$sql = $dbh->prepare("UPDATE ipphone SET sipiaxfriend = ? WHERE pkey = ?");
+    		$sql = $dbh->prepare("UPDATE ipphone SET sipiaxfriend=? WHERE pkey=?");
     		$sql->execute(array($sipiaxfriend,$row['pkey']));
     	}
 	}

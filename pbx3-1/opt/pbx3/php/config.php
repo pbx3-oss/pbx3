@@ -14,7 +14,8 @@
 
 define('CODENAME',                      'pbx3');
 define('KEYTYPE',                       'pkey');
-define('SYSAGI',                        'pbx3cagi');
+define('SHORTUID',                      'shortuid');
+define('SYSAGI',                        'swarmcore');
 
 define('SYSROOT',                       '/opt');
 define('SYSPREFIX',                     '/pbx3');
@@ -42,10 +43,9 @@ define('SYSDB',						    DBPATH .  "/" . DBNAME);
 define('DBDUMPS',						DBPATH .  '/db_database_dumps');
 define('DBTABLEDUMPS',					DBPATH .  '/db_table_dumps');
 define('DBSQL',						    DBPATH .  '/db_sql');
-define('DBLEGACYSQLDIR',				DBPATH .  '/db_legacy_sql');
 define('DBINSTANCESQL',				    DBSQL .  '/sqlite_create_instance.sql');
 define('DBTENANTSQL',				    DBSQL .  '/sqlite_create_tenant.sql');
-define('DBLEGACYSQL',				    DBLEGACYSQLDIR .  '/sqlite_create_legacy.sql');
+define('DBLEGACYSQL',				    DBSQL .  '/sqlite_create_legacy.sql');
 define('DBMESSAGE',					    DBSQL .  '/sqlite_message.sql');
 
 define('READONLY_DB',				    DBPATH .  '/sqlite.rdonly.db');
@@ -58,7 +58,6 @@ define ('LDAPHELPER',                   CLASSES . '/LDAPHelperClass');
 define ('NETHELPER',                    CLASSES . '/NetHelperClass');
 
 define('RELOADER',				        SCRIPTS . '/reloader.sh');
-define('EXEC_DB_RELOAD',				RELOADER);		// alias for backward compatibility
 
 define ('AMIHELPER',                    CLASSES . '/AmiHelperClass');
 define ('ASTMANAGER',                   CLASSES . '/AsteriskManager.php');
@@ -150,14 +149,15 @@ define('FW_RULES',                      '/etc/shorewall/pbx3_rules');
  */
 
 define('LASTDB',                        DBDUMPS . '/last.db');               //pbx3 db previous iteration
-define('CLEANDB',                       DBSQL . '/sqlite_clean.db');	    //factory reset copy of the db (created on first install, not in repo) 
-define('LEGACY_DB',                     DBLEGACYSQLDIR . '/sqlite_create_legacy.sql');	    //old db create
+define('CLEANDB',                       DBSQL . '/sqlite_clean.db');	    //factory reset copy of the db 
+define('LEGACY_DB',                     DBSQL . '/sqlite_create_legacy.sql');	    //old db create
 define('INSTANCE_DB',                   DBSQL . '/sqlite_create_instance.sql');	    //installed db create
 define('TENANT_DB',                     DBSQL . '/sqlite_create_tenant.sql');	    //installed db create
 define('LARAVEL_DB',                    DBSQL . '/sqlite_create_laravel.sql');	    //installed db create
 define('SYSTEMDB',                      DBSQL . '/sqlite_system.sql');		//installed db system data
 define('SYSMSGDB',                      DBSQL . '/sqlite_message.sql');	    //installed db system messages
 define('SYSINIDB',                      DBSQL . '/sqlite_inidat.sql');		//installed db defaults
+define('SYSDEVICE',                     DBSQL . '/sqlite_device.sql');	    //installed db device table
 define('SYSONCE',                       SYSPATH . '/once');				    //once directory
 define('SYSALWAYS',                     SYSPATH . '/always');				//always directory
 define('SYSONCEDONE',                   SYSPATH . '/oncedone');				//applied once files
@@ -166,7 +166,7 @@ define('LASTDEVICE',                    DBDUMPS . '/last_device.sql');		//device
 define('CUSTDEVICE',                    DBDUMPS . '/last_custdevice.sql');	//customer devices previous iteration
 define('SIPLOG',                        DBPATH . '/var/log/siplog');	    //installed db create
 define('DUMPER',                        UTILITIES . '/dumper.php'); 	    //loc. of the dumper
-define('ASTGEN',                        GENERATOR . '/runAstGen.php');
+define('ASTGEN',                        UTILITIES . '/runAstGen.php');      //loc. of the astgen php script
 define('SIPFIX',                        UTILITIES . '/sipiaxfix.php'); 	//loc. of the V6 sipiaxfixup routine
-define('GENAST',                        SCRIPTS . '/genAst.sh');		//loc. of the generator
-define('HTTPOWNER',                     'www-data:www-data');		//HTTP server user/group (Apache/nginx + PHP-FPM for API)
+define('GENAST',                        SCRIPTS . '/genAst.sh');		//loc. of the generator script
+define('HTTPOWNER',                     'www-data:www-data');		//apache user/group (Deb/Ubu)

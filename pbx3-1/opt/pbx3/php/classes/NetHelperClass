@@ -55,9 +55,9 @@ function __construct() {
 
 //	staticIPV4
     $this->dbh = DB::getInstance();
-	$res = $this->dbh->query("SELECT staticipv4 FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-	if (isset($res['staticipv4'])) {
-		$this->staticIPV4 = $res['staticipv4'];
+	$res = $this->dbh->query("SELECT STATICIPV4 FROM globals where pkey = 'global'")->fetch(PDO::FETCH_ASSOC);
+	if (isset($res['STATICIPV4'])) {
+		$this->staticIPV4 = $res['STATICIPV4'];
     }
 // localIPV4 & CIDR IPV4
 	$iprets = shell_exec( "ip addr show dev " . $this->interfaceName);
@@ -260,30 +260,31 @@ public function restartFirewall() {
 	public function copyFirewallTemplates() {
 	
 		$this->dbh = DB::getInstance();
-		$res = $this->dbh->query("SELECT bindport, fqdn, fqdninspect, sipflood FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-		if (!empty($res) && $res['fqdninspect'] == 'YES') {
+		$res = $this->dbh->query("SELECT BINDPORT,FQDN,FQDNINSPECT,SIPFLOOD FROM globals where pkey = 'global'")->fetch(PDO::FETCH_ASSOC);
+		$file = '/opt/gcs/etc/shorewall/gcs_inline_fqdn';
+		if ($res['FQDNINSPECT'] == 'YES') {
 			$rule = "'INLINE(ACCEPT) net \$FW tcp ";
-			$rule .= $res['bindport'];
+			$rule .= $res['BINDPORT'];
 			$rule .= '; -m string --algo bm --to 500 --string "';
-			$rule .= $res['fqdn'];
+			$rule .= $res['FQDN'];
 			$rule .= '"';
 			$rule .= "'";
-			$rc = $this->helper->request_syscmd ("echo $rule > /etc/shorewall/pbx3_inline_fqdn");
+			$rc = $this->helper->request_syscmd ("echo $rule > /etc/shorewall/gcs_inline_fqdn");
 	
 			$rule = "'INLINE(ACCEPT) net \$FW udp ";
-			$rule .= $res['bindport'];
+			$rule .= $res['BINDPORT'];
 			$rule .= '; -m string --algo bm --to 500 --string "';
-			$rule .= $res['fqdn'];
+			$rule .= $res['FQDN'];
 			$rule .= '"';
 			$rule .= "'";
-			$rc = $this->helper->request_syscmd ("echo $rule >> /etc/shorewall/pbx3_inline_fqdn");
+			$rc = $this->helper->request_syscmd ("echo $rule >> /etc/shorewall/gcs_inline_fqdn");
 		}
 		else {
-			$rc = $this->helper->request_syscmd ("echo '#' > /etc/shorewall/pbx3_inline_fqdn");
+			$rc = $this->helper->request_syscmd ("echo '#' > /etc/shorewall/gcs_inline_fqdn");
 		}
 	
 		$file = SYSPATH . '/templates/shorewall/pbx3_inline_limit';
-		if (file_exists($file) && $res['sipflood'] == 'YES') {
+		if (file_exists($file) && $res['SIPFLOOD'] == 'YES') {
 			$rc = $this->helper->request_syscmd ("cp $file /etc/shorewall");
 		}
 		else {

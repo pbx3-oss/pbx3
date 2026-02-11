@@ -29,7 +29,6 @@ while getopts ":hsL" option; do
 	esac
 done
 
-mkdir -p "$DBDUMPS"
 echo "Saving existing database $SYSDB as $LASTDB"
 cp -a $SYSDB $LASTDB
 
@@ -71,32 +70,11 @@ if [ -e $Customerdata ]; then
 	sqlite3 $SYSDB < $Customerdata
 fi
 
-# Instance identity: ensure globals has exactly one row with pkey = ksuid (idempotent: keep existing pkey if present)
-GCOUNT=$(sqlite3 $SYSDB "SELECT COUNT(*) FROM globals;" 2>/dev/null || echo "0")
-if [ "$GCOUNT" -ge 1 ]; then
-	EXISTING_PKEY=$(sqlite3 $SYSDB "SELECT pkey FROM globals LIMIT 1" 2>/dev/null)
-	if [ -n "$EXISTING_PKEY" ]; then
-		mkdir -p "$(dirname "$INSTANCEID")"
-		echo "$EXISTING_PKEY" > "$INSTANCEID"
-		echo "Instance id already set (globals.pkey): $EXISTING_PKEY"
-	fi
-elif [ "$GCOUNT" -eq 0 ]; then
-	KSUID=$(ksuid 2>/dev/null)
-	if [ -n "$KSUID" ]; then
-		sqlite3 $SYSDB "INSERT INTO globals(pkey) VALUES ('$KSUID');"
-		mkdir -p "$(dirname "$INSTANCEID")"
-		echo "$KSUID" > "$INSTANCEID"
-		echo "Set instance id (globals.pkey) to $KSUID"
-	else
-		echo "WARNING: ksuid not found (install package ksuid); inserting fallback pkey 'global'" >&2
-		sqlite3 $SYSDB "INSERT INTO globals(pkey) VALUES ('global');"
-	fi
-fi
 
 #run the once files
 if [ ! -e $SYSONCEDONE ] ; then
-	echo Creating oncedone directory $SYSONCEDONE
-	mkdir -p $SYSONCEDONE
+	echo Creating oncedone directory $STSONCEDONE
+	mkdir $SYSONCEDONE
 fi
 
 
@@ -157,7 +135,6 @@ if [ "$legacy" != "true" ]; then
 fi
 
 #set db ownership
-# HTTPOWNER (www-data) is the user that runs the HTTP server (Apache/nginx + PHP-FPM) for the API
 chown $HTTPOWNER $DBPATH/*
 
 #set db perms q
@@ -167,7 +144,7 @@ exit 0
 
 # clean the firewall up
 echo Running firewall sanitizer
-php $SYSPATH$GENERATOR/sanitize-firewall.php
+php $SYSPATH$UTILITIES/sanitize-firewall.php
 echo Firewall rules are as follows
 cat $FW_RULES
 echo running firewall check

@@ -1,0 +1,7 @@
+BEGIN TRANSACTION;
+INSERT OR IGNORE INTO greeting(id,shortuid,pkey,cname,filename,cluster,type) values ('36zZbeiqlhbyT51q6nkA6xxV4mE','cWHCr3PS','3456','3456','usergreeting3456','Z27C23ZF','wav');
+INSERT OR IGNORE INTO greeting(id,shortuid,pkey,cname,filename,cluster,type) values ('36zZbfzc8J7Y2o2w1bkIuGbhNyQ','hQLhykMH','1123','1123','usergreeting1123','Z27C23ZF','wav');
+INSERT OR IGNORE INTO greeting(id,shortuid,pkey,cname,filename,cluster,type) values ('36zZbfZt138wutEG5xp0zDY8WfB','pVtCVXJN','4001','4001','usergreeting4001','Z27C23ZF','wav');
+INSERT OR IGNORE INTO greeting(id,shortuid,pkey,cname,filename,cluster,type) values ('36zZbd6zy9la2pPiNTtm2n1EvCy','nr2XHHsL','1124','1124','usergreeting1124','Z27C23ZF','wav');
+INSERT OR IGNORE INTO greeting(id,shortuid,pkey,cname,filename,cluster,type) values ('36zZbbDkMrFCL0H3o1eVBJLThCB','bpFcyKgV','4003','4003','usergreeting4003','Z27C23ZF','wav');
+COMMIT;

@@ -1,0 +1,5 @@
+BEGIN TRANSACTION;
+INSERT OR IGNORE INTO dateseg(id,shortuid,pkey,active,cluster,datemonth,dayofweek,description,month,state,timespan) values ('36zZbZuhmCBG9GmUbSRvDWTg34b','jqKPLdzm','dateSeg466938','YES','affcot','*','*','*NEW RULE*','*','*INUSE*','16:30-08:30');
+INSERT OR IGNORE INTO dateseg(id,shortuid,pkey,active,cluster,datemonth,dayofweek,description,month,state,timespan) values ('36zZbfFqa1abaBzeIJtHwsampvl','QjXnQhVt','dateSeg370663','YES','affcot','*','*','*NEW RULE*','*','IDLE','*');
+INSERT OR IGNORE INTO dateseg(id,shortuid,pkey,active,cluster,datemonth,dayofweek,description,month,state,timespan) values ('36zZbccLT8IYWIZq5HQKZBTk0i6','pHLRBnGS','dateSeg513127','YES','affcot','*','*','*NEW RULE*','*','IDLE','*');
+COMMIT;

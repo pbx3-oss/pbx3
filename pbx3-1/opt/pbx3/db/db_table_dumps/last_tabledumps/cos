@@ -1,0 +1,3 @@
+BEGIN TRANSACTION;
+INSERT OR IGNORE INTO cos(id,shortuid,pkey,active,cname,defaultclosed,defaultopen,dialplan,orideclosed,orideopen) values ('36zZbfWASnh5Ac4U5KP3D0SVzJo','nbJ8fSJV','prohibited','YES','prohibited','YES','YES','_09XXX.','NO','NO');
+COMMIT;

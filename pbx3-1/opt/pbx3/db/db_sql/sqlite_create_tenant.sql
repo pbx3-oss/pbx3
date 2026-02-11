@@ -1,4 +1,3 @@
-
 BEGIN TRANSACTION;
 
 /* agent */
@@ -25,6 +24,7 @@ CREATE TABLE IF NOT EXISTS agent (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* Custom app */
 CREATE TABLE IF NOT EXISTS appl (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid 
@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS appl (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* Class of service */
 CREATE TABLE IF NOT EXISTS cos (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
@@ -62,6 +63,7 @@ CREATE TABLE IF NOT EXISTS cos (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* Tenant/Cluster */
 CREATE TABLE IF NOT EXISTS cluster (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
@@ -99,11 +101,11 @@ CREATE TABLE IF NOT EXISTS cluster (
     "ivr_digit_wait" INTEGER DEFAULT 6000,   -- how long to wait for another digit
     "language" TEXT DEFAULT 'en-gb',         -- used in extensions.conf 
     "ldapanonbind" TEXT DEFAULT 'YES',       -- anonymous bind YES/NO **MOVED**
-    "ldapbase" TEXT DEFAULT 'dc=pbx3,dc=local',  -- LDAP base **MOVED**
+    "ldapbase" TEXT DEFAULT 'dc=sark,dc=local',  -- LDAP base **MOVED**
     "ldaphost" TEXT DEFAULT '127.0.0.1',  -- LDAP host **MOVED**
     "ldapou" TEXT DEFAULT 'contacts',     -- LDAP OU **MOVED**
     "ldapuser" TEXT DEFAULT 'admin',		-- LDAP user **MOVED**
-    "ldappass" TEXT DEFAULT 'pbx3admin',	-- LDAP password **MOVED**
+    "ldappass" TEXT DEFAULT 'sarkadmin',	-- LDAP password **MOVED**
     "ldaptls" TEXT DEFAULT 'off',              -- LDAP TLS mode(off/on)
     "localarea" TEXT,                        -- local area code
     "localdplan" TEXT,                       -- local number dialplan
@@ -150,6 +152,7 @@ CREATE TABLE IF NOT EXISTS cluster (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* open/closed automation */
 CREATE TABLE IF NOT EXISTS dateseg (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
@@ -168,6 +171,7 @@ CREATE TABLE IF NOT EXISTS dateseg (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* system greetings */
 CREATE TABLE IF NOT EXISTS greeting (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
@@ -182,6 +186,7 @@ CREATE TABLE IF NOT EXISTS greeting (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* Holiday overrides */
 CREATE TABLE IF NOT EXISTS holiday (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
@@ -197,6 +202,7 @@ CREATE TABLE IF NOT EXISTS holiday (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* Extensions */
 CREATE TABLE IF NOT EXISTS ipphone (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
@@ -234,30 +240,33 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-/* Class of service */
+
+/* Class of service xref*/
 CREATE TABLE IF NOT EXISTS ipphonecosopen (
     "id" TEXT,
     "cluster" TEXT,
     "active" TEXT DEFAULT 'YES',
-    "ipphone_pkey" TEXT,
-    "cos_pkey" TEXT,
+    "IPphone_pkey" TEXT,
+    "COS_pkey" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
-    PRIMARY KEY (cluster, ipphone_pkey, cos_pkey)
+    PRIMARY KEY (cluster,IPphone_pkey,COS_pkey)
 );
-/* Class of service */
+
+/* Class of service xref*/
 CREATE TABLE IF NOT EXISTS ipphonecosclosed (
     "id" TEXT,
     "active" TEXT DEFAULT 'YES',
     "cluster" TEXT,
-    "ipphone_pkey" TEXT,
-    "cos_pkey" TEXT,
+    "IPphone_pkey" TEXT,
+    "COS_pkey" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
-    PRIMARY KEY (cluster, ipphone_pkey, cos_pkey)
+    PRIMARY KEY (cluster,IPphone_pkey,COS_pkey)
 );
+
 /* IVR menus */
 CREATE TABLE IF NOT EXISTS ivrmenu (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
@@ -312,6 +321,7 @@ CREATE TABLE IF NOT EXISTS ivrmenu (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* inbound Routes (DiDs and CLIDs) */
 CREATE TABLE IF NOT EXISTS inroutes (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
@@ -351,6 +361,7 @@ CREATE TABLE IF NOT EXISTS inroutes (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* page groups */
 CREATE TABLE IF NOT EXISTS page (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
@@ -365,6 +376,7 @@ CREATE TABLE IF NOT EXISTS page (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* conference rooms */
 CREATE TABLE IF NOT EXISTS meetme (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
@@ -381,6 +393,7 @@ CREATE TABLE IF NOT EXISTS meetme (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* call queues */
 CREATE TABLE IF NOT EXISTS queue (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
@@ -410,6 +423,7 @@ CREATE TABLE IF NOT EXISTS queue (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* Outbound routing */
 CREATE TABLE IF NOT EXISTS route (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
@@ -432,6 +446,7 @@ CREATE TABLE IF NOT EXISTS route (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
+
 /* trunks/gateways */
 CREATE TABLE IF NOT EXISTS trunks (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
@@ -471,6 +486,4 @@ CREATE TABLE IF NOT EXISTS trunks (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-
 COMMIT;
-

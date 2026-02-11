@@ -10,7 +10,6 @@
 #
 #sysroot='/usr/share/' 
 
-# Legacy sark backup code (commented out - replaced by pbx3 backup)
 #/usr/sbin/slapcat > /tmp/sark.local.ldif 
 #/usr/bin/zip -r /opt/sark/bkup/sarkbak.`date +%s`.zip /opt/sark/db/sark.db $sysroot/asterisk/sounds/usergreet* $sysroot/asterisk/moh-* /var/spool/asterisk/voicemail /etc/asterisk /etc/shorewall /tmp/sark.local.ldif  >/dev/null 2>&1
 #if [  "$(ls -A /opt/sark/bkup)" ]; then

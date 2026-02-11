@@ -1,0 +1,3 @@
+BEGIN TRANSACTION;
+INSERT OR IGNORE INTO meetme(id,shortuid,pkey,active,cluster,adminpin,description,pin,type) values ('36zZbZqiSgWAm2rNKZ2AfV52K0M','6kTXx5RN','60001','YES','Z27C23ZF','None','meet1','None','simple');
+COMMIT;

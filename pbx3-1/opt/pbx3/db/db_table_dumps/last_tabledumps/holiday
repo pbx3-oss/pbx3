@@ -1,0 +1,3 @@
+BEGIN TRANSACTION;
+INSERT OR IGNORE INTO holiday(id,shortuid,pkey,cluster,route,stime,etime) values ('36zZbcuxAX26ESFlSNiptacPPuD','h0nRqR9t','sched635106','affcot','100','1766552400','1766811600');
+COMMIT;

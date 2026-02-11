@@ -198,7 +198,7 @@ $tablesdirectory=DBTABLEDUMPS . $prefix .'tabledumps';
 // Check format - we don't want to overwrite a previously issued ksuid
 						if (!preg_match("/^[a-zA-Z0-9]{27}$/",$row[$col['name']])) {
 // set the ksuid
-							$row[$col['name']] = trim(shell_exec('ksuid'));	
+							$row[$col['name']] = trim(`ksuid`);	
 						}					
 					}
 				} 
@@ -261,4 +261,4 @@ $tablesdirectory=DBTABLEDUMPS . $prefix .'tabledumps';
 	`dos2unix $cfgfilename >/dev/null 2>&1`;
 	`dos2unix $datafilename >/dev/null 2>&1`;
 
-
+	

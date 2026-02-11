@@ -1,0 +1,3 @@
+BEGIN TRANSACTION;
+INSERT OR IGNORE INTO page(id,shortuid,pkey,active) values ('36zZbcSFq0DbIHFTWpznuvd1q9C','R24nGQwY','pageall','YES');
+COMMIT;
