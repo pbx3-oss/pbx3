@@ -4,7 +4,7 @@
 ## ToDo replace original asterisk files
 ##
 
-sv d sys-ua-responder
+
 sv d sys-ua-helper
 
 # nginx/API site cleanup is done by pbx3api package when it is removed

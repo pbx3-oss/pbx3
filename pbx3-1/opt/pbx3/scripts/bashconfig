@@ -1,6 +1,6 @@
 CODENAME=pbx3
 KEYTYPE=pkey
-SYSAGI=swarmcore
+SYSAGI=pbx3cagi
 SYSROOT=/opt
 SYSPREFIX=/pbx3
 SYSPATH=/opt/pbx3

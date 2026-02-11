@@ -14,7 +14,7 @@
 
 define('CODENAME',                      'pbx3');
 define('KEYTYPE',                       'pkey');
-define('SYSAGI',                        'swarmcore');
+define('SYSAGI',                        'pbx3cagi');
 
 define('SYSROOT',                       '/opt');
 define('SYSPREFIX',                     '/pbx3');
@@ -42,7 +42,7 @@ define('SYSDB',						    DBPATH .  "/" . DBNAME);
 define('DBDUMPS',						DBPATH .  '/db_database_dumps');
 define('DBTABLEDUMPS',					DBPATH .  '/db_table_dumps');
 define('DBSQL',						    DBPATH .  '/db_sql');
-define('DBLEGACYSQLDIR',				    DBPATH .  '/db_legacy_sql');
+define('DBLEGACYSQLDIR',				DBPATH .  '/db_legacy_sql');
 define('DBINSTANCESQL',				    DBSQL .  '/sqlite_create_instance.sql');
 define('DBTENANTSQL',				    DBSQL .  '/sqlite_create_tenant.sql');
 define('DBLEGACYSQL',				    DBLEGACYSQLDIR .  '/sqlite_create_legacy.sql');
