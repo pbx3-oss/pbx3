@@ -1,4 +1,6 @@
 /DEBIAN/*
+# dpkg staging tree (copy of app tree, recreated each build)
+pbx3-1/debian/pbx3/
 __pycache__/
 **/.debhelper/
 **/*.debhelper.log

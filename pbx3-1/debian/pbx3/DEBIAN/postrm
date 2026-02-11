@@ -1,5 +1,0 @@
-#!/bin/bash
-# Do not remove /opt/pbx3 on purge: it contains working files (DB, recordings,
-# config). Admin can remove it manually if desired.
-set -e
-exit 0
