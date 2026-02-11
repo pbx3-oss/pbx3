@@ -1,0 +1,48 @@
+# pbx3 fail2ban jail — Ubuntu 24.04 LTS
+# Install: ln -sf /opt/pbx3/etc/fail2ban/jail.local /etc/fail2ban/jail.local
+#
+# Mission: PBX (Asterisk + API). Protects: SSH (admin), Asterisk (SIP/registration),
+# repeat offenders, and API (below). Kept as reference for pbx3api: use same
+# pattern with nginx logpath (e.g. /var/log/nginx/access.log or ssl_access.log).
+
+[DEFAULT]
+banaction = shorewall
+
+# SSH — admin access; high-value target for brute-force
+[sshd]
+enabled   = true
+filter    = sshd
+logpath   = %(auth_log)s
+maxretry  = 3
+findtime  = 600
+bantime   = 86400
+
+# Asterisk: use log file explicitly (Ubuntu 24.04 fail2ban may default to journal;
+# logpath forces file-based matching with the system asterisk filter).
+[asterisk]
+enabled   = true
+filter    = asterisk
+logpath   = /var/log/asterisk/messages
+maxretry  = 5
+findtime  = 600
+bantime   = 600
+
+# Recidive — ban IPs that get banned in multiple jails (e.g. SSH + Asterisk)
+[recidive]
+enabled   = true
+filter    = recidive
+logpath   = /var/log/fail2ban.log
+bantime   = 604800
+findtime  = 86400
+maxretry  = 3
+
+# API (was Apache 44300; pbx3api uses nginx) — block bad User-Agents / scanners.
+# Reference for pbx3api: enable and set logpath to nginx access log (e.g. /var/log/nginx/access.log).
+[apache-badbots]
+enabled   = false
+filter    = apache-badbots
+logpath   = /var/log/apache2/ssl_access.log
+maxretry  = 1
+findtime  = 86400
+bantime   = 86400
+

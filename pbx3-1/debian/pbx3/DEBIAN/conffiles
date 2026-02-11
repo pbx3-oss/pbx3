@@ -1,0 +1,16 @@
+/etc/cron.d/pbx3
+/etc/dnsmasq.d/dns
+/etc/logrotate.d/shorewall_log
+/etc/logrotate.d/siplog
+/etc/resolv.dnsmasq
+/etc/rsyslog.d/40-shorewall.conf
+/etc/shorewall/interfaces
+/etc/shorewall/policy
+/etc/shorewall/routestopped
+/etc/shorewall/stoppedrules
+/etc/shorewall/zones
+/etc/shorewall6/interfaces
+/etc/shorewall6/local.lan
+/etc/shorewall6/policy
+/etc/shorewall6/zones
+/etc/sudoers.d/pbx3sudoers
