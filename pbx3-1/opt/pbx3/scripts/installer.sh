@@ -4,7 +4,11 @@
 
 # Need to create the work directories in etc/asterisk:-
 # callparks, endpoints, iax_trunks, queues, trunks
-
+[ ! -d $SYSPATH/etc/asterisk/callparks ] && mkdir -p $SYSPATH/etc/asterisk/callparks
+[ ! -d $SYSPATH/etc/asterisk/endpoints ] && mkdir -p $SYSPATH/etc/asterisk/endpoints
+[ ! -d $SYSPATH/etc/asterisk/iax_trunks ] && mkdir -p $SYSPATH/etc/asterisk/iax_trunks
+[ ! -d $SYSPATH/etc/asterisk/queues ] && mkdir -p $SYSPATH/etc/asterisk/queues
+[ ! -d $SYSPATH/etc/asterisk/trunks ] && mkdir -p $SYSPATH/etc/asterisk/trunks
 
 setvcl() {
 # turn on VCL in Globals
@@ -42,6 +46,7 @@ chown -R asterisk:asterisk /var/log/asterisk
 chown -R asterisk:asterisk /var/spool/asterisk
 
 [ -d $ASTPATH ] && chmod -R 664 $ASTPATH
+[ -d $ASTPATH ] && find $ASTPATH -type d -exec chmod 755 {} \;   # directories must be 755 to list contents (Asterisk may install with 644)
 [ -e $ASTPATH/manager.d ] && chmod +x $ASTPATH/manager.d
 [ -d "$GENERATOR" ] && chmod -R 755 "$GENERATOR"
 chmod 755 -R $SYSPATH/scripts
