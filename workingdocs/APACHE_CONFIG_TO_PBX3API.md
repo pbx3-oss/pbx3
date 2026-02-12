@@ -1,7 +1,7 @@
 # Move HTTP config to pbx3api (nginx)
 
 **Created:** 2025-02-07  
-**Status:** In progress. **Phase 2 (pbx3) applied:** pbx3 no longer installs Apache; package is backend-only (no apache2 in Depends; Depends include php-cli, php-sqlite3 for setip/installer). **Phase 1 (pbx3api) started:** `pbx3api` now has nginx artifacts in-repo (`config/nginx/pbx3-api.conf`, install/remove scripts, and `docs/deployment-nginx.md`) for HTTPS on `44300`. **Remaining:** wire these scripts into pbx3api package lifecycle (`postinst`/`prerm` or installer), and update pbx3 fail2ban from apache log path to nginx. See AGENT_HANDOFF.md §9 and TODO.md.
+**Status:** In progress. **Phase 2 (pbx3) applied:** pbx3 no longer installs Apache; package is backend-only (no apache2 in Depends; Depends include php-cli, php-sqlite3 for setip/installer). **Phase 1 (pbx3api) implemented and tested:** `pbx3api` now includes nginx installer flow (`config/nginx/pbx3-api.conf`, `scripts/installer.sh`, `scripts/install-nginx-site.sh`, `scripts/remove-nginx-site.sh`, `docs/deployment-nginx.md`) and has been validated on Ubuntu 24.04. **Current temporary mode:** LAN HTTP used for frontend dev/testing; HTTPS/LE completion pass still required before release. **Remaining:** package lifecycle integration decision, TLS finish pass (trusted cert path), and pbx3 fail2ban update from apache log path to nginx.
 
 **Decision: use nginx, drop Apache.** We standardise on **nginx** for the API (and any minimal site on port 80 for HTTP-01). nginx is easier to deploy and maintain; Apache is not carried forward.
 

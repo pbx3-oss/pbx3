@@ -10,13 +10,14 @@
 
 - **Package content** lives under **`pbx3-1/`** (what gets installed into `/opt/pbx3`, `/etc`, etc.).
 - **Workingdocs** (design, decisions, checklists) are in **`workingdocs/`**.
-- **Branch in use:** `cleanup`.
+- **Branch in use:** `main` (cleanup merged).
 
 ---
 
 ## 2. Current state (recent work completed)
 
 - **Backend-only:** Apache and HTTP config removed from pbx3. HTTP/API is pbx3api’s responsibility (see `APACHE_CONFIG_TO_PBX3API.md`).
+- **pbx3api nginx installer path is now implemented and tested:** On Ubuntu 24.04, fresh-clone installer flow was validated end-to-end (nginx + php8.3-fpm + Laravel bootstrap + PBX sqlite link). Frontend login to API works in LAN HTTP dev mode; see TODO for HTTPS/LE completion pass.
 - **setip:** No longer a systemd service. Installer runs `php/utilities/setip.php` **once** directly; `debsetlan.service` was removed from the package. Installer also disables/removes the unit if present. Package Depends: **php-cli**, **php-sqlite3** so setip and installer can run.
 - **Installer** runs manually (`sudo /opt/pbx3/scripts/installer.sh`), **not** from postinst. Script is written to work under **sh** (dash) or bash (POSIX case/printf; no `[[` or `read -p`). Fixes and behaviour:
   - **Instance FQDN:** Prompts for instance FQDN (e.g. node1.pbx3.com) or uses `INSTANCE_FQDN` env; stores in `globals.fqdn`; sets hostname to 3LD (e.g. node1) via hostnamectl or fallback; updates `/etc/hosts` so `127.0.1.1` points to the new hostname.
@@ -92,7 +93,7 @@
 
 **Planned work (next session):**
 
-1. **pbx3api** – The API repo is still **Apache-oriented**: it ships `public/.htaccess` (Laravel mod_rewrite) and **no nginx config**. To run under nginx you currently rely on a reference config (e.g. `workingdocs/nginx-api-site-reference.conf`). Next steps: add nginx site config (or installer steps) to pbx3api so it is nginx-ready; optionally keep .htaccess for Apache compatibility or document nginx-only.
+1. **TLS completion pass (pbx3 + pbx3api):** Current dev testing intentionally uses LAN HTTP to avoid self-signed browser friction. Before release, switch API back to HTTPS on `44300`, wire LE cert paths (owned by pbx3), and re-verify frontend login/CORS/Sanctum with trusted certs.
 2. **pbx3 fail2ban** – Shipped config still references **Apache**: `etc/fail2ban/jail.local` uses the `apache-badbots` jail and `logpath = /var/log/apache2/ssl_access.log`. Since the API is served by nginx (pbx3api), update to a nginx log path and a suitable filter (or nginx-badbots if available), or disable the jail until nginx logging is in place.
 
 **References:** `APACHE_CONFIG_TO_PBX3API.md` (decision: nginx in pbx3api; TLS/LE in pbx3), `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, `nginx-api-site-reference.conf`.
