@@ -86,7 +86,20 @@
 
 ---
 
-## 8. Conventions
+## 8. For the next agent: nginx / API HTTP layer
+
+**Confirmed:** pbx3 **does not install Apache**. The package has no apache2 dependency; the description states "No HTTP server" and "HTTP/API is provided by pbx3api (nginx + PHP-FPM)".
+
+**Planned work (next session):**
+
+1. **pbx3api** – The API repo is still **Apache-oriented**: it ships `public/.htaccess` (Laravel mod_rewrite) and **no nginx config**. To run under nginx you currently rely on a reference config (e.g. `workingdocs/nginx-api-site-reference.conf`). Next steps: add nginx site config (or installer steps) to pbx3api so it is nginx-ready; optionally keep .htaccess for Apache compatibility or document nginx-only.
+2. **pbx3 fail2ban** – Shipped config still references **Apache**: `etc/fail2ban/jail.local` uses the `apache-badbots` jail and `logpath = /var/log/apache2/ssl_access.log`. Since the API is served by nginx (pbx3api), update to a nginx log path and a suitable filter (or nginx-badbots if available), or disable the jail until nginx logging is in place.
+
+**References:** `APACHE_CONFIG_TO_PBX3API.md` (decision: nginx in pbx3api; TLS/LE in pbx3), `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, `nginx-api-site-reference.conf`.
+
+---
+
+## 9. Conventions
 
 - **config.php** is the PHP source of truth for paths; run `php utilities/genbashconfig.php` to regenerate `scripts/bashconfig` after editing config.php (or rely on shipped bashconfig if PHP not needed).
 - **reloader.sh** rebuilds the SQLite DB (saves current to `db_database_dumps/last.db`, then recreates from SQL files). It **exits** partway through; code after that (e.g. genAst, sanitize-firewall) is currently dead.

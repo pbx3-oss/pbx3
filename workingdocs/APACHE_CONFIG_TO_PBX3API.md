@@ -1,9 +1,9 @@
 # Move HTTP config to pbx3api (nginx)
 
 **Created:** 2025-02-07  
-**Status:** Decision recorded. **Phase 2 (pbx3) applied** 2025-02-07: Apache/HTTP removed from pbx3; package is backend-only (no apache2, no PHP in Depends); pbx3api branch `webserver` will add nginx config.
+**Status:** Decision recorded. **Phase 2 (pbx3) applied:** pbx3 no longer installs Apache; package is backend-only (no apache2 in Depends; Depends include php-cli, php-sqlite3 for setip/installer). **Remaining:** pbx3api repo is still Apache-oriented (`.htaccess` only; no nginx config in repo). Next session: make pbx3api nginx-ready; update pbx3 fail2ban from apache log path to nginx. See AGENT_HANDOFF.md §9 and TODO.md.
 
-**Decision: use nginx, drop Apache.** As part of this change we standardise on **nginx** for the API (and any minimal site on port 80 for HTTP-01). nginx is easier to deploy and maintain; Apache is not carried forward.
+**Decision: use nginx, drop Apache.** We standardise on **nginx** for the API (and any minimal site on port 80 for HTTP-01). nginx is easier to deploy and maintain; Apache is not carried forward.
 
 ---
 
