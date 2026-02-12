@@ -11,7 +11,7 @@
 | | Old system | New system (PBX3) |
 |---|------------|-------------------|
 | **Model** | Traditional Asterisk PBX with **colocated admin panel** (HTTP/S on same server) | **Backend + API on same host** – An HTTP server (Apache or **nginx**; nginx is often simpler) hosts **pbx3api** only; no colocated admin UI |
-| **Admin** | Web UI and backend on same server | Admin is a **SPA** (pbx3-frontend), separate; SPA talks to API (pbx3api) |
+| **Admin** | Web UI and backend on same server | Admin is a **SPA** (pbx3spa), separate; SPA talks to API (pbx3api) |
 | **Configuration** | Changed via web UI hitting local backend | Changed **only via API** (pbx3api); API talks to pbx3 (DB, Asterisk, scripts) as needed |
 | **This repo (pbx3)** | Contained both PBX logic and web-serving pieces | PBX logic, schema, config generation, DB, scripts; HTTP server (Apache or nginx) on host is for **hosting the API**, not admin UI |
 
@@ -27,7 +27,7 @@ PBX3 was hacked out of the old system to get something running as a basis for fu
 - **Naming and structure** should reflect pbx3, not the old product names (sark, gcs, sail) except where still required for compatibility.
 - **Documentation** should describe the current architecture (API-driven, SPA admin) and how pbx3 fits in.
 - **Fix broken references** (missing files, wrong variables, broken links) so scripts and packaging are consistent and runnable.
-- **Cross-repo coordination:** Schema or path changes in pbx3 may require matching changes in **pbx3api** (and possibly pbx3-frontend if API URLs or behaviour change). When touching schema (Phase C) or shared paths, check the other repos.
+- **Cross-repo coordination:** Schema or path changes in pbx3 may require matching changes in **pbx3api** (and possibly pbx3spa if API URLs or behaviour change). When touching schema (Phase C) or shared paths, check the other repos.
 - **Secrets / credentials:** Do not leave production secrets in the repo. config.php has e.g. AMIPWD; pbx3api uses .env. Phase E or F: review where credentials come from (env vars, installer prompt, secrets store) and document; move hardcoded secrets out of versioned config where appropriate.
 
 ---
