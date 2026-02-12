@@ -19,7 +19,7 @@ sudo sqlite3 $SYSDB < $DBSQL/sqlite_create_instance.sql
 
 sudo sh $RELOADER 
 
-sudo sqlite3 sqlite.db < $DBPATH/db_legacy_sql/sqlite_fixRi.sql
+sudo sqlite3 $SYSDB < $DBPATH/db_legacy_sql/sqlite_fixRi.sql
 
 sudo php $DUMPER 
 sudo sh $RELOADER 

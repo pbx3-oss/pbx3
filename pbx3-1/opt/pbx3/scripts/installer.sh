@@ -48,7 +48,6 @@ chown -R asterisk:asterisk /var/spool/asterisk
 [ -d $ASTPATH ] && chmod -R 664 $ASTPATH
 [ -d $ASTPATH ] && find $ASTPATH -type d -exec chmod 755 {} \;   # directories must be 755 to list contents (Asterisk may install with 644)
 [ -e $ASTPATH/manager.d ] && chmod +x $ASTPATH/manager.d
-[ -d "$GENERATOR" ] && chmod -R 755 "$GENERATOR"
 chmod 755 -R $SYSPATH/scripts
  
 chmod +x $SYSPATH/service/sys-ua-helper/run 

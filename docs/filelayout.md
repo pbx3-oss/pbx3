@@ -18,9 +18,8 @@ This layout is a bit fluid and it will change but most of it is pretty solid
                 etc/       # softlink library
                 once/      # SQL applied only once when the DB is rebuilt
                 php/
-                           classes/         # classes used by the generator
-                           generator/       # object generator for Asterisk files
-                           utilities/       # various useful scripts 
+                           classes/         # classes used by generator and utilities
+                           utilities/       # Asterisk config generation (runAstGen, etc.) and other scripts 
                            provisioning/    # endpoint provisioning engine
                     config.php              # config file
                 scripts/         # bash stuff

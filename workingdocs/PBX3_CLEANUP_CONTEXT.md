@@ -14,7 +14,7 @@
 
 | Area | Contents |
 |------|----------|
-| **Root** | README.md, LICENSE, mkdocs.yml, full_schema.sql, .gitignore, pbx3_1.0.0-1_all.deb |
+| **Root** | README.md, LICENSE, mkdocs.yml, full_schema.sql, .gitignore |
 | **docs/** | MkDocs: index.md, filelayout.md, config.md, featureKeys.md |
 | **workingdocs/** | Working documents and preserved context (this folder) |
 | **pbx3-1/** | Debian package layout: debian/, etc/, opt/pbx3/, usr/ |
@@ -33,10 +33,9 @@
 
 ### PHP
 
-- **config.php** – Paths and constants; must run `php genbashconfig.php` to ripple into bash.
+- **config.php** – Paths and constants; run `php utilities/genbashconfig.php` to sync to bashconfig.
 - **classes/** – DbClass, GenClass, HelperClass, AsteriskManager, etc.
-- **generator/** – runAstGen.php, runLinker.php, shorewallreload.php, sanitize-firewall.php.
-- **utilities/** – dumper.php, refactor*.php, ldapfixup, findUnusedColumns, etc.
+- **utilities/** – runAstGen.php, runLinker.php, shorewallreload.php, sanitize-firewall.php, dumper.php, refactor*.php, etc. (no generator/ directory).
 
 ### Scripts
 
@@ -58,50 +57,15 @@
 
 ---
 
-## Cleanup candidates (discovered)
+## Cleanup status (summary)
 
-Items to address during the cleanup exercise.
+- **create.initial.db** – Uses split SQL files (instance → laravel → tenant → message) in order. ✅
+- **migrateLegacyDb.sh** – Uses `$RELOADER`; bashconfig defines both RELOADER and EXEC_DB_RELOAD. Calls `refactorOldDB.php` (utilities). **Bug:** line 23 uses bare `sqlite.db` instead of `$SYSDB`.
+- **SYSAGI** – config.php and bashconfig both use `pbx3cagi`. ✅
+- **Docs (filelayout, mkdocs nav, index.md)** – Fixed. ✅
+- **Full phases and actions:** see **CLEANUP_PLAN.md**.
 
-### 1. create.initial.db – missing SQL file
-
-- **File:** `pbx3-1/opt/pbx3/scripts/create.initial.db`
-- **Issue:** References `$DBPATH/db_vx_create.sql`, which does **not** exist in the repo.
-- **Reality:** Schema is split into sqlite_create_instance.sql, sqlite_create_laravel.sql, sqlite_create_tenant.sql, sqlite_create_legacy.sql.
-- **Action:** Either introduce a single `db_vx_create.sql` (or script) that applies the split SQL files in the correct order, or change create.initial.db to run the existing SQL files in sequence.
-
-### 2. migrateLegacyDb.sh – wrong/missing variables and script
-
-- **File:** `pbx3-1/opt/pbx3/scripts/migrateLegacyDb.sh`
-- **Issues:**
-  - Uses **`$RELOADER`** – bashconfig defines **`EXEC_DB_RELOAD`**, not `RELOADER`; `refactorOldDb.php` does not exist.
-  - **Plan:** Migration code stays in this repo for now. Fix the RELOADER variable issue and remove or implement refactorOldDb.php call.
-- **Action:** Use `EXEC_DB_RELOAD` (or add RELOADER to bashconfig to match config.php). Remove or implement the refactorOldDb.php step.
-
-### 3. Docs – filelayout typo ✅ COMPLETE
-
-- **File:** `docs/filelayout.md`
-- **Issue:** Directory name written as **pnx3-1/**; should be **pbx3-1/**.
-- **Status:** ✅ Fixed – typo corrected to pbx3-1.
-
-### 4. MkDocs – broken nav link ✅ COMPLETE
-
-- **File:** `mkdocs.yml`
-- **Issue:** Nav includes “Creating your site: Page1.md”; **Page1.md** does not exist in docs/ (only index.md, filelayout.md, config.md, featureKeys.md).
-- **Status:** ✅ Fixed – nav updated to point to "File layout: filelayout.md".
-
-### 4a. Docs – index.md backend description ✅ COMPLETE
-
-- **File:** `docs/index.md`
-- **Issue:** Should clearly state that pbx3 is backend only, has no HTML front-end, and is driven by pbx3api; admin is a separate SPA.
-- **Status:** ✅ Fixed – now states: "pbx3 is a small back end worker instance. It has no conventional HTML front-end and can only be used via its API, pbx3api. Administration is a separate SPA that talks to the API."
-
-### 5. config.php vs bashconfig – SYSAGI mismatch
-
-- **Files:** `pbx3-1/opt/pbx3/php/config.php`, `pbx3-1/opt/pbx3/scripts/bashconfig`
-- **Issue:** config.php has `SYSAGI = 'swarmcore'`; bashconfig has `SYSAGI=pbx3agi`. Possible drift.
-- **Action:** Decide canonical value and align both (and re-run genbashconfig if config.php is source of truth).
-
-### 6. Laravel schema vs pbx3api (abilities/role)
+### Laravel schema vs pbx3api (abilities/role)
 
 - **File:** `pbx3-1/opt/pbx3/db/db_sql/sqlite_create_laravel.sql`
 - **Context:** pbx3api now uses `users.abilities` (JSON array) as source of truth for auth; role column no longer used for auth (see pbx3api/docs/SANCTUM_HANDOFF.md).

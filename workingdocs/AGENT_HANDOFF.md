@@ -25,7 +25,7 @@
   - **Shorewall:** Shipped `pbx3_inline_fqdn` is comment-only; API/NetHelper overwrites when fqdninspect enabled.
   - **CDR MySQL:** Installer uses `mysql -u root --socket=...` for socket auth.
   - **Shorewall6:** Installer runs `mkdir -p /etc/shorewall6` when templates exist so the service can start even if the package didn’t create the dir.
-  - **generator:** chmod uses `$GENERATOR` (`/opt/pbx3/php/generator`), not `$SYSPATH/generator`.
+  - **generator:** Removed; Asterisk config generation scripts live in `php/utilities/` (runAstGen.php, etc.).
 - **genbashconfig.php** in installer is optional (run only if `php` is available).
 - **setip.php:** dpkg-query and `/etc/issue` use **CODENAME** (pbx3), not SYSPREFIX (/pbx3).
 

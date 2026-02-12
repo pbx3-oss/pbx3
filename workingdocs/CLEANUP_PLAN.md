@@ -47,29 +47,21 @@ Phases can be reordered or split; dependencies: B and C are largely independent.
 
 ---
 
-## 4. Phase A – Documentation & quick fixes
+## 4. Phase A – Documentation & quick fixes ✅
 
-- **filelayout.md:** Fix typo `pnx3-1` → `pbx3-1`.
-- **mkdocs.yml:** Fix broken nav – “Creating your site: Page1.md” either add `docs/Page1.md` or point to an existing page / remove the link.
-- **docs/index.md (and any other high-level docs):** State clearly that pbx3 is a backend only, has no HTML front-end, and is driven by pbx3api; admin is a separate SPA.
-- **workingdocs:** Keep PBX3_CLEANUP_CONTEXT.md and this CLEANUP_PLAN.md updated as we go.
+- **Done:** filelayout typo, mkdocs nav, docs/index.md (backend-only). See PBX3_CLEANUP_CONTEXT.md for status.
 
 ---
 
 ## 5. Phase B – Scripts & config
 
-- **create.initial.db**  
-  - **Issue:** References non-existent `$DBPATH/db_vx_create.sql`.  
-  - **Options:** (1) Add a script or single SQL file that applies, in order, the existing split SQL files (e.g. instance → laravel → tenant, or as determined by migration order); or (2) Change create.initial.db to run the existing `sqlite_create_*.sql` files in the correct order. Document the chosen order.
+- **create.initial.db** – ✅ Fixed. Applies split SQL (instance → laravel → tenant → message) in order.
 
 - **migrateLegacyDb.sh**  
-  - **Issue 1:** Uses `$RELOADER`; bashconfig defines `EXEC_DB_RELOAD`, not `RELOADER`. Script effectively runs `sh` with no argument.  
-  - **Issue 2:** Calls `refactorOldDb.php` which does not exist.  
-  - **Fix:** Use `EXEC_DB_RELOAD` in the script (or add `RELOADER` to bashconfig aligned with config.php). Remove the call to `refactorOldDb.php` or implement it. Migration code stays in this repo for now.
+  - **Status:** Uses `$RELOADER`; bashconfig defines both RELOADER and EXEC_DB_RELOAD. Calls `refactorOldDB.php` (utilities).  
+  - **Remaining bug:** Line 23 uses bare `sqlite.db` instead of `$SYSDB` or `$DBPATH/sqlite.db`.
 
-- **config.php vs bashconfig**  
-  - **Issue:** SYSAGI is `swarmcore` in config.php, `pbx3agi` in bashconfig.  
-  - **Fix:** Decide canonical value; align both; run `genbashconfig.php` if config.php is source of truth.
+- **config.php vs bashconfig** – ✅ SYSAGI aligned: both use `pbx3cagi`. Run `php utilities/genbashconfig.php` after editing config.php.
 
 - **reloader.sh / HTTPOWNER**  
   - Uses `www-data` for DB/cache ownership. The HTTP server (Apache or nginx + PHP-FPM) typically runs as www-data to serve the API, so this is correct; document that www-data is the API/PHP user.
@@ -147,7 +139,6 @@ Phases can be reordered or split; dependencies: B and C are largely independent.
   - Grep for sark, gcs, sail across the repo; replace with pbx3 where it denotes the product, or add a short comment where we keep for compatibility.
 
 - **Dead or obsolete files:**  
-  - Remove or archive scripts/configs that are never used (e.g. refactorOldDb.php if we decide not to implement).  
   - CLEANDB in config points to `sqlite_clean.db` – confirm if this file is generated or expected to exist; document or fix.
 
 - **.gitignore / packaging:**  
@@ -157,7 +148,7 @@ Phases can be reordered or split; dependencies: B and C are largely independent.
   - Review **cron.d/pbx3** and any scripts it calls for legacy paths (sark/gcs) and relevance; fix or document.
 
 - **Migration from existing installs:**  
-  - Migration-from-old-system code (e.g. **migrateLegacyDb.sh** and related scripts) stays in this repo for now. Fix issues in Phase B (RELOADER variable, refactorOldDb.php); document migration path for users migrating from old (sark/pbx3) installs.
+  - Migration-from-old-system code (e.g. **migrateLegacyDb.sh** and related scripts) stays in this repo. Fix remaining bug (line 23: `sqlite.db` → `$SYSDB`); document migration path for users migrating from old (sark/pbx3) installs.
 
 - **Device provisioning:**  
   - **public/** (aastra, cisco, polycom, etc.) – **Removed for now.** Device provisioning directories and references have been removed from the codebase. Future provisioning (if needed) will be handled separately.

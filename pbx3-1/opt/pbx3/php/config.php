@@ -28,7 +28,6 @@ define('SCRIPTS',                       SYSPATH . '/scripts');
 define('BASHCONFIG',                    SCRIPTS . '/bashconfig');
 
 define('CLASSES',                       PHPDIR . '/classes');
-define('GENERATOR',                     PHPDIR . '/generator');
 define('UTILITIES',                     PHPDIR . '/utilities');        
 
 define('SNAPSHOTS', 			        SYSPATH . '/snap');
@@ -166,7 +165,7 @@ define('LASTDEVICE',                    DBDUMPS . '/last_device.sql');		//device
 define('CUSTDEVICE',                    DBDUMPS . '/last_custdevice.sql');	//customer devices previous iteration
 define('SIPLOG',                        DBPATH . '/var/log/siplog');	    //installed db create
 define('DUMPER',                        UTILITIES . '/dumper.php'); 	    //loc. of the dumper
-define('ASTGEN',                        GENERATOR . '/runAstGen.php');
+define('ASTGEN',                        UTILITIES . '/runAstGen.php');
 define('SIPFIX',                        UTILITIES . '/sipiaxfix.php'); 	//loc. of the V6 sipiaxfixup routine
 define('GENAST',                        SCRIPTS . '/genAst.sh');		//loc. of the generator
 define('HTTPOWNER',                     'www-data:www-data');		//HTTP server user/group (Apache/nginx + PHP-FPM for API)

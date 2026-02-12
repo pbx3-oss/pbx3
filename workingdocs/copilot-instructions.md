@@ -21,7 +21,7 @@ pbx3-1/opt/pbx3/db/db_sql/               # Current schema: sqlite_create_{instan
 pbx3-1/opt/pbx3/db/db_legacy_sql/        # Legacy schema: sqlite_create_legacy.sql, sqlite_fix_*.sql
 pbx3-1/opt/pbx3/db/db_mysql/             # MySQL schema: mysql_create_catalog.sql
 pbx3-1/opt/pbx3/php/classes/             # DbClass, GenClass, NetHelperClass, etc.
-pbx3-1/opt/pbx3/php/generator/           # Asterisk config generation logic
+pbx3-1/opt/pbx3/php/utilities/            # Asterisk config generation (runAstGen.php, etc.) and other scripts
 ```
 
 ## Development Patterns
@@ -85,7 +85,7 @@ sudo /opt/pbx3/scripts/genAst.sh
 - FQDN management: installer prompts for instance FQDN, stores in `globals.fqdn`
 
 ### Asterisk Config Generation
-- Generator classes in `php/generator/` create config fragments
+- Generator logic in `php/utilities/` (runAstGen.php, etc.) creates config fragments
 - Each tenant can have different Asterisk settings
 - Use existing GenClass patterns when adding new config generation
 

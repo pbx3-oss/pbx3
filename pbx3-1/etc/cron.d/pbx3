@@ -2,7 +2,7 @@
 . /opt/pbx3/scripts/bashconfig
 
 #  timer
-* * * * * root php $GENERATOR/timer.php >/dev/null 2>&1 
+* * * * * root php $UTILITIES/pbx3timer.php >/dev/null 2>&1 
 
 #  queue mover in ARC
 */5 * * * * root perl $SCRIPTS/cronqmove.pl >/dev/null 2>&1
@@ -23,7 +23,7 @@
 0 3 * * * root sh $SCRIPTS/agegracerecordings.sh >/dev/null 2>&1
 
 # calculate recordings storage used by each tenant daily
-0 3 * * * root php $GENERATOR/ManageRecs.php >/dev/null 2>&1
+0 3 * * * root php $UTILITIES/manageRecs.php >/dev/null 2>&1
 
 #recording offload every 10 minutes
 */10 * * * * root sh $SCRIPTS/offload_simple.sh >/dev/null 2>&1

@@ -167,7 +167,7 @@ exit 0
 
 # clean the firewall up
 echo Running firewall sanitizer
-php $SYSPATH$GENERATOR/sanitize-firewall.php
+php $UTILITIES/sanitize-firewall.php
 echo Firewall rules are as follows
 cat $FW_RULES
 echo running firewall check
