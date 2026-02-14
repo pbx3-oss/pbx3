@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "active" TEXT DEFAULT 'YES',			      -- Active/inactive flag
     "basemacaddr" TEXT,                      -- not used             
     "callerid" TEXT,                         -- CLID
-    "callbackto" INTEGER DEFAULT 100,        -- who we callback (ext/cell)
+    "callbackto" TEXT DEFAULT 'desk',        -- who we callback (desk/cell)
     "cname" TEXT,                            -- common name
     "callmax" INTEGER DEFAULT 3,				      -- PJSIP does not support call-limit so we have to do it using GROUP
     "cellphone" TEXT,						      -- cellphone twin
@@ -218,7 +218,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "description" TEXT,                      
     "device" TEXT,                           -- device vendor
     "devicemodel" TEXT,						      -- Harvested model number
-    "devicerec" TEXT DEFAULT 'default',      -- recopts
+    "devicerec" TEXT DEFAULT 'default',      -- recoptsdatabse desc
     "dvrvmail" TEXT,                         -- mailbox
     "extalert" TEXT,                         -- alert info
     "macaddr" TEXT,                          -- mac address
