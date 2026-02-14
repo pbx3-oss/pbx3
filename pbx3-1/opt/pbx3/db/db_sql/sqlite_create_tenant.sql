@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS cluster (
     "localdplan" TEXT,                       -- local number dialplan
     "lterm" INTEGER DEFAULT 0,			   -- late termination flag
     "leasedhdtime" INTEGER DEFAULT 43200,		-- Hot desk lease time
-    "masteroclo" TEXT,
+    "masteroclo" TEXT DEFAULT 'AUTO',
     "maxin" INTEGER DEFAULT 30,          -- max inbound calls allowed to be up
     "maxout" INTEGER DEFAULT 30,          -- max outbound calls allowed to be up
     "mixmonitor" TEXT,                    -- force mixmonitor on all recordings
@@ -211,7 +211,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "cname" TEXT,                            -- common name
     "callmax" INTEGER DEFAULT 3,				      -- PJSIP does not support call-limit so we have to do it using GROUP
     "cellphone" TEXT,						      -- cellphone twin
-    "celltwin" TEXT,							      -- cell twin on/off
+    "celltwin" TEXT DEFAULT 'OFF',					      -- cell twin on/off
     "cluster" TEXT DEFAULT 'default',        -- Tenant
     -- desc is deprecated, use cname instead
     "desc" TEXT,                             -- asterisk username
@@ -278,7 +278,7 @@ CREATE TABLE IF NOT EXISTS ivrmenu (
     "alert7" TEXT,
     "alert8" TEXT,
     "alert9" TEXT,
-    "cluster" TEXT,
+    "cluster" TEXT DEFAULT 'default',
     "cname" TEXT,                            -- common name
     "description" TEXT DEFAULT 'None',
     "greetnum" TEXT DEFAULT 'None',			-- greeting number to play
@@ -309,7 +309,7 @@ CREATE TABLE IF NOT EXISTS ivrmenu (
     "tag7" TEXT,
     "tag8" TEXT,
     "tag9" TEXT,
-    "timeout" TEXT,			               -- timeout name 					
+    "timeout" TEXT DEFAULT 'operator',		               -- timeout name 					
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
@@ -325,8 +325,8 @@ CREATE TABLE IF NOT EXISTS inroutes (
     "callback" TEXT,				-- denotes callback trunk
     "callerid" TEXT,				-- high-order (weak) CLID
     "callprogress" TEXT DEFAULT 'YES',		-- send progress tones on dial
-    "closeroute" TEXT,			-- closed inbound route
-    "cluster" TEXT,				-- cluster (Tenant) this trunk belongs to
+    "closeroute" TEXT DEFAULT 'None',		-- closed inbound route
+    "cluster" TEXT DEFAULT 'default',		-- cluster (Tenant) this trunk belongs to
     "cname" TEXT,
     "description" TEXT,			-- weak Asterisk username 
     "devicerec" TEXT,			-- RECOPTS
@@ -337,7 +337,7 @@ CREATE TABLE IF NOT EXISTS inroutes (
     "inprefix" TEXT,				-- prepend prefix on inbound
     "match" TEXT,					-- trunk seize sequence
     "moh" TEXT DEFAULT 'NO',	-- play moh instead of ring
-    "openroute" TEXT,			-- open inbound route
+    "openroute" TEXT DEFAULT 'None',		-- open inbound route
     "password" TEXT,				-- far end password
     "peername" TEXT,				-- strong Asterisk username
     "pjsipreg" TEXT DEFAULT NULL,	-- Asterisk pjsip registration (SND/RCV/NULL)									
@@ -391,10 +391,10 @@ CREATE TABLE IF NOT EXISTS queue (
     "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
     "alertinfo" TEXT,
-    "cluster" TEXT,
+    "cluster" TEXT DEFAULT 'default',
     "cname" TEXT,
     "description" TEXT, 
-    "devicerec" TEXT,
+    "devicerec" TEXT DEFAULT 'default',
     "divert" INTEGER,
     "greetnum" TEXT DEFAULT 'None',
     "greeting" TEXT DEFAULT 'None',       --N.B. will replace greetnum
@@ -422,7 +422,7 @@ CREATE TABLE IF NOT EXISTS route (
     "active" TEXT DEFAULT 'YES',
     "alternate" TEXT,               -- alternate dial for desk to desk shortdial
     "auth" TEXT DEFAULT 'NO',       -- 1/0 used for pin dial
-    "cluster" TEXT,
+    "cluster" TEXT DEFAULT 'default',
     "cname" TEXT,
     "description" TEXT,  
     "dialplan" TEXT,                -- route dialplan
@@ -447,11 +447,11 @@ CREATE TABLE IF NOT EXISTS trunks (
     "callback" TEXT,				-- denotes callback trunk
     "callerid" TEXT,				-- high-order (weak) CLID
     "callprogress" TEXT DEFAULT 'YES',		-- send progress tones on dial
-    "closeroute" TEXT,			-- closed inbound route
-    "cluster" TEXT,				-- cluster (Tenant) this trunk belongs to
+    "closeroute" TEXT DEFAULT 'None',		-- closed inbound route
+    "cluster" TEXT DEFAULT 'default',		-- cluster (Tenant) this trunk belongs to
     "cname" TEXT,
     "description" TEXT,			-- weak Asterisk username 
-    "devicerec" TEXT,			-- RECOPTS
+    "devicerec" TEXT DEFAULT 'default',		-- RECOPTS
     "disa" TEXT,					-- DISA capable trunk
     "disapass" TEXT,				-- DISA password
     "host" TEXT,					-- Host IP address
@@ -459,7 +459,7 @@ CREATE TABLE IF NOT EXISTS trunks (
     "inprefix" TEXT,				-- prepend prefix on inbound
     "match" TEXT,					-- trunk seize sequence
     "moh" TEXT DEFAULT 'NO',	-- play moh instead of ring
-    "openroute" TEXT,			-- open inbound route
+    "openroute" TEXT DEFAULT 'None',		-- open inbound route
     "password" TEXT,				-- far end password
     "peername" TEXT,				-- strong Asterisk username
     "pjsipreg" TEXT DEFAULT NULL,	-- Asterisk pjsip registration (SND/RCV/NULL)									
