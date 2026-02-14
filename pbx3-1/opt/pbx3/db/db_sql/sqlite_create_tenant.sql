@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS cos (
     "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
-    "cluster" TEXT,
+    "cluster" TEXT DEFAULT 'default',
     "cname" TEXT,
     "defaultclosed" TEXT DEFAULT 'NO',
     "defaultopen" TEXT  DEFAULT 'NO',
@@ -239,7 +239,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
 /* Class of service */
 CREATE TABLE IF NOT EXISTS ipphonecosopen (
     "id" TEXT,
-    "cluster" TEXT,
+    "cluster" TEXT DEFAULT 'default',
     "active" TEXT DEFAULT 'YES',
     "ipphone_pkey" TEXT,
     "cos_pkey" TEXT,
@@ -252,7 +252,7 @@ CREATE TABLE IF NOT EXISTS ipphonecosopen (
 CREATE TABLE IF NOT EXISTS ipphonecosclosed (
     "id" TEXT,
     "active" TEXT DEFAULT 'YES',
-    "cluster" TEXT,
+    "cluster" TEXT DEFAULT 'default',
     "ipphone_pkey" TEXT,
     "cos_pkey" TEXT,
     "z_created" datetime,
@@ -309,7 +309,7 @@ CREATE TABLE IF NOT EXISTS ivrmenu (
     "tag7" TEXT,
     "tag8" TEXT,
     "tag9" TEXT,
-    "timeout" TEXT DEFAULT 'operator',		               -- timeout name 					
+    "timeout" TEXT DEFAULT '30',		               -- timeout name 					
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
@@ -360,7 +360,7 @@ CREATE TABLE IF NOT EXISTS page (
     "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
     "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
-    "cluster" TEXT,
+    "cluster" TEXT DEFAULT 'default',
     "cname" TEXT,
     "description" TEXT,
     "pagegroup" TEXT,
@@ -394,7 +394,7 @@ CREATE TABLE IF NOT EXISTS queue (
     "cluster" TEXT DEFAULT 'default',
     "cname" TEXT,
     "description" TEXT, 
-    "devicerec" TEXT DEFAULT 'default',
+    "devicerec" TEXT DEFAULT 'None',
     "divert" INTEGER,
     "greetnum" TEXT DEFAULT 'None',
     "greeting" TEXT DEFAULT 'None',       --N.B. will replace greetnum
