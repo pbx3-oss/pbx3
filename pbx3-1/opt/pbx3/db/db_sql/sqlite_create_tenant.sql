@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS agent (
     "queue6" TEXT DEFAULT 'None',
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 /* Custom app */
 CREATE TABLE IF NOT EXISTS appl (
@@ -201,7 +202,7 @@ CREATE TABLE IF NOT EXISTS holiday (
 CREATE TABLE IF NOT EXISTS ipphone (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
     "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
-    "pkey" TEXT, 
+    "pkey" TEXT NOT NULL, 
     "abstimeout" INTEGER DEFAULT 1440,
     "active" TEXT DEFAULT 'YES',			      -- Active/inactive flag
     "basemacaddr" TEXT,                      -- not used             
@@ -232,7 +233,8 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "vmailfwd" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 /* Class of service */
 CREATE TABLE IF NOT EXISTS ipphonecosopen (
@@ -310,7 +312,8 @@ CREATE TABLE IF NOT EXISTS ivrmenu (
     "timeout" TEXT,			               -- timeout name 					
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 /* inbound Routes (DiDs and CLIDs) */
 CREATE TABLE IF NOT EXISTS inroutes (
@@ -385,7 +388,7 @@ CREATE TABLE IF NOT EXISTS meetme (
 CREATE TABLE IF NOT EXISTS queue (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
     "shortuid" TEXT UNIQUE,               -- human readable 8 char uid
-    "pkey" TEXT,
+    "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
     "alertinfo" TEXT,
     "cluster" TEXT,
@@ -408,13 +411,14 @@ CREATE TABLE IF NOT EXISTS queue (
     "timeout" INTEGER DEFAULT 30,
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 /* Outbound routing */
 CREATE TABLE IF NOT EXISTS route (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
     "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid	
-    "pkey" TEXT,
+    "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
     "alternate" TEXT,               -- alternate dial for desk to desk shortdial
     "auth" TEXT DEFAULT 'NO',       -- 1/0 used for pin dial
@@ -430,13 +434,14 @@ CREATE TABLE IF NOT EXISTS route (
     "strategy" TEXT DEFAULT 'hunt',   --hunt or balance
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 /* trunks/gateways */
 CREATE TABLE IF NOT EXISTS trunks (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
     "shortuid" TEXT UNIQUE,         -- human readable key
-    "pkey" TEXT,
+    "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',	-- Active/inactive flag
     "alertinfo" TEXT,				-- distinctive ring
     "callback" TEXT,				-- denotes callback trunk
@@ -469,7 +474,8 @@ CREATE TABLE IF NOT EXISTS trunks (
     "username" TEXT,				-- far end username
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 
 COMMIT;
