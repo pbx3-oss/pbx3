@@ -181,7 +181,8 @@ CREATE TABLE agent (
     "queue6" TEXT DEFAULT 'None',
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 CREATE TABLE appl (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid 
@@ -352,7 +353,7 @@ CREATE TABLE holiday (
 CREATE TABLE ipphone (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
     "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
-    "pkey" TEXT, 
+    "pkey" TEXT NOT NULL, 
     "abstimeout" INTEGER DEFAULT 1440,
     "active" TEXT DEFAULT 'YES',			      -- Active/inactive flag
     "basemacaddr" TEXT,                      -- not used             
@@ -383,7 +384,8 @@ CREATE TABLE ipphone (
     "vmailfwd" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 CREATE TABLE ipphonecosopen (
     "id" TEXT,
@@ -458,7 +460,8 @@ CREATE TABLE ivrmenu (
     "timeout" TEXT,			               -- timeout name 					
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 CREATE TABLE inroutes (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
@@ -496,7 +499,8 @@ CREATE TABLE inroutes (
     "username" TEXT,				-- far end username
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 CREATE TABLE page (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
@@ -529,7 +533,7 @@ CREATE TABLE meetme (
 CREATE TABLE queue (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
     "shortuid" TEXT UNIQUE,               -- human readable 8 char uid
-    "pkey" TEXT,
+    "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
     "alertinfo" TEXT,
     "cluster" TEXT,
@@ -552,12 +556,13 @@ CREATE TABLE queue (
     "timeout" INTEGER DEFAULT 30,
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 CREATE TABLE route (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
     "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid	
-    "pkey" TEXT,
+    "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',
     "alternate" TEXT,               -- alternate dial for desk to desk shortdial
     "auth" TEXT DEFAULT 'NO',       -- 1/0 used for pin dial
@@ -573,12 +578,13 @@ CREATE TABLE route (
     "strategy" TEXT DEFAULT 'hunt',   --hunt or balance
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
 CREATE TABLE trunks (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
     "shortuid" TEXT UNIQUE,         -- human readable key
-    "pkey" TEXT,
+    "pkey" TEXT NOT NULL,
     "active" TEXT DEFAULT 'YES',	-- Active/inactive flag
     "alertinfo" TEXT,				-- distinctive ring
     "callback" TEXT,				-- denotes callback trunk
@@ -611,5 +617,6 @@ CREATE TABLE trunks (
     "username" TEXT,				-- far end username
     "z_created" datetime,
     "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system'
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
 );
