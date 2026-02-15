@@ -1,15 +1,24 @@
 #!/bin/sh
-# get a list of macs amd manufacturers from IEEE
+# get a list of macs and manufacturers from IEEE
 # 
 
-[ ! -e /opt/pbx3/cache/manuf.txt ]  && touch /opt/pbx3/cache/manuf.txt
-chown www-data:www-data /opt/pbx3/cache/manuf.txt
-curl -L -s "http://www.sailpbx.com/sail/public/manuf.txt" > /tmp/manuf.txt
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+logger "getmaclist - **** running ****"
+
+curl -L -s "https://standards-oui.ieee.org/oui/oui.txt" > /tmp/oui.txt
 ret=$?
 if test "$ret" != "0"; then
-     logger pbx3getmaclist - **** Link fail - Could not fetch new manufacturer MAC DB ****
+     logger "getmaclist - **** Link fail - Could not fetch new manufacturer MAC DB ****"
      exit 4
-fi   
+fi
+grep -E -i -w 'Snom|Panasonic|Yealink|Polycom|Fanvil|Cisco|Gigaset|Aastra|Grandstream|Vtech' /tmp/oui.txt > /tmp/manuf0.txt
+
+grep 'base 16' /tmp/manuf0.txt | sed -e 's/(base 16)//' |sed -e "s/\s\{3,\}/ /g" > /tmp/manuf1.txt
+
+sed -e 's/\(^[0-9A-Fa-f]\{2\}\)\([0-9A-Fa-f]\{2\}\)/\1:\2:/g' -e 's/\(.*\):$/\1/' /tmp/manuf1.txt >/tmp/manuf.txt
+
+touch /opt/pbx3/cache/manuf.txt
 
 if [ -s /tmp/manuf.txt ]; then
         diff /opt/pbx3/cache/manuf.txt /tmp/manuf.txt
