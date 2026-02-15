@@ -437,46 +437,6 @@ CREATE TABLE IF NOT EXISTS route (
     "z_updater" TEXT DEFAULT 'system',
     UNIQUE("cluster", "pkey")
 );
-/* trunks/gateways */
-CREATE TABLE IF NOT EXISTS trunks (
-    "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
-    "shortuid" TEXT UNIQUE,         -- human readable key
-    "pkey" TEXT NOT NULL,
-    "active" TEXT DEFAULT 'YES',	-- Active/inactive flag
-    "alertinfo" TEXT,				-- distinctive ring
-    "callback" TEXT,				-- denotes callback trunk
-    "callerid" TEXT,				-- high-order (weak) CLID
-    "callprogress" TEXT DEFAULT 'YES',		-- send progress tones on dial
-    "closeroute" TEXT DEFAULT 'None',		-- closed inbound route
-    "cluster" TEXT DEFAULT 'default',		-- cluster (Tenant) this trunk belongs to
-    "cname" TEXT,
-    "description" TEXT,			-- weak Asterisk username 
-    "devicerec" TEXT DEFAULT 'default',		-- RECOPTS
-    "disa" TEXT,					-- DISA capable trunk
-    "disapass" TEXT,				-- DISA password
-    "host" TEXT,					-- Host IP address
-    "iaxreg" TEXT DEFAULT NULL,	-- Asterisk IAX registration (SND/RCV/NULL)		
-    "inprefix" TEXT,				-- prepend prefix on inbound
-    "match" TEXT,					-- trunk seize sequence
-    "moh" TEXT DEFAULT 'NO',	-- play moh instead of ring
-    "openroute" TEXT DEFAULT 'None',		-- open inbound route
-    "password" TEXT,				-- far end password
-    "peername" TEXT,				-- strong Asterisk username
-    "pjsipreg" TEXT DEFAULT NULL,	-- Asterisk pjsip registration (SND/RCV/NULL)									
-    "privileged" TEXT,			-- privileged ingress 
-    "register" TEXT,				-- registration string
-    "swoclip" TEXT DEFAULT 'YES',	-- Switch On CLIP
-    "tag" TEXT,					-- Alpha tag
-    "technology" TEXT,           -- SIP/IAX2/DiD/CLiD/Class
-    "transform" TEXT,				-- Transformation mask
-    "transport" TEXT DEFAULT 'udp',
-    "trunkname" TEXT,				-- freeform trunkname
-    "username" TEXT,				-- far end username
-    "z_created" datetime,
-    "z_updated" datetime,
-    "z_updater" TEXT DEFAULT 'system',
-    UNIQUE("cluster", "pkey")
-);
 
 COMMIT;
 
