@@ -6,8 +6,9 @@
 
 [ -e $SYSDB ] && rm -rf $SYSDB
 
-# Apply schema files in order: instance (system) → laravel (auth) → tenant (data) → message
+# Apply schema files in order: instance (system) → device data → laravel (auth) → tenant (data) → message
 sqlite3 $SYSDB < $DBSQL/sqlite_create_instance.sql
+sqlite3 $SYSDB < $DBSQL/sqlite_device_data.sql
 sqlite3 $SYSDB < $DBSQL/sqlite_create_laravel.sql
 sqlite3 $SYSDB < $DBSQL/sqlite_create_tenant.sql
 sqlite3 $SYSDB < $DBSQL/sqlite_message.sql

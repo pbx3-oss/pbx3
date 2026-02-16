@@ -9,6 +9,8 @@ __pycache__/
 *sqlite.db
 *sqlite.rdonly.db
 /.phpunit.cache
+# Runtime cache files (downloaded/updated by scripts)
+pbx3-1/opt/pbx3/cache/manuf.txt
 /node_modules
 /public/build
 /public/hot

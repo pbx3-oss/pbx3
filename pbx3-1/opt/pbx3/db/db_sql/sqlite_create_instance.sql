@@ -64,6 +64,29 @@ CREATE TABLE IF NOT EXISTS tt_help_core (
 "z_updater" TEXT DEFAULT 'system'
 );
 
+/* Device table: provisioning templates (schema/data lifted from sail65/sark db_v4_* as-is) */
+CREATE TABLE IF NOT EXISTS Device (
+"pkey" TEXT PRIMARY KEY,
+"blfkeyname" TEXT,
+"blfkeys" INTEGER,
+"desc" TEXT,
+"device" TEXT,
+"fkeys" INTEGER,
+"imageurl" TEXT,
+"legacy" TEXT,
+"noproxy" TEXT,
+"owner" TEXT DEFAULT 'system',
+"pkeys" INTEGER,
+"provision" TEXT,
+"sipiaxfriend" TEXT,
+"technology" TEXT,
+"tftpname" TEXT,
+"zapdevfixed" TEXT,
+"z_created" datetime,
+"z_updated" datetime,
+"z_updater" TEXT DEFAULT 'system'
+);
+
 /* trunks/gateways - instance-owned (TRUNK_ROUTE_MULTITENANCY) */
 CREATE TABLE IF NOT EXISTS trunks (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    

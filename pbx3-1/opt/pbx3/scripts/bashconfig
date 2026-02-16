@@ -96,6 +96,7 @@ LASTDB=/opt/pbx3/db/db_database_dumps/last.db
 CLEANDB=/opt/pbx3/db/db_sql/sqlite_clean.db
 LEGACY_DB=/opt/pbx3/db/db_legacy_sql/sqlite_create_legacy.sql
 INSTANCE_DB=/opt/pbx3/db/db_sql/sqlite_create_instance.sql
+DEVICE_DATA=/opt/pbx3/db/db_sql/sqlite_device_data.sql
 TENANT_DB=/opt/pbx3/db/db_sql/sqlite_create_tenant.sql
 LARAVEL_DB=/opt/pbx3/db/db_sql/sqlite_create_laravel.sql
 SYSTEMDB=/opt/pbx3/db/db_sql/sqlite_system.sql

@@ -290,7 +290,7 @@ public function movePjsipPhoneInstance($key,$newkey) {
 	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE;
 	$newFile = ASTENDPOINTS . '/' . $newkey . '_' . PJSIP_PHONE;
 	if (file_exists($targetFile)) {
-		return $this->request_syscmd ("/bin/mv $targetFile $newfile >/dev/null 2>&1");
+		return $this->request_syscmd ("/bin/mv $targetFile $newFile >/dev/null 2>&1");
 	}
 	return False;	
 } 
@@ -370,7 +370,7 @@ public function movePjsipWebrtcInstance($key,$newkey) {
 	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC;
 	$newFile = ASTENDPOINTS . '/' . $newkey . '_' . PJSIP_WEBRTC;
 	if (file_exists($targetFile)) {
-		return $this->request_syscmd ("/bin/mv $targetFile $newfile >/dev/null 2>&1");
+		return $this->request_syscmd ("/bin/mv $targetFile $newFile >/dev/null 2>&1");
 	}
 	return False;	
 } 
