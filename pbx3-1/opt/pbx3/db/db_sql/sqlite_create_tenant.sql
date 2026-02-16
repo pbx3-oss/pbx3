@@ -215,7 +215,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "cluster" TEXT DEFAULT 'default',        -- Tenant
     -- desc is deprecated, use cname instead
     "desc" TEXT,                             -- asterisk username
-    "description" TEXT,                      
+    "description" TEXT,                      -- Freeform description
     "device" TEXT,                           -- device vendor
     "devicemodel" TEXT,						 -- Harvested model number
     "devicerec" TEXT DEFAULT 'default',      -- recoptsdatabse desc
@@ -223,13 +223,15 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "extalert" TEXT,                         -- alert info
     "macaddr" TEXT,                          -- mac address
     "passwd" TEXT,                           -- asterisk password
-    "protocol" TEXT DEFAULT 'IPV4',			      -- IPV4/IPV6
-    "pjsipuser" TEXT,						      -- Asterisk PJSIP string							
+    "protocol" TEXT DEFAULT 'IPV4',			 -- IPV4/IPV6
+    "provision" TEXT,                        -- provisioning string with #INCLUDE directives
+    "provisionwith" TEXT DEFAULT 'IP',       -- how to provision: IP or FQDN
+    "pjsipuser" TEXT,						 -- Asterisk PJSIP string							
     "stealtime" INTEGER,                     -- epoch time this extension was stolen by HD
     "stolen" TEXT,                           -- HD thief 
     "technology" TEXT,                       -- SIP/IAX2/DiD/CLiD/Class
     "tls" TEXT,                              -- SSIP on/off
-    "transport" TEXT DEFAULT 'udp',		      -- transport(udp/tcp/tls/wss)
+    "transport" TEXT DEFAULT 'udp',		     -- transport(udp/tcp/tls/wss)
     "vmailfwd" TEXT,                         -- vmail forward email address
     "z_created" datetime,
     "z_updated" datetime,
