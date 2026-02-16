@@ -217,7 +217,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "desc" TEXT,                             -- asterisk username
     "description" TEXT,                      
     "device" TEXT,                           -- device vendor
-    "devicemodel" TEXT,						      -- Harvested model number
+    "devicemodel" TEXT,						 -- Harvested model number
     "devicerec" TEXT DEFAULT 'default',      -- recoptsdatabse desc
     "dvrvmail" TEXT,                         -- mailbox
     "extalert" TEXT,                         -- alert info
@@ -230,7 +230,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "technology" TEXT,                       -- SIP/IAX2/DiD/CLiD/Class
     "tls" TEXT,                              -- SSIP on/off
     "transport" TEXT DEFAULT 'udp',		      -- transport(udp/tcp/tls/wss)
-    "vmailfwd" TEXT,
+    "vmailfwd" TEXT,                         -- vmail forward email address
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
