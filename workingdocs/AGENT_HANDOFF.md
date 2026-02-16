@@ -87,7 +87,15 @@
 
 ---
 
-## 8. For the next agent: nginx / API HTTP layer
+## 8. Extension provisioning (planned; API + frontend in pbx3spa/pbx3api)
+
+**Scope:** SIP extensions with optional MAC (provisioned/unprovisioned), WebRTC; Save vs Commit (generator runs on Commit, not on every Save). Plan is **finalised**; DB changes (add `provision`, `provisionwith` to ipphone) are applied **manually** by the user (PBX3 has no Laravel migrations). Implementation: API (ExtensionController save/update, getVendorFromMac, adjustAstProvSettings, Device/globals) then frontend (ExtensionCreateView extensionType/MAC, Save/Commit when designed).
+
+**Docs (in pbx3spa/workingdocs):** **EXTENSION_PROVISIONING_QUICKSTART.md** (start here), **EXTENSION_PROVISIONING_DEPLOYMENT_PLAN.md**, **DATABASE_CHANGES_FOR_PROVISIONING.md**, **OLD_SYSTEM_EXTENSION_CREATE_REFERENCE.md**. Generator: `genAst.sh` → `runAstGen.php` → GenClass (genPjsipPhones, genPjsipWebrtc); endpoint files created on demand when generator runs.
+
+---
+
+## 9. For the next agent: nginx / API HTTP layer
 
 **Confirmed:** pbx3 **does not install Apache**. The package has no apache2 dependency; the description states "No HTTP server" and "HTTP/API is provided by pbx3api (nginx + PHP-FPM)".
 
@@ -100,7 +108,7 @@
 
 ---
 
-## 9. Conventions
+## 10. Conventions
 
 - **config.php** is the PHP source of truth for paths; run `php utilities/genbashconfig.php` to regenerate `scripts/bashconfig` after editing config.php (or rely on shipped bashconfig if PHP not needed).
 - **reloader.sh** rebuilds the SQLite DB (saves current to `db_database_dumps/last.db`, then recreates from SQL files). It **exits** partway through; code after that (e.g. genAst, sanitize-firewall) is currently dead.
