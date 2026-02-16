@@ -222,8 +222,6 @@
 				"firstseen",
 				"location",
 				"newformat",
-				"provision",
-				"provisionwith",
 				"sndcreds",
 				"openfirewall",
 				"sipiaxfriend",
