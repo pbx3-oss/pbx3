@@ -190,7 +190,7 @@ require_once HELPER;
     }
     
     foreach ($cluster as $k=>$v) {
-		$dboclo = $dbh->query("select oclo from Cluster WHERE pkey='" . $k . "'")->fetch();
+		$dboclo = $dbh->query("select oclo from cluster WHERE pkey='" . $k . "'")->fetch();
 		if ($dboclo['oclo'] == $v) {
 			continue;
 		}

@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS tt_help_core (
 );
 
 /* Device table: provisioning templates (schema/data lifted from sail65/sark db_v4_* as-is) */
-CREATE TABLE IF NOT EXISTS Device (
+CREATE TABLE IF NOT EXISTS device (
 "pkey" TEXT PRIMARY KEY,
 "blfkeyname" TEXT,
 "blfkeys" INTEGER,

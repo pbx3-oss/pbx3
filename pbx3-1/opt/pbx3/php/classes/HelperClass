@@ -684,7 +684,7 @@ public function checkXref($key,$cluster=false) {
 	$relation = $res['relation'];
 
 	switch ($relation) {
-		case "IPphone":
+		case "ipphone":
 			$relation = "Extension";
 			break;
 		case "speed";

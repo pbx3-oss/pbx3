@@ -254,9 +254,9 @@ class genAsteriskObjects
 /**
  *  Bind to the static IP if we are using one
  */
-		if (!empty($this->globals['STATICIPV4'])) {
+		if (!empty($this->globals['staticipv4'])) {
 			$this->OUT = $this->genFileBanner();
-			$this->OUT .= 'bindaddr=' . $this->globals['STATICIPV4'] . "\n"; 
+			$this->OUT .= 'bindaddr=' . $this->globals['staticipv4'] . "\n"; 
 			$fh = fopen(ASTLOCALCONF . "iax_localnet_header.conf", 'w') or die('Could not open file iax_localnet_header.conf!');
 			fwrite($fh,$this->OUT) or die('Could not write to file iax_localnet_header.conf');
 			fclose($fh);
@@ -337,9 +337,9 @@ class genAsteriskObjects
 		$this->OUT = $this->genFileBanner();
 
 		$myExternip = '';
-		if ($this->globals['SENDEDOMAIN'] == "YES") {
-			if ($this->globals['EDOMAIN'] != "") {
-				$myExternip = $this->globals['EDOMAIN'];
+		if (($this->globals['sendedomain'] ?? '') == "YES") {
+			if (($this->globals['edomain'] ?? '') != "") {
+				$myExternip = $this->globals['edomain'];
 			} else {
 				$edomaindig = $this->nethelper->get_externip();
 				if ($edomaindig) {
@@ -842,22 +842,22 @@ BANNEREND;
         //
 
         $displayglobals = array(
-            "ABSTIMEOUT", "EMERGENCY", "LANGUAGE", "OPERATOR", "SYSOP", "SYSPASS", "VOIPMAX", "MAXIN"
+            "abstimeout", "emergency", "language", "operator", "sysop", "syspass", "voipmax", "maxin"
         );
 
-        $this->globals['LANGUAGE'] = ASTLANG;
+        $this->globals['language'] = ASTLANG;
     /**
      * Placeholder to remember to fix operator
      *
-     *			if (empty($this->globals['OPERATOR'])) {
-     *				$this->globals['OPERATOR'] = "100";
+     *			if (empty($this->globals['operator'])) {
+     *				$this->globals['operator'] = "100";
      *			}
      */
-        $this->globals['EMERGENCY'] = preg_replace('/\s+/', " ", $this->globals['EMERGENCY']);
-        $this->globals['EMERGENCY'] = preg_replace('/\s*$/', "", $this->globals['EMERGENCY']);
+        $em = (string) ($this->globals['emergency'] ?? '');
+        $this->globals['emergency'] = preg_replace('/\s*$/', "", preg_replace('/\s+/', " ", $em));
 
         foreach ($displayglobals as $name) {
-            $this->OUT .= "\t" . $name . "=" . $this->globals[$name] . "\n";
+            $this->OUT .= "\t" . strtoupper($name) . "=" . ($this->globals[$name] ?? '') . "\n";
         }
 
         $this->OUT .= "\tSET_DYNAMIC_FEATURES=>YES\n";
@@ -894,7 +894,7 @@ private function genExtensionsCoS()
         $this->OUT .= "; Class of Service (CoS)\n";
         $this->OUT .= "[COS_$myClusterId]\n";
         $this->OUT .= "\texten => _*X.,1,GoTo($myClusterId,\${EXTEN},1)\n";
-        $dialplan = explode(" ", $this->globals['EMERGENCY']);
+        $dialplan = explode(" ", (string) ($this->globals['emergency'] ?? ''));
         foreach ($dialplan as $plan) {
             $this->OUT .= "\texten => $plan,1,GoTo($myClusterId,\${EXTEN},1)\n";;
         }
@@ -924,7 +924,7 @@ private function genExtensionsEndpoints()
         $this->OUT .= "\n";
 		
 		try {
-			$sql = "SELECT * FROM Appl WHERE cluster='" . $row['id'] . "' ORDER BY pkey";
+			$sql = "SELECT * FROM appl WHERE cluster='" . $row['id'] . "' ORDER BY pkey";
 			$qRes = $this->dbh->query($sql);
 			$this->appl = $qRes->fetchAll();
 			$qRes = NULL;
@@ -1026,7 +1026,7 @@ HERE;
         $this->OUT .= "\n";
 
 		try {
-			$sql = "SELECT * FROM Route WHERE cluster='" . $row['id'] . "' ORDER BY pkey";
+			$sql = "SELECT * FROM route WHERE cluster='" . $row['id'] . "' ORDER BY pkey";
 			$qRes = $this->dbh->query($sql);
 			$route = $qRes->fetchAll();
 			$qRes = NULL;
@@ -1075,7 +1075,7 @@ HERE;
         // Queues
 
 		try {
-			$sql = "SELECT * FROM Queue WHERE cluster='" . $row['shortuid'] . "' ORDER BY pkey";
+			$sql = "SELECT * FROM queue WHERE cluster='" . $row['shortuid'] . "' ORDER BY pkey";
 			$qRes = $this->dbh->query($sql);
 			$queue = $qRes->fetchAll();
 			$qRes = NULL;
@@ -1117,7 +1117,7 @@ HERE;
         $this->OUT .= "\n";
 
 		try {
-		$sql = "SELECT * FROM IVRmenu WHERE cluster='" . $row['shortuid'] . "' ORDER BY pkey";
+		$sql = "SELECT * FROM ivrmenu WHERE cluster='" . $row['shortuid'] . "' ORDER BY pkey";
         $qRes = $this->dbh->query($sql);
         $ivr = $qRes->fetchAll();
 		} catch (PDOException $e) {
@@ -1140,7 +1140,7 @@ HERE;
         $this->OUT .= "\n";
 
 		try {
-			$sql = "SELECT * FROM IPphone where cluster = '" . $row['shortuid'] . "' ORDER BY pkey";
+			$sql = "SELECT * FROM ipphone where cluster = '" . $row['shortuid'] . "' ORDER BY pkey";
 			$qRes = $this->dbh->query($sql);
 			$phones = $qRes->fetchAll();
 			$qRes = NULL;
@@ -1224,7 +1224,7 @@ HERE;
 ;
 
 HERE;
-		if ($this->globals['COSSTART'] == "ON") {
+		if (($this->globals['cosstart'] ?? '') == "ON") {
 			$orideopenarray = array();
 			$orideclosedarray = array();
 			//
@@ -1232,7 +1232,7 @@ HERE;
 			//
 
 			try {
-				$sql = "SELECT * FROM COS ORDER BY pkey";
+				$sql = "SELECT * FROM cos ORDER BY pkey";
 				$qRes = $this->dbh->query($sql);
 				$cos = $qRes->fetchAll();
 				$qRes = NULL;
@@ -1252,7 +1252,7 @@ HERE;
 			//		now do the process 
 			//
 			try {							
-				$sql = "SELECT * FROM IPphone ORDER BY pkey";
+				$sql = "SELECT * FROM ipphone ORDER BY pkey";
 				$qRes = $this->dbh->query($sql);
 				$cosphone = $qRes->fetchAll();
 				$qRes = NULL;
@@ -1279,7 +1279,7 @@ HERE;
 				}
 
 				try {
-					$sql = 	"SELECT COS_pkey FROM IPphoneCOSopen where IPphone_pkey='" . $IPphone['pkey'] . "'";
+					$sql = 	"SELECT cos_pkey FROM ipphonecosopen where ipphone_pkey='" . $IPphone['pkey'] . "'";
 					$qRes = $this->dbh->query($sql);
 					$cosopen = $qRes->fetchAll();
 					$qRes = NULL;
@@ -1292,8 +1292,8 @@ HERE;
 					//
 					//          don't print if already overridden
 					// 
-					if (empty($orideopenarray[$coskeys['COS_pkey']])) {
-						$this->OUT .= "\tinclude => " . $coskeys['COS_pkey'] . "\n";
+if (empty($orideopenarray[$coskeys['cos_pkey']])) {
+					$this->OUT .= "\tinclude => " . $coskeys['cos_pkey'] . "\n";
 					}
 				}
 
@@ -1305,7 +1305,7 @@ HERE;
 				}
 
 				try {
-					$sql = 	"SELECT COS_pkey FROM IPphoneCOSclosed where IPphone_pkey='" . $IPphone['pkey'] . "'";
+					$sql = 	"SELECT cos_pkey FROM ipphonecosclosed where ipphone_pkey='" . $IPphone['pkey'] . "'";
 					$qRes = $this->dbh->query($sql);
 					$cosclosed = $qRes->fetchAll();
 					$qRes = NULL;
@@ -1318,8 +1318,8 @@ HERE;
 					//
 					//          don't print if already overridden
 					// 
-					if (empty($orideclosedarray[$coskeys['COS_pkey']])) {
-						$this->OUT .= "\tinclude => " . $coskeys['COS_pkey'] . "\n";
+if (empty($orideclosedarray[$coskeys['cos_pkey']])) {
+					$this->OUT .= "\tinclude => " . $coskeys['cos_pkey'] . "\n";
 					}
 				}
 				//			$this->OUT .= "\tinclude => " . $myCluster . "Cosend\n";
@@ -1375,7 +1375,7 @@ HERE;
 HERE;
 	$this->OUT .= "\n\n";
 	try {
-		$sql = "select * from Appl";
+		$sql = "select * from appl";
 		$qRes = $this->dbh->query($sql);
 		$this->appl = $qRes->fetchAll();
 		$qRes = NULL;
