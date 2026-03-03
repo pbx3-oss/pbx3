@@ -16,6 +16,10 @@
   **Action:** Either (1) have LDAPHelperClass read LDAP config from tenant `cluster` (e.g. for the current/default tenant), or (2) add LDAP columns to instance `globals` if LDAP is intended to be instance-wide.  
   **Current workaround:** Query uses `FROM globals LIMIT 1` with lowercase column names; empty-result guard avoids errors when columns are missing.
 
+- [ ] **pjsipuser for extensions:** Address pjsipuser handling for extensions (PJSIP endpoint/user config, API/SPA and generator/templates as needed).
+  It needs to expose the instance copy of the template and NOT the database column (although that might be an option).  TBD.
+  Also, we need to settle the template handling of NAT, e.g. force_rport, Rewrite_contact. 
+
 ---
 
 ## Completed / deferred
