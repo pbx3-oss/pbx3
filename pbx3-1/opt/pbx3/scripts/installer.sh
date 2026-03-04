@@ -64,6 +64,10 @@ chmod 751 /etc/ssl/private 2>/dev/null || true
 usermod -a -G ssl-cert asterisk 2>/dev/null || true
 usermod -a -G ssl-cert www-data 2>/dev/null || true
 
+# Certificates panel: dirs for LE identity and custom (purchased) cert; create nginx snippet (snakeoil until LE/custom).
+mkdir -p /opt/pbx3/etc/identity /opt/pbx3/etc/ssl/custom 2>/dev/null || true
+[ -x /opt/pbx3/scripts/apply-active-cert.sh ] && /opt/pbx3/scripts/apply-active-cert.sh 2>/dev/null || true
+
 # Use our versions of asterisk/modules, asterisk/http & asterisk/pjsip
 
 [ ! -e $ASTPATH/modules.conf_installed ] && mv $ASTPATH/modules.conf $ASTPATH/modules.conf_installed
