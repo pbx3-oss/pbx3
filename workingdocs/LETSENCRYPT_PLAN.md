@@ -8,51 +8,37 @@
 
 ## 1. Goals
 
-- **Wildcard** Let's Encrypt certificate (e.g. `*.pbx3.com` + `pbx3.com`) so any node (e.g. `node1.pbx3.com`) can use the same cert pattern. On a **multi-tenant** instance, the same cert is valid for the instance hostname and all tenant hostnames (tenant1.pbx3.com, tenant2.pbx3.com, …) as long as they are single-level subdomains. **Tenant mobility:** Tenants can be moved between nodes (instances) for load and failover; because every node obtains its own wildcard cert covering `*.pbx3.com`, a tenant’s hostname remains valid on whichever node it is moved to—no cert migration when moving tenants.
-- Cert lives under `/etc/letsencrypt/live/<domain>/` (certbot layout; `<domain>` is the cert name, e.g. `pbx3.com` for `-d '*.pbx3.com' -d 'pbx3.com'`).
+- **Individual cert per hostname** (no wildcards). One Let's Encrypt certificate for **this** host's FQDN only (e.g. `myhost.mydomain.com`). Each server has its own FQDN and gets its own cert via HTTP-01; no cert sharing or distribution.
+- Cert lives under `/etc/letsencrypt/live/<fqdn>/` (certbot layout; `<fqdn>` is the hostname, e.g. `myhost.mydomain.com`).
 - Asterisk and nginx both use that cert; after renewal, both are reloaded.
-- Installer obtains the first cert: prompt only for the **instance FQDN** (e.g. `node1.pbx3.com`); we derive the cert domain from it (e.g. `pbx3.com`) and request the wildcard (`*.pbx3.com` + `pbx3.com`). Also prompt for Name.com credentials and LE email. Renewal is automatic (timer + deploy hook).
-- **Port 80 is not required** for wildcard (DNS-01 challenge only).
+- Installer obtains the first cert: prompt for **this host's FQDN** and **LE email**. Run certbot or lego with **HTTP-01** (port 80 reachable during issuance/renewal only). No DNS API. Renewal is automatic (timer + deploy hook).
+- **Port 80** is required only **during** the ACME HTTP-01 challenge. Can be closed the rest of the time.
 
 ---
 
-## 2. Wildcard = DNS-01 only
+## 2. Individual cert = HTTP-01
 
 | Item | Choice |
 |------|--------|
-| **Challenge** | **DNS-01** only (wildcard certs require it). |
-| **Port 80** | Not used for ACME; no need for pbx3 to own or listen on 80 for cert issuance/renewal. |
-| **Automation** | certbot + a **certbot-dns-&lt;provider&gt;** plugin (e.g. Cloudflare, Route53, OVH). Plugin uses the provider’s API to create/delete the TXT record for the challenge. |
-| **Credentials** | DNS API token or key/secret stored in a file (e.g. `/opt/pbx3/etc/le-dns-credentials.ini` or under `/etc/pbx3/`) with mode 0600; installer prompts for path or values and writes the file. Never commit to git. |
+| **Challenge** | **HTTP-01** (serve token at `http://<fqdn>/.well-known/acme-challenge/<token>`). |
+| **Port 80** | Required only during issuance/renewal. **We control it:** `le-renew-with-80.sh` opens 80, runs certbot renew, closes 80 (Shorewall; managed rule only). Cron twice daily + "Renew now" use this script. |
+| **DNS** | One **A record** for this host's FQDN pointing to this server. No TXT, no DNS API. |
+| **Credentials** | None. No DNS API file. Only LE email for expiry notices. |
 
 ---
 
-## 2b. Name.com as DNS provider
+## 2b. DNS requirement (no API)
 
-**Current choice: Name.com.** We use Name.com for DNS; subdomains (node1.pbx3.com, node2.pbx3.com, …) are free. Wildcard certs require DNS-01; Name.com supports this via API (username + API token from account settings).
+**No DNS API.** User creates one **A record** (and optionally AAAA) for this host's FQDN pointing to this server's IP, before running the installer or first renewal. Nothing else on the DNS side.
 
-**Credentials:** From Name.com → Account → API Access: create an API token. We need **username** and **API token** (not password). Store in `/opt/pbx3/etc/le-dns-credentials.ini` (mode 0600), e.g.:
-- For **lego:** `NAMECOM_USERNAME=...` and `NAMECOM_API_TOKEN=...` (or export as env vars).
-- For **certbot hooks:** `NAME_USERNAME=...` and `NAME_API_TOKEN=...` (or equivalent; hook scripts read these to call Name.com API).
-
-**Two ways to run ACME with Name.com:**
-
-| Approach | Pros | Cons |
-|----------|------|------|
-| **Certbot + manual DNS hooks** | Cert layout is standard `/etc/letsencrypt/live/<domain>/`; `certbot.timer` handles renewal; no new binary. | No official certbot Name.com plugin in Debian/Ubuntu; we maintain two small scripts (auth + cleanup) that call Name.com API (curl + jq) to create/delete `_acme-challenge.<domain>` TXT. |
-| **Lego** | Native Name.com support (`--dns namedotcom`), no hooks. Single binary, well maintained. | Writes certs to `.lego/certificates/` (e.g. `_.domain.crt`, `_.domain.key`); we need a timer (no certbot.timer) and either point Asterisk/nginx at lego paths or copy/symlink into `/etc/letsencrypt/live/<domain>/` so the rest of the plan stays unchanged. |
-
-**Recommendation:** Use **lego** for Name.com: no hook scripting, native support, credentials are just two env vars. Add a small wrapper or systemd timer that runs lego, then copies or symlinks `_.<domain>.crt` / `_.<domain>.key` to `/etc/letsencrypt/live/<domain>/fullchain.pem` and `privkey.pem` so Asterisk and nginx config stays the same. Alternatively, use **certbot + auth/cleanup hooks** if you prefer to keep certbot and its timer; hooks call Name.com API to set/remove the TXT record.
-
-**Changing DNS provider later:** If we move to Cloudflare, Route53, etc., we’d switch to that provider’s certbot plugin or lego provider; credential format and installer prompts would change; cert paths and deploy/reload logic stay the same.
 
 ---
 
 ## 3. Cert paths and consumers
 
-- **Cert dir:** `/etc/letsencrypt/live/<domain>/` (e.g. `pbx3.com` for wildcard `*.pbx3.com` + `pbx3.com`).  
+- **Cert dir:** `/etc/letsencrypt/live/<fqdn>/` (e.g. `myhost.mydomain.com`).  
   - `fullchain.pem`, `privkey.pem`  
-- **Persist domain:** Store the **derived** cert domain (e.g. `pbx3.com`) in `/opt/pbx3/etc/identity/le-domain` so Asterisk/nginx and renewal use the same path. Optionally persist the instance FQDN (e.g. `node1.pbx3.com`) for server_name / Asterisk if not already in DB (e.g. `globals.fqdn`).  
+- **Persist FQDN:** Store this host's FQDN in `/opt/pbx3/etc/identity/le-domain` so Asterisk/nginx and renewal use the same path.  
 - **Asterisk** (pbx3): http.conf and pjsip TLS → LE paths when cert exists; else snakeoil.  
 - **nginx** (pbx3api): 44300 server block uses LE paths when present; fallback snakeoil.  
 - **Permissions:** Ensure `asterisk` and `www-data` can read LE certs (certbot default dir permissions or a deploy-hook step).
@@ -67,55 +53,52 @@
 - Hook location: certbot’s `--deploy-hook` or drop a script in `/etc/letsencrypt/renewal-hooks/deploy/` (e.g. `reload-pbx3-services.sh`).  
 - Script should be idempotent and safe (only reload, no restart of unrelated services).
 
----
-
-## 6. Installer integration (wildcard)
-
-- **Prompt for (only these):**  
-  - **Instance FQDN** (e.g. `node1.pbx3.com`) – the hostname for this PBX3 instance. We use it to **derive** the cert domain: strip the first label → `pbx3.com`. The wildcard cert will be requested for `*.pbx3.com` and `pbx3.com`, which covers this instance and all tenant hostnames (tenant1.pbx3.com, etc.).  
-  - **Name.com credentials** – username and API token (Name.com → Account → API Access). Write to `/opt/pbx3/etc/le-dns-credentials.ini` (mode 0600).  
-  - **Email** for Let's Encrypt (recommended).  
-- **Derive domain:** From instance FQDN (e.g. `node1.pbx3.com`) set `domain=pbx3.com` (everything after the first dot). Request cert for `-d '*.<domain>' -d '<domain>'`.  
-- **Run:** **Lego:** `lego --dns namedotcom -d '*.domain' -d 'domain' --email <email> run`; then copy/symlink certs to `/etc/letsencrypt/live/<domain>/`. **Certbot:** same `-d` with manual hooks.  
-- **Persist:** Write derived `<domain>` to `/opt/pbx3/etc/identity/le-domain`. Optionally write instance FQDN to identity or DB for nginx/Asterisk.  
-- **After first cert:** Point Asterisk and (via doc) pbx3api nginx at LE paths; install reload script; enable renewal.
+**Port 80 control:** We open port 80 only for the duration of issuance or renewal. Scripts under `/opt/pbx3/scripts/`:
+- **le-port80-open.sh** — Adds a Shorewall rule for port 80 (IPv4 and IPv6) marked `# LE renewal (managed)`, then restarts Shorewall. Idempotent.
+- **le-port80-close.sh** — Removes that managed rule and restarts Shorewall.
+- **le-first-cert.sh** — First-time issuance: open 80 → certbot certonly --standalone -d &lt;fqdn&gt; -m &lt;email&gt; → write le-domain → apply-active-cert → close 80. Called by POST `/certificates/letsencrypt/setup` (Certificates panel "Get certificate"). Port 80 must be free for certbot --standalone.
+- **le-renew-with-80.sh** — Runs open → certbot renew --deploy-hook apply-active-cert.sh → close; trap ensures close runs on exit. Used by POST `/certificates/letsencrypt/renew` and by cron (twice daily at 03:15 and 15:15, only if `le-domain` exists). For "Renew now" and setup, set `PBX3_SYSCMD_TIMEOUT` ≥ 90 so the request does not time out.
 
 ---
 
-## 7. Package and dependencies (Name.com)
+## 6. First-time setup (Certificates panel or installer)
 
-- **Option A – Lego:** Add **lego** (ACME client with native Name.com support) to Depends. No certbot. Lego is available as a single binary; on Debian/Ubuntu install from [lego releases](https://github.com/go-acme/lego/releases) or a PPA/package if available; or vendor the binary. Renewal: systemd timer that runs lego (renew), then copies/symlinks certs to `/etc/letsencrypt/live/<domain>/` and runs the reload script.
-- **Option B – Certbot + hooks:** Add **certbot** to Depends. No Name.com plugin in distro; use `certbot certonly --manual --preferred-challenges dns --manual-auth-hook ./name-auth.sh --manual-cleanup-hook ./name-cleanup.sh -d '*.domain' -d 'domain'`. Ship two scripts that read `NAME_USERNAME` and `NAME_API_TOKEN` and call Name.com API (curl + jq) to create/delete the `_acme-challenge.<domain>` TXT record. Certbot writes to `/etc/letsencrypt/live/<domain>/`; use certbot.timer for renewal.
-- **Credentials file:** Same for both: `/opt/pbx3/etc/le-dns-credentials.ini` with `NAMECOM_USERNAME` and `NAMECOM_API_TOKEN` (lego) or `NAME_USERNAME` and `NAME_API_TOKEN` (hooks). Mode 0600.
+- **Primary: Certificates panel.** User goes to Certificates, enters **this host's FQDN** and **LE email**, clicks "Get certificate". API POST `/certificates/letsencrypt/setup` runs `le-first-cert.sh <fqdn> <email>`: open port 80, `certbot certonly --standalone -d <fqdn> -m <email> --agree-tos --non-interactive`, write FQDN to `le-domain`, run apply-active-cert.sh, close 80. No DNS API; user must have an A record for the FQDN pointing to this server before clicking.
+- **Optional: Installer.** Installer can also prompt for FQDN and LE email and run the same logic (or call `le-first-cert.sh`) so LE is configured at install time.
+- **Script:** `le-first-cert.sh` (in `/opt/pbx3/scripts/`) takes two args: FQDN and email. Uses certbot --standalone (port 80 must be free for the run). After first cert, renewal is automatic (cron + "Renew now").
+
+---
+
+## 7. Package and dependencies (HTTP-01)
+
+- **Certbot** (recommended): Add **certbot** to Depends. Use `certbot certonly --webroot` or `--standalone` for initial cert. **Renewal:** `le-renew-with-80.sh` (opens port 80, certbot renew, closes 80); cron runs it twice daily; "Renew now" calls it. Deploy hook apply-active-cert.sh reloads nginx + Asterisk.
+- **Lego:** Alternative single-binary ACME client: `lego --http -d <fqdn> run`; certs go to `.lego/certificates/` — copy or symlink to `/etc/letsencrypt/live/<fqdn>/` for consistent paths. Systemd timer for renewal.
+- **No credentials file** for DNS; no Name.com or other DNS API.
 
 ---
 
 ## 8. Suggested implementation order
 
-1. **Certbot + DNS plugin and timer**  
-   - Add certbot and certbot-dns-&lt;provider&gt; to package; ensure certbot.timer is enabled.  
-   - Manually test: create credentials file, run `certbot certonly --dns-<provider> ... -d '*.domain' -d 'domain'`; run `certbot renew --dry-run`.
+1. **Certbot (or lego) + HTTP-01**  
+   - Add certbot to Depends. Use `certbot certonly --webroot` or `--standalone` for one FQDN. Renewal: `le-renew-with-80.sh` (opens 80, certbot renew, closes 80); cron at 03:15 and 15:15; API "Renew now" invokes same script. No certbot.timer; we control port 80.
 
-2. **Credentials path and format**  
-   - Define where installer writes DNS API credentials (e.g. `/opt/pbx3/etc/le-dns-credentials.ini`) and the format (per certbot plugin; e.g. `dns_cloudflare_api_token = ...`). Document in installer or LETSENCRYPT_PLAN.
+2. **Deploy hook**  
+   - Script (e.g. apply-active-cert.sh) that reloads nginx and Asterisk. Read FQDN from `/opt/pbx3/etc/identity/le-domain`.
 
-3. **Deploy hook**  
-   - Script in `/etc/letsencrypt/renewal-hooks/deploy/` that reloads nginx and Asterisk. Read domain from `/opt/pbx3/etc/identity/le-domain` if needed for logic.
+3. **Asterisk TLS config**  
+   - When LE cert exists at `/etc/letsencrypt/live/<fqdn>/`, point http.conf and pjsip at it; else snakeoil.
 
-4. **Asterisk TLS config**  
-   - When LE cert exists at `/etc/letsencrypt/live/<domain>/`, point http.conf and pjsip at it; else snakeoil.
+4. **First cert: Certificates panel (or installer)**  
+   - Panel: user enters FQDN + email, "Get certificate" → POST setup → `le-first-cert.sh`. Installer can optionally do the same. Persist FQDN to `le-domain`; run apply-active-cert.sh after issuance.
 
-5. **Installer: domain + credentials + initial cert**  
-   - Prompt for domain, DNS credentials (or path), and LE email; write credentials file; run certonly (DNS plugin); persist domain to `le-domain`; update Asterisk paths.
-
-6. **pbx3api nginx**  
-   - Nginx 44300 config uses LE paths when present (path from `le-domain` or fixed convention); fallback snakeoil.
+5. **pbx3api nginx**  
+   - Nginx 44300 config uses LE paths when present (path from `le-domain`); fallback snakeoil.
 
 ---
 
 ## 9. Multi-server deployment (server #2, #3, …)
 
-**Same wildcard, many servers:** The cert for `*.pbx3.com` (and `pbx3.com`) is valid for **any** hostname under that domain: node1.pbx3.com, node2.pbx3.com, node3.pbx3.com, etc. So yes – conceptually they all “use the same cert” (same names in the cert). How each server gets that cert is a deployment choice.
+**Individual cert per server:** Each server has its own FQDN and gets its own cert via HTTP-01. No wildcard. (Obsolete text below referred to wildcard.) The cert for `*.pbx3.com` (and `pbx3.com`) is valid for **any** hostname under that domain: node1.pbx3.com, node2.pbx3.com, node3.pbx3.com, etc. So yes – conceptually they all “use the same cert” (same names in the cert). How each server gets that cert is a deployment choice.
 
 ### Option A: Certbot on every server — **chosen**
 

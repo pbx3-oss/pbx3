@@ -33,3 +33,6 @@
 
 #refresh phone images once a week
 0 0 * * 0 root sh $SCRIPTS/getimages.sh
+
+# Let's Encrypt renewal: open port 80, certbot renew, close port 80 (twice daily)
+15 3,15 * * * root [ -f /opt/pbx3/etc/identity/le-domain ] && $SCRIPTS/le-renew-with-80.sh >/dev/null 2>&1
