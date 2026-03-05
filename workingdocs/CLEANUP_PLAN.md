@@ -47,9 +47,23 @@ Phases can be reordered or split; dependencies: B and C are largely independent.
 
 ---
 
+## 3a. Repo layout (context)
+
+| Area | Contents |
+|------|----------|
+| **Root** | README.md, LICENSE, mkdocs.yml, full_schema.sql, .gitignore |
+| **docs/** | MkDocs: index.md, filelayout.md, config.md, featureKeys.md |
+| **workingdocs/** | Working documents (this folder) |
+| **pbx3-1/** | Debian package layout: debian/, etc/, opt/pbx3/, usr/ |
+| **opt/pbx3/** | always/, cache/, db/, etc/, once/, php/, scripts/, service/ |
+
+**Database (db/db_sql/):** sqlite_create_instance.sql (globals, tt_help_core), sqlite_create_laravel.sql (Laravel/auth), sqlite_create_tenant.sql (tenant/cluster/agent/app/cos/queue/etc.), sqlite_create_legacy.sql; full_schema.sql (repo root) = combined reference. **PHP:** config.php → genbashconfig.php → bashconfig; classes/ (DbClass, GenClass, etc.); utilities/ (runAstGen.php, runLinker.php, etc.). **Scripts:** bashconfig, create.initial.db, migrateLegacyDb.sh, genAst.sh, reloader.sh. **Asterisk:** etc/asterisk/configs/, etc/asterisk/templates/.
+
+---
+
 ## 4. Phase A – Documentation & quick fixes ✅
 
-- **Done:** filelayout typo, mkdocs nav, docs/index.md (backend-only). See PBX3_CLEANUP_CONTEXT.md for status.
+- **Done:** filelayout typo, mkdocs nav, docs/index.md (backend-only).
 
 ---
 

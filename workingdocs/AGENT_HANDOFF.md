@@ -1,6 +1,21 @@
 # Agent handoff – pbx3 (backend)
 
+**AI: read this first.**
+
 **Purpose:** Get a new agent up to speed on the pbx3 repo and recent work. Read this first, then dive into specific workingdocs as needed.
+
+---
+
+## Read order by task
+
+| Task | Read (in order) |
+|------|------------------|
+| Any / first time | This file, then TODO.md |
+| Cleanup / installer | CLEANUP_PLAN.md, APACHE_CONFIG_TO_PBX3API.md, PBX3API_INSTALLER_NGINX_ADDITIONS.md |
+| Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
+| TLS / LE | LETSENCRYPT_PLAN.md; SPA cert UI: pbx3spa/workingdocs/CERTIFICATES_ADOPTION_PLAN.md |
+
+**Source of truth:** Schema and code. Verify against pbx3 db_sql and code when changing behaviour; workingdocs may be outdated.
 
 ---
 
@@ -87,8 +102,7 @@
 | **PHP_SCRIPTS_AND_MODULES.md** | Which PHP scripts exist, who calls them, php-cli/php-sqlite3 and extensions |
 | **TODO.md** | Open items (e.g. LDAP columns globals vs tenant) |
 | **DEBIAN_PACKAGE_IMPROVEMENTS.md** | postinst vs installer, rules, install file ideas |
-| **CLEANUP_PLAN.md** | Phases (D, F, etc.), legacy web, installer scope |
-| **PBX3_CLEANUP_CONTEXT.md** | General cleanup context and layout |
+| **CLEANUP_PLAN.md** | Phases (D, F, etc.), legacy web, installer scope, repo layout (§3a) |
 
 ---
 
