@@ -236,7 +236,8 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
-    UNIQUE("cluster", "pkey")
+    UNIQUE("cluster", "pkey"),
+    UNIQUE("macaddr")
 );
 /* Class of service */
 CREATE TABLE IF NOT EXISTS ipphonecosopen (
