@@ -35,6 +35,7 @@
   - **generator:** Removed; Asterisk config generation scripts live in `php/utilities/` (runAstGen.php, etc.).
 - **genbashconfig.php** in installer is optional (run only if `php` is available).
 - **setip.php:** dpkg-query and `/etc/issue` use **CODENAME** (pbx3), not SYSPREFIX (/pbx3).
+- **Certificates / Let's Encrypt:** Individual cert per hostname (HTTP-01, no wildcard). **Initial setup** from Certificates panel (FQDN + email, "Get certificate") or optionally installer. Scripts: `le-port80-open.sh` / `le-port80-close.sh` (Shorewall managed rule for port 80); `le-renew-with-80.sh` (open 80 → certbot renew → close 80), used by "Renew now" and cron (twice daily when `le-domain` exists); `le-first-cert.sh` (first-time issuance: open 80, certbot certonly --standalone, write le-domain, apply-active-cert, close 80). `apply-active-cert.sh` still applies active cert (custom → LE → snakeoil) to nginx and Asterisk after install/remove/renew. See **LETSENCRYPT_PLAN.md** and **pbx3spa/workingdocs/CERTIFICATES_ADOPTION_PLAN.md**.
 
 ---
 
@@ -51,6 +52,10 @@
 | SQL schemas | `pbx3-1/opt/pbx3/db/db_sql/` (instance, laravel, tenant, message) |
 | Shorewall templates | `pbx3-1/opt/pbx3/etc/shorewall/` |
 | Asterisk configs/templates | `pbx3-1/opt/pbx3/etc/asterisk/` |
+| LE port 80 open/close | `pbx3-1/opt/pbx3/scripts/le-port80-open.sh`, `le-port80-close.sh` |
+| LE renewal (with port 80) | `pbx3-1/opt/pbx3/scripts/le-renew-with-80.sh` |
+| LE first-time cert | `pbx3-1/opt/pbx3/scripts/le-first-cert.sh` |
+| Apply active cert (nginx + Asterisk) | `pbx3-1/opt/pbx3/scripts/apply-active-cert.sh` |
 
 ---
 
@@ -107,7 +112,7 @@
 
 **Planned work (next session):**
 
-1. **TLS completion pass (pbx3 + pbx3api):** Current dev testing intentionally uses LAN HTTP to avoid self-signed browser friction. Before release, switch API back to HTTPS on `44300`, wire LE cert paths (owned by pbx3), and re-verify frontend login/CORS/Sanctum with trusted certs.
+1. **TLS completion pass (pbx3 + pbx3api):** Current dev testing intentionally uses LAN HTTP to avoid self-signed browser friction. Before release, switch API back to HTTPS on `44300`, wire LE cert paths (owned by pbx3), and re-verify frontend login/CORS/Sanctum with trusted certs. **Certificates panel and LE scripts are in place:** panel setup (FQDN + email, Get certificate), Renew now, port 80 open/close around issuance and renewal, cron twice daily; see LETSENCRYPT_PLAN.md.
 2. **pbx3 fail2ban** – Shipped config still references **Apache**: `etc/fail2ban/jail.local` uses the `apache-badbots` jail and `logpath = /var/log/apache2/ssl_access.log`. Since the API is served by nginx (pbx3api), update to a nginx log path and a suitable filter (or nginx-badbots if available), or disable the jail until nginx logging is in place.
 
 **References:** `APACHE_CONFIG_TO_PBX3API.md` (decision: nginx in pbx3api; TLS/LE in pbx3), `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, `nginx-api-site-reference.conf`.
