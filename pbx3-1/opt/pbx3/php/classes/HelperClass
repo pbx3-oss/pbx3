@@ -45,7 +45,7 @@ function __construct(){
  */
 
 private static $DEFAULT_CHARSET = 
-'0123456789bcdfghjkmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ';
+'0123456789bcdfghjkmnpqrstvwxyz';
 /* this is a cleaned up character set with no vowels and no similar looking 
  * characters (e.g. 0/O, 1/I/l) and little chance of a rude word being accidentally formed.
  */
