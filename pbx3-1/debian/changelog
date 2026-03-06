@@ -1,3 +1,24 @@
+pbx3 (0.0.2-2) noble; urgency=medium
+
+  * Backend-only split completed: removed Apache/HTTP ownership from pbx3;
+    API web stack is owned by pbx3api (nginx + PHP-FPM).
+  * Installer hardening and portability updates: POSIX sh compatibility,
+    manual idempotent run model, instance FQDN prompt/env support, hostname
+    and /etc/hosts updates, and one-shot setip execution.
+  * Packaging/runtime updates: add php-cli and php-sqlite3 dependencies for
+    installer/setip scripts; remove legacy debsetlan systemd service flow.
+  * Database/bootstrap fixes: reloader now ensures db_database_dumps exists;
+    remove sqlite_sequence from laravel schema to avoid SQLite reserved table
+    conflicts.
+  * Network/service reliability updates: ensure /etc/shorewall6 is created
+    when needed, keep shipped shorewall inline FQDN template comment-only,
+    and use mysql socket auth for CDR bootstrap.
+  * TLS/LE workflow integration in backend scripts: add first-issue, renew,
+    and open/close-port-80 helpers with apply-active-cert path for nginx and
+    Asterisk certificate activation.
+
+ -- KOKO <admin@aelintra.com>  Fri, 06 Mar 2026 12:00:00 +0000
+
 pbx3 (0.0.2-1) noble; urgency=medium
 
   * Debhelper compat 13; fix prerm (remove symlinks, drop bad asterisk.conf line)
