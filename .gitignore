@@ -6,7 +6,6 @@ __pycache__/
 **/*.debhelper.log
 **/*.substvars
 .DS_Store
-*.deb
 *sqlite.db
 *sqlite.rdonly.db
 /.phpunit.cache
