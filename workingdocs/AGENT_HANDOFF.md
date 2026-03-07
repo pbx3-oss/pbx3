@@ -11,6 +11,7 @@
 | Task | Read (in order) |
 |------|------------------|
 | Any / first time | This file, then TODO.md |
+| Install / deploy | INSTALL_SEQUENCE_UBUNTU.md (pbx3 then pbx3api on Ubuntu 24.04) |
 | Cleanup / installer | CLEANUP_PLAN.md, APACHE_CONFIG_TO_PBX3API.md, PBX3API_INSTALLER_NGINX_ADDITIONS.md |
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
 | TLS / LE | LETSENCRYPT_PLAN.md; SPA cert UI: pbx3spa/workingdocs/CERTIFICATES_ADOPTION_PLAN.md |
@@ -78,7 +79,7 @@
 
 - Build the .deb from the **pbx3** repo (e.g. `dpkg-buildpackage` or project’s build script). Package files are under `pbx3-1/`.
 - Install: `apt install ./pbx3_*.deb` (or equivalent).
-- After install, run **once:** `sudo /opt/pbx3/scripts/installer.sh` (idempotent; prompts for **instance FQDN** or use `INSTANCE_FQDN=node1.pbx3.com`; stores in globals.fqdn, sets hostname and `/etc/hosts` 127.0.1.1; runs setip once; creates DB, shorewall, shorewall6 dir if needed, CDR MySQL, etc.). Works when invoked as `sh installer.sh` or `./installer.sh`.
+- After install, run **once:** `sudo /opt/pbx3/scripts/installer.sh` (idempotent; prompts for **instance FQDN** or use `INSTANCE_FQDN=node1.pbx3.com`; stores in globals.fqdn, sets hostname and `/etc/hosts` 127.0.1.1; runs setip once; creates DB, shorewall, shorewall6 dir if needed, CDR MySQL, etc.). Works when invoked as `sh installer.sh` or `./installer.sh`. Full sequence (pbx3 then pbx3api) is in **INSTALL_SEQUENCE_UBUNTU.md**.
 
 ---
 
@@ -95,6 +96,7 @@
 
 | File | Use when |
 |------|----------|
+| **INSTALL_SEQUENCE_UBUNTU.md** | Full install order: pbx3 package, pbx3 installer, pbx3api deploy, pbx3api installer (Ubuntu 24.04) |
 | **APACHE_CONFIG_TO_PBX3API.md** | HTTP vs backend split, TLS/LE ownership, nginx in pbx3api, phases |
 | **LETSENCRYPT_PLAN.md** | Let's Encrypt: HTTP-01 vs DNS-01, port 80, deploy hook, installer, Asterisk/nginx paths, implementation order |
 | **PBX3API_INSTALLER_NGINX_ADDITIONS.md** | What pbx3api installer needs to add (nginx, site config) |

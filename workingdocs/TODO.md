@@ -1,13 +1,13 @@
 # PBX3 ToDo list
 
-**Branch:** cleanup  
-**Last updated:** 2026-02-12
+**Branch:** main  
+**Last updated:** 2026-03-06
 
 ---
 
 ## Open items
 
-- [ ] **API HTTP layer (next session):** pbx3 does not install Apache; API is pbx3api (nginx + PHP-FPM). pbx3api repo still has only `.htaccess` (no nginx config). **Tasks:** (1) Make pbx3api nginx-ready (add nginx site config or installer steps; see `APACHE_CONFIG_TO_PBX3API.md`, `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, `nginx-api-site-reference.conf`). (2) In pbx3: update fail2ban `etc/fail2ban/jail.local` from apache-badbots / `/var/log/apache2/ssl_access.log` to nginx log path and suitable filter.
+- [ ] **pbx3 fail2ban:** pbx3api serves the API via nginx; pbx3’s shipped `etc/fail2ban/jail.local` still references Apache (`apache-badbots`, `/var/log/apache2/ssl_access.log`). Update to nginx log path and a suitable filter (or nginx-badbots if available), or disable the jail until nginx logging is in place.
 
 - [ ] **TLS finish pass after LAN HTTP dev cycle:** current frontend/API integration is validated over HTTP in LAN for development speed. Before release, switch back to HTTPS on `44300`, wire hostname-aligned certs (Let's Encrypt owned by pbx3), re-test browser login/CORS/Sanctum with trusted cert. **Installer health-check follow-up:** add to pbx3api `scripts/installer.sh` after nginx/php-fpm setup: (1) DB symlink check (exists, target resolves, www-data can r/w); (2) nginx upstream/socket check, `nginx -t`; (3) HTTP readiness e.g. `curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1:44300/`. Fail installer non-zero if validation fails.
 
