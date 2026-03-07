@@ -1,221 +1,220 @@
 
-CREATE DATABASE IF NOT EXISTS `catalog` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci */
+CREATE DATABASE IF NOT EXISTS catalog /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci */
 
 
 == CORE TABLES
 
 --
--- Table structure for table `Agent`
+-- Table structure for table Agent
 --
 
-DROP TABLE IF EXISTS `Agent`;
+DROP TABLE IF EXISTS Agent;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Agent` (
-  `id` varchar(20) NOT NULL,
-  `pkey` int(11) NOT NULL,
-  `cluster` text DEFAULT 'default',
-  `conf` text DEFAULT NULL,
-  `extlen` int(11) DEFAULT NULL,
-  `name` text DEFAULT '*NEW AGENT*',
-  `cname` text DEFAULT '*NEW AGENT*',
-  `num` text DEFAULT NULL,
-  `passwd` text DEFAULT NULL,
-  `queue1` text DEFAULT 'None',
-  `queue2` text DEFAULT 'None',
-  `queue3` text DEFAULT 'None',
-  `queue4` text DEFAULT 'None',
-  `queue5` text DEFAULT 'None',
-  `queue6` text DEFAULT 'None',
-  PRIMARY KEY (`id`)
+CREATE TABLE Agent (
+  id varchar(20) NOT NULL,
+  pkey int(11) NOT NULL,
+  cluster text DEFAULT 'default',
+  conf text DEFAULT NULL,
+  extlen int(11) DEFAULT NULL,
+  name text DEFAULT '*NEW AGENT*',
+  cname text DEFAULT '*NEW AGENT*',
+  num text DEFAULT NULL,
+  passwd text DEFAULT NULL,
+  queue1 text DEFAULT 'None',
+  queue2 text DEFAULT 'None',
+  queue3 text DEFAULT 'None',
+  queue4 text DEFAULT 'None',
+  queue5 text DEFAULT 'None',
+  queue6 text DEFAULT 'None',
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `Appl`
+-- Table structure for table Appl
 --
 
-DROP TABLE IF EXISTS `Appl`;
+DROP TABLE IF EXISTS Appl;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Appl` (
-  `id` varchar(20) NOT NULL,
-  `pkey` text NOT NULL,
-  `active` text DEFAULT 'YES',
-  `cluster` text DEFAULT 'default',
-  `description` text DEFAULT NULL,
-  `directdial` int(11) DEFAULT NULL,
-  `extcode` text DEFAULT NULL,
-  `name` text DEFAULT NULL,
-  `cname` text DEFAULT NULL,
-  `span` text DEFAULT 'Neither',
-  `striptags` text DEFAULT NULL,
-  PRIMARY KEY (`id`)
+CREATE TABLE Appl (
+  id varchar(20) NOT NULL,
+  pkey text NOT NULL,
+  active text DEFAULT 'YES',
+  cluster text DEFAULT 'default',
+  description text DEFAULT NULL,
+  directdial int(11) DEFAULT NULL,
+  extcode text DEFAULT NULL,
+  name text DEFAULT NULL,
+  cname text DEFAULT NULL,
+  span text DEFAULT 'Neither',
+  striptags text DEFAULT NULL,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `ast-full-logs`
+-- Table structure for table ast-full-logs
 --
 
-DROP TABLE IF EXISTS `ast-full-logs`;
+DROP TABLE IF EXISTS ast-full-logs;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `ast-full-logs` (
-  `id` varchar(20) NOT NULL,
-  `instance-id` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+CREATE TABLE ast-full-logs (
+  id varchar(20) NOT NULL,
+  instance-id varchar(20) DEFAULT NULL,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='MOH media';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `cdr-csv-logs`
+-- Table structure for table cdr-csv-logs
 --
 
-DROP TABLE IF EXISTS `cdr-csv-logs`;
+DROP TABLE IF EXISTS cdr-csv-logs;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `cdr-csv-logs` (
-  `id` varchar(20) NOT NULL,
-  `instance-id` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+CREATE TABLE cdr-csv-logs (
+  id varchar(20) NOT NULL,
+  instance-id varchar(20) DEFAULT NULL,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='MOH media';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
 --
--- Table structure for table `COS`
+-- Table structure for table COS
 --
 
-DROP TABLE IF EXISTS `COS`;
+DROP TABLE IF EXISTS COS;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `COS` (
-  `id` varchar(20) NOT NULL,
-  `pkey` text NOT NULL,
-  `active` text DEFAULT 'YES',
-  `cluster` text DEFAULT NULL,
-  `cname` text DEFAULT NULL,
-  `defaultclosed` text DEFAULT 'NO',
-  `defaultopen` text DEFAULT 'NO',
-  `description` text DEFAULT NULL,
-  `dialplan` text DEFAULT NULL,
-  `orideclosed` text DEFAULT 'NO',
-  `orideopen` text DEFAULT 'NO',
-  PRIMARY KEY (`id`)
+CREATE TABLE COS (
+  id varchar(20) NOT NULL,
+  pkey text NOT NULL,
+  active text DEFAULT 'YES',
+  cluster text DEFAULT NULL,
+  cname text DEFAULT NULL,
+  defaultclosed text DEFAULT 'NO',
+  defaultopen text DEFAULT 'NO',
+  description text DEFAULT NULL,
+  dialplan text DEFAULT NULL,
+  orideclosed text DEFAULT 'NO',
+  orideopen text DEFAULT 'NO',
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `Cluster`
+-- Table structure for table Cluster
 --
 
-DROP TABLE IF EXISTS `Cluster`;
+DROP TABLE IF EXISTS Cluster;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Cluster` (
-  `id` varchar(20) NOT NULL,
-  `pkey` text NOT NULL,
-  `abstimeout` int(11) DEFAULT 14400,
-  `acl` tinyint(1) DEFAULT 0,
-  `allow_hash_xfer` text DEFAULT 'enabled',
-  `blind_busy` text DEFAULT NULL,
-  `bounce_alert` text DEFAULT NULL,
-  `callrecord_1` text DEFAULT 'None',
-  `camp_on_q_onoff` text DEFAULT NULL,
-  `camp_on_q_opt` text DEFAULT NULL,
-  `cfwdextern_rule` text DEFAULT 'YES',
-  `cfwd_progress` text DEFAULT 'enabled',
-  `cfwd_answer` text DEFAULT 'enabled',
-  `clusterclid` text DEFAULT NULL,
-  `chanmax` int(11) DEFAULT 3,
-  `countrycode` int(11) DEFAULT 44,
-  `dynamicfeatures` text DEFAULT NULL,
-  `description` text DEFAULT NULL,
-  `devicerec` text DEFAULT 'default',
-  `emailalert` text DEFAULT NULL,
-  `emergency` text DEFAULT '999 112 911',
-  `extblklist` text DEFAULT NULL,
-  `ext_lim` int(11) DEFAULT 0,
-  `ext_len` int(11) DEFAULT 3,
-  `fqdn` text DEFAULT NULL,
-  `fqdninspect` tinyint(1) DEFAULT 0,
-  `include` text DEFAULT NULL,
-  `int_ring_delay` int(11) DEFAULT 20,
-  `ivr_key_wait` int(11) DEFAULT 6,
-  `ivr_digit_wait` int(11) DEFAULT 6000,
-  `language` text DEFAULT 'en-gb',
-  `ldapanonbind` text DEFAULT 'YES',
-  `ldapbase` text DEFAULT 'dc=sark,dc=local',
-  `ldaphost` text DEFAULT '127.0.0.1',
-  `ldapou` text DEFAULT 'contacts',
-  `ldapuser` text DEFAULT 'admin',
-  `ldappass` text DEFAULT 'sarkadmin',
-  `ldaptls` text DEFAULT 'off',
-  `leasehdtimeE` int(11) DEFAULT 43200,
-  `localarea` text DEFAULT NULL,
-  `localdplan` text DEFAULT NULL,
-  `lterm` int(11) DEFAULT 0,
-  `leasedhdtime` int(11) DEFAULT 43200,
-  `masteroclo` text DEFAULT NULL,
-  `maxin` int(11) DEFAULT 30,
-  `maxout` int(11) DEFAULT 30,
-  `mixmonitor` text DEFAULT NULL,
-  `monitor_out` text DEFAULT '/var/spool/asterisk/monout/',
-  `monitor_stage` text DEFAULT '/var/spool/asterisk/monstage/',
-  `name` text DEFAULT NULL,
-  `cname` text DEFAULT NULL,
-  `number_range_regex` text DEFAULT NULL,
-  `oclo` text DEFAULT NULL,
-  `operator` int(11) DEFAULT 100,
-  `padminpass` int(11) DEFAULT 44068,
-  `puserpass` int(11) DEFAULT 31524,
-  `pickupgroup` text DEFAULT NULL,
-  `play_beep` int(11) DEFAULT 1,
-  `play_busy` int(11) DEFAULT 1,
-  `play_congested` int(11) DEFAULT 1,
-  `play_transfer` int(11) DEFAULT 1,
-  `rec_age` int(11) DEFAULT 60,
-  `rec_final_dest` text DEFAULT NULL,
-  `rec_grace` int(11) DEFAULT 5,
-  `rec_limit` int(11) DEFAULT NULL,
-  `rec_mount` text DEFAULT NULL,
-  `recmaxage` text DEFAULT '60',
-  `recmaxsize` text DEFAULT '0',
-  `recused` text DEFAULT '0',
-  `ringdelay` int(11) DEFAULT 20,
-  `routeoverride` text DEFAULT NULL,
-  `spy_pass` text DEFAULT '3333',
-  `sysop` int(11) DEFAULT NULL,
-  `syspass` text DEFAULT '4444',
-  `usemohcustom` text DEFAULT NULL,
-  `VDELAY` int(11) DEFAULT 0,
-  `vmail_age` int(11) DEFAULT 60,
-  `voice_instr` int(11) DEFAULT 1,
-  `voip_max` int(11) DEFAULT 30,
-  `vxt` int(11) DEFAULT 0,
-  PRIMARY KEY (`id`),
+CREATE TABLE Cluster (
+  id varchar(20) NOT NULL,
+  pkey text NOT NULL,
+  abstimeout int(11) DEFAULT 14400,
+  acl tinyint(1) DEFAULT 0,
+  allow_hash_xfer text DEFAULT 'enabled',
+  blind_busy text DEFAULT NULL,
+  bounce_alert text DEFAULT NULL,
+  callrecord_1 text DEFAULT 'None',
+  camp_on_q_onoff text DEFAULT NULL,
+  camp_on_q_opt text DEFAULT NULL,
+  cfwdextern_rule text DEFAULT 'YES',
+  cfwd_progress text DEFAULT 'enabled',
+  cfwd_answer text DEFAULT 'enabled',
+  clusterclid text DEFAULT NULL,
+  chanmax int(11) DEFAULT 3,
+  countrycode int(11) DEFAULT 44,
+  dynamicfeatures text DEFAULT NULL,
+  description text DEFAULT NULL,
+  devicerec text DEFAULT 'default',
+  emailalert text DEFAULT NULL,
+  emergency text DEFAULT '999 112 911',
+  extblklist text DEFAULT NULL,
+  ext_lim int(11) DEFAULT 0,
+  ext_len int(11) DEFAULT 3,
+  fqdn text DEFAULT NULL,
+  fqdninspect tinyint(1) DEFAULT 0,
+  include text DEFAULT NULL,
+  int_ring_delay int(11) DEFAULT 20,
+  ivr_key_wait int(11) DEFAULT 6,
+  ivr_digit_wait int(11) DEFAULT 6000,
+  language text DEFAULT 'en-gb',
+  ldapanonbind text DEFAULT 'YES',
+  ldapbase text DEFAULT 'dc=sark,dc=local',
+  ldaphost text DEFAULT '127.0.0.1',
+  ldapou text DEFAULT 'contacts',
+  ldapuser text DEFAULT 'admin',
+  ldappass text DEFAULT 'sarkadmin',
+  ldaptls text DEFAULT 'off',
+  localarea text DEFAULT NULL,
+  localdplan text DEFAULT NULL,
+  lterm int(11) DEFAULT 0,
+  leasedhdtime int(11) DEFAULT 43200,
+  masteroclo text DEFAULT NULL,
+  maxin int(11) DEFAULT 30,
+  maxout int(11) DEFAULT 30,
+  mixmonitor text DEFAULT NULL,
+  monitor_out text DEFAULT '/var/spool/asterisk/monout/',
+  monitor_stage text DEFAULT '/var/spool/asterisk/monstage/',
+  name text DEFAULT NULL,
+  cname text DEFAULT NULL,
+  number_range_regex text DEFAULT NULL,
+  oclo text DEFAULT NULL,
+  operator int(11) DEFAULT 100,
+  padminpass int(11) DEFAULT 44068,
+  puserpass int(11) DEFAULT 31524,
+  pickupgroup text DEFAULT NULL,
+  play_beep int(11) DEFAULT 1,
+  play_busy int(11) DEFAULT 1,
+  play_congested int(11) DEFAULT 1,
+  play_transfer int(11) DEFAULT 1,
+  rec_age int(11) DEFAULT 60,
+  rec_final_dest text DEFAULT NULL,
+  rec_grace int(11) DEFAULT 5,
+  rec_limit int(11) DEFAULT NULL,
+  rec_mount text DEFAULT NULL,
+  recmaxage text DEFAULT '60',
+  recmaxsize text DEFAULT '0',
+  recused text DEFAULT '0',
+  ringdelay int(11) DEFAULT 20,
+  routeoverride text DEFAULT NULL,
+  spy_pass text DEFAULT '3333',
+  sysop int(11) DEFAULT NULL,
+  syspass text DEFAULT '4444',
+  usemohcustom text DEFAULT NULL,
+  VDELAY int(11) DEFAULT 0,
+  vmail_age int(11) DEFAULT 60,
+  voice_instr int(11) DEFAULT 1,
+  voip_max int(11) DEFAULT 30,
+  vxt int(11) DEFAULT 0,
+  PRIMARY KEY (id),
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
 --
--- Table structure for table `customers`
+-- Table structure for table customers
 --
 
-DROP TABLE IF EXISTS `customers`;
+DROP TABLE IF EXISTS customers;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `customers` (
-  `id` varchar(20) NOT NULL,
-  `cname` varchar(100) NOT NULL,
-  `cdate` datetime DEFAULT curdate(),
-  PRIMARY KEY (`id`)
+CREATE TABLE customers (
+  id varchar(20) NOT NULL,
+  cname varchar(100) NOT NULL,
+  cdate datetime DEFAULT curdate(),
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /* open/closed automation */
-DROP TABLE IF EXISTS `dateseg`;
+DROP TABLE IF EXISTS dateseg;
 CREATE TABLE IF NOT EXISTS dateSeg (
 id TEXT,
 pkey INTEGER,             -- candidate to be removed
@@ -226,7 +225,7 @@ description TEXT DEFAULT '*NEW RULE*',
 month TEXT DEFAULT '*',
 state TEXT DEFAULT 'IDLE',
 timespan TEXT DEFAULT '*',
-PRIMARY KEY (`id`)
+PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 /* system settings   - should be merged with or references from instance?  */
@@ -274,7 +273,7 @@ TLSPORT	INTEGER DEFAULT 5061,		-- TLS port (default 5061)
 USEROTP TEXT DEFAULT NULL,			   -- V6 default OTP.  Seeded by the generator
 VCL TEXT DEFAULT '1',			      -- V5 cloud enabled (1/0)
 VOIPMAX INTEGER DEFAULT 30,			-- MAX outbound up calls 
-PRIMARY KEY (`id`)
+PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 /* system greetings */
@@ -287,7 +286,7 @@ filename TEXT,
 cluster TEXT DEFAULT 'default',
 description TEXT,
 type TEXT,
-PRIMARY KEY (`id`)
+PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 /* Holiday overrides */
@@ -300,21 +299,21 @@ description TEXT,								-- Description
 route TEXT,								      -- Holiday scheduler route override
 stime INTEGER,							      -- Epoch start
 etime INTEGER,							      -- Epoch end
-PRIMARY KEY (`id`)
+PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 --
--- Table structure for table `instances`
+-- Table structure for table instances
 --
 
-DROP TABLE IF EXISTS `instances`;
+DROP TABLE IF EXISTS instances;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `instances` (
-  `id` varchar(20) NOT NULL,
-  `cname` varchar(100) NOT NULL,
-  `cdate` datetime DEFAULT curdate(),
-  PRIMARY KEY (`id`)
+CREATE TABLE instances (
+  id varchar(20) NOT NULL,
+  cname varchar(100) NOT NULL,
+  cdate datetime DEFAULT curdate(),
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -517,24 +516,24 @@ PRIMARY KEY (pkey,cluster)
 
 
 --
--- Table structure for table `recordings`
+-- Table structure for table recordings
 --
 
-DROP TABLE IF EXISTS `recordings`;
+DROP TABLE IF EXISTS recordings;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `recordings` (
-  `id` varchar(20) NOT NULL,
-  `caller-id` varchar(20) NOT NULL,
-  `callee-id` varchar(20) NOT NULL,
-  `cdate` datetime DEFAULT curdate(),
-  `tenant-id` varchar(20) NOT NULL,
-  `s3key` varchar(1024) NOT NULL,
-  `instance-id` varchar(20) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `recordings_cdate_IDX` (`cdate`) USING BTREE,
-  KEY `recordings_caller_id_IDX` (`caller-id`) USING BTREE,
-  KEY `recordings_callee_id_IDX` (`callee-id`) USING BTREE
+CREATE TABLE recordings (
+  id varchar(20) NOT NULL,
+  caller-id varchar(20) NOT NULL,
+  callee-id varchar(20) NOT NULL,
+  cdate datetime DEFAULT curdate(),
+  tenant-id varchar(20) NOT NULL,
+  s3key varchar(1024) NOT NULL,
+  instance-id varchar(20) NOT NULL,
+  PRIMARY KEY (id),
+  KEY recordings_cdate_IDX (cdate) USING BTREE,
+  KEY recordings_caller_id_IDX (caller-id) USING BTREE,
+  KEY recordings_callee_id_IDX (callee-id) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -555,21 +554,21 @@ path3 TEXT DEFAULT 'None',
 path4 TEXT DEFAULT 'None',
 route TEXT DEFAULT 'None',       -- always the same as pkey.   Not used, not needed.
 strategy TEXT DEFAULT 'hunt',   --hunt or balance
-PRIMARY KEY (`id`),
+PRIMARY KEY (id),
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 
 --
--- Table structure for table `syslogs`
+-- Table structure for table syslogs
 --
 
-DROP TABLE IF EXISTS `syslogs`;
+DROP TABLE IF EXISTS syslogs;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `syslogs` (
-  `id` varchar(20) NOT NULL,
-  `instance-id` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+CREATE TABLE syslogs (
+  id varchar(20) NOT NULL,
+  instance-id varchar(20) DEFAULT NULL,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='MOH media';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -581,11 +580,11 @@ htext TEXT,
 -- name is deprecated and will be dropped in a near release use cname instead
 name TEXT,
 cname TEXT,                            -- common name
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='MOH media';
 
 --
--- Table structure for table `tenants`
+-- Table structure for table tenants
 --
 
 

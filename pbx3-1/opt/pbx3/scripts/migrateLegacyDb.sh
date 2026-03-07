@@ -23,3 +23,5 @@ sudo sqlite3 $SYSDB < $DBPATH/db_legacy_sql/sqlite_fixRi.sql
 
 sudo php $DUMPER 
 sudo sh $RELOADER 
+sudo chown www-data:www-data $SYSDB
+sudo chmod 664 $SYSDB

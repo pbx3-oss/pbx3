@@ -64,6 +64,8 @@ if [ -e $SYSMSGDB ]; then
 	echo Loading system messages
 	sqlite3 $SYSDB < $SYSMSGDB
 fi
+echo Loading system device data
+sqlite3 $SYSDB < $DBSQL/sqlite_device_data.sql
 
 #Reload any saved customer data
 
@@ -139,7 +141,6 @@ fi
 sqlite3 $SYSDB 'PRAGMA synchronous=1;'
 sqlite3 $SYSDB 'PRAGMA journal_mode=DELETE;' >/dev/null 2>&1
 
-exit
 
 # save a copy of the original installed database (for factory reset)
 #[ "$NEWINSTALL" = true ] && cp $SYSDB $CLEANDB
@@ -164,7 +165,6 @@ chown $HTTPOWNER $DBPATH/*
 #set db perms q
 chmod 664 $SYSDB
 
-exit 0
 
 # clean the firewall up
 echo Running firewall sanitizer

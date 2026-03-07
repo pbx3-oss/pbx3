@@ -100,7 +100,6 @@ ldapou text DEFAULT 'contacts',     -- LDAP OU **MOVED**
 ldapuser text DEFAULT 'admin',		-- LDAP user **MOVED**
 ldappass text DEFAULT 'sarkadmin',	-- LDAP password **MOVED**
 ldaptls DEFAULT 'off',              -- LDAP TLS mode(off/on)
-leasehdtimeE INTEGER DEFAULT 43200,		-- Hot desk
 localarea TEXT,                        -- local area code
 localdplan TEXT,                       -- local number dialplan
 lterm INTEGER DEFAULT 0,			   -- late termination flag
