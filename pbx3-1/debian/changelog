@@ -1,3 +1,21 @@
+pbx3 (0.0.2.3-1) noble; urgency=medium
+
+  * idpwgen: introduce Go binary for shortuid and password generation (single
+    source for pbx3 and pbx3api). Shortuids: 6 chars, charset without
+    vowels/similar; passwords: 12 chars with override charset.
+  * HelperClass: generate() now uses idpwgen only; add idpwgenPath(),
+    runIdpwgen(); path from config.php constant IDPWGEN.
+  * dumper.php: update "existing shortuid" regex to 6 chars and idpwgen
+    charset (^[0-9bcdfghjkmnpqrstvwxyz]{6}$) so previously issued shortuids
+    are not overwritten.
+  * Packaging: add golang-go to Depends; build idpwgen at install in
+    installer.sh only (do not ship binary); add compiled binary to
+    .gitignore.
+  * Documentation: add idpwgen section to PHP_SCRIPTS_AND_MODULES.md; add
+    workingdocs/IDPWGEN_ROLLOUT_PLAN.md.
+
+ -- KOKO <admin@aelintra.com>  Sat, 07 Mar 2026 12:00:00 +0000
+
 pbx3 (0.0.2-2) noble; urgency=medium
 
   * Backend-only split completed: removed Apache/HTTP ownership from pbx3;

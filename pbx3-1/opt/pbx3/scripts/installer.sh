@@ -151,6 +151,12 @@ if command -v php >/dev/null 2>&1; then
     php $SYSPATH/php/utilities/genbashconfig.php 2>/dev/null || true
 fi
 
+# Build idpwgen (shortuid/password generator) if source exists and go is available
+if [ -f $SYSPATH/golang/idpwgen.go ] && command -v go >/dev/null 2>&1; then
+    (cd $SYSPATH/golang && go build -o idpwgen idpwgen.go) 2>/dev/null || true
+    [ -x $SYSPATH/golang/idpwgen ] && chmod 755 $SYSPATH/golang/idpwgen
+fi
+
 # Create initial DB if missing (fresh install)
 [ ! -e "$SYSDB" ] && /bin/sh $SCRIPTS/create.initial.db
 

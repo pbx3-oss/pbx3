@@ -24,6 +24,13 @@ The pbx3 package **Depends** on **php-cli** and **php-sqlite3** (see debian/cont
 | **php/utilities/sanitize-firewall.php** | reloader.sh (currently dead code after `exit`) | Format shorewall rules | core only |
 | **php/utilities/sipiaxfix.php** | commented out in reloader | SIP/IAX fixup | unknown |
 
+## Shortuid and password generation (idpwgen)
+
+- **idpwgen** is a Go binary at `/opt/pbx3/golang/idpwgen`, built at install by **installer.sh** (not shipped in the package). It is used for:
+  - **Shortuids** (6 chars, charset without vowels/similar): **HelperClass::generate()** in pbx3 and **dumper.php** (via `helper::generate()`), and **generate_shortuid()** in pbx3api.
+  - **Phone passwords** (12 chars, mixed charset): **pbx3api** **Helper::ret_password()** only.
+- Path in pbx3: **config.php** constant **`IDPWGEN`**. Path in pbx3api: env **`IDPWGEN_PATH`** (default `/opt/pbx3/golang/idpwgen`).
+
 ## Minimal PHP for “run generator / migrations”
 
 - **php-cli**

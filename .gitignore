@@ -8,6 +8,8 @@ __pycache__/
 .DS_Store
 *sqlite.db
 *sqlite.rdonly.db
+# idpwgen binary built at install; do not commit
+pbx3-1/opt/pbx3/golang/idpwgen
 /.phpunit.cache
 # Runtime cache files (downloaded/updated by scripts)
 pbx3-1/opt/pbx3/cache/manuf.txt
