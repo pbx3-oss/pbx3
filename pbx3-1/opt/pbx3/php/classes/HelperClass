@@ -39,34 +39,67 @@ function __construct(){
 }
 
 /**
- * Human readable 8 digit uid(ish) generator (shortuid in the DB)
- * lifted from GpsLab Base64UID
- * see - https://github.com/gpslab/base64uid
+ * Human readable shortuid generator (shortuid in the DB).
+ * Uses idpwgen binary; default 6 chars from DEFAULT_CHARSET.
  */
 
-private static $DEFAULT_CHARSET = 
-'0123456789bcdfghjkmnpqrstvwxyz';
-/* this is a cleaned up character set with no vowels and no similar looking 
- * characters (e.g. 0/O, 1/I/l) and little chance of a rude word being accidentally formed.
- */
+private static $DEFAULT_CHARSET = '0123456789bcdfghjkmnpqrstvwxyz';
+/* no vowels, no similar-looking chars (0/O, 1/I/l); low chance of accidental rude words */
 
+/** Path to idpwgen binary (from config.php when available). */
+private static function idpwgenPath() {
+	return defined('IDPWGEN') ? IDPWGEN : '/opt/pbx3/golang/idpwgen';
+}
 
 /**
+ * Run idpwgen and return validated output.
  * @param int    $length
  * @param string $charset
- *
+ * @return string generated ID
+ * @throws \RuntimeException on failure
+ */
+private static function runIdpwgen($length, $charset) {
+	$path = self::idpwgenPath();
+	if (!is_executable($path)) {
+		throw new \RuntimeException('idpwgen not executable: ' . $path);
+	}
+	$cmd = $path . ' -length ' . (int) $length . ' -charset ' . escapeshellarg($charset);
+	$desc = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+	$proc = @proc_open($cmd, $desc, $pipes, null, null, ['bypass_shell' => true]);
+	if (!is_resource($proc)) {
+		throw new \RuntimeException('idpwgen proc_open failed');
+	}
+	$stdout = stream_get_contents($pipes[1]);
+	$stderr = stream_get_contents($pipes[2]);
+	fclose($pipes[1]);
+	fclose($pipes[2]);
+	$code = proc_close($proc);
+	if ($code !== 0) {
+		error_log('idpwgen exit ' . $code . ': ' . trim($stderr));
+		throw new \RuntimeException('idpwgen failed (exit ' . $code . ')');
+	}
+	$uid = trim($stdout);
+	if (strlen($uid) !== $length) {
+		throw new \RuntimeException('idpwgen wrong length: got ' . strlen($uid) . ', expected ' . $length);
+	}
+	$charsetArr = array_flip(str_split($charset));
+	for ($i = 0; $i < strlen($uid); $i++) {
+		if (!isset($charsetArr[$uid[$i]])) {
+			throw new \RuntimeException('idpwgen invalid character in output');
+		}
+	}
+	return $uid;
+}
+
+/**
+ * @param int    $length  default 6 (shortuid)
+ * @param string $charset default DEFAULT_CHARSET
  * @return string
  */
-public static function generate($length = 8, $charset = '')
+public static function generate($length = 6, $charset = '')
 {
 	$charset = $charset ?: self::$DEFAULT_CHARSET;
-	$charset_size = strlen($charset);
-	$uid = '';
-	while ($length-- > 0) {
-		$uid .= $charset[random_int(0, $charset_size - 1)];
-	}
-
-	return $uid;
+	return self::runIdpwgen($length, $charset);
 }
 
 /**

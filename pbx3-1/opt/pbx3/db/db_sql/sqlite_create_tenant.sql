@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS cluster (
     "recmaxage" TEXT DEFAULT '60',		   -- Max age in days of call recordings for this tenant
     "recmaxsize" TEXT DEFAULT '0',		   -- Recording storage maximum for this tenant
     "recused" TEXT DEFAULT '0',			   -- Recording storage used by this tenant (updated according to cron freq)						
-    "ringdelay" INTEGER DEFAULT 20,       -- default ring timeout (seconds)
+    "ringdelay" INTEGER DEFAULT 20,       -- voip artificial ring timeout (seconds)
     "routeoverride" TEXT,					   -- Holiday scheduler route override
     "spy_pass" TEXT DEFAULT '3333',       -- spy password
     "sysop" INTEGER,                      -- real operator extension

@@ -59,6 +59,8 @@ define ('NETHELPER',                    CLASSES . '/NetHelperClass');
 define('RELOADER',				        SCRIPTS . '/reloader.sh');
 define('EXEC_DB_RELOAD',				RELOADER);		// alias for backward compatibility
 
+define('IDPWGEN',				        SYSPATH . '/golang/idpwgen');  // path to idpwgen binary (shortuid/password generator)
+
 define ('AMIHELPER',                    CLASSES . '/AmiHelperClass');
 define ('ASTMANAGER',                   CLASSES . '/AsteriskManager.php');
 define ('AMIUID',                       'pbx3');
