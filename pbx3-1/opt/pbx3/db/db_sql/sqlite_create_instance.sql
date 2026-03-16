@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS globals (
 "cosstart" TEXT DEFAULT 'ON',            -- COS onoff
 "edomain" TEXT,                       -- external IP address of this server
 "emergency" TEXT DEFAULT '999 112 911',  -- **MOVED**
-"fqdn" TEXT,							-- FQDN - NEEDS TO MOVE
+"fqdn" TEXT,							-- FQDN (this instance))
 "fqdninspect" TEXT DEFAULT 'NO',		-- Require FQDN in SIP Ops Shorewall 4.6+ 
 "fqdnprov" TEXT,						-- use FQDN in remote provisioning YES/NO
 "language" TEXT DEFAULT 'en-gb',      -- used in extensions.conf 

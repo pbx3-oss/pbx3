@@ -149,6 +149,8 @@ fi
 # Regenerate bashconfig from config.php when PHP is available (package ships bashconfig so install works without PHP)
 if command -v php >/dev/null 2>&1; then
     php $SYSPATH/php/utilities/genbashconfig.php 2>/dev/null || true
+    # Ensure Asterisk config files in ASTLOCALCONF are symlinked into ASTPATH (manager.conf, pjsip.conf, etc.)
+    php $SYSPATH/php/utilities/runLinker.php 2>/dev/null || true
 fi
 
 # Build idpwgen (shortuid/password generator) if source exists and go is available
