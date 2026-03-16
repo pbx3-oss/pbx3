@@ -4,28 +4,28 @@
 --
 
 UPDATE agent SET cname = name;
-UPDATE agent SET cluster = (SELECT id FROM cluster WHERE pkey = agent.cluster);
+UPDATE agent SET cluster = (SELECT shortuid FROM cluster WHERE pkey = agent.cluster);
 
 UPDATE appl SET cname = name;
-UPDATE appl SET cluster = (SELECT id FROM cluster WHERE pkey = appl.cluster);
+UPDATE appl SET cluster = (SELECT shortuid FROM cluster WHERE pkey = appl.cluster);
 
 UPDATE cos SET cname = pkey;
-UPDATE cos SET cluster = (SELECT id FROM cluster WHERE pkey = cos.cluster);
+UPDATE cos SET cluster = (SELECT shortuid FROM cluster WHERE pkey = cos.cluster);
 
 UPDATE greeting SET cname = pkey; 
-UPDATE greeting SET cluster = (SELECT id FROM cluster WHERE pkey = greeting.cluster);
+UPDATE greeting SET cluster = (SELECT shortuid FROM cluster WHERE pkey = greeting.cluster);
 
-UPDATE ipphone SET cluster = (SELECT id FROM cluster WHERE pkey = ipphone.cluster);
+UPDATE ipphone SET cluster = (SELECT shortuid FROM cluster WHERE pkey = ipphone.cluster);
 
 UPDATE ivrmenu SET cname = name;
-UPDATE ivrmenu SET cluster = (SELECT id FROM cluster WHERE pkey = ivrmenu.cluster);
+UPDATE ivrmenu SET cluster = (SELECT shortuid FROM cluster WHERE pkey = ivrmenu.cluster);
 
-UPDATE inroutes SET cluster = (SELECT id FROM cluster WHERE pkey = inroutes.cluster);
+UPDATE inroutes SET cluster = (SELECT shortuid FROM cluster WHERE pkey = inroutes.cluster);
 
-UPDATE trunks SET cluster = (SELECT id FROM cluster WHERE pkey = trunks.cluster);
+UPDATE trunks SET cluster = (SELECT shortuid FROM cluster WHERE pkey = trunks.cluster);
 
-UPDATE meetme SET cluster = (SELECT id FROM cluster WHERE pkey = meetme.cluster);
+UPDATE meetme SET cluster = (SELECT shortuid FROM cluster WHERE pkey = meetme.cluster);
 
-UPDATE queue SET cluster = (SELECT id FROM cluster WHERE pkey = queue.cluster );
+UPDATE queue SET cluster = (SELECT shortuid FROM cluster WHERE pkey = queue.cluster );
 
-UPDATE route SET cluster = (SELECT id FROM cluster WHERE pkey = route.cluster);
+UPDATE route SET cluster = (SELECT shortuid FROM cluster WHERE pkey = route.cluster); 
