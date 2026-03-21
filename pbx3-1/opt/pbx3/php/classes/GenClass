@@ -218,8 +218,8 @@ class genAsteriskObjects
 			}
 			$Pbuff .= $this->helper->getParkInstance($row['shortuid']);
 			if ($Pbuff) {
-				$Pbuff = preg_replace('/\$clstpkey/', $row['pkey'], $Pbuff);
-				$Pbuff = preg_replace('/\$clstshortuid/', $row['shortuid'], $Pbuff);
+				$Pbuff = preg_replace('/\$clstpkey/', (string)($row['pkey'] ?? ''), $Pbuff);
+				$Pbuff = preg_replace('/\$clstshortuid/', (string)($row['shortuid'] ?? ''), $Pbuff);
 			}
 
 			$readyParks .= $Pbuff;
@@ -300,7 +300,7 @@ class genAsteriskObjects
 				if ($row['privileged'] == "NO") {
 					$iaxTrunkBuff = preg_replace('/\$context/', 'Ingress', $iaxTrunkBuff);
 				} else {
-					$iaxTrunkBuff = preg_replace('/\$context/', $row['cluster'], $iaxTrunkBuff);
+					$iaxTrunkBuff = preg_replace('/\$context/', (string)($row['cluster'] ?? ''), $iaxTrunkBuff);
 				}
 
 				$iaxReadyTrunks .= $iaxTrunkBuff;
@@ -501,7 +501,7 @@ class genAsteriskObjects
 			if ($row['privileged'] == "NO") {
 				$pjsipTrunkBuff = preg_replace('/\$context/', 'Ingress', $pjsipTrunkBuff);
 			} else {
-				$pjsipTrunkBuff = preg_replace('/\$context/', $row['cluster'], $pjsipTrunkBuff);
+				$pjsipTrunkBuff = preg_replace('/\$context/', (string)($row['cluster'] ?? ''), $pjsipTrunkBuff);
 			}
 			$pjsipReadyTrunks .= $pjsipTrunkBuff;
 			$pjsipReadyTrunks .= "\n\n";
@@ -539,15 +539,16 @@ class genAsteriskObjects
  */
 	private function xlatePjsipBuff(&$buffer, $row)
 	{
+		$rep = function ($v) { return (string)($v ?? ''); };
 //		$buffer = preg_replace('/\$id/', $row['id'], $buffer);
-		$buffer = preg_replace('/\$id/', $row['shortuid'], $buffer);
-		$buffer = preg_replace('/\$pkey/', $row['pkey'], $buffer);
-		$buffer = preg_replace('/\$trunk/', $row['pkey'], $buffer);
-		$buffer = preg_replace('/\$ext/', $row['pkey'], $buffer);
-		$buffer = preg_replace('/\$username/', $row['pkey'], $buffer);
-		$buffer = preg_replace('/\$clst/', $row['cluster'], $buffer);
+		$buffer = preg_replace('/\$id/', $rep($row['shortuid'] ?? null), $buffer);
+		$buffer = preg_replace('/\$pkey/', $rep($row['pkey'] ?? null), $buffer);
+		$buffer = preg_replace('/\$trunk/', $rep($row['pkey'] ?? null), $buffer);
+		$buffer = preg_replace('/\$ext/', $rep($row['pkey'] ?? null), $buffer);
+		$buffer = preg_replace('/\$username/', $rep($row['pkey'] ?? null), $buffer);
+		$buffer = preg_replace('/\$clst/', $rep($row['cluster'] ?? null), $buffer);
 		if (!empty($row['strategy'])) {
-			$buffer = preg_replace('/\$strategy/', $row['strategy'], $buffer);
+			$buffer = preg_replace('/\$strategy/', $rep($row['strategy'] ?? null), $buffer);
 		}
 /**
  * default to udp for converted rows from imported systems
@@ -555,25 +556,25 @@ class genAsteriskObjects
 		if (empty($row['transport'])) {
 			$row['transport'] = 'udp';
 		}
-		$buffer = preg_replace('/\$transport/', $row['transport'], $buffer);
+		$buffer = preg_replace('/\$transport/', $rep($row['transport'] ?? null), $buffer);
 
 		if (!empty($row['description'])) {
-			$buffer = preg_replace('/\$desc/', $row['description'], $buffer);
+			$buffer = preg_replace('/\$desc/', $rep($row['description'] ?? null), $buffer);
 		}
 		else {
-			$buffer = preg_replace('/\$desc/', $row['pkey'], $buffer);
+			$buffer = preg_replace('/\$desc/', $rep($row['pkey'] ?? null), $buffer);
 		}
 		if (!empty($row['host'])) {
-			$buffer = preg_replace('/\$host/', $row['host'], $buffer);
+			$buffer = preg_replace('/\$host/', $rep($row['host'] ?? null), $buffer);
 		}
 /*
  * Accident of history; trunks and phones do not use the same column name
  * for password (password and passwd)
  */
 		if (!empty($row['password'])) {
-			$buffer = preg_replace('/\$password/', $row['password'], $buffer);
+			$buffer = preg_replace('/\$password/', $rep($row['password'] ?? null), $buffer);
 		} else if (!empty($row['passwd'])) {
-			$buffer = preg_replace('/\$password/', $row['passwd'], $buffer);
+			$buffer = preg_replace('/\$password/', $rep($row['passwd'] ?? null), $buffer);
 		}
 		return True;
 	}
@@ -1026,7 +1027,7 @@ HERE;
         $this->OUT .= "\n";
 
 		try {
-			$sql = "SELECT * FROM route WHERE cluster='" . $row['id'] . "' ORDER BY pkey";
+			$sql = "SELECT * FROM route WHERE cluster='" . $row['shortuid'] . "' ORDER BY pkey";
 			$qRes = $this->dbh->query($sql);
 			$route = $qRes->fetchAll();
 			$qRes = NULL;

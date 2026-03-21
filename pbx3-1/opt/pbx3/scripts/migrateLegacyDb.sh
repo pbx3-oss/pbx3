@@ -5,6 +5,8 @@
 sudo php $DUMPER -L
 sudo sh $RELOADER -L
 
+
+
 sudo sqlite3 $SYSDB < $DBPATH/db_legacy_sql/sqlite_fix_lineio.sql
 sudo php $UTILITIES/refactorGreetings.php
 
@@ -19,9 +21,7 @@ sudo sqlite3 $SYSDB < $DBSQL/sqlite_create_instance.sql
 
 sudo sh $RELOADER 
 
-sudo sqlite3 $SYSDB < $DBPATH/db_legacy_sql/sqlite_fixRi.sql
+#sudo php $DUMPER 
+#sudo sh $RELOADER 
 
-sudo php $DUMPER 
-sudo sh $RELOADER 
-sudo chown www-data:www-data $SYSDB
-sudo chmod 664 $SYSDB
+sudo sqlite3 $SYSDB < $DBPATH/db_legacy_sql/sqlite_fixRi.sql
