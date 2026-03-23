@@ -84,6 +84,9 @@ class genAsteriskObjects
 		$this->nethelper = new nethelper;
 
 		$this->helper->logit(" commit - starting AstGen", 0);
+		// Keep generated outputs consistent even if earlier runs used different privileges.
+		$this->ensureDirIsWriteable(ASTLOCALCONF);
+		$this->ensureDirIsWriteable(DBPATH);
 
 /*** connect to SQLite database ***/
     try {
@@ -165,14 +168,29 @@ class genAsteriskObjects
 	private function checkFileIsWriteable($fileName)
 	{
 
-		if (!file_exists($fileName)) {
-			$rc = $this->helper->request_syscmd("/bin/echo ';;;' > $fileName >/dev/null 2>&1");
-			$rc = $this->helper->request_syscmd("/bin/chown asterisk:asterisk $fileName >/dev/null 2>&1");
-			$rc = $this->helper->request_syscmd("/bin/chmod 664 $fileName >/dev/null 2>&1");
-		}
+		$q = escapeshellarg($fileName);
+		// Generator may be invoked via different privilege paths (e.g. sudo). If outputs were
+		// previously created with wrong ownership/mode, repair them before fopen().
+		$this->helper->request_syscmd("/bin/touch $q >/dev/null 2>&1");
+		$this->helper->request_syscmd("/bin/chown asterisk:asterisk $q >/dev/null 2>&1");
+		$this->helper->request_syscmd("/bin/chmod 664 $q >/dev/null 2>&1");
 
 		return True;
 	}
+
+	/**
+	 * Ensure an output directory is writable by the php/web process via group permissions.
+	 * setgid (g+s) keeps newly created files in the `asterisk` group.
+	 */
+	private function ensureDirIsWriteable($dirPath)
+	{
+		$q = escapeshellarg($dirPath);
+		$this->helper->request_syscmd("/bin/mkdir -p $q >/dev/null 2>&1");
+		$this->helper->request_syscmd("/bin/chown asterisk:asterisk $q >/dev/null 2>&1");
+		$this->helper->request_syscmd("/bin/chmod 2775 $q >/dev/null 2>&1");
+		return True;
+	}
+
 /**
  * genMoh
  * generate moh entries for each tenant (cluster)
@@ -194,6 +212,7 @@ class genAsteriskObjects
 			$this->OUT .= "sort=random\n";
 		}
 		if (!empty($this->OUT)) {
+			$this->checkFileIsWriteable(ASTLOCALCONF . "/moh_extra.conf");
 			$fh = fopen(ASTLOCALCONF . "/moh_extra.conf", 'w') or die('Could not open file moh_extra.conf!');
 			fwrite($fh, $this->OUT) or die('Could not write to file moh_extra.conf');
 			fclose($fh);
@@ -257,6 +276,7 @@ class genAsteriskObjects
 		if (!empty($this->globals['staticipv4'])) {
 			$this->OUT = $this->genFileBanner();
 			$this->OUT .= 'bindaddr=' . $this->globals['staticipv4'] . "\n"; 
+			$this->checkFileIsWriteable(ASTLOCALCONF . "iax_localnet_header.conf");
 			$fh = fopen(ASTLOCALCONF . "iax_localnet_header.conf", 'w') or die('Could not open file iax_localnet_header.conf!');
 			fwrite($fh,$this->OUT) or die('Could not write to file iax_localnet_header.conf');
 			fclose($fh);
@@ -275,6 +295,7 @@ class genAsteriskObjects
 			}
 		}	
 		if (!empty($this->OUT)) {   
+			$this->checkFileIsWriteable(ASTLOCALCONF . "iax_registrations.conf");
 			$fh = fopen(ASTLOCALCONF . "iax_registrations.conf", 'w') or die('Could not open file iax_registrations.conf!');
 			fwrite($fh,$this->OUT) or die('Could not write to file iax_registrations.conf');
 			fclose($fh);
@@ -754,6 +775,7 @@ BANNEREND;
 			}
 		}
 
+		$this->checkFileIsWriteable(ASTLOCALCONF . "/voicemail.conf");
 		$fh = fopen(ASTLOCALCONF . "/voicemail.conf", 'w') or die('Could not open file voicemail.conf!');
 		fwrite($fh, $this->OUT) or die('Could not write to file voicemail.conf');
 		fclose($fh);
@@ -813,6 +835,7 @@ BANNEREND;
 	}
         // write the generated file 
         $myExtensions = ASTLOCALCONF . "/extensions.conf";
+        $this->checkFileIsWriteable($myExtensions);
         $fh = fopen($myExtensions, 'w') or die('Could not open file extensions.conf!');
         fwrite($fh, $this->OUT) or die('Could not write to file extensions.conf');
         fclose($fh);
