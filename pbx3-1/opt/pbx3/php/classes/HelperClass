@@ -698,7 +698,8 @@ public function setLinks()
 public function checkXref($key,$cluster=false) {
 
 /*
- *  find key clashes
+ * Legacy code to check for key clashes
+ * find key clashes
  *	Checks a full key or a shortkey (no cluster ID prefix) with a cluster name qualifier
  *	MUST run on the OLD database structure when master_xref still exists
  */	
