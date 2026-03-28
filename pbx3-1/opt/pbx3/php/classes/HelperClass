@@ -983,47 +983,6 @@ public function setTupleById($tab,$rec) {
 	return 'OK';
 }	
 
-public function delTuple($tab,$pkey) {
-/*
- * general tuple delete - takes a table name and a key
- */
-	$dbh = DB::getInstance();
-/*
- *  check for pkey
- */ 
-	if ( ! isset($pkey)) {
-		return "Delete failed - no pkey given!";
-	}	
-/*
- * Check the row exists 
- */
-	$sql = $dbh->prepare("SELECT pkey FROM $tab WHERE pkey = ?");
-	$sql->execute(array($pkey));
-	$res = $sql->fetch();	
-	if ( ! isset($res['pkey']) ) { 
-		return "Row (" . $pkey . " ) doesn't exist!";
-	}  
- 
-
- $sql = $dbh->prepare("DELETE FROM $tab WHERE pkey =?");
- $sql->execute(array($pkey));
- $this->commitOn();
- $this->logit("I'm deleting $tab key $pkey", 5 );
- return 'OK';
-
-
-/*
- *	Check for a PJSIP trunk instance file and delete it
- */
-
- if ($tab == 'lineio' || $tab == 'lineIO') {
- 	$this->deletePjsipTrunkInstance($pkey);
- }
-
- return 'OK';
-
-}
-                                               	
 /**
  * logIt
  *
