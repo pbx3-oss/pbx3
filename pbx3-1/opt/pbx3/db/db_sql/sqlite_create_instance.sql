@@ -5,14 +5,17 @@ BEGIN TRANSACTION;
 
 /* system settings */
 CREATE TABLE IF NOT EXISTS globals (
-"pkey" TEXT PRIMARY KEY,
+"id" TEXT PRIMARY KEY,                -- 27 char ksuid
+"shortuid" TEXT UNIQUE,              -- human readable 8 char uid
+"pkey" TEXT UNIQUE,                  -- always 'global'
 "abstimeout" INTEGER DEFAULT 14400,   -- default abstimeout 4 hours **MOVED**
 "bindaddr" TEXT,                      -- Asterisk SIP bindaddr
 "bindport" TEXT DEFAULT 5060,			-- SIP BINDPORT
 "cosstart" TEXT DEFAULT 'ON',            -- COS onoff
+"domain" TEXT,                       -- domain name of this instance (e.g. example.com)
 "edomain" TEXT,                       -- external IP address of this server
 "emergency" TEXT DEFAULT '999 112 911',  -- **MOVED**
-"fqdn" TEXT,							-- FQDN (this instance))
+"fqdn" TEXT DEFAULT NULL,				-- default is shortuid.domain
 "fqdninspect" TEXT DEFAULT 'NO',		-- Require FQDN in SIP Ops Shorewall 4.6+ 
 "fqdnprov" TEXT,						-- use FQDN in remote provisioning YES/NO
 "language" TEXT DEFAULT 'en-gb',      -- used in extensions.conf 
@@ -97,7 +100,7 @@ CREATE TABLE IF NOT EXISTS trunks (
     "callback" TEXT,				-- denotes callback trunk
     "callerid" TEXT,				-- high-order (weak) CLID
     "callprogress" TEXT DEFAULT 'YES',		-- send progress tones on dial
-    "closeroute" TEXT DEFAULT 'None',		-- closed inbound route
+    "closeroute" TEXT DEFAULT 'None',		-- REMOVE: closed inbound route
     "cluster" TEXT DEFAULT 'default',		-- cluster (Tenant) this trunk belongs to
     "cname" TEXT,
     "description" TEXT,			-- weak Asterisk username 
@@ -109,7 +112,7 @@ CREATE TABLE IF NOT EXISTS trunks (
     "inprefix" TEXT,				-- prepend prefix on inbound
     "match" TEXT,					-- trunk seize sequence
     "moh" TEXT DEFAULT 'NO',	-- play moh instead of ring
-    "openroute" TEXT DEFAULT 'None',		-- open inbound route
+    "openroute" TEXT DEFAULT 'None',		-- REMOVE: open inbound route 
     "password" TEXT,				-- far end password
     "peername" TEXT,				-- strong Asterisk username
     "pjsipreg" TEXT DEFAULT NULL,	-- Asterisk pjsip registration (SND/RCV/NULL)									

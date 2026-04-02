@@ -1208,7 +1208,7 @@ HERE;
         $this->OUT .= "\n";
 
 		try {
-        $sql = "SELECT * FROM greeting WHERE cluster='" . $row['id'] . "' ORDER BY pkey";
+        $sql = "SELECT * FROM greeting WHERE cluster='" . $row['shortid'] . "' ORDER BY pkey";
 			$GRes = $this->dbh->query($sql);
 			$greetings = $GRes->fetchAll();
 			$GRes = NULL;
@@ -1224,8 +1224,16 @@ HERE;
 /**
  *  Conference bridges (if any)
  */
-        $this->confBridge();
-        $this->OUT .= <<<HERE
+$this->OUT .= <<<HERE
+;
+;   Conference bridges (if any)
+;	
+HERE
+    $this->confBridge($row['shortid']);
+
+
+
+$this->OUT .= <<<HERE
 ;
 ;   short codes & vmail
 ;	
@@ -1482,12 +1490,12 @@ HERE;
         }
 }
 
-    private function confBridge()
+    private function confBridge($clstshortuid)
     {
         $profile = 'pbx3_user';
 
 		try {
-			$sql = "SELECT * FROM meetme ORDER BY pkey";
+			$sql = "SELECT * FROM meetme WHERE cluster='" . $clstshortuid . "' ORDER BY pkey";
 			$qRes = $this->dbh->query($sql);
 			$meetme = $qRes->fetchAll();
 			$qRes = NULL; 
@@ -1497,16 +1505,16 @@ HERE;
 		}
 
         foreach ($meetme as $room) {
-        $this->OUT .= "\texten => " . $room['pkey'] . ",1,NoOp(conference " . $room['pkey'] . ")\n";
-        $this->OUT .= "\tsame => n,Answer(500)\n";
-        if ($room['pin'] and $room['pin'] != "None") {
-            $this->OUT .= "\tsame => n,Authenticate(" . $room['pin'] . ")\n";
-        }		 
-        if ($room['type'] == "hosted" ) {			
-            $profile = 'pbx3_hosted_user';
-        }	
-        $this->OUT .= "\tsame => n,ConfBridge(\${EXTEN},,$profile)\n";
-        $this->OUT .= "\tsame => n,Hangup()\n";
+			$this->OUT .= "\texten => " . $room['pkey'] . ",1,NoOp(conference " . $room['pkey'] . ")\n";
+			$this->OUT .= "\tsame => n,Answer(500)\n";
+			if ($room['pin'] and $room['pin'] != "None") {
+				$this->OUT .= "\tsame => n,Authenticate(" . $room['pin'] . ")\n";
+			}		 
+			if ($room['type'] == "hosted" ) {			
+				$profile = 'pbx3_hosted_user';
+			}	
+			$this->OUT .= "\tsame => n,ConfBridge(\${EXTEN},,$profile)\n";
+			$this->OUT .= "\tsame => n,Hangup()\n";
         }	
     }
 }

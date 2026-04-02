@@ -87,13 +87,14 @@ CREATE TABLE IF NOT EXISTS cluster (
     "dynamicfeatures" TEXT DEFAULT NULL,  -- Asterisk DYNAMIC_FEATURES string		
     "description" TEXT,       
     "devicerec" TEXT DEFAULT 'default',	   -- recording settings for this tenant
+    "domain" TEXT,                          -- domain name of this tenant (e.g. example.com)
     "emailalert" TEXT,                       -- email alert address
     "emergency" TEXT DEFAULT '999 112 911',  -- emergency numbers which bypass COS
     "extblklist" TEXT,                        -- Needs work!!!!!!!!!
     "ext_lim" INTEGER DEFAULT 0,             -- extlim for this tenant
     "ext_len" INTEGER DEFAULT 3,             -- extlen for this cluster
-    "fqdn" TEXT DEFAULT NULL,                --TRANSFORM!
-    "fqdninspect" BOOLEAN DEFAULT FALSE,     --TRANSFORM!
+    "fqdn" TEXT DEFAULT NULL,                -- default is shortuid.domain
+    "fqdninspect" BOOLEAN DEFAULT FALSE,     -- require FQDN in SIP Ops Shorewall 4.6+ 
     "include" TEXT,                          -- list of other tenants which may be short-dialled
     "int_ring_delay" INTEGER DEFAULT 20,		-- ring time before voicemail
     "ivr_key_wait" INTEGER DEFAULT 6,        -- how long to wait after keypress
