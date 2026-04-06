@@ -90,6 +90,7 @@ In `pbx3api/app/Helpers/Helper.php`:
 
 1. **Build at install**
    - Do **not** ship the compiled binary in the .deb. Build it during install so it runs on the target architecture (e.g. arm64 and amd64).
+   - Do **not** copy `idpwgen` from a **developer Mac** (or any other OS) onto a Linux PBX: same CPU name (e.g. “arm64”) is **not** the same executable format; you get `Exec format error` / exit 126. Always `go build` on the server (installer removes any existing binary before building).
    - Add **golang-go** (or the appropriate package) to `debian/control` Depends so `go build` is available at install time.
    - In postinst (or equivalent), from the package’s golang dir: `go build -o idpwgen idpwgen.go`, then place the binary at `/opt/pbx3/golang/idpwgen` (or the chosen path). Ensure that path is used consistently in PHP.
    - Add the compiled binary to **.gitignore** so it is not committed.

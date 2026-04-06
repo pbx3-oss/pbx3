@@ -153,10 +153,15 @@ if command -v php >/dev/null 2>&1; then
     php $SYSPATH/php/utilities/runLinker.php 2>/dev/null || true
 fi
 
-# Build idpwgen (shortuid/password generator) if source exists and go is available
+# Build idpwgen on *this* host only. Do not copy /opt/pbx3/golang/idpwgen from another OS or arch
+# (e.g. macOS arm64 and Linux arm64 are not interchangeable — "cannot execute binary file: Exec format error").
 if [ -f $SYSPATH/golang/idpwgen.go ] && command -v go >/dev/null 2>&1; then
-    (cd $SYSPATH/golang && go build -o idpwgen idpwgen.go) 2>/dev/null || true
-    [ -x $SYSPATH/golang/idpwgen ] && chmod 755 $SYSPATH/golang/idpwgen
+    rm -f "$SYSPATH/golang/idpwgen"
+    if (cd "$SYSPATH/golang" && go build -o idpwgen idpwgen.go); then
+        chmod 755 "$SYSPATH/golang/idpwgen" 2>/dev/null || true
+    else
+        echo "Warning: idpwgen build failed; run: cd $SYSPATH/golang && go build -o idpwgen idpwgen.go" >&2
+    fi
 fi
 
 # Create initial DB if missing (fresh install)
