@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS cluster (
     "ext_lim" INTEGER DEFAULT 0,             -- extlim for this tenant
     "ext_len" INTEGER DEFAULT 3,             -- extlen for this cluster
     "fqdn" TEXT DEFAULT NULL,                -- default is shortuid.domain
-    "fqdninspect" BOOLEAN DEFAULT FALSE,     -- require FQDN in SIP Ops Shorewall 4.6+ 
+    "fqdninspect" BOOLEAN DEFAULT FALSE,     --TRANSFORM!
     "include" TEXT,                          -- list of other tenants which may be short-dialled
     "int_ring_delay" INTEGER DEFAULT 20,		-- ring time before voicemail
     "ivr_key_wait" INTEGER DEFAULT 6,        -- how long to wait after keypress
