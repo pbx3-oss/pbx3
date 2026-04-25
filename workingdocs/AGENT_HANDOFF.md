@@ -43,7 +43,7 @@
 - **pbx3api nginx installer path is now implemented and tested:** On Ubuntu 24.04, fresh-clone installer flow was validated end-to-end (nginx + php8.3-fpm + Laravel bootstrap + PBX sqlite link). Frontend login to API works in LAN HTTP dev mode; see TODO for HTTPS/LE completion pass.
 - **setip:** No longer a systemd service. Installer runs `php/utilities/setip.php` **once** directly; `debsetlan.service` was removed from the package. Installer also disables/removes the unit if present. Package Depends: **php-cli**, **php-sqlite3** so setip and installer can run.
 - **Installer** runs manually (`sudo /opt/pbx3/scripts/installer.sh`), **not** from postinst. Script is written to work under **sh** (dash) or bash (POSIX case/printf; no `[[` or `read -p`). Fixes and behaviour:
-  - **Instance FQDN:** Prompts for instance FQDN (e.g. node1.pbx3.com) or uses `INSTANCE_FQDN` env; stores in `globals.fqdn`; sets hostname to 3LD (e.g. node1) via hostnamectl or fallback; updates `/etc/hosts` so `127.0.1.1` points to the new hostname.
+  - **Instance identity (LE prep):** Builds `idpwgen` locally, then sets `globals.domain` (apex / TLD, e.g. `pbx3.com`) and `globals.fqdn` as `{subdomain}.{domain}`. Subdomain is a unique 6-character value from `idpwgen` unless overridden by legacy `INSTANCE_FQDN=host.example.com` or recovered from existing `globals` before `reloader.sh` runs. `DOMAIN_TLD` env or interactive prompt supplies the apex; default apex is `pbx3.com` when unset and non-interactive. Hostname is the subdomain (same as the first label of the FQDN); updates `/etc/hosts` so `127.0.1.1` points to that hostname.
   - **db_database_dumps:** `reloader.sh` does `mkdir -p "$DBDUMPS"` before copying DB to `last.db`.
   - **sqlite_sequence:** Removed from `sqlite_create_laravel.sql` (reserved by SQLite).
   - **Shorewall:** Shipped `pbx3_inline_fqdn` is comment-only; API/NetHelper overwrites when fqdninspect enabled.
@@ -80,7 +80,7 @@
 
 - Build the .deb from the **pbx3** repo (e.g. `dpkg-buildpackage` or project’s build script). Package files are under `pbx3-1/`.
 - Install: `apt install ./pbx3_*.deb` (or equivalent).
-- After install, run **once:** `sudo /opt/pbx3/scripts/installer.sh` (idempotent; prompts for **instance FQDN** or use `INSTANCE_FQDN=node1.pbx3.com`; stores in globals.fqdn, sets hostname and `/etc/hosts` 127.0.1.1; runs setip once; creates DB, shorewall, shorewall6 dir if needed, CDR MySQL, etc.). Works when invoked as `sh installer.sh` or `./installer.sh`. Full sequence (pbx3 then pbx3api) is in **INSTALL_SEQUENCE_UBUNTU.md**.
+- After install, run **once:** `sudo /opt/pbx3/scripts/installer.sh` (idempotent; prompts for **domain apex** (e.g. `pbx3.com`) or use `DOMAIN_TLD=example.com`, or legacy `INSTANCE_FQDN=node1.example.com`; stores `globals.domain` and `globals.fqdn`, sets hostname to the subdomain and `/etc/hosts` 127.0.1.1; runs setip once; creates DB, shorewall, shorewall6 dir if needed, CDR MySQL, etc.). Works when invoked as `sh installer.sh` or `./installer.sh`. Full sequence (pbx3 then pbx3api) is in **INSTALL_SEQUENCE_UBUNTU.md**.
 
 ---
 

@@ -82,7 +82,7 @@ sudo /opt/pbx3/scripts/genAst.sh
 ### Network Configuration
 - `NetHelperClass` handles interface detection and network config
 - Shorewall rules generated from DB + templates in `etc/shorewall/`
-- FQDN management: installer prompts for instance FQDN, stores in `globals.fqdn`
+- FQDN / domain: installer sets `globals.domain` (apex) and `globals.fqdn` (`{subdomain}.{domain}`); subdomain from `idpwgen` unless `INSTANCE_FQDN` legacy override; apex from `DOMAIN_TLD` env, prompt, or default `pbx3.com`
 
 ### Asterisk Config Generation
 - Generator logic in `php/utilities/` (runAstGen.php, etc.) creates config fragments

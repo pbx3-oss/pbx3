@@ -117,41 +117,18 @@ if [ -d $SHOREWALL ]; then
     chown www-data:www-data $SHOREWALL/pbx3_inline_limit
 fi
 
-# Instance FQDN: use env, else existing globals.fqdn, else prompt (idempotent: skip prompt if already set)
-# e.g. node1.pbx3.com -> fqdn=node1.pbx3.com, hostname=node1
+# Instance identity (capture in shell before reloader.sh — it deletes and rebuilds SYSDB).
+# FQDN = {subdomain}.{DOMAIN_TLD}; hostname = subdomain (for Let's Encrypt later).
+# DOMAIN_TLD: env DOMAIN_TLD, else globals.domain from existing DB, else prompt (default pbx3.com), else pbx3.com.
+# Subdomain: 6 chars from idpwgen unless INSTANCE_FQDN legacy env, or existing fqdn+domain in DB match.
+# Legacy: INSTANCE_FQDN=node1.pbx3.com -> subdomain=node1, TLD=rest (e.g. pbx3.com).
+
 normalize_fqdn() {
     echo "$1" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
 }
 valid_fqdn() {
     [ -n "$1" ] && case "$1" in *.*) true ;; *) false ;; esac
 }
-if [ -n "$INSTANCE_FQDN" ]; then
-    INSTANCE_FQDN=$(normalize_fqdn "$INSTANCE_FQDN")
-    valid_fqdn "$INSTANCE_FQDN" || INSTANCE_FQDN=""
-fi
-if [ -z "$INSTANCE_FQDN" ] && [ -e "$SYSDB" ]; then
-    existing_fqdn=$(sqlite3 "$SYSDB" "SELECT fqdn FROM globals WHERE fqdn IS NOT NULL AND fqdn != '' LIMIT 1" 2>/dev/null)
-    existing_fqdn=$(normalize_fqdn "$existing_fqdn")
-    valid_fqdn "$existing_fqdn" && INSTANCE_FQDN="$existing_fqdn"
-fi
-if [ -z "$INSTANCE_FQDN" ] && [ -t 0 ]; then
-    while true; do
-        printf "Instance FQDN (e.g. node1.pbx3.com): " >&2
-        read -r INSTANCE_FQDN
-        INSTANCE_FQDN=$(normalize_fqdn "$INSTANCE_FQDN")
-        if valid_fqdn "$INSTANCE_FQDN"; then
-            break
-        fi
-        echo "Please enter a full FQDN (e.g. node1.pbx3.com)." >&2
-    done
-fi
-
-# Regenerate bashconfig from config.php when PHP is available (package ships bashconfig so install works without PHP)
-if command -v php >/dev/null 2>&1; then
-    php $SYSPATH/php/utilities/genbashconfig.php 2>/dev/null || true
-    # Ensure Asterisk config files in ASTLOCALCONF are symlinked into ASTPATH (manager.conf, pjsip.conf, etc.)
-    php $SYSPATH/php/utilities/runLinker.php 2>/dev/null || true
-fi
 
 # Build idpwgen on *this* host only. Do not copy /opt/pbx3/golang/idpwgen from another OS or arch
 # (e.g. macOS arm64 and Linux arm64 are not interchangeable — "cannot execute binary file: Exec format error").
@@ -164,6 +141,78 @@ if [ -f $SYSPATH/golang/idpwgen.go ] && command -v go >/dev/null 2>&1; then
     fi
 fi
 
+# Snapshot env before we clear shell variables (legacy INSTANCE_FQDN and DOMAIN_TLD are both optional).
+_ENV_TLD=$(normalize_fqdn "${DOMAIN_TLD}")
+_LEGACY_FQDN=$(normalize_fqdn "${INSTANCE_FQDN}")
+INSTANCE_SUBDOMAIN=""
+DOMAIN_TLD=""
+INSTANCE_FQDN=""
+
+if valid_fqdn "$_LEGACY_FQDN"; then
+    INSTANCE_SUBDOMAIN=$(echo "$_LEGACY_FQDN" | cut -d. -f1)
+    DOMAIN_TLD=$(echo "$_LEGACY_FQDN" | cut -d. -f2-)
+    INSTANCE_FQDN="$_LEGACY_FQDN"
+fi
+
+if [ -z "$DOMAIN_TLD" ] && valid_fqdn "$_ENV_TLD"; then
+    DOMAIN_TLD="$_ENV_TLD"
+fi
+if [ -z "$DOMAIN_TLD" ] && [ -e "$SYSDB" ]; then
+    DOMAIN_TLD=$(normalize_fqdn "$(sqlite3 "$SYSDB" "SELECT domain FROM globals WHERE domain IS NOT NULL AND domain != '' LIMIT 1" 2>/dev/null)")
+fi
+if [ -z "$DOMAIN_TLD" ] && [ -t 0 ]; then
+    printf "Domain apex / TLD (e.g. pbx3.com) [pbx3.com]: " >&2
+    read -r _tld_in
+    _tld_in=$(normalize_fqdn "$_tld_in")
+    if [ -z "$_tld_in" ]; then
+        DOMAIN_TLD="pbx3.com"
+    else
+        DOMAIN_TLD="$_tld_in"
+    fi
+fi
+if [ -z "$DOMAIN_TLD" ]; then
+    DOMAIN_TLD="pbx3.com"
+fi
+if ! valid_fqdn "$DOMAIN_TLD"; then
+    echo "Invalid DOMAIN_TLD (need at least one dot, e.g. pbx3.com): $DOMAIN_TLD" >&2
+    DOMAIN_TLD="pbx3.com"
+fi
+
+if [ -z "$INSTANCE_SUBDOMAIN" ] && [ -e "$SYSDB" ]; then
+    _fq=$(normalize_fqdn "$(sqlite3 "$SYSDB" "SELECT fqdn FROM globals WHERE fqdn IS NOT NULL AND fqdn != '' LIMIT 1" 2>/dev/null)")
+    _dm=$(normalize_fqdn "$(sqlite3 "$SYSDB" "SELECT domain FROM globals WHERE domain IS NOT NULL AND domain != '' LIMIT 1" 2>/dev/null)")
+    if [ -z "$_dm" ]; then
+        _dm="$DOMAIN_TLD"
+    fi
+    if [ -n "$_fq" ] && valid_fqdn "$_dm" ]; then
+        _suf=".${_dm}"
+        case "$_fq" in
+            *"${_suf}")
+                INSTANCE_SUBDOMAIN=${_fq%"${_suf}"}
+                ;;
+        esac
+    fi
+fi
+
+if [ -z "$INSTANCE_SUBDOMAIN" ]; then
+    if [ -x "$SYSPATH/golang/idpwgen" ]; then
+        INSTANCE_SUBDOMAIN=$("$SYSPATH/golang/idpwgen" | tr -d '[:space:]')
+    else
+        echo "ERROR: $SYSPATH/golang/idpwgen not found or not executable (install golang-go and re-run, or set INSTANCE_FQDN=sub.example.com)." >&2
+    fi
+fi
+
+if [ -n "$INSTANCE_SUBDOMAIN" ] && [ -n "$DOMAIN_TLD" ]; then
+    INSTANCE_FQDN="${INSTANCE_SUBDOMAIN}.${DOMAIN_TLD}"
+fi
+
+# Regenerate bashconfig from config.php when PHP is available (package ships bashconfig so install works without PHP)
+if command -v php >/dev/null 2>&1; then
+    php $SYSPATH/php/utilities/genbashconfig.php 2>/dev/null || true
+    # Ensure Asterisk config files in ASTLOCALCONF are symlinked into ASTPATH (manager.conf, pjsip.conf, etc.)
+    php $SYSPATH/php/utilities/runLinker.php 2>/dev/null || true
+fi
+
 # Create initial DB if missing (fresh install)
 [ ! -e "$SYSDB" ] && /bin/sh $SCRIPTS/create.initial.db
 
@@ -172,24 +221,23 @@ fi
 chmod 775 $DBPATH
 chmod 664 $SYSDB
 
-# Store instance FQDN in globals and set system hostname to 3LD (e.g. node1.pbx3.com -> hostname node1)
-if [ -n "$INSTANCE_FQDN" ]; then
-    sqlite3 $SYSDB "UPDATE globals SET fqdn='$(echo "$INSTANCE_FQDN" | sed "s/'/''/g")' WHERE pkey=(SELECT pkey FROM globals LIMIT 1);"
-    INSTANCE_3LD=$(echo "$INSTANCE_FQDN" | cut -d. -f1)
-    if [ -n "$INSTANCE_3LD" ]; then
-        if /usr/bin/hostnamectl set-hostname "$INSTANCE_3LD" 2>/dev/null; then
-            :
-        else
-            echo "$INSTANCE_3LD" > /etc/hostname
-            hostname "$INSTANCE_3LD" 2>/dev/null || true
-        fi
-        # Update /etc/hosts so 127.0.1.1 points to the new hostname (replace existing or add)
-        if [ -f /etc/hosts ]; then
-            sed -i 's/^127\.0\.1\.1[[:space:]].*/127.0.1.1\t'"$INSTANCE_3LD"'/' /etc/hosts
-            grep -q '^127\.0\.1\.1[[:space:]]' /etc/hosts || sed -i '2i 127.0.1.1\t'"$INSTANCE_3LD" /etc/hosts
-        fi
-        echo "Set globals.fqdn to $INSTANCE_FQDN and hostname to $INSTANCE_3LD"
+# Store instance domain + FQDN in globals; hostname = subdomain (first label of FQDN)
+if [ -n "$INSTANCE_FQDN" ] && [ -n "$DOMAIN_TLD" ] && [ -n "$INSTANCE_SUBDOMAIN" ]; then
+    _sql_dom=$(echo "$DOMAIN_TLD" | sed "s/'/''/g")
+    _sql_fq=$(echo "$INSTANCE_FQDN" | sed "s/'/''/g")
+    sqlite3 $SYSDB "UPDATE globals SET domain='$_sql_dom', fqdn='$_sql_fq' WHERE pkey=(SELECT pkey FROM globals LIMIT 1);"
+    if /usr/bin/hostnamectl set-hostname "$INSTANCE_SUBDOMAIN" 2>/dev/null; then
+        :
+    else
+        echo "$INSTANCE_SUBDOMAIN" > /etc/hostname
+        hostname "$INSTANCE_SUBDOMAIN" 2>/dev/null || true
     fi
+    # Update /etc/hosts so 127.0.1.1 points to the new hostname (replace existing or add)
+    if [ -f /etc/hosts ]; then
+        sed -i 's/^127\.0\.1\.1[[:space:]].*/127.0.1.1\t'"$INSTANCE_SUBDOMAIN"'/' /etc/hosts
+        grep -q '^127\.0\.1\.1[[:space:]]' /etc/hosts || sed -i '2i 127.0.1.1\t'"$INSTANCE_SUBDOMAIN" /etc/hosts
+    fi
+    echo "Set globals.domain to $DOMAIN_TLD, globals.fqdn to $INSTANCE_FQDN, hostname to $INSTANCE_SUBDOMAIN"
 fi
 
 # Run setip once (network detection, shorewall/fail2ban/Asterisk localnet, /etc/issue)

@@ -29,9 +29,13 @@ This installs files under `/opt/pbx3`, `/etc`, etc. It does **not** run the full
 sudo /opt/pbx3/scripts/installer.sh
 ```
 
-- Prompts for **instance FQDN** (e.g. `node1.pbx3.com`) or set it non-interactively:
+- Sets **domain apex** and **FQDN** for the node (for later Let’s Encrypt). Non-interactive examples:
   ```bash
-  sudo INSTANCE_FQDN=node1.pbx3.com /opt/pbx3/scripts/installer.sh
+  sudo DOMAIN_TLD=example.com /opt/pbx3/scripts/installer.sh
+  ```
+  Default apex when unset and non-interactive is `pbx3.com`. The installer generates a **6-character subdomain** with `idpwgen`, sets `globals.domain` / `globals.fqdn`, and sets the system hostname to that subdomain. Legacy full-FQDN override:
+  ```bash
+  sudo INSTANCE_FQDN=node1.example.com /opt/pbx3/scripts/installer.sh
   ```
 - Idempotent: safe to run again.
 - Creates/updates: SQLite DB at `/opt/pbx3/db/sqlite.db`, hostname, `/etc/hosts`, Shorewall/Shorewall6, runs setip once, CDR MySQL, etc.
@@ -83,7 +87,7 @@ sudo PBX3_SQLITE_PATH=/opt/pbx3/db/sqlite.db /opt/pbx3api/scripts/installer.sh
 | Step | Command / action |
 |------|-------------------|
 | 1 | `sudo apt install ./pbx3_*.deb` |
-| 2 | `sudo /opt/pbx3/scripts/installer.sh` (set `INSTANCE_FQDN` if non-interactive) |
+| 2 | `sudo /opt/pbx3/scripts/installer.sh` (set `DOMAIN_TLD` or `INSTANCE_FQDN` if non-interactive) |
 | 3 | Deploy pbx3api to `/opt/pbx3api` (clone or copy) |
 | 4 | `sudo /opt/pbx3api/scripts/installer.sh` |
 | 5 | (Optional) Configure Let’s Encrypt via pbx3; apply certs |
