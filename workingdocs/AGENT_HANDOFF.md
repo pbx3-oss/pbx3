@@ -103,6 +103,7 @@
 | **PBX3API_INSTALLER_NGINX_ADDITIONS.md** | What pbx3api installer needs to add (nginx, site config) |
 | **nginx-api-site-reference.conf** | Reference nginx server block for API (e.g. 44300) |
 | **PHP_SCRIPTS_AND_MODULES.md** | Which PHP scripts exist, who calls them, php-cli/php-sqlite3 and extensions |
+| **DB_RESTORE_REGRESSION_CHECKLIST.md** | Release-candidate validation for backup/restore + reloader data retention |
 | **TODO.md** | Open items (e.g. LDAP columns globals vs tenant) |
 | **DEBIAN_PACKAGE_IMPROVEMENTS.md** | postinst vs installer, rules, install file ideas |
 | **CLEANUP_PLAN.md** | Phases (D, F, etc.), legacy web, installer scope, repo layout (§3a) |
@@ -141,3 +142,23 @@
 - **config.php** is the PHP source of truth for paths; run `php utilities/genbashconfig.php` to regenerate `scripts/bashconfig` after editing config.php (or rely on shipped bashconfig if PHP not needed).
 - **reloader.sh** rebuilds the SQLite DB (saves current to `db_database_dumps/last.db`, then recreates from SQL files). It **exits** partway through; code after that (e.g. genAst, sanitize-firewall) is currently dead.
 - **setip.php** needs NetHelperClass (and DbClass for static IP from DB); both need php-sqlite3. Uses **CODENAME** (pbx3) for dpkg-query and `/etc/issue`, not SYSPREFIX.
+
+---
+
+## 11. Regression checklist (backup/restore + DB rebuild)
+
+Run this checklist on release-candidate builds to catch DB restore regressions:
+
+1. **Create backup A** from the UI/API.
+2. **Delete one extension** (or other tenant row), then **Save + Commit**.
+3. **Restore backup A** with **restoredb** selected.
+4. Verify the deleted row is present again in UI and DB (`/opt/pbx3/db/sqlite.db`).
+5. Check API logs for restore path:
+   - backup zip resolved from route filename,
+   - database copied from backup payload,
+   - no DB rebuild script run during restore.
+6. Run `reloader.sh` once and verify:
+   - dump step runs before DB delete/rebuild,
+   - `db_database_dumps/last_data.sql` is produced,
+   - customer rows still present after rebuild.
+7. Re-run **Commit** and verify generated Asterisk config/reload behaves normally.
