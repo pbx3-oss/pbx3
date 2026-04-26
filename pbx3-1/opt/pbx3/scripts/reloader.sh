@@ -30,12 +30,24 @@ while getopts ":hsL" option; do
 done
 
 mkdir -p "$DBDUMPS"
-echo "Saving existing database $SYSDB as $LASTDB"
-cp -a $SYSDB $LASTDB
+if [ -e "$SYSDB" ] ; then
+	echo "Saving existing database $SYSDB as $LASTDB"
+	cp -a "$SYSDB" "$LASTDB"
+	echo "Dumping customer data from $SYSDB"
+	if [ "$legacy" = "true" ]; then
+		php "$DUMPER" -L
+	else
+		php "$DUMPER"
+	fi
+	if [ $? -ne 0 ]; then
+		echo "DUMP ERROR"
+		exit 4
+	fi
+fi
 
 
 echo "Deleting existing db $SYSDB"
-rm $SYSDB
+rm -f "$SYSDB"
 
 
 Customerdata=$DBDUMPS/$Prefix
