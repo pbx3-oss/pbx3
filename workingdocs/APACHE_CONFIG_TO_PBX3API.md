@@ -31,6 +31,8 @@ Keeping HTTP config in pbx3api gives clear functional separation and keeps pbx3 
 
 ## 3. TLS / Let's Encrypt (certificate ownership)
 
+**Canonical detail (paths, custom vs LE, scripts, API):** **`TLS_AND_CERTIFICATES.md`**. This section keeps the **ownership** decision only; Phase 4 below may describe optional DNS-01/wildcard ideas that are **not** the shipped HTTP-01 flow — see the canonical doc.
+
 **Decision: certificate acquisition and renewal (e.g. Let's Encrypt) are homed in pbx3, not pbx3api.**
 
 There are **two consumers** of TLS on the host:

@@ -75,10 +75,10 @@ sudo PBX3_SQLITE_PATH=/opt/pbx3/db/sqlite.db /opt/pbx3api/scripts/installer.sh
 
 ---
 
-## 5. Optional: TLS (Let’s Encrypt)
+## 5. Optional: TLS (Let’s Encrypt and custom certs)
 
-- Certificates are managed by **pbx3** (certbot, LE scripts). Use the Certificates panel (FQDN + email, “Get certificate”) or pbx3’s LE scripts.
-- After a cert is in place, pbx3’s `apply-active-cert.sh` applies it to nginx and Asterisk; nginx config can be pointed at `/etc/letsencrypt/live/<fqdn>/` (see `LETSENCRYPT_PLAN.md` and pbx3api `docs/deployment-nginx.md`).
+- **Docs:** **`TLS_AND_CERTIFICATES.md`** (index) → **`CERTIFICATES_PANEL_AND_API.md`** → **`LETSENCRYPT_PER_TENANT_FQDN.md`** (Option A **§12**). Certificates are managed by **pbx3** (certbot / LE scripts, custom upload paths). Use the Certificates panel or pbx3’s LE scripts.
+- After a cert is in place, pbx3’s `apply-active-cert.sh` applies it to nginx and Asterisk; nginx config can be pointed at `/etc/letsencrypt/live/<fqdn>/` (see **`TLS_AND_CERTIFICATES.md`** and pbx3api `docs/deployment-nginx.md`).
 
 ---
 

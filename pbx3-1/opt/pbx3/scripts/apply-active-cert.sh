@@ -1,6 +1,7 @@
 #!/bin/bash
 # Apply active TLS certificate: write nginx snippet and Asterisk http.conf, then reload.
-# Selection order: custom -> Let's Encrypt -> snakeoil. See CERTIFICATES_ADOPTION_PLAN.md.
+# See pbx3/workingdocs/TLS_AND_CERTIFICATES.md
+# Selection order: custom -> Let's Encrypt -> snakeoil. See also CERTIFICATES_PANEL_AND_API.md.
 # Called by: API (after custom install/remove), certbot deploy-hook (after LE renew).
 
 set -e

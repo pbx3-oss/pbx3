@@ -14,7 +14,7 @@
 | Install / deploy | INSTALL_SEQUENCE_UBUNTU.md (pbx3 then pbx3api on Ubuntu 24.04) |
 | Cleanup / installer | CLEANUP_PLAN.md, APACHE_CONFIG_TO_PBX3API.md, PBX3API_INSTALLER_NGINX_ADDITIONS.md |
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
-| TLS / LE | LETSENCRYPT_PLAN.md; SPA cert UI: pbx3spa/workingdocs/CERTIFICATES_ADOPTION_PLAN.md |
+| TLS / certificates | **TLS_AND_CERTIFICATES.md** (index) → **TLS_IMPLEMENTATION_STEPS.md** (linear checklist) → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**Option A** spec + §11–§12). **pbx3spa**/workingdocs has stubs pointing here. |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
 
 **Source of truth:** Schema and code. Verify against pbx3 db_sql and code when changing behaviour; workingdocs may be outdated.
@@ -52,7 +52,7 @@
   - **generator:** Removed; Asterisk config generation scripts live in `php/utilities/` (runAstGen.php, etc.).
 - **genbashconfig.php** in installer is optional (run only if `php` is available).
 - **setip.php:** dpkg-query and `/etc/issue` use **CODENAME** (pbx3), not SYSPREFIX (/pbx3).
-- **Certificates / Let's Encrypt:** Individual cert per hostname (HTTP-01, no wildcard). **Initial setup** from Certificates panel (FQDN + email, "Get certificate") or optionally installer. Scripts: `le-port80-open.sh` / `le-port80-close.sh` (Shorewall managed rule for port 80); `le-renew-with-80.sh` (open 80 → certbot renew → close 80), used by "Renew now" and cron (twice daily when `le-domain` exists); `le-first-cert.sh` (first-time issuance: open 80, certbot certonly --standalone, write le-domain, apply-active-cert, close 80). `apply-active-cert.sh` still applies active cert (custom → LE → snakeoil) to nginx and Asterisk after install/remove/renew. See **LETSENCRYPT_PLAN.md** and **pbx3spa/workingdocs/CERTIFICATES_ADOPTION_PLAN.md**.
+- **Certificates:** **Let’s Encrypt** **Option A** (multi-SAN HTTP-01: node + tenant **`cluster.fqdn`**); **commercial/custom** → **custom → LE → snakeoil** via **`apply-active-cert.sh`**. **All TLS docs:** **`workingdocs/TLS_AND_CERTIFICATES.md`** (index), **`TLS_IMPLEMENTATION_STEPS.md`** (execution order), **`CERTIFICATES_PANEL_AND_API.md`**, **`LETSENCRYPT_PER_TENANT_FQDN.md`**. **pbx3spa** `CERTIFICATES_ADOPTION_PLAN.md` / `LETSENCRYPT_PER_TENANT_FQDN_OPTIONS.md` are **stubs** → read **pbx3** `workingdocs/` instead.
 
 ---
 
@@ -99,7 +99,9 @@
 |------|----------|
 | **INSTALL_SEQUENCE_UBUNTU.md** | Full install order: pbx3 package, pbx3 installer, pbx3api deploy, pbx3api installer (Ubuntu 24.04) |
 | **APACHE_CONFIG_TO_PBX3API.md** | HTTP vs backend split, TLS/LE ownership, nginx in pbx3api, phases |
-| **LETSENCRYPT_PLAN.md** | Let's Encrypt: HTTP-01 vs DNS-01, port 80, deploy hook, installer, Asterisk/nginx paths, implementation order |
+| **TLS_AND_CERTIFICATES.md** | TLS index + overview: ownership, **Option A** summary, API table, links |
+| **CERTIFICATES_PANEL_AND_API.md** | Certificates panel (SPA), `/certificates/*` API, code checklist |
+| **LETSENCRYPT_PER_TENANT_FQDN.md** | **Option A** full spec, firewall **pbx3_inline_fqdn**, §11–§12 implementation |
 | **PBX3API_INSTALLER_NGINX_ADDITIONS.md** | What pbx3api installer needs to add (nginx, site config) |
 | **nginx-api-site-reference.conf** | Reference nginx server block for API (e.g. 44300) |
 | **PHP_SCRIPTS_AND_MODULES.md** | Which PHP scripts exist, who calls them, php-cli/php-sqlite3 and extensions |
@@ -130,7 +132,7 @@
 
 **Planned work (next session):**
 
-1. **TLS completion pass (pbx3 + pbx3api):** Current dev testing intentionally uses LAN HTTP to avoid self-signed browser friction. Before release, switch API back to HTTPS on `44300`, wire LE cert paths (owned by pbx3), and re-verify frontend login/CORS/Sanctum with trusted certs. **Certificates panel and LE scripts are in place:** panel setup (FQDN + email, Get certificate), Renew now, port 80 open/close around issuance and renewal, cron twice daily; see LETSENCRYPT_PLAN.md.
+1. **TLS completion pass (pbx3 + pbx3api):** Current dev testing intentionally uses LAN HTTP to avoid self-signed browser friction. Before release, switch API back to HTTPS on `44300`, wire cert paths (owned by pbx3), and re-verify frontend login/CORS/Sanctum with trusted certs. **Certificates panel and LE scripts are in place:** panel setup (FQDN + email, Get certificate), Renew now, port 80 open/close around issuance and renewal, cron twice daily; see **TLS_AND_CERTIFICATES.md**.
 2. **pbx3 fail2ban** – Shipped config still references **Apache**: `etc/fail2ban/jail.local` uses the `apache-badbots` jail and `logpath = /var/log/apache2/ssl_access.log`. Since the API is served by nginx (pbx3api), update to a nginx log path and a suitable filter (or nginx-badbots if available), or disable the jail until nginx logging is in place.
 
 **References:** `APACHE_CONFIG_TO_PBX3API.md` (decision: nginx in pbx3api; TLS/LE in pbx3), `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, `nginx-api-site-reference.conf`.

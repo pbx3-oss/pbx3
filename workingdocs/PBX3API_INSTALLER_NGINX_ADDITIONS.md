@@ -59,13 +59,14 @@ Ensure the pbx3api package (or its installer) depends on:
 
 ## 5. Cert paths
 
-- Certificates are provided by **pbx3** (Let's Encrypt or snakeoil). nginx only references the paths (e.g. `/etc/letsencrypt/live/<fqdn>/fullchain.pem`). No certbot or ACME in pbx3api.
-- If no LE cert exists yet, the reference config uses snakeoil; once pbx3 runs certbot, point the same server block at the LE paths (or use an include that pbx3’s deploy hook can update).
+- Certificates are provided by **pbx3** (Let's Encrypt, **commercial/custom** upload, or snakeoil). nginx only references the active paths. No certbot or ACME in pbx3api. **Canonical doc:** **`TLS_AND_CERTIFICATES.md`** (selection order: custom → LE → snakeoil).
+- If no public cert is active yet, the reference config uses snakeoil; once pbx3 applies LE or custom material, point the server block at those paths (or use an include/snippet updated by **`apply-active-cert.sh`**).
 
 ---
 
 ## 6. Reference files in pbx3 repo
 
+- **workingdocs/TLS_AND_CERTIFICATES.md** — **Canonical** TLS (LE + custom): paths, scripts, API, consumers.
 - **workingdocs/nginx-api-site-reference.conf** – nginx server block to copy/adapt.
-- **workingdocs/APACHE_CONFIG_TO_PBX3API.md** – decisions, Phase 1 work plan, TLS ownership.
+- **workingdocs/APACHE_CONFIG_TO_PBX3API.md** – HTTP move to pbx3api; TLS ownership summary (Phase 4 may describe alternate DNS-01 ideas).
 - **opt/pbx3/etc/fail2ban/jail.local** – `[apache-badbots]` (disabled) as reference for nginx logpath and params.
