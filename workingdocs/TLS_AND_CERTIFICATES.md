@@ -108,6 +108,8 @@ Detail: **`CERTIFICATES_PANEL_AND_API.md`** §5.
 
 **Day-to-day order:** **`TLS_IMPLEMENTATION_STEPS.md`** (Step 0 → 4, numbered tables). **Rationale and firewall detail:** **`LETSENCRYPT_PER_TENANT_FQDN.md`** **§12** (Phases 1–4). Panel/API file lists: **`CERTIFICATES_PANEL_AND_API.md`** §9–10.
 
+**Automated step checks:** shell scripts under **`scripts/tls-implementation-tests/`** — see **`README.md`** there (`./run-all.sh`, env vars **`PBX_SQLITE`**, **`PBX3API_BASE`**, **`PBX3API_TOKEN`**).
+
 ---
 
 ## 11. Release checklist / follow-ups
@@ -123,6 +125,7 @@ Detail: **`CERTIFICATES_PANEL_AND_API.md`** §5.
 
 | Location | Use |
 |----------|-----|
+| **scripts/tls-implementation-tests/README.md** (in **pbx3**) | Bash gates for **`TLS_IMPLEMENTATION_STEPS.md`** (run **`./run-all.sh`**) |
 | **APACHE_CONFIG_TO_PBX3API.md** | nginx vs pbx3 |
 | **PBX3API_INSTALLER_NGINX_ADDITIONS.md** | pbx3api installer |
 | **nginx-api-site-reference.conf** | reference vhost |
