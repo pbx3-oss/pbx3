@@ -226,6 +226,14 @@ if [ -n "$INSTANCE_FQDN" ] && [ -n "$DOMAIN_TLD" ] && [ -n "$INSTANCE_SUBDOMAIN"
     _sql_dom=$(echo "$DOMAIN_TLD" | sed "s/'/''/g")
     _sql_fq=$(echo "$INSTANCE_FQDN" | sed "s/'/''/g")
     sqlite3 $SYSDB "UPDATE globals SET domain='$_sql_dom', fqdn='$_sql_fq' WHERE pkey=(SELECT pkey FROM globals LIMIT 1);"
+    # Option A / Step 0.2: default tenant row holds node FQDN for cert + firewall domain lists (GET tenants).
+    _defcnt=$(sqlite3 "$SYSDB" "SELECT COUNT(*) FROM cluster WHERE pkey='default';" 2>/dev/null || echo 0)
+    if [ "${_defcnt:-0}" -ge 1 ]; then
+        sqlite3 "$SYSDB" "UPDATE cluster SET fqdn='$_sql_fq', domain='$_sql_fq' WHERE pkey='default';"
+        echo "Set default tenant fqdn/domain to $INSTANCE_FQDN"
+    else
+        echo "Note: no cluster row pkey=default; skip default tenant fqdn (unexpected empty DB)" >&2
+    fi
     if /usr/bin/hostnamectl set-hostname "$INSTANCE_SUBDOMAIN" 2>/dev/null; then
         :
     else

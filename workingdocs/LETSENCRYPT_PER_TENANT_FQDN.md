@@ -1,6 +1,6 @@
 # Let's Encrypt and per-tenant FQDN (Option A — full specification)
 
-**Purpose:** Plan how to support **per-tenant FQDNs** (`{tenant_shortuid}.{domain}.{tld}`) with TLS certificates, so that tenant mobility (export/import between nodes) and phone/endpoint discovery work with valid certificates.
+**Purpose:** Plan how to support **per-tenant FQDNs** (`{tenant_shortuid}.{globals.domain}` — the instance apex, one DNS suffix such as `pbx3.com`, stored in the **`globals.domain`** column and returned as **`domain`** on GET sysglobals) with TLS certificates, so that tenant mobility (export/import between nodes) and phone/endpoint discovery work with valid certificates.
 
 **Adopted strategy:** **Option A** (multi-SAN HTTP-01 — one cert: node + all tenant FQDNs). **Short overview:** **`TLS_AND_CERTIFICATES.md`**. **Certificates panel / API detail:** **`CERTIFICATES_PANEL_AND_API.md`**. **This file** is the **detailed** design: options comparison, firewall **pbx3_inline_fqdn**, prerequisites (**§11**), implementation phases (**§12**).
 
@@ -10,9 +10,9 @@
 
 ## 1. Goal
 
-- **Tenant FQDN:** Each tenant has a stable FQDN: `{tenant_shortuid}.{domain}.{tld}` (e.g. `abc12xyz.pbx3.com`). Phones and other endpoints **find the tenant by this domain name** (provisioning, SIP, API).
+- **Tenant FQDN:** Each tenant has a stable FQDN: `{tenant_shortuid}.{globals.domain}` (e.g. `abc12xyz.pbx3.com` when **`globals.domain`** is `pbx3.com`). Phones and other endpoints **find the tenant by this domain name** (provisioning, SIP, API).
 - **Tenant mobility:** A future supertask will export/import tenants between nodes. When a tenant moves, its FQDN should resolve to the **new** node; DNS must be updated (or already point to a load balancer that routes by tenant).
-- **TLS:** Connections to `{tenant_shortuid}.{domain}.{tld}` must use a certificate that is valid for that hostname (no browser/phone cert mismatch).
+- **TLS:** Connections to `{tenant_shortuid}.{globals.domain}` must use a certificate that is valid for that hostname (no browser/phone cert mismatch).
 
 **Out of scope for this doc:** The exact supertask design, DNS automation (who creates A/CNAME for tenant FQDNs), or load balancers. This doc focuses on **certificate strategy** on a single node that may host many tenants.
 
@@ -72,11 +72,11 @@ So today, if a phone connected to `abc12xyz.pbx3.com` (tenant FQDN) but the cert
 
 - **pbx3:** Script that builds domain list (node + all tenant FQDNs from cluster table), runs certbot with multiple `-d`. Call it from API when adding/removing tenant FQDN and from cron for renewal. `le-domain` could become `le-domains` (one FQDN per line) or keep node as primary and add a separate “tenant FQDN list” source.
 - **Certificates panel (optional):** Show “Cert covers: node1.pbx3.com, abc12xyz.pbx3.com, …” and “Add tenant FQDN” flow that triggers re-issue.
-- **Tenant panel:** When setting `cluster.fqdn` to `{shortuid}.{domain}.{tld}`, trigger cert re-issue (or queue it). Ensure DNS is created (manual or later automation).
+- **Tenant panel:** When setting `cluster.fqdn` to `{shortuid}.{globals.domain}`, trigger cert re-issue (or queue it). Ensure DNS is created (manual or later automation).
 
 ---
 
-### Option B: Wildcard cert per base domain (`*.{domain}.{tld}`)
+### Option B: Wildcard cert per base domain (`*.{globals.domain}`)
 
 **Idea:** One certificate with SAN `*.pbx3.com` (and optionally `pbx3.com`). Covers **all** tenant FQDNs that match the pattern `{shortuid}.pbx3.com`, and the node FQDN if it’s under the same domain (e.g. `node1.pbx3.com`).
 
@@ -97,7 +97,7 @@ So today, if a phone connected to `abc12xyz.pbx3.com` (tenant FQDN) but the cert
 
 - **DNS API and credentials** — The baseline **TLS_AND_CERTIFICATES.md** (HTTP-01, no DNS API) and **CERTIFICATES_PANEL_AND_API.md** explicitly avoided DNS API for simplicity. This is a design shift.
 - Security: credentials must be stored and possibly rotated; lock down who can run certbot/lego with those credentials.
-- Wildcard covers only **one level** of subdomain: `*.pbx3.com` covers `abc12xyz.pbx3.com` but not `foo.abc12xyz.pbx3.com`. For `{shortuid}.{domain}.{tld}` you’re fine.
+- Wildcard covers only **one level** of subdomain: `*.pbx3.com` covers `abc12xyz.pbx3.com` but not `foo.abc12xyz.pbx3.com`. For `{shortuid}.{globals.domain}` you’re fine.
 
 **Changes required:**
 
@@ -142,7 +142,7 @@ So today, if a phone connected to `abc12xyz.pbx3.com` (tenant FQDN) but the cert
 
 ### Option D: Tenant FQDN is CNAME to node; node cert only (no tenant in cert)
 
-**Idea:** Tenant FQDN `{shortuid}.{domain}.{tld}` is a **CNAME** to the node FQDN (e.g. `node1.pbx3.com`). Phones resolve tenant FQDN → node; they connect to the node’s IP. TLS is the **node’s** cert only; the client connects to the resolved hostname (tenant FQDN), so the TLS handshake presents the node’s cert — **mismatch** unless the client is configured to accept (e.g. “connect by IP” or “ignore cert name”). Many phones and browsers will show a security warning.
+**Idea:** Tenant FQDN `{shortuid}.{globals.domain}` is a **CNAME** to the node FQDN (e.g. `node1.pbx3.com`). Phones resolve tenant FQDN → node; they connect to the node’s IP. TLS is the **node’s** cert only; the client connects to the resolved hostname (tenant FQDN), so the TLS handshake presents the node’s cert — **mismatch** unless the client is configured to accept (e.g. “connect by IP” or “ignore cert name”). Many phones and browsers will show a security warning.
 
 **Verdict:** **Not recommended** if we want “phones find tenant by tenant FQDN” and **valid** TLS. Only viable if endpoints connect by node FQDN or IP and tenant is identified by other means (e.g. path, auth), in which case tenant FQDN is for display/DNS only, not for TLS. So we do **not** treat this as a primary option for “tenant FQDN for phones with valid cert.”
 
@@ -153,7 +153,7 @@ So today, if a phone connected to `abc12xyz.pbx3.com` (tenant FQDN) but the cert
 | Option | Cert model | Challenge | Re-issue on tenant add/remove? | SAN limit | DNS API? | Config complexity |
 |--------|------------|-----------|--------------------------------|-----------|----------|-------------------|
 | **A** Multi-SAN | One cert, node + all tenant FQDNs | HTTP-01 | Yes (or at renewal) | 50 names | No | Low |
-| **B** Wildcard | One cert `*.{domain}.{tld}` | DNS-01 | No | N/A | Yes | Low |
+| **B** Wildcard | One cert `*.{globals.domain}` | DNS-01 | No | N/A | Yes | Low |
 | **C** SNI | One cert per tenant FQDN | HTTP-01 | No (new cert only for new tenant) | N/A | No | High (dynamic nginx/Asterisk) |
 | **D** CNAME only | Node cert only | — | No | — | No | Low (but cert mismatch) |
 
@@ -183,7 +183,7 @@ The existing **selection order** (**CERTIFICATES_PANEL_AND_API.md** §3) is: **(
 
 ## 8. Tenant FQDN and migration
 
-- **Setting tenant FQDN:** Convention: `cluster.fqdn = {shortuid}.{domain}.{tld}` (e.g. derived from tenant shortuid + base domain). API/SPA can enforce this or allow override. Base domain could come from globals or config.
+- **Setting tenant FQDN:** Convention: `cluster.fqdn = {shortuid}.{globals.domain}` (e.g. derived from tenant shortuid + **`globals.domain`**). API/SPA can enforce this or allow override. Apex comes from **`globals.domain`** (API **`domain`** on sysglobals).
 - **DNS for tenant FQDN:** For **HTTP-01** (Options A and C), each tenant FQDN must resolve to the **node** that hosts that tenant (A or CNAME). When a tenant is **migrated**, DNS must be updated so the same FQDN now points to the **new** node (supertask or manual). For **wildcard** (Option B), no per-tenant DNS for cert; but routing (which node serves which tenant) may still need A/CNAME or a load balancer that routes by hostname.
 - **Export/import:** Tenant export includes `cluster.fqdn`; on import, the new node may need to (A) add this FQDN to its multi-SAN cert, (B) already have wildcard, or (C) request a new cert for this FQDN and regenerate SNI config. So the cert strategy affects what the “land tenant” step does after import.
 
@@ -214,7 +214,7 @@ INLINE(ACCEPT) net $FW udp 5060 ; -m string --algo bm --to 1000 --string "sip:$F
 
 ### 9.3 What’s needed for multiple tenant FQDNs
 
-We need to allow SIP that contains **any** of the valid FQDNs: every **cluster.fqdn** (non-null). The **default tenant** holds the node FQDN; other tenants hold shortuid.domain_name. So:
+We need to allow SIP that contains **any** of the valid FQDNs: every **cluster.fqdn** (non-null). The **default tenant** holds the node FQDN; other tenants hold **`{shortuid}.{globals.domain}`**. So:
 
 - **One INLINE(ACCEPT) rule per FQDN**, for both TCP and UDP on the SIP port(s), with string **`sip:<that_fqdn>`**.
 - Example: if node is `node1.pbx3.com` and tenants have `abc12xyz.pbx3.com`, `def99uvw.pbx3.com`, then the generated **pbx3_inline_fqdn** should contain (conceptually):
@@ -223,7 +223,7 @@ We need to allow SIP that contains **any** of the valid FQDNs: every **cluster.f
   - same for `sip:abc12xyz.pbx3.com` (tcp + udp)
   - same for `sip:def99uvw.pbx3.com` (tcp + udp)
 - **Who generates:** The same place that today writes **pbx3_inline_fqdn** (e.g. **NetHelperClass::copyFirewallTemplates()** in pbx3) should:
-  1. Read **globals.fqdninspect**, **globals.bindport** (SIP port; source of truth for INLINE rules, typically 5060). **Globals** do not hold FQDN; they hold **domain_name** and **fqdninspect** (global for now).
+  1. Read **globals.fqdninspect**, **globals.bindport** (SIP port; source of truth for INLINE rules, typically 5060). **Globals** do not hold FQDN; they hold **`domain`** (SQL: **`globals.domain`**, the instance apex) and **fqdninspect** (global for now).
   2. If fqdninspect is enabled, read all **cluster.fqdn** (non-null). Default tenant’s fqdn = node FQDN; others = tenant FQDNs.
   3. Build the full list of FQDNs: all cluster.fqdn values, deduplicated.
   4. Write **pbx3_inline_fqdn** with two lines (TCP, UDP) per FQDN, each with string **`sip:<fqdn>`**, using **--to 1000** and port from **globals.bindport** (source of truth; typically 5060).
@@ -253,8 +253,8 @@ Below is the set of **panels, API controllers, backend scripts, and helpers** th
 | Block | Path / location | Change |
 |-------|------------------|--------|
 | **CertificateController** | `app/Http/Controllers/CertificateController.php` | **setup:** Accept **optional** list of extra FQDNs (e.g. `domains[]` or body with `fqdn` + `tenant_fqdns[]`). Build full list from GET tenants (all cluster.fqdn), call **le-first-cert-multi.sh** (or extended le-first-cert) with that list so the issued cert is multi-SAN. **letsencrypt (GET):** Continue to use le-domain for “primary” and path; optionally return **domains** (list of SANs) by reading from DB (globals.fqdn + cluster.fqdn) or from cert. **renew:** No change; certbot renew renews the multi-SAN cert. Optionally add **POST /certificates/letsencrypt/sync** that (1) builds domain list from globals + cluster, (2) re-issues cert with that list (same as setup but “already configured” path), for use when a tenant FQDN is added/removed. |
-| **TenantController** | `app/Http/Controllers/TenantController.php` | **On create:** set **cluster.fqdn = shortuid + "." + domain_name** (domain_name from sysglobals); **immutable** (no update of fqdn). **After create/update/delete:** call update-fqdn-inline script (writes file + **automatic Shorewall restart**). No auto cert sync (manual only). |
-| **SysglobalController** | `app/Http/Controllers/SysglobalController.php` | If **sysglobals** (or a dedicated “network” endpoint) exposes **domain_name** (readonly) and **fqdninspect**: after update, call syshelper to run **update-fqdn-inline** (writes file + automatic Shorewall restart). |
+| **TenantController** | `app/Http/Controllers/TenantController.php` | **On create:** set **cluster.fqdn = shortuid + "." + globals.domain** (**`domain`** from GET sysglobals); **immutable** (no update of fqdn). **After create/update/delete:** call update-fqdn-inline script (writes file + **automatic Shorewall restart**). No auto cert sync (manual only). |
+| **SysglobalController** | `app/Http/Controllers/SysglobalController.php` | If **sysglobals** exposes **`domain`** (instance apex; consider readonly in API) and **fqdninspect**: after update, call syshelper to run **update-fqdn-inline** (writes file + automatic Shorewall restart). |
 | **FirewallController** | `app/Http/Controllers/FirewallController.php` | **ipv4restart / ipv6restart:** Before `shorewall restart`, call syshelper to run the **FQDN inline update script** (so the file reflects current globals + cluster.fqdn). That way “Restart firewall” from the panel always writes the latest tenant list into pbx3_inline_fqdn. |
 | **New syscommand or script** | e.g. `syscommands` or new route | Optional: **“Refresh firewall FQDN inline”** (no restart) so tenant/sysglobals save can update the file without restarting Shorewall; admin can restart later. Or fold into existing firewall restart. |
 
@@ -265,7 +265,7 @@ Below is the set of **panels, API controllers, backend scripts, and helpers** th
 | **CertificatesView** | `src/views/CertificatesView.vue` | **Option A multi-SAN:** (1) **Setup:** Either keep single “Hostname (FQDN)” for **node** only and add copy like “Tenant FQDNs are added from Tenant panel and included in cert at next renewal/sync,” or add a “Sync cert with tenant list” button that calls the new sync endpoint so the cert is re-issued with node + all tenant FQDNs. (2) **Status:** Show “Cert covers: &lt;list of domains&gt;” from GET letsencrypt if API returns **domains** (SAN list). (3) **Renew now:** Unchanged. |
 | **TenantDetailView** | `src/views/TenantDetailView.vue` | Add **FQDN** (and optionally **FQDN inspect**) to the form: show as **read-only derived** (shortuid + "." + base_domain); no edit or save of cluster.fqdn. Optionally show hint: “e.g. {shortuid}.pbx3.com”. If base domain is configurable (sysglobals or config), show it so user can follow convention. |
 | **tenantAdvanced.js** | — | If FQDN is in the “advanced” section, No change; FQDN is a stored, read-only display field. |
-| **TenantCreateView** | `src/views/TenantCreateView.vue` | API sets cluster.fqdn = shortuid.domain_name on create (immutable). Optional hint in SPA. |
+| **TenantCreateView** | `src/views/TenantCreateView.vue` | API sets **cluster.fqdn** = **`{shortuid}.{globals.domain}`** on create (immutable). Optional hint in SPA. |
 
 ### 10.4 Summary table
 
@@ -276,7 +276,7 @@ Below is the set of **panels, API controllers, backend scripts, and helpers** th
 | pbx3 | Script + API call path | Refresh pbx3_inline_fqdn from API (tenant/sysglobals/firewall restart). |
 | pbx3api | CertificateController | Setup/sync with domain list from DB; optionally return SAN list. |
 | pbx3api | TenantController | On create set cluster.fqdn; after save run update-fqdn-inline + auto Shorewall restart; no auto cert sync. |
-| pbx3api | SysglobalController / FirewallController | Expose domain_name, fqdninspect; after sysglobals PUT or firewall Restart run update-fqdn-inline + auto Shorewall restart. |
+| pbx3api | SysglobalController / FirewallController | Expose **domain**, **fqdninspect**; after sysglobals PUT or firewall Restart run update-fqdn-inline + auto Shorewall restart. |
 | pbx3spa | CertificatesView | Show “Cert covers” list; optional “Sync with tenant list” action. |
 | pbx3spa | TenantDetailView | Show **derived** tenant FQDN (shortuid.base_domain) as read-only. |
 
@@ -290,10 +290,10 @@ Below is the set of **panels, API controllers, backend scripts, and helpers** th
 
 | Item | Where | Notes |
 |------|--------|------|
-| **globals.domain_name** | pbx3 schema (globals table) + installer | Base domain (e.g. `pbx3.com`), set at install, readonly. Add column if not present; installer prompts for it and writes once. |
-| **Default tenant fqdn = node FQDN** | pbx3 installer or bootstrap | At install, set the **default** tenant’s **cluster.fqdn** to the node FQDN (e.g. shortuid_default.domain_name, or a separate install prompt for “node FQDN” that is written to default tenant). So the node has a stable FQDN for the cert and firewall from first boot. |
-| **Sysglobals exposes domain_name, fqdninspect** | pbx3api Sysglobal model + GET sysglobals | API must return **domain_name** (readonly) and **fqdninspect** so CertificateController and TenantController can build domain list and set tenant fqdn on create. Expose in model; ensure not hidden. |
-| **Tenant create returns shortuid** | pbx3api TenantController | New tenant must get **shortuid** (and id) on create so cluster.fqdn = shortuid + "." + domain_name can be set. Already the case if tenant create follows tenant-scoped pattern. |
+| **globals.domain** | pbx3 schema (`globals` table) + installer | Instance apex (e.g. `pbx3.com`), set at install. Column **`domain`** already exists; installer writes it. Optional: make **`domain`** readonly via API after bootstrap. |
+| **Default tenant fqdn = node FQDN** | pbx3 installer or bootstrap | At install, set the **default** tenant’s **cluster.fqdn** to the node FQDN (e.g. `{default_tenant_shortuid}.{globals.domain}`, or a separate install prompt for “node FQDN” that is written to default tenant). So the node has a stable FQDN for the cert and firewall from first boot. |
+| **Sysglobals exposes domain, fqdninspect** | pbx3api Sysglobal model + GET sysglobals | API must return **`domain`** and **fqdninspect** so CertificateController and TenantController can build domain list and set tenant fqdn on create. **`fqdninspect`** is currently in **`$hidden`** — unhide for panels if needed. |
+| **Tenant create returns shortuid** | pbx3api TenantController | New tenant must get **shortuid** (and id) on create so **cluster.fqdn** = **shortuid + "." + globals.domain** can be set. Already the case if tenant create follows tenant-scoped pattern. |
 
 **Branch:** Create a **feature branch from `main`** for LE multi-SAN / per-tenant FQDN work; merge back via PR when each phase is verified.
 
@@ -306,12 +306,12 @@ Ordered by dependency: pbx3 first (scripts and FQDN inline), then pbx3api (API a
 **Decisions (product):**
 
 - **4. Cert sync:** **Manual only** — re-issue only when admin clicks “Sync with tenant list” on Certificates panel (avoids LE rate limits).
-- **5. Firewall restart:** **Automatic** — after updating the FQDN inline file (on tenant create/update/delete or when sysglobals fqdninspect/domain_name change), automatically run Shorewall restart so new rules apply immediately.
-- **6. Where FQDNs live:** **Globals** do **not** hold FQDN; they hold only **domain_name** (base domain, e.g. `pbx3.com`), set at install, readonly. **FQDNs** live in **tenants**: each tenant has **cluster.fqdn**. The **default tenant** (node-owned) holds the **node FQDN** (e.g. `node1.pbx3.com`); store it there. **Globals** own the **fqdninspect** boolean (check/don’t check SIP for FQDN); global for now.
-- **7. New tenant FQDN:** **Self-defining** = **shortuid.domain_name**. Set **cluster.fqdn = shortuid + "." + domain_name** on tenant create; **immutable** thereafter. Display in tenant views as read-only.
+- **5. Firewall restart:** **Automatic** — after updating the FQDN inline file (on tenant create/update/delete or when sysglobals **fqdninspect** / **`domain`** change), automatically run Shorewall restart so new rules apply immediately.
+- **6. Where FQDNs live:** **Globals** do **not** hold per-tenant FQDN; they hold **`domain`** (instance apex, e.g. `pbx3.com`, SQL **`globals.domain`**) and **fqdninspect**. **FQDNs** live in **tenants**: each tenant has **cluster.fqdn**. The **default tenant** (node-owned) holds the **node FQDN** (e.g. `node1.pbx3.com`); store it there. **Globals** own **fqdninspect** (check/don’t check SIP for FQDN); global for now.
+- **7. New tenant FQDN:** **Self-defining** = **`{shortuid}.{globals.domain}`**. Set **cluster.fqdn = shortuid + "." + globals.domain** on tenant create; **immutable** thereafter. Display in tenant views as read-only.
 - **8. fqdninspect:** **Global only** (in globals). May become per-tenant later (move to cluster); that can be done later.
 
-**Domain list: API-only, from tenants.** All panels use the API only. **Domain list** = all **cluster.fqdn** (non-null) from **GET tenants** — i.e. every tenant’s stored FQDN (default tenant = node FQDN; others = shortuid.domain_name). No FQDN in globals. **GET sysglobals** provides **domain_name** (for tenant create: set cluster.fqdn = shortuid + "." + domain_name) and **fqdninspect**. On the pbx3 side, the firewall script reads **cluster.fqdn** for all tenants (and globals.fqdninspect, globals.bindport) and writes one INLINE rule per FQDN.
+**Domain list: API-only, from tenants.** All panels use the API only. **Domain list** = all **cluster.fqdn** (non-null) from **GET tenants** — i.e. every tenant’s stored FQDN (default tenant = node FQDN; others = **`{shortuid}.{globals.domain}`**). No FQDN in globals. **GET sysglobals** provides **`domain`** (for tenant create: set **cluster.fqdn = shortuid + "." + globals.domain**) and **fqdninspect**. On the pbx3 side, the firewall script reads **cluster.fqdn** for all tenants (and globals.fqdninspect, globals.bindport) and writes one INLINE rule per FQDN.
 
 ### Phase 1 — pbx3 backend (cert multi-SAN + firewall FQDN inline)
 
@@ -326,21 +326,21 @@ Ordered by dependency: pbx3 first (scripts and FQDN inline), then pbx3api (API a
 
 | Step | Task | Details |
 |------|------|---------|
-| **2.1** | CertificateController — domain list helper | Build domain list **via API only**: **GET tenants**; take every tenant’s **fqdn** (non-null). Domain list = [t.fqdn for each tenant]. (Default tenant’s fqdn = node FQDN; others = shortuid.domain_name.) No FQDN in sysglobals; sysglobals has **domain_name** and **fqdninspect** only. Used by setup, sync, and GET response. |
+| **2.1** | CertificateController — domain list helper | Build domain list **via API only**: **GET tenants**; take every tenant’s **fqdn** (non-null). Domain list = [t.fqdn for each tenant]. (Default tenant’s fqdn = node FQDN; others = **`{shortuid}.{globals.domain}`**.) No FQDN in sysglobals; sysglobals has **`domain`** and **fqdninspect** only. Used by setup, sync, and GET response. |
 | **2.2** | CertificateController::setup (multi-SAN) | Build domain list as in 2.1 (all tenant fqdns from GET tenants). Call **le-first-cert-multi.sh** with that list + email (via syshelper). Keep 409 when already configured. |
 | **2.3** | CertificateController::letsencrypt (GET) — return domains | Return configured, domain (primary), expires_at, issuer; add **domains** (array) = all tenant fqdns from GET tenants. |
 | **2.4** | CertificateController — sync endpoint | Add **POST /certificates/letsencrypt/sync**: build domain list as in 2.1; if LE already configured, run re-issue script with current list. **Manual only** (no auto sync on tenant save); document LE rate limits. |
 | **2.5** | FirewallController — refresh FQDN before restart | In **ipv4restart** / **ipv6restart**, call syshelper to run **update-fqdn-inline** (which writes file and **restarts Shorewall**). So panel “Restart” uses current tenant FQDN list. |
-| **2.6** | TenantController — FQDN on create + refresh + auto restart | On tenant **create**: set **cluster.fqdn = shortuid + "." + domain_name** (domain_name from GET sysglobals); **immutable** (do not allow update of fqdn). After **create**, **update**, or **delete**, call syshelper to run **update-fqdn-inline** (script writes file and **automatically restarts Shorewall** per decision 5). |
-| **2.7** | SysglobalController | Expose **domain_name** (readonly) and **fqdninspect**. After successful PUT (e.g. fqdninspect changed), call syshelper to run **update-fqdn-inline** (writes file + **automatic Shorewall restart**). |
-| **2.8** | Verify Phase 2 | From API: (1) POST certificates/letsencrypt/setup (domain list = all tenant fqdns); confirm 200 and cert has multiple SANs. (2) GET certificates/letsencrypt; confirm **domains** = tenant fqdns. (3) Create a tenant; confirm cluster.fqdn set to shortuid.domain_name and update-fqdn-inline ran and Shorewall restarted. (4) Firewall panel Restart; confirm script runs and Shorewall restarts. |
+| **2.6** | TenantController — FQDN on create + refresh + auto restart | On tenant **create**: set **cluster.fqdn = shortuid + "." + globals.domain** (**`domain`** from GET sysglobals); **immutable** (do not allow update of fqdn). After **create**, **update**, or **delete**, call syshelper to run **update-fqdn-inline** (script writes file and **automatically restarts Shorewall** per decision 5). |
+| **2.7** | SysglobalController | Expose **`domain`** (consider readonly) and **fqdninspect**. After successful PUT (e.g. fqdninspect changed), call syshelper to run **update-fqdn-inline** (writes file + **automatic Shorewall restart**). |
+| **2.8** | Verify Phase 2 | From API: (1) POST certificates/letsencrypt/setup (domain list = all tenant fqdns); confirm 200 and cert has multiple SANs. (2) GET certificates/letsencrypt; confirm **domains** = tenant fqdns. (3) Create a tenant; confirm cluster.fqdn set to **shortuid + "." + globals.domain** and update-fqdn-inline ran and Shorewall restarted. (4) Firewall panel Restart; confirm script runs and Shorewall restarts. |
 
 ### Phase 3 — pbx3spa (Tenant FQDN + Certificates UI)
 
 | Step | Task | Details |
 |------|------|---------|
 | **3.1** | TenantDetailView — FQDN (read-only, immutable) | Show **FQDN** in the tenant view (e.g. Identity or Settings) as **read-only**: **shortuid + "." + base_domain** (base_domain from sysglobals). No need to edit or save cluster.fqdn for now; the rule is derived. Label e.g. “Tenant FQDN” with hint “Derived from shortuid + base domain (for cert and firewall).” |
-| **3.2** | TenantCreateView | API sets cluster.fqdn = shortuid + "." + domain_name on create. SPA may show hint: "FQDN will be shortuid.domain_name (immutable)." No editable FQDN field. |
+| **3.2** | TenantCreateView | API sets **cluster.fqdn = shortuid + "." + globals.domain** on create. SPA may show hint: "FQDN will be **{shortuid}.{globals.domain}** (immutable)." No editable FQDN field. |
 | **3.3** | CertificatesView — show “Cert covers” | When GET certificates/letsencrypt returns **domains**, display a line or list: “Cert covers: domain1, domain2, …”. If API doesn’t return domains yet, skip or show primary domain only until Phase 2 is done. |
 | **3.4** | CertificatesView — “Sync with tenant list” | Add a button **Sync with tenant list** that calls **POST /certificates/letsencrypt/sync** (when configured). On success, toast and refetch status. Show brief copy: “Re-issue cert to include current node + all tenant FQDNs.” |
 | **3.5** | Verify Phase 3 | In browser: (1) Open a tenant; confirm FQDN (cluster.fqdn) is shown as read-only. (2) Create a tenant; confirm FQDN set. (3) Certificates panel: confirm “Cert covers” list and Sync button; run Sync (manual only) and confirm cert re-issued. |
@@ -355,7 +355,7 @@ Ordered by dependency: pbx3 first (scripts and FQDN inline), then pbx3api (API a
 
 ### Optional / follow-on
 
-- **globals.domain_name:** Stored at install, readonly. Expose via GET sysglobals; API uses it on tenant create to set cluster.fqdn = shortuid.domain_name. **Globals** do not hold FQDN; **fqdninspect** (boolean) stays in globals, global for now.
+- **globals.domain:** Stored at install. Expose via GET sysglobals as **`domain`**; API uses it on tenant create to set **cluster.fqdn = shortuid + "." + globals.domain**. **Globals** do not hold per-tenant FQDN; **fqdninspect** stays in globals, global for now.
 - **Per-tenant fqdninspect (later):** Keep global for now; may move to cluster later so inspect is per-tenant.
 - **Dedicated “Refresh FQDN inline” syscommand:** Expose a syscommand (e.g. POST syscommands/refresh-fqdn-inline) that only runs the update script, for use from scripts or support without restarting the firewall.
 
@@ -388,7 +388,7 @@ Ordered by dependency: pbx3 first (scripts and FQDN inline), then pbx3api (API a
 | **TLS_AND_CERTIFICATES.md** | **pbx3** `workingdocs/` | Canonical TLS overview (**Option A**). |
 | **CERTIFICATES_PANEL_AND_API.md** | **pbx3** `workingdocs/` | Certificates panel, API tables, nginx/Asterisk file checklist. |
 | **TRUNK_ROUTE_MULTITENANCY.md** | **pbx3spa** `workingdocs/` | Tenant migration (export/import). |
-| **full_schema.sql** | **pbx3** | `cluster.fqdn`; **globals.domain_name**, **globals.fqdninspect**. |
+| **full_schema.sql** | **pbx3** | `cluster.fqdn`; **`globals.domain`**, **globals.fqdninspect**. |
 | **Tenant.php** | **pbx3api** | `fqdn` in `$fillable`. |
 | **sail65** `sail-6/opt/sark/etc/shorewall/sark_inline_fqdn` | reference | INLINE rule with `sip:$FQDN`. |
 | **NetHelperClass** | **pbx3** `pbx3-1/opt/pbx3/php/classes/` | `copyFirewallTemplates()`. |

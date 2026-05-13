@@ -14,16 +14,16 @@
 
 ## Step 0 — Prerequisites (before Phase 1)
 
-Complete **all** before writing multi-SAN cert code. (Table from **`LETSENCRYPT_PER_TENANT_FQDN.md`** §11.)
+Complete **all** before writing multi-SAN cert code. (Table from **`LETSENCRYPT_PER_TENANT_FQDN.md`** §11.) **Implemented on branch `certificates`:** 0.1–0.4 below (installer + pbx3api + Instance Globals UI).
 
 | # | Task | Repo / area |
 |---|------|----------------|
-| 0.1 | Add **`globals.domain_name`** (base domain, e.g. `pbx3.com`) if missing; installer sets it once, **readonly**. | **pbx3** schema + **installer** |
-| 0.2 | Ensure **default tenant** has **`cluster.fqdn`** = **node FQDN** after install/bootstrap. | **pbx3** installer / bootstrap |
-| 0.3 | **GET sysglobals** returns **`domain_name`** (readonly) and **`fqdninspect`**. | **pbx3api** model + controller |
-| 0.4 | **Tenant create** returns **shortuid** (and id); **`cluster.fqdn`** can be set to `shortuid + "." + domain_name`. | **pbx3api** `TenantController` |
+| 0.1 | **Base apex domain** for tenant hostnames: **`globals.domain`** (GET sysglobals JSON field **`domain`**). Installer sets **`globals.domain`** and **`globals.fqdn`**. **API:** **`domain`** and **`fqdn`** are no longer in **`SysglobalController`** **`$updateableColumns`** (install-time identity). | **pbx3** + **pbx3api** |
+| 0.2 | Ensure **default tenant** has **`cluster.fqdn`** (and **`domain`**) = **node FQDN** after install. **`installer.sh`** runs **`UPDATE cluster … WHERE pkey='default'`** when that row exists. | **pbx3** installer |
+| 0.3 | **GET/PUT sysglobals** includes **`fqdninspect`** (TEXT **YES**/**NO**). **`Sysglobal`:** removed from **`$hidden`**; **`SysglobalController`:** validate **`fqdninspect`**. **pbx3spa:** Instance Globals shows/edits FQDN inspect pill. | **pbx3api** + **pbx3spa** |
+| 0.4 | **Tenant create** returns **shortuid**; **`fqdn`** / **`domain`** set from **`globals.domain`** (optional body override on create). **Updates:** **`fqdn`** and **`domain`** removed from **`$updateableColumns`** (immutable after create). | **pbx3api** `TenantController` |
 
-**Gate:** You can read `domain_name` from API and create a tenant with a deterministic FQDN.
+**Gate:** You can read **`domain`** and **`fqdninspect`** from GET sysglobals, and create a tenant with a deterministic hostname from **`globals.domain`**.
 
 ---
 
@@ -48,7 +48,7 @@ Complete **all** before writing multi-SAN cert code. (Table from **`LETSENCRYPT_
 | 2.3 | **GET `/certificates/letsencrypt`** | Add **`domains`** array (tenant FQDNs). Keep **`domain`** = primary from **`le-domain`**. |
 | 2.4 | **POST `/certificates/letsencrypt/sync`** | **Manual only:** rebuild list from 2.1 → re-issue (same cert name / **`le-domain`**). |
 | 2.5 | **FirewallController** | **`ipv4restart` / `ipv6restart`**: before Shorewall, syshelper runs **update-fqdn-inline** (writes file + restarts Shorewall per script — avoid double restart if script already restarts; align implementation). |
-| 2.6 | **TenantController** | **Create:** set **`cluster.fqdn = shortuid + "." + domain_name`** (immutable later). **After create/update/delete:** syshelper **update-fqdn-inline** (Shorewall auto per product decision). |
+| 2.6 | **TenantController** | **Create:** ensure **`fqdn` = `shortuid + "." + globals.domain`** (already when request omits **`fqdn`**/**`domain`**); **immutable** later if required by product. **After create/update/delete:** syshelper **update-fqdn-inline** (Shorewall auto per product decision). |
 | 2.7 | **SysglobalController** | After PUT affecting **fqdninspect** / relevant globals: **update-fqdn-inline**. |
 | 2.8 | **Syshelper registration** | Wire new script paths and timeouts; follow **`SYSCOMMANDS_VIA_SYSHELPER.md`**. |
 | 2.9 | **Verify** | API-only tests: setup returns multi-SAN cert; GET shows **domains**; tenant create sets **fqdn** and triggers inline update; firewall restart path runs updater. |
@@ -89,6 +89,6 @@ Complete **all** before writing multi-SAN cert code. (Table from **`LETSENCRYPT_
 
 1. **Cert sync:** manual (**Sync** button only).  
 2. **Firewall:** after **update-fqdn-inline**, **restart Shorewall** automatically.  
-3. **FQDN storage:** **`cluster.fqdn`**, not globals (globals = **`domain_name`** + **`fqdninspect`**).  
-4. **New tenant FQDN:** **`{tenant_shortuid}.domain_name`** (tenant **`shortuid`** assigned on **tenant create**), **immutable** after create — *this is not the instance hostname.*  
+3. **FQDN storage:** Tenant hostname material is **`cluster.fqdn`** (API field **`fqdn`**); apex for the tenant suffix is **`globals.domain`** (API **`domain`**). **`fqdninspect`** lives on **globals** (instance) for the firewall plan.  
+4. **New tenant FQDN:** **`{tenant_shortuid}.globals.domain`** (tenant **`shortuid`** on create), **immutable** after create — *this is not the instance hostname.*  
 5. **Node / instance FQDN:** **`globals.fqdn`** = `{subdomain}.{apex}`; the **`subdomain`** is generated by the **installer** (typically **6-char `idpwgen`**, or legacy **`INSTANCE_FQDN`**). Instance **globals** do not store a separate **`shortuid`** column. Treat **`globals.fqdn`** as **install-time and long-lived**; changing it is an ops migration, not routine UI.
