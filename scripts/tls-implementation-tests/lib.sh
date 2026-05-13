@@ -39,3 +39,18 @@ tls_json_has_key() {
 	fi
 	python3 -c "import json,sys; d=json.loads(sys.stdin.read()); sys.exit(0 if \"$key\" in d else 1)" <<<"$json" 2>/dev/null
 }
+
+# pbx3api tree for greps: use $PBX3API_ROOT if already set in the environment; else /opt/pbx3api when that
+# layout exists (typical PBX deploy); else sibling ../pbx3api of the pbx3 clone.
+tls_default_pbx3api_root() {
+	local pbx3_root="$1"
+	if [[ -n "${PBX3API_ROOT:-}" ]]; then
+		printf '%s\n' "$PBX3API_ROOT"
+		return
+	fi
+	if [[ -d /opt/pbx3api/app ]]; then
+		printf '%s\n' "/opt/pbx3api"
+		return
+	fi
+	printf '%s\n' "$pbx3_root/../pbx3api"
+}

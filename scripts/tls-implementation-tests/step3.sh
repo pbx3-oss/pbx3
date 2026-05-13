@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # Step 3 — pbx3spa (tenant FQDN UI, Certificates panel)
+if [ -z "${BASH_VERSION:-}" ]; then
+	echo "This script requires bash, not sh/dash. Use: bash \"$0\"" >&2
+	exit 1
+fi
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh

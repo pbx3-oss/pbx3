@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 # Step 0 — TLS_IMPLEMENTATION_STEPS.md (prerequisites / globals / default tenant / tenant fqdn)
+if [ -z "${BASH_VERSION:-}" ]; then
+	echo "This script requires bash, not sh/dash. Use: bash \"$0\"" >&2
+	exit 1
+fi
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
 PBX3_ROOT="${PBX3_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-PBX3API_ROOT="${PBX3API_ROOT:-$PBX3_ROOT/../pbx3api}"
+PBX3API_ROOT="$(tls_default_pbx3api_root "$PBX3_ROOT")"
 PBX_SQLITE="${PBX_SQLITE:-/opt/pbx3/db/sqlite.db}"
 
 echo "=== Step 0: prerequisites (TLS Option A) ==="
 echo "PBX3_ROOT=$PBX3_ROOT"
+echo "PBX3API_ROOT=$PBX3API_ROOT"
 echo "PBX_SQLITE=$PBX_SQLITE"
 
 if [[ ! -r "$PBX_SQLITE" ]]; then
@@ -107,14 +112,15 @@ else
 fi
 
 # Source: SysglobalController should list fqdninspect for PUT (Step 0.3)
-if [[ -f "$PBX3API_ROOT/app/Http/Controllers/SysglobalController.php" ]]; then
-	if grep -q "'fqdninspect'" "$PBX3API_ROOT/app/Http/Controllers/SysglobalController.php"; then
+_sg="$PBX3API_ROOT/app/Http/Controllers/SysglobalController.php"
+if [[ -f "$_sg" ]]; then
+	if grep -qE "['\"]fqdninspect['\"][[:space:]]*=>" "$_sg"; then
 		tls_pass "SysglobalController includes fqdninspect in update rules"
 	else
-		tls_fail "SysglobalController missing fqdninspect in update rules"
+		tls_fail "SysglobalController missing fqdninspect in \$updateableColumns ($_sg) — deploy/pull pbx3api or set PBX3API_ROOT"
 	fi
 else
-	tls_skip "pbx3api repo not at PBX3API_ROOT=$PBX3API_ROOT"
+	tls_skip "SysglobalController.php not found (PBX3API_ROOT=$PBX3API_ROOT)"
 fi
 
 exit "${TLS_TEST_FAILED:-0}"

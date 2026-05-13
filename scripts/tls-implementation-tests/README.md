@@ -21,13 +21,13 @@ Shell checks for **`workingdocs/TLS_IMPLEMENTATION_STEPS.md`**. They are **gates
 | **`PBX3API_BASE`** | *(empty)* | e.g. `https://pbx.example.com:44300` — no trailing slash |
 | **`PBX3API_TOKEN`** | *(empty)* | Sanctum **Bearer** token; if unset, API checks are **skipped** |
 | **`PBX3_ROOT`** | Auto: parent of **`scripts/`** | **pbx3** repo root (for grepping packaged scripts) |
-| **`PBX3API_ROOT`** | `$PBX3_ROOT/../pbx3api` | **pbx3api** repo (sibling of **pbx3** in **pbx3-master**) |
+| **`PBX3API_ROOT`** | `$PBX3API_ROOT` env if set; else **`/opt/pbx3api`** when that tree exists; else **`$PBX3_ROOT/../pbx3api`** | **pbx3api** tree for greps (on PBX, home clone is often stale — default prefers **`/opt/pbx3api`**) |
 | **`PBX3SPA_ROOT`** | `$PBX3_ROOT/../pbx3spa` | **pbx3spa** repo |
 | **`PBX3_OPT`** | `/opt/pbx3` | On-box install prefix for **step1** “installed script” checks |
 
 ## Run
 
-From clone (macOS / Linux with **bash**, **sqlite3**, **curl**):
+From clone (macOS / Linux with **bash**, **sqlite3**, **curl**). **Do not** run with **`sh step0.sh`** — on Ubuntu **`sh`** is **dash**, which ignores the **`#!/usr/bin/env bash`** line and then **`set -o pipefail`** fails. Use **`./step0.sh`** (after **`chmod +x`**) or **`bash step0.sh`**.
 
 ```bash
 cd pbx3/scripts/tls-implementation-tests

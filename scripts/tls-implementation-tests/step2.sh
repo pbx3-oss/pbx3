@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 # Step 2 — pbx3api (certificates, firewall hooks, tenant/sysglobal side-effects)
+if [ -z "${BASH_VERSION:-}" ]; then
+	echo "This script requires bash, not sh/dash. Use: bash \"$0\"" >&2
+	exit 1
+fi
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "$SCRIPT_DIR/lib.sh"
 
 PBX3_ROOT="${PBX3_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-PBX3API_ROOT="${PBX3API_ROOT:-$PBX3_ROOT/../pbx3api}"
+PBX3API_ROOT="$(tls_default_pbx3api_root "$PBX3_ROOT")"
 PBX3API_BASE="${PBX3API_BASE:-}"
 PBX3API_TOKEN="${PBX3API_TOKEN:-}"
 
 echo "=== Step 2: pbx3api (TLS / certificates integration) ==="
+echo "PBX3API_ROOT=$PBX3API_ROOT"
 
 CC="$PBX3API_ROOT/app/Http/Controllers/CertificateController.php"
 FW="$PBX3API_ROOT/app/Http/Controllers/FirewallController.php"
