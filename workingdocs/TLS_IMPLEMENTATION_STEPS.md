@@ -10,6 +10,8 @@
 
 **Branch:** Feature branch from **`main`** in each repo you touch (typically **pbx3** first, then **pbx3api**, then **pbx3spa**).
 
+**Automated checks:** **`pbx3/scripts/tls-implementation-tests/`** — run **`./run-all.sh`** or **`./stepN.sh`** (see **`README.md`** in that folder for env vars).
+
 ---
 
 ## Step 0 — Prerequisites (before Phase 1)
