@@ -257,33 +257,67 @@ public function restartFirewall() {
 					
 	}
 	
+	/**
+	 * Shorewall INLINE string-match line for SIP FQDN inspect (Option A / LETSENCRYPT_PER_TENANT_FQDN.md).
+	 * @param string $proto tcp|udp
+	 * @param string $bindport SIP port from globals (e.g. 5060)
+	 * @param string $fqdn tenant / node FQDN (Host-Only; escaped for shell --string "sip:…")
+	 */
+	private function shorewallFqdnInlineEchoRule($proto, $bindport, $fqdn) {
+		$sip = 'sip:' . $fqdn;
+		$sipEsc = str_replace(['\\', '"'], ['\\\\', '\\"'], $sip);
+		return "'INLINE(ACCEPT) net \$FW " . $proto . " " . $bindport
+			. '; -m string --algo bm --to 1000 --string "' . $sipEsc . '"' . "'";
+	}
+
 	public function copyFirewallTemplates() {
-	
+
 		$this->dbh = DB::getInstance();
-		$res = $this->dbh->query("SELECT bindport, fqdn, fqdninspect, sipflood FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-		if (!empty($res) && $res['fqdninspect'] == 'YES') {
-			$rule = "'INLINE(ACCEPT) net \$FW tcp ";
-			$rule .= $res['bindport'];
-			$rule .= '; -m string --algo bm --to 500 --string "';
-			$rule .= $res['fqdn'];
-			$rule .= '"';
-			$rule .= "'";
-			$rc = $this->helper->request_syscmd ("echo $rule > /etc/shorewall/pbx3_inline_fqdn");
-	
-			$rule = "'INLINE(ACCEPT) net \$FW udp ";
-			$rule .= $res['bindport'];
-			$rule .= '; -m string --algo bm --to 500 --string "';
-			$rule .= $res['fqdn'];
-			$rule .= '"';
-			$rule .= "'";
-			$rc = $this->helper->request_syscmd ("echo $rule >> /etc/shorewall/pbx3_inline_fqdn");
+		if (!isset($this->helper) || !is_object($this->helper)) {
+			$this->helper = new helper();
+		}
+		$res = $this->dbh->query("SELECT bindport, fqdninspect, sipflood FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+		if (empty($res)) {
+			$res = array('bindport' => '5060', 'fqdninspect' => 'NO', 'sipflood' => 'NO');
+		}
+		$bindport = (isset($res['bindport']) && $res['bindport'] !== '' && $res['bindport'] !== null)
+			? trim($res['bindport']) : '5060';
+
+		if (!empty($res['fqdninspect']) && $res['fqdninspect'] === 'YES') {
+			$stmt = $this->dbh->query(
+				"SELECT fqdn FROM cluster WHERE fqdn IS NOT NULL AND length(trim(fqdn)) > 0 "
+				. "ORDER BY CASE WHEN pkey = 'default' THEN 0 ELSE 1 END, pkey"
+			);
+			$rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : array();
+			$seen = array();
+			$firstLine = true;
+			foreach ($rows as $row) {
+				$fq = isset($row['fqdn']) ? trim($row['fqdn']) : '';
+				if ($fq === '') {
+					continue;
+				}
+				$key = strtolower($fq);
+				if (isset($seen[$key])) {
+					continue;
+				}
+				$seen[$key] = true;
+				foreach (array('tcp', 'udp') as $proto) {
+					$rule = $this->shorewallFqdnInlineEchoRule($proto, $bindport, $fq);
+					$redir = $firstLine ? '>' : '>>';
+					$firstLine = false;
+					$this->helper->request_syscmd("echo $rule $redir /etc/shorewall/pbx3_inline_fqdn");
+				}
+			}
+			if ($firstLine) {
+				$this->helper->request_syscmd("echo '#' > /etc/shorewall/pbx3_inline_fqdn");
+			}
 		}
 		else {
-			$rc = $this->helper->request_syscmd ("echo '#' > /etc/shorewall/pbx3_inline_fqdn");
+			$this->helper->request_syscmd("echo '#' > /etc/shorewall/pbx3_inline_fqdn");
 		}
 	
 		$file = SYSPATH . '/templates/shorewall/pbx3_inline_limit';
-		if (file_exists($file) && $res['sipflood'] == 'YES') {
+		if (file_exists($file) && !empty($res['sipflood']) && $res['sipflood'] == 'YES') {
 			$rc = $this->helper->request_syscmd ("cp $file /etc/shorewall");
 		}
 		else {

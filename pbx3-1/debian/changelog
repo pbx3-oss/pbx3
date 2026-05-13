@@ -1,3 +1,11 @@
+pbx3 (0.0.3-3) noble; urgency=medium
+
+  * Option A Step 1: NetHelper copyFirewallTemplates — per-tenant cluster.fqdn,
+    sip: string match, --to 1000; helper init; le-first-cert-multi.sh;
+    update-fqdn-inline.sh (shorewallreload.php).
+
+ -- KOKO <admin@aelintra.com>  Wed, 14 May 2026 12:00:00 +0000
+
 pbx3 (0.0.3-2) noble; urgency=medium
 
   * Add test suite for certfifcate implementation
