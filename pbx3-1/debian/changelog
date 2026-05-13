@@ -1,4 +1,11 @@
-pbx3 (0.0.2.3-1) noble; urgency=medium
+pbx3 (0.0.3-2) noble; urgency=medium
+
+  * Add test suite for certfifcate implementation
+    workingdocs/TLS_AND_CERTIFICATES.md.
+
+ -- KOKO <admin@aelintra.com>  Sat, 13 May 2026 12:00:00 +0000
+
+pbx3 (0.0.3-1) noble; urgency=medium
 
   * idpwgen: introduce Go binary for shortuid and password generation (single
     source for pbx3 and pbx3api). Shortuids: 6 chars, charset without
