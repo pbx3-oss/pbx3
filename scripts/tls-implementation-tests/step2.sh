@@ -59,6 +59,11 @@ if [[ -f "$TC" ]]; then
 	if grep -q "shortuid" "$TC" && grep -q "globals" "$TC"; then
 		tls_pass "TenantController still ties create to globals / shortuid (2.6 baseline)"
 	fi
+	if grep -q "pbx3_update_fqdn_inline_optional" "$TC"; then
+		tls_pass "TenantController triggers update-fqdn-inline after tenant changes (2.6)"
+	else
+		tls_skip "TenantController missing pbx3_update_fqdn_inline_optional hook (2.6)"
+	fi
 else
 	tls_fail "missing TenantController"
 fi
@@ -66,6 +71,11 @@ fi
 if [[ -f "$SG" ]]; then
 	if grep -q "fqdninspect" "$SG"; then
 		tls_pass "SysglobalController handles fqdninspect (2.7 baseline)"
+	fi
+	if grep -q "pbx3_update_fqdn_inline_optional" "$SG"; then
+		tls_pass "SysglobalController triggers update-fqdn-inline after fqdninspect/bindport (2.7)"
+	else
+		tls_skip "SysglobalController missing update-fqdn-inline hook (2.7)"
 	fi
 fi
 

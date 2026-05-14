@@ -73,6 +73,7 @@
 | LE renewal (with port 80) | `pbx3-1/opt/pbx3/scripts/le-renew-with-80.sh` |
 | LE first-time cert | `pbx3-1/opt/pbx3/scripts/le-first-cert.sh` |
 | LE first-time cert (multi-SAN, Option A) | `pbx3-1/opt/pbx3/scripts/le-first-cert-multi.sh` |
+| LE re-issue with expanded SANs (sync) | `pbx3-1/opt/pbx3/scripts/le-sync-cert-sans.sh` |
 | Regenerate Shorewall `pbx3_inline_fqdn` + restart | `pbx3-1/opt/pbx3/scripts/update-fqdn-inline.sh` (runs `shorewallreload.php`) |
 | Apply active cert (nginx + Asterisk) | `pbx3-1/opt/pbx3/scripts/apply-active-cert.sh` |
 

@@ -1,3 +1,10 @@
+pbx3 (0.0.3-4) noble; urgency=medium
+
+  * Add le-sync-cert-sans.sh for Option A POST /certificates/letsencrypt/sync
+    (certbot --expand, same --cert-name as le-domain).
+
+ -- KOKO <admin@aelintra.com>  Wed, 14 May 2026 18:00:00 +0000
+
 pbx3 (0.0.3-3) noble; urgency=medium
 
   * Option A Step 1: NetHelper copyFirewallTemplates — per-tenant cluster.fqdn,
