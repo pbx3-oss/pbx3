@@ -8,6 +8,7 @@ Target: one server, backend (pbx3) then API/frontend (pbx3api). pbx3 provides DB
 
 - Ubuntu 24.04 LTS
 - Root or sudo
+- install dpkg-dev (`sudo apt install dpkg-dev debhelper build-essential devscripts`)
 - pbx3 `.deb` built from the pbx3 repo (`cd pbx3-1 && dpkg-buildpackage -us -uc -b`)
 - pbx3api source (clone or copy) to be deployed under `/opt/pbx3api`
 
