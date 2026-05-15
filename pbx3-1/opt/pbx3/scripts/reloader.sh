@@ -86,25 +86,25 @@ if [ -e $Customerdata ]; then
 	sqlite3 $SYSDB < $Customerdata
 fi
 
-# Instance identity: ensure globals has exactly one row with pkey = ksuid (idempotent: keep existing pkey if present)
+# Instance identity: globals.id = KSUID, globals.pkey = 'global' (row marker). Legacy DBs may only have KSUID in pkey.
 GCOUNT=$(sqlite3 $SYSDB "SELECT COUNT(*) FROM globals;" 2>/dev/null || echo "0")
-if [ "$GCOUNT" -ge 1 ]; then
-	EXISTING_PKEY=$(sqlite3 $SYSDB "SELECT pkey FROM globals LIMIT 1" 2>/dev/null)
-	if [ -n "$EXISTING_PKEY" ]; then
-		mkdir -p "$(dirname "$INSTANCEID")"
-		echo "$EXISTING_PKEY" > "$INSTANCEID"
-		echo "Instance id already set (globals.pkey): $EXISTING_PKEY"
-	fi
-elif [ "$GCOUNT" -eq 0 ]; then
+if [ "$GCOUNT" -eq 0 ]; then
 	KSUID=$(ksuid 2>/dev/null)
 	if [ -n "$KSUID" ]; then
-		sqlite3 $SYSDB "INSERT INTO globals(pkey) VALUES ('$KSUID');"
+		sqlite3 $SYSDB "INSERT INTO globals(id, pkey) VALUES ('$KSUID', 'global');"
 		mkdir -p "$(dirname "$INSTANCEID")"
 		echo "$KSUID" > "$INSTANCEID"
-		echo "Set instance id (globals.pkey) to $KSUID"
+		echo "Set instance id (globals.id) to $KSUID"
 	else
-		echo "WARNING: ksuid not found (install package ksuid); inserting fallback pkey 'global'" >&2
+		echo "WARNING: ksuid not found (install package ksuid); inserting fallback row pkey 'global'" >&2
 		sqlite3 $SYSDB "INSERT INTO globals(pkey) VALUES ('global');"
+	fi
+elif [ "$GCOUNT" -ge 1 ]; then
+	INSTANCE_KSUID=$(sqlite3 $SYSDB "SELECT COALESCE(NULLIF(trim(id), ''), CASE WHEN length(trim(pkey)) = 27 THEN trim(pkey) ELSE '' END) FROM globals LIMIT 1;" 2>/dev/null)
+	if [ -n "$INSTANCE_KSUID" ]; then
+		mkdir -p "$(dirname "$INSTANCEID")"
+		echo "$INSTANCE_KSUID" > "$INSTANCEID"
+		echo "Instance id file: $INSTANCE_KSUID"
 	fi
 fi
 
@@ -153,6 +153,10 @@ fi
 sqlite3 $SYSDB 'PRAGMA synchronous=1;'
 sqlite3 $SYSDB 'PRAGMA journal_mode=DELETE;' >/dev/null 2>&1
 
+# id / pkey / shortuid (from fqdn when present); safe after every reload
+if [ -x "$SCRIPTS/normalize-globals-identity.sh" ]; then
+	/bin/sh "$SCRIPTS/normalize-globals-identity.sh" || true
+fi
 
 # save a copy of the original installed database (for factory reset)
 #[ "$NEWINSTALL" = true ] && cp $SYSDB $CLEANDB

@@ -1,3 +1,16 @@
+pbx3 (0.0.3-5) noble; urgency=medium
+
+  * Installer: when /opt/pbx3/db/sqlite.db already exists, skip reloader.sh
+    (no full DB recreate); preserve globals FQDN/domain/shortuid unless
+    PBX3_APPLY_INSTANCE_IDENTITY=1 with INSTANCE_FQDN; still run
+    normalize-globals-identity.sh.
+  * postinst: replace misleading "rebuilds the database" warning; note reloader
+    skip when DB exists and suggest normalize-globals-identity.sh for UID/KSUID.
+  * Documentation: INSTALL_SEQUENCE_UBUNTU.md, AGENT_HANDOFF.md aligned with
+    installer and postinst behaviour.
+
+ -- KOKO <admin@aelintra.com>  Fri, 15 May 2026 12:00:00 +0000
+
 pbx3 (0.0.3-4) noble; urgency=medium
 
   * Add le-sync-cert-sans.sh for Option A POST /certificates/letsencrypt/sync

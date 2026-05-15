@@ -117,7 +117,7 @@ if [ -d $SHOREWALL ]; then
     chown www-data:www-data $SHOREWALL/pbx3_inline_limit
 fi
 
-# Instance identity (capture in shell before reloader.sh — it deletes and rebuilds SYSDB).
+# Instance identity (applied only on fresh DB rebuild, unless PBX3_APPLY_INSTANCE_IDENTITY=1 — see below).
 # FQDN = {subdomain}.{DOMAIN_TLD}; hostname = subdomain (for Let's Encrypt later).
 # DOMAIN_TLD: env DOMAIN_TLD, else globals.domain from existing DB, else prompt (default pbx3.com), else pbx3.com.
 # Subdomain: 6 chars from idpwgen unless INSTANCE_FQDN legacy env, or existing fqdn+domain in DB match.
@@ -213,19 +213,41 @@ if command -v php >/dev/null 2>&1; then
     php $SYSPATH/php/utilities/runLinker.php 2>/dev/null || true
 fi
 
-# Create initial DB if missing (fresh install)
-[ ! -e "$SYSDB" ] && /bin/sh $SCRIPTS/create.initial.db
+_DB_ALREADY=0
+[ -f "$SYSDB" ] && _DB_ALREADY=1
 
-#Rebuild the database
-/bin/sh $SCRIPTS/reloader.sh
-chmod 775 $DBPATH
-chmod 664 $SYSDB
+# Create skeleton DB only when none exists (fresh install); do not recreate if already present.
+[ "$_DB_ALREADY" -eq 0 ] && /bin/sh $SCRIPTS/create.initial.db
 
-# Store instance domain + FQDN in globals; hostname = subdomain (first label of FQDN)
-if [ -n "$INSTANCE_FQDN" ] && [ -n "$DOMAIN_TLD" ] && [ -n "$INSTANCE_SUBDOMAIN" ]; then
+_APPLY_IDENT=0
+if [ "$_DB_ALREADY" -eq 0 ]; then
+    echo "No existing $SYSDB: building database via reloader.sh (first provision only)."
+    /bin/sh $SCRIPTS/reloader.sh
+    chmod 775 $DBPATH
+    chmod 664 $SYSDB
+    _APPLY_IDENT=1
+else
+    echo "Existing $SYSDB: skipping reloader.sh (tenant data and instance FQDN are preserved)."
+    chmod 775 $DBPATH 2>/dev/null || true
+    chmod 664 $SYSDB 2>/dev/null || true
+    if [ -x "$SCRIPTS/normalize-globals-identity.sh" ]; then
+        /bin/sh "$SCRIPTS/normalize-globals-identity.sh" || true
+    fi
+    # Explicit host migration only: INSTANCE_FQDN=node.example.com PBX3_APPLY_INSTANCE_IDENTITY=1 installer.sh
+    if [ "${PBX3_APPLY_INSTANCE_IDENTITY:-}" = "1" ] && valid_fqdn "$_LEGACY_FQDN"; then
+        INSTANCE_SUBDOMAIN=$(echo "$_LEGACY_FQDN" | cut -d. -f1)
+        DOMAIN_TLD=$(echo "$_LEGACY_FQDN" | cut -d. -f2-)
+        INSTANCE_FQDN="$_LEGACY_FQDN"
+        echo "PBX3_APPLY_INSTANCE_IDENTITY=1: applying INSTANCE_FQDN=$INSTANCE_FQDN"
+        _APPLY_IDENT=1
+    fi
+fi
+
+# Store instance domain + FQDN in globals; hostname = subdomain (fresh build or explicit migrate)
+if [ "$_APPLY_IDENT" -eq 1 ] && [ -n "$INSTANCE_FQDN" ] && [ -n "$DOMAIN_TLD" ] && [ -n "$INSTANCE_SUBDOMAIN" ]; then
     _sql_dom=$(echo "$DOMAIN_TLD" | sed "s/'/''/g")
     _sql_fq=$(echo "$INSTANCE_FQDN" | sed "s/'/''/g")
-    sqlite3 $SYSDB "UPDATE globals SET domain='$_sql_dom', fqdn='$_sql_fq' WHERE pkey=(SELECT pkey FROM globals LIMIT 1);"
+    sqlite3 $SYSDB "UPDATE globals SET domain='$_sql_dom', fqdn='$_sql_fq', shortuid='$(echo "$INSTANCE_SUBDOMAIN" | sed "s/'/''/g")' WHERE rowid=(SELECT rowid FROM globals LIMIT 1);"
     # Option A / Step 0.2: default tenant row holds node FQDN for cert + firewall domain lists (GET tenants).
     _defcnt=$(sqlite3 "$SYSDB" "SELECT COUNT(*) FROM cluster WHERE pkey='default';" 2>/dev/null || echo 0)
     if [ "${_defcnt:-0}" -ge 1 ]; then
@@ -245,7 +267,11 @@ if [ -n "$INSTANCE_FQDN" ] && [ -n "$DOMAIN_TLD" ] && [ -n "$INSTANCE_SUBDOMAIN"
         sed -i 's/^127\.0\.1\.1[[:space:]].*/127.0.1.1\t'"$INSTANCE_SUBDOMAIN"'/' /etc/hosts
         grep -q '^127\.0\.1\.1[[:space:]]' /etc/hosts || sed -i '2i 127.0.1.1\t'"$INSTANCE_SUBDOMAIN" /etc/hosts
     fi
-    echo "Set globals.domain to $DOMAIN_TLD, globals.fqdn to $INSTANCE_FQDN, hostname to $INSTANCE_SUBDOMAIN"
+    echo "Set globals.domain to $DOMAIN_TLD, globals.fqdn to $INSTANCE_FQDN, globals.shortuid to $INSTANCE_SUBDOMAIN, hostname to $INSTANCE_SUBDOMAIN"
+fi
+
+if [ -x "$SCRIPTS/normalize-globals-identity.sh" ]; then
+    /bin/sh "$SCRIPTS/normalize-globals-identity.sh" || true
 fi
 
 # Run setip once (network detection, shorewall/fail2ban/Asterisk localnet, /etc/issue)

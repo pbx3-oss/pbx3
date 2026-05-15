@@ -1,6 +1,25 @@
 #!/bin/bash
-# Full setup (fail2ban, DB, CDR MySQL, instance id) is done by
-# running /opt/pbx3/scripts/installer.sh (idempotent). Not run from here.
+set -e
+# Package install/upgrade only. Full first-time setup: /opt/pbx3/scripts/installer.sh after install.
 
-# Install date
 date --iso-8601=minutes > /opt/pbx3/.install-date
+
+NORM=/opt/pbx3/scripts/normalize-globals-identity.sh
+if [ -x "$NORM" ] && [ -f /opt/pbx3/db/sqlite.db ]; then
+	"$NORM" || true
+fi
+
+if [ ! -f /opt/pbx3/db/sqlite.db ]; then
+	cat <<'EOF'
+
+pbx3 package installed.
+
+Next step (run once on this server):
+  sudo /opt/pbx3/scripts/installer.sh
+
+Once /opt/pbx3/db/sqlite.db exists, re-running installer.sh skips reloader (no full DB rebuild).
+To fix legacy empty UID/KSUID in globals without re-running the installer:
+  sudo /opt/pbx3/scripts/normalize-globals-identity.sh
+
+EOF
+fi
