@@ -2,11 +2,25 @@
 set -e
 # Package install/upgrade only. Full first-time setup: /opt/pbx3/scripts/installer.sh after install.
 
-date --iso-8601=minutes > /opt/pbx3/.install-date
+SYSPATH=/opt/pbx3
+
+date --iso-8601=minutes > "$SYSPATH/.install-date"
 
 # .deb copy may not preserve git execute bits on helper scripts.
-if [ -d /opt/pbx3/scripts ]; then
-	chmod 755 /opt/pbx3/scripts/*.sh 2>/dev/null || true
+if [ -d "$SYSPATH/scripts" ]; then
+	chmod 755 "$SYSPATH/scripts"/*.sh 2>/dev/null || true
+fi
+
+# Ensure runit services exist after upgrade (prerm no longer removes /etc/service on upgrade).
+if [ -d "$SYSPATH/service/sys-ua-helper" ]; then
+	chmod +x "$SYSPATH/service/sys-ua-helper/run" 2>/dev/null || true
+	[ ! -L /etc/service/sys-ua-helper ] && ln -sf "$SYSPATH/service/sys-ua-helper" /etc/service/sys-ua-helper
+	sv u sys-ua-helper 2>/dev/null || true
+fi
+if [ -d "$SYSPATH/service/sys-ua-siplog" ]; then
+	chmod +x "$SYSPATH/service/sys-ua-siplog/run" 2>/dev/null || true
+	[ ! -L /etc/service/sys-ua-siplog ] && ln -sf "$SYSPATH/service/sys-ua-siplog" /etc/service/sys-ua-siplog
+	sv u sys-ua-siplog 2>/dev/null || true
 fi
 
 NORM=/opt/pbx3/scripts/normalize-globals-identity.sh

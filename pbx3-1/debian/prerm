@@ -1,20 +1,39 @@
 #!/bin/bash
+# dpkg runs maintainer scripts with set -e.
+# Do not remove /etc/service/* on upgrade — only stop services; links are recreated if missing in postinst.
 
-##
-## ToDo replace original asterisk files
-##
+SYSPATH=/opt/pbx3
 
+stop_runit_service() {
+	local name="$1"
+	if [ -L "/etc/service/${name}" ] || [ -d "/etc/service/${name}" ]; then
+		sv d "$name" 2>/dev/null || true
+	fi
+}
 
-sv d sys-ua-helper
+case "$1" in
+	remove|upgrade|deconfigure|failed-upgrade)
+		stop_runit_service sys-ua-helper
+		stop_runit_service sys-ua-siplog
+		;;
+esac
 
-# nginx/API site cleanup is done by pbx3api package when it is removed
+# Remove symlinks only on package removal, not on upgrade (files under /opt/pbx3 are replaced in place).
+case "$1" in
+	remove|deconfigure)
+		[ -L /etc/cron.d/pbx3 ] && rm -f /etc/cron.d/pbx3
+		[ -L /etc/service/sys-ua-helper ] && rm -f /etc/service/sys-ua-helper
+		[ -L /etc/service/sys-ua-siplog ] && rm -f /etc/service/sys-ua-siplog
+		[ -L /etc/fail2ban/jail.local ] && rm -f /etc/fail2ban/jail.local
+		[ -L /etc/fail2ban/action.d/shorewall.local ] && rm -f /etc/fail2ban/action.d/shorewall.local
+		;;
+	purge)
+		[ -e /etc/cron.d/pbx3 ] && rm -f /etc/cron.d/pbx3
+		[ -e /etc/service/sys-ua-helper ] && rm -f /etc/service/sys-ua-helper
+		[ -e /etc/service/sys-ua-siplog ] && rm -f /etc/service/sys-ua-siplog
+		[ -L /etc/fail2ban/jail.local ] && rm -f /etc/fail2ban/jail.local
+		[ -L /etc/fail2ban/action.d/shorewall.local ] && rm -f /etc/fail2ban/action.d/shorewall.local
+		;;
+esac
 
-[ -L /etc/cron.d/pbx3 ] && rm -rf /etc/cron.d/pbx3
-
-rm -rf /etc/service/sys*
-
-[ -L /etc/fail2ban/jail.local ] && rm -f /etc/fail2ban/jail.local
-[ -L /etc/fail2ban/action.d/shorewall.local ] && rm -f /etc/fail2ban/action.d/shorewall.local
-
-# debsetlan (setip) is no longer a systemd service; installer runs setip directly
-# systemctl disable debsetlan 2>/dev/null || true
+exit 0

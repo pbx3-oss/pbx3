@@ -1,3 +1,11 @@
+pbx3 (0.0.3-8) noble; urgency=medium
+
+  * Fix prerm: stop sys-ua-helper only if the service exists; do not rm
+    /etc/service/sys* on upgrade (was breaking dpkg install/upgrade).
+  * postinst: restore runit symlinks and start services after upgrade.
+
+ -- KOKO <admin@aelintra.com>  Sun, 17 May 2026 12:00:00 +0000
+
 pbx3 (0.0.3-7) noble; urgency=medium
 
   * Fix LE helper scripts: le-port80-open/close and apply-active-cert were
