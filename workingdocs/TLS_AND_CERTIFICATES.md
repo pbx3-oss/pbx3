@@ -132,6 +132,8 @@ Detail: **`CERTIFICATES_PANEL_AND_API.md`** §5.
 | **INSTALL_SEQUENCE_UBUNTU.md** | install order |
 | **pbx3api** `docs/deployment-nginx.md`, **README.md** | deploy + ownership |
 | **pbx3spa** `TRUNK_ROUTE_MULTITENANCY.md` | tenant move |
+| **pbx3spa** `CENTRAL_ADMIN_DIRECTION.md` | **Future:** central admin + instance directory (Model B); per-node TLS remains data-plane |
+| **`pbx3-directory/`** (repo root stub) | Instance index schema v0 (S3/map TBD) |
 
 ---
 

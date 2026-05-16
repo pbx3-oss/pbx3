@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/instance-record.v0.json",
+  "title": "PBX3 instance directory record (v0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "fqdn", "api_base_url", "label", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable instance id (prefer match to globals.id KSUID on the node)"
+    },
+    "fqdn": {
+      "type": "string",
+      "format": "hostname",
+      "description": "Public DNS hostname (globals.fqdn)"
+    },
+    "api_base_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Laravel API base including path, e.g. https://node.pbx3.com:44300/api"
+    },
+    "label": {
+      "type": "string",
+      "description": "Short display name in instance picker"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "maintenance", "decommissioned"]
+    },
+    "org_id": {
+      "type": "string",
+      "description": "Owning organisation / MSP customer (ACL filter)"
+    },
+    "service_id": {
+      "type": "string",
+      "description": "Optional service tier or product line"
+    },
+    "region": {
+      "type": "string",
+      "description": "Optional cloud region or site code"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Operator notes (not shown in default UI)"
+    }
+  }
+}

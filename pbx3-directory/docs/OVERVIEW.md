@@ -1,0 +1,57 @@
+# Instance directory — overview (v0 stub)
+
+## Problem
+
+PBX3 is a **federation of instances**. Operators should not type `https://host:44300/api` at login. They should pick an **instance** from a list scoped to their organisation/service.
+
+## Solution shape
+
+1. **Directory** — versioned JSON (or API mirroring it) listing instance records.
+2. **Central auth** — returns user identity + allowed `instance_id` values (or org filter).
+3. **pbx3spa** — after login, `GET` directory (filtered) → picker → set `baseUrl` from `api_base_url`.
+
+```text
+  Central SPA                    Directory (S3/API)
+       |                                |
+       |  list instances (filtered)     |
+       |------------------------------->|
+       |<-------------------------------|
+       |                                |
+       |  POST .../auth/login           |
+       |------------------------------->|  (central — TBD)
+       |                                |
+       |  API calls                     |
+       |------------------------------->|  PBX instance :44300
+```
+
+## Instance record (v0)
+
+See **`../schema/instance-record.v0.json`** and example **`../schema/instance-index.v0.json`**.
+
+Required fields for SPA v0:
+
+- `id` — stable instance identifier
+- `fqdn` — public hostname
+- `api_base_url` — full API prefix including `/api`
+- `label` — UI display string
+
+## Open questions (to resolve before build)
+
+| Topic | Options |
+|--------|---------|
+| **Storage** | S3 only vs S3 + caching API vs DB |
+| **Who writes records** | Provisioner on install, central registrar, manual |
+| **ACL** | Directory embeds `allowed_orgs[]` vs auth service returns allowed ids |
+| **Health** | Inline `status` vs separate monitoring pipeline |
+| **Sync with node** | How `globals.id` / `globals.fqdn` register on first boot |
+
+## Relationship to per-node TLS
+
+Directory stores **`api_base_url`** and **`fqdn`**; **certificate issuance** remains on the node (pbx3 LE scripts, `tls-active.json`). Central UI may **display** cert expiry from instance API (`GET /certificates/letsencrypt`) after connect — not from directory alone.
+
+## Next steps (after LE merge)
+
+1. Agree v0 schema with one real instance (e.g. `08jzwn.pbx3.com`).
+2. Publish example index to dev S3 (or static file URL for SPA dev).
+3. SPA: instance picker + `VITE_DIRECTORY_URL` for dev.
+4. Central auth design doc (separate).
