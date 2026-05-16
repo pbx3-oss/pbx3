@@ -202,6 +202,11 @@ if [ -z "$INSTANCE_SUBDOMAIN" ]; then
     fi
 fi
 
+# DNS labels are case-insensitive; keep the subdomain canonical lowercase (human + URL consistency).
+if [ -n "$INSTANCE_SUBDOMAIN" ]; then
+    INSTANCE_SUBDOMAIN=$(normalize_fqdn "$INSTANCE_SUBDOMAIN")
+fi
+
 if [ -n "$INSTANCE_SUBDOMAIN" ] && [ -n "$DOMAIN_TLD" ]; then
     INSTANCE_FQDN="${INSTANCE_SUBDOMAIN}.${DOMAIN_TLD}"
 fi

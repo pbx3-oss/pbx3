@@ -32,7 +32,7 @@
     - **length = 6**
     - **charset = `0123456789bcdfghjkmnpqrstvwxyz`**
 
-This is the **shortuid profile**. For passwords, call with explicit `-length 12` and a larger `-charset` (e.g. including uppercase).
+This is the **shortuid profile**. For passwords, call with explicit `-length 12` and a larger `-charset` (e.g. including uppercase). When `-charset` matches the default shortuid charset, the binary **lower-cases** the result (DNS / URL canonical form); other charsets are left as-is so passwords can keep mixed case.
 
 ---
 
@@ -41,7 +41,7 @@ This is the **shortuid profile**. For passwords, call with explicit `-length 12`
 ### 3.1 Shortuid (default)
 
 - **Length:** 6
-- **Charset:** `0123456789bcdfghjkmnpqrstvwxyz`
+- **Charset:** `0123456789bcdfghjkmnpqrstvwxyz` (lowercase letters and digits only)
 - **Used by:** HelperClass::generate(), and thus dumper.php (via helper::generate())
 - idpwgen’s built-in defaults match this; call with no args or with `-length 6 -charset "0123456789bcdfghjkmnpqrstvwxyz"`.
 

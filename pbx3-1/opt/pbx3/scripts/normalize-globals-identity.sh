@@ -29,6 +29,10 @@ _g_pkey=$(sqlite3 "$SYSDB" "SELECT COALESCE(pkey,'') FROM globals LIMIT 1;" 2>/d
 _g_fqdn=$(sqlite3 "$SYSDB" "SELECT COALESCE(fqdn,'') FROM globals LIMIT 1;" 2>/dev/null)
 _g_short=$(sqlite3 "$SYSDB" "SELECT COALESCE(shortuid,'') FROM globals LIMIT 1;" 2>/dev/null)
 
+_lc_label() {
+    echo "$1" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
+}
+
 changed=0
 
 if [ -z "$_g_id" ] && [ "${#_g_pkey}" -eq 27 ]; then
@@ -40,11 +44,35 @@ if [ -z "$_g_id" ] && [ "${#_g_pkey}" -eq 27 ]; then
 fi
 
 if [ -z "$_g_short" ] && [ -n "$_g_fqdn" ] && echo "$_g_fqdn" | grep -q '\.'; then
-    _g_short=$(echo "$_g_fqdn" | cut -d. -f1)
+    _g_short=$(_lc_label "$(echo "$_g_fqdn" | cut -d. -f1)")
     _e_short=$(_sql_escape "$_g_short")
     sqlite3 "$SYSDB" "UPDATE globals SET shortuid='$_e_short' WHERE rowid=(SELECT rowid FROM globals LIMIT 1);"
     echo "Set globals.shortuid to $_g_short (from fqdn)"
     changed=1
+fi
+
+# Canonical lowercase shortuid (DNS / URL consistency).
+if [ -n "$_g_short" ]; then
+    _sl=$(_lc_label "$_g_short")
+    if [ "$_g_short" != "$_sl" ]; then
+        sqlite3 "$SYSDB" "UPDATE globals SET shortuid='$(_sql_escape "$_sl")' WHERE rowid=(SELECT rowid FROM globals LIMIT 1);"
+        echo "Lowercased globals.shortuid to $_sl"
+        _g_short="$_sl"
+        changed=1
+    fi
+fi
+
+# Lowercase first label of globals.fqdn if needed (matches shortuid / DNS behaviour).
+if [ -n "$_g_fqdn" ] && echo "$_g_fqdn" | grep -q '\.'; then
+    _first=$(_lc_label "$(echo "$_g_fqdn" | cut -d. -f1)")
+    _rest=$(echo "$_g_fqdn" | cut -d. -f2-)
+    _fq_new="${_first}.${_rest}"
+    if [ "$_fq_new" != "$_g_fqdn" ]; then
+        sqlite3 "$SYSDB" "UPDATE globals SET fqdn='$(_sql_escape "$_fq_new")' WHERE rowid=(SELECT rowid FROM globals LIMIT 1);"
+        echo "Lowercased globals.fqdn first label -> $_fq_new"
+        _g_fqdn="$_fq_new"
+        changed=1
+    fi
 fi
 
 if [ -n "$_g_id" ]; then

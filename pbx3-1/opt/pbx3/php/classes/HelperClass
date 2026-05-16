@@ -99,7 +99,8 @@ private static function runIdpwgen($length, $charset) {
 public static function generate($length = 6, $charset = '')
 {
 	$charset = $charset ?: self::$DEFAULT_CHARSET;
-	return self::runIdpwgen($length, $charset);
+	$out = self::runIdpwgen($length, $charset);
+	return strtolower($out);
 }
 
 /**

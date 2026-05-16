@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"strings"
 )
 
 func GenerateID(length int, charset string) (string, error) {
@@ -36,6 +37,7 @@ func GenerateID(length int, charset string) (string, error) {
 func main() {
 
 	// Defaults preserve existing behaviour when no flags are provided.
+	// Shortuid profile: 6 chars, DNS-safe (lowercase + digits, no vowels / ambiguous glyphs).
 	defaultLength := 6
 	defaultCharset := "0123456789bcdfghjkmnpqrstvwxyz"
 
@@ -47,6 +49,11 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
+	}
+
+	// Default charset is lowercase-only; force lower so callers cannot inject uppercase via a stale binary.
+	if *charset == defaultCharset {
+		id = strings.ToLower(id)
 	}
 
 	fmt.Println(id)

@@ -204,11 +204,13 @@ $tablesdirectory=DBTABLEDUMPS . $prefix .'tabledumps';
 				} 
 // Deal with shortuids - allocate a shortuid to any table with a shortuid column (unless its an autoincrement ID or it already has a shortuid)
 				if ($col['name'] == 'shortuid') {
-// Check format - we don't want to overwrite a previously issued shortuid (6 chars, idpwgen charset)
-						if (!preg_match("/^[0-9bcdfghjkmnpqrstvwxyz]{6}$/", $row[$col['name']])) {
+// Check format - we don't want to overwrite a previously issued shortuid (6 chars, idpwgen charset, lowercase for DNS)
+						$sv = strtolower(trim((string) ($row[$col['name']] ?? '')));
+						if (!preg_match("/^[0-9bcdfghjkmnpqrstvwxyz]{6}$/", $sv)) {
 // set the shortuid
-							$row[$col['name']] = trim(helper::generate());
+							$sv = trim(helper::generate());
 						}
+						$row[$col['name']] = $sv;
 				} 
 				$myData = $row[$col['name']];
 				$myCol = $col['name'];
