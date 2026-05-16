@@ -11,6 +11,14 @@ if [ -d "$SYSPATH/scripts" ]; then
 	chmod 755 "$SYSPATH/scripts"/*.sh 2>/dev/null || true
 fi
 
+# idpwgen is built on the target host (never ship/copy a Mac binary). Required by pbx3api tenant/extension create.
+if [ -f "$SYSPATH/golang/idpwgen.go" ] && command -v go >/dev/null 2>&1; then
+	rm -f "$SYSPATH/golang/idpwgen"
+	if (cd "$SYSPATH/golang" && go build -o idpwgen idpwgen.go); then
+		chmod 755 "$SYSPATH/golang/idpwgen" 2>/dev/null || true
+	fi
+fi
+
 # Ensure runit services exist after upgrade (prerm no longer removes /etc/service on upgrade).
 if [ -d "$SYSPATH/service/sys-ua-helper" ]; then
 	chmod +x "$SYSPATH/service/sys-ua-helper/run" 2>/dev/null || true

@@ -7,9 +7,9 @@
 LE_WEBROOT=/opt/pbx3/var/acme-challenge
 LE_DOMAIN_FILE=/opt/pbx3/etc/identity/le-domain
 
-# Run a script whether or not the .deb left +x (invoke via sh).
+# Run a script whether or not the .deb left +x (PBX3 LE scripts are bash; do not use /bin/sh).
 le_run_script() {
-	/bin/sh "$@"
+	/bin/bash "$@"
 }
 
 ensure_le_webroot() {

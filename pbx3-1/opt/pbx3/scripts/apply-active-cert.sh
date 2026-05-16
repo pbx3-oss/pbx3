@@ -39,7 +39,7 @@ fi
 
 write_tls_active_json() {
   mkdir -p "$(dirname "$TLS_ACTIVE_JSON")"
-  local expires issuer expires_json issuer_json domain_json sans_json comma s esc
+  local expires issuer expires_json issuer_json domain_json sans_json comma s esc _sans_tmp
   expires=""
   issuer=""
   expires_json="null"
@@ -53,12 +53,15 @@ write_tls_active_json() {
       expires=$(date -u -d "$expires" '+%Y-%m-%d' 2>/dev/null || true)
     fi
     issuer=$(openssl x509 -noout -issuer -in "$CERT" 2>/dev/null | sed -n 's/^issuer=//p' | head -1)
+    _sans_tmp=$(mktemp) || exit 1
+    openssl x509 -noout -text -in "$CERT" 2>/dev/null | tr ',' '\n' | sed -n 's/^[[:space:]]*DNS://p' >"$_sans_tmp"
     while IFS= read -r s; do
       [ -z "$s" ] && continue
       esc=$(printf '%s' "$s" | sed 's/\\/\\\\/g; s/"/\\"/g')
       sans_json+="${comma}\"${esc}\""
       comma=","
-    done < <(openssl x509 -noout -text -in "$CERT" 2>/dev/null | tr ',' '\n' | sed -n 's/^[[:space:]]*DNS://p')
+    done <"$_sans_tmp"
+    rm -f "$_sans_tmp"
   fi
   sans_json+="]"
   if [ "$sans_json" = "[]" ] && [ -n "${TLS_DOMAIN:-}" ]; then
