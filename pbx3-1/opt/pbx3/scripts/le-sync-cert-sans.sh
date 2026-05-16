@@ -1,8 +1,9 @@
 #!/bin/bash
-# Re-issue Let's Encrypt certificate with an expanded SAN list (Option A sync).
+# Re-issue Let's Encrypt certificate with an expanded SAN list (Option A sync, HTTP-01 webroot by default).
 # Usage: le-sync-cert-sans.sh <email> <fqdn1> [<fqdn2> ...]
 # fqdn1 must match /opt/pbx3/etc/identity/le-domain (certbot --cert-name).
-# Run as root. Requires certbot. Port 80 must be free for --standalone.
+# Run as root. Requires certbot, nginx ACME site, port 80 reachable.
+# PBX3_LE_STAGING=1 or PBX3_LE_STANDALONE=1 — see le-acme-common.sh
 
 set -e
 if [ $# -lt 2 ]; then
@@ -12,9 +13,12 @@ fi
 EMAIL="$1"
 shift
 
-LE_DOMAIN_FILE="/opt/pbx3/etc/identity/le-domain"
+SCRIPT_DIR="$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")"
+# shellcheck source=le-acme-common.sh
+. "$SCRIPT_DIR/le-acme-common.sh"
+
 if [ ! -f "$LE_DOMAIN_FILE" ]; then
-	echo "No le-domain file at $LE_DOMAIN_FILE" >&2
+	echo "No le-domain file at /opt/pbx3/etc/identity/le-domain" >&2
 	exit 1
 fi
 PRIMARY=$(tr -d '\n' < "$LE_DOMAIN_FILE")
@@ -27,7 +31,6 @@ if [ "$1" != "$PRIMARY" ]; then
 	exit 1
 fi
 
-SCRIPT_DIR="$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")"
 OPEN_SCRIPT="$SCRIPT_DIR/le-port80-open.sh"
 CLOSE_SCRIPT="$SCRIPT_DIR/le-port80-close.sh"
 APPLY_SCRIPT="$SCRIPT_DIR/apply-active-cert.sh"
@@ -42,6 +45,8 @@ close_on_exit() {
 }
 trap close_on_exit EXIT
 
+le_require_nginx_for_webroot
 "$OPEN_SCRIPT"
-certbot certonly --standalone --cert-name "$PRIMARY" "${CERTBOT_D[@]}" -m "$EMAIL" --expand --agree-tos --non-interactive 2>&1
+# shellcheck disable=SC2046
+certbot certonly $(le_certbot_auth_args) $(le_certbot_staging_args) --cert-name "$PRIMARY" "${CERTBOT_D[@]}" -m "$EMAIL" --expand --agree-tos --non-interactive 2>&1
 "$APPLY_SCRIPT"

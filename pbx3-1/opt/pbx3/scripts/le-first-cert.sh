@@ -1,7 +1,8 @@
 #!/bin/bash
-# First-time Let's Encrypt certificate: open port 80, run certbot certonly --standalone, write le-domain, apply cert, close 80.
+# First-time Let's Encrypt certificate (HTTP-01 webroot by default).
 # Usage: le-first-cert.sh <fqdn> <email>
-# Run as root. Requires certbot. Port 80 must be free for certbot --standalone (nothing else listening).
+# Run as root. Requires certbot, nginx ACME site (pbx3-acme-http.conf), port 80 reachable.
+# PBX3_LE_STAGING=1 or PBX3_LE_STANDALONE=1 — see le-acme-common.sh
 
 set -e
 if [ $# -lt 2 ]; then
@@ -11,18 +12,21 @@ fi
 FQDN="$1"
 EMAIL="$2"
 SCRIPT_DIR="$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")"
+# shellcheck source=le-acme-common.sh
+. "$SCRIPT_DIR/le-acme-common.sh"
 OPEN_SCRIPT="$SCRIPT_DIR/le-port80-open.sh"
 CLOSE_SCRIPT="$SCRIPT_DIR/le-port80-close.sh"
 APPLY_SCRIPT="$SCRIPT_DIR/apply-active-cert.sh"
-LE_DOMAIN_FILE="/opt/pbx3/etc/identity/le-domain"
 
 close_on_exit() {
     "$CLOSE_SCRIPT" 2>/dev/null || true
 }
 trap close_on_exit EXIT
 
+le_require_nginx_for_webroot
 "$OPEN_SCRIPT"
-certbot certonly --standalone -d "$FQDN" -m "$EMAIL" --agree-tos --non-interactive
+# shellcheck disable=SC2046
+certbot certonly $(le_certbot_auth_args) $(le_certbot_staging_args) -d "$FQDN" -m "$EMAIL" --agree-tos --non-interactive
 mkdir -p "$(dirname "$LE_DOMAIN_FILE")"
 echo "$FQDN" > "$LE_DOMAIN_FILE"
 "$APPLY_SCRIPT"

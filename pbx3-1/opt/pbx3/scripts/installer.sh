@@ -66,6 +66,10 @@ usermod -a -G ssl-cert www-data 2>/dev/null || true
 
 # Certificates panel: dirs for LE identity and custom (purchased) cert; create nginx snippet (snakeoil until LE/custom).
 mkdir -p /opt/pbx3/etc/identity /opt/pbx3/etc/ssl/custom 2>/dev/null || true
+mkdir -p /opt/pbx3/var/acme-challenge 2>/dev/null || true
+chown www-data:www-data /opt/pbx3/var/acme-challenge 2>/dev/null || true
+chmod 755 /opt/pbx3/var/acme-challenge 2>/dev/null || true
+[ -x /opt/pbx3/scripts/le-install-nginx-acme.sh ] && /opt/pbx3/scripts/le-install-nginx-acme.sh 2>/dev/null || true
 [ -x /opt/pbx3/scripts/apply-active-cert.sh ] && /opt/pbx3/scripts/apply-active-cert.sh 2>/dev/null || true
 
 # Use our versions of asterisk/modules, asterisk/http & asterisk/pjsip
