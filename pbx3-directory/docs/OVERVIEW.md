@@ -49,9 +49,11 @@ Required fields for SPA v0:
 
 Directory stores **`api_base_url`** and **`fqdn`**; **certificate issuance** remains on the node (pbx3 LE scripts, `tls-active.json`). Central UI may **display** cert expiry from instance API (`GET /certificates/letsencrypt`) after connect — not from directory alone.
 
-## Next steps (after LE merge)
+## Next steps (LE merged 2026-05-17)
 
-1. Agree v0 schema with one real instance (e.g. `08jzwn.pbx3.com`).
-2. Publish example index to dev S3 (or static file URL for SPA dev).
-3. SPA: instance picker + `VITE_DIRECTORY_URL` for dev.
-4. Central auth design doc (separate).
+See **`PLANNING_HANDOFF.md`** for phased checklist (A–E).
+
+1. Agree v0 schema with test instance **`08jzwn.pbx3.com`** (refresh `globals.id` on node).
+2. Publish dev index (S3 or static URL).
+3. SPA: instance picker + `VITE_INSTANCE_DIRECTORY_URL` for dev.
+4. Central auth design doc (separate; do not block picker on full auth).
