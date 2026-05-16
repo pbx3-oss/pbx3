@@ -1,3 +1,18 @@
+pbx3 (0.0.3-6) noble; urgency=medium
+
+  * Let's Encrypt HTTP-01 via webroot (/opt/pbx3/var/acme-challenge) so nginx
+    can stay up during issue, sync, and renew; nginx pbx3-acme-http.conf
+    (default_server on port 80 for ACME only). PBX3_LE_STAGING=1 and
+    PBX3_LE_STANDALONE=1 for staging and break-glass.
+  * Add le-instance-bootstrap.sh: first instance cert after DNS (node +
+    tenant cluster.fqdn SANs); le-acme-common.sh, le-install-nginx-acme.sh.
+  * Renewal cron: daily 03:17 in /etc/cron.d/pbx3 (log:
+    /var/log/pbx3-le-renew.log).
+  * Shortuid: canonical lowercase in idpwgen path, normalize-globals-identity,
+    installer, HelperClass/dumper (DNS-safe host labels).
+
+ -- KOKO <admin@aelintra.com>  Sun, 17 May 2026 12:00:00 +0000
+
 pbx3 (0.0.3-5) noble; urgency=medium
 
   * Installer: when /opt/pbx3/db/sqlite.db already exists, skip reloader.sh
