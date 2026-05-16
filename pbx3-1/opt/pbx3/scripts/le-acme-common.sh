@@ -7,6 +7,11 @@
 LE_WEBROOT=/opt/pbx3/var/acme-challenge
 LE_DOMAIN_FILE=/opt/pbx3/etc/identity/le-domain
 
+# Run a script whether or not the .deb left +x (invoke via sh).
+le_run_script() {
+	/bin/sh "$@"
+}
+
 ensure_le_webroot() {
 	mkdir -p "$LE_WEBROOT"
 	chown www-data:www-data "$LE_WEBROOT" 2>/dev/null || true

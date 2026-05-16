@@ -27,14 +27,14 @@ for d in "$@"; do
 done
 
 close_on_exit() {
-	"$CLOSE_SCRIPT" 2>/dev/null || true
+	le_run_script "$CLOSE_SCRIPT" 2>/dev/null || true
 }
 trap close_on_exit EXIT
 
 le_require_nginx_for_webroot
-"$OPEN_SCRIPT"
+le_run_script "$OPEN_SCRIPT"
 # shellcheck disable=SC2046
 certbot certonly $(le_certbot_auth_args) $(le_certbot_staging_args) "${CERTBOT_D[@]}" -m "$EMAIL" --agree-tos --non-interactive
 mkdir -p "$(dirname "$LE_DOMAIN_FILE")"
 echo "$PRIMARY" > "$LE_DOMAIN_FILE"
-"$APPLY_SCRIPT"
+le_run_script "$APPLY_SCRIPT"

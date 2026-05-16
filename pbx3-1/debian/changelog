@@ -1,3 +1,14 @@
+pbx3 (0.0.3-7) noble; urgency=medium
+
+  * Fix LE helper scripts: le-port80-open/close and apply-active-cert were
+    non-executable in the package; invoke via sh and chmod +x in postinst.
+  * le-install-nginx-acme.sh: disable sites-enabled/default to avoid duplicate
+    default_server on port 80.
+  * apply-active-cert.sh: write /opt/pbx3/etc/identity/tls-active.json so the
+    Certificates API can read LE status without traversing /etc/letsencrypt/live.
+
+ -- KOKO <admin@aelintra.com>  Sat, 16 May 2026 18:00:00 +0000
+
 pbx3 (0.0.3-6) noble; urgency=medium
 
   * Let's Encrypt HTTP-01 via webroot (/opt/pbx3/var/acme-challenge) so nginx

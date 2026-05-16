@@ -4,6 +4,11 @@ set -e
 
 date --iso-8601=minutes > /opt/pbx3/.install-date
 
+# .deb copy may not preserve git execute bits on helper scripts.
+if [ -d /opt/pbx3/scripts ]; then
+	chmod 755 /opt/pbx3/scripts/*.sh 2>/dev/null || true
+fi
+
 NORM=/opt/pbx3/scripts/normalize-globals-identity.sh
 if [ -x "$NORM" ] && [ -f /opt/pbx3/db/sqlite.db ]; then
 	"$NORM" || true

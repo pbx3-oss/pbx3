@@ -12,11 +12,11 @@ CLOSE_SCRIPT="$SCRIPT_DIR/le-port80-close.sh"
 DEPLOY_HOOK="$SCRIPT_DIR/apply-active-cert.sh"
 
 close_on_exit() {
-	"$CLOSE_SCRIPT" 2>/dev/null || true
+	le_run_script "$CLOSE_SCRIPT" 2>/dev/null || true
 }
 trap close_on_exit EXIT
 
 le_require_nginx_for_webroot
 ensure_le_webroot
-"$OPEN_SCRIPT"
-certbot renew --quiet --deploy-hook "$DEPLOY_HOOK" 2>&1
+le_run_script "$OPEN_SCRIPT"
+certbot renew --quiet --deploy-hook "/bin/sh $DEPLOY_HOOK" 2>&1

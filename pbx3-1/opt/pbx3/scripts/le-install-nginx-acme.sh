@@ -22,6 +22,13 @@ chown www-data:www-data /opt/pbx3/var/acme-challenge 2>/dev/null || true
 chmod 755 /opt/pbx3/var/acme-challenge
 
 mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+
+# Ubuntu package nginx ships sites-enabled/default with default_server on :80 — conflicts with ACME vhost.
+if [ -L /etc/nginx/sites-enabled/default ] || [ -f /etc/nginx/sites-enabled/default ]; then
+	rm -f /etc/nginx/sites-enabled/default
+	echo "Disabled /etc/nginx/sites-enabled/default (PBX3 ACME uses default_server on port 80)."
+fi
+
 cp -f "$SRC" "$AVAIL"
 ln -sfn "$AVAIL" "$ENABLED"
 nginx -t

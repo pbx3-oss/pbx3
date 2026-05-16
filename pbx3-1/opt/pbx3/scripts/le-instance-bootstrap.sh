@@ -106,7 +106,7 @@ if [ "${#SAN_ARGS[@]}" -gt 1 ]; then
 fi
 
 echo "Issuing certificate (webroot=${LE_WEBROOT})..."
-"$SCRIPT_DIR/le-first-cert-multi.sh" "$PRIMARY" "$EMAIL" "${_extra[@]}"
+le_run_script "$SCRIPT_DIR/le-first-cert-multi.sh" "$PRIMARY" "$EMAIL" "${_extra[@]}"
 
 echo ""
 echo "Done. Certificate files under /etc/letsencrypt/live/$(tr -d '\n' < "$LE_DOMAIN_FILE")/"
