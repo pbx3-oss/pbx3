@@ -2,9 +2,12 @@
 
 **AI: start here** for Model B / central admin / instance directory work.
 
+**Design rules (read first):** **`DESIGN_RULES.md`** — nodes never depend on directory for calls; directory is a signpost; login must work when directory is down.  
 **Product direction:** `pbx3spa/workingdocs/CENTRAL_ADMIN_DIRECTION.md`  
 **SPA handoff (broader):** `pbx3spa/workingdocs/SESSION_HANDOFF.md`  
 **Per-instance TLS (done):** `pbx3/workingdocs/TLS_AND_CERTIFICATES.md`
+
+**Branch:** **`directory`** (all three repos).
 
 ---
 
@@ -104,8 +107,9 @@ Refresh **`id`** from `sqlite3 /opt/pbx3/db/sqlite.db "SELECT id FROM globals;"`
 
 ### Phase C — SPA instance picker (minimal)
 
-- [ ] After login (or before instance API login): fetch directory → list **label** + **fqdn**.
+- [ ] After login (or before instance API login): fetch directory → list **label** + **fqdn** (**best-effort** — see **`DESIGN_RULES.md` Rule 3**).
 - [ ] On select: set `baseUrl` from `api_base_url`; persist in sessionStorage.
+- [ ] **Directory unavailable:** warning + manual `api_base_url` / recent instances; instance Sanctum login must still work.
 - [ ] Keep **advanced override** for engineering (see `DEV_ENVIRONMENT.md`).
 - [ ] Top bar **Instance** chip shows directory **label** / **fqdn** (already have `globalsFqdn` from connected instance).
 
@@ -171,11 +175,12 @@ Use this node as the **golden example** when validating schema and SPA picker.
 
 ## 8. Read order for next session
 
-1. This file  
-2. `CENTRAL_ADMIN_DIRECTION.md`  
-3. `OVERVIEW.md`  
-4. `schema/instance-record.v0.json` + `instance-index.v0.json`  
-5. `AUTH_PATTERNS.md` (§4 federated)  
-6. `pbx3spa/workingdocs/DEV_ENVIRONMENT.md` (API URL today)
+1. **`DESIGN_RULES.md`**  
+2. This file  
+3. `CENTRAL_ADMIN_DIRECTION.md`  
+4. `OVERVIEW.md`  
+5. `schema/instance-record.v0.json` + `instance-index.v0.json`  
+6. `AUTH_PATTERNS.md` (§4 federated)  
+7. `pbx3spa/workingdocs/DEV_ENVIRONMENT.md` (API URL today)
 
-**Branches:** **`main`** only (all three repos).
+**Branches:** **`directory`** (all three repos).

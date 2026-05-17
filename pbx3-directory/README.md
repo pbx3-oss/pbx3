@@ -4,7 +4,7 @@
 
 **Product direction:** **pbx3spa** repo — **`workingdocs/CENTRAL_ADMIN_DIRECTION.md`**
 
-**Current priority:** **Planning** instance directory v0 (LE/TLS merged to **`main`** 2026-05-17). **Start:** **`docs/PLANNING_HANDOFF.md`**.
+**Current priority:** **Planning** instance directory v0 on branch **`directory`**. **Start:** **`docs/DESIGN_RULES.md`** then **`docs/PLANNING_HANDOFF.md`**.
 
 ---
 
