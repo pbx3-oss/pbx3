@@ -70,6 +70,64 @@ Prefer **live read from the connected node** for detail; use **async fleet poll*
 
 PBX3 directory follows the **console + per-cell IAM** pattern, not a **single gateway proxy** for all admin traffic.
 
+### Directory service topology — datastore + identical read fronts
+
+**Separate layer from PBX nodes.** The **directory** itself may be:
+
+```
+                    ┌─────────────┐     ┌─────────────┐
+   SPA / ops ──────►│  Reader A   │     │  Reader B   │  (stateless, identical)
+                    └──────┬──────┘     └──────┬──────┘
+                           │                   │
+                           └─────────┬─────────┘
+                                     ▼
+                           ┌─────────────────┐
+                           │   Datastore     │  (S3 object, DB, etc.)
+                           │ instance-index  │
+                           └─────────────────┘
+```
+
+It does not matter which reader serves `GET /instances` — all return the same catalog **for a given datastore version**. PBX **nodes** are *not* these readers; they never call this layer for calls (Rule 1).
+
+**Good fit:** Read-heavy signpost; v0 static JSON on S3 + CloudFront is already “one logical store, many edge caches.”
+
+#### Gotchas — HA read replicas (directory only)
+
+| # | Gotcha | What goes wrong | Mitigation |
+|---|--------|-----------------|------------|
+| 1 | **Replica ≠ fresh** | All readers healthy but datastore/CDN serves **stale** index; every replica agrees on wrong data | Short CDN TTL; `ETag` / `version` / `generated_at` in JSON; SPA shows “index as of …” |
+| 2 | **LB “healthy” liar** | Reader passes TCP health check but cannot reach S3/DB | Deep health: reader verifies datastore read (or fails out of pool) |
+| 3 | **Thundering herd** | Fleet refresh at top of hour hits all readers → datastore | Cache at reader; `If-None-Match`; rate limit; single regional cache layer |
+| 4 | **Writes are the hard part** | N identical readers + **multiple writers** (install hooks, ops, CI) → lost updates, split index | **Single writer path** or conditional writes (ETag), idempotent registration by `globals.id` |
+| 5 | **Read-after-write** | Register new node → immediate picker fetch → row missing on all readers | Writer returns only after commit; or client retry; or “pending” until visible |
+| 6 | **ACL on each reader** | Replica pool without shared auth config → inconsistent filtered lists | Same JWT validation keys; or filter in SPA after fetch of signed index |
+| 7 | **Confusing two “instances”** | Team mixes up **directory reader** vs **PBX node** in runbooks | Naming: “directory API” / “catalog” vs “PBX instance” / “node” |
+| 8 | **False confidence** | “Directory is HA” so ops neglect **PBX node** health | Rule 5: directory SLA ≠ node SLA; probe `api_base_url` per row |
+| 9 | **Break-glass unchanged** | All readers down → Rule 3 still required | SPA manual `api_base_url`; cached last index optional |
+| 10 | **Geo replication lag** | Multi-region readers, single-region datastore (or vice versa) | Prefer one primary store; readers regional with same source; document RPO |
+
+#### Writes vs reads (design early)
+
+| Pattern | Reads | Writes | Notes |
+|---------|-------|--------|-------|
+| **S3 + CloudFront (v0)** | Many edges, one object | Rare human/CI `PUT` | Simplest HA reads; invalidate cache on publish |
+| **DB primary + read replicas** | `SELECT` on replicas | `INSERT/UPDATE` on primary | Replica lag = gotcha #1 |
+| **Leader-elected writer** | All readers read snapshot | One job owns writes | Good for registration automation |
+
+**Do not** require sticky sessions on directory readers for the SPA (stateless `GET`). **Do** require **idempotent** node registration (`id` = `globals.id`).
+
+#### How others do “identical fronts, one store”
+
+| System | Store | Identical fronts | Caveat |
+|--------|-------|------------------|--------|
+| **S3 + CloudFront** | Object | Edge POPs | Eventual consistency + cache TTL |
+| **RDS read replicas** | Postgres | App servers | Replication lag |
+| **DynamoDB / DAX** | Table | Many Lambdas/APIs | Consistency model per read |
+| **etcd + many apiservers** | Raft log | Kube apiservers | Strong consistency; ops complexity |
+| **Git-backed config** | Repo | Many pull agents | Not instant; version by commit |
+
+For PBX3 v0, **S3 index + CDN** is enough for “doesn’t matter which edge”; add explicit **API readers** later only if you need ACL at fetch time or write APIs.
+
 ---
 
 ## Rule 1 — Nodes never depend on the directory for telephony
