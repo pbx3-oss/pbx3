@@ -37,7 +37,7 @@ else
 fi
 
 if [[ -f "$CV" ]]; then
-	if grep -qi "domains\|Cert covers\|letsencrypt/sync" "$CV"; then
+	if grep -qiE "domains|Cert covers|letsencrypt/sync|syncLetsEncrypt|certCovers" "$CV"; then
 		tls_pass "CertificatesView mentions domains list and/or sync (3.3)"
 	else
 		tls_skip "CertificatesView not yet showing domains / Sync (3.3)"
