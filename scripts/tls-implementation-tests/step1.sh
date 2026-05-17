@@ -58,10 +58,10 @@ fi
 optional_opt_script "update-fqdn-inline.sh"
 
 if [[ -f "$NETHELPER" ]]; then
-	if grep -qi "sip:" "$NETHELPER" && grep -q "copyFirewallTemplates" "$NETHELPER"; then
-		tls_pass "NetHelperClass references sip: and copyFirewallTemplates (1.2 direction)"
+	if grep -q "shorewallFqdnInlineRuleLine" "$NETHELPER" && grep -q "copyFirewallTemplates" "$NETHELPER"; then
+		tls_pass "NetHelperClass has copyFirewallTemplates / INLINE FQDN rules (1.2)"
 	elif grep -q "copyFirewallTemplates" "$NETHELPER"; then
-		tls_skip "NetHelperClass has copyFirewallTemplates but no sip: yet (1.2 partial)"
+		tls_skip "NetHelperClass has copyFirewallTemplates but no INLINE FQDN helper (1.2 partial)"
 	else
 		tls_fail "NetHelperClass missing expected FQDN-inline logic — implement 1.2"
 	fi
@@ -72,10 +72,10 @@ fi
 # 1.5 optional: Shorewall file on box
 SHOREWALL_FQDN="${SHOREWALL_FQDN:-/etc/shorewall/pbx3_inline_fqdn}"
 if [[ -r "$SHOREWALL_FQDN" ]]; then
-	if grep -qE "INLINE.*sip:" "$SHOREWALL_FQDN" 2>/dev/null; then
-		tls_pass "pbx3_inline_fqdn contains INLINE sip: rules (1.5)"
+	if grep -qE 'INLINE\(ACCEPT\).*;; -m string' "$SHOREWALL_FQDN" 2>/dev/null; then
+		tls_pass "pbx3_inline_fqdn contains INLINE string-match rules (1.5)"
 	else
-		tls_skip "pbx3_inline_fqdn readable but no sip: INLINE lines yet (fqdninspect off or not regenerated)"
+		tls_skip "pbx3_inline_fqdn readable but no INLINE string rules yet (fqdninspect off or not regenerated)"
 	fi
 else
 	tls_skip "no $SHOREWALL_FQDN on this host (1.5 on-PBX only)"

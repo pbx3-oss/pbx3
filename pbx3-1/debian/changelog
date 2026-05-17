@@ -1,3 +1,13 @@
+pbx3 (0.0.3-10) noble; urgency=medium
+
+  * NetHelper copyFirewallTemplates: write pbx3_inline_* with file_put_contents
+    when privileged (sudo / syshelper); avoid re-entering syshelper (deadlock
+    on port 7601 / "did not send Ready" from the API).
+  * FQDN INLINE rules: sail65/sark_inline_fqdn format (5060;;, double-quoted FQDN,
+    no sip: prefix); fixes Mismatched_quotes from single ";" and bad quoting.
+
+ -- KOKO <admin@aelintra.com>  Sat, 17 May 2026 20:00:00 +0000
+
 pbx3 (0.0.3-9) noble; urgency=medium
 
   * Let's Encrypt: le_run_script invokes bash (not sh) so apply-active-cert

@@ -261,13 +261,38 @@ public function restartFirewall() {
 	 * Shorewall INLINE string-match line for SIP FQDN inspect (Option A / LETSENCRYPT_PER_TENANT_FQDN.md).
 	 * @param string $proto tcp|udp
 	 * @param string $bindport SIP port from globals (e.g. 5060)
-	 * @param string $fqdn tenant / node FQDN (Host-Only; escaped for shell --string "sip:…")
+	 * @param string $fqdn tenant / node FQDN (Host-Only)
 	 */
-	private function shorewallFqdnInlineEchoRule($proto, $bindport, $fqdn) {
-		$sip = 'sip:' . $fqdn;
-		$sipEsc = str_replace(['\\', '"'], ['\\\\', '\\"'], $sip);
-		return "'INLINE(ACCEPT) net \$FW " . $proto . " " . $bindport
-			. '; -m string --algo bm --to 1000 --string "' . $sipEsc . '"' . "'";
+	private function shorewallFqdnInlineRuleLine($proto, $bindport, $fqdn) {
+		// Match sail65 / sark_inline_fqdn: "5060;;" then double-quoted FQDN (no sip: prefix).
+		$fqdnEsc = str_replace(['\\', '"'], ['\\\\', '\\"'], $fqdn);
+		return 'INLINE(ACCEPT) net $FW ' . $proto . ' ' . $bindport
+			. ';; -m string --algo bm --to 1000 --string "' . $fqdnEsc . '"';
+	}
+
+	/**
+	 * @param string $path absolute path under /etc/shorewall
+	 * @param string $content file body (newline-terminated lines)
+	 */
+	private function writeShorewallFile($path, $content) {
+		// Prefer direct write (sudo php / syshelper). Never call syshelper from inside
+		// syshelper — the daemon is single-threaded and would deadlock on port 7601.
+		if (@file_put_contents($path, $content) !== false) {
+			return true;
+		}
+		if (!isset($this->helper) || !is_object($this->helper)) {
+			$this->helper = new helper();
+		}
+		$tmp = tempnam(sys_get_temp_dir(), 'pbx3fw');
+		if ($tmp === false) {
+			return false;
+		}
+		if (@file_put_contents($tmp, $content) === false) {
+			@unlink($tmp);
+			return false;
+		}
+		$this->helper->request_syscmd('/bin/mv ' . escapeshellarg($tmp) . ' ' . escapeshellarg($path));
+		return true;
 	}
 
 	public function copyFirewallTemplates() {
@@ -283,6 +308,7 @@ public function restartFirewall() {
 		$bindport = (isset($res['bindport']) && $res['bindport'] !== '' && $res['bindport'] !== null)
 			? trim($res['bindport']) : '5060';
 
+		$inlineLines = array();
 		if (!empty($res['fqdninspect']) && $res['fqdninspect'] === 'YES') {
 			$stmt = $this->dbh->query(
 				"SELECT fqdn FROM cluster WHERE fqdn IS NOT NULL AND length(trim(fqdn)) > 0 "
@@ -290,7 +316,6 @@ public function restartFirewall() {
 			);
 			$rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : array();
 			$seen = array();
-			$firstLine = true;
 			foreach ($rows as $row) {
 				$fq = isset($row['fqdn']) ? trim($row['fqdn']) : '';
 				if ($fq === '') {
@@ -302,28 +327,24 @@ public function restartFirewall() {
 				}
 				$seen[$key] = true;
 				foreach (array('tcp', 'udp') as $proto) {
-					$rule = $this->shorewallFqdnInlineEchoRule($proto, $bindport, $fq);
-					$redir = $firstLine ? '>' : '>>';
-					$firstLine = false;
-					$this->helper->request_syscmd("echo $rule $redir /etc/shorewall/pbx3_inline_fqdn");
+					$inlineLines[] = $this->shorewallFqdnInlineRuleLine($proto, $bindport, $fq);
 				}
 			}
-			if ($firstLine) {
-				$this->helper->request_syscmd("echo '#' > /etc/shorewall/pbx3_inline_fqdn");
-			}
 		}
-		else {
-			$this->helper->request_syscmd("echo '#' > /etc/shorewall/pbx3_inline_fqdn");
+		if (empty($inlineLines)) {
+			$inlineLines = array('#');
 		}
-	
+		$this->writeShorewallFile("/etc/shorewall/pbx3_inline_fqdn", implode("\n", $inlineLines) . "\n");
+
 		$file = SYSPATH . '/templates/shorewall/pbx3_inline_limit';
+		$limitPath = '/etc/shorewall/pbx3_inline_limit';
 		if (file_exists($file) && !empty($res['sipflood']) && $res['sipflood'] == 'YES') {
-			$rc = $this->helper->request_syscmd ("cp $file /etc/shorewall");
+			if (!@copy($file, $limitPath)) {
+				$this->helper->request_syscmd('cp ' . escapeshellarg($file) . ' ' . escapeshellarg($limitPath));
+			}
+		} else {
+			$this->writeShorewallFile($limitPath, "#\n");
 		}
-		else {
-			$rc = $this->helper->request_syscmd ("echo '#' > /etc/shorewall/pbx3_inline_limit");
-		}		
-			
 	}
 
 }
