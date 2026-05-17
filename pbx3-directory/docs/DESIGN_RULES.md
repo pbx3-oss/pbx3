@@ -20,20 +20,23 @@ The directory is **not** a telephony control plane. It is where operators **see*
 | EC2 console / resource list | Central **pbx3spa** + **instance directory** |
 | Each EC2 instance (workload on a host) | One **PBX node** (`pbx3` + `pbx3api` + Asterisk) |
 | Instance runs if console/Organizations API is down | **Calls work** if directory / central SPA unavailable (Rules 1, 5) |
-| CloudWatch metrics, alarms, status checks | Fleet view: directory + **poll** each `api_base_url` for health/errors (Phase E) |
+| CloudWatch metrics, alarms, status checks | **Later (optional):** fleet badges; v0 = open instance and use panels |
 | **IAM in that AWS account** | **Security on the node** — Sanctum, users, `whoami` on `:44300/api` |
 | Organizations account picker | Directory rows: `label`, `fqdn`, `api_base_url`, `org_id` |
 | “Open this account” / switch role | User picks instance → SPA sets `baseUrl` → panels as today |
 | Console URL + account credentials (break-glass) | Direct `api_base_url` / dev override when directory fetch fails (Rule 3) |
 
-### Telemetry: list vs drill-down (EC2-style)
+### Telemetry: keep it on the node (v0)
 
-| Layer | What it holds | Staleness |
-|-------|----------------|-----------|
-| **Directory row** (optional) | `status`, `updated_at`, last probe OK, cert expiry **hint**, alarm count **hint** | May be stale — treat as signpost |
-| **After user opens instance** | Logs, Asterisk, certificates, tenants, commit — **authoritative on node API** | Live (same as instance detail page in EC2 console) |
+Admin UIs are **low traffic**; PBX fleets are **steady-state** for long periods. The directory changes **rarely** (new node, retire node, URL fix).
 
-Prefer **live read from the connected node** for detail; use **async fleet poll** only for list badges. Do not replicate full telemetry into the directory (classic “stale console” failure mode).
+| v0 | Later (optional) |
+|----|------------------|
+| Directory row = **label**, **fqdn**, **api_base_url**, **id**, **status** | Summary health on list (poll nodes) |
+| Fetch index **on login** (+ manual “Refresh list”) | Continuous fleet dashboards |
+| All real detail after connect — certificates, logs, Asterisk | Cache hints in directory JSON |
+
+Do not build live telemetry into the catalog for v0.
 
 ### Security: IAM per account, not one global gate
 
@@ -47,7 +50,7 @@ Prefer **live read from the connected node** for detail; use **async fleet poll*
 |----|--------|
 | List instances; show summary health when available | Put SIP/RTP or dialplan through directory |
 | On select, all admin traffic to that node’s `api_base_url` | Require directory for node boot, `commit`, or calls |
-| Fleet monitoring walks directory, polls nodes **best-effort** | Treat directory as sole security boundary for everyone |
+| **Later:** optional fleet poll for list badges | Treat directory as sole security boundary for everyone |
 | Stable row `id` (`globals.id`); URL can change with ops | Copy full logs/metrics into S3 index as source of truth |
 
 ### Gotchas (EC2 analogy)
@@ -58,75 +61,43 @@ Prefer **live read from the connected node** for detail; use **async fleet poll*
 4. **Empty list ≠ broken** — Distinguish “directory down”, “you have zero instances”, and “ACL filtered everything out”.
 5. **Discovery vs secrecy** — Console lists accounts you can access; break-glass URL is policy for support, not accidental removal (Rule 3 vs Rule 4).
 
-### How other federated systems align
-
-| Pattern | Federation | Workloads if catalog down | Auth |
-|---------|------------|---------------------------|------|
-| **AWS Console + Organizations** | Account list | EC2 in account still runs | **IAM per account** |
-| **GCP / Azure** | Project/subscription picker | Resources keep running | **IAM on resource** |
-| **Kubernetes contexts** | kubeconfig | Clusters autonomous | **Per-cluster credentials** |
-| **Grafana orgs** | Org + datasource list | Metrics backends independent | **Per-org roles** |
-| **Okta app portal** | App tiles | Apps up; portal is convenience | **Per-app federation** |
-
 PBX3 directory follows the **console + per-cell IAM** pattern, not a **single gateway proxy** for all admin traffic.
 
-### Directory service topology — datastore + identical read fronts
+### v0 delivery — keep it boring
 
-**Separate layer from PBX nodes.** The **directory** itself may be:
+**Workload:** A few operators, a few logins per day, catalog changes **infrequently**. Do not design for heavy traffic or sub-minute global consistency.
 
-```
-                    ┌─────────────┐     ┌─────────────┐
-   SPA / ops ──────►│  Reader A   │     │  Reader B   │  (stateless, identical)
-                    └──────┬──────┘     └──────┬──────┘
-                           │                   │
-                           └─────────┬─────────┘
-                                     ▼
-                           ┌─────────────────┐
-                           │   Datastore     │  (S3 object, DB, etc.)
-                           │ instance-index  │
-                           └─────────────────┘
-```
+**v0 catalog:**
 
-It does not matter which reader serves `GET /instances` — all return the same catalog **for a given datastore version**. PBX **nodes** are *not* these readers; they never call this layer for calls (Rule 1).
+1. One file — `instance-index.json` (see `schema/`).
+2. One HTTPS URL — static host, S3, or S3 + CDN (**CDN optional**, not required day one).
+3. SPA **GET on login** (+ optional “Refresh list”) — not polling.
+4. Fields enough to pick a node: `id`, `label`, `fqdn`, `api_base_url`, `status`.
+5. **Writes** — manual edit or script when a node is provisioned/decommissioned; idempotent by `globals.id`.
 
-**Good fit:** Read-heavy signpost; v0 static JSON on S3 + CloudFront is already “one logical store, many edge caches.”
+**Explicitly defer (until a real requirement):**
 
-#### Gotchas — HA read replicas (directory only)
+- Multiple directory API replicas / load-balanced readers  
+- Read replicas, geo-redundant catalog DB  
+- Live fleet health in the index  
+- Aggressive cache invalidation and thundering-herd tuning  
 
-| # | Gotcha | What goes wrong | Mitigation |
-|---|--------|-----------------|------------|
-| 1 | **Replica ≠ fresh** | All readers healthy but datastore/CDN serves **stale** index; every replica agrees on wrong data | Short CDN TTL; `ETag` / `version` / `generated_at` in JSON; SPA shows “index as of …” |
-| 2 | **LB “healthy” liar** | Reader passes TCP health check but cannot reach S3/DB | Deep health: reader verifies datastore read (or fails out of pool) |
-| 3 | **Thundering herd** | Fleet refresh at top of hour hits all readers → datastore | Cache at reader; `If-None-Match`; rate limit; single regional cache layer |
-| 4 | **Writes are the hard part** | N identical readers + **multiple writers** (install hooks, ops, CI) → lost updates, split index | **Single writer path** or conditional writes (ETag), idempotent registration by `globals.id` |
-| 5 | **Read-after-write** | Register new node → immediate picker fetch → row missing on all readers | Writer returns only after commit; or client retry; or “pending” until visible |
-| 6 | **ACL on each reader** | Replica pool without shared auth config → inconsistent filtered lists | Same JWT validation keys; or filter in SPA after fetch of signed index |
-| 7 | **Confusing two “instances”** | Team mixes up **directory reader** vs **PBX node** in runbooks | Naming: “directory API” / “catalog” vs “PBX instance” / “node” |
-| 8 | **False confidence** | “Directory is HA” so ops neglect **PBX node** health | Rule 5: directory SLA ≠ node SLA; probe `api_base_url` per row |
-| 9 | **Break-glass unchanged** | All readers down → Rule 3 still required | SPA manual `api_base_url`; cached last index optional |
-| 10 | **Geo replication lag** | Multi-region readers, single-region datastore (or vice versa) | Prefer one primary store; readers regional with same source; document RPO |
+**If you add CDN later:** Long TTL is fine; after a rare publish, invalidate once or bump `version` in JSON. Stale list for an hour is acceptable for admin pickers.
 
-#### Writes vs reads (design early)
+**Naming:** “**Directory catalog**” vs “**PBX node**” — do not mix in runbooks.
 
-| Pattern | Reads | Writes | Notes |
-|---------|-------|--------|-------|
-| **S3 + CloudFront (v0)** | Many edges, one object | Rare human/CI `PUT` | Simplest HA reads; invalidate cache on publish |
-| **DB primary + read replicas** | `SELECT` on replicas | `INSERT/UPDATE` on primary | Replica lag = gotcha #1 |
-| **Leader-elected writer** | All readers read snapshot | One job owns writes | Good for registration automation |
+#### v0 gotchas (only what matters at low scale)
 
-**Do not** require sticky sessions on directory readers for the SPA (stateless `GET`). **Do** require **idempotent** node registration (`id` = `globals.id`).
+| Gotcha | Mitigation |
+|--------|------------|
+| Node live, not in JSON yet | Registration step when node is built |
+| Wrong `api_base_url` in JSON | `updated_at` / `version`; fix file; break-glass direct URL |
+| Directory URL down | Rule 3 — manual `api_base_url`, recent instances |
+| Two people edit JSON | Single owner or small script; git-review the index |
 
-#### How others do “identical fronts, one store”
+#### Later (optional) — HA readers / CDN / fleet badges
 
-| System | Store | Identical fronts | Caveat |
-|--------|-------|------------------|--------|
-| **S3 + CloudFront** | Object | Edge POPs | Eventual consistency + cache TTL |
-| **RDS read replicas** | Postgres | App servers | Replication lag |
-| **DynamoDB / DAX** | Table | Many Lambdas/APIs | Consistency model per read |
-| **etcd + many apiservers** | Raft log | Kube apiservers | Strong consistency; ops complexity |
-| **Git-backed config** | Repo | Many pull agents | Not instant; version by commit |
-
-For PBX3 v0, **S3 index + CDN** is enough for “doesn’t matter which edge”; add explicit **API readers** later only if you need ACL at fetch time or write APIs.
+See git history or ops runbooks if traffic or MSP scale demands it. PBX **nodes** stay unchanged; only how the SPA loads the map gets fancier.
 
 ---
 

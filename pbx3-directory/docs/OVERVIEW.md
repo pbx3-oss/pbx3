@@ -1,6 +1,6 @@
 # Instance directory — overview (v0 stub)
 
-**Mental model:** EC2 fleet console — see instances and summary health; each node manages its own admin security. See **`DESIGN_RULES.md`** § Product mental model.
+**Mental model:** EC2 fleet console — low-traffic admin signpost; each node manages its own security. **v0:** one JSON file, fetch on login. See **`DESIGN_RULES.md`**.
 
 ## Problem
 
@@ -8,9 +8,9 @@ PBX3 is a **federation of instances**. Operators should not type `https://host:4
 
 ## Solution shape
 
-1. **Directory** — versioned JSON (or API mirroring it) listing instance records.
-2. **Central auth** — returns user identity + allowed `instance_id` values (or org filter).
-3. **pbx3spa** — after login, `GET` directory (filtered) → picker → set `baseUrl` from `api_base_url`.
+1. **Directory** — one rarely updated **`instance-index.json`** at one HTTPS URL (CDN/API optional later).
+2. **Central auth** — later; v0 uses per-node Sanctum after pick.
+3. **pbx3spa** — on login, `GET` directory → picker → set `baseUrl` from `api_base_url` (break-glass if fetch fails).
 
 ```text
   Central SPA                    Directory (S3/API)

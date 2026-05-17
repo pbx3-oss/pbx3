@@ -89,8 +89,8 @@ Refresh **`id`** from `sqlite3 /opt/pbx3/db/sqlite.db "SELECT id FROM globals;"`
 ### Phase A — Agree v0 contract (no code)
 
 - [ ] Confirm **required fields** on `instance-record.v0.json` (enough for picker + `baseUrl`).
-- [ ] Decide **storage**: S3 object only vs S3 + thin read API vs DB later.
-- [ ] Decide **who writes** records: install hook, manual ops, central registrar, CI.
+- [ ] **Storage (default):** one static **`instance-index.json`** at one HTTPS URL (S3 or static host; CDN optional). **Not** multi-reader API or DB for v0 — see **`DESIGN_RULES.md`** § v0 delivery.
+- [ ] Decide **who writes** records: manual ops or script on provision/decommission (rare); idempotent `globals.id`.
 - [ ] Decide **ACL model**: directory row includes `org_id` vs auth service returns allowed `instance_id[]`.
 - [ ] Map **registration**: how `globals.id` + `globals.fqdn` on first install become a directory row (idempotent).
 - [ ] Document **tenant move** (future): directory updates `api_base_url` / FQDN hints; node runs LE sync (see `LETSENCRYPT_PER_TENANT_FQDN.md` §8).
@@ -99,11 +99,11 @@ Refresh **`id`** from `sqlite3 /opt/pbx3/db/sqlite.db "SELECT id FROM globals;"`
 
 ### Phase B — Dev directory feed
 
-- [ ] Publish **dev index** (static file URL, or S3 bucket `pbx3-directory-dev`).
+- [ ] Publish **dev index** — single JSON at a stable URL (repo static file, or S3; no HA requirement).
 - [ ] Add second instance row when a second test node exists.
 - [ ] Optional: script `tools/validate-index.sh` (ajv against schema).
 
-**Deliverable:** URL the SPA can `GET` in dev (`VITE_INSTANCE_DIRECTORY_URL`).
+**Deliverable:** `VITE_INSTANCE_DIRECTORY_URL` — SPA fetches **on login**, not on a timer.
 
 ### Phase C — SPA instance picker (minimal)
 
@@ -122,9 +122,9 @@ Refresh **`id`** from `sqlite3 /opt/pbx3/db/sqlite.db "SELECT id FROM globals;"`
 
 **Deliverable:** separate auth design doc; do not block Phase C on full central auth.
 
-### Phase E — Ops / monitoring (later)
+### Phase E — Ops / monitoring (later, optional)
 
-- [ ] Central monitoring reads directory, polls instance health or cert expiry via existing API.
+- [ ] Fleet list badges (poll `api_base_url`) — only if operators need it; not v0.
 - [ ] Tenant migration orchestration uses directory for source/target URLs.
 
 ---
@@ -133,8 +133,8 @@ Refresh **`id`** from `sqlite3 /opt/pbx3/db/sqlite.db "SELECT id FROM globals;"`
 
 | # | Question | Notes |
 |---|----------|--------|
-| 1 | **S3 layout** | Single `instance-index.json` vs sharded by org? Version field + `updated_at`? |
-| 2 | **HTTPS for directory** | CloudFront + S3? Signed URLs? |
+| 1 | **S3 layout** | **Default v0:** single `instance-index.json`; include `version` + `updated_at`. Shard by org only if needed later. |
+| 2 | **HTTPS for directory** | **Default v0:** plain HTTPS to object or static host; CDN optional, not required. |
 | 3 | **Instance `id`** | Must match `globals.id` (KSUID) or separate directory UUID? |
 | 4 | **Multi-tenant FQDN in directory** | Directory is **instance-level** only; tenant FQDNs stay on node DB |
 | 5 | **Stale records** | `status: decommissioned` vs delete; who cleans up |

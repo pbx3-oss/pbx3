@@ -4,7 +4,7 @@
 
 **Product direction:** **pbx3spa** repo — **`workingdocs/CENTRAL_ADMIN_DIRECTION.md`**
 
-**Current priority:** **Planning** instance directory v0 on branch **`directory`**. **Start:** **`docs/DESIGN_RULES.md`** then **`docs/PLANNING_HANDOFF.md`**.
+**Current priority:** **Planning** instance directory v0 on branch **`directory`**. **v0 = one JSON, fetch on login, low ops traffic.** **Start:** **`docs/DESIGN_RULES.md`** then **`docs/PLANNING_HANDOFF.md`**.
 
 ---
 
