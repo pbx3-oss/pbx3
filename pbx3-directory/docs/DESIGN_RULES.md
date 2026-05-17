@@ -7,6 +7,71 @@
 
 ---
 
+## Product mental model — EC2 fleet console
+
+**One line:** A **fleet console** for PBX nodes — like **EC2**: see instances, monitor them, open one; each node keeps its own admin security and keeps carrying calls if the console is away.
+
+The directory is **not** a telephony control plane. It is where operators **see** the fleet and **choose** which node to administer. Each instance remains a sovereign cell (like an AWS account or a single EC2 “world” on a host): local DB, Asterisk, LE, firewall, and **its own admin security**.
+
+### EC2 ↔ PBX3 mapping
+
+| EC2 / AWS console | PBX3 (Model B) |
+|-------------------|----------------|
+| EC2 console / resource list | Central **pbx3spa** + **instance directory** |
+| Each EC2 instance (workload on a host) | One **PBX node** (`pbx3` + `pbx3api` + Asterisk) |
+| Instance runs if console/Organizations API is down | **Calls work** if directory / central SPA unavailable (Rules 1, 5) |
+| CloudWatch metrics, alarms, status checks | Fleet view: directory + **poll** each `api_base_url` for health/errors (Phase E) |
+| **IAM in that AWS account** | **Security on the node** — Sanctum, users, `whoami` on `:44300/api` |
+| Organizations account picker | Directory rows: `label`, `fqdn`, `api_base_url`, `org_id` |
+| “Open this account” / switch role | User picks instance → SPA sets `baseUrl` → panels as today |
+| Console URL + account credentials (break-glass) | Direct `api_base_url` / dev override when directory fetch fails (Rule 3) |
+
+### Telemetry: list vs drill-down (EC2-style)
+
+| Layer | What it holds | Staleness |
+|-------|----------------|-----------|
+| **Directory row** (optional) | `status`, `updated_at`, last probe OK, cert expiry **hint**, alarm count **hint** | May be stale — treat as signpost |
+| **After user opens instance** | Logs, Asterisk, certificates, tenants, commit — **authoritative on node API** | Live (same as instance detail page in EC2 console) |
+
+Prefer **live read from the connected node** for detail; use **async fleet poll** only for list badges. Do not replicate full telemetry into the directory (classic “stale console” failure mode).
+
+### Security: IAM per account, not one global gate
+
+- **Today:** Only **instance IAM** — Sanctum login and abilities on that node’s API.
+- **Later (optional):** Central IdP answers “who is this person?”; **each node** still decides what they may do (like **SSO into AWS**, then **IAM in that account**).
+- Directory ACL (Phase D) filters **which instances appear in the picker** for MSP/superuser views — **discovery**, not replacement for node credentials unless explicitly designed later.
+
+### Do / don’t (stay EC2-like)
+
+| Do | Don’t |
+|----|--------|
+| List instances; show summary health when available | Put SIP/RTP or dialplan through directory |
+| On select, all admin traffic to that node’s `api_base_url` | Require directory for node boot, `commit`, or calls |
+| Fleet monitoring walks directory, polls nodes **best-effort** | Treat directory as sole security boundary for everyone |
+| Stable row `id` (`globals.id`); URL can change with ops | Copy full logs/metrics into S3 index as source of truth |
+
+### Gotchas (EC2 analogy)
+
+1. **Stale signpost** — Directory URL wrong but node still serving calls (like wrong Route53/console tag). Need `updated_at`, health probe, decommissioned `status`.
+2. **Invisible new instance** — Node live before directory row exists (like instance running before it appears in Resource Groups). Need registration/onboarding path.
+3. **Two permission systems** — Removed on node but still on directory row (or reverse). Deprovision playbook must cover both until single IdP owns access.
+4. **Empty list ≠ broken** — Distinguish “directory down”, “you have zero instances”, and “ACL filtered everything out”.
+5. **Discovery vs secrecy** — Console lists accounts you can access; break-glass URL is policy for support, not accidental removal (Rule 3 vs Rule 4).
+
+### How other federated systems align
+
+| Pattern | Federation | Workloads if catalog down | Auth |
+|---------|------------|---------------------------|------|
+| **AWS Console + Organizations** | Account list | EC2 in account still runs | **IAM per account** |
+| **GCP / Azure** | Project/subscription picker | Resources keep running | **IAM on resource** |
+| **Kubernetes contexts** | kubeconfig | Clusters autonomous | **Per-cluster credentials** |
+| **Grafana orgs** | Org + datasource list | Metrics backends independent | **Per-org roles** |
+| **Okta app portal** | App tiles | Apps up; portal is convenience | **Per-app federation** |
+
+PBX3 directory follows the **console + per-cell IAM** pattern, not a **single gateway proxy** for all admin traffic.
+
+---
+
 ## Rule 1 — Nodes never depend on the directory for telephony
 
 PBX nodes must **always** be able to make and receive calls when the directory is down, unreachable, misconfigured, or empty.

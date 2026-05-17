@@ -1,5 +1,7 @@
 # Instance directory — overview (v0 stub)
 
+**Mental model:** EC2 fleet console — see instances and summary health; each node manages its own admin security. See **`DESIGN_RULES.md`** § Product mental model.
+
 ## Problem
 
 PBX3 is a **federation of instances**. Operators should not type `https://host:44300/api` at login. They should pick an **instance** from a list scoped to their organisation/service.
