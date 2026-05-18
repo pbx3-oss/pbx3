@@ -231,11 +231,15 @@ Attach role to instance; on node **no** `AWS_ACCESS_KEY_ID` in `.env` if the SDK
 
 ### 7.2 Laravel (pbx3api) — Phase 4
 
+**Package (still current for Laravel 11.x / 12.x):** [`league/flysystem-aws-s3-v3`](https://packagist.org/packages/league/flysystem-aws-s3-v3) — official optional dependency for the `s3` disk ([Laravel 11 filesystem](https://laravel.com/docs/11.x/filesystem#driver-prerequisites), [Laravel 12 filesystem](https://laravel.com/docs/12.x/filesystem#driver-prerequisites)). Pulls in `aws/aws-sdk-php` transitively; do **not** install the AWS SDK as a separate top-level dependency unless you need low-level calls outside `Storage::`.
+
 On deploy host (`/opt/pbx3api`):
 
 ```bash
 composer require league/flysystem-aws-s3-v3 "^3.0" --with-all-dependencies
 ```
+
+Use `Storage::disk('s3')` (or a scoped disk — see Laravel **“Scoped Filesystems”**) for backup PUTs; use `temporaryUrl()` for presigned GETs to the SPA when bulk download UI ships.
 
 **`.env`** (only if not using instance role):
 
