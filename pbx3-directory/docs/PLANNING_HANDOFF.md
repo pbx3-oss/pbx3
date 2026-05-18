@@ -107,7 +107,7 @@ Deferred work (CDN, fleet health poll, central auth, recordings offload, etc.) â
 | # | Question | Notes |
 |---|----------|--------|
 | 1 | **S3 layout** | **Directory v0:** `catalog/instance-index.json` per org bucket. **Bulk layout** (share, tenants, backups): see **`S3_LAYOUT_PROPOSAL.md`**. |
-| 2 | **HTTPS for directory** | **Default v0:** plain HTTPS to object or static host; CDN optional, not required. |
+| 2 | **HTTPS for directory** | **Committed Phase 2:** `catalog/instance-index.json` on S3 or static HTTPS. **Not** Supabase/RDS until Phase D evaluation. |
 | 3 | **Instance `id`** | Must match `globals.id` (KSUID) or separate directory UUID? |
 | 4 | **Multi-tenant FQDN in directory** | Directory is **instance-level** only; tenant FQDNs stay on node DB |
 | 5 | **Stale records** | `status: decommissioned` vs delete; who cleans up |

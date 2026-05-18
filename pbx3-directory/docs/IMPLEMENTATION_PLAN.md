@@ -7,6 +7,19 @@
 
 ---
 
+## Architecture decisions (committed)
+
+| Decision | Choice | Notes |
+|----------|--------|--------|
+| **Phase 2 catalog** | **S3 JSON** (`catalog/instance-index.json`) | GET on login; no DB for picker v0. Human-facing `label` / tenant **shortuid** in paths; **KSUID** for instance `id` and `instances/` prefix. |
+| **Bulk data** | **S3** (same org bucket) | Backups, recordings, share assets — not Postgres/Supabase blobs. |
+| **Phase D central auth** | **Deferred** | Before building: **evaluate Supabase vs RDS** (and whether catalog moves off JSON). See ToDo § Product & auth. |
+| **Nodes / telephony** | **No directory dependency** | `DESIGN_RULES.md` Rule 1 — unchanged. |
+
+**Rejected for Phase 2:** Supabase/Postgres/RDS/DynamoDB as the catalog source of truth (unnecessary for rare reads of a small fleet; avoids running a DB before central auth is defined).
+
+---
+
 ## Goals
 
 | Track | Goal | v0 deliverable |
@@ -82,9 +95,10 @@ Schema: `instance-record.v0.json` · example: `instance-index.v0.json`
 
 ---
 
-### Phase 2 — Dev catalog URL (pbx3 + pbx3spa)
+### Phase 2 — Dev catalog URL (pbx3 + pbx3spa) — **S3 JSON (committed)**
 
-**Owner:** pbx3-directory example + SPA env
+**Owner:** pbx3-directory example + SPA env  
+**Storage:** HTTPS URL to `catalog/instance-index.json` (static host or S3 object). **Not** Supabase/RDS for this phase.
 
 - [ ] Host `catalog/instance-index.json` (dev: static file in repo, or S3 test bucket)
 - [ ] `pbx3spa`: `VITE_INSTANCE_DIRECTORY_URL` → fetch on login
@@ -166,7 +180,8 @@ Use this as the product/engineering queue after Phase 2–4. **Not** blocking in
 
 ### Product & auth
 
-- [ ] Central auth (Phase D) — filter catalog by user/org
+- [ ] **Before Phase D:** Evaluate **Supabase vs RDS** (vs DynamoDB on AWS) for **central identity + catalog ACL** — keep **S3 for bulk** either way; decide whether catalog stays JSON or migrates to SQL only when per-user instance lists are required
+- [ ] Phase D — central auth + filter catalog by user/org (implementation after evaluation above)
 - [ ] Tenant-scoped backup zip to `tenants/…/backups/`
 - [ ] Tenant move orchestration (directory + LE sync on nodes)
 - [ ] `tenants/{shortuid}/exports/` GDPR export packages
