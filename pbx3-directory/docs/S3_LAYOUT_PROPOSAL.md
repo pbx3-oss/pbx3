@@ -133,8 +133,128 @@ Everything else in this doc is **parallel track** (media, backup to S3) — do n
 
 ---
 
+## Improved layout (v1) — visual reference
+
+**Bucket:** `s3://{org_shortuid}-pbx3/` (one org / MSP customer; not tenant shortuid)
+
+**Legend:** `()` = variable · `[ ]` = optional · `→` = written by registrar on provision/move
+
+```text
+s3://{org_shortuid}-pbx3/
+│
+├── catalog/                                    ← SPA login only (tiny, rare updates)
+│   └── instance-index.json                     ← fleet signpost (all instances in org)
+│
+├── share/                                      ← public-read via CloudFront OAC (optional)
+│   └── phone-images/
+│       └── {manufacturer}/
+│           └── {model}/
+│               ├── image.jpg
+│               └── manifest.json               ← sha256, updated_at
+│
+├── instances/
+│   └── {instance_ksuid}/                       ← globals.id (stable)
+│       ├── meta.json                           ← fqdn, api_base_url, label, status
+│       └── backups/
+│           ├── policy.json                     ← { "maxage_days": 30, "glacier_after_days": 7 }
+│           └── {backup_stamp}/                 ← backup_stamp = 20260517T120000Z (UTC, sortable)
+│               ├── manifest.json               ← schema_version, artifacts[], sha256
+│               └── backup.zip                  ← single restore artifact (UI + DR)
+│
+└── tenants/
+    └── {tenant_shortuid}/                      ← cluster.shortuid (stable across moves)
+        ├── meta.json                           ← REQUIRED: instance_id, cname, fqdn, status
+        ├── recordings/
+        │   ├── policy.json                     ← { "maxage_days": 30 }
+        │   ├── recordings.db                   ← snapshot upload only (not live over S3)
+        │   └── media/
+        │       └── {yyyy}/{mm}/{dd}/
+        │           ├── {call_id}.wav
+        │           └── {call_id}.txt           ← transcription sidecar (same call_id)
+        └── backups/
+            ├── policy.json
+            └── {backup_stamp}/
+                ├── manifest.json               ← scope: "tenant", lists contents
+                └── backup.zip                  ← portable tenant payload (move/restore)
+```
+
+### Side-by-side: original sketch → v1
+
+| Original | Improved v1 |
+|----------|-------------|
+| `Instances/{shortuid}` + `fqdn` siblings | `instances/{instance_ksuid}/` only; fqdn in `meta.json` |
+| `instance-ksuid`, `cname` as loose files | `tenants/.../meta.json` with all tenant fields |
+| `info.json` `{ "maxage": "30" }` | `policy.json` with `maxage_days` (integer) + S3 Lifecycle |
+| `{epochdate}/` + zip + exploded folders | `{backup_stamp}/` + **manifest.json** + **backup.zip** only |
+| `media/recording.wav` flat | `media/{yyyy}/{mm}/{dd}/{call_id}.wav` |
+| Directory mixed into tree | **`catalog/instance-index.json`** isolated at top |
+
+### Example paths (test node)
+
+Org bucket `acme-pbx3`, instance KSUID `2abc…`, tenant `f34ck1`:
+
+```text
+s3://acme-pbx3/catalog/instance-index.json
+
+s3://acme-pbx3/instances/2abc…/meta.json
+s3://acme-pbx3/instances/2abc…/backups/20260517T153045Z/manifest.json
+s3://acme-pbx3/instances/2abc…/backups/20260517T153045Z/backup.zip
+
+s3://acme-pbx3/tenants/f34ck1/meta.json
+s3://acme-pbx3/tenants/f34ck1/recordings/media/2026/05/17/call-01K…/.wav
+s3://acme-pbx3/tenants/f34ck1/backups/20260517T153045Z/backup.zip
+```
+
+### `instance-index.json` (catalog) — still one small file
+
+```json
+{
+  "version": 1,
+  "updated_at": "2026-05-17T15:30:00Z",
+  "instances": [
+    {
+      "id": "2abc…",
+      "fqdn": "08jzwn.pbx3.com",
+      "api_base_url": "https://08jzwn.pbx3.com:44300/api",
+      "label": "08jzwn",
+      "status": "active"
+    }
+  ]
+}
+```
+
+### `manifest.json` (per backup folder)
+
+```json
+{
+  "schema_version": 1,
+  "created_at": "2026-05-17T15:30:45Z",
+  "scope": "instance",
+  "instance_id": "2abc…",
+  "tenant_shortuid": null,
+  "artifacts": [
+    { "name": "backup.zip", "sha256": "…", "bytes": 104857600 }
+  ]
+}
+```
+
+### Data flow (ASCII)
+
+```text
+  [Operator SPA] ──GET──► catalog/instance-index.json
+        │
+        │ pick instance → Sanctum on node :44300 (unchanged)
+        ▼
+  [PBX node] ──async PUT──► instances/{ksuid}/backups/…
+              ──async PUT──► tenants/{shortuid}/recordings/media/…
+              (calls do NOT wait on S3)
+```
+
+---
+
 ## Changelog
 
 | Date | Note |
 |------|------|
 | 2026-05 | Initial capture from operator layout sketch |
+| 2026-05 | Added improved v1 layout (manifest, policy.json, partitioned media) |
