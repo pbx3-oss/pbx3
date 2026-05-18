@@ -172,13 +172,36 @@ Monitoring and ops should treat directory availability separately from **instanc
 
 ---
 
+## Rule 6 — Solo / “kick the tyres” must stay frictionless
+
+A new operator running **one** PBX to evaluate the product must **not** need S3, a fleet catalog, registrar scripts, central admin hosting, or cloning **`pbx3-directory`** tooling.
+
+| Required for minimal trial | **Not** required for minimal trial |
+|----------------------------|-------------------------------------|
+| **pbx3** + **pbx3api** on the node | S3 bucket or `catalog/instance-index.json` |
+| Admin UI (**pbx3spa**) + Sanctum login | Multi-instance picker |
+| Reachable `api_base_url` (or same-origin admin) | Phase D central auth |
+| | Org backup upload to S3 (Phase 4+) |
+
+**Product paths (same SPA, no second app):**
+
+1. **Solo default** — `VITE_INSTANCE_DIRECTORY_URL` unset → skip catalog; email/password + API URL (or build-time `VITE_DEFAULT_API_BASE_URL`).
+2. **Single catalog row** — if directory is configured and `instances.length === 1`, auto-select; no picker step.
+3. **Model A** — SPA on the node hostname; derive API from same origin (optional nginx co-host on `:44300`).
+4. **Fleet later** — enable directory URL when the operator has **two or more** instances or opts into MSP console.
+
+**Implication:** Directory and S3 are **opt-in scale features**, not gates on first boot, LE, `commit`, or calls. Install docs for solo: one URL + credentials; fleet catalog is an appendix.
+
+---
+
 ## Summary (one line each)
 
 1. **Calls work without directory.**  
 2. **Directory = human signpost, not call path.**  
 3. **Directory down → can still log into permitted nodes.**  
 4. **Auth/clearance on instance API (central ACL filters the map later).**  
-5. **Directory SLA ≠ node SLA.**
+5. **Directory SLA ≠ node SLA.**  
+6. **One box to try it → no S3/catalog required.**
 
 ---
 
@@ -188,7 +211,9 @@ Before merging directory-related work, confirm:
 
 - [ ] No new **pbx3** / **pbx3api** dependency on directory at request or boot time.
 - [ ] SPA instance picker treats directory `GET` as optional; manual / cached instance entry still works.
+- [ ] Solo path works with **no** `VITE_INSTANCE_DIRECTORY_URL`; single-row catalog auto-selects without picker.
 - [ ] No user-facing path where directory failure equals total admin lockout (except “no credentials for any node”).
+- [ ] Install/quick-start docs do not require S3 or directory setup for a single-node trial.
 - [ ] Docs and diagrams show directory **beside** nodes, not **in front of** SIP/RTP.
 
 ---
@@ -199,6 +224,6 @@ Before merging directory-related work, confirm:
 |-------|------------------------|
 | **A — Contract** | Schema is instance metadata only; no “required_for_calls” flags. |
 | **B — Dev feed** | Static URL; nodes unaffected if URL wrong. |
-| **C — SPA picker** | Implement Rule 3 explicitly (override + error state). |
+| **C — SPA picker** | Rules 3 + 6: optional catalog, solo + single-row paths, override + error state. |
 | **D — Central auth** | ACL filters directory view; Rule 4 + break-glass documented. |
 | **E — Orchestration** | Tenant move uses directory for **ops** URLs; nodes run local LE/sync scripts. |

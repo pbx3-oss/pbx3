@@ -15,6 +15,7 @@
 | **Bulk data** | **S3** (same org bucket) | Backups, recordings, share assets — not Postgres/Supabase blobs. |
 | **Phase D central auth** | **Deferred** | Before building: **evaluate Supabase vs RDS** (and whether catalog moves off JSON). See ToDo § Product & auth. |
 | **Nodes / telephony** | **No directory dependency** | `DESIGN_RULES.md` Rule 1 — unchanged. |
+| **Solo / trial** | **No catalog required** | Rule 6 — one node = install + SPA login only; directory/S3 when fleet or backups opted in. |
 
 **Rejected for Phase 2:** Supabase/Postgres/RDS/DynamoDB as the catalog source of truth (unnecessary for rare reads of a small fleet; avoids running a DB before central auth is defined).
 
@@ -100,8 +101,10 @@ Schema: `instance-record.v0.json` · example: `instance-index.v0.json`
 **Owner:** pbx3-directory example + SPA env  
 **Storage:** HTTPS URL to `catalog/instance-index.json` (static host or S3 object). **Not** Supabase/RDS for this phase.
 
-- [ ] Host `catalog/instance-index.json` (dev: static file in repo, or S3 test bucket)
-- [ ] `pbx3spa`: `VITE_INSTANCE_DIRECTORY_URL` → fetch on login
+- [ ] **Solo (Rule 6):** if `VITE_INSTANCE_DIRECTORY_URL` unset → no catalog fetch; login = email/password + API URL (optional `VITE_DEFAULT_API_BASE_URL`)
+- [ ] If catalog has **one** row → auto-select, skip picker
+- [ ] Host `catalog/instance-index.json` (dev/fleet only: static file in repo, or S3 test bucket)
+- [ ] `pbx3spa`: `VITE_INSTANCE_DIRECTORY_URL` → fetch on login when set
 - [ ] Instance picker UI: list `label`, `fqdn`, `status`, `environment`
 - [ ] **Rule 3:** directory fetch failure → warning + manual `api_base_url` + **recent instances** (`localStorage`)
 - [ ] **Refresh catalog** button (no polling)
