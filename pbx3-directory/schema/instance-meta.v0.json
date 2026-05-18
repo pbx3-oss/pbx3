@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/instance-meta.v0.json",
+  "title": "PBX3 instance S3 meta (v0)",
+  "description": "instances/{instance_ksuid}/meta.json — mirror catalog row + backup pointer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "fqdn", "api_base_url", "label", "status", "created_at", "updated_at"],
+  "properties": {
+    "id": { "type": "string" },
+    "fqdn": { "type": "string", "format": "hostname" },
+    "api_base_url": { "type": "string", "format": "uri" },
+    "label": { "type": "string" },
+    "status": { "type": "string", "enum": ["active", "maintenance", "decommissioned"] },
+    "environment": { "type": "string", "enum": ["production", "staging", "lab"] },
+    "region": { "type": "string" },
+    "notes": { "type": "string" },
+    "package_version": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "backup_latest_stamp": {
+      "type": "string",
+      "description": "Newest backups/{backup_stamp}/ folder name (UTC)"
+    },
+    "tenant_shortuids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional cache; authoritative list remains on node DB"
+    }
+  }
+}

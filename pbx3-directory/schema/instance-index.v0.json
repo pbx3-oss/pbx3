@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-17T00:00:00Z",
+  "updated_at": "2026-05-17T15:30:00Z",
   "instances": [
     {
       "id": "3DmAsxePTWQZgynBYXE8obIRqEE",
@@ -8,8 +8,12 @@
       "api_base_url": "https://08jzwn.pbx3.com:44300/api",
       "label": "08jzwn",
       "status": "active",
+      "environment": "production",
       "org_id": "example-org",
-      "region": "us-east-1"
+      "region": "us-east-1",
+      "notes": "Test node — golden reference",
+      "package_version": "pbx3 0.0.3-10",
+      "last_seen_at": "2026-05-17T15:00:00Z"
     }
   ]
 }

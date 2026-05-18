@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/tenant-meta.v0.json",
+  "title": "PBX3 tenant S3 meta (v0)",
+  "description": "tenants/{tenant_shortuid}/meta.json — required on every tenant prefix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenant_shortuid",
+    "instance_id",
+    "cname",
+    "fqdn",
+    "status",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "tenant_shortuid": { "type": "string" },
+    "instance_id": { "type": "string", "description": "Hosting node globals.id" },
+    "cname": { "type": "string", "format": "hostname", "description": "cluster.fqdn" },
+    "fqdn": {
+      "type": "string",
+      "format": "hostname",
+      "description": "Same as cname unless product splits display vs SIP"
+    },
+    "status": { "type": "string", "enum": ["active", "maintenance", "decommissioned"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "moved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last tenant move between instances"
+    },
+    "previous_instance_id": {
+      "type": ["string", "null"],
+      "description": "Prior hosting node after move"
+    }
+  }
+}

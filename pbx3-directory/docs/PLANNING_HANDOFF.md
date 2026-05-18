@@ -2,9 +2,11 @@
 
 **AI: start here** for Model B / central admin / instance directory work.
 
-**Design rules (read first):** **`DESIGN_RULES.md`** — nodes never depend on directory for calls; directory is a signpost; login must work when directory is down.  
+**Implementation plan (active):** **`IMPLEMENTATION_PLAN.md`** — phases 1–5 + ToDo backlog.  
+**Design rules:** **`DESIGN_RULES.md`**  
+**S3 layout:** **`S3_LAYOUT_PROPOSAL.md`**  
 **Product direction:** `pbx3spa/workingdocs/CENTRAL_ADMIN_DIRECTION.md`  
-**SPA handoff (broader):** `pbx3spa/workingdocs/SESSION_HANDOFF.md`  
+**SPA handoff:** `pbx3spa/workingdocs/SESSION_HANDOFF.md`  
 **Per-instance TLS (done):** `pbx3/workingdocs/TLS_AND_CERTIFICATES.md`
 
 **Branch:** **`directory`** (all three repos).
@@ -84,48 +86,19 @@ Refresh **`id`** from `sqlite3 /opt/pbx3/db/sqlite.db "SELECT id FROM globals;"`
 
 ---
 
-## 4. Planning phases (suggested order)
+## 4. Planning phases
 
-### Phase A — Agree v0 contract (no code)
+**Superseded by **`IMPLEMENTATION_PLAN.md`** (phases 1–5 + ToDo backlog).** Summary:
 
-- [ ] Confirm **required fields** on `instance-record.v0.json` (enough for picker + `baseUrl`).
-- [ ] **Storage (default):** one static **`instance-index.json`** at one HTTPS URL (S3 or static host; CDN optional). **Not** multi-reader API or DB for v0 — see **`DESIGN_RULES.md`** § v0 delivery.
-- [ ] Decide **who writes** records: manual ops or script on provision/decommission (rare); idempotent `globals.id`.
-- [ ] Decide **ACL model**: directory row includes `org_id` vs auth service returns allowed `instance_id[]`.
-- [ ] Map **registration**: how `globals.id` + `globals.fqdn` on first install become a directory row (idempotent).
-- [ ] Document **tenant move** (future): directory updates `api_base_url` / FQDN hints; node runs LE sync (see `LETSENCRYPT_PER_TENANT_FQDN.md` §8).
+| Phase | Focus |
+|-------|--------|
+| **1** | Schemas + validate script (done in repo) |
+| **2** | Dev catalog URL + SPA picker + Rule 3 fallbacks |
+| **3** | Registrar scripts (catalog + meta.json) |
+| **4** | S3 backup zip + manifest upload (async) |
+| **5** | Install registration hook |
 
-**Deliverable:** `docs/V0_CONTRACT.md` (or update `OVERVIEW.md` § Open questions with decisions).
-
-### Phase B — Dev directory feed
-
-- [ ] Publish **dev index** — single JSON at a stable URL (repo static file, or S3; no HA requirement).
-- [ ] Add second instance row when a second test node exists.
-- [ ] Optional: script `tools/validate-index.sh` (ajv against schema).
-
-**Deliverable:** `VITE_INSTANCE_DIRECTORY_URL` — SPA fetches **on login**, not on a timer.
-
-### Phase C — SPA instance picker (minimal)
-
-- [ ] After login (or before instance API login): fetch directory → list **label** + **fqdn** (**best-effort** — see **`DESIGN_RULES.md` Rule 3**).
-- [ ] On select: set `baseUrl` from `api_base_url`; persist in sessionStorage.
-- [ ] **Directory unavailable:** warning + manual `api_base_url` / recent instances; instance Sanctum login must still work.
-- [ ] Keep **advanced override** for engineering (see `DEV_ENVIRONMENT.md`).
-- [ ] Top bar **Instance** chip shows directory **label** / **fqdn** (already have `globalsFqdn` from connected instance).
-
-**Deliverable:** PR in **pbx3spa** only; still uses per-instance Sanctum until Phase D.
-
-### Phase D — Auth (later)
-
-- [ ] Central identity + “instances you may access” (may duplicate ACL filter).
-- [ ] Preserve **`AUTH_PATTERNS.md`** contract: Bearer + **whoami** shape on instance API.
-
-**Deliverable:** separate auth design doc; do not block Phase C on full central auth.
-
-### Phase E — Ops / monitoring (later, optional)
-
-- [ ] Fleet list badges (poll `api_base_url`) — only if operators need it; not v0.
-- [ ] Tenant migration orchestration uses directory for source/target URLs.
+Deferred work (CDN, fleet health poll, central auth, recordings offload, etc.) → **IMPLEMENTATION_PLAN.md** § ToDo backlog.
 
 ---
 
@@ -175,13 +148,11 @@ Use this node as the **golden example** when validating schema and SPA picker.
 
 ## 8. Read order for next session
 
-1. **`DESIGN_RULES.md`**  
-2. **`S3_LAYOUT_PROPOSAL.md`** (if working on bucket structure)  
-3. This file  
-4. `CENTRAL_ADMIN_DIRECTION.md`  
-5. `OVERVIEW.md`  
-6. `schema/instance-record.v0.json` + `instance-index.v0.json`  
-7. `AUTH_PATTERNS.md` (§4 federated)  
-8. `pbx3spa/workingdocs/DEV_ENVIRONMENT.md` (API URL today)
+1. **`IMPLEMENTATION_PLAN.md`**  
+2. **`DESIGN_RULES.md`**  
+3. **`S3_LAYOUT_PROPOSAL.md`**  
+4. This file (historical context)  
+5. `CENTRAL_ADMIN_DIRECTION.md` · `OVERVIEW.md`  
+6. `schema/*.v0.json` · `AUTH_PATTERNS.md` · `DEV_ENVIRONMENT.md`
 
 **Branches:** **`directory`** (all three repos).

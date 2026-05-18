@@ -4,7 +4,7 @@
 
 **Product direction:** **pbx3spa** repo — **`workingdocs/CENTRAL_ADMIN_DIRECTION.md`**
 
-**Current priority:** **Planning** instance directory v0 on branch **`directory`**. **v0 = one JSON, fetch on login, low ops traffic.** **Start:** **`docs/DESIGN_RULES.md`** then **`docs/PLANNING_HANDOFF.md`**.
+**Current priority:** Branch **`directory`**. **Start:** **`docs/IMPLEMENTATION_PLAN.md`** (phases + ToDo) → **`docs/DESIGN_RULES.md`** → **`docs/S3_LAYOUT_PROPOSAL.md`** → **`schema/`**.
 
 ---
 
@@ -26,8 +26,12 @@ pbx3-directory/
   README.md                 ← this file
   docs/OVERVIEW.md          ← architecture and open questions
   schema/
-    instance-record.v0.json   ← JSON Schema for one instance
-    instance-index.v0.json    ← example full index file
+    instance-record.v0.json   ← catalog row (picker)
+    instance-index.v0.json    ← example catalog file
+    instance-meta.v0.json     ← instances/{ksuid}/meta.json
+    tenant-meta.v0.json       ← tenants/{shortuid}/meta.json
+    backup-manifest.v0.json
+    retention-policy.v0.json  ← policy.json (backups/recordings)
 ```
 
 ---

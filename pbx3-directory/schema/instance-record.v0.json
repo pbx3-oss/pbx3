@@ -8,7 +8,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "Stable instance id (prefer match to globals.id KSUID on the node)"
+      "description": "Stable instance id (match globals.id KSUID on the node)"
     },
     "fqdn": {
       "type": "string",
@@ -28,6 +28,11 @@
       "type": "string",
       "enum": ["active", "maintenance", "decommissioned"]
     },
+    "environment": {
+      "type": "string",
+      "enum": ["production", "staging", "lab"],
+      "description": "Avoid opening wrong environment in picker"
+    },
     "org_id": {
       "type": "string",
       "description": "Owning organisation / MSP customer (ACL filter)"
@@ -42,7 +47,16 @@
     },
     "notes": {
       "type": "string",
-      "description": "Operator notes (not shown in default UI)"
+      "description": "Operator notes (shown in picker detail)"
+    },
+    "package_version": {
+      "type": "string",
+      "description": "e.g. pbx3 0.0.3-10 — support without SSH"
+    },
+    "last_seen_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last successful health probe (optional badge; not required for v0 picker)"
     }
   }
 }

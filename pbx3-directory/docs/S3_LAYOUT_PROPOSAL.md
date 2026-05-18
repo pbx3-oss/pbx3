@@ -205,7 +205,9 @@ s3://acme-pbx3/tenants/f34ck1/recordings/media/2026/05/17/call-01K…/.wav
 s3://acme-pbx3/tenants/f34ck1/backups/20260517T153045Z/backup.zip
 ```
 
-### `instance-index.json` (catalog) — still one small file
+### `instance-index.json` (catalog)
+
+Schema: `schema/instance-record.v0.json` · example: `schema/instance-index.v0.json`
 
 ```json
 {
@@ -217,26 +219,61 @@ s3://acme-pbx3/tenants/f34ck1/backups/20260517T153045Z/backup.zip
       "fqdn": "08jzwn.pbx3.com",
       "api_base_url": "https://08jzwn.pbx3.com:44300/api",
       "label": "08jzwn",
-      "status": "active"
+      "status": "active",
+      "environment": "production",
+      "region": "us-east-1",
+      "notes": "Acme primary",
+      "package_version": "pbx3 0.0.3-10",
+      "last_seen_at": "2026-05-17T15:00:00Z"
     }
   ]
 }
 ```
 
+### `instances/{ksuid}/meta.json`
+
+Schema: `schema/instance-meta.v0.json`
+
+### `tenants/{shortuid}/meta.json` (required)
+
+Schema: `schema/tenant-meta.v0.json` — must include `instance_id`, `cname`, `moved_at` after tenant move.
+
+### `policy.json`
+
+Schema: `schema/retention-policy.v0.json`
+
+```json
+{
+  "maxage_days": 30,
+  "glacier_after_days": 7,
+  "legal_hold": false
+}
+```
+
 ### `manifest.json` (per backup folder)
+
+Schema: `schema/backup-manifest.v0.json`
 
 ```json
 {
   "schema_version": 1,
   "created_at": "2026-05-17T15:30:45Z",
   "scope": "instance",
+  "trigger": "manual",
   "instance_id": "2abc…",
   "tenant_shortuid": null,
+  "node_fqdn": "08jzwn.pbx3.com",
+  "pbx3_version": "pbx3 0.0.3-10",
+  "contents_summary": { "tenant_count": 2, "sqlite_bytes": 5242880 },
   "artifacts": [
     { "name": "backup.zip", "sha256": "…", "bytes": 104857600 }
   ]
 }
 ```
+
+### Recordings object keys
+
+`media/{yyyy}/{mm}/{dd}/{call_id}.wav` — `call_id` matches CDR / Asterisk uniqueid on node. Optional S3 metadata on PUT: `x-amz-meta-tenant`, `x-amz-meta-call-id`, `x-amz-meta-duration` (implementation in **IMPLEMENTATION_PLAN.md** ToDo).
 
 ### Data flow (ASCII)
 
@@ -258,3 +295,4 @@ s3://acme-pbx3/tenants/f34ck1/backups/20260517T153045Z/backup.zip
 |------|------|
 | 2026-05 | Initial capture from operator layout sketch |
 | 2026-05 | Added improved v1 layout (manifest, policy.json, partitioned media) |
+| 2026-05 | High-value fields + schemas; see **IMPLEMENTATION_PLAN.md** |

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/retention-policy.v0.json",
+  "title": "PBX3 S3 retention policy (v0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["maxage_days"],
+  "properties": {
+    "maxage_days": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Delete objects under this prefix after N days (enforce via S3 Lifecycle)"
+    },
+    "glacier_after_days": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Transition to Glacier/IA after N days (optional)"
+    },
+    "legal_hold": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, lifecycle must not expire objects (ops/legal)"
+    }
+  }
+}
