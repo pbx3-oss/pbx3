@@ -4,7 +4,7 @@
 
 **Product direction:** **pbx3spa** repo — **`workingdocs/CENTRAL_ADMIN_DIRECTION.md`**
 
-**Current priority:** Branch **`directory`**. **Start:** **`docs/IMPLEMENTATION_PLAN.md`** (phases + ToDo) → **`docs/DESIGN_RULES.md`** → **`docs/S3_LAYOUT_PROPOSAL.md`** → **`schema/`**.
+**Current priority:** Branch **`directory`**. **Start:** **`docs/IMPLEMENTATION_PLAN.md`** (phases + ToDo) → **`docs/DESIGN_RULES.md`** → **`docs/S3_LAYOUT_PROPOSAL.md`** → **`docs/OPS_S3_RUNBOOK.md`** (bucket/IAM/CORS) → **`schema/`**.
 
 ---
 
@@ -36,9 +36,13 @@ pbx3-directory/
 
 ---
 
+## Ops
+
+- **`docs/OPS_S3_RUNBOOK.md`** — create org bucket, public `catalog/*` only, CORS, node IAM, Laravel S3 package (Phase 4).
+
 ## Not in scope for this stub
 
-- Runtime code, Terraform, or S3 buckets
+- Runtime code, Terraform (runbook is manual CLI; IaC later)
 - Central auth implementation
 - Changes to per-node `pbx3` / `pbx3api` installers
 

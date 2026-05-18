@@ -16,7 +16,9 @@
 | **Tenants** | Per-tenant recordings + tenant-scoped backup payloads | Grows with CDR/media |
 | **Instances** | Per-node (instance) backup snapshots | Grows with backup policy |
 
-The central SPA loads the **catalog** on login. Panels on a connected node may **read/write** tenant/instance prefixes via API (later) — not required for v0 picker.
+The central SPA loads the **catalog** on login (public HTTPS `GET` on `catalog/*` only — no AWS keys in the browser). Panels on a connected node may **read/write** tenant/instance prefixes via **instance API + IAM** (later) — not required for v0 picker.
+
+**Ops how-to:** **`OPS_S3_RUNBOOK.md`** — bucket creation, prefix-scoped public policy, CORS, node IAM, Laravel Flysystem.
 
 ---
 
@@ -296,3 +298,4 @@ Schema: `schema/backup-manifest.v0.json`
 | 2026-05 | Initial capture from operator layout sketch |
 | 2026-05 | Added improved v1 layout (manifest, policy.json, partitioned media) |
 | 2026-05 | High-value fields + schemas; see **IMPLEMENTATION_PLAN.md** |
+| 2026-05 | **OPS_S3_RUNBOOK.md** — bucket, catalog policy, CORS, IAM |

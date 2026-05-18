@@ -150,7 +150,7 @@ Use this node as the **golden example** when validating schema and SPA picker.
 
 1. **`IMPLEMENTATION_PLAN.md`**  
 2. **`DESIGN_RULES.md`**  
-3. **`S3_LAYOUT_PROPOSAL.md`**  
+3. **`S3_LAYOUT_PROPOSAL.md`** · **`OPS_S3_RUNBOOK.md`** (bucket setup)  
 4. This file (historical context)  
 5. `CENTRAL_ADMIN_DIRECTION.md` · `OVERVIEW.md`  
 6. `schema/*.v0.json` · `AUTH_PATTERNS.md` · `DEV_ENVIRONMENT.md`

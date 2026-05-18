@@ -158,7 +158,7 @@ Use this as the product/engineering queue after Phase 2–4. **Not** blocking in
 
 ### S3 & ops infrastructure
 
-- [ ] Terraform/ops: S3 bucket per org, encryption (SSE-S3 or KMS), block public access
+- [ ] Terraform/ops: S3 bucket per org — **manual steps:** **`OPS_S3_RUNBOOK.md`** (encryption SSE-S3, block public access, catalog prefix policy)
 - [ ] S3 **Lifecycle** rules driven by `policy.json` (`maxage_days`, `glacier_after_days`)
 - [ ] S3 **object tags**: `org`, `instance_id`, `tenant`, `class=backup|recording`
 - [ ] S3 **EventBridge** on `backup.zip` `Complete` → SNS/email
