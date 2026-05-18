@@ -133,7 +133,7 @@ Refresh **`id`** from `sqlite3 /opt/pbx3/db/sqlite.db "SELECT id FROM globals;"`
 
 | # | Question | Notes |
 |---|----------|--------|
-| 1 | **S3 layout** | **Default v0:** single `instance-index.json`; include `version` + `updated_at`. Shard by org only if needed later. |
+| 1 | **S3 layout** | **Directory v0:** `catalog/instance-index.json` per org bucket. **Bulk layout** (share, tenants, backups): see **`S3_LAYOUT_PROPOSAL.md`**. |
 | 2 | **HTTPS for directory** | **Default v0:** plain HTTPS to object or static host; CDN optional, not required. |
 | 3 | **Instance `id`** | Must match `globals.id` (KSUID) or separate directory UUID? |
 | 4 | **Multi-tenant FQDN in directory** | Directory is **instance-level** only; tenant FQDNs stay on node DB |
@@ -176,11 +176,12 @@ Use this node as the **golden example** when validating schema and SPA picker.
 ## 8. Read order for next session
 
 1. **`DESIGN_RULES.md`**  
-2. This file  
-3. `CENTRAL_ADMIN_DIRECTION.md`  
-4. `OVERVIEW.md`  
-5. `schema/instance-record.v0.json` + `instance-index.v0.json`  
-6. `AUTH_PATTERNS.md` (§4 federated)  
-7. `pbx3spa/workingdocs/DEV_ENVIRONMENT.md` (API URL today)
+2. **`S3_LAYOUT_PROPOSAL.md`** (if working on bucket structure)  
+3. This file  
+4. `CENTRAL_ADMIN_DIRECTION.md`  
+5. `OVERVIEW.md`  
+6. `schema/instance-record.v0.json` + `instance-index.v0.json`  
+7. `AUTH_PATTERNS.md` (§4 federated)  
+8. `pbx3spa/workingdocs/DEV_ENVIRONMENT.md` (API URL today)
 
 **Branches:** **`directory`** (all three repos).
