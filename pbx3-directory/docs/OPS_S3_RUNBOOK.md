@@ -93,22 +93,39 @@ curl -sS -o /dev/null -w "%{http_code}\n" \
 
 16. If catalog `curl` is still **AccessDenied**: object missing/wrong key, wrong region in URL, **account** Block Public Access, or object encrypted with KMS that blocks anonymous read.
 
-### F. CORS (only when SPA is on another host)
+### F. CORS (when SPA origin ≠ S3)
 
-17. Bucket → **Permissions** → **Cross-origin resource sharing (CORS)** → example:
+**Symptom:** Browser console `Access-Control-Allow-Origin` / `Fetch API cannot load` catalog URL; login shows catalog load failed (S3 may still return 200).
+
+**Fix A — S3 CORS (required for production central admin):**
+
+17. Bucket → **Permissions** → **Cross-origin resource sharing (CORS)** → paste and **Save**:
 
 ```json
 [
   {
-    "AllowedOrigins": ["http://localhost:5173"],
+    "AllowedOrigins": [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173"
+    ],
     "AllowedMethods": ["GET", "HEAD"],
     "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
     "MaxAgeSeconds": 3600
   }
 ]
 ```
 
-Add your real admin origin when deployed.
+Add `https://admin.example.com` (your real admin host) before production deploy.
+
+**Fix B — local dev only (no S3 CORS):** In **pbx3spa** `.env.development`:
+
+```env
+VITE_CATALOG_PROXY_TARGET=https://08jzwn-pbx3.s3.us-east-1.amazonaws.com
+VITE_INSTANCE_DIRECTORY_URL=/dev-catalog/catalog/instance-index.v0.json
+```
+
+Restart `npm run dev`. Vite proxies `/dev-catalog/*` to S3 server-side (no browser CORS).
 
 ### G. Wire pbx3spa (Phase 2)
 
