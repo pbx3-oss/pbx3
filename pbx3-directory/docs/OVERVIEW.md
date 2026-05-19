@@ -28,7 +28,7 @@ PBX3 is a **federation of instances**. Operators should not type `https://host:4
 
 ## Instance record (v0)
 
-See **`../schema/instance-record.v0.json`** and example **`../schema/instance-index.v0.json`**.
+See **`../schema/instance-record.v0.json`** and **`../schema/instance-index.json`** (S3: `catalog/instance-index.json`).
 
 Required fields for SPA v0:
 

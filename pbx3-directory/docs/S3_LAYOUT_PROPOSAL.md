@@ -209,7 +209,7 @@ s3://acme-pbx3/tenants/f34ck1/backups/20260517T153045Z/backup.zip
 
 ### `instance-index.json` (catalog)
 
-Schema: `schema/instance-record.v0.json` · example: `schema/instance-index.v0.json`
+Schema: `schema/instance-record.v0.json` · example: `schema/instance-index.json` (upload as `catalog/instance-index.json`)
 
 ```json
 {

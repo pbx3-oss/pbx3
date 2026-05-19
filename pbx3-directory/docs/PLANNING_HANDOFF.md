@@ -66,7 +66,7 @@ Merged to **`main`** in **pbx3**, **pbx3api**, **pbx3spa**. Remote **`certificat
 | Path | Purpose |
 |------|---------|
 | `schema/instance-record.v0.json` | JSON Schema for one instance row |
-| `schema/instance-index.v0.json` | Example index (includes test node `08jzwn`) |
+| `schema/instance-index.json` | Example index (includes test node `08jzwn`; same S3 key) |
 | `docs/OVERVIEW.md` | Architecture sketch + open questions |
 
 **Example record (align with live test node when planning):**

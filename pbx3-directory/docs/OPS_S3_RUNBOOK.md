@@ -2,7 +2,7 @@
 
 **Status:** Ops guide (branch **`directory`**). Complements **`S3_LAYOUT_PROPOSAL.md`**, **`DESIGN_RULES.md`**, **`IMPLEMENTATION_PLAN.md`**.
 
-**Golden test node:** `08jzwn.pbx3.com` — API `https://08jzwn.pbx3.com:44300/api` — example catalog row in **`../schema/instance-index.v0.json`**.
+**Golden test node:** `08jzwn.pbx3.com` — API `https://08jzwn.pbx3.com:44300/api` — example catalog in **`../schema/instance-index.json`** (same key in S3).
 
 ---
 
@@ -46,18 +46,14 @@ Repeatable checklist for a **fleet catalog** bucket. Example names: bucket **`08
 
 ### D. Upload the catalog JSON
 
-**Canonical object key (production):** `catalog/instance-index.json`  
-**Also OK for dev:** `catalog/instance-index.v0.json` (same content as repo schema file) — **SPA URL must match the key you upload.**
+**Object key (repo and S3 — one name only):** `catalog/instance-index.json`
 
 **Console (typical):**
 
 10. Bucket → **Create folder** → name **`catalog`** → Create. (Console upload often needs this; CLI does not.)
 11. Open the **`catalog/`** “folder” → **Upload** → select local file:
-    - From repo: `pbx3-directory/schema/instance-index.v0.json`
-12. After upload, confirm **Object key** is exactly:
-    - `catalog/instance-index.json` **or**
-    - `catalog/instance-index.v0.json`  
-    **Not** `instance-index.v0.json` at bucket root.
+    - From repo: `pbx3-directory/schema/instance-index.json`
+12. After upload, confirm **Object key** is exactly `catalog/instance-index.json` (not at bucket root).
 13. **Properties** → **Content-Type** `application/json` (optional but nice).
 
 **Before upload:** set `"id"` in JSON to the node’s real **`globals.id`** (KSUID) if different from the example.
@@ -65,7 +61,7 @@ Repeatable checklist for a **fleet catalog** bucket. Example names: bucket **`08
 **CLI (no folder step):**
 
 ```bash
-aws s3 cp pbx3-directory/schema/instance-index.v0.json \
+aws s3 cp pbx3-directory/schema/instance-index.json \
   s3://08jzwn-pbx3/catalog/instance-index.json \
   --content-type application/json
 ```
@@ -76,14 +72,12 @@ aws s3 cp pbx3-directory/schema/instance-index.v0.json \
 
 ```text
 https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.json
-# or, if you kept the v0 filename:
-https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.v0.json
 ```
 
 15. From any machine (no AWS login):
 
 ```bash
-curl -sS "https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.v0.json"
+curl -sS "https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.json"
 # expect JSON body
 
 curl -sS -o /dev/null -w "%{http_code}\n" \
@@ -122,7 +116,7 @@ Add `https://admin.example.com` (your real admin host) before production deploy.
 
 ```env
 VITE_CATALOG_PROXY_TARGET=https://08jzwn-pbx3.s3.us-east-1.amazonaws.com
-VITE_INSTANCE_DIRECTORY_URL=/dev-catalog/catalog/instance-index.v0.json
+VITE_INSTANCE_DIRECTORY_URL=/dev-catalog/catalog/instance-index.json
 ```
 
 Restart `npm run dev`. Vite proxies `/dev-catalog/*` to S3 server-side (no browser CORS).
@@ -132,7 +126,7 @@ Restart `npm run dev`. Vite proxies `/dev-catalog/*` to S3 server-side (no brows
 18. **Exact URL that returned JSON** in step 15 → build env:
 
 ```env
-VITE_INSTANCE_DIRECTORY_URL=https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.v0.json
+VITE_INSTANCE_DIRECTORY_URL=https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.json
 ```
 
 19. **Solo / no fleet:** omit `VITE_INSTANCE_DIRECTORY_URL`; login with API URL only (Rule 6).
@@ -212,20 +206,14 @@ Keep **Block Public Access** ON at account/bucket level until you add the **narr
 
 ## 4. Bucket layout (first upload)
 
-**Repo file:** `../schema/instance-index.v0.json`  
-**S3 key (pick one; keep SPA URL in sync):**
-
-| S3 object key | Notes |
-|---------------|--------|
-| `catalog/instance-index.json` | Canonical name in layout docs / registrar |
-| `catalog/instance-index.v0.json` | Fine for dev; same JSON body |
+**Repo file = S3 key:** `schema/instance-index.json` → `s3://{bucket}/catalog/instance-index.json`
 
 Validate locally (when `tools/validate-index.sh` exists) or eyeball against schema.
 
 **CLI** (creates `catalog/` prefix automatically — no console folder):
 
 ```bash
-aws s3 cp ../schema/instance-index.v0.json \
+aws s3 cp ../schema/instance-index.json \
   "s3://${BUCKET}/catalog/instance-index.json" \
   --content-type application/json
 ```
@@ -497,7 +485,7 @@ Documented for Phase 5; not required for catalog-only test:
 | **`S3_LAYOUT_PROPOSAL.md`** | Key layout, manifest, policies |
 | **`DESIGN_RULES.md`** | Rules 1, 3, 6 — telephony vs directory vs solo |
 | **`IMPLEMENTATION_PLAN.md`** | Phases 2–5 |
-| **`../schema/instance-index.v0.json`** | Example catalog |
+| **`../schema/instance-index.json`** | Example catalog (same name in S3) |
 
 ---
 
@@ -506,4 +494,5 @@ Documented for Phase 5; not required for catalog-only test:
 | Date | Note |
 |------|------|
 | 2026-05 | Initial ops runbook (bucket, catalog policy, CORS, IAM, Laravel note) |
-| 2026-05 | **Quick recipe** — console steps, folder upload, `instance-index` vs `.v0.json` |
+| 2026-05 | **Quick recipe** — console steps, folder upload |
+| 2026-05 | Single catalog name: `instance-index.json` (repo + S3) |

@@ -48,7 +48,7 @@ These are **specified now** in `schema/` and `S3_LAYOUT_PROPOSAL.md` § improved
 | `package_version` | optional | Support |
 | `last_seen_at` | optional | Fleet badge (manual or job later) |
 
-Schema: `instance-record.v0.json` · example: `instance-index.v0.json`
+Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 ### Instance meta (`instances/{ksuid}/meta.json`)
 
@@ -92,7 +92,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.v0.json`
 - [ ] `docs/V0_CONTRACT.md` — one-page pointer to schemas + required vs optional fields
 - [ ] `tools/validate-index.sh` — validate `instance-index.json` against schema (ajv or `python -m jsonschema`)
 
-**Exit:** Example `instance-index.v0.json` validates; team agrees backup = zip + manifest only.
+**Exit:** Example `instance-index.json` validates; team agrees backup = zip + manifest only.
 
 ---
 

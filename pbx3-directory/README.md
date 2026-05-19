@@ -27,7 +27,7 @@ pbx3-directory/
   docs/OVERVIEW.md          ← architecture and open questions
   schema/
     instance-record.v0.json   ← catalog row (picker)
-    instance-index.v0.json    ← example catalog file
+    instance-index.json       ← example catalog (same key in S3: catalog/instance-index.json)
     instance-meta.v0.json     ← instances/{ksuid}/meta.json
     tenant-meta.v0.json       ← tenants/{shortuid}/meta.json
     backup-manifest.v0.json
