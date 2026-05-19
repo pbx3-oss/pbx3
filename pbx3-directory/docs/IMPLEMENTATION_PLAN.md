@@ -133,11 +133,15 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 **Owner:** backup pipeline
 
-- [ ] After existing backup create: write `manifest.json` + upload `backup.zip` to `instances/{ksuid}/backups/{stamp}/`
-- [ ] Populate manifest: `pbx3_version`, `node_fqdn`, `trigger`, `sha256`, `contents_summary`
-- [ ] Update `instances/{ksuid}/meta.json` → `backup_latest_stamp`
-- [ ] Write `backups/policy.json` on first upload (defaults from org template)
-- [ ] **Async upload** — local `/opt/pbx3/bkup` remains source for UI until PUT succeeds
+- [x] After existing backup create: write `manifest.json` + upload `backup.zip` to `instances/{ksuid}/backups/{stamp}/`
+- [x] Populate manifest: `pbx3_version`, `node_fqdn`, `trigger`, `sha256`, `contents_summary`
+- [x] Update `instances/{ksuid}/meta.json` → `backup_latest_stamp`
+- [x] Write `backups/policy.json` on first upload (defaults from org template)
+- [x] **Async upload** — local `/opt/pbx3/bkup` remains source for UI until PUT succeeds (`dispatch()->afterResponse()`)
+
+**Code:** `pbx3api` — `InstanceBackupDirectoryUpload`, `config/pbx3_directory.php`, disk `pbx3_org`; `php artisan pbx3:upload-backup`. **`pbx3-directory/tools/upload-instance-backup.sh`** for CLI retry without PHP.
+
+**Deploy:** `composer install` on node (adds `league/flysystem-aws-s3-v3`); set `PBX3_ORG_BUCKET` + IAM (see `OPS_S3_RUNBOOK.md` §7).
 
 **Exit:** One instance backup visible in S3 with valid manifest; restore still from local UI first.
 

@@ -381,21 +381,25 @@ On deploy host (`/opt/pbx3api`):
 composer require league/flysystem-aws-s3-v3 "^3.0" --with-all-dependencies
 ```
 
-Use `Storage::disk('s3')` (or a scoped disk — see Laravel **“Scoped Filesystems”**) for backup PUTs; use `temporaryUrl()` for presigned GETs to the SPA when bulk download UI ships.
+Use `Storage::disk('pbx3_org')` for backup PUTs (`instances/{ksuid}/backups/…`); use `temporaryUrl()` for presigned GETs to the SPA when bulk download UI ships.
 
-**`.env`** (only if not using instance role):
+**`.env`** on the node (only if not using instance role):
 
 ```env
-FILESYSTEM_DISK=local
-AWS_DEFAULT_REGION=eu-west-1
-AWS_BUCKET=acme-pbx3
+AWS_DEFAULT_REGION=us-east-1
+PBX3_ORG_BUCKET=08jzwn-pbx3
+PBX3_DIRECTORY_BACKUP_UPLOAD=true
 # AWS_ACCESS_KEY_ID=     # omit when using IAM role
 # AWS_SECRET_ACCESS_KEY=
 ```
 
-Use a dedicated disk in code (future): `Storage::disk('s3')->put("instances/{$ksuid}/backups/…")`. **`config/filesystems.php`** already defines an `s3` disk stub.
+After `composer install` on `/opt/pbx3api`, creating a backup via the SPA/API triggers an **after-response** upload (`InstanceBackupDirectoryUpload`). Retry manually:
 
-**Not implemented yet:** backup job calling S3 — installing Composer alone does nothing until Phase 4 code lands.
+```bash
+php artisan pbx3:upload-backup pbx3bak.UNIXTIME.zip
+# or from pbx3 repo:
+./pbx3-directory/tools/upload-instance-backup.sh --zip /opt/pbx3/bkup/pbx3bak.UNIXTIME.zip
+```
 
 ### 7.3 Registrar / ops user (Phase 3)
 
@@ -462,7 +466,7 @@ Documented for Phase 5; not required for catalog-only test:
 - [ ] `instance-index.json` validates against schema; `id` matches node `globals.id`
 - [ ] `curl` / browser can load catalog URL
 - [ ] SPA login to `08jzwn` still works with directory URL unset (solo path)
-- [ ] Phase 4: test PUT from node with IAM role after Laravel package + code exist
+- [ ] Phase 4: test PUT from node with IAM role after `composer install` + `PBX3_ORG_BUCKET` set
 
 ---
 

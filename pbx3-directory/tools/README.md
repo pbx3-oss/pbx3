@@ -53,6 +53,22 @@ Updates tenant meta for a new hosting instance; sets `moved_at` and `previous_in
   --cname f34ck1.pbx3.com
 ```
 
+## upload-instance-backup.sh (Phase 4)
+
+Uploads a local `pbx3bak.{unixtime}.zip` to `instances/{ksuid}/backups/{stamp}/` with manifest + policy + meta update. Same layout as pbx3api async upload.
+
+```bash
+chmod +x upload-instance-backup.sh
+
+./upload-instance-backup.sh --zip /opt/pbx3/bkup/pbx3bak.1716123456.zip
+```
+
+On the node with Laravel:
+
+```bash
+cd /opt/pbx3api && php artisan pbx3:upload-backup pbx3bak.1716123456.zip
+```
+
 ## validate-index.sh
 
 ```bash
