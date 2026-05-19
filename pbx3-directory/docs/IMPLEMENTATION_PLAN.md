@@ -89,8 +89,8 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 - [x] `DESIGN_RULES.md`, `S3_LAYOUT_PROPOSAL.md` v1 tree
 - [x] JSON Schemas: `instance-record`, `instance-meta`, `tenant-meta`, `backup-manifest`, `retention-policy`
-- [ ] `docs/V0_CONTRACT.md` — one-page pointer to schemas + required vs optional fields
-- [ ] `tools/validate-index.sh` — validate `instance-index.json` against schema (ajv or `python -m jsonschema`)
+- [x] `docs/V0_CONTRACT.md` — one-page pointer to schemas + required vs optional fields
+- [x] `tools/validate-index.sh` — validate `instance-index.json` (jq + optional python jsonschema)
 
 **Exit:** Example `instance-index.json` validates; team agrees backup = zip + manifest only.
 
@@ -118,12 +118,12 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 ### Phase 3 — Registrar (pbx3 scripts)
 
-**Owner:** `pbx3-directory/tools/` or `pbx3-1/opt/pbx3/scripts/`
+**Owner:** `pbx3-directory/tools/` · **Docs:** `tools/README.md`
 
-- [ ] `register-instance.sh` — input: node `globals.id`, `fqdn`, `api_base_url`, org bucket; merges catalog row + writes `instances/{ksuid}/meta.json`
-- [ ] `register-tenant.sh` — input: `tenant_shortuid`, `instance_id`, `cname`; writes `tenants/{shortuid}/meta.json`
-- [ ] `move-tenant.sh` — updates tenant meta + `moved_at` / `previous_instance_id`; does **not** move recordings prefix
-- [ ] Idempotent: same `globals.id` → update row, no duplicate
+- [x] `register-instance.sh` — merges `catalog/instance-index.json` + `instances/{ksuid}/meta.json`
+- [x] `register-tenant.sh` — writes `tenants/{shortuid}/meta.json`
+- [x] `move-tenant.sh` — updates tenant meta + `moved_at` / `previous_instance_id`; does **not** move recordings prefix
+- [x] Idempotent: same `globals.id` → update catalog row, no duplicate
 
 **Exit:** Manual run on test node updates dev catalog consistently.
 

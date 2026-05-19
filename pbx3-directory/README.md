@@ -39,6 +39,7 @@ pbx3-directory/
 ## Ops
 
 - **`docs/OPS_S3_RUNBOOK.md`** — **Quick recipe** (console checklist), bucket policy, CORS, node IAM, Laravel S3 (Phase 4).
+- **`tools/README.md`** — Phase 3 registrar (`register-instance.sh`, `register-tenant.sh`, `move-tenant.sh`).
 
 ## Not in scope for this stub
 
