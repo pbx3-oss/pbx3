@@ -38,7 +38,7 @@ pbx3-directory/
 
 ## Ops
 
-- **`docs/OPS_S3_RUNBOOK.md`** — create org bucket, public `catalog/*` only, CORS, node IAM, Laravel S3 package (Phase 4).
+- **`docs/OPS_S3_RUNBOOK.md`** — **Quick recipe** (console checklist), bucket policy, CORS, node IAM, Laravel S3 (Phase 4).
 
 ## Not in scope for this stub
 

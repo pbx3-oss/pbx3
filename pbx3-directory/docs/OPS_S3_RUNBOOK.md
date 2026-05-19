@@ -6,6 +6,131 @@
 
 ---
 
+## Quick recipe (console — start here)
+
+Repeatable checklist for a **fleet catalog** bucket. Example names: bucket **`08jzwn-pbx3`**, region **`us-east-1`**.
+
+### A. Create bucket
+
+1. **S3** → **Create bucket**.
+2. **Bucket name:** `{shortid}-pbx3` (e.g. `08jzwn-pbx3`). **No dots** in the name (avoid `08jzwn.pbx3.com`).
+3. **Region:** note it (e.g. `us-east-1`) — URLs depend on it.
+4. Leave defaults (encryption SSE-S3 is fine). **Create bucket**.
+
+### B. Allow a public catalog (bucket only)
+
+5. Open the bucket → **Permissions** → **Block public access (bucket settings)** → **Edit**.
+6. Turn **Off** → **Block all public access** (master switch for **this bucket only**). Save.
+7. **Account check (if public read still fails later):** S3 left nav → **Block Public Access settings for this account** → ensure account is not forcing “block all” over your bucket (adjust for test if needed).
+
+### C. Bucket policy (catalog prefix only)
+
+8. Same **Permissions** tab → **Bucket policy** → **Edit** → paste (replace bucket name if not `08jzwn-pbx3`):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadCatalogOnly",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::08jzwn-pbx3/catalog/*"
+    }
+  ]
+}
+```
+
+9. Save. AWS may warn “public” — expected for `catalog/*` only.
+
+### D. Upload the catalog JSON
+
+**Canonical object key (production):** `catalog/instance-index.json`  
+**Also OK for dev:** `catalog/instance-index.v0.json` (same content as repo schema file) — **SPA URL must match the key you upload.**
+
+**Console (typical):**
+
+10. Bucket → **Create folder** → name **`catalog`** → Create. (Console upload often needs this; CLI does not.)
+11. Open the **`catalog/`** “folder” → **Upload** → select local file:
+    - From repo: `pbx3-directory/schema/instance-index.v0.json`
+12. After upload, confirm **Object key** is exactly:
+    - `catalog/instance-index.json` **or**
+    - `catalog/instance-index.v0.json`  
+    **Not** `instance-index.v0.json` at bucket root.
+13. **Properties** → **Content-Type** `application/json` (optional but nice).
+
+**Before upload:** set `"id"` in JSON to the node’s real **`globals.id`** (KSUID) if different from the example.
+
+**CLI (no folder step):**
+
+```bash
+aws s3 cp pbx3-directory/schema/instance-index.v0.json \
+  s3://08jzwn-pbx3/catalog/instance-index.json \
+  --content-type application/json
+```
+
+### E. Verify public read
+
+14. Copy **Object URL** from the console (or build it):
+
+```text
+https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.json
+# or, if you kept the v0 filename:
+https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.v0.json
+```
+
+15. From any machine (no AWS login):
+
+```bash
+curl -sS "https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.v0.json"
+# expect JSON body
+
+curl -sS -o /dev/null -w "%{http_code}\n" \
+  "https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/instances/test/meta.json"
+# expect 403
+```
+
+16. If catalog `curl` is still **AccessDenied**: object missing/wrong key, wrong region in URL, **account** Block Public Access, or object encrypted with KMS that blocks anonymous read.
+
+### F. CORS (only when SPA is on another host)
+
+17. Bucket → **Permissions** → **Cross-origin resource sharing (CORS)** → example:
+
+```json
+[
+  {
+    "AllowedOrigins": ["http://localhost:5173"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+Add your real admin origin when deployed.
+
+### G. Wire pbx3spa (Phase 2)
+
+18. **Exact URL that returned JSON** in step 15 → build env:
+
+```env
+VITE_INSTANCE_DIRECTORY_URL=https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.v0.json
+```
+
+19. **Solo / no fleet:** omit `VITE_INSTANCE_DIRECTORY_URL`; login with API URL only (Rule 6).
+
+### H. Mistakes cheat sheet
+
+| Symptom | Usual cause |
+|---------|-------------|
+| AccessDenied on catalog URL | Empty bucket, file at **root** not under `catalog/`, account BPA still on, wrong region in URL |
+| AccessDenied on `instances/…` | **Good** — policy is scoped correctly |
+| Console upload landed at root | Did not create **`catalog/`** folder first or did not upload **inside** it |
+| Policy “does nothing” | Bucket name in policy ARN ≠ real bucket; account-level block public access |
+
+---
+
 ## 1. What you are setting up
 
 | Phase | S3 use | AWS on PBX node? |
@@ -70,13 +195,25 @@ Keep **Block Public Access** ON at account/bucket level until you add the **narr
 
 ## 4. Bucket layout (first upload)
 
-Validate JSON locally (when `tools/validate-index.sh` exists) or eyeball against **`../schema/instance-index.v0.json`**.
+**Repo file:** `../schema/instance-index.v0.json`  
+**S3 key (pick one; keep SPA URL in sync):**
+
+| S3 object key | Notes |
+|---------------|--------|
+| `catalog/instance-index.json` | Canonical name in layout docs / registrar |
+| `catalog/instance-index.v0.json` | Fine for dev; same JSON body |
+
+Validate locally (when `tools/validate-index.sh` exists) or eyeball against schema.
+
+**CLI** (creates `catalog/` prefix automatically — no console folder):
 
 ```bash
 aws s3 cp ../schema/instance-index.v0.json \
   "s3://${BUCKET}/catalog/instance-index.json" \
   --content-type application/json
 ```
+
+**Console:** create folder **`catalog`**, open it, then upload — see **Quick recipe §D**.
 
 Optional instance meta (Phase 3+):
 
@@ -352,3 +489,4 @@ Documented for Phase 5; not required for catalog-only test:
 | Date | Note |
 |------|------|
 | 2026-05 | Initial ops runbook (bucket, catalog policy, CORS, IAM, Laravel note) |
+| 2026-05 | **Quick recipe** — console steps, folder upload, `instance-index` vs `.v0.json` |
