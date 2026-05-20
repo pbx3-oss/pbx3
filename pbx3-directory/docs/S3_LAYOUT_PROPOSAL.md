@@ -1,6 +1,6 @@
 # S3 bucket layout — initial proposal (draft)
 
-**Status:** Draft for review (branch **`directory`**). Not implemented.  
+**Status:** Branch **`directory`** — **catalog**, **instance backups**, and **registrar** implemented on golden; **recordings** and **tenant backups** specified here, implementation **Phase S7** (`IMPLEMENTATION_PLAN.md` § S3 program closeout).  
 **Related:** `DESIGN_RULES.md` (directory signpost is **one small JSON**; this doc is **bulk object storage** for shared assets, recordings, backups).
 
 **Rule 1 still applies:** PBX nodes make and take calls without S3. Upload/download to this bucket is **async ops/media** — never in the SIP/RTP path.

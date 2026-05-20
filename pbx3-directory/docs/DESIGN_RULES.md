@@ -308,11 +308,13 @@ The SPA origin (e.g. `https://yourorg.github.io` or `https://app.example.com`) d
 
 **Future (backlog):** restore/download from S3 when local zip is gone (presigned GET or rehydrate to `bkup/`).
 
-### Recordings (future S3 offload)
+### Recordings (S3 offload — Phase S7 in `IMPLEMENTATION_PLAN.md`)
 
-- **Search on node:** Keep **epoch** (or DB datetime from epoch) for `BETWEEN` — same as old system.
-- **S3 layout:** Prefer `media/{yyyy}/{mm}/{dd}/{call_id}.wav` for prefix walks; optional epoch in object metadata — not required in the visible folder name for search.
-- **SPA:** Show ISO 8601 UTC for call time; epoch stays internal.
+- **Rule 1:** Recording capture and playback on disk work **without S3**; upload is **async** after the wav exists locally.
+- **Search on node:** Keep **epoch** (or DB datetime from epoch) for `BETWEEN` — authoritative index stays on node until a later manifest track.
+- **S3 layout:** `tenants/{tenant_shortuid}/recordings/media/{yyyy}/{mm}/{dd}/{call_id}.wav` (+ optional `.txt`); `policy.json` + tag `class=recording` for lifecycle.
+- **Retention hybrid:** Node `rec_age` / `recmaxage` evicts local files; S3 holds DR copy until lifecycle (same spirit as backup option C).
+- **SPA:** Show ISO 8601 UTC for call time; epoch stays internal; “archived” when object is S3-only.
 
 ### Checklist (time/display)
 

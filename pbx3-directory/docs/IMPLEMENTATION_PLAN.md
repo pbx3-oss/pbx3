@@ -156,9 +156,119 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 ---
 
+## S3 program closeout (target: finish bulk S3 without Phase D auth)
+
+**Goal:** Close the **S3-shaped** workstream — directory, instance backups, tenant recordings, ops tooling — so the team can treat “S3 v1” as done and park **Supabase/RDS / Phase D** until a separate auth project.
+
+**Out of scope for this closeout:** central IdP, per-user catalog ACL, tenant-scoped backup zips to `tenants/…/backups/`, CloudFront phone images, EventBridge, Terraform, cross-region replication, GDPR export packages.
+
+### Already done (golden reference)
+
+| Area | Status |
+|------|--------|
+| Catalog + schemas + registrar | Phase 1–3 |
+| Instance backup upload + manifest + `meta.json` | Phase 4 |
+| Local retention option C (9 FIFO + cron) | pbx3api `119b1f7+` |
+| S3 lifecycle `class=backup` (ops script, laptop) | Applied on `08jzwn-pbx3` |
+| SPA backup columns (UTC + archive id) | pbx3spa |
+| Central SPA hosting decision | GitHub Pages (`DESIGN_RULES.md`) |
+
+### Exit criteria — “S3 v1 complete”
+
+1. **Two instances** in `catalog/instance-index.json` with distinct buckets/roles (proves `OPS_S3_RUNBOOK.md` is repeatable).
+2. **Backups:** operator can see **local + S3** archives; **restore or download** works when only S3 has the zip (presigned GET or rehydrate to `bkup/`).
+3. **Recordings:** at least one tenant on golden — finished call recording **async PUT** to `tenants/{shortuid}/recordings/media/{yyyy}/{mm}/{dd}/{call_id}.wav`; **playback** works from S3 when local file is gone (presigned or API proxy); lifecycle/tag `class=recording` aligned with `policy.json`.
+4. **Ops:** lifecycle apply script reads **`maxage_days`** from `instances/{ksuid}/backups/policy.json` (and tenant `recordings/policy.json` when present), not a hard-coded `30` CLI arg only.
+5. **Docs:** runbook covers **S3-compatible** endpoint (not AWS-only); deferred items listed explicitly below.
+
+---
+
+### Phase S5 — Backups complete (~1–2 weeks)
+
+**Owner:** pbx3api + pbx3spa
+
+| # | Task | Notes |
+|---|------|--------|
+| S5.1 | **API:** `GET /backups` merges local `pbx3bak.*.zip` + S3 prefixes under `instances/{ksuid}/backups/` (from manifest or listObjects) | De-dupe by `backup_stamp` / epoch; mark `source: local\|s3\|both` |
+| S5.2 | **SPA:** backup table shows S3-only rows (archive id, no local file); actions differ | “Download from archive” vs restore |
+| S5.3 | **Presigned GET** (or rehydrate job) for `backup.zip` when local missing | Time-limited URL; audit log |
+| S5.4 | **Restore from S3:** optional `POST /backups/restore-from-archive` pulls zip to `bkup/` then existing restore path | Same safety checks as local restore |
+| S5.5 | **`apply-backup-lifecycle-rule.sh`:** read `maxage_days` from bucket `policy.json` (instance path); fallback 30 | One script invocation per org bucket |
+
+**Not required:** delete untagged pre-`119b1f7` backup objects (ops may `rm` prefix manually).
+
+---
+
+### Phase S6 — Fleet proof (~ops, light code)
+
+| # | Task | Notes |
+|---|------|--------|
+| S6.1 | **Second node** — full runbook: bucket (or shared org bucket + second KSUID prefix), IAM role, `register-instance.sh`, Phase 4 smoke | Checklist in `OPS_S3_RUNBOOK.md` |
+| S6.2 | **GitHub Pages** staging deploy + catalog CORS + API CORS for Pages origin | Closes hosting loop (`IMPLEMENTATION_PLAN` § SPA hosting) |
+| S6.3 | *(Optional)* `last_seen_at` probe job updating catalog | Nice for SPA chips; **not** blocking S3 v1 exit |
+
+---
+
+### Phase S7 — Recordings offload v1 (~2–3 weeks)
+
+**Principle (Rule 1):** Calls and recording capture work **without S3**. Upload is **async** after the wav exists on disk (mirror `InstanceBackupDirectoryUpload`).
+
+**On-node today:** tenant `rec_final_dest`, `rec_age` / `recmaxage` (days), spool under `/opt/pbx3/media/recordings/…` and Asterisk monitor paths — see `sqlite_create_tenant.sql`.
+
+| # | Task | Repo | Notes |
+|---|------|------|--------|
+| S7.1 | **`InstanceRecordingDirectoryUpload`** (or shared `OrgObjectUpload` base) | pbx3api | PUT `tenants/{shortuid}/recordings/media/{y}/{m}/{d}/{call_id}.wav`; optional `.txt` sidecar |
+| S7.2 | **Trigger** — after recording finalized or nightly scan of age-eligible files | pbx3api / cron | Config: `PBX3_RECORDING_UPLOAD_ENABLED`, tenant allowlist for golden |
+| S7.3 | **`tenants/…/recordings/policy.json`** on first upload (`maxage_days` from tenant `recmaxage` or default) | pbx3api | Schema `retention-policy.v0.json` |
+| S7.4 | **S3 tag** `class=recording` + lifecycle rule (extend ops script or sibling `apply-recording-lifecycle-rule.sh`) | pbx3-directory/tools | Same pattern as backups; **do not** expire `meta.json` / catalog |
+| S7.5 | **IAM** — node role `PutObject` on `tenants/{hosted-tenant}/recordings/*` for tenants on that instance | ops | Per-node policy like backups |
+| S7.6 | **API playback** — `GET /recordings/{id}/play` returns presigned URL or streams via API when file only on S3 | pbx3api | CDR/search still uses **epoch** on node DB |
+| S7.7 | **SPA** — recording list shows UTC; badge “archived” if S3-only | pbx3spa | ISO display per `DESIGN_RULES.md` |
+| S7.8 | **Local retention unchanged** — `rec_age` still deletes from disk; S3 holds DR copy until lifecycle | design | Hybrid like backup option C |
+
+**Defer past S7:** `recordings.db` snapshot to S3, monthly `manifest-{yyyy}-{mm}.jsonl`, bulk Athena search, tenant backup zip under `tenants/…/backups/`.
+
+---
+
+### Phase S8 — Ops polish (when S5–S7 code exists)
+
+| # | Task |
+|---|------|
+| S8.1 | Document **non-AWS** endpoint env for Flysystem (`AWS_ENDPOINT`, path-style) in `OPS_S3_RUNBOOK.md` |
+| S8.2 | Optional object tags `org`, `instance_id`, `tenant` on PUT (in addition to `class`) |
+| S8.3 | `postinst` registrar hook (Phase 5) |
+| S8.4 | Mark `S3_LAYOUT_PROPOSAL.md` **implemented** sections vs **planned** in header |
+
+---
+
+### Explicitly deferred (post–S3 v1)
+
+| Item | Why wait |
+|------|----------|
+| Supabase / RDS / Phase D central auth | Separate product decision |
+| `last_seen_at` fleet badges | Monitoring track, not storage |
+| `share/phone-images` + CloudFront | No telephony dependency |
+| Tenant-scoped backup zip (`tenants/…/backups/`) | Instance backup covers DR v1 |
+| EventBridge, Inventory, replication | Enterprise ops maturity |
+
+---
+
+### Suggested build order
+
+```text
+  S5 backups complete  →  S6 second node + Pages  →  S7 recordings v1  →  S8 ops polish
+         │                      │                         │
+         └──────────────────────┴─────────────────────────┘
+                           S3 v1 exit review
+```
+
+**Next session pick:** start **S5.1** (merged backup list API) — smallest visible win after golden cron verification.
+
+---
+
 ## ToDo backlog (deferred — not in v0 scope)
 
-Use this as the product/engineering queue after Phase 2–4. **Not** blocking instance picker.
+Use this as the **long-tail** queue. **Active S3 work** is tracked in **§ S3 program closeout** above. **Not** blocking instance picker.
 
 ### Backup retention (agreed option C — `DESIGN_RULES.md`)
 
