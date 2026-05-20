@@ -142,6 +142,287 @@ VITE_INSTANCE_DIRECTORY_URL=https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catal
 
 ---
 
+## Golden node playbook — `08jzwn.pbx3.com` (validated)
+
+End-to-end steps used on the **golden** EC2 test instance. Other nodes follow the same pattern with their own `globals.id`, bucket name, and IAM role.
+
+### Reference values (verify on box)
+
+| Item | Golden example |
+|------|----------------|
+| **FQDN** | `08jzwn.pbx3.com` |
+| **API** | `https://08jzwn.pbx3.com:44300/api` |
+| **Org bucket** | `08jzwn-pbx3` (`us-east-1`) |
+| **`globals.id` (KSUID)** | `3DmAsxePTWQZgynBYXE8obIRqEE` |
+| **EC2 instance** | e.g. `i-0829f0a5ecbbf0cde` |
+| **IAM instance role** | `pbx3-node-08jzwn` |
+| **pbx3api deploy path** | `/opt/pbx3api` (nginx `root`; **not** `~/Git/…`) |
+| **Local backups** | `/opt/pbx3/bkup/pbx3bak.{unixtime}.zip` |
+| **S3 backup prefix** | `s3://08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/backups/{stamp}/` |
+
+Refresh KSUID:
+
+```bash
+sqlite3 /opt/pbx3/db/sqlite.db "SELECT id, fqdn, shortuid FROM globals WHERE pkey='global';"
+```
+
+---
+
+### Step 1 — EC2 security groups (network)
+
+**IAM instance roles control S3 access.** Security groups control **network** reachability. Both matter on golden.
+
+#### What S3 Phase 4 needs from the security group
+
+| Direction | Port | Purpose |
+|-----------|------|---------|
+| **Outbound** | **443** (HTTPS) | PUT/GET to S3 (`s3.us-east-1.amazonaws.com` and bucket endpoints) |
+| **Inbound** | — | **None** for S3 (uploads are outbound from the node) |
+
+Default EC2 security groups often allow **all outbound** traffic — that is enough for S3. If uploads fail with network/timeout errors (not IAM), check that egress to the internet on **443** is allowed.
+
+#### Golden node inbound (typical PBX + LE + admin)
+
+Adjust to your fleet policy; golden used roughly:
+
+| Port | Protocol | Source | Purpose |
+|------|----------|--------|---------|
+| **22** | TCP | Your admin IP / bastion | SSH |
+| **44300** | TCP | Admin / tenant networks | **pbx3api** (HTTPS nginx) |
+| **80** | TCP | `0.0.0.0/0` (or LE only) | **HTTP-01** Let’s Encrypt (see below) |
+| **5060** | UDP/TCP | As designed | SIP (PJSIP) |
+| **5061** | TCP | As designed | SIP TLS |
+| *(others)* | — | Shorewall docs | RTP, etc. — **pbx3** firewall is separate from EC2 SG |
+
+**Let’s Encrypt:** LE validators reach **port 80** on the public IP. Golden had **EC2 SG port 80 open** plus a **Shorewall** rule on the node (`le-port80-open.sh` / managed comment during issuance). A successful pre-check looked like:
+
+```bash
+curl -v --connect-timeout 5 http://08jzwn.pbx3.com/.well-known/acme-challenge/test
+# Connected + HTTP response (404 on fake path is OK)
+```
+
+**Two firewalls:** open **80** (and **44300**, **22**, SIP) in **both** EC2 security group **and** Shorewall where applicable.
+
+#### Build / attach a security group (console)
+
+1. **EC2** → **Security groups** → **Create security group**.
+2. **Name:** e.g. `pbx3-golden-08jzwn` — **VPC** = same as the instance.
+3. **Inbound rules:** add rows from the table above (tighten `0.0.0.0/0` on 22/44300 in production).
+4. **Outbound:** default **All traffic** → `0.0.0.0/0` (keeps S3, apt, LE working).
+5. **EC2** → **Instances** → select golden instance → **Security** tab → **Security groups** → attach this group (replace or add to existing).
+
+No security group change is required specifically for **IAM role** credentials (those use instance metadata, not inbound ports).
+
+---
+
+### Step 2 — S3 bucket + public catalog
+
+Follow **Quick recipe §A–E** above with bucket **`08jzwn-pbx3`**, region **`us-east-1`**.
+
+- Catalog URL: `https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.json`
+- Ensure catalog row **`id`** = node **`globals.id`** (KSUID above).
+
+**Phase 3 (laptop):** register instance + tenants with `pbx3-directory/tools/register-instance.sh` / `register-tenant.sh` and `PBX3_ORG_BUCKET=08jzwn-pbx3` (IAM user/role with write to `catalog/*`, `instances/*`, `tenants/*` — **not** the node role).
+
+---
+
+### Step 3 — IAM instance role (no access keys on the node)
+
+**Goal:** PBX node uploads backups via **instance profile**; no `AWS_ACCESS_KEY_ID` in `.env` or `~/.aws/credentials`.
+
+#### 3.1 Create IAM policy (one node = one KSUID)
+
+**IAM** → **Policies** → **Create policy** → **JSON**:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListOrgBucket",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::08jzwn-pbx3",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "instances/3DmAsxePTWQZgynBYXE8obIRqEE/*",
+            "tenants/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "WriteInstanceAndTenantObjects",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Resource": [
+        "arn:aws:s3:::08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/*",
+        "arn:aws:s3:::08jzwn-pbx3/tenants/*"
+      ]
+    }
+  ]
+}
+```
+
+**Name:** `pbx3-node-08jzwn-s3-writer` (or similar). Node does **not** need `catalog/*` write unless registrar runs on-box.
+
+#### 3.2 Create role + instance profile
+
+1. **IAM** → **Roles** → **Create role** → trusted entity **EC2**.
+2. Attach policy from §3.1.
+3. **Role name:** `pbx3-node-08jzwn` (console usually creates matching **instance profile**).
+
+#### 3.3 Attach to the EC2 instance
+
+1. **EC2** → **Instances** → golden instance → **Actions** → **Security** → **Modify IAM role**.
+2. Choose **`pbx3-node-08jzwn`** → **Save**.
+
+#### 3.4 Verify (on the node)
+
+```bash
+# Remove static keys so CLI uses the role (if present)
+mv ~/.aws/credentials ~/.aws/credentials.bak 2>/dev/null || true
+mv ~/.aws/config ~/.aws/config.bak 2>/dev/null || true
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+
+aws sts get-caller-identity
+# Expect: "Arn": "...:assumed-role/pbx3-node-08jzwn/i-..."
+
+sudo -u www-data aws sts get-caller-identity
+# Same role (PHP-FPM / www-data path)
+```
+
+**Wrong:** `"Arn": "...:root"` or account id only → static **root/user keys** still in `~/.aws/credentials`; remove them.
+
+**S3 write smoke test:**
+
+```bash
+echo test | aws s3 cp - \
+  s3://08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/backups/_iam-test.txt
+aws s3 rm s3://08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/backups/_iam-test.txt
+```
+
+---
+
+### Step 4 — Deploy pbx3api Phase 4 on `/opt/pbx3api`
+
+Production API is **`/opt/pbx3api`** (nginx `root /opt/pbx3api/public`). Do **not** rely on `~/Git/pbx3-master/pbx3api` for runtime unless you symlink/copy there.
+
+```bash
+cd /opt/pbx3api
+sudo git fetch origin directory
+sudo git checkout directory
+sudo git pull origin directory
+# Need commits through Phase 4 + composer lock (b313beb+, PHP fix a3d0751+, S3 cred fix 759fd9d+)
+
+sudo composer install --no-dev
+# Run as root on /opt/pbx3api — NOT: sudo -u www-data composer (permission errors in ~)
+
+test -f vendor/league/flysystem-aws-s3-v3/PortableVisibilityConverter.php && echo "S3 package OK"
+
+sudo php artisan config:clear
+```
+
+**`.env`** (golden):
+
+```env
+AWS_DEFAULT_REGION=us-east-1
+PBX3_ORG_BUCKET=08jzwn-pbx3
+PBX3_DIRECTORY_BACKUP_UPLOAD=true
+```
+
+**Do not** leave empty assignment lines for keys (they block the instance role in Laravel):
+
+```env
+# Comment out or delete — do NOT use:
+# AWS_ACCESS_KEY_ID=
+# AWS_SECRET_ACCESS_KEY=
+```
+
+After pull **`759fd9d+`**, `config/filesystems.php` treats empty env as `null` so the role works even if those lines exist — commenting them out is still clearer.
+
+**PHP version:** lock file targets **PHP 8.3** (`composer.json` `config.platform.php`). Node on **8.3.6** is correct; if `composer install` complains about `symfony/filesystem` v8 / PHP 8.4, pull latest `directory` and re-run install.
+
+---
+
+### Step 5 — Create backup and upload to S3
+
+**5a — Local backup** (SPA **Backups → Create** or API):
+
+```bash
+ls -lt /opt/pbx3/bkup/pbx3bak.*.zip
+```
+
+**5b — Upload** (use **real** filename, not a placeholder):
+
+```bash
+cd /opt/pbx3api
+ZIP=$(ls -t /opt/pbx3/bkup/pbx3bak.*.zip | head -1)
+sudo php artisan pbx3:upload-backup "$(basename "$ZIP")"
+```
+
+**5c — List S3:**
+
+```bash
+aws s3 ls s3://08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/backups/
+```
+
+Each prefix is a **UTC stamp folder** containing `backup.zip` + `manifest.json`. SPA/API backup create also triggers **async upload** after response when configured.
+
+**Logs:**
+
+```bash
+sudo grep -i 'directory backup' /opt/pbx3api/storage/logs/laravel.log | tail -10
+# Success: directory backup upload complete
+```
+
+---
+
+### Step 6 — Reconcile local zip names vs S3 folders
+
+| Local (node) | S3 folder | Same instant? |
+|--------------|-----------|----------------|
+| `pbx3bak.1779236226.zip` | `20260520T001706Z/` | Yes — epoch `1779236226` → UTC folder name |
+| `pbx3bak.1779236663.zip` | `20260520T002423Z/` | Yes |
+
+- **Local:** `pbx3bak.{unix_epoch}.zip` (existing PBX convention).
+- **S3:** `backups/{backup_stamp}/backup.zip` where `backup_stamp` = `gmdate('Ymd\THis\Z', epoch)` (v0 layout — human-readable in console).
+- **Bridge:** read epoch from local filename; or read `created_at` in `manifest.json`.
+
+```bash
+EPOCH=1779236226
+date -u -d "@$EPOCH" +%Y%m%dT%H%M%SZ
+```
+
+`instances/{ksuid}/meta.json` → `backup_latest_stamp` is only the **newest** upload, not a full list.
+
+---
+
+### Step 7 — pbx3spa (Phase 2) on golden
+
+```env
+VITE_INSTANCE_DIRECTORY_URL=https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.json
+```
+
+Local dev without S3 CORS: **Quick recipe §F** (`/dev-catalog` proxy). Solo path: omit `VITE_INSTANCE_DIRECTORY_URL`.
+
+---
+
+### Golden checklist
+
+- [ ] EC2 SG: outbound **443**; inbound **22**, **44300**, **80** (LE), SIP as needed
+- [ ] Shorewall aligned with SG for **80** / **44300**
+- [ ] Bucket `08jzwn-pbx3`; public read **only** `catalog/*`
+- [ ] Catalog `id` = `globals.id` on node
+- [ ] IAM role `pbx3-node-08jzwn` attached; `aws sts` shows `assumed-role/...`
+- [ ] No static AWS keys in `~/.aws/` or `.env`
+- [ ] `/opt/pbx3api` on `directory`; `composer install --no-dev`; Flysystem S3 package present
+- [ ] `.env`: `PBX3_ORG_BUCKET`, region, upload enabled
+- [ ] Local backup exists; S3 shows `backups/{stamp}/backup.zip` + `manifest.json`
+
+---
+
 ## 1. What you are setting up
 
 | Phase | S3 use | AWS on PBX node? |
@@ -373,33 +654,37 @@ Attach role to instance; on node **no** `AWS_ACCESS_KEY_ID` in `.env` if the SDK
 
 ### 7.2 Laravel (pbx3api) — Phase 4
 
-**Package (still current for Laravel 11.x / 12.x):** [`league/flysystem-aws-s3-v3`](https://packagist.org/packages/league/flysystem-aws-s3-v3) — official optional dependency for the `s3` disk ([Laravel 11 filesystem](https://laravel.com/docs/11.x/filesystem#driver-prerequisites), [Laravel 12 filesystem](https://laravel.com/docs/12.x/filesystem#driver-prerequisites)). Pulls in `aws/aws-sdk-php` transitively; do **not** install the AWS SDK as a separate top-level dependency unless you need low-level calls outside `Storage::`.
-
-On deploy host (`/opt/pbx3api`):
+**Package:** [`league/flysystem-aws-s3-v3`](https://packagist.org/packages/league/flysystem-aws-s3-v3) — in `composer.json` on branch **`directory`**; install on the node with `composer install`, not only on a dev laptop.
 
 ```bash
-composer require league/flysystem-aws-s3-v3 "^3.0" --with-all-dependencies
+cd /opt/pbx3api
+sudo git pull origin directory
+sudo composer install --no-dev
+test -f vendor/league/flysystem-aws-s3-v3/PortableVisibilityConverter.php && echo OK
+sudo php artisan config:clear
 ```
 
-Use `Storage::disk('pbx3_org')` for backup PUTs (`instances/{ksuid}/backups/…`); use `temporaryUrl()` for presigned GETs to the SPA when bulk download UI ships.
+Use `Storage::disk('pbx3_org')` for backup PUTs. Disk config uses `PBX3_ORG_BUCKET`; empty `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` must be **null** (not `""`) so the EC2 instance role is used — see **Golden node playbook §Step 4**.
 
-**`.env`** on the node (only if not using instance role):
+**`.env` on the node (instance role — golden pattern):**
 
 ```env
 AWS_DEFAULT_REGION=us-east-1
 PBX3_ORG_BUCKET=08jzwn-pbx3
 PBX3_DIRECTORY_BACKUP_UPLOAD=true
-# AWS_ACCESS_KEY_ID=     # omit when using IAM role
-# AWS_SECRET_ACCESS_KEY=
 ```
 
-After `composer install` on `/opt/pbx3api`, creating a backup via the SPA/API triggers an **after-response** upload (`InstanceBackupDirectoryUpload`). Retry manually:
+Do **not** set `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` when using an instance profile.
+
+Creating a backup via SPA/API triggers **after-response** upload (`InstanceBackupDirectoryUpload`). Manual retry:
 
 ```bash
-php artisan pbx3:upload-backup pbx3bak.UNIXTIME.zip
-# or from pbx3 repo:
-./pbx3-directory/tools/upload-instance-backup.sh --zip /opt/pbx3/bkup/pbx3bak.UNIXTIME.zip
+cd /opt/pbx3api
+ZIP=$(ls -t /opt/pbx3/bkup/pbx3bak.*.zip | head -1)
+sudo php artisan pbx3:upload-backup "$(basename "$ZIP")"
 ```
+
+CLI without PHP (ops): `pbx3-directory/tools/upload-instance-backup.sh --zip /opt/pbx3/bkup/pbx3bak.….zip`
 
 ### 7.3 Registrar / ops user (Phase 3)
 
@@ -466,7 +751,12 @@ Documented for Phase 5; not required for catalog-only test:
 - [ ] `instance-index.json` validates against schema; `id` matches node `globals.id`
 - [ ] `curl` / browser can load catalog URL
 - [ ] SPA login to `08jzwn` still works with directory URL unset (solo path)
-- [ ] Phase 4: test PUT from node with IAM role after `composer install` + `PBX3_ORG_BUCKET` set
+- [ ] EC2 SG egress **443**; IAM instance role attached; `aws sts get-caller-identity` → `assumed-role/...`
+- [ ] No root/static keys in `~/.aws/credentials` on node
+- [ ] `/opt/pbx3api`: `directory` branch, `composer install --no-dev`, Flysystem S3 package on disk
+- [ ] Phase 4: local `pbx3bak.*.zip` → S3 `backups/{stamp}/backup.zip` + `manifest.json`
+
+Full golden walkthrough: **Golden node playbook** (top of this doc).
 
 ---
 
@@ -477,7 +767,16 @@ Documented for Phase 5; not required for catalog-only test:
 | 403 on catalog URL | Block Public Access; bucket policy Resource ARN; object key exactly `catalog/instance-index.json` |
 | CORS error in browser | `put-bucket-cors`; `AllowedOrigins` includes SPA origin; method GET |
 | SPA shows empty list | JSON shape `instances[]`; `Content-Type: application/json` |
-| Node upload fails | IAM role attached; policy prefix matches `globals.id`; region matches bucket |
+| `aws sts` shows `root` | Remove `~/.aws/credentials`; use instance role only |
+| `www-data`/`ubuntu` differ on `aws sts` | Both should show same `assumed-role` after keys removed |
+| `PortableVisibilityConverter` not found | Run `sudo composer install --no-dev` in **`/opt/pbx3api`**, not only in `~/Git/…` |
+| Composer PHP 8.4 / symfony/filesystem v8 error | Pull `directory` (lock pinned to PHP 8.3); re-run `composer install` |
+| `sudo -u www-data composer` permission denied | Composer as **root** in `/opt/pbx3api`; not in `ubuntu` home |
+| `ls: pbx3bak.*.zip: No such file` | Create backup in SPA first; ensure `/opt/pbx3/bkup` exists |
+| Upload failed, empty AWS keys in `.env` | Comment out `AWS_ACCESS_KEY_ID=` lines; `config:clear`; or pull cred-fix commit |
+| Node upload fails (other) | IAM policy `INSTANCE_KSUID` matches `globals.id`; region = bucket region |
+| S3 timeout / network | EC2 SG **outbound** 443 allowed |
+| Local zip vs S3 folder names differ | Expected — see **Golden node playbook §Step 6** (epoch ↔ UTC stamp) |
 | Whole bucket leaked | Policy must **not** use `"Resource": "arn:aws:s3:::BUCKET/*"` for public statement |
 
 ---
@@ -500,3 +799,4 @@ Documented for Phase 5; not required for catalog-only test:
 | 2026-05 | Initial ops runbook (bucket, catalog policy, CORS, IAM, Laravel note) |
 | 2026-05 | **Quick recipe** — console steps, folder upload |
 | 2026-05 | Single catalog name: `instance-index.json` (repo + S3) |
+| 2026-05 | **Golden node playbook** — EC2 SG, IAM role, `/opt/pbx3api` deploy, backup naming, troubleshooting (08jzwn) |
