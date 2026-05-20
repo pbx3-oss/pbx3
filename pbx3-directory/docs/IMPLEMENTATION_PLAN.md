@@ -189,7 +189,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 | # | Task | Notes |
 |---|------|--------|
-| S5.1 | **API:** `GET /backups` merges local `pbx3bak.*.zip` + S3 prefixes under `instances/{ksuid}/backups/` (from manifest or listObjects) | De-dupe by `backup_stamp` / epoch; mark `source: local\|s3\|both` |
+| S5.1 | **API:** `GET /backups` merges local `pbx3bak.*.zip` + S3 prefixes under `instances/{ksuid}/backups/` (from manifest or listObjects) | De-dupe by `backup_stamp` / epoch; mark `source: local\|s3\|both` — **done** (`BackupIndexService`) |
 | S5.2 | **SPA:** backup table shows S3-only rows (archive id, no local file); actions differ | “Download from archive” vs restore |
 | S5.3 | **Presigned GET** (or rehydrate job) for `backup.zip` when local missing | Time-limited URL; audit log |
 | S5.4 | **Restore from S3:** optional `POST /backups/restore-from-archive` pulls zip to `bkup/` then existing restore path | Same safety checks as local restore |
