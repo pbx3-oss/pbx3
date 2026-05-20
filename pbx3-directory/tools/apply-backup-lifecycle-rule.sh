@@ -4,8 +4,11 @@
 #
 # Usage:
 #   ./apply-backup-lifecycle-rule.sh BUCKET_NAME [DAYS]
-# Example:
+#   ./apply-backup-lifecycle-rule.sh BUCKET_NAME INSTANCE_KSUID
+# Examples:
 #   ./apply-backup-lifecycle-rule.sh 08jzwn-pbx3 30
+#   ./apply-backup-lifecycle-rule.sh 08jzwn-pbx3 3DmAsxePTWQZgynBYXE8obIRqEE
+#     (reads maxage_days from s3://BUCKET/instances/KSUID/backups/policy.json, fallback 30)
 #
 # Requires: aws CLI with s3:PutLifecycleConfiguration on the bucket.
 # Run from your laptop / ops workstation (IAM admin or bucket owner) — NOT from a PBX
@@ -15,7 +18,26 @@
 set -euo pipefail
 
 BUCKET="${1:?bucket name required}"
-DAYS="${2:-30}"
+ARG2="${2:-30}"
+
+if [[ "$ARG2" =~ ^[0-9]+$ ]]; then
+  DAYS="$ARG2"
+else
+  KSUID="$ARG2"
+  POLICY_KEY="instances/${KSUID}/backups/policy.json"
+  echo "Reading maxage_days from s3://${BUCKET}/${POLICY_KEY} ..."
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "jq required when second argument is INSTANCE_KSUID" >&2
+    exit 1
+  fi
+  DAYS="$(aws s3 cp "s3://${BUCKET}/${POLICY_KEY}" - 2>/dev/null | jq -r '.maxage_days // 30' || echo 30)"
+  if [[ ! "$DAYS" =~ ^[0-9]+$ ]] || [[ "$DAYS" -lt 1 ]]; then
+    echo "WARN: invalid maxage_days from policy; using 30" >&2
+    DAYS=30
+  fi
+  echo "Using maxage_days=${DAYS} from policy.json"
+fi
+
 RULE_ID="pbx3-expire-tagged-backups-${DAYS}d"
 
 if ! command -v aws >/dev/null 2>&1; then

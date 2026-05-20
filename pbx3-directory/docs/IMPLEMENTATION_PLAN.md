@@ -190,10 +190,10 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 | # | Task | Notes |
 |---|------|--------|
 | S5.1 | **API:** `GET /backups` merges local `pbx3bak.*.zip` + S3 prefixes under `instances/{ksuid}/backups/` (from manifest or listObjects) | De-dupe by `backup_stamp` / epoch; mark `source: local\|s3\|both` — **done** (`BackupIndexService`) |
-| S5.2 | **SPA:** backup table shows S3-only rows (archive id, no local file); actions differ | “Download from archive” vs restore |
-| S5.3 | **Presigned GET** (or rehydrate job) for `backup.zip` when local missing | Time-limited URL; audit log |
-| S5.4 | **Restore from S3:** optional `POST /backups/restore-from-archive` pulls zip to `bkup/` then existing restore path | Same safety checks as local restore |
-| S5.5 | **`apply-backup-lifecycle-rule.sh`:** read `maxage_days` from bucket `policy.json` (instance path); fallback 30 | One script invocation per org bucket |
+| S5.2 | **SPA:** backup table shows S3-only rows (archive id, no local file); actions differ | **done** — archive download/restore when `!has_local && has_s3` |
+| S5.3 | **Presigned GET** (or rehydrate job) for `backup.zip` when local missing | **done** — `GET backups/archive/{stamp}/download-url` |
+| S5.4 | **Restore from S3:** optional `POST /backups/restore-from-archive` pulls zip to `bkup/` then existing restore path | **done** — `BackupArchiveService::rehydrateToLocal` + `restore_from_backup` |
+| S5.5 | **`apply-backup-lifecycle-rule.sh`:** read `maxage_days` from bucket `policy.json` (instance path); fallback 30 | **done** — second arg `INSTANCE_KSUID` reads policy |
 
 **Not required:** delete untagged pre-`119b1f7` backup objects (ops may `rm` prefix manually).
 
@@ -262,7 +262,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
                            S3 v1 exit review
 ```
 
-**Next session pick:** start **S5.1** (merged backup list API) — smallest visible win after golden cron verification.
+**Next session pick:** **S6** (second node + GitHub Pages) or **S7** (recordings offload). S5 backups complete.
 
 ---
 

@@ -109,6 +109,7 @@ Bucket lifecycle: expire objects tagged `class=backup` after N days. **Mac/ops o
 
 ```bash
 ./apply-backup-lifecycle-rule.sh 08jzwn-pbx3 30
+./apply-backup-lifecycle-rule.sh 08jzwn-pbx3 3DmAsxePTWQZgynBYXE8obIRqEE
 ```
 
 ## Ops
