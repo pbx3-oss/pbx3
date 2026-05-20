@@ -194,6 +194,65 @@ A new operator running **one** PBX to evaluate the product must **not** need S3,
 
 ---
 
+## Central SPA hosting (agreed 2026-05)
+
+**Decision:** Production **pbx3spa** is hosted **once**, on **GitHub Pages** (custom domain when ready). It is **not** deployed onto PBX **instances** in production.
+
+### Topology
+
+```text
+  GitHub Pages (one SPA origin, e.g. app.example.com)
+       │
+       ├── GET catalog/instance-index.json  (HTTPS — any S3-compatible bucket)
+       │
+       └── per instance: POST/GET https://{fqdn}:44300/api  (pbx3api only on EC2)
+```
+
+| Component | Where it lives | Notes |
+|-----------|----------------|--------|
+| **pbx3spa** | **GitHub Pages** (+ optional custom domain) | Static `dist/`; deploy via GitHub Actions |
+| **pbx3api** | **Each instance** (`/opt/pbx3api`) | Sanctum, backups, telephony admin API |
+| **Directory + backups** | **Org bucket** (S3-compatible API) | Layout in `S3_LAYOUT_PROPOSAL.md`; not tied to AWS as vendor |
+
+### Why GitHub Pages (vs CDN on AWS vs per-node nginx)
+
+- **Convenience:** CI build → publish; free HTTPS; no VM to patch for static files.
+- **No AWS lock-in for the UI:** Fleet storage may use AWS today, **MinIO, R2, B2, Wasabi**, etc. tomorrow — standard S3 API + Flysystem / AWS CLI toolkit.
+- **Matches EC2-console model:** One fleet UI; nodes stay API-only (Rule 1, 5).
+
+**Golden node exception:** Installing or nginx-serving **pbx3spa on a test instance** is an **expedient** for TLS/nginx validation only — **not** the production pattern. Do not bake SPA into instance AMIs or fleet install.
+
+### Cross-origin requirements (production)
+
+The SPA origin (e.g. `https://yourorg.github.io` or `https://app.example.com`) differs from each `api_base_url` and usually from the catalog bucket host. Plan for:
+
+1. **Catalog bucket CORS** — allow SPA origin on `GET`/`HEAD` for `catalog/*` (see **`OPS_S3_RUNBOOK.md`** § CORS).
+2. **Each instance API** — allow SPA origin + `Authorization` header for API calls (Bearer token after login; configure per node or via install template).
+3. **Build-time env** — `VITE_INSTANCE_DIRECTORY_URL` is baked at build; use separate builds or CI vars for staging vs production catalog URLs. Local dev may use Vite `/dev-catalog` proxy (no bucket CORS).
+
+### Storage portability (directory / backups)
+
+- **Application code** uses S3-shaped keys and Laravel `pbx3_org` disk (endpoint + bucket env).
+- **Ops scripts** (`register-instance.sh`, `apply-backup-lifecycle-rule.sh`, etc.) use standard AWS CLI; lifecycle/IAM details vary by provider — rewrite ops steps, not app layout.
+- **SPA hosting** is independent of bucket vendor.
+
+### Phased rollout
+
+| Phase | SPA | Catalog / backups |
+|-------|-----|-------------------|
+| **Now** | Local `npm run dev` (+ proxy) | Golden bucket on AWS (reference) |
+| **Next** | GitHub Pages staging + custom domain | Same or any S3-compatible endpoint |
+| **Production** | GitHub Pages production URL | Per-org bucket; registrar + node IAM unchanged |
+
+### Checklist (SPA hosting PRs)
+
+- [ ] No requirement to install **pbx3spa** on fleet instances in production docs or packages.
+- [ ] Pages deploy docs or workflow live in **pbx3spa** repo (when implemented).
+- [ ] Runbook lists SPA origin in catalog CORS and node API CORS checklist.
+- [ ] Solo path (Rule 6) still works with no catalog URL.
+
+---
+
 ## Summary (one line each)
 
 1. **Calls work without directory.**  
@@ -273,6 +332,7 @@ Before merging directory-related work, confirm:
 - [ ] No user-facing path where directory failure equals total admin lockout (except “no credentials for any node”).
 - [ ] Install/quick-start docs do not require S3 or directory setup for a single-node trial.
 - [ ] Docs and diagrams show directory **beside** nodes, not **in front of** SIP/RTP.
+- [ ] Production SPA hosting documented as **GitHub Pages** (central); instances **API-only**.
 
 ---
 

@@ -110,7 +110,22 @@ curl -sS -o /dev/null -w "%{http_code}\n" \
 ]
 ```
 
-Add `https://admin.example.com` (your real admin host) before production deploy.
+**Production (agreed):** central **pbx3spa** on **GitHub Pages** (optional custom domain, e.g. `https://app.example.com`). Add that origin to `AllowedOrigins`, plus `https://<user>.github.io` if you use the default Pages URL before DNS is wired.
+
+Example (adjust hostnames):
+
+```json
+"AllowedOrigins": [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://app.example.com",
+  "https://yourorg.github.io"
+]
+```
+
+**Instance API CORS:** Each `pbx3api` must also allow the same SPA origin for `Authorization` Bearer calls to `https://{fqdn}:44300/api` (configure when Pages goes live — not required for local Vite proxy dev).
+
+See **`DESIGN_RULES.md`** § Central SPA hosting.
 
 **Fix B — local dev only (no S3 CORS):** In **pbx3spa** `.env.development`:
 
@@ -438,13 +453,17 @@ aws s3api get-bucket-lifecycle-configuration --bucket 08jzwn-pbx3
 
 ---
 
-### Step 7 — pbx3spa (Phase 2) on golden
+### Step 7 — pbx3spa (Phase 2) — local or GitHub Pages (not on golden for prod)
+
+**Production:** build **pbx3spa** with `VITE_INSTANCE_DIRECTORY_URL` → deploy **`dist/`** to **GitHub Pages** (see **`DESIGN_RULES.md`** § Central SPA hosting). **Do not** rely on nginx-served SPA on fleet instances.
+
+**Golden / dev:** run SPA locally (`npm run dev`) against `https://08jzwn.pbx3.com:44300/api`, or use Quick recipe §F catalog proxy. Optional nginx SPA on golden is **test-only**, not the fleet model.
 
 ```env
 VITE_INSTANCE_DIRECTORY_URL=https://08jzwn-pbx3.s3.us-east-1.amazonaws.com/catalog/instance-index.json
 ```
 
-Local dev without S3 CORS: **Quick recipe §F** (`/dev-catalog` proxy). Solo path: omit `VITE_INSTANCE_DIRECTORY_URL`.
+Solo path: omit `VITE_INSTANCE_DIRECTORY_URL`.
 
 ---
 
@@ -752,21 +771,33 @@ Phase 2 v0 assumes **public catalog prefix** or **non-S3 static URL** (repo file
 
 ---
 
-## 9. SPA and env (Phase 2)
+## 9. SPA hosting and env (Phase 2+)
 
-**pbx3spa** (build-time):
+**Agreed production home:** **GitHub Pages** for **pbx3spa** (one origin for all operators). **Instances** run **pbx3api** only. Catalog and backups use any **S3-compatible** bucket; AWS is a reference implementation, not a UI-hosting requirement.
+
+### Build-time env
 
 ```env
-# Fleet mode — HTTPS URL to catalog JSON (S3 or CloudFront)
+# Fleet mode — HTTPS URL to catalog JSON (S3, R2, MinIO public URL, etc.)
 VITE_INSTANCE_DIRECTORY_URL=https://acme-pbx3.s3.eu-west-1.amazonaws.com/catalog/instance-index.json
 
 # Solo — omit VITE_INSTANCE_DIRECTORY_URL (Rule 6)
 # VITE_DEFAULT_API_BASE_URL=https://08jzwn.pbx3.com:44300/api
 ```
 
-After deploy: login → picker (or auto-select if one row) → Sanctum on chosen `api_base_url`.
+Bake a **production** catalog URL in CI before `npm run build`; staging and prod may need separate Pages environments or build args.
 
-**Dev without S3:** host `instance-index.json` on any static server or paste URL to raw GitHub gist; same env var.
+### GitHub Pages checklist (when enabling)
+
+1. **Repo:** **pbx3spa** — Actions workflow: `npm ci && npm run build` → upload `dist/` to Pages (or `gh-pages` branch).
+2. **Custom domain** (optional): DNS → Pages; HTTPS automatic.
+3. **S3 catalog CORS:** add Pages origin(s) to bucket CORS — § F above.
+4. **Each instance:** allow same SPA origin on API CORS for Bearer requests to `:44300/api`.
+5. **Do not** add SPA to instance debian packages for fleet production.
+
+After deploy: login → picker (or auto-select if one row) → Sanctum token on chosen `api_base_url`.
+
+**Dev without S3:** Vite `/dev-catalog` proxy or host `instance-index.json` on any static HTTPS URL; same env var.
 
 ---
 

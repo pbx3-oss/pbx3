@@ -8,9 +8,9 @@ PBX3 is a **federation of instances**. Operators should not type `https://host:4
 
 ## Solution shape
 
-1. **Directory** — one rarely updated **`instance-index.json`** at one HTTPS URL (CDN/API optional later).
+1. **Directory** — one rarely updated **`instance-index.json`** at one HTTPS URL (any S3-compatible bucket; CDN optional).
 2. **Central auth** — later; v0 uses per-node Sanctum after pick.
-3. **pbx3spa** — on login, `GET` directory → picker → set `baseUrl` from `api_base_url` (break-glass if fetch fails).
+3. **pbx3spa** — hosted **once** on **GitHub Pages** (production); on login, `GET` directory → picker → set `baseUrl` from `api_base_url` (break-glass if fetch fails). **Not** installed on each PBX instance.
 
 ```text
   Central SPA                    Directory (S3/API)

@@ -206,6 +206,12 @@ Use this as the product/engineering queue after Phase 2–4. **Not** blocking in
 - [ ] `tenants/{shortuid}/exports/` GDPR export packages
 - [ ] Multiple directory API read replicas (only if static URL insufficient)
 
+### SPA hosting (agreed)
+
+- [x] **Decision:** production **pbx3spa** on **GitHub Pages**; instances **API-only** (`DESIGN_RULES.md` § Central SPA hosting)
+- [ ] **GitHub Actions** — build `dist/` and deploy to Pages (staging + prod catalog URL in CI)
+- [ ] **Custom domain** + catalog/API CORS for Pages origin (`OPS_S3_RUNBOOK.md` § 9)
+
 ### SPA polish (post picker)
 
 - [x] **Backup list display** — ISO 8601 UTC + `backup_stamp` (S3 archive id); `pbx3bak.{epoch}.zip` as local file (`DESIGN_RULES.md` § time/display)
