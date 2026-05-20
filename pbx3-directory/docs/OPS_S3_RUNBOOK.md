@@ -270,7 +270,13 @@ Follow **Quick recipe §A–E** above with bucket **`08jzwn-pbx3`**, region **`u
     {
       "Sid": "WriteInstanceAndTenantObjects",
       "Effect": "Allow",
-      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Action": [
+        "s3:PutObject",
+        "s3:PutObjectTagging",
+        "s3:GetObject",
+        "s3:GetObjectTagging",
+        "s3:DeleteObject"
+      ],
       "Resource": [
         "arn:aws:s3:::08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/*",
         "arn:aws:s3:::08jzwn-pbx3/tenants/*"
