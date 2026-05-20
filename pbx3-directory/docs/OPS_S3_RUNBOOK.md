@@ -414,14 +414,23 @@ If you run `apply-backup-lifecycle-rule.sh` on the golden server you will see:
 
 `User: arn:aws:sts::…:assumed-role/pbx3-node-08jzwn/… is not authorized to perform: s3:PutLifecycleConfiguration`
 
-**Do this once from your Mac** (root account, IAM admin user, or a dedicated ops role):
+**Do this once from your Mac** (root account, IAM admin user, or a dedicated ops role). Use credentials that created the bucket — **not** the EC2 node role.
+
+From your **pbx3** git clone (you may already be in that directory). If you use a named AWS profile, set it **on its own line** (replace `YOUR_PROFILE` with a real name from `~/.aws/credentials`; omit both lines if default credentials are already admin):
 
 ```bash
-cd ~/Git/pbx3-master/pbx3   # or wherever you have the repo
-export AWS_PROFILE=your-admin-profile   # not the node; no keys on EC2
+export AWS_PROFILE=YOUR_PROFILE
+aws sts get-caller-identity
+```
+
+Confirm the ARN is **not** `assumed-role/pbx3-node-…`. Then:
+
+```bash
 ./pbx3-directory/tools/apply-backup-lifecycle-rule.sh 08jzwn-pbx3 30
 aws s3api get-bucket-lifecycle-configuration --bucket 08jzwn-pbx3
 ```
+
+**Do not paste** placeholder lines like `export AWS_PROFILE=...` or shell comments on the same line as commands — zsh will treat words after `#` as comments, but a bad paste can pass `/` and extra words to `export` and fail with `not valid in this context: /`.
 
 **Console alternative:** S3 → bucket **`08jzwn-pbx3`** → **Management** → **Lifecycle rules** → **Create rule** → scope **Limit to prefix** `instances/` + **Tags** `class` = `backup` → **Expire current versions** after **30** days.
 
