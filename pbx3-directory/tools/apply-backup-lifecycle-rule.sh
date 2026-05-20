@@ -23,6 +23,14 @@ if ! command -v aws >/dev/null 2>&1; then
   exit 1
 fi
 
+ARN="$(aws sts get-caller-identity --query Arn --output text 2>/dev/null || true)"
+if [[ "$ARN" == *":assumed-role/pbx3-node-"* ]]; then
+  echo "ERROR: AWS identity is a PBX EC2 node role ($ARN)." >&2
+  echo "Run this script on your Mac (or ops workstation) with admin credentials," >&2
+  echo "not on the PBX server. See pbx3-directory/docs/OPS_S3_RUNBOOK.md § S3 lifecycle." >&2
+  exit 1
+fi
+
 TMP="$(mktemp)"
 trap 'rm -f "$TMP"' EXIT
 
