@@ -7,8 +7,10 @@
 # Example:
 #   ./apply-backup-lifecycle-rule.sh 08jzwn-pbx3 30
 #
-# Requires: aws CLI, s3:PutLifecycleConfiguration on the bucket.
-# Uploads must tag backup.zip and manifest.json with class=backup (pbx3api Phase 4+).
+# Requires: aws CLI with s3:PutLifecycleConfiguration on the bucket.
+# Run from your laptop / ops workstation (IAM admin or bucket owner) — NOT from a PBX
+# EC2 node: instance roles (e.g. pbx3-node-08jzwn) must not get lifecycle permissions.
+# Uploads must tag backup.zip and manifest.json with class=backup (pbx3api 119b1f7+).
 
 set -euo pipefail
 

@@ -402,9 +402,30 @@ date -u -d "@$EPOCH" +%Y%m%dT%H%M%SZ         # Archive ID / S3 folder
 |-------|-----------|
 | **Local (9 FIFO)** | After SPA/cron create: `LocalBackupRetention` keeps newest `PBX3_BACKUP_LOCAL_MAX_COUNT` (default **9**) under `/opt/pbx3/bkup/`. Manual delete still does **not** touch S3. |
 | **Daily backup** | `php artisan pbx3:backup-run --trigger=scheduled` — see `pbx3api/scripts/cron.d/pbx3-backup.example` or Laravel `schedule:run` (02:00 in `bootstrap/app.php`). |
-| **S3 (30 days)** | Lifecycle on objects tagged **`class=backup`** (set on `backup.zip` + `manifest.json` upload). Ops: `pbx3-directory/tools/apply-backup-lifecycle-rule.sh BUCKET 30` — aligns with `policy.json` `maxage_days`. |
+| **S3 (30 days)** | Lifecycle on objects tagged **`class=backup`** (set on `backup.zip` + `manifest.json` upload). **One-time ops on laptop** (see § below) — aligns with `policy.json` `maxage_days`. |
 
 Local eviction does **not** delete S3 archives — see **`DESIGN_RULES.md`** § backup retention (option C).
+
+#### S3 lifecycle (ops laptop — not the PBX node)
+
+`pbx3-node-*` instance roles allow **object** PUT/GET under `instances/{ksuid}/*` only. They **must not** include `s3:PutLifecycleConfiguration` (bucket-wide setting).
+
+If you run `apply-backup-lifecycle-rule.sh` on the golden server you will see:
+
+`User: arn:aws:sts::…:assumed-role/pbx3-node-08jzwn/… is not authorized to perform: s3:PutLifecycleConfiguration`
+
+**Do this once from your Mac** (root account, IAM admin user, or a dedicated ops role):
+
+```bash
+cd ~/Git/pbx3-master/pbx3   # or wherever you have the repo
+export AWS_PROFILE=your-admin-profile   # not the node; no keys on EC2
+./pbx3-directory/tools/apply-backup-lifecycle-rule.sh 08jzwn-pbx3 30
+aws s3api get-bucket-lifecycle-configuration --bucket 08jzwn-pbx3
+```
+
+**Console alternative:** S3 → bucket **`08jzwn-pbx3`** → **Management** → **Lifecycle rules** → **Create rule** → scope **Limit to prefix** `instances/` + **Tags** `class` = `backup` → **Expire current versions** after **30** days.
+
+**Note:** Backups uploaded **before** pbx3api `119b1f7` (S3 object tags) are not tagged `class=backup` and will **not** match this rule until re-uploaded or tagged manually.
 
 ---
 
