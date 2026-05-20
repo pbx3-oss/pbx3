@@ -324,6 +324,38 @@ echo test | aws s3 cp - \
 aws s3 rm s3://08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/backups/_iam-test.txt
 ```
 
+#### 3.5 Add object tagging (backup lifecycle)
+
+pbx3api tags `backup.zip` and `manifest.json` with **`class=backup`** on upload (lifecycle rule in § S3 lifecycle). The node policy must include **`s3:PutObjectTagging`** and **`s3:GetObjectTagging`** (see §3.1 JSON).
+
+**From Mac (IAM admin):** update the attached policy and backfill tags on objects uploaded before tagging was allowed:
+
+```bash
+cd pbx3-directory/tools
+chmod +x apply-node-s3-writer-policy.sh tag-s3-backups.sh
+
+./apply-node-s3-writer-policy.sh pbx3-node-08jzwn-s3-writer \
+  ../schema/pbx3-node-s3-writer.policy.json
+
+./tag-s3-backups.sh 08jzwn-pbx3 3DmAsxePTWQZgynBYXE8obIRqEE
+```
+
+**Verify on golden** (after policy v2+):
+
+```bash
+aws s3api put-object-tagging \
+  --bucket 08jzwn-pbx3 \
+  --key instances/3DmAsxePTWQZgynBYXE8obIRqEE/backups/_tag-test.txt \
+  --tagging 'TagSet=[{Key=class,Value=backup}]' 2>/dev/null || \
+  echo test | aws s3 cp - s3://08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/backups/_tag-test.txt && \
+  aws s3api put-object-tagging --bucket 08jzwn-pbx3 \
+    --key instances/3DmAsxePTWQZgynBYXE8obIRqEE/backups/_tag-test.txt \
+    --tagging 'TagSet=[{Key=class,Value=backup}]'
+aws s3 rm s3://08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/backups/_tag-test.txt
+```
+
+New uploads should log **`directory backup upload complete`** without a PutObjectTagging warning.
+
 ---
 
 ### Step 4 — Deploy pbx3api Phase 4 on `/opt/pbx3api`

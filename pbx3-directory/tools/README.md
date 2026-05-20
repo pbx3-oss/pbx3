@@ -84,6 +84,33 @@ aws s3 cp "s3://${PBX3_ORG_BUCKET}/instances/3DmAsxePTWQZgynBYXE8obIRqEE/meta.js
 
 In **pbx3spa**: **Refresh catalog** on login.
 
+## apply-node-s3-writer-policy.sh
+
+Update (or create) a node IAM policy JSON — includes `s3:PutObjectTagging` for backup lifecycle. Run from **Mac/ops**, not EC2.
+
+```bash
+./apply-node-s3-writer-policy.sh pbx3-node-08jzwn-s3-writer \
+  ../schema/pbx3-node-s3-writer.policy.json
+```
+
+Golden template: **`../schema/pbx3-node-s3-writer.policy.json`** (edit bucket + KSUID per node).
+
+## tag-s3-backups.sh
+
+Backfill `class=backup` on existing `backup.zip` / `manifest.json` under `instances/{ksuid}/backups/`.
+
+```bash
+./tag-s3-backups.sh 08jzwn-pbx3 3DmAsxePTWQZgynBYXE8obIRqEE
+```
+
+## apply-backup-lifecycle-rule.sh
+
+Bucket lifecycle: expire objects tagged `class=backup` after N days. **Mac/ops only** (not node role).
+
+```bash
+./apply-backup-lifecycle-rule.sh 08jzwn-pbx3 30
+```
+
 ## Ops
 
 See **`../docs/OPS_S3_RUNBOOK.md`** for bucket policy (public `catalog/*` read only).
