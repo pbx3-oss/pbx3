@@ -205,6 +205,64 @@ A new operator running **one** PBX to evaluate the product must **not** need S3,
 
 ---
 
+## Time identifiers and display (agreed 2026-05)
+
+**UX rule:** *Don’t make me think* — operators see **one consistent time format** in admin UIs. Storage and search may use other forms; **display** does not.
+
+### Split: machine vs human
+
+| Layer | Format | Use |
+|-------|--------|-----|
+| **Query / range search** | **Unix epoch** (integer seconds) | SQL `BETWEEN`, CDR/recording indexes, legacy behaviour |
+| **Operator display** | **ISO 8601 UTC** (e.g. `2026-05-20T00:24:23Z`) | SPA tables, panels, messages — same everywhere |
+| **S3 backup folder** | **Compact UTC stamp** `YYYYMMDDThhmmssZ` (e.g. `20260520T002423Z`) | Sortable prefix; equals epoch from `pbx3bak.{epoch}.zip` |
+| **Local backup file** | `pbx3bak.{epoch}.zip` | Unchanged on disk; restore/download API |
+
+**Principle:** Epoch (or datetime derived from epoch) is authoritative for **logic**. ISO 8601 UTC is authoritative for **what humans read**. Do not show raw epoch in primary UI columns.
+
+### Backups
+
+- **SPA / API list:** Primary column = **Created (UTC)** (`created_at` ISO). Secondary = **Archive ID** (`backup_stamp`, matches S3 prefix). **Local file** = `pbx3bak.{epoch}.zip` (technical; used for actions).
+- **S3:** Keep `instances/{ksuid}/backups/{backup_stamp}/backup.zip` + `manifest.json` (`created_at` ISO).
+- Operators comparing UI ↔ S3 console use **Archive ID**, not the zip filename.
+
+### Backup retention (agreed — option C)
+
+**Legacy Sark:** daily cron + on-demand backups in one pool; **max 9** local copies; new backup deletes the oldest (10th) locally.
+
+**PBX3 (option C — implemented):**
+
+| Layer | Policy | Enforcement |
+|-------|--------|-------------|
+| **Local** `/opt/pbx3/bkup/` | **Keep 9** newest `pbx3bak.*.zip` (FIFO) | `LocalBackupRetention` after SPA create or `pbx3:backup-run`; **do not** delete S3 |
+| **S3** `instances/{ksuid}/backups/` | **30 days** archive | Ops: `apply-backup-lifecycle-rule.sh` on tag `class=backup` (upload sets tag); `policy.json` documents `maxage_days: 30` |
+
+**Relationship (option C — hybrid):**
+
+- Local = **fast restore** window (9 generations on disk).
+- S3 = **longer DR window** (30 days); may still hold backups that were **evicted locally** until lifecycle expires.
+- **Not lockstep on count:** local may have 9 while S3 has more stamps (up to 30 days of history).
+- **Not lockstep on delete:** local manual delete does **not** remove S3 (unchanged until lifecycle or explicit ops).
+- **Cron:** `pbx3:backup-run --trigger=scheduled` (see `pbx3api/scripts/cron.d/pbx3-backup.example`).
+
+**Config knobs:** `PBX3_BACKUP_LOCAL_MAX_COUNT=9`, `PBX3_BACKUP_MAXAGE_DAYS=30` (`pbx3api` `config/pbx3_directory.php`).
+
+**Future (backlog):** restore/download from S3 when local zip is gone (presigned GET or rehydrate to `bkup/`).
+
+### Recordings (future S3 offload)
+
+- **Search on node:** Keep **epoch** (or DB datetime from epoch) for `BETWEEN` — same as old system.
+- **S3 layout:** Prefer `media/{yyyy}/{mm}/{dd}/{call_id}.wav` for prefix walks; optional epoch in object metadata — not required in the visible folder name for search.
+- **SPA:** Show ISO 8601 UTC for call time; epoch stays internal.
+
+### Checklist (time/display)
+
+- [ ] New admin lists use **ISO 8601 UTC** for primary time, not locale-only strings alone.
+- [ ] S3/console identifiers (`backup_stamp`) exposed in UI where off-box copy exists.
+- [ ] Recording search APIs continue to accept **epoch** ranges.
+
+---
+
 ## Checklist for designs and PRs
 
 Before merging directory-related work, confirm:

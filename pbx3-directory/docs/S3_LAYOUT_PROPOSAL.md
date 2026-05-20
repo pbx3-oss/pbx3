@@ -20,6 +20,8 @@ The central SPA loads the **catalog** on login (public HTTPS `GET` on `catalog/*
 
 **Ops how-to:** **`OPS_S3_RUNBOOK.md`** — bucket creation, prefix-scoped public policy, CORS, node IAM, Laravel Flysystem.
 
+**Naming (agreed):** See **`DESIGN_RULES.md`** § *Time identifiers and display* — **epoch for query logic**, **ISO 8601 UTC for operator display**, **compact UTC `backup_stamp` on S3** (matches epoch in `pbx3bak.{epoch}.zip`). Recordings use date hierarchy + `call_id` on S3; epoch remains the node search key.
+
 ---
 
 ## Proposed tree (as suggested, normalized)

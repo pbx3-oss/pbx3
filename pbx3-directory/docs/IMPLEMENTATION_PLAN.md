@@ -160,10 +160,22 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 Use this as the product/engineering queue after Phase 2–4. **Not** blocking instance picker.
 
+### Backup retention (agreed option C — `DESIGN_RULES.md`)
+
+**Policy:** **9** local FIFO (daily cron + on-demand share one pool) · **30 days** on S3 (lifecycle; archives survive local eviction).
+
+- [x] **Local prune:** after backup create (SPA or `pbx3:backup-run`), keep newest 9 `pbx3bak.*.zip` — `LocalBackupRetention`; env `PBX3_BACKUP_LOCAL_MAX_COUNT=9`
+- [x] **Daily cron** — `pbx3:backup-run --trigger=scheduled`; `pbx3api/scripts/cron.d/pbx3-backup.example` + Laravel schedule 02:00
+- [x] **S3 lifecycle (ops):** `tools/apply-backup-lifecycle-rule.sh` — tag filter `class=backup`, 30 days; **`OPS_S3_RUNBOOK.md`**
+- [x] **Do not** delete S3 when local FIFO evicts (option C — prune is local-only)
+- [ ] **Later:** SPA/API “restore from archive” when zip exists on S3 only (presigned download)
+
+**Phase 4 v0 (done):** upload after create. **Option C retention (done):** local FIFO + cron + ops lifecycle script (S3 expiry is AWS-side, not PHP delete).
+
 ### S3 & ops infrastructure
 
 - [ ] Terraform/ops: S3 bucket per org — **manual steps:** **`OPS_S3_RUNBOOK.md`** (encryption SSE-S3, block public access, catalog prefix policy)
-- [ ] S3 **Lifecycle** rules driven by `policy.json` (`maxage_days`, `glacier_after_days`)
+- [ ] S3 **Lifecycle** rules driven by `policy.json` (`maxage_days`, `glacier_after_days`) — **required for 30-day S3 retention**
 - [ ] S3 **object tags**: `org`, `instance_id`, `tenant`, `class=backup|recording`
 - [ ] S3 **EventBridge** on `backup.zip` `Complete` → SNS/email
 - [ ] `ops/catalog-publish.log.jsonl` — audit who updated catalog
@@ -196,8 +208,10 @@ Use this as the product/engineering queue after Phase 2–4. **Not** blocking in
 
 ### SPA polish (post picker)
 
+- [x] **Backup list display** — ISO 8601 UTC + `backup_stamp` (S3 archive id); `pbx3bak.{epoch}.zip` as local file (`DESIGN_RULES.md` § time/display)
 - [ ] “Index as of {updated_at}” banner when catalog stale
 - [ ] Empty list vs fetch error vs ACL filtered — distinct UX
+- [ ] Recording lists: ISO 8601 UTC display; epoch for search APIs (when S3 offload ships)
 
 ---
 

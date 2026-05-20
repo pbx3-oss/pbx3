@@ -381,21 +381,30 @@ sudo grep -i 'directory backup' /opt/pbx3api/storage/logs/laravel.log | tail -10
 
 ### Step 6 — Reconcile local zip names vs S3 folders
 
-| Local (node) | S3 folder | Same instant? |
-|--------------|-----------|----------------|
-| `pbx3bak.1779236226.zip` | `20260520T001706Z/` | Yes — epoch `1779236226` → UTC folder name |
-| `pbx3bak.1779236663.zip` | `20260520T002423Z/` | Yes |
+**Product rule (`DESIGN_RULES.md` § time/display):** Operators see **ISO 8601 UTC** + **Archive ID** (`backup_stamp`) in the SPA; S3 console folder = Archive ID; local `pbx3bak.{epoch}.zip` is the technical file for restore/download.
 
-- **Local:** `pbx3bak.{unix_epoch}.zip` (existing PBX convention).
-- **S3:** `backups/{backup_stamp}/backup.zip` where `backup_stamp` = `gmdate('Ymd\THis\Z', epoch)` (v0 layout — human-readable in console).
-- **Bridge:** read epoch from local filename; or read `created_at` in `manifest.json`.
+| Local file | Archive ID (S3 prefix) | Created (UTC) |
+|------------|------------------------|---------------|
+| `pbx3bak.1779236226.zip` | `20260520T001706Z/` | `2026-05-20T00:17:06Z` |
+| `pbx3bak.1779236663.zip` | `20260520T002423Z/` | `2026-05-20T00:24:23Z` |
 
 ```bash
 EPOCH=1779236226
-date -u -d "@$EPOCH" +%Y%m%dT%H%M%SZ
+date -u -d "@$EPOCH" +%Y-%m-%dT%H:%M:%SZ    # display
+date -u -d "@$EPOCH" +%Y%m%dT%H%M%SZ         # Archive ID / S3 folder
 ```
 
 `instances/{ksuid}/meta.json` → `backup_latest_stamp` is only the **newest** upload, not a full list.
+
+**Retention (option C — implemented in `pbx3api`):**
+
+| Layer | What runs |
+|-------|-----------|
+| **Local (9 FIFO)** | After SPA/cron create: `LocalBackupRetention` keeps newest `PBX3_BACKUP_LOCAL_MAX_COUNT` (default **9**) under `/opt/pbx3/bkup/`. Manual delete still does **not** touch S3. |
+| **Daily backup** | `php artisan pbx3:backup-run --trigger=scheduled` — see `pbx3api/scripts/cron.d/pbx3-backup.example` or Laravel `schedule:run` (02:00 in `bootstrap/app.php`). |
+| **S3 (30 days)** | Lifecycle on objects tagged **`class=backup`** (set on `backup.zip` + `manifest.json` upload). Ops: `pbx3-directory/tools/apply-backup-lifecycle-rule.sh BUCKET 30` — aligns with `policy.json` `maxage_days`. |
+
+Local eviction does **not** delete S3 archives — see **`DESIGN_RULES.md`** § backup retention (option C).
 
 ---
 
