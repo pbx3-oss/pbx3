@@ -2,7 +2,8 @@
 
 Registrar scripts update **`catalog/instance-index.json`** and **`instances/`** / **`tenants/`** meta files in the org S3 bucket.
 
-**Fleet onboarding (IAM + node + catalog + SPA):** see **`../docs/INSTANCE_ONBOARDING.md`**.
+**Fleet onboarding (IAM + node + catalog + SPA):** see **`../docs/INSTANCE_ONBOARDING.md`**.  
+**Planned (S6.4):** **`onboard-fleet-instance.sh`** — one Mac command after AMI boot (`IMPLEMENTATION_PLAN.md` § S6.4).
 
 **Requires:** `aws` CLI, `jq`, and **IAM write** access (catalog public read does **not** allow anonymous PUT).
 

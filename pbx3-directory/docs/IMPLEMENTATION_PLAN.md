@@ -203,9 +203,49 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 | # | Task | Notes |
 |---|------|--------|
-| S6.1 | **Second node** — full runbook: bucket (or shared org bucket + second KSUID prefix), IAM role, `register-instance.sh`, Phase 4 smoke | **`INSTANCE_ONBOARDING.md`** (bzy54n walkthrough); bucket/IAM detail in `OPS_S3_RUNBOOK.md` |
+| S6.1 | **Second node** — full runbook: bucket (or shared org bucket + second KSUID prefix), IAM role, `register-instance.sh`, Phase 4 smoke | **done** — **`INSTANCE_ONBOARDING.md`** (bzy54n); bucket/IAM detail in `OPS_S3_RUNBOOK.md` |
 | S6.2 | **GitHub Pages** staging deploy + catalog CORS + API CORS for Pages origin | Closes hosting loop (`IMPLEMENTATION_PLAN` § SPA hosting) |
 | S6.3 | *(Optional)* `last_seen_at` probe job updating catalog | Nice for SPA chips; **not** blocking S3 v1 exit |
+| S6.4 | **Fleet onboard orchestrator** — one Mac command after AMI boot | **High priority (adoption)** — see § S6.4 below |
+
+#### S6.4 — `onboard-fleet-instance.sh` (planned)
+
+**Problem:** Manual onboarding (IAM + SSH + registrar) is correct but heavy; many operators will stop at the runbook. **Goal:** After a **fleet-ready AMI** launch, operator runs **one idempotent command** on a Mac (or CI) with minimal flags.
+
+**Prerequisites (not in the script):** PBX stack up on node (`/up` 200), `globals.id` set, Mac has IAM admin + SSH to instance.
+
+**Operator input (minimal):**
+
+- `--instance-id` and/or `--ssh user@host` (+ optional `--ssh-key`)
+- `PBX3_ORG_BUCKET` (env or flag), `--region`
+- Optional fleet defaults file `~/.pbx3/fleet.yaml`
+
+**Discover from node (do not prompt for KSUID):** `shortuid`, `fqdn`, `globals.id` via SSH + sqlite.
+
+**Pipeline (idempotent):**
+
+| Step | Where | Reuse |
+|------|--------|--------|
+| Preflight | Mac + SSH | `aws sts`, SSH, `curl /up`, read globals |
+| IAM | Mac | Policy from template `{{BUCKET}}` + `{{KSUID}}`; role `pbx3-node-{shortuid}`; profile; `associate-iam-instance-profile` |
+| Catalog | Mac | `register-instance.sh` |
+| Node join | SSH | `.env` `PBX3_ORG_BUCKET`, strip empty AWS keys, `config:clear`, optional `git pull`, S3 smoke |
+| Verify | Mac | catalog instance count; optional backup upload if zip exists |
+
+**Deliverables:**
+
+| # | Artifact |
+|---|----------|
+| S6.4a | `tools/onboard-fleet-instance.sh` |
+| S6.4b | `schema/pbx3-node-s3-writer.policy.json.tmpl` (or generate from golden policy) |
+| S6.4c | `INSTANCE_ONBOARDING.md` § Automation + AMI launch checklist |
+| S6.4d | `tools/README.md` — primary entry for “add node to fleet” |
+
+**Out of scope v1:** DNS/Route53, security groups, full PBX install, Terraform (sibling later).
+
+**AMI pairing:** Document “fleet-ready AMI” — packages + `/up` + globals; **no** `PBX3_ORG_BUCKET` until onboard script runs.
+
+**Later:** `--hosted-zone`, registrar API on node (Phase 5), Terraform module mirroring same steps.
 
 ---
 
@@ -256,13 +296,13 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 ### Suggested build order
 
 ```text
-  S5 backups complete  →  S6 second node + Pages  →  S7 recordings v1  →  S8 ops polish
-         │                      │                         │
-         └──────────────────────┴─────────────────────────┘
+  S5 backups complete  →  S6.1 manual onboard (done)  →  S6.4 onboard script  →  S6.2 Pages
+         │                         │                              │
+         └─────────────────────────┴──────────────────────────────┴──→  S7 recordings  →  S8 polish
                            S3 v1 exit review
 ```
 
-**Next session pick:** **S6** (second node + GitHub Pages) or **S7** (recordings offload). S5 backups complete.
+**Next session pick:** **S6.4** (onboard orchestrator — adoption) or **S6.2** (GitHub Pages) or **S7** (recordings). S6.1 manual path validated (08jzwn + bzy54n picker).
 
 ---
 

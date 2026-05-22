@@ -363,9 +363,41 @@ cd pbx3spa && npm run dev
 
 ---
 
+## Automation (planned — S6.4)
+
+Manual steps above are the **reference implementation** and acceptance test for a single Mac orchestrator.
+
+**Why:** Fleet onboarding is multi-surface (IAM, S3 catalog, SSH, `.env`). Without a one-command path, many teams will not adopt the directory model after reading the runbook.
+
+**Target UX:**
+
+1. Launch EC2 from a **fleet-ready AMI** (PBX installed, `/up` healthy, `globals` populated — see `IMPLEMENTATION_PLAN.md` § S6.4).
+2. Operator supplies **instance id** and/or **SSH target** plus fleet bucket (env or `~/.pbx3/fleet.yaml`).
+3. Run **`tools/onboard-fleet-instance.sh`** once — idempotent IAM + `register-instance.sh` + node `.env` + S3 smoke.
+
+**Planned command (illustrative):**
+
+```bash
+export PBX3_ORG_BUCKET=08jzwn-pbx3
+./onboard-fleet-instance.sh \
+  --instance-id i-0bb601e7b1253c3f5 \
+  --ssh ubuntu@bzy54n.pbx3.com \
+  --ssh-key ~/Documents/pemfiles/pbx3test.pem \
+  --region us-east-1
+```
+
+The script **discovers** `shortuid`, `fqdn`, and KSUID from the node — operators must not paste KSUID by hand.
+
+**Not automated in v1:** PBX install (AMI), DNS, security groups, Let’s Encrypt, SPA deploy. Those stay launch-template / runbook steps.
+
+Track progress: **`IMPLEMENTATION_PLAN.md`** task **S6.4**.
+
+---
+
 ## Next steps after onboarding
 
 - Run first backup + `pbx3:upload-backup` (Phase B.4)
+- **S6.4:** `onboard-fleet-instance.sh` (when shipped, prefer over manual phases A–D)
 - **S6.2:** deploy pbx3spa to GitHub Pages; add Pages origin to bucket CORS and each node API CORS
 - **S7:** tenant recording offload to `tenants/{shortuid}/recordings/…`
 
