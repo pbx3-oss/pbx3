@@ -34,6 +34,7 @@ Ensure the pbx3api package (or its installer) depends on:
 2. **Install nginx site config**:
    - Copy or symlink the site config into `/etc/nginx/sites-available/` (e.g. `pbx3-api.conf`).
    - Enable it: `ln -sf /etc/nginx/sites-available/pbx3-api.conf /etc/nginx/sites-enabled/` (or use the distro’s `sites-enabled` pattern).
+   - **ACME HTTP site:** `install-nginx-site.sh` also enables `pbx3-acme-http.conf` (`default_server` on port 80). It **removes** `/etc/nginx/sites-enabled/default` first — Ubuntu’s package enables that site and would otherwise cause `duplicate default server` on `nginx -t`.
 
 3. **Ensure nginx and php-fpm are enabled and running**:
    - `systemctl enable nginx`

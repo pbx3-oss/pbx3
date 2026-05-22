@@ -203,7 +203,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 | # | Task | Notes |
 |---|------|--------|
-| S6.1 | **Second node** — full runbook: bucket (or shared org bucket + second KSUID prefix), IAM role, `register-instance.sh`, Phase 4 smoke | Checklist in `OPS_S3_RUNBOOK.md` |
+| S6.1 | **Second node** — full runbook: bucket (or shared org bucket + second KSUID prefix), IAM role, `register-instance.sh`, Phase 4 smoke | **`INSTANCE_ONBOARDING.md`** (bzy54n walkthrough); bucket/IAM detail in `OPS_S3_RUNBOOK.md` |
 | S6.2 | **GitHub Pages** staging deploy + catalog CORS + API CORS for Pages origin | Closes hosting loop (`IMPLEMENTATION_PLAN` § SPA hosting) |
 | S6.3 | *(Optional)* `last_seen_at` probe job updating catalog | Nice for SPA chips; **not** blocking S3 v1 exit |
 

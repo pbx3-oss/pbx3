@@ -239,6 +239,8 @@ Follow **Quick recipe §A–E** above with bucket **`08jzwn-pbx3`**, region **`u
 
 **Phase 3 (laptop):** register instance + tenants with `pbx3-directory/tools/register-instance.sh` / `register-tenant.sh` and `PBX3_ORG_BUCKET=08jzwn-pbx3` (IAM user/role with write to `catalog/*`, `instances/*`, `tenants/*` — **not** the node role).
 
+**Adding a second node to an existing fleet bucket:** see **`INSTANCE_ONBOARDING.md`** (full step-by-step with `bzy54n` commands).
+
 ---
 
 ### Step 3 — IAM instance role (no access keys on the node)
