@@ -1,10 +1,12 @@
 # pbx3-directory tools
 
-**Add a node to the fleet (start here):** **`onboard-fleet-instance.sh`** — one Mac command after AMI boot. See **`../docs/INSTANCE_ONBOARDING.md`**.
+**Add a node to the fleet (start here):** **`onboard-fleet-instance.sh`** — one Mac command after AMI boot.
+
+**Before you run it:** complete **Operator pre-flight (Mac)** and **Fleet-ready AMI (EC2)** in **`../docs/INSTANCE_ONBOARDING.md`** § Automation.
 
 Registrar scripts update **`catalog/instance-index.json`** and **`instances/`** / **`tenants/`** meta files in the org S3 bucket.
 
-**Requires (onboard + registrar):** `aws` CLI, `jq`, `ssh`, and **IAM write** access on the org bucket (catalog public read does **not** allow anonymous PUT).
+**Requires (onboard + registrar):** logged-in **AWS CLI** session on the Mac (`aws sts get-caller-identity`), `jq`, `ssh`, and operator IAM for fleet bucket + IAM (not the EC2 node role).
 
 ## onboard-fleet-instance.sh (S6.4)
 

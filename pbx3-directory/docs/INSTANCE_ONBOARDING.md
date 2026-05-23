@@ -2,7 +2,7 @@
 
 **Audience:** Operators adding a **second (or Nth) PBX node** to an existing fleet catalog and S3 org bucket.
 
-**Quick path:** **`tools/onboard-fleet-instance.sh`** — see [Automation](#automation--onboard-fleet-instancesh-s64) below. Manual phases A–D are for debugging or when SSH/AWS is split across people.
+**Quick path:** **`tools/onboard-fleet-instance.sh`** — complete [Operator pre-flight (Mac)](#operator-pre-flight-mac) first, then see [Automation](#automation--onboard-fleet-instancesh-s64). Manual phases A–D are for debugging or when SSH/AWS is split across people.
 
 **Validated example:** `bzy54n.pbx3.com` joined fleet bucket `08jzwn-pbx3` alongside golden `08jzwn.pbx3.com` (May 2026).
 
@@ -367,7 +367,100 @@ cd pbx3spa && npm run dev
 
 ## Automation — `onboard-fleet-instance.sh` (S6.4)
 
-Manual phases A–D above remain the **reference** if you need to debug step-by-step. For normal fleet joins, use the orchestrator:
+Manual phases A–D above remain the **reference** if you need to debug step-by-step. For normal fleet joins, use the orchestrator.
+
+**Complete both checklists below before running the script:** [Operator pre-flight (Mac)](#operator-pre-flight-mac) and [Fleet-ready AMI (EC2)](#fleet-ready-ami-ec2).
+
+### Operator pre-flight (Mac)
+
+Run these on your **laptop or ops workstation** — not on the PBX EC2 instance.
+
+#### 1. Tools installed
+
+```bash
+command -v aws jq ssh
+# all three must print a path (e.g. /opt/homebrew/bin/aws)
+```
+
+Install if missing: AWS CLI v2, `jq`, OpenSSH client.
+
+#### 2. AWS CLI session (required)
+
+The orchestrator uses your **local AWS credentials** for IAM and S3 catalog writes. Configure once, then verify **before every onboard run**:
+
+```bash
+# If you use a named profile:
+# export AWS_PROFILE=your-ops-profile
+
+# If you use SSO:
+# aws sso login --profile your-ops-profile
+
+aws sts get-caller-identity
+```
+
+**Must succeed** and return an account ARN (e.g. `arn:aws:iam::334063106996:user/ops` or `...:root`).
+
+**Must not** be a PBX node role. If the ARN contains `assumed-role/pbx3-node-`, you are on the EC2 instance (or using node credentials) — log in as an **operator** identity instead.
+
+#### 3. Minimum IAM permissions (operator identity)
+
+Your AWS user or role needs **both** of the following (golden test used account admin; production may use a dedicated **registrar** user):
+
+| Area | Actions (summary) |
+|------|-------------------|
+| **IAM** | Create/update policy, role, instance profile; attach policy to role; add role to profile; `ec2:AssociateIamInstanceProfile`, `ec2:DisassociateIamInstanceProfile`, `ec2:DescribeIamInstanceProfileAssociations`, `ec2:DescribeInstances` |
+| **S3 (org bucket)** | `s3:GetObject`, `s3:PutObject` on `catalog/*`, `instances/*` (registrar scripts) |
+
+The script does **not** use long-lived access keys on the node. After onboard, the **EC2 instance profile** handles backup uploads only.
+
+#### 4. Fleet bucket and region
+
+```bash
+export PBX3_ORG_BUCKET=08jzwn-pbx3   # your fleet org bucket
+export AWS_DEFAULT_REGION=us-east-1  # or pass --region on the command
+```
+
+Or put `org_bucket` and `region` in `~/.pbx3/fleet.yaml` (see below).
+
+#### 5. SSH to the new node (required)
+
+The script reads `globals` and configures `.env` over SSH. You need **non-interactive** key-based login:
+
+```bash
+ssh -i ~/path/to/key.pem -o BatchMode=yes ubuntu@YOUR_NODE_HOST \
+  'sqlite3 /opt/pbx3/db/sqlite.db "SELECT shortuid, fqdn, id FROM globals WHERE pkey='"'"'global'"'"';"'
+```
+
+Must return one line like `bzy54n|bzy54n.pbx3.com|3E3gAOVG…` without a password prompt.
+
+Also have ready:
+
+- **EC2 instance id** (e.g. `i-0bb601e7b1253c3f5`) — for IAM instance profile attach
+- **`--ssh ubuntu@host`** (FQDN or public IP)
+- **`--ssh-key`** path if not in `~/.ssh/config`
+
+EC2 security group must allow **TCP 22** from your current IP.
+
+#### 6. Optional dry-run
+
+Confirms AWS identity, SSH discovery, and planned steps **without** IAM/S3/SSH writes:
+
+```bash
+cd pbx3/pbx3-directory/tools
+export PBX3_ORG_BUCKET=08jzwn-pbx3
+
+./onboard-fleet-instance.sh --dry-run \
+  --instance-id i-xxxxxxxx \
+  --ssh ubuntu@your-node.pbx3.com \
+  --ssh-key ~/path/to/key.pem \
+  --region us-east-1
+```
+
+When pre-flight passes, run the same command **without** `--dry-run`.
+
+---
+
+### Run onboard
 
 ```bash
 cd pbx3/pbx3-directory/tools
@@ -399,13 +492,16 @@ Then: `./onboard-fleet-instance.sh --instance-id i-xxx --ssh ubuntu@host`
 
 **Not automated:** PBX install (AMI), DNS, security groups, Let’s Encrypt, SPA deploy.
 
-### Fleet-ready AMI checklist (before running onboard)
+### Fleet-ready AMI (EC2)
+
+On the **new instance** before running the Mac script:
 
 - [ ] `pbx3` + `pbx3api` installed; **`curl -k https://127.0.0.1:44300/up` → 200**
 - [ ] `globals` row populated (`shortuid`, `fqdn`, stable `id` / KSUID)
 - [ ] EC2 security group: inbound **22**, **44300**, **80** (LE) from operator/network as needed
-- [ ] **No** `PBX3_ORG_BUCKET` in `/opt/pbx3api/.env` yet (or empty — script sets it)
-- [ ] Operator Mac: `aws` + `jq` + SSH key; IAM admin (not node role)
+- [ ] **No** `PBX3_ORG_BUCKET` in `/opt/pbx3api/.env` yet (or empty — the script sets it)
+
+Operator Mac setup: see [Operator pre-flight (Mac)](#operator-pre-flight-mac) above.
 
 ---
 
