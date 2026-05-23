@@ -39,7 +39,7 @@ pbx3-directory/
 ## Ops
 
 - **`docs/OPS_S3_RUNBOOK.md`** — **Quick recipe** (console checklist), bucket policy, CORS, node IAM, Laravel S3 (Phase 4).
-- **`docs/INSTANCE_ONBOARDING.md`** — **Second+ node** step-by-step (IAM, registrar, node `.env`, SPA) with bzy54n examples; **S6.4** one-command orchestrator planned.
+- **`docs/INSTANCE_ONBOARDING.md`** — manual steps + **`onboard-fleet-instance.sh`** (preferred).
 - **`tools/README.md`** — Phase 3 registrar (`register-instance.sh`, `register-tenant.sh`, `move-tenant.sh`).
 
 ## Not in scope for this stub

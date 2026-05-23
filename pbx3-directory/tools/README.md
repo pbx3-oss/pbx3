@@ -1,11 +1,35 @@
-# pbx3-directory tools (Phase 3)
+# pbx3-directory tools
+
+**Add a node to the fleet (start here):** **`onboard-fleet-instance.sh`** — one Mac command after AMI boot. See **`../docs/INSTANCE_ONBOARDING.md`**.
 
 Registrar scripts update **`catalog/instance-index.json`** and **`instances/`** / **`tenants/`** meta files in the org S3 bucket.
 
-**Fleet onboarding (IAM + node + catalog + SPA):** see **`../docs/INSTANCE_ONBOARDING.md`**.  
-**Planned (S6.4):** **`onboard-fleet-instance.sh`** — one Mac command after AMI boot (`IMPLEMENTATION_PLAN.md` § S6.4).
+**Requires (onboard + registrar):** `aws` CLI, `jq`, `ssh`, and **IAM write** access on the org bucket (catalog public read does **not** allow anonymous PUT).
 
-**Requires:** `aws` CLI, `jq`, and **IAM write** access (catalog public read does **not** allow anonymous PUT).
+## onboard-fleet-instance.sh (S6.4)
+
+Idempotent: IAM (policy from template) → catalog → node `.env` + S3 smoke. Discovers KSUID from node `globals` — do not pass `--id` by hand.
+
+```bash
+chmod +x onboard-fleet-instance.sh register-instance.sh register-tenant.sh
+
+export PBX3_ORG_BUCKET=08jzwn-pbx3
+
+./onboard-fleet-instance.sh \
+  --instance-id i-0bb601e7b1253c3f5 \
+  --ssh ubuntu@bzy54n.pbx3.com \
+  --ssh-key ~/Documents/pemfiles/pbx3test.pem \
+  --region us-east-1
+```
+
+`--dry-run` — discover from node; print IAM/catalog/node steps without writes.  
+`--git-pull` — pull `origin/directory` on node before S3 smoke.  
+`--smoke-backup` — run `pbx3:upload-backup` if a local zip exists.  
+`--skip-iam` / `--skip-catalog` / `--skip-node` — partial re-run.
+
+Optional defaults: `~/.pbx3/fleet.yaml` or `--fleet-config PATH` (`org_bucket`, `region`, `ssh_key`, …).
+
+Policy template: **`../schema/pbx3-node-s3-writer.policy.json.tmpl`** (`__BUCKET__`, `__INSTANCE_KSUID__`).
 
 ## Environment
 

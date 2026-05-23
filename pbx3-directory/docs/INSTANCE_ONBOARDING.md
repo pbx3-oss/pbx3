@@ -2,6 +2,8 @@
 
 **Audience:** Operators adding a **second (or Nth) PBX node** to an existing fleet catalog and S3 org bucket.
 
+**Quick path:** **`tools/onboard-fleet-instance.sh`** — see [Automation](#automation--onboard-fleet-instancesh-s64) below. Manual phases A–D are for debugging or when SSH/AWS is split across people.
+
 **Validated example:** `bzy54n.pbx3.com` joined fleet bucket `08jzwn-pbx3` alongside golden `08jzwn.pbx3.com` (May 2026).
 
 **Related docs:** `OPS_S3_RUNBOOK.md` (bucket policy, CORS, golden node), `tools/README.md` (registrar scripts), `DESIGN_RULES.md` (fleet bucket naming).
@@ -363,22 +365,14 @@ cd pbx3spa && npm run dev
 
 ---
 
-## Automation (planned — S6.4)
+## Automation — `onboard-fleet-instance.sh` (S6.4)
 
-Manual steps above are the **reference implementation** and acceptance test for a single Mac orchestrator.
-
-**Why:** Fleet onboarding is multi-surface (IAM, S3 catalog, SSH, `.env`). Without a one-command path, many teams will not adopt the directory model after reading the runbook.
-
-**Target UX:**
-
-1. Launch EC2 from a **fleet-ready AMI** (PBX installed, `/up` healthy, `globals` populated — see `IMPLEMENTATION_PLAN.md` § S6.4).
-2. Operator supplies **instance id** and/or **SSH target** plus fleet bucket (env or `~/.pbx3/fleet.yaml`).
-3. Run **`tools/onboard-fleet-instance.sh`** once — idempotent IAM + `register-instance.sh` + node `.env` + S3 smoke.
-
-**Planned command (illustrative):**
+Manual phases A–D above remain the **reference** if you need to debug step-by-step. For normal fleet joins, use the orchestrator:
 
 ```bash
+cd pbx3/pbx3-directory/tools
 export PBX3_ORG_BUCKET=08jzwn-pbx3
+
 ./onboard-fleet-instance.sh \
   --instance-id i-0bb601e7b1253c3f5 \
   --ssh ubuntu@bzy54n.pbx3.com \
@@ -386,18 +380,38 @@ export PBX3_ORG_BUCKET=08jzwn-pbx3
   --region us-east-1
 ```
 
-The script **discovers** `shortuid`, `fqdn`, and KSUID from the node — operators must not paste KSUID by hand.
+**What it does (idempotent):** discover `globals` over SSH → IAM policy/role/profile + EC2 attach → `register-instance.sh` → node `.env` + S3 smoke → verify catalog.
 
-**Not automated in v1:** PBX install (AMI), DNS, security groups, Let’s Encrypt, SPA deploy. Those stay launch-template / runbook steps.
+**Flags:** `--dry-run` (skip AWS/SSH writes; still discovers from node), `--git-pull`, `--smoke-backup`, `--skip-iam`, `--skip-catalog`, `--skip-node`, `--fleet-config ~/.pbx3/fleet.yaml`.
 
-Track progress: **`IMPLEMENTATION_PLAN.md`** task **S6.4**.
+**Optional `~/.pbx3/fleet.yaml`:**
+
+```yaml
+org_bucket: 08jzwn-pbx3
+region: us-east-1
+ssh_user: ubuntu
+ssh_key: ~/Documents/pemfiles/pbx3test.pem
+org_id: example-org
+environment: production
+```
+
+Then: `./onboard-fleet-instance.sh --instance-id i-xxx --ssh ubuntu@host`
+
+**Not automated:** PBX install (AMI), DNS, security groups, Let’s Encrypt, SPA deploy.
+
+### Fleet-ready AMI checklist (before running onboard)
+
+- [ ] `pbx3` + `pbx3api` installed; **`curl -k https://127.0.0.1:44300/up` → 200**
+- [ ] `globals` row populated (`shortuid`, `fqdn`, stable `id` / KSUID)
+- [ ] EC2 security group: inbound **22**, **44300**, **80** (LE) from operator/network as needed
+- [ ] **No** `PBX3_ORG_BUCKET` in `/opt/pbx3api/.env` yet (or empty — script sets it)
+- [ ] Operator Mac: `aws` + `jq` + SSH key; IAM admin (not node role)
 
 ---
 
 ## Next steps after onboarding
 
-- Run first backup + `pbx3:upload-backup` (Phase B.4)
-- **S6.4:** `onboard-fleet-instance.sh` (when shipped, prefer over manual phases A–D)
+- Run first backup + `pbx3:upload-backup` (Phase B.4), or re-run onboard with `--smoke-backup`
 - **S6.2:** deploy pbx3spa to GitHub Pages; add Pages origin to bucket CORS and each node API CORS
 - **S7:** tenant recording offload to `tenants/{shortuid}/recordings/…`
 
