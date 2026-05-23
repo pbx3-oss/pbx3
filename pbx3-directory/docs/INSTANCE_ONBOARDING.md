@@ -505,6 +505,56 @@ Operator Mac setup: see [Operator pre-flight (Mac)](#operator-pre-flight-mac) ab
 
 ---
 
+## Remove instance from fleet
+
+When a node is retired, remove it from the **directory** so the SPA picker no longer lists it. This is **catalog-only** — the PBX may still run; S3 backups and `instances/{ksuid}/` data are **not** deleted.
+
+**Requires:** same operator AWS CLI session as [Operator pre-flight (Mac)](#operator-pre-flight-mac) (`aws sts get-caller-identity`, S3 write on catalog + instances).
+
+### Soft decommission (default — recommended)
+
+Sets `status: decommissioned` in catalog and `instances/{ksuid}/meta.json`. The SPA **hides** decommissioned rows after **Refresh catalog**.
+
+```bash
+cd pbx3/pbx3-directory/tools
+export PBX3_ORG_BUCKET=08jzwn-pbx3
+
+./unregister-instance.sh --id 3E3gAOVGBhvc6vEPTBIYCBPycIk \
+  --notes 'Node retired — EC2 terminated 2026-05-22'
+```
+
+Dry-run: add `--dry-run` (prints intended S3 updates without uploading).
+
+### Hard remove (delete catalog row)
+
+Removes the row from `catalog/instance-index.json`. Updates `meta.json` to `decommissioned` for audit; does **not** delete backup objects.
+
+```bash
+./unregister-instance.sh --id 3E3gAOVGBhvc6vEPTBIYCBPycIk --remove \
+  --notes 'Removed from fleet catalog'
+```
+
+### Verify
+
+```bash
+aws s3 cp s3://08jzwn-pbx3/catalog/instance-index.json - | jq '.instances[] | {label, id, status}'
+```
+
+In **pbx3spa**: **Refresh catalog** — instance should disappear from the picker.
+
+### Not included (manual ops)
+
+| Item | Action |
+|------|--------|
+| **EC2 / PBX node** | Terminate or leave running; directory change does not stop calls |
+| **IAM role / instance profile** | Detach and delete in AWS console when EC2 is gone |
+| **S3 backups** | Retained under `instances/{ksuid}/backups/` (lifecycle applies) |
+| **Node `.env`** | Optionally clear `PBX3_ORG_BUCKET` on decommissioned node |
+
+To **re-add** a node later, run `onboard-fleet-instance.sh` again (or `register-instance.sh` with `--status active`).
+
+---
+
 ## Next steps after onboarding
 
 - Run first backup + `pbx3:upload-backup` (Phase B.4), or re-run onboard with `--smoke-backup`

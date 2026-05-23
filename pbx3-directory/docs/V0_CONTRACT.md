@@ -19,7 +19,7 @@
 
 **Backups:** `instances/{ksuid}/backups/{stamp}/backup.zip` + `manifest.json` + `policy.json` — Phase 4
 
-**Registrar:** `tools/register-instance.sh`, `register-tenant.sh`, `move-tenant.sh`  
+**Registrar:** `tools/register-instance.sh`, `unregister-instance.sh`, `register-tenant.sh`, `move-tenant.sh`  
 **Validate:** `tools/validate-index.sh`
 
 **Rules:** `DESIGN_RULES.md` · **Ops:** `OPS_S3_RUNBOOK.md`

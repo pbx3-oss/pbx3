@@ -119,3 +119,41 @@ registrar_merge_instance_meta() {
   fi
   rm -f "${out}.tmp"
 }
+
+registrar_find_catalog_instance() {
+  local catalog_file=$1 instance_id=$2
+  jq --arg id "$instance_id" '.instances[] | select(.id == $id)' "$catalog_file" | head -1
+}
+
+registrar_decommission_catalog_instance() {
+  local catalog_file=$1 instance_id=$2 notes=$3
+  local now
+  now=$(registrar_now_iso)
+  local found
+  found=$(jq --arg id "$instance_id" '[.instances[] | select(.id == $id)] | length' "$catalog_file")
+  [[ "$found" -ge 1 ]] || { echo "registrar: instance $instance_id not in catalog" >&2; return 1; }
+  jq --arg id "$instance_id" --arg now "$now" --arg notes "$notes" '
+    .updated_at = $now |
+    .instances = [
+      .instances[] |
+      if .id == $id then
+        .status = "decommissioned"
+        + (if $notes != "" then {notes: $notes} else {} end)
+      else . end
+    ]
+  ' "$catalog_file" >"${catalog_file}.new"
+  mv "${catalog_file}.new" "$catalog_file"
+}
+
+registrar_remove_catalog_instance() {
+  local catalog_file=$1 instance_id=$2
+  local now count
+  now=$(registrar_now_iso)
+  count=$(jq --arg id "$instance_id" '[.instances[] | select(.id == $id)] | length' "$catalog_file")
+  [[ "$count" -ge 1 ]] || { echo "registrar: instance $instance_id not in catalog" >&2; return 1; }
+  jq --arg id "$instance_id" --arg now "$now" '
+    .updated_at = $now |
+    .instances = [.instances[] | select(.id != $id)]
+  ' "$catalog_file" >"${catalog_file}.new"
+  mv "${catalog_file}.new" "$catalog_file"
+}

@@ -62,6 +62,20 @@ chmod +x register-instance.sh register-tenant.sh move-tenant.sh validate-index.s
 
 `--dry-run` prints intended `aws s3 cp` without uploading.
 
+## unregister-instance.sh
+
+Remove an instance from the fleet directory (SPA picker). Default: **soft decommission** (`status=decommissioned`). `--remove` deletes the catalog row; S3 backups are kept.
+
+```bash
+./unregister-instance.sh --id 3E3gAOVGBhvc6vEPTBIYCBPycIk \
+  --notes 'Node retired'
+
+# Hard remove catalog row:
+./unregister-instance.sh --id 3E3gAOVGBhvc6vEPTBIYCBPycIk --remove
+```
+
+See **`../docs/INSTANCE_ONBOARDING.md`** § Remove instance from fleet. Does not detach IAM or delete S3 backups.
+
 ## register-tenant.sh
 
 ```bash

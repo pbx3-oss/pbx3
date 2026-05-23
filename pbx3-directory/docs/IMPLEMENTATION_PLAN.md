@@ -207,6 +207,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 | S6.2 | **GitHub Pages** staging deploy + catalog CORS + API CORS for Pages origin | Closes hosting loop (`IMPLEMENTATION_PLAN` § SPA hosting) |
 | S6.3 | *(Optional)* `last_seen_at` probe job updating catalog | Nice for SPA chips; **not** blocking S3 v1 exit |
 | S6.4 | **Fleet onboard orchestrator** — one Mac command after AMI boot | **done** — `tools/onboard-fleet-instance.sh`; see § S6.4 |
+| S6.5 | **Fleet unregister** — remove / decommission instance in catalog | **done** — `tools/unregister-instance.sh`; SPA hides `decommissioned` |
 
 #### S6.4 — `onboard-fleet-instance.sh` (shipped)
 
