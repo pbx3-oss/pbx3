@@ -53,7 +53,10 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **S6 fleet** | Two-node catalog; SPA picker flips instances; dev proxies work |
 | **S6.4 onboard** | `pbx3-directory/tools/onboard-fleet-instance.sh` (Mac IAM + SSH + catalog + node `.env`) |
 | **S6.5 offboard** | `unregister-instance.sh`; SPA hides `status=decommissioned` (`pbx3spa` `1e06679`) |
+| **S6 backup smoke (bzy54n)** | `pbx3:backup-run --trigger=manual` → S3 `20260526T230950Z` (8.2 MB zip + manifest); `meta.json` updated |
 | **Docs** | `INSTANCE_ONBOARDING.md` (manual + operator pre-flight), `OPS_S3_RUNBOOK.md` |
+
+**S3 v1 closeout (2026-05-26):** Directory, instance backups (both nodes), onboard/offboard, and ops runbooks are **done for now**. Deferred without blocking: **S6.2 Pages + CORS**, **S7 recordings**, optional postinst registrar hint.
 
 ### Fleet reference (verify live before ops)
 
@@ -89,15 +92,14 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 |------|----------------|
 | **S6.2 Pages live + CORS** | Wait for org + final origin (`app.pbx.com`?) |
 | **pbx3api CORS** | Not configured for cross-origin SPA yet; required for Pages, not for Vite dev proxy |
-| **bzy54n first backup in S3** | Optional smoke; node may have no local zip yet |
-| **S7 recordings offload** | Whole phase open (`IMPLEMENTATION_PLAN.md`) |
+| **S7 recordings offload** | Whole phase open (`IMPLEMENTATION_PLAN.md`) — parked with S3 v1 |
 | **Phase 5 install hook** | Registrar hint on postinst — optional |
 
 ### Suggested next session pick (user preference order)
 
-1. **S6.2 prep only** — Pages workflow + `VITE_BASE_PATH` in **pbx3spa** (no AWS CORS)
-2. **S7** — recordings to S3
-3. **bzy54n backup upload** smoke on second node
+1. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
+2. **S6.2 prep only** — Pages workflow + `VITE_BASE_PATH` in **pbx3spa** (no AWS CORS until go-live)
+3. **TLS finish pass** or **extension provisioning** — see TODO.md / pbx3spa handoff (outside S3)
 
 ### Recent commits (directory branch)
 

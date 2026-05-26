@@ -336,7 +336,7 @@ cd pbx3spa && npm run dev
 | S3 PUT/DELETE smoke | EC2 | ✓ |
 | `register-instance.sh` | Mac | ✓ |
 | SPA shows two instances | Mac dev | ✓ |
-| First backup in S3 | EC2 | — (no local zip yet) |
+| First backup in S3 | EC2 | ✓ `20260526T230950Z` (`pbx3:backup-run --trigger=manual`) |
 
 ---
 
