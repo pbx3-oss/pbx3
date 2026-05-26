@@ -27,7 +27,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 | Task | Read (in order) |
 |------|------------------|
-| Any / first time | This file, then TODO.md |
+| Any / first time | This file (**§ Next agent session notes**), then TODO.md |
+| New GitHub org / OSS | **OPEN_SOURCE_GITHUB_SETUP.md** |
 | Install / deploy | INSTALL_SEQUENCE_UBUNTU.md (pbx3 then pbx3api on Ubuntu 24.04) |
 | Cleanup / installer | CLEANUP_PLAN.md, APACHE_CONFIG_TO_PBX3API.md, PBX3API_INSTALLER_NGINX_ADDITIONS.md |
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
@@ -37,6 +38,72 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
 
 **Source of truth:** Schema and code. Verify against pbx3 db_sql and code when changing behaviour; workingdocs may be outdated.
+
+---
+
+## Next agent session notes (2026-05-26)
+
+**Program:** S3 / fleet directory on branch **`directory`** (pbx3, pbx3api, pbx3spa). See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** for S5–S8.
+
+### Done and validated
+
+| Area | Notes |
+|------|--------|
+| **S5 backups** | Merged local+S3 index, presigned GET, rehydrate, lifecycle from `policy.json` — golden **08jzwn** |
+| **S6 fleet** | Two-node catalog; SPA picker flips instances; dev proxies work |
+| **S6.4 onboard** | `pbx3-directory/tools/onboard-fleet-instance.sh` (Mac IAM + SSH + catalog + node `.env`) |
+| **S6.5 offboard** | `unregister-instance.sh`; SPA hides `status=decommissioned` (`pbx3spa` `1e06679`) |
+| **Docs** | `INSTANCE_ONBOARDING.md` (manual + operator pre-flight), `OPS_S3_RUNBOOK.md` |
+
+### Fleet reference (verify live before ops)
+
+| | Golden | Second node |
+|--|--------|-------------|
+| FQDN | `08jzwn.pbx3.com` | `bzy54n.pbx3.com` |
+| KSUID | `3DmAsxePTWQZgynBYXE8obIRqEE` | `3E3gAOVGBhvc6vEPTBIYCBPycIk` |
+| EC2 | (golden test IP in notes) | `i-0bb601e7b1253c3f5` |
+
+- **Fleet bucket:** `08jzwn-pbx3` (one org bucket, many `instances/{ksuid}/` prefixes — not one bucket per node)
+- **Catalog:** `s3://08jzwn-pbx3/catalog/instance-index.json` (public read on `catalog/*` only)
+- **Mac ops:** AWS CLI with **IAM admin** (not node role) for onboard/offboard/registrar; **`aws sts get-caller-identity`** before scripts
+- **SSH:** `pbx3test.pem`, user `ubuntu`; SG must allow **22** and **44300** from operator IP
+
+### Local dev (pbx3spa) — unchanged by Pages plan
+
+```bash
+cd pbx3spa && npm run dev   # http://localhost:5173
+```
+
+`.env.development`: `VITE_CATALOG_PROXY_TARGET` + `/dev-catalog` for catalog; `VITE_API_PROXY_TARGET` per node under test. **No S3/API CORS needed for localhost** (Vite proxies).
+
+### Decisions for next work (do not re-litigate without user)
+
+1. **S6.2 GitHub Pages — deferred public cutover.** Dev via `npm run dev` is sufficient for now. **Do not** roll S3 + node API CORS until GitHub org / hostname is settled.
+2. **PBX3 will be open source** — plan a **new GitHub org** (not a shared personal account). Checklist: **`OPEN_SOURCE_GITHUB_SETUP.md`**.
+3. **Production SPA URL:** prefer **`app.pbx.com`** (or similar on owned **`pbx.com`**) over locking to `aelintra.github.io/pbx3spa`. Custom domain survives org/repo moves; update CORS once at go-live.
+4. **S6.2 “do now” without CORS:** optional workflow in **pbx3spa** (`base` path, `404.html`, `.env.production`) — safe to implement before org exists.
+
+### Gaps / not done yet
+
+| Item | Blocker / note |
+|------|----------------|
+| **S6.2 Pages live + CORS** | Wait for org + final origin (`app.pbx.com`?) |
+| **pbx3api CORS** | Not configured for cross-origin SPA yet; required for Pages, not for Vite dev proxy |
+| **bzy54n first backup in S3** | Optional smoke; node may have no local zip yet |
+| **S7 recordings offload** | Whole phase open (`IMPLEMENTATION_PLAN.md`) |
+| **Phase 5 install hook** | Registrar hint on postinst — optional |
+
+### Suggested next session pick (user preference order)
+
+1. **S6.2 prep only** — Pages workflow + `VITE_BASE_PATH` in **pbx3spa** (no AWS CORS)
+2. **S7** — recordings to S3
+3. **bzy54n backup upload** smoke on second node
+
+### Recent commits (directory branch)
+
+- **pbx3:** `36700f8` handoff + OSS checklist; `ddc222c` onboard script; `d554b57` unregister
+- **pbx3spa:** `1e06679` decommissioned filter
+- **pbx3api:** `6616120` nginx default-site fix for ACME
 
 ---
 
@@ -73,7 +140,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **genbashconfig.php** in installer is optional (run only if `php` is available).
 - **setip.php:** dpkg-query and `/etc/issue` use **CODENAME** (pbx3), not SYSPREFIX (/pbx3).
 - **Certificates:** **Let’s Encrypt** **Option A** (multi-SAN HTTP-01: node + tenant **`cluster.fqdn`**); **commercial/custom** → **custom → LE → snakeoil** via **`apply-active-cert.sh`**. **All TLS docs:** **`workingdocs/TLS_AND_CERTIFICATES.md`** (index), **`TLS_IMPLEMENTATION_STEPS.md`** (execution order), **`CERTIFICATES_PANEL_AND_API.md`**, **`LETSENCRYPT_PER_TENANT_FQDN.md`**. **pbx3spa** `CERTIFICATES_ADOPTION_PLAN.md` / `LETSENCRYPT_PER_TENANT_FQDN_OPTIONS.md` are **stubs** → read **pbx3** `workingdocs/` instead.
-- **Fleet / S3 (branch `directory`):** Shared org bucket + `catalog/instance-index.json`; per-node IAM; **`onboard-fleet-instance.sh`** / **`unregister-instance.sh`**; golden **08jzwn** + second node **bzy54n** validated in dev. **Next:** S6.2 GitHub Pages for **pbx3spa** (`https://aelintra.github.io/pbx3spa/` first; custom domain later). See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`**.
+- **Fleet / S3 (branch `directory`):** Shared org bucket + `catalog/instance-index.json`; per-node IAM; **`onboard-fleet-instance.sh`** / **`unregister-instance.sh`**; golden **08jzwn** + second node **bzy54n** validated in dev. **S6.2 Pages:** prep workflow OK; **defer public URL + CORS** until new OSS org + **`app.pbx.com`** (see **§ Next agent session notes**). See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`**.
 
 ---
 
@@ -136,6 +203,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **pbx3-directory/docs/IMPLEMENTATION_PLAN.md** | S3 + fleet program phases (S5–S8); current backlog |
 | **pbx3-directory/docs/INSTANCE_ONBOARDING.md** | Add/remove fleet nodes; operator pre-flight; **`onboard-fleet-instance.sh`** |
 | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** | Bucket policy, CORS, node IAM, SPA hosting (GitHub Pages § 9) |
+| **OPEN_SOURCE_GITHUB_SETUP.md** | New GitHub org checklist (PBX3 will be OSS) |
 
 ---
 
