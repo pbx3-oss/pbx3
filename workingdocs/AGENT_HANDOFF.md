@@ -6,6 +6,23 @@
 
 ---
 
+## Agent behavior (handoff reminder)
+
+Bias toward **caution over speed** on non-trivial work. Full detail lives in **Cursor user rules**; this is the short checklist for agents landing on pbx3.
+
+- **Think first** — state assumptions; ask if unclear; surface tradeoffs before coding.
+- **Minimal diff** — only what the request needs; match existing style; no drive-by refactors.
+- **Verify** — turn tasks into checks (e.g. “Pages live → catalog loads → login on 08jzwn”).
+
+**Repo-specific (always):**
+
+- **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, or **`pbx3spa/`** only.
+- **Fleet / S3 / directory:** active work on branch **`directory`** across those three repos. Start **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`**, then **`INSTANCE_ONBOARDING.md`** / **`OPS_S3_RUNBOOK.md`** as needed.
+- **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
+
+---
+
+
 ## Read order by task
 
 | Task | Read (in order) |
@@ -16,6 +33,8 @@
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (index) → **TLS_IMPLEMENTATION_STEPS.md** (linear checklist) → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**Option A** spec + §11–§12). **pbx3spa**/workingdocs has stubs pointing here. |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
+| Fleet / S3 catalog / onboard | **pbx3-directory/docs/IMPLEMENTATION_PLAN.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`unregister-instance.sh`** |
+| SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
 
 **Source of truth:** Schema and code. Verify against pbx3 db_sql and code when changing behaviour; workingdocs may be outdated.
 
@@ -33,7 +52,8 @@
 
 - **Package content** lives under **`pbx3-1/`** (what gets installed into `/opt/pbx3`, `/etc`, etc.).
 - **Workingdocs** (design, decisions, checklists) are in **`workingdocs/`**.
-- **Branch in use:** `main` (cleanup merged).
+- **Fleet directory / S3 ops** live in **`pbx3-directory/`** (docs + registrar scripts).
+- **Branches:** **`main`** — pbx3 backend/installer; **`directory`** — fleet catalog, S3 backups, onboard/offboard (also **pbx3api**, **pbx3spa**).
 
 ---
 
@@ -53,6 +73,7 @@
 - **genbashconfig.php** in installer is optional (run only if `php` is available).
 - **setip.php:** dpkg-query and `/etc/issue` use **CODENAME** (pbx3), not SYSPREFIX (/pbx3).
 - **Certificates:** **Let’s Encrypt** **Option A** (multi-SAN HTTP-01: node + tenant **`cluster.fqdn`**); **commercial/custom** → **custom → LE → snakeoil** via **`apply-active-cert.sh`**. **All TLS docs:** **`workingdocs/TLS_AND_CERTIFICATES.md`** (index), **`TLS_IMPLEMENTATION_STEPS.md`** (execution order), **`CERTIFICATES_PANEL_AND_API.md`**, **`LETSENCRYPT_PER_TENANT_FQDN.md`**. **pbx3spa** `CERTIFICATES_ADOPTION_PLAN.md` / `LETSENCRYPT_PER_TENANT_FQDN_OPTIONS.md` are **stubs** → read **pbx3** `workingdocs/` instead.
+- **Fleet / S3 (branch `directory`):** Shared org bucket + `catalog/instance-index.json`; per-node IAM; **`onboard-fleet-instance.sh`** / **`unregister-instance.sh`**; golden **08jzwn** + second node **bzy54n** validated in dev. **Next:** S6.2 GitHub Pages for **pbx3spa** (`https://aelintra.github.io/pbx3spa/` first; custom domain later). See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`**.
 
 ---
 
@@ -112,6 +133,9 @@
 | **TODO.md** | Open items (e.g. LDAP columns globals vs tenant) |
 | **DEBIAN_PACKAGE_IMPROVEMENTS.md** | postinst vs installer, rules, install file ideas |
 | **CLEANUP_PLAN.md** | Phases (D, F, etc.), legacy web, installer scope, repo layout (§3a) |
+| **pbx3-directory/docs/IMPLEMENTATION_PLAN.md** | S3 + fleet program phases (S5–S8); current backlog |
+| **pbx3-directory/docs/INSTANCE_ONBOARDING.md** | Add/remove fleet nodes; operator pre-flight; **`onboard-fleet-instance.sh`** |
+| **pbx3-directory/docs/OPS_S3_RUNBOOK.md** | Bucket policy, CORS, node IAM, SPA hosting (GitHub Pages § 9) |
 
 ---
 
