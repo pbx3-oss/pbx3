@@ -17,7 +17,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 **Repo-specific (always):**
 
 - **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, or **`pbx3spa/`** only.
-- **Fleet / S3 / directory:** on **`main`** (merged 2026-05-26). Start **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`**, then **`INSTANCE_ONBOARDING.md`** / **`OPS_S3_RUNBOOK.md`** as needed.
+- **Fleet / S3 / directory:** on **`main`**. **Track B:** branch **`hardening`** in pbx3, pbx3api, pbx3spa.
 - **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
 
 ---

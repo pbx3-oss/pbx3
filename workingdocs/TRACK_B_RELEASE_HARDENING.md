@@ -2,7 +2,7 @@
 
 **Status:** Active (2026-05-26). **Goal:** Trusted HTTPS on fleet nodes, installer fails loudly when misconfigured, fail2ban matches nginx, and every field on stakeholder-facing SPA panels has a visible help message (`?` icon with `tt_help_core` content).
 
-**Repos:** `pbx3`, `pbx3api`, `pbx3spa` (all on **`main`**).
+**Repos:** `pbx3`, `pbx3api`, `pbx3spa` — branch **`hardening`** (from `main`).
 
 **References:** `TODO.md`, `TLS_IMPLEMENTATION_STEPS.md` §4.3, `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, **pbx3spa** `PANEL_PATTERN.md`, **pbx3spa** `SESSION_HANDOFF.md` (help system).
 
@@ -24,7 +24,7 @@
 |------|--------|------|
 | **0.1** | Define **stakeholder demo path** (suggested): Login → pick instance → Dashboard → Extension create/edit → Tenant → Queue → Backup create/list → Certificates Sync | Written checklist (10–15 screens) |
 | **0.2** | Record current dev setup: HTTP vs HTTPS API URL, which node (`08jzwn` / `bzy54n`) | Note in handoff |
-| **0.3** | Open branch **`release-hardening`** in each repo (or work on `main`) | Branch ready |
+| **0.3** | Open branch **`hardening`** in each repo (from `main`) | Branch ready |
 | **0.4** | Run **`npm test`** in pbx3spa | Green |
 
 ---
@@ -166,7 +166,7 @@
 | **6.2** | Update **`AGENT_HANDOFF.md`** — Track B complete |
 | **6.3** | Refresh **`pbx3spa/workingdocs/SESSION_HANDOFF.md`** |
 | **6.4** | Deb/changelog bumps as needed (`pbx3`, `pbx3api`, `pbx3spa`) |
-| **6.5** | Optional git tag: `release-hardening-2026-05` |
+| **6.5** | Optional git tag: `hardening-2026-05` |
 
 ---
 
