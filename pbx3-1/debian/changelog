@@ -1,3 +1,26 @@
+pbx3 (0.0.3-11) noble; urgency=medium
+
+  * pbx3-directory (fleet / S3 v1 — merged to main): docs, schemas, and Mac
+    ops tooling for org-bucket catalog, instance backups, and fleet onboard/
+    offboard. No change to installed /opt/pbx3 runtime; pairs with pbx3api
+    directory branch (now main) for backup upload and merged backup index.
+  * Docs: DESIGN_RULES, S3_LAYOUT_PROPOSAL, IMPLEMENTATION_PLAN (S5–S8),
+    OPS_S3_RUNBOOK (bucket policy, IAM, CORS, golden node playbook),
+    INSTANCE_ONBOARDING (two-node validated: 08jzwn + bzy54n), V0_CONTRACT.
+  * Schemas: instance-index, instance/tenant meta, backup-manifest,
+    retention-policy; IAM policy template pbx3-node-s3-writer.policy.json.tmpl.
+  * Registrar: register-instance.sh, register-tenant.sh, move-tenant.sh,
+    validate-index.sh (catalog + instances/{ksuid}/meta.json in org bucket).
+  * Fleet ops: onboard-fleet-instance.sh (IAM + catalog + node .env + smoke),
+    unregister-instance.sh (soft decommission or catalog row removal).
+  * S3 ops: upload-instance-backup.sh, apply-backup-lifecycle-rule.sh
+    (maxage_days from policy.json), apply-node-s3-writer-policy.sh,
+    tag-s3-backups.sh (class=backup lifecycle tags).
+  * workingdocs: AGENT_HANDOFF S3 v1 closeout; OPEN_SOURCE_GITHUB_SETUP
+    checklist for future OSS org and SPA hostname.
+
+ -- KOKO <admin@aelintra.com>  Tue, 26 May 2026 23:30:00 +0000
+
 pbx3 (0.0.3-10) noble; urgency=medium
 
   * NetHelper copyFirewallTemplates: write pbx3_inline_* with file_put_contents
