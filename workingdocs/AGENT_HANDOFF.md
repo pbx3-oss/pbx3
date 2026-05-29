@@ -28,7 +28,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Task | Read (in order) |
 |------|------------------|
 | Any / first time | This file (**§ Next agent session notes**), then TODO.md |
-| **Track B — release hardening** | **TRACK_B_RELEASE_HARDENING.md** → TODO.md → TLS_IMPLEMENTATION_STEPS.md §4.3 |
+| **Track B — release hardening** | **TRACK_B_RELEASE_HARDENING.md** → **STAKEHOLDER_DEMO_SCRIPT.md** → TODO.md → TLS_IMPLEMENTATION_STEPS.md §4.3 |
 | New GitHub org / OSS | **OPEN_SOURCE_GITHUB_SETUP.md** |
 | Install / deploy | INSTALL_SEQUENCE_UBUNTU.md (pbx3 then pbx3api on Ubuntu 24.04) |
 | Cleanup / installer | CLEANUP_PLAN.md, APACHE_CONFIG_TO_PBX3API.md, PBX3API_INSTALLER_NGINX_ADDITIONS.md |
@@ -44,7 +44,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-05-26)
 
-**Program:** **Track B — release hardening** (see **`TRACK_B_RELEASE_HARDENING.md`**). S3 v1 closed; **`directory` merged to `main`** (2026-05-26).
+**Program:** **Track B — release hardening** on branch **`hardening`** (see **`TRACK_B_RELEASE_HARDENING.md`**). **Phase 0 complete** (2026-05-26): demo script, dev baseline, tests green. **Next: Phase 1** (TLS HTTPS verification).
 
 ### Done and validated
 
@@ -203,6 +203,7 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 | **DB_RESTORE_REGRESSION_CHECKLIST.md** | Release-candidate validation for backup/restore + reloader data retention |
 | **TODO.md** | Open items (e.g. LDAP columns globals vs tenant) |
 | **TRACK_B_RELEASE_HARDENING.md** | **Active:** TLS HTTPS, installer health checks, fail2ban, SPA field help before stakeholder demo |
+| **STAKEHOLDER_DEMO_SCRIPT.md** | Tier 1–2 demo path + help checkboxes for stakeholder rehearsal |
 | **DEBIAN_PACKAGE_IMPROVEMENTS.md** | postinst vs installer, rules, install file ideas |
 | **CLEANUP_PLAN.md** | Phases (D, F, etc.), legacy web, installer scope, repo layout (§3a) |
 | **pbx3-directory/docs/IMPLEMENTATION_PLAN.md** | S3 + fleet program phases (S5–S8); current backlog |

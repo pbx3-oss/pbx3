@@ -4,7 +4,7 @@
 
 **Repos:** `pbx3`, `pbx3api`, `pbx3spa` — branch **`hardening`** (from `main`).
 
-**References:** `TODO.md`, `TLS_IMPLEMENTATION_STEPS.md` §4.3, `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, **pbx3spa** `PANEL_PATTERN.md`, **pbx3spa** `SESSION_HANDOFF.md` (help system).
+**References:** `TODO.md`, `TLS_IMPLEMENTATION_STEPS.md` §4.3, `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, **`STAKEHOLDER_DEMO_SCRIPT.md`**, **pbx3spa** `PANEL_PATTERN.md`, **pbx3spa** `SESSION_HANDOFF.md` (help system).
 
 ---
 
@@ -22,10 +22,29 @@
 
 | Step | Action | Exit |
 |------|--------|------|
-| **0.1** | Define **stakeholder demo path** (suggested): Login → pick instance → Dashboard → Extension create/edit → Tenant → Queue → Backup create/list → Certificates Sync | Written checklist (10–15 screens) |
-| **0.2** | Record current dev setup: HTTP vs HTTPS API URL, which node (`08jzwn` / `bzy54n`) | Note in handoff |
-| **0.3** | Open branch **`hardening`** in each repo (from `main`) | Branch ready |
-| **0.4** | Run **`npm test`** in pbx3spa | Green |
+| **0.1** | Define **stakeholder demo path** | **`STAKEHOLDER_DEMO_SCRIPT.md`** — 10 sections, Tier 1–2 routes, help checkboxes |
+| **0.2** | Record **dev baseline** (below) | Frozen 2026-05-26 |
+| **0.3** | Branch **`hardening`** in pbx3, pbx3api, pbx3spa | ✓ pushed to origin |
+| **0.4** | **`npm test`** in pbx3spa | ✓ 31 tests passed (vitest 4.1.2, 2026-05-26) |
+
+### Dev baseline (0.2 — 2026-05-26)
+
+Recorded from operator machine; update this block when Phase 1 switches API to HTTPS-only dev.
+
+| Setting | Current value | Notes |
+|---------|---------------|--------|
+| SPA dev URL | `http://localhost:5173` | `npm run dev` in **pbx3spa** |
+| API proxy | `VITE_API_PROXY_TARGET=https://bzy54n.pbx3.com:44300` | Vite proxies `/api` — no browser CORS |
+| Catalog | `VITE_CATALOG_PROXY_TARGET=https://08jzwn-pbx3.s3.us-east-1.amazonaws.com` | |
+| Catalog URL | `VITE_INSTANCE_DIRECTORY_URL=/dev-catalog/catalog/instance-index.json` | Dev proxy; no S3 CORS |
+| Default demo node | **bzy54n** (proxy); **08jzwn** (golden reference) | Change proxy + restart to flip |
+| API TLS | HTTPS on `:44300` (LE on nodes) | Phase 1 verifies end-to-end |
+| Fleet nodes | `08jzwn.pbx3.com`, `bzy54n.pbx3.com` | See `AGENT_HANDOFF.md` § Fleet reference |
+| Branch | **`hardening`** | All three repos |
+
+**Example file:** `pbx3spa/.env.development.example` (committed); live values in gitignored `.env.development`.
+
+**Phase 0 exit:** ✓ Complete — proceed to **Phase 1** (TLS finish pass on nodes + SPA HTTPS proxy verification).
 
 ---
 
@@ -202,6 +221,10 @@ Week 3 end Phase 6 bookkeeping → stakeholder demo
 
 ## First session (recommended)
 
-1. **Phase 0.1** — write the stakeholder demo script.
-2. **Phase 1.1–1.4** — HTTPS on `08jzwn`, then `bzy54n`.
-3. **Phase 4.1** — start help audit on **ExtensionDetailView** + **BackupView**.
+**Phase 0:** ✓ Done — see **`STAKEHOLDER_DEMO_SCRIPT.md`** and dev baseline above.
+
+**Phase 1 next:**
+
+1. **1.1–1.4** — HTTPS `/up` on `08jzwn`, then `bzy54n`.
+2. **1.5–1.8** — SPA login, backup, certificates over HTTPS proxy.
+3. **4.1** — start help audit on **ExtensionDetailView** + **BackupView** (parallel).
