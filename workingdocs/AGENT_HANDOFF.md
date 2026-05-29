@@ -17,7 +17,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 **Repo-specific (always):**
 
 - **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, or **`pbx3spa/`** only.
-- **Fleet / S3 / directory:** active work on branch **`directory`** across those three repos. Start **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`**, then **`INSTANCE_ONBOARDING.md`** / **`OPS_S3_RUNBOOK.md`** as needed.
+- **Fleet / S3 / directory:** on **`main`** (merged 2026-05-26). Start **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`**, then **`INSTANCE_ONBOARDING.md`** / **`OPS_S3_RUNBOOK.md`** as needed.
 - **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
 
 ---
@@ -43,20 +43,21 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-05-26)
 
-**Program:** S3 / fleet directory on branch **`directory`** (pbx3, pbx3api, pbx3spa). See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** for S5–S8.
+**Program:** S3 / fleet directory — **`directory` merged to `main`** (2026-05-26). See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** for S5–S8.
 
 ### Done and validated
 
 | Area | Notes |
 |------|--------|
 | **S5 backups** | Merged local+S3 index, presigned GET, rehydrate, lifecycle from `policy.json` — golden **08jzwn** |
+| **S5 archive round-trip (bzy54n)** | S3-only restore from older backup removed added tenant/extension; restore from later backup brought them back |
 | **S6 fleet** | Two-node catalog; SPA picker flips instances; dev proxies work |
 | **S6.4 onboard** | `pbx3-directory/tools/onboard-fleet-instance.sh` (Mac IAM + SSH + catalog + node `.env`) |
 | **S6.5 offboard** | `unregister-instance.sh`; SPA hides `status=decommissioned` (`pbx3spa` `1e06679`) |
 | **S6 backup smoke (bzy54n)** | `pbx3:backup-run --trigger=manual` → S3 `20260526T230950Z` (8.2 MB zip + manifest); `meta.json` updated |
 | **Docs** | `INSTANCE_ONBOARDING.md` (manual + operator pre-flight), `OPS_S3_RUNBOOK.md` |
 
-**S3 v1 closeout (2026-05-26):** Directory, instance backups (both nodes), onboard/offboard, and ops runbooks are **done for now**. Deferred without blocking: **S6.2 Pages + CORS**, **S7 recordings**, optional postinst registrar hint.
+**S3 v1 closeout (2026-05-26):** Directory, instance backups (both nodes), onboard/offboard, and ops runbooks are **done for now**. **`directory` merged to `main`** in pbx3, pbx3api, pbx3spa after S5 archive validation. Deferred without blocking: **S6.2 Pages + CORS**, **S7 recordings**, optional postinst registrar hint.
 
 ### Fleet reference (verify live before ops)
 
@@ -122,7 +123,7 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 - **Package content** lives under **`pbx3-1/`** (what gets installed into `/opt/pbx3`, `/etc`, etc.).
 - **Workingdocs** (design, decisions, checklists) are in **`workingdocs/`**.
 - **Fleet directory / S3 ops** live in **`pbx3-directory/`** (docs + registrar scripts).
-- **Branches:** **`main`** — pbx3 backend/installer; **`directory`** — fleet catalog, S3 backups, onboard/offboard (also **pbx3api**, **pbx3spa**).
+- **Branches:** **`main`** — includes fleet catalog, S3 backups, onboard/offboard (merged from **`directory`** 2026-05-26); **`directory`** may remain for reference until deleted.
 
 ---
 
