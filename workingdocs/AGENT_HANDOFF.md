@@ -28,6 +28,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Task | Read (in order) |
 |------|------------------|
 | Any / first time | This file (**§ Next agent session notes**), then TODO.md |
+| **Track B — release hardening** | **TRACK_B_RELEASE_HARDENING.md** → TODO.md → TLS_IMPLEMENTATION_STEPS.md §4.3 |
 | New GitHub org / OSS | **OPEN_SOURCE_GITHUB_SETUP.md** |
 | Install / deploy | INSTALL_SEQUENCE_UBUNTU.md (pbx3 then pbx3api on Ubuntu 24.04) |
 | Cleanup / installer | CLEANUP_PLAN.md, APACHE_CONFIG_TO_PBX3API.md, PBX3API_INSTALLER_NGINX_ADDITIONS.md |
@@ -43,7 +44,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-05-26)
 
-**Program:** S3 / fleet directory — **`directory` merged to `main`** (2026-05-26). See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** for S5–S8.
+**Program:** **Track B — release hardening** (see **`TRACK_B_RELEASE_HARDENING.md`**). S3 v1 closed; **`directory` merged to `main`** (2026-05-26).
 
 ### Done and validated
 
@@ -98,9 +99,9 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 
 ### Suggested next session pick (user preference order)
 
-1. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
-2. **S6.2 prep only** — Pages workflow + `VITE_BASE_PATH` in **pbx3spa** (no AWS CORS until go-live)
-3. **TLS finish pass** or **extension provisioning** — see TODO.md / pbx3spa handoff (outside S3)
+1. **Track B — release hardening** — **`TRACK_B_RELEASE_HARDENING.md`** (TLS HTTPS, installer checks, fail2ban, SPA field help for stakeholders)
+2. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname; after Track B or in parallel)
+3. **Extension provisioning** — pbx3spa `EXTENSION_PROVISIONING_QUICKSTART.md` (after Track B or in parallel)
 
 ### Recent commits (directory branch)
 
@@ -201,6 +202,7 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 | **PHP_SCRIPTS_AND_MODULES.md** | Which PHP scripts exist, who calls them, php-cli/php-sqlite3 and extensions |
 | **DB_RESTORE_REGRESSION_CHECKLIST.md** | Release-candidate validation for backup/restore + reloader data retention |
 | **TODO.md** | Open items (e.g. LDAP columns globals vs tenant) |
+| **TRACK_B_RELEASE_HARDENING.md** | **Active:** TLS HTTPS, installer health checks, fail2ban, SPA field help before stakeholder demo |
 | **DEBIAN_PACKAGE_IMPROVEMENTS.md** | postinst vs installer, rules, install file ideas |
 | **CLEANUP_PLAN.md** | Phases (D, F, etc.), legacy web, installer scope, repo layout (§3a) |
 | **pbx3-directory/docs/IMPLEMENTATION_PLAN.md** | S3 + fleet program phases (S5–S8); current backlog |
