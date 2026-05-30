@@ -38,46 +38,64 @@ Recorded from operator machine; update this block when Phase 1 switches API to H
 | Catalog | `VITE_CATALOG_PROXY_TARGET=https://08jzwn-pbx3.s3.us-east-1.amazonaws.com` | |
 | Catalog URL | `VITE_INSTANCE_DIRECTORY_URL=/dev-catalog/catalog/instance-index.json` | Dev proxy; no S3 CORS |
 | Default demo node | **bzy54n** (proxy); **08jzwn** (golden reference) | Change proxy + restart to flip |
-| API TLS | HTTPS on `:44300` (LE on nodes) | Phase 1 verifies end-to-end |
+| API TLS | HTTPS on `:44300` (LE both nodes, 2026-05-30) | Validate with `curl` without `-k`, not dev-proxy backup alone |
 | Fleet nodes | `08jzwn.pbx3.com`, `bzy54n.pbx3.com` | See `AGENT_HANDOFF.md` § Fleet reference |
 | Branch | **`hardening`** | All three repos |
 
 **Example file:** `pbx3spa/.env.development.example` (committed); live values in gitignored `.env.development`.
 
-**Phase 0 exit:** ✓ Complete — proceed to **Phase 1** (TLS finish pass on nodes + SPA HTTPS proxy verification).
+**Phase 0 exit:** ✓ Complete.
+
+---
+
+## Dev proxy vs node TLS (read this before Phase 1 smoke tests)
+
+In **`npm run dev`**, the browser only talks to **`http://localhost:5173`**. Vite forwards `/api` to **`VITE_API_PROXY_TARGET`** with **`secure: false`** (`pbx3spa/vite.config.js`) — the proxy **does not validate** the node certificate (snakeoil or LE both work).
+
+| Test | Proves node has trusted LE? | Proves API/auth works in dev? |
+|------|------------------------------|-------------------------------|
+| Login / backup / panels via localhost proxy | **No** | **Yes** |
+| **`curl https://{fqdn}:44300/up`** (no `-k`) | **Yes** | API up + trusted cert |
+| Certificates panel → LE configured + SANs | **Yes** | Panel + syshelper path |
+| Browser tab directly to `https://{fqdn}:44300/up` | **Yes** | Same as curl |
+
+Tenant FQDN DNS (e.g. `wfh69h.pbx3.com`) is required for **LE issuance/Sync**, not for API calls to the **node** FQDN through the dev proxy.
+
+See **pbx3spa** **`workingdocs/DEV_ENVIRONMENT.md`** §7.
 
 ---
 
 ## Phase 1 — TLS finish pass (2–3 days)
 
-*From `TODO.md` — move off LAN HTTP dev to trusted HTTPS on 44300.*
+*From `TODO.md` — trusted LE on `:44300` on fleet nodes. **Phase 1 exit: ✓ Complete (2026-05-30).***
 
 ### 1A — Fleet nodes
 
-| Step | Action | Repo | Verify |
-|------|--------|------|--------|
-| **1.1** | Confirm LE cert active: `tls-active.json`, `openssl x509 -text` shows node + tenant SANs | pbx3 (node) | SANs present |
-| **1.2** | Run **`apply-active-cert.sh`**; confirm nginx uses `snippets/pbx3-ssl-active.conf` | pbx3 | `nginx -t` OK |
-| **1.3** | `curl -sS -o /dev/null -w '%{http_code}\n' https://08jzwn.pbx3.com:44300/up` | — | `200` |
-| **1.4** | Repeat **1.1–1.3** on **bzy54n** | — | Both nodes HTTPS |
+| Step | Action | Verify |
+|------|--------|--------|
+| **1.1–1.3** | **08jzwn** — LE since May 2026; `curl https://08jzwn.pbx3.com:44300/up` → **200** | ✓ |
+| **1.4** | **bzy54n** — was snakeoil until 2026-05-30; **Certificates → Get certificate** after DNS for `wfh69h.pbx3.com` | ✓ |
+
+**bzy54n LE (2026-05-30):** Panel **Get certificate** → covers `bzy54n.pbx3.com`, `wfh69h.pbx3.com`; expires **2026-08-28**; issuer Let's Encrypt (YE2). First issue is **manual** (not install/onboard) — see **`INSTALL_SEQUENCE_UBUNTU.md`** / **`le-instance-bootstrap.sh`**.
 
 ### 1B — SPA + Sanctum on HTTPS
 
-| Step | Action | Repo | Verify |
-|------|--------|------|--------|
-| **1.5** | Update **`.env.development`**: `VITE_API_PROXY_TARGET=https://{fqdn}.pbx3.com:44300` (keep Vite proxy — avoids CORS for now) | pbx3spa | `npm run dev` |
-| **1.6** | Login, whoami, navigate 3–4 panels, **Commit** dirty state | pbx3spa | No cert / CORS / Sanctum errors |
-| **1.7** | Re-test **backup create + S3-only restore** over HTTPS proxy | pbx3spa + pbx3api | Same as LAN HTTP test |
-| **1.8** | **Certificates** panel: view domains, **Sync with tenant list**, renew dry-run | pbx3spa | Toasts OK |
+| Step | Action | Verify |
+|------|--------|--------|
+| **1.5** | `.env.development`: `VITE_API_PROXY_TARGET=https://bzy54n.pbx3.com:44300` | ✓ |
+| **1.6–1.7** | Login, backup via dev proxy | ✓ (API smoke; **not** cert validation — see above) |
+| **1.8** | Certificates panel on bzy54n | ✓ (Get certificate succeeded) |
 
 ### 1C — Document and close
 
-| Step | Action |
-|------|--------|
-| **1.9** | Update **`TODO.md`** — check off TLS finish pass (or note remaining gaps) |
-| **1.10** | Update **`AGENT_HANDOFF.md`**: dev pattern is HTTPS API + Vite proxy |
+| Step | Action | Status |
+|------|--------|--------|
+| **1.9** | **`TODO.md`** — fleet LE done; installer health checks → Phase 2 | ✓ |
+| **1.10** | **`AGENT_HANDOFF.md`**, **`DEV_ENVIRONMENT.md`** | ✓ |
 
-**Phase 1 exit:** Both fleet nodes serve API on **trusted LE HTTPS**; local SPA dev works through Vite proxy without browser cert warnings on API calls.
+**Phase 1 exit:** Both fleet nodes serve API on **trusted LE HTTPS** (`curl` without `-k` → 200). Dev SPA uses HTTPS proxy target; **`secure: false`** means login/backup do not prove LE — use curl or Certificates panel.
+
+**Next:** **Phase 2** (installer health checks).
 
 ---
 
@@ -210,8 +228,8 @@ Week 3 end Phase 6 bookkeeping → stakeholder demo
 
 | # | Deliverable | Done when |
 |---|-------------|-----------|
-| B1 | HTTPS API on both fleet nodes | `curl https://…:44300/up` → 200, trusted cert |
-| B2 | SPA works on HTTPS via Vite proxy | Login + backup + certs OK |
+| B1 | HTTPS API on both fleet nodes | ✓ `curl` without `-k` → 200 (08jzwn + bzy54n) |
+| B2 | SPA works on HTTPS via Vite proxy | ✓ login/backup (proxy `secure: false` — see § Dev proxy vs node TLS) |
 | B3 | Installer health checks | Fresh install fails on broken nginx/DB |
 | B4 | fail2ban nginx-aligned | No Apache log references |
 | B5 | Help on all Tier 1–2 demo fields | Every label has `?` + useful text |
@@ -223,8 +241,6 @@ Week 3 end Phase 6 bookkeeping → stakeholder demo
 
 **Phase 0:** ✓ Done — see **`STAKEHOLDER_DEMO_SCRIPT.md`** and dev baseline above.
 
-**Phase 1 next:**
+**Phase 1:** ✓ Done (2026-05-30) — fleet LE on both nodes; bzy54n via Certificates **Get certificate**.
 
-1. **1.1–1.4** — HTTPS `/up` on `08jzwn`, then `bzy54n`.
-2. **1.5–1.8** — SPA login, backup, certificates over HTTPS proxy.
-3. **4.1** — start help audit on **ExtensionDetailView** + **BackupView** (parallel).
+**Phase 2 next:** pbx3api installer health checks (DB symlink, `nginx -t`, curl `/up`).

@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** main  
-**Last updated:** 2026-03-11
+**Branch:** main · **Track B:** `hardening`  
+**Last updated:** 2026-05-30
 
 ---
 
@@ -11,7 +11,7 @@
 
 - [ ] **pbx3 fail2ban:** pbx3api serves the API via nginx; pbx3’s shipped `etc/fail2ban/jail.local` still references Apache (`apache-badbots`, `/var/log/apache2/ssl_access.log`). Update to nginx log path and a suitable filter (or nginx-badbots if available), or disable the jail until nginx logging is in place.
 
-- [ ] **TLS finish pass after LAN HTTP dev cycle:** current frontend/API integration is validated over HTTP in LAN for development speed. Before release, switch back to HTTPS on `44300`, wire hostname-aligned certs (Let's Encrypt owned by pbx3), re-test browser login/CORS/Sanctum with trusted cert. **Installer health-check follow-up:** add to pbx3api `scripts/installer.sh` after nginx/php-fpm setup: (1) DB symlink check (exists, target resolves, www-data can r/w); (2) nginx upstream/socket check, `nginx -t`; (3) HTTP readiness e.g. `curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1:44300/`. Fail installer non-zero if validation fails.
+- [ ] **pbx3api installer health checks (Track B Phase 2):** After nginx/php-fpm setup in `scripts/installer.sh`: (1) DB symlink check (exists, target resolves, www-data can r/w); (2) nginx upstream/socket check, `nginx -t`; (3) HTTPS readiness e.g. `curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1:44300/up`. Fail installer non-zero if validation fails.
 
 - [ ] **LDAP: LDAPHelperClass reads from `globals` but instance `globals` has no LDAP columns.**  
   Instance schema (`sqlite_create_instance.sql`) does not define `ldapbase`, `ldapou`, `ldapuser`, `ldappass` on `globals`. Those columns exist on the tenant `cluster` table (`sqlite_create_tenant.sql`).  
@@ -26,4 +26,4 @@
 
 ## Completed / deferred
 
-_(Move items here when done or parked.)_
+- [x] **TLS — fleet nodes (Track B Phase 1, 2026-05-30):** **08jzwn** + **bzy54n** trusted LE on `:44300`. bzy54n: Certificates **Get certificate** after tenant DNS (`wfh69h.pbx3.com`). First issue is manual (not install/onboard). Dev proxy (`secure: false`) does not validate node certs — use `curl` without `-k` or Certificates panel. **Remaining:** installer health checks (Phase 2), fail2ban (Phase 3), Pages/CORS when SPA is off localhost.

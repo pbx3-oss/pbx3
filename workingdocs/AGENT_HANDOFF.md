@@ -44,7 +44,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-05-26)
 
-**Program:** **Track B — release hardening** on branch **`hardening`** (see **`TRACK_B_RELEASE_HARDENING.md`**). **Phase 0 complete** (2026-05-26): demo script, dev baseline, tests green. **Next: Phase 1** (TLS HTTPS verification).
+**Program:** **Track B — release hardening** on branch **`hardening`** (see **`TRACK_B_RELEASE_HARDENING.md`**). **Phase 0 ✓** · **Phase 1 ✓** (2026-05-30): trusted LE on **08jzwn** + **bzy54n**. **Next: Phase 2** (installer health checks).
 
 ### Done and validated
 
@@ -56,6 +56,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **S6.4 onboard** | `pbx3-directory/tools/onboard-fleet-instance.sh` (Mac IAM + SSH + catalog + node `.env`) |
 | **S6.5 offboard** | `unregister-instance.sh`; SPA hides `status=decommissioned` (`pbx3spa` `1e06679`) |
 | **S6 backup smoke (bzy54n)** | `pbx3:backup-run --trigger=manual` → S3 `20260526T230950Z` (8.2 MB zip + manifest); `meta.json` updated |
+| **Track B Phase 1 TLS** | Both fleet nodes LE on `:44300`; bzy54n via Certificates **Get certificate** (2026-05-30) after DNS for tenant `wfh69h.pbx3.com` |
 | **Docs** | `INSTANCE_ONBOARDING.md` (manual + operator pre-flight), `OPS_S3_RUNBOOK.md` |
 
 **S3 v1 closeout (2026-05-26):** Directory, instance backups (both nodes), onboard/offboard, and ops runbooks are **done for now**. **`directory` merged to `main`** in pbx3, pbx3api, pbx3spa after S5 archive validation. Deferred without blocking: **S6.2 Pages + CORS**, **S7 recordings**, optional postinst registrar hint.
@@ -79,7 +80,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 cd pbx3spa && npm run dev   # http://localhost:5173
 ```
 
-`.env.development`: `VITE_CATALOG_PROXY_TARGET` + `/dev-catalog` for catalog; `VITE_API_PROXY_TARGET` per node under test. **No S3/API CORS needed for localhost** (Vite proxies).
+`.env.development`: `VITE_CATALOG_PROXY_TARGET` + `/dev-catalog` for catalog; `VITE_API_PROXY_TARGET=https://{node}:44300` per node under test. **No S3/API CORS needed for localhost** (Vite proxies `/api` with **`secure: false`** — login/backup work with snakeoil or LE; **validate LE** with `curl https://{fqdn}:44300/up` without `-k` or Certificates panel). See **`TRACK_B_RELEASE_HARDENING.md`** § Dev proxy vs node TLS and **pbx3spa** **`DEV_ENVIRONMENT.md`** §7.
 
 ### Decisions for next work (do not re-litigate without user)
 
@@ -99,9 +100,9 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 
 ### Suggested next session pick (user preference order)
 
-1. **Track B — release hardening** — **`TRACK_B_RELEASE_HARDENING.md`** (TLS HTTPS, installer checks, fail2ban, SPA field help for stakeholders)
-2. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname; after Track B or in parallel)
-3. **Extension provisioning** — pbx3spa `EXTENSION_PROVISIONING_QUICKSTART.md` (after Track B or in parallel)
+1. **Track B Phase 2** — installer health checks (**`TRACK_B_RELEASE_HARDENING.md`**)
+2. **Track B Phase 4** — SPA field help audit (stakeholder demo)
+3. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
 
 ### Recent commits (directory branch)
 
@@ -131,7 +132,7 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 ## 2. Current state (recent work completed)
 
 - **Backend-only:** Apache and HTTP config removed from pbx3. HTTP/API is pbx3api’s responsibility (see `APACHE_CONFIG_TO_PBX3API.md`).
-- **pbx3api nginx installer path is now implemented and tested:** On Ubuntu 24.04, fresh-clone installer flow was validated end-to-end (nginx + php8.3-fpm + Laravel bootstrap + PBX sqlite link). Frontend login to API works in LAN HTTP dev mode; see TODO for HTTPS/LE completion pass.
+- **pbx3api nginx installer path is now implemented and tested:** On Ubuntu 24.04, fresh-clone installer flow was validated end-to-end (nginx + php8.3-fpm + Laravel bootstrap + PBX sqlite link). Fleet nodes **08jzwn** + **bzy54n** use **trusted LE** on `:44300` (Track B Phase 1, 2026-05-30). Local dev: **`npm run dev`** + HTTPS **`VITE_API_PROXY_TARGET`** (proxy `secure: false` — see **`DEV_ENVIRONMENT.md`** §7).
 - **setip:** No longer a systemd service. Installer runs `php/utilities/setip.php` **once** directly; `debsetlan.service` was removed from the package. Installer also disables/removes the unit if present. Package Depends: **php-cli**, **php-sqlite3** so setip and installer can run.
 - **Installer** runs manually (`sudo /opt/pbx3/scripts/installer.sh`), **not** from postinst. Script is written to work under **sh** (dash) or bash (POSIX case/printf; no `[[` or `read -p`). Fixes and behaviour:
   - **Instance identity (LE prep):** Builds `idpwgen` locally, then sets `globals.domain` (apex / TLD, e.g. `pbx3.com`) and `globals.fqdn` as `{subdomain}.{domain}`. Subdomain is a unique 6-character value from `idpwgen` unless overridden by legacy `INSTANCE_FQDN=host.example.com` or recovered from existing `globals` when `sqlite.db` is already present (installer **skips** `reloader.sh` then). On **first provision**, identity is applied after `create.initial.db` + `reloader.sh`. To overwrite FQDN/hostname on an existing DB: `PBX3_APPLY_INSTANCE_IDENTITY=1 INSTANCE_FQDN=host.example.com installer.sh`. `DOMAIN_TLD` env or interactive prompt supplies the apex; default apex is `pbx3.com` when unset and non-interactive. Hostname is the subdomain (same as the first label of the FQDN); updates `/etc/hosts` so `127.0.1.1` points to that hostname.
