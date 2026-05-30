@@ -44,7 +44,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-05-26)
 
-**Program:** **Track B — release hardening** on branch **`hardening`** (see **`TRACK_B_RELEASE_HARDENING.md`**). **Phase 0 ✓** · **Phase 1 ✓** (2026-05-30): trusted LE on **08jzwn** + **bzy54n**. **Next: Phase 2** (installer health checks).
+**Program:** **Track B — release hardening** on branch **`hardening`** (see **`TRACK_B_RELEASE_HARDENING.md`**). **Phase 0 ✓** · **Phase 1 ✓** (2026-05-30): trusted LE on **08jzwn** + **bzy54n**. **Phase 2 ✓** (code, 2026-05-30): `validate_install_health` in pbx3api installer. **Next:** Phase 2 VM sign-off (2.4–2.5), then **Phase 3** (fail2ban).
 
 ### Done and validated
 
@@ -100,9 +100,10 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 
 ### Suggested next session pick (user preference order)
 
-1. **Track B Phase 2** — installer health checks (**`TRACK_B_RELEASE_HARDENING.md`**)
-2. **Track B Phase 4** — SPA field help audit (stakeholder demo)
-3. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
+1. **Track B Phase 2.4–2.5** — run full/failure-path installer on clean Ubuntu 24.04 VM
+2. **Track B Phase 3** — fail2ban → nginx (**`TRACK_B_RELEASE_HARDENING.md`**)
+3. **Track B Phase 4** — SPA field help audit (stakeholder demo)
+4. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
 
 ### Recent commits (directory branch)
 

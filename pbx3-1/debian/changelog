@@ -1,3 +1,11 @@
+pbx3 (0.0.3-12) noble; urgency=medium
+
+  * debian/control: add nginx to Depends so LE/certbot webroot and
+    apply-active-cert.sh have the daemon after apt install pbx3; API site
+    config remains pbx3api (install-nginx-site.sh).
+
+ -- KOKO <admin@aelintra.com>  Sat, 30 May 2026 12:00:00 +0000
+
 pbx3 (0.0.3-11) noble; urgency=medium
 
   * pbx3-directory (fleet / S3 v1 — merged to main): docs, schemas, and Mac

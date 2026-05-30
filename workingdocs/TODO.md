@@ -11,7 +11,6 @@
 
 - [ ] **pbx3 fail2ban:** pbx3api serves the API via nginx; pbx3’s shipped `etc/fail2ban/jail.local` still references Apache (`apache-badbots`, `/var/log/apache2/ssl_access.log`). Update to nginx log path and a suitable filter (or nginx-badbots if available), or disable the jail until nginx logging is in place.
 
-- [ ] **pbx3api installer health checks (Track B Phase 2):** After nginx/php-fpm setup in `scripts/installer.sh`: (1) DB symlink check (exists, target resolves, www-data can r/w); (2) nginx upstream/socket check, `nginx -t`; (3) HTTPS readiness e.g. `curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1:44300/up`. Fail installer non-zero if validation fails.
 
 - [ ] **LDAP: LDAPHelperClass reads from `globals` but instance `globals` has no LDAP columns.**  
   Instance schema (`sqlite_create_instance.sql`) does not define `ldapbase`, `ldapou`, `ldapuser`, `ldappass` on `globals`. Those columns exist on the tenant `cluster` table (`sqlite_create_tenant.sql`).  
@@ -26,4 +25,5 @@
 
 ## Completed / deferred
 
-- [x] **TLS — fleet nodes (Track B Phase 1, 2026-05-30):** **08jzwn** + **bzy54n** trusted LE on `:44300`. bzy54n: Certificates **Get certificate** after tenant DNS (`wfh69h.pbx3.com`). First issue is manual (not install/onboard). Dev proxy (`secure: false`) does not validate node certs — use `curl` without `-k` or Certificates panel. **Remaining:** installer health checks (Phase 2), fail2ban (Phase 3), Pages/CORS when SPA is off localhost.
+- [x] **TLS — fleet nodes (Track B Phase 1, 2026-05-30):** **08jzwn** + **bzy54n** trusted LE on `:44300`. bzy54n: Certificates **Get certificate** after tenant DNS (`wfh69h.pbx3.com`). First issue is manual (not install/onboard). Dev proxy (`secure: false`) does not validate node certs — use `curl` without `-k` or Certificates panel. **Remaining:** fail2ban (Phase 3), Pages/CORS when SPA is off localhost.
+- [x] **pbx3api installer health checks (Track B Phase 2, 2026-05-30):** `validate_install_health` in `scripts/installer.sh` after nginx deploy — DB symlink + www-data r/w, `nginx -t`, PHP-FPM socket, `curl -k https://127.0.0.1:44300/up` → 200. **Manual:** re-run full install on clean VM; confirm failure paths (broken symlink, bad nginx).

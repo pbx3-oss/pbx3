@@ -95,23 +95,23 @@ See **pbx3spa** **`workingdocs/DEV_ENVIRONMENT.md`** §7.
 
 **Phase 1 exit:** Both fleet nodes serve API on **trusted LE HTTPS** (`curl` without `-k` → 200). Dev SPA uses HTTPS proxy target; **`secure: false`** means login/backup do not prove LE — use curl or Certificates panel.
 
-**Next:** **Phase 2** (installer health checks).
+**Next:** **Phase 2** manual VM sign-off (2.4–2.5), then **Phase 3** (fail2ban).
 
 ---
 
 ## Phase 2 — pbx3api installer health checks (1 day)
 
-*From `TODO.md` — fail install when the stack is broken.*
+*From `TODO.md` — fail install when the stack is broken. **Code complete (2026-05-30); manual 2.4–2.5 pending on a VM.***
 
 | Step | Action | File / area | Verify |
 |------|--------|-------------|--------|
-| **2.1** | After nginx/php-fpm setup, **DB symlink check**: exists, target resolves, `www-data` can read/write sqlite | `pbx3api/scripts/installer.sh` | Fails with clear message if bad |
-| **2.2** | **`nginx -t`** + php-fpm socket exists | same | Non-zero exit on failure |
-| **2.3** | **HTTP readiness**: `curl -k -s -o /dev/null -w '%{http_code}' https://127.0.0.1:44300/up` | same | Expect `200`; fail otherwise |
-| **2.4** | Test on **clean Ubuntu 24.04** VM or disposable instance | — | Full install → all checks pass |
-| **2.5** | Test **failure paths** (break symlink, bad nginx config) | — | Installer exits non-zero |
+| **2.1** | After nginx/php-fpm setup, **DB symlink check**: exists, target resolves, `www-data` can read/write sqlite | `pbx3api/scripts/installer.sh` `validate_install_health` | ✓ |
+| **2.2** | **`nginx -t`** + php-fpm socket exists | same | ✓ |
+| **2.3** | **HTTP readiness**: `curl -k -s -o /dev/null -w '%{http_code}' https://127.0.0.1:44300/up` | same; `curl` added to apt install | ✓ expect `200` |
+| **2.4** | Test on **clean Ubuntu 24.04** VM or disposable instance | — | Operator: full install → all checks pass |
+| **2.5** | Test **failure paths** (break symlink, bad nginx config) | — | Operator: installer exits non-zero |
 
-**Phase 2 exit:** Fresh install cannot succeed with a broken API layer.
+**Phase 2 exit:** Fresh install cannot succeed with a broken API layer (pending 2.4–2.5 sign-off on a test host).
 
 ---
 
@@ -230,7 +230,7 @@ Week 3 end Phase 6 bookkeeping → stakeholder demo
 |---|-------------|-----------|
 | B1 | HTTPS API on both fleet nodes | ✓ `curl` without `-k` → 200 (08jzwn + bzy54n) |
 | B2 | SPA works on HTTPS via Vite proxy | ✓ login/backup (proxy `secure: false` — see § Dev proxy vs node TLS) |
-| B3 | Installer health checks | Fresh install fails on broken nginx/DB |
+| B3 | Installer health checks | ✓ coded; VM failure-path sign-off pending |
 | B4 | fail2ban nginx-aligned | No Apache log references |
 | B5 | Help on all Tier 1–2 demo fields | Every label has `?` + useful text |
 | B6 | Stakeholder rehearsal | Third party can follow demo script |
@@ -243,4 +243,4 @@ Week 3 end Phase 6 bookkeeping → stakeholder demo
 
 **Phase 1:** ✓ Done (2026-05-30) — fleet LE on both nodes; bzy54n via Certificates **Get certificate**.
 
-**Phase 2 next:** pbx3api installer health checks (DB symlink, `nginx -t`, curl `/up`).
+**Phase 2:** ✓ `validate_install_health` in pbx3api installer (2026-05-30). **Next:** VM sign-off 2.4–2.5, then Phase 3 fail2ban.
