@@ -306,15 +306,24 @@ fi
 #run shorewall's own fix routines
 shorewall update
 
-# F2b setup — Ubuntu 24.04 LTS (idempotent: force symlinks)
-ln -sf $SYSPATH/etc/fail2ban/jail.local /etc/fail2ban/jail.local
+# F2b setup — Ubuntu 24.04 LTS (jail.d fragments; do not symlink jail.local)
 ln -sf $SYSPATH/etc/fail2ban/action.d/shorewall.local /etc/fail2ban/action.d/shorewall.local
 mkdir -p /etc/fail2ban/jail.d
+if [ -L /etc/fail2ban/jail.local ] && [ "$(readlink /etc/fail2ban/jail.local 2>/dev/null)" = "$SYSPATH/etc/fail2ban/jail.local" ]; then
+	rm -f /etc/fail2ban/jail.local
+fi
+if [ -f "$SYSPATH/etc/fail2ban/jail.d/pbx3-jails.conf" ]; then
+	ln -sf "$SYSPATH/etc/fail2ban/jail.d/pbx3-jails.conf" /etc/fail2ban/jail.d/pbx3-jails.conf
+fi
 if [ -f "$SYSPATH/etc/fail2ban/jail.d/pbx3-api.conf" ]; then
 	ln -sf "$SYSPATH/etc/fail2ban/jail.d/pbx3-api.conf" /etc/fail2ban/jail.d/pbx3-api.conf
 fi
 if command -v fail2ban-client >/dev/null 2>&1; then
-	fail2ban-client reload >/dev/null 2>&1 || systemctl reload fail2ban >/dev/null 2>&1 || true
+	if fail2ban-client -t >/dev/null 2>&1; then
+		fail2ban-client reload >/dev/null 2>&1 || systemctl reload fail2ban >/dev/null 2>&1 || true
+	else
+		echo "Warning: fail2ban config test failed; run: sudo fail2ban-client -t" >&2
+	fi
 fi
 
 

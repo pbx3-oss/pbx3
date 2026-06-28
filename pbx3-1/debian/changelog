@@ -1,3 +1,11 @@
+pbx3 (0.0.3-14) noble; urgency=medium
+
+  * fail2ban: move jails to jail.d/pbx3-jails.conf; stop symlinking jail.local
+    (fixes %(auth_log)s error and missing asterisk/recidive/nginx jails on
+    Ubuntu 24.04 fail2ban 1.x). setip.php updates ignoreip in jail.d.
+
+ -- KOKO <admin@aelintra.com>  Sat, 28 Jun 2026 14:00:00 +0000
+
 pbx3 (0.0.3-13) noble; urgency=medium
 
   * fail2ban: remove Apache apache-badbots jail; add jail.d/pbx3-api.conf

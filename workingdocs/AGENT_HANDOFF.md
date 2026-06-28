@@ -231,7 +231,7 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 
 **Confirmed:** pbx3 **does not install Apache**. HTTP/API is **pbx3api** (nginx + PHP-FPM). TLS/LE in **pbx3**; fleet nodes use trusted LE on **:44300**.
 
-**fail2ban (Phase 3, 2026-06-28):** `jail.d/pbx3-api.conf` enables **`nginx-badbots`** on `/var/log/nginx/access.log`; **`apache-badbots`** removed from `jail.local`. `installer.sh` symlinks and reloads fail2ban. Deb **0.0.3-13**.
+**fail2ban (Phase 3, 2026-06-28):** `jail.d/pbx3-jails.conf` + `pbx3-api.conf` (not `jail.local` — Ubuntu 24.04). Deb **0.0.3-14** fixes `%(auth_log)s` error.
 
 **References:** `APACHE_CONFIG_TO_PBX3API.md`, `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, `etc/fail2ban/README`.
 

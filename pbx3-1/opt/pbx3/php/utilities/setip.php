@@ -68,9 +68,12 @@ else {
 		`echo IF1=$interface > /etc/shorewall/local.if1`;
 	}
 	
-	if ( file_exists( "/etc/fail2ban/jail.local")) {	
+	if ( file_exists( "/etc/fail2ban/jail.d/pbx3-jails.conf" ) ) {
+		`sed -i --follow-symlinks '/^ignoreip/c \ignoreip = 127.0.0.1 $netaddress\/$cidr 224.0.1.0\/24' /etc/fail2ban/jail.d/pbx3-jails.conf`;
+		`fail2ban-client reload > /dev/null 2>&1`;
+	} elseif ( file_exists( "/etc/fail2ban/jail.local" ) ) {
 		`sed -i --follow-symlinks '/^ignoreip/c \ignoreip = 127.0.0.1 $netaddress\/$cidr 224.0.1.0\/24' /etc/fail2ban/jail.local`;
-		`fail2ban-server reload > /dev/null`;
+		`fail2ban-client reload > /dev/null 2>&1`;
 	}
 		
 	if ( file_exists( "/etc/asterisk")) {
