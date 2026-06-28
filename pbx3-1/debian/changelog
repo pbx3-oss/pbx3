@@ -1,3 +1,10 @@
+pbx3 (0.0.3-16) noble; urgency=medium
+
+  * Track B Phase 4: add tt_help_core rows for SPA field help gaps (queue,
+    tenant monitoring, sysglobals, firewall description, etc.).
+
+ -- KOKO <admin@aelintra.com>  Sat, 30 May 2026 12:00:00 +0000
+
 pbx3 (0.0.3-15) noble; urgency=medium
 
   * fail2ban API jail: use apache-badbots filter (shipped on Ubuntu 24.04);

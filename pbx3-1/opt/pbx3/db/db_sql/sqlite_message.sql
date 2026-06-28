@@ -383,4 +383,34 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('year','Year'
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('xref','Cross Reference','Objects which reference this object');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ztp','Zero Touch Provisioning','Enable this to provide Zero Touch Provisioning. You must also have PnP enabled with this option');
 
+-- Track B Phase 4 (helptext): SPA panels / legacy column name gaps
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('maxlen','Max queue length','Maximum number of callers waiting in the queue. When full, additional callers receive the busy treatment.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('members','Queue members','Member endpoints for this queue (comma-separated hints or extensions). Dynamic members are often managed via the queue configuration.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('musicclass','Music class','Music-on-hold class played to callers while waiting. Must match an MOH class configured for this tenant or the system default.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('wrapuptime','Wrap-up time','Seconds an agent remains unavailable after completing a call before receiving the next queue call.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('retry','Queue retry','Seconds to wait before trying the next available member when a call is not answered.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('queuetimeout','Member timeout','Seconds to ring each queue member before trying the next member.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('maxin','Max inbound calls','Maximum concurrent inbound calls allowed for this scope (instance globals or tenant).');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('maxout','Max outbound calls','Maximum concurrent outbound calls allowed at instance level.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('language','Language','Default language code for voice prompts and voicemail (e.g. en-gb).');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sitename','Site name','Network site label used in Shorewall/network configuration for this node.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('mixmonitor','Mix monitor','Optional MixMonitor application string for call recording on this tenant.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('monitor_out','Monitor out path','Directory where completed call monitor files are stored.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('monitor_stage','Monitor stage path','Staging directory for in-progress monitor recordings.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('rec_file_dlim','Recording file delimiter','Delimiter character(s) used between fields in recorded call filenames.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('rec_final_dest','Recording final destination','Path or target where completed recordings are moved after staging.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('rec_grace','Recording grace period','Grace seconds before a recording is considered complete.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('rec_limit','Recording limit','Maximum recording size or duration limit for this tenant (read-only when computed by the system).');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('leasedhdtime','Hot desk lease','Seconds a hot-desk extension lease remains valid before automatic release.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('customappname','Custom app name','Unique name for this custom Asterisk application (maps to the app context).');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdesc','Rule description','Optional comment for this Shorewall rule (shown after # in the rules file).');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('logopts','Log options','Additional Asterisk logging options for this instance.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('recfiledlim','Recording file delimiter','Instance-wide delimiter used in call recording filenames.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('reclimit','Recording limit','Instance-wide recording size or count limit.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('recmount','Recording mount','External mount command for call recordings (see instance globals). Leave blank to store locally.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('recqdither','Recording queue dither','Jitter applied when ageing the recording queue.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('recqsearchlim','Recording search limit','Maximum age or scope when searching the recording index.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sendedomain','Send domain','Domain name sent in SIP headers for outbound calls from this instance.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sessiontimout','Session timeout','Web session idle timeout in minutes before automatic logout.');
+
 COMMIT;
