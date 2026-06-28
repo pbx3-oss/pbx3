@@ -17,7 +17,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 **Repo-specific (always):**
 
 - **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, or **`pbx3spa/`** only.
-- **Fleet / S3 / directory:** on **`main`**. **Track B** (Phases 0–3): merged to **`main`** 2026-05-30; **`hardening`** branch deleted. **Next:** Phase 4 SPA field help on **`main`**.
+- **Fleet / S3 / directory:** on **`main`**. **Track B** Phases 0–3 on **`main`**; **Phase 4** on **`helptext`** (pbx3, pbx3api, pbx3spa).
 - **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
 
 ---
@@ -42,11 +42,35 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-05-30)
+## Next agent session notes (2026-05-30, Phase 4 pause)
 
-**Program:** **Track B — release hardening** on **`main`** (`hardening` merged and deleted 2026-05-30). **Phase 0–3 ✓** · package **`0.0.3-15`** (nginx dep, jail.d fail2ban, `apache-badbots` API jail). Golden **08jzwn** validated: install, restore, DNS, LE, four fail2ban jails. **Next:** Phase 4 SPA field help.
+**Program:** **Track B Phase 4** on branch **`helptext`** (pbx3, pbx3api, pbx3spa). Phases 0–3 on **`main`**. Golden **08jzwn** now carries **demo data** for field-help QA.
 
-### Done and validated
+### Golden **08jzwn** (validated 2026-05-30)
+
+| Item | State |
+|------|--------|
+| **Data** | Full DB restored from test instance (`vpqtc7`); **`globals`** patched to golden KSUID/FQDN; **`default`** tenant `fqdn` = `08jzwn.pbx3.com` |
+| **Tenants** | `default`, `affcot`, `duns`, `sandycroft`, `willand` (+ DNS `{shortuid}.pbx3.com`) |
+| **Packages** | **pbx3 0.0.3-16** (help SQL seeds), **0.0.3-17** (LE sync fix — drop certbot `--expand`) |
+| **LE** | Five SANs on cert; use **Sync with tenant list** after tenant add/remove or restore (**Renew** only extends expiry) |
+| **`tt_help_core`** | After restore: `sudo sqlite3 /opt/pbx3/db/sqlite.db < /opt/pbx3/db/db_sql/sqlite_message.sql` → **410** rows (package upgrade alone does not merge seeds) |
+
+**Post-restore identity (do not run `reloader.sh`):** `UPDATE globals` (id, shortuid, fqdn, domain) + `UPDATE cluster … WHERE pkey='default'` + `normalize-globals-identity.sh`.
+
+### Phase 4 field help (`helptext`)
+
+| Done | Notes |
+|------|--------|
+| Audit tooling | `pbx3spa/scripts/audit-field-help.mjs` + **FIELD_HELP_COVERAGE_AUDIT.md** |
+| Tier 1–2 gaps | **0** (373/456 fields with help; 73 remaining mostly Tier 3–4) |
+| `tt_help_core` | ~30 new rows in **0.0.3-16** |
+| LE / Certificates UX | Sync primary; mismatch warning; **`le-sync-cert-sans.sh`** replaces full SAN list |
+| Tenant panel | **Mix monitor** removed from create/edit (obsolete `cluster.mixmonitor`) |
+
+**Paused:** Operator walking demo panels on golden; will report gaps. **Next slices:** Backup/Certificates/Login help wiring; IVR dynamic keys; KSUID/UID readouts.
+
+### Prior session (Track B 0–3 on `main`)
 
 | Area | Notes |
 |------|--------|
@@ -99,11 +123,11 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 | **pbx3api CORS** | Not configured for cross-origin SPA yet; required for Pages, not for Vite dev proxy |
 | **S7 recordings offload** | Whole phase open (`IMPLEMENTATION_PLAN.md`) — parked with S3 v1 |
 | **Phase 5 install hook** | Registrar hint on postinst — optional |
-| **Golden missing `pkey='default'` tenant** | See **TODO.md** — golden has `f34ck1`/`5489nv` only; test instance has `default` + four named tenants; investigate provision path |
+| **Golden missing `pkey='default'` tenant** | **Superseded on golden** after test DB restore (now has `default` + four named tenants). Pre-migration layout (`f34ck1`/`5489nv` only) — see **TODO.md** if investigating provision path |
 
 ### Suggested next session pick (user preference order)
 
-1. **Track B Phase 4** — SPA field help audit (stakeholder demo)
+1. **Phase 4 field help QA** — operator review on golden demo data; then Backup/Certificates/Login wiring, IVR keys
 2. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
 
 ### Recent commits (directory branch)

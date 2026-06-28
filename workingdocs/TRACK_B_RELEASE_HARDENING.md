@@ -1,8 +1,8 @@
 # Track B — Release hardening + stakeholder-ready help
 
-**Status:** Phases 0–3 complete on **`main`** (merged from **`hardening`**, branch deleted 2026-05-30). **Goal:** Trusted HTTPS on fleet nodes, installer fails loudly when misconfigured, fail2ban matches nginx, and every field on stakeholder-facing SPA panels has a visible help message (`?` icon with `tt_help_core` content). **Next:** Phase 4 SPA field help.
+**Status:** Phases 0–3 complete on **`main`**. **Phase 4 in progress** on **`helptext`** — Tier 1–2 help gaps closed; golden **08jzwn** has demo data for QA. **Goal:** Trusted HTTPS on fleet nodes, installer fails loudly when misconfigured, fail2ban matches nginx, and every field on stakeholder-facing SPA panels has a visible help message (`?` icon with `tt_help_core` content).
 
-**Repos:** `pbx3`, `pbx3api`, `pbx3spa` — **`main`** (Track B work continues here).
+**Repos:** `pbx3`, `pbx3api`, `pbx3spa` — Phase 4 on **`helptext`**; merge to **`main`** when Phase 4 exits.
 
 **References:** `TODO.md`, `TLS_IMPLEMENTATION_STEPS.md` §4.3, `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, **`STAKEHOLDER_DEMO_SCRIPT.md`**, **pbx3spa** `PANEL_PATTERN.md`, **pbx3spa** `SESSION_HANDOFF.md` (help system).
 
