@@ -44,7 +44,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-05-26)
 
-**Program:** **Track B — release hardening** on branch **`hardening`** (see **`TRACK_B_RELEASE_HARDENING.md`**). **Phase 0 ✓** · **Phase 1 ✓** (2026-05-30): trusted LE on **08jzwn** + **bzy54n**. **Phase 2 ✓** (code, 2026-05-30): `validate_install_health` in pbx3api installer. **Next:** Phase 2 VM sign-off (2.4–2.5), then **Phase 3** (fail2ban).
+**Program:** **Track B — release hardening** on branch **`hardening`**. **Phase 0–1 ✓** · **Phase 2 ✓** (golden rebuild 2026-06-28) · **Phase 3 ✓** (fail2ban nginx, 0.0.3-13). **Next:** Phase 4 SPA field help.
 
 ### Done and validated
 
@@ -100,10 +100,8 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 
 ### Suggested next session pick (user preference order)
 
-1. **Track B Phase 2.4–2.5** — run full/failure-path installer on clean Ubuntu 24.04 VM
-2. **Track B Phase 3** — fail2ban → nginx (**`TRACK_B_RELEASE_HARDENING.md`**)
-3. **Track B Phase 4** — SPA field help audit (stakeholder demo)
-4. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
+1. **Track B Phase 4** — SPA field help audit (stakeholder demo)
+2. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
 
 ### Recent commits (directory branch)
 
@@ -229,16 +227,13 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 
 ---
 
-## 9. For the next agent: nginx / API HTTP layer
+## 9. nginx / API HTTP layer (status)
 
-**Confirmed:** pbx3 **does not install Apache**. The package has no apache2 dependency; the description states "No HTTP server" and "HTTP/API is provided by pbx3api (nginx + PHP-FPM)".
+**Confirmed:** pbx3 **does not install Apache**. HTTP/API is **pbx3api** (nginx + PHP-FPM). TLS/LE in **pbx3**; fleet nodes use trusted LE on **:44300**.
 
-**Planned work (next session):**
+**fail2ban (Phase 3, 2026-06-28):** `jail.d/pbx3-api.conf` enables **`nginx-badbots`** on `/var/log/nginx/access.log`; **`apache-badbots`** removed from `jail.local`. `installer.sh` symlinks and reloads fail2ban. Deb **0.0.3-13**.
 
-1. **TLS completion pass (pbx3 + pbx3api):** Current dev testing intentionally uses LAN HTTP to avoid self-signed browser friction. Before release, switch API back to HTTPS on `44300`, wire cert paths (owned by pbx3), and re-verify frontend login/CORS/Sanctum with trusted certs. **Certificates panel and LE scripts are in place:** panel setup (FQDN + email, Get certificate), Renew now, port 80 open/close around issuance and renewal, cron twice daily; see **TLS_AND_CERTIFICATES.md**.
-2. **pbx3 fail2ban** – Shipped config still references **Apache**: `etc/fail2ban/jail.local` uses the `apache-badbots` jail and `logpath = /var/log/apache2/ssl_access.log`. Since the API is served by nginx (pbx3api), update to a nginx log path and a suitable filter (or nginx-badbots if available), or disable the jail until nginx logging is in place.
-
-**References:** `APACHE_CONFIG_TO_PBX3API.md` (decision: nginx in pbx3api; TLS/LE in pbx3), `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, `nginx-api-site-reference.conf`.
+**References:** `APACHE_CONFIG_TO_PBX3API.md`, `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, `etc/fail2ban/README`.
 
 ---
 

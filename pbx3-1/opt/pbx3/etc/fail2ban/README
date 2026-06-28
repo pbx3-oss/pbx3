@@ -8,21 +8,25 @@ Mission: PBX server (Asterisk + API on 44300). Jails protect SSH (admin), Asteri
 
 - Symlinks `jail.local` → `/etc/fail2ban/jail.local`
 - Symlinks `action.d/shorewall.local` → `/etc/fail2ban/action.d/shorewall.local`
+- Symlinks `jail.d/pbx3-api.conf` → `/etc/fail2ban/jail.d/pbx3-api.conf`
+- Runs `fail2ban-client reload` when available
 
 ## Jails
 
-| Jail | Purpose |
-|------|--------|
-| **sshd** | SSH brute-force (admin access). 3 failures in 10 min → ban 24 h. |
-| **asterisk** | SIP/PJSIP registration and auth failures. 5 in 10 min → ban 10 min. Uses system filter; `logpath` forces file-based matching (avoids journal mismatch on 24.04). |
-| **recidive** | IPs banned in multiple jails. 3 bans in 24 h → ban 1 week. |
-| **apache-badbots** | Bad User-Agents / scanners hitting the API (ssl_access.log). 1 match in 24 h → ban 24 h. Requires system filter `apache-badbots`; if missing, disable this jail. |
+| Jail | Config file | Purpose |
+|------|-------------|---------|
+| **sshd** | `jail.local` | SSH brute-force (admin access). 3 failures in 10 min → ban 24 h. |
+| **asterisk** | `jail.local` | SIP/PJSIP registration and auth failures. 5 in 10 min → ban 10 min. Uses system filter; `logpath` forces file-based matching (avoids journal mismatch on 24.04). |
+| **recidive** | `jail.local` | IPs banned in multiple jails. 3 bans in 24 h → ban 1 week. |
+| **nginx-badbots** | `jail.d/pbx3-api.conf` | Bad User-Agents / scanners hitting the API via nginx (`/var/log/nginx/access.log`). 1 match in 24 h → ban 24 h. Requires system filter `nginx-badbots`. |
 
 ## Ubuntu 24.04 notes
 
 - Fail2ban 1.0.2-3 can fail under Python 3.12 (`No module named 'asynchat'`). Use fail2ban **1.1.0 or later** (e.g. `apt install --only-upgrade fail2ban` or ensure you have a fixed build).
 - Test the Asterisk filter:  
   `fail2ban-regex /var/log/asterisk/messages /etc/fail2ban/filter.d/asterisk.conf`
+- Test the API jail:  
+  `fail2ban-regex /var/log/nginx/access.log /etc/fail2ban/filter.d/nginx-badbots.conf`
 - Upstream Asterisk filter:  
   https://github.com/fail2ban/fail2ban/blob/master/config/filter.d/asterisk.conf
 
@@ -30,5 +34,6 @@ Mission: PBX server (Asterisk + API on 44300). Jails protect SSH (admin), Asteri
 
 | File | Purpose |
 |------|--------|
-| `jail.local` | Jail config (sshd, asterisk, recidive, apache-badbots); deployed to /etc/fail2ban/jail.local |
+| `jail.local` | Jail config (sshd, asterisk, recidive); deployed to /etc/fail2ban/jail.local |
+| `jail.d/pbx3-api.conf` | nginx-badbots jail for pbx3api; deployed to /etc/fail2ban/jail.d/pbx3-api.conf |
 | `action.d/shorewall.local` | Shorewall action (blocktype=drop); deployed to action.d/shorewall.local |

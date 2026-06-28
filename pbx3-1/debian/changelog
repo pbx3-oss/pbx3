@@ -1,3 +1,11 @@
+pbx3 (0.0.3-13) noble; urgency=medium
+
+  * fail2ban: remove Apache apache-badbots jail; add jail.d/pbx3-api.conf
+    (nginx-badbots on /var/log/nginx/access.log). installer.sh symlinks and
+    reloads fail2ban (Track B Phase 3).
+
+ -- KOKO <admin@aelintra.com>  Sat, 28 Jun 2026 12:00:00 +0000
+
 pbx3 (0.0.3-12) noble; urgency=medium
 
   * debian/control: add nginx to Depends so LE/certbot webroot and

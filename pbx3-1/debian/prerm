@@ -26,6 +26,7 @@ case "$1" in
 		[ -L /etc/service/sys-ua-siplog ] && rm -f /etc/service/sys-ua-siplog
 		[ -L /etc/fail2ban/jail.local ] && rm -f /etc/fail2ban/jail.local
 		[ -L /etc/fail2ban/action.d/shorewall.local ] && rm -f /etc/fail2ban/action.d/shorewall.local
+		[ -L /etc/fail2ban/jail.d/pbx3-api.conf ] && rm -f /etc/fail2ban/jail.d/pbx3-api.conf
 		;;
 	purge)
 		[ -e /etc/cron.d/pbx3 ] && rm -f /etc/cron.d/pbx3
@@ -33,6 +34,7 @@ case "$1" in
 		[ -e /etc/service/sys-ua-siplog ] && rm -f /etc/service/sys-ua-siplog
 		[ -L /etc/fail2ban/jail.local ] && rm -f /etc/fail2ban/jail.local
 		[ -L /etc/fail2ban/action.d/shorewall.local ] && rm -f /etc/fail2ban/action.d/shorewall.local
+		[ -L /etc/fail2ban/jail.d/pbx3-api.conf ] && rm -f /etc/fail2ban/jail.d/pbx3-api.conf
 		;;
 esac
 

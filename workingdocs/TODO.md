@@ -9,9 +9,6 @@
 
 - [ ] **pbx3api astamis `PJSIPShowEndpoint/{id}`:** Calling `GET .../astamis/PJSIPShowEndpoint/{id}` returns `AMI Action invalid or unsupported` because **`AstAmiController::$eventList` only whitelists `PJSIPShowEndpoints` (plural)** — singular action never reaches Asterisk. **Follow-up when implementing:** (1) Allow `PJSIPShowEndpoint` (dedicated route/method like other `eventItem` actions, or extend `getlist` with a special case). (2) AMI body must include **`Endpoint: {id}`** (not only `Action:`). (3) Do not use plain `amiQuery()` for this action — use **`amiPjsipShowEndpointForLive()`** or **`amiQueryUntilComplete()`** and return structured JSON or raw response as needed. (4) Document in `astamis` index (`GET astamis`) if exposed.
 
-- [ ] **pbx3 fail2ban:** pbx3api serves the API via nginx; pbx3’s shipped `etc/fail2ban/jail.local` still references Apache (`apache-badbots`, `/var/log/apache2/ssl_access.log`). Update to nginx log path and a suitable filter (or nginx-badbots if available), or disable the jail until nginx logging is in place.
-
-
 - [ ] **LDAP: LDAPHelperClass reads from `globals` but instance `globals` has no LDAP columns.**  
   Instance schema (`sqlite_create_instance.sql`) does not define `ldapbase`, `ldapou`, `ldapuser`, `ldappass` on `globals`. Those columns exist on the tenant `cluster` table (`sqlite_create_tenant.sql`).  
   **Action:** Either (1) have LDAPHelperClass read LDAP config from tenant `cluster` (e.g. for the current/default tenant), or (2) add LDAP columns to instance `globals` if LDAP is intended to be instance-wide.  
@@ -25,5 +22,6 @@
 
 ## Completed / deferred
 
-- [x] **TLS — fleet nodes (Track B Phase 1, 2026-05-30):** **08jzwn** + **bzy54n** trusted LE on `:44300`. bzy54n: Certificates **Get certificate** after tenant DNS (`wfh69h.pbx3.com`). First issue is manual (not install/onboard). Dev proxy (`secure: false`) does not validate node certs — use `curl` without `-k` or Certificates panel. **Remaining:** fail2ban (Phase 3), Pages/CORS when SPA is off localhost.
-- [x] **pbx3api installer health checks (Track B Phase 2, 2026-05-30):** `validate_install_health` in `scripts/installer.sh` after nginx deploy — DB symlink + www-data r/w, `nginx -t`, PHP-FPM socket, `curl -k https://127.0.0.1:44300/up` → 200. **Manual:** re-run full install on clean VM; confirm failure paths (broken symlink, bad nginx).
+- [x] **TLS — fleet nodes (Track B Phase 1, 2026-05-30):** **08jzwn** + **bzy54n** trusted LE on `:44300`. **Remaining:** Pages/CORS when SPA is off localhost.
+- [x] **pbx3api installer health checks (Track B Phase 2, 2026-06-28):** golden rebuild on **0.0.3-12** validated (install, restore, DNS, LE).
+- [x] **pbx3 fail2ban → nginx (Track B Phase 3, 2026-06-28):** `jail.d/pbx3-api.conf` (`nginx-badbots`, `/var/log/nginx/access.log`); removed `apache-badbots` from `jail.local`. **Manual:** `fail2ban-client status` on node after upgrade/re-run installer.

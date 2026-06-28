@@ -309,6 +309,13 @@ shorewall update
 # F2b setup — Ubuntu 24.04 LTS (idempotent: force symlinks)
 ln -sf $SYSPATH/etc/fail2ban/jail.local /etc/fail2ban/jail.local
 ln -sf $SYSPATH/etc/fail2ban/action.d/shorewall.local /etc/fail2ban/action.d/shorewall.local
+mkdir -p /etc/fail2ban/jail.d
+if [ -f "$SYSPATH/etc/fail2ban/jail.d/pbx3-api.conf" ]; then
+	ln -sf "$SYSPATH/etc/fail2ban/jail.d/pbx3-api.conf" /etc/fail2ban/jail.d/pbx3-api.conf
+fi
+if command -v fail2ban-client >/dev/null 2>&1; then
+	fail2ban-client reload >/dev/null 2>&1 || systemctl reload fail2ban >/dev/null 2>&1 || true
+fi
 
 
 

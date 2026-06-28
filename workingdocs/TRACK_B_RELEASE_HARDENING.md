@@ -117,15 +117,17 @@ See **pbx3spa** **`workingdocs/DEV_ENVIRONMENT.md`** §7.
 
 ## Phase 3 — fail2ban → nginx (½ day)
 
+*Track B Phase 3 — **code complete (2026-06-28)**; verify on node after deb upgrade (3.4).*
+
 | Step | Action | Repo | Verify |
 |------|--------|------|--------|
-| **3.1** | Replace Apache **`apache-badbots`** jail in `jail.local` with nginx log path or disable until nginx jail exists | **pbx3** `pbx3-1/opt/pbx3/etc/fail2ban/jail.local` | No `/var/log/apache2/` references |
-| **3.2** | Add **`/etc/fail2ban/jail.d/pbx3-api.conf`** fragment (optional): badbots-style filter on nginx access log | pbx3 or pbx3api installer | `fail2ban-client status` |
-| **3.3** | Align with **`PBX3API_INSTALLER_NGINX_ADDITIONS.md`** § optional fail2ban | docs | Consistent |
-| **3.4** | On test node: `fail2ban-client reload`; confirm jails start without error | node | No Apache dependency |
-| **3.5** | Bump **pbx3 deb** + changelog if package ships fail2ban change | pbx3 | Next deb revision |
+| **3.1** | Remove **`apache-badbots`** from `jail.local` | **pbx3** `etc/fail2ban/jail.local` | ✓ no `/var/log/apache2/` |
+| **3.2** | **`jail.d/pbx3-api.conf`**: `nginx-badbots` on `/var/log/nginx/access.log` | **pbx3** `etc/fail2ban/jail.d/` | ✓ |
+| **3.3** | Align **`PBX3API_INSTALLER_NGINX_ADDITIONS.md`** § fail2ban | docs | ✓ |
+| **3.4** | On test node: re-run installer or upgrade deb; `fail2ban-client status` | node | Operator |
+| **3.5** | Deb **0.0.3-13** + changelog | pbx3 | ✓ |
 
-**Phase 3 exit:** fail2ban config matches nginx API reality.
+**Phase 3 exit:** fail2ban config matches nginx API reality (pending 3.4 on golden).
 
 ---
 
@@ -231,7 +233,7 @@ Week 3 end Phase 6 bookkeeping → stakeholder demo
 | B1 | HTTPS API on both fleet nodes | ✓ `curl` without `-k` → 200 (08jzwn + bzy54n) |
 | B2 | SPA works on HTTPS via Vite proxy | ✓ login/backup (proxy `secure: false` — see § Dev proxy vs node TLS) |
 | B3 | Installer health checks | ✓ coded; VM failure-path sign-off pending |
-| B4 | fail2ban nginx-aligned | No Apache log references |
+| B4 | fail2ban nginx-aligned | ✓ coded (0.0.3-13); `fail2ban-client status` on node pending |
 | B5 | Help on all Tier 1–2 demo fields | Every label has `?` + useful text |
 | B6 | Stakeholder rehearsal | Third party can follow demo script |
 
@@ -243,4 +245,4 @@ Week 3 end Phase 6 bookkeeping → stakeholder demo
 
 **Phase 1:** ✓ Done (2026-05-30) — fleet LE on both nodes; bzy54n via Certificates **Get certificate**.
 
-**Phase 2:** ✓ `validate_install_health` in pbx3api installer (2026-05-30). **Next:** VM sign-off 2.4–2.5, then Phase 3 fail2ban.
+**Phase 3:** ✓ fail2ban nginx-badbots in `jail.d/pbx3-api.conf` (0.0.3-13). **Next:** Phase 4 SPA field help.

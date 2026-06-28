@@ -42,7 +42,7 @@ Ensure the pbx3api package (or its installer) depends on:
    - `systemctl reload nginx` (or `restart` if first time)
    - `systemctl start php*-fpm` if not already running
 
-4. **Optional – fail2ban**: If pbx3’s jail.local is installed, enable the API jail with nginx log path; or ship a small fragment (e.g. under `/etc/fail2ban/jail.d/`) that enables a badbots-style jail with `logpath = /var/log/nginx/access.log` (or the nginx log path you use).
+4. **Optional – fail2ban**: pbx3 ships **`/opt/pbx3/etc/fail2ban/jail.d/pbx3-api.conf`** (`nginx-badbots` on `/var/log/nginx/access.log`). `installer.sh` symlinks it to `/etc/fail2ban/jail.d/pbx3-api.conf` and reloads fail2ban. Base jails: `jail.local` (sshd, asterisk, recidive).
 
 5. **Optional – sudoers**: If the API needs to reload nginx (e.g. after cert renewal), add:
    - `www-data ALL=NOPASSWD: /usr/sbin/nginx -s reload`
