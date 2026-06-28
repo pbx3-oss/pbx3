@@ -54,7 +54,7 @@ So today, if a phone connected to `abc12xyz.pbx3.com` (tenant FQDN) but the cert
 - **HTTP-01:** Each `-d` hostname must resolve to this server; port 80 is opened; certbot serves the challenge for each. So all tenant FQDNs must point to this node before issuance/renewal.
 - **Storage:** Keep a list of FQDNs (node + tenants) in a file or derive from DB (e.g. `globals.fqdn` + `SELECT fqdn FROM cluster WHERE fqdn IS NOT NULL`). Cert lives in one path, e.g. `/etc/letsencrypt/live/node1.pbx3.com/` (certbot uses the first `-d` as the live dir name).
 - **When to re-issue:** Whenever a tenant is **added** or **removed** (or their FQDN changes), the cert must be re-issued with the new SAN list. So: new tenant → set `cluster.fqdn` → run a script that requests a new cert with updated domain list → apply-active-cert.
-- **Renewal:** Same: renewal must pass the current list of domains; if a tenant was removed, renewal script uses the current list (no need to remove from cert until next renewal — old SANs stay until cert expires and is renewed with updated list).
+- **Renewal:** `certbot renew` (cron / **Renew now**) keeps the **same** SANs as the cert on disk; it does not read the DB. After tenant add/remove or backup restore, use **Sync with tenant list** (`le-sync-cert-sans.sh`) to replace the cert with the current FQDN list.
 
 **Pros:**
 

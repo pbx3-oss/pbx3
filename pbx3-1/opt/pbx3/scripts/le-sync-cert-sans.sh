@@ -1,5 +1,6 @@
 #!/bin/bash
-# Re-issue Let's Encrypt certificate with an expanded SAN list (Option A sync, HTTP-01 webroot by default).
+# Re-issue Let's Encrypt certificate with the current SAN list (Option A sync, HTTP-01 webroot by default).
+# Replaces the cert for --cert-name with exactly the FQDNs passed (adds and removes tenant names).
 # Usage: le-sync-cert-sans.sh <email> <fqdn1> [<fqdn2> ...]
 # fqdn1 must match /opt/pbx3/etc/identity/le-domain (certbot --cert-name).
 # Run as root. Requires certbot, nginx ACME site, port 80 reachable.
@@ -48,7 +49,8 @@ trap close_on_exit EXIT
 le_require_nginx_for_webroot
 le_run_script "$OPEN_SCRIPT"
 # shellcheck disable=SC2046
-certbot certonly $(le_certbot_auth_args) $(le_certbot_staging_args) --cert-name "$PRIMARY" "${CERTBOT_D[@]}" -m "$EMAIL" --expand --agree-tos --non-interactive 2>&1
+# Do not use --expand: it only adds SANs. Sync must drop removed tenant FQDNs (backup restore, tenant delete).
+certbot certonly $(le_certbot_auth_args) $(le_certbot_staging_args) --cert-name "$PRIMARY" "${CERTBOT_D[@]}" -m "$EMAIL" --agree-tos --non-interactive 2>&1
 mkdir -p "$(dirname "$LE_DOMAIN_FILE")"
 echo "$PRIMARY" > "$LE_DOMAIN_FILE"
 le_run_script "$APPLY_SCRIPT"
