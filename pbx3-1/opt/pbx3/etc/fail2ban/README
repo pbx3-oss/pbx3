@@ -19,7 +19,7 @@ Mission: PBX server (Asterisk + API on 44300). Jails protect SSH (admin), Asteri
 | **sshd** | `jail.d/pbx3-jails.conf` | SSH brute-force. 3 failures in 10 min → ban 24 h. Log: `/var/log/auth.log`. |
 | **asterisk** | `jail.d/pbx3-jails.conf` | SIP/PJSIP auth failures. 5 in 10 min → ban 10 min. Log: `/var/log/asterisk/messages`. |
 | **recidive** | `jail.d/pbx3-jails.conf` | Repeat offenders across jails. 3 bans in 24 h → ban 1 week. |
-| **nginx-badbots** | `jail.d/pbx3-api.conf` | Bad User-Agents on API nginx log. 1 match in 24 h → ban 24 h. |
+| **pbx3-api-badbots** | `jail.d/pbx3-api.conf` | Bad User-Agents on API nginx log (`apache-badbots` filter). 1 match in 24 h → ban 24 h. |
 
 ## Ubuntu 24.04 notes
 
@@ -29,12 +29,12 @@ Mission: PBX server (Asterisk + API on 44300). Jails protect SSH (admin), Asteri
 - Test filters:  
   `fail2ban-regex /var/log/auth.log /etc/fail2ban/filter.d/sshd.conf`  
   `fail2ban-regex /var/log/asterisk/messages /etc/fail2ban/filter.d/asterisk.conf`  
-  `fail2ban-regex /var/log/nginx/access.log /etc/fail2ban/filter.d/nginx-badbots.conf`
+  `fail2ban-regex /var/log/nginx/access.log /etc/fail2ban/filter.d/apache-badbots.conf`
 
 ## Shipped files
 
 | File | Purpose |
 |------|--------|
 | `jail.d/pbx3-jails.conf` | sshd, asterisk, recidive + `[DEFAULT]` banaction/ignoreip |
-| `jail.d/pbx3-api.conf` | nginx-badbots for pbx3api |
+| `jail.d/pbx3-api.conf` | apache-badbots jail for pbx3api (nginx access.log) |
 | `action.d/shorewall.local` | Shorewall ban action |

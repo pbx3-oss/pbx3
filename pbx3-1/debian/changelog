@@ -1,3 +1,10 @@
+pbx3 (0.0.3-15) noble; urgency=medium
+
+  * fail2ban API jail: use apache-badbots filter (shipped on Ubuntu 24.04);
+    nginx-badbots filter is not in the noble fail2ban package.
+
+ -- KOKO <admin@aelintra.com>  Sat, 28 Jun 2026 16:00:00 +0000
+
 pbx3 (0.0.3-14) noble; urgency=medium
 
   * fail2ban: move jails to jail.d/pbx3-jails.conf; stop symlinking jail.local
