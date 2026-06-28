@@ -42,7 +42,7 @@ Ensure the pbx3api package (or its installer) depends on:
    - `systemctl reload nginx` (or `restart` if first time)
    - `systemctl start php*-fpm` if not already running
 
-4. **fail2ban**: pbx3 ships **`jail.d/pbx3-jails.conf`** (sshd, asterisk, recidive) and **`jail.d/pbx3-api.conf`** (nginx-badbots). `installer.sh` symlinks into `/etc/fail2ban/jail.d/` — **not** a full `jail.local` (Ubuntu 24.04 compatibility).
+4. **fail2ban**: pbx3 ships **`jail.d/pbx3-jails.conf`** (sshd, asterisk, recidive) and **`jail.d/pbx3-api.conf`** (`pbx3-api-badbots`, **`apache-badbots`** filter on nginx `access.log`). `installer.sh` symlinks into `/etc/fail2ban/jail.d/` — **not** a full `jail.local` (Ubuntu 24.04 compatibility).
 
 5. **Optional – sudoers**: If the API needs to reload nginx (e.g. after cert renewal), add:
    - `www-data ALL=NOPASSWD: /usr/sbin/nginx -s reload`
@@ -70,4 +70,4 @@ Ensure the pbx3api package (or its installer) depends on:
 - **workingdocs/TLS_AND_CERTIFICATES.md** — **Canonical** TLS (LE + custom): paths, scripts, API, consumers.
 - **workingdocs/nginx-api-site-reference.conf** – nginx server block to copy/adapt.
 - **workingdocs/APACHE_CONFIG_TO_PBX3API.md** – HTTP move to pbx3api; TLS ownership summary (Phase 4 may describe alternate DNS-01 ideas).
-- **opt/pbx3/etc/fail2ban/jail.d/** – pbx3-jails.conf (sshd, asterisk, recidive) and pbx3-api.conf (nginx-badbots).
+- **opt/pbx3/etc/fail2ban/jail.d/** – pbx3-jails.conf (sshd, asterisk, recidive) and pbx3-api.conf (pbx3-api-badbots).

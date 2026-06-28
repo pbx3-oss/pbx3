@@ -2,7 +2,7 @@
 
 **Purpose:** Repeatable walkthrough for stakeholder reviews. Every step on **Tier 1–2** panels must show a **`?` help icon** with useful text before demo (Phase 4 gate).
 
-**Branch:** `hardening` · **Workplan:** `TRACK_B_RELEASE_HARDENING.md`
+**Branch:** `main` · **Workplan:** `TRACK_B_RELEASE_HARDENING.md`
 
 ---
 

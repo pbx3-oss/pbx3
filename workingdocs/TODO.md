@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Branch:** main · **Track B:** `hardening`  
+**Branch:** main · **Track B:** Phases 0–3 on `main` (merged 2026-05-30); Phase 4 next  
 **Last updated:** 2026-05-30
 
 ---
@@ -23,5 +23,5 @@
 ## Completed / deferred
 
 - [x] **TLS — fleet nodes (Track B Phase 1, 2026-05-30):** **08jzwn** + **bzy54n** trusted LE on `:44300`. **Remaining:** Pages/CORS when SPA is off localhost.
-- [x] **pbx3api installer health checks (Track B Phase 2, 2026-06-28):** golden rebuild on **0.0.3-12** validated (install, restore, DNS, LE).
-- [x] **pbx3 fail2ban → nginx (Track B Phase 3, 2026-06-28):** `jail.d/pbx3-api.conf` (`nginx-badbots`, `/var/log/nginx/access.log`); removed `apache-badbots` from `jail.local`. **Manual:** `fail2ban-client status` on node after upgrade/re-run installer.
+- [x] **pbx3api installer health checks (Track B Phase 2, 2026-05-30):** golden rebuild on **08jzwn** validated (install, restore, DNS, LE).
+- [x] **pbx3 fail2ban → nginx (Track B Phase 3, 2026-05-30):** `jail.d/pbx3-jails.conf` + `pbx3-api.conf` (`pbx3-api-badbots`, **`apache-badbots`** filter, `/var/log/nginx/access.log`); no `jail.local` symlink (Ubuntu 24.04). Deb **0.0.3-15** on **`main`**. Validated on golden: sshd, asterisk, recidive, pbx3-api-badbots.

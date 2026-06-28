@@ -17,7 +17,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 **Repo-specific (always):**
 
 - **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, or **`pbx3spa/`** only.
-- **Fleet / S3 / directory:** on **`main`**. **Track B:** branch **`hardening`** in pbx3, pbx3api, pbx3spa.
+- **Fleet / S3 / directory:** on **`main`**. **Track B** (Phases 0–3): merged to **`main`** 2026-05-30; **`hardening`** branch deleted. **Next:** Phase 4 SPA field help on **`main`**.
 - **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
 
 ---
@@ -42,9 +42,9 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-05-26)
+## Next agent session notes (2026-05-30)
 
-**Program:** **Track B — release hardening** on branch **`hardening`**. **Phase 0–1 ✓** · **Phase 2 ✓** (golden rebuild 2026-06-28) · **Phase 3 ✓** (fail2ban nginx, 0.0.3-13). **Next:** Phase 4 SPA field help.
+**Program:** **Track B — release hardening** on **`main`** (`hardening` merged and deleted 2026-05-30). **Phase 0–3 ✓** · package **`0.0.3-15`** (nginx dep, jail.d fail2ban, `apache-badbots` API jail). Golden **08jzwn** validated: install, restore, DNS, LE, four fail2ban jails. **Next:** Phase 4 SPA field help.
 
 ### Done and validated
 
@@ -57,6 +57,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **S6.5 offboard** | `unregister-instance.sh`; SPA hides `status=decommissioned` (`pbx3spa` `1e06679`) |
 | **S6 backup smoke (bzy54n)** | `pbx3:backup-run --trigger=manual` → S3 `20260526T230950Z` (8.2 MB zip + manifest); `meta.json` updated |
 | **Track B Phase 1 TLS** | Both fleet nodes LE on `:44300`; bzy54n via Certificates **Get certificate** (2026-05-30) after DNS for tenant `wfh69h.pbx3.com` |
+| **Track B Phase 2** | pbx3api `validate_install_health` in installer; golden rebuild validated (2026-05-30) |
+| **Track B Phase 3** | fail2ban `jail.d` only (not `jail.local`); **`pbx3-api-badbots`** + **`apache-badbots`** filter; deb **0.0.3-15** on **`main`** |
 | **Docs** | `INSTANCE_ONBOARDING.md` (manual + operator pre-flight), `OPS_S3_RUNBOOK.md` |
 
 **S3 v1 closeout (2026-05-26):** Directory, instance backups (both nodes), onboard/offboard, and ops runbooks are **done for now**. **`directory` merged to `main`** in pbx3, pbx3api, pbx3spa after S5 archive validation. Deferred without blocking: **S6.2 Pages + CORS**, **S7 recordings**, optional postinst registrar hint.
@@ -231,7 +233,7 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 
 **Confirmed:** pbx3 **does not install Apache**. HTTP/API is **pbx3api** (nginx + PHP-FPM). TLS/LE in **pbx3**; fleet nodes use trusted LE on **:44300**.
 
-**fail2ban (Phase 3, 2026-06-28):** `jail.d/pbx3-jails.conf` + `pbx3-api.conf` (not `jail.local` — Ubuntu 24.04). Deb **0.0.3-14** fixes `%(auth_log)s` error.
+**fail2ban (Phase 3, 2026-05-30):** `jail.d/pbx3-jails.conf` + `pbx3-api.conf` (not `jail.local` — Ubuntu 24.04). Jail **`pbx3-api-badbots`** uses **`apache-badbots`** filter on nginx `access.log` (noble has no `nginx-badbots`). Deb **0.0.3-15** on **`main`**.
 
 **References:** `APACHE_CONFIG_TO_PBX3API.md`, `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, `etc/fail2ban/README`.
 

@@ -1,8 +1,8 @@
 # Track B — Release hardening + stakeholder-ready help
 
-**Status:** Active (2026-05-26). **Goal:** Trusted HTTPS on fleet nodes, installer fails loudly when misconfigured, fail2ban matches nginx, and every field on stakeholder-facing SPA panels has a visible help message (`?` icon with `tt_help_core` content).
+**Status:** Phases 0–3 complete on **`main`** (merged from **`hardening`**, branch deleted 2026-05-30). **Goal:** Trusted HTTPS on fleet nodes, installer fails loudly when misconfigured, fail2ban matches nginx, and every field on stakeholder-facing SPA panels has a visible help message (`?` icon with `tt_help_core` content). **Next:** Phase 4 SPA field help.
 
-**Repos:** `pbx3`, `pbx3api`, `pbx3spa` — branch **`hardening`** (from `main`).
+**Repos:** `pbx3`, `pbx3api`, `pbx3spa` — **`main`** (Track B work continues here).
 
 **References:** `TODO.md`, `TLS_IMPLEMENTATION_STEPS.md` §4.3, `PBX3API_INSTALLER_NGINX_ADDITIONS.md`, **`STAKEHOLDER_DEMO_SCRIPT.md`**, **pbx3spa** `PANEL_PATTERN.md`, **pbx3spa** `SESSION_HANDOFF.md` (help system).
 
@@ -24,7 +24,7 @@
 |------|--------|------|
 | **0.1** | Define **stakeholder demo path** | **`STAKEHOLDER_DEMO_SCRIPT.md`** — 10 sections, Tier 1–2 routes, help checkboxes |
 | **0.2** | Record **dev baseline** (below) | Frozen 2026-05-26 |
-| **0.3** | Branch **`hardening`** in pbx3, pbx3api, pbx3spa | ✓ pushed to origin |
+| **0.3** | Branch **`hardening`** in pbx3, pbx3api, pbx3spa | ✓ merged to **`main`** 2026-05-30; branch deleted |
 | **0.4** | **`npm test`** in pbx3spa | ✓ 31 tests passed (vitest 4.1.2, 2026-05-26) |
 
 ### Dev baseline (0.2 — 2026-05-26)
@@ -40,7 +40,7 @@ Recorded from operator machine; update this block when Phase 1 switches API to H
 | Default demo node | **bzy54n** (proxy); **08jzwn** (golden reference) | Change proxy + restart to flip |
 | API TLS | HTTPS on `:44300` (LE both nodes, 2026-05-30) | Validate with `curl` without `-k`, not dev-proxy backup alone |
 | Fleet nodes | `08jzwn.pbx3.com`, `bzy54n.pbx3.com` | See `AGENT_HANDOFF.md` § Fleet reference |
-| Branch | **`hardening`** | All three repos |
+| Branch | **`main`** | Track B Phases 0–3 merged 2026-05-30 |
 
 **Example file:** `pbx3spa/.env.development.example` (committed); live values in gitignored `.env.development`.
 
@@ -95,39 +95,37 @@ See **pbx3spa** **`workingdocs/DEV_ENVIRONMENT.md`** §7.
 
 **Phase 1 exit:** Both fleet nodes serve API on **trusted LE HTTPS** (`curl` without `-k` → 200). Dev SPA uses HTTPS proxy target; **`secure: false`** means login/backup do not prove LE — use curl or Certificates panel.
 
-**Next:** **Phase 2** manual VM sign-off (2.4–2.5), then **Phase 3** (fail2ban).
-
 ---
 
 ## Phase 2 — pbx3api installer health checks (1 day)
 
-*From `TODO.md` — fail install when the stack is broken. **Code complete (2026-05-30); manual 2.4–2.5 pending on a VM.***
+*From `TODO.md` — fail install when the stack is broken. **Complete (2026-05-30)** — golden rebuild validated on **0.0.3-12**+.*
 
 | Step | Action | File / area | Verify |
 |------|--------|-------------|--------|
 | **2.1** | After nginx/php-fpm setup, **DB symlink check**: exists, target resolves, `www-data` can read/write sqlite | `pbx3api/scripts/installer.sh` `validate_install_health` | ✓ |
 | **2.2** | **`nginx -t`** + php-fpm socket exists | same | ✓ |
 | **2.3** | **HTTP readiness**: `curl -k -s -o /dev/null -w '%{http_code}' https://127.0.0.1:44300/up` | same; `curl` added to apt install | ✓ expect `200` |
-| **2.4** | Test on **clean Ubuntu 24.04** VM or disposable instance | — | Operator: full install → all checks pass |
-| **2.5** | Test **failure paths** (break symlink, bad nginx config) | — | Operator: installer exits non-zero |
+| **2.4** | Test on **clean Ubuntu 24.04** VM or disposable instance | — | ✓ golden **08jzwn** rebuild (2026-05-30) |
+| **2.5** | Test **failure paths** (break symlink, bad nginx config) | — | Operator optional; health checks exit non-zero when broken |
 
-**Phase 2 exit:** Fresh install cannot succeed with a broken API layer (pending 2.4–2.5 sign-off on a test host).
+**Phase 2 exit:** ✓ Fresh install cannot succeed with a broken API layer (validated on golden).
 
 ---
 
 ## Phase 3 — fail2ban → nginx (½ day)
 
-*Track B Phase 3 — **code complete (2026-06-28)**; verify on node after deb upgrade (3.4).*
+*Track B Phase 3 — **complete (2026-05-30)**; deb **0.0.3-15** on **`main`**.*
 
 | Step | Action | Repo | Verify |
 |------|--------|------|--------|
-| **3.1** | Remove **`apache-badbots`** from `jail.local` | **pbx3** `etc/fail2ban/jail.local` | ✓ no `/var/log/apache2/` |
-| **3.2** | **`jail.d/pbx3-api.conf`**: `nginx-badbots` on `/var/log/nginx/access.log` | **pbx3** `etc/fail2ban/jail.d/` | ✓ |
-| **3.3** | Align **`PBX3API_INSTALLER_NGINX_ADDITIONS.md`** § fail2ban | docs | ✓ |
-| **3.4** | On test node: re-run installer or upgrade deb; `fail2ban-client status` | node | Operator |
-| **3.5** | Deb **0.0.3-13** + changelog | pbx3 | ✓ |
+| **3.1** | Drop full **`jail.local`** symlink (fixes `%(auth_log)s` on Ubuntu 24.04) | **pbx3** `installer.sh` | ✓ |
+| **3.2** | **`jail.d/pbx3-jails.conf`**: sshd, asterisk, recidive | **pbx3** `etc/fail2ban/jail.d/` | ✓ |
+| **3.3** | **`jail.d/pbx3-api.conf`**: **`pbx3-api-badbots`** + **`apache-badbots`** on `/var/log/nginx/access.log` | **pbx3** | ✓ (noble has no `nginx-badbots` filter) |
+| **3.4** | On test node: upgrade deb + re-run installer; `fail2ban-client status` | node | ✓ golden: 4 jails |
+| **3.5** | Deb **0.0.3-15** + changelog | pbx3 | ✓ on **`main`** |
 
-**Phase 3 exit:** fail2ban config matches nginx API reality (pending 3.4 on golden).
+**Phase 3 exit:** ✓ fail2ban config matches nginx API reality.
 
 ---
 
@@ -205,7 +203,7 @@ See **pbx3spa** **`workingdocs/DEV_ENVIRONMENT.md`** §7.
 | **6.2** | Update **`AGENT_HANDOFF.md`** — Track B complete |
 | **6.3** | Refresh **`pbx3spa/workingdocs/SESSION_HANDOFF.md`** |
 | **6.4** | Deb/changelog bumps as needed (`pbx3`, `pbx3api`, `pbx3spa`) |
-| **6.5** | Optional git tag: `hardening-2026-05` |
+| **6.5** | Optional git tag: `track-b-phases-0-3-2026-05` |
 
 ---
 
@@ -232,8 +230,8 @@ Week 3 end Phase 6 bookkeeping → stakeholder demo
 |---|-------------|-----------|
 | B1 | HTTPS API on both fleet nodes | ✓ `curl` without `-k` → 200 (08jzwn + bzy54n) |
 | B2 | SPA works on HTTPS via Vite proxy | ✓ login/backup (proxy `secure: false` — see § Dev proxy vs node TLS) |
-| B3 | Installer health checks | ✓ coded; VM failure-path sign-off pending |
-| B4 | fail2ban nginx-aligned | ✓ coded (0.0.3-13); `fail2ban-client status` on node pending |
+| B3 | Installer health checks | ✓ coded + golden validated |
+| B4 | fail2ban nginx-aligned | ✓ **0.0.3-15** on **`main`**; 4 jails on golden |
 | B5 | Help on all Tier 1–2 demo fields | Every label has `?` + useful text |
 | B6 | Stakeholder rehearsal | Third party can follow demo script |
 
@@ -241,8 +239,6 @@ Week 3 end Phase 6 bookkeeping → stakeholder demo
 
 ## First session (recommended)
 
-**Phase 0:** ✓ Done — see **`STAKEHOLDER_DEMO_SCRIPT.md`** and dev baseline above.
+**Phases 0–3:** ✓ Done on **`main`** (2026-05-30). See **`STAKEHOLDER_DEMO_SCRIPT.md`**, dev baseline above, golden rebuild notes in **`AGENT_HANDOFF.md`**.
 
-**Phase 1:** ✓ Done (2026-05-30) — fleet LE on both nodes; bzy54n via Certificates **Get certificate**.
-
-**Phase 3:** ✓ fail2ban nginx-badbots in `jail.d/pbx3-api.conf` (0.0.3-13). **Next:** Phase 4 SPA field help.
+**Next:** **Phase 4** SPA field help — audit Tier 1–2 panels against `tt_help_core`.
