@@ -30,6 +30,7 @@
 | **C — Registrar** | One writer updates catalog + meta files | Script (manual invoke → install hook later) |
 | **D — S3 backup upload** | Node backups land under `instances/…/backups/` | Async PUT after existing `/opt/pbx3/bkup` |
 | **E+** | Recordings, CDN, fleet health, central auth | **ToDo** (below) |
+| **F — Fleet lifecycle** | Low-friction instance (re)build + tenant move | **Phase S8** — **`NEW_INSTANCE_CHECKLIST.md`**, **`TENANT_MIGRATION_RUNBOOK.md`**, onboard hardening |
 
 ---
 
@@ -271,14 +272,46 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 ---
 
-### Phase S8 — Ops polish (when S5–S7 code exists)
+### Phase S8 — Fleet instance lifecycle & tenant mobility (~3–4 weeks)
+
+**Problem (May 2026):** Fleet nodes are painful to (re)build: steps are split across **`INSTALL_SEQUENCE_UBUNTU.md`**, **`INSTANCE_ONBOARDING.md`**, and **`OPS_S3_RUNBOOK.md`**; rebuilds lose **EC2 IAM role** and **`pbx3api/.env` fleet block** (S3 backups vanish from panel while config looks fine). **Tenant move** is catalog-only today (`move-tenant.sh` updates S3 `tenants/{shortuid}/meta.json` only) — no integrated export/import, DNS cutover, dual-node LE sync, or SPA workflow.
+
+**Fleet product goal:** Start/stop/rebuild instances and **move tenants between nodes** with minimal operator friction (AMI → onboard → healthy; tenant move → cutover → both nodes consistent).
+
+**Principle:** Telephony still does not depend on S3 at runtime (Rule 1). Directory/S3 are for **ops, backups, recordings, and catalog** — but those paths must be **repeatable** without tribal knowledge.
+
+| # | Task | Repo / owner | Notes |
+|---|------|----------------|-------|
+| **S8.1** | **`NEW_INSTANCE_CHECKLIST.md`** — single linear checklist | **pbx3-directory/docs** | Install → identity → IAM → `.env` → LE → backup/S3 smoke → catalog register; **rebuild/restore** subsection (identity patch, help seeds, re-attach IAM). Stub shipped; flesh out from golden + bzy54n lessons. |
+| **S8.2** | **Fleet-ready AMI spec** | docs + ops | Packages + `/up` + `globals.id`; **no** `PBX3_ORG_BUCKET` until onboard; optional baked `scripts/fleet-node-preflight.sh`. Pair with **INSTANCE_ONBOARDING.md** § Fleet-ready AMI. |
+| **S8.3** | **Harden `onboard-fleet-instance.sh`** | pbx3-directory/tools | Idempotent: IAM policy + role + **verify** `associate-iam-instance-profile`; write `.env` fleet block from template (strip empty AWS keys); run S3 list smoke; fail loudly on metadata 404. |
+| **S8.4** | **Install / fleet health validator** | pbx3api | Extend `validate_install_health` (or `pbx3:fleet-preflight`): `globals.id`, `PBX3_ORG_BUCKET`, instance-profile creds, `Storage::disk('pbx3_org')->directories(instances/{ksuid}/backups)`; surfaced in installer or `GET /up` detail. |
+| **S8.5** | **`TENANT_MIGRATION_RUNBOOK.md`** | pbx3-directory/docs | End-to-end: export tenant data → import on destination (preserve `cluster.id` KSUID) → DNS → **Certificates Sync** on dest + source → SPA **Commit** both → `move-tenant.sh` → optional recordings note. Cross-link **LETSENCRYPT_PER_TENANT_FQDN.md** §4.2 / **TLS_IMPLEMENTATION_STEPS.md** §4.2. |
+| **S8.6** | **Tenant export/import tooling** | pbx3 + pbx3api | Inventory: `backupClusters.php` per-tenant mini-DBs, full backup restore, API gaps. Target: one command or API pair (`tenant:export` / `tenant:import`) for operator move; preserve object KSUIDs. |
+| **S8.7** | **Instance stop/start runbook** | docs | EC2 stop/start vs decommission: catalog `status`, unregister vs maintenance, LE/DNS expectations, when to detach IAM. |
+| **S8.8** | **Worked example + regression** | ops | Document golden rebuild (2026-05): test DB restore + globals patch + `sqlite_message.sql` + IAM + `.env`; tenant move smoke **affcot** (or test tenant) **08jzwn ↔ bzy54n** when S8.5–6 exist. |
+
+**Out of scope S8 v1:** Terraform for full fleet; automatic DNS API; SPA tenant-move wizard (S8.7/S8.8 docs + scripts first).
+
+**Exit criteria:**
+
+- [ ] Operator follows **`NEW_INSTANCE_CHECKLIST.md`** only — new fleet node shows S3 backups without ad-hoc certbot/IAM debugging.
+- [ ] **`onboard-fleet-instance.sh`** fails fast if IAM role not attached (metadata 404 caught in preflight).
+- [ ] **`TENANT_MIGRATION_RUNBOOK.md`** published; one tenant move validated on two-node fleet (data + catalog + LE).
+- [ ] Rebuild golden from backup/AMI without losing backup panel S3 visibility (documented regression).
+
+**Dependencies:** S5 backups (done), S6 onboard (done), LE Sync fix (**0.0.3-17**). Can run **in parallel** with Track B Phase 4 help QA.
+
+---
+
+### Phase S9 — Ops polish (when S5–S8 code exists)
 
 | # | Task |
 |---|------|
-| S8.1 | Document **non-AWS** endpoint env for Flysystem (`AWS_ENDPOINT`, path-style) in `OPS_S3_RUNBOOK.md` |
-| S8.2 | Optional object tags `org`, `instance_id`, `tenant` on PUT (in addition to `class`) |
-| S8.3 | `postinst` registrar hook (Phase 5) |
-| S8.4 | Mark `S3_LAYOUT_PROPOSAL.md` **implemented** sections vs **planned** in header |
+| S9.1 | Document **non-AWS** endpoint env for Flysystem (`AWS_ENDPOINT`, path-style) in `OPS_S3_RUNBOOK.md` |
+| S9.2 | Optional object tags `org`, `instance_id`, `tenant` on PUT (in addition to `class`) |
+| S9.3 | `postinst` registrar hook (Phase 5) |
+| S9.4 | Mark `S3_LAYOUT_PROPOSAL.md` **implemented** sections vs **planned** in header |
 
 ---
 
@@ -299,11 +332,13 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 ```text
   S5 backups complete  →  S6.1 manual onboard (done)  →  S6.4 onboard script  →  S6.2 Pages
          │                         │                              │
-         └─────────────────────────┴──────────────────────────────┴──→  S7 recordings  →  S8 polish
+         └─────────────────────────┴──────────────────────────────┴──→  S7 recordings
+                                                                              │
+                                                                              └──→  S8 fleet lifecycle + tenant move  →  S9 polish
                            S3 v1 exit review
 ```
 
-**Next session pick:** **S6.2** (GitHub Pages) or **S7** (recordings). S6.1 + S6.4 fleet onboard validated.
+**Next session pick:** **Track B Phase 4** help QA (paused) · **S8** instance checklist + tenant migration (fleet friction) · or **S7** (recordings). S6.1 + S6.4 fleet onboard validated; golden rebuild exposed IAM/`.env` gaps → **S8**.
 
 ---
 

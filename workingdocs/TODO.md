@@ -7,6 +7,8 @@
 
 ## Open items
 
+- [ ] **Phase S8 — Fleet instance lifecycle & tenant mobility:** Consolidate instance (re)build (**`NEW_INSTANCE_CHECKLIST.md`**), harden **`onboard-fleet-instance.sh`** + IAM/`.env` preflight, **`TENANT_MIGRATION_RUNBOOK.md`** + export/import tooling. **Driver:** golden rebuild lost IAM + `.env`; backups invisible until fixed; tenant move is catalog-only today. See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** § Phase S8.
+
 - [ ] **Phase 4 field help QA (operator-driven):** Golden **08jzwn** has demo tenants + **410** `tt_help_core` rows. Walk stakeholder demo path; report missing/wrong help, panel removals, wiring gaps. See **pbx3spa/workingdocs/FIELD_HELP_COVERAGE_AUDIT.md** (73 fields still missing help — mostly KSUID/UID, IVR dynamic keys, Tier 3–4).
 
 - [ ] **Golden `pkey='default'` layout (investigate, low priority):** Pre-migration golden had only `f34ck1`/`5489nv` (node FQDN on `globals` only). Test instance uses **`default`** tenant row with `cluster.fqdn` = node FQDN. Post-restore golden matches test layout. Question: does SPA tenant-create-only provisioning ever skip creating `default`?

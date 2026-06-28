@@ -182,6 +182,21 @@ See **pbx3spa** **`workingdocs/DEV_ENVIRONMENT.md`** §7.
 
 ---
 
+## Track F — Fleet instance lifecycle & tenant mobility (S8)
+
+**Post–Track B** — full plan in **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** § **Phase S8**.
+
+| Deliverable | Purpose |
+|-------------|---------|
+| **`NEW_INSTANCE_CHECKLIST.md`** | Single operator path: install → IAM → `.env` → LE → S3 backups → catalog |
+| **`TENANT_MIGRATION_RUNBOOK.md`** | Move tenant A→B: data + DNS + LE + Commit + `move-tenant.sh` |
+| Onboard script + preflight | Fail fast on missing IAM / `.env`; reduce golden-rebuild surprises |
+| Export/import tooling | Close gap between `backupClusters.php` and operator tenant move |
+
+**Driver:** Golden rebuild (May 2026) — backups invisible until IAM + `.env` restored; docs were fragmented.
+
+---
+
 ## Phase 5 — Stakeholder demo rehearsal (1 day)
 
 | Step | Action | Verify |

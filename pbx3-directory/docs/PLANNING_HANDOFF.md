@@ -121,7 +121,7 @@ Deferred work (CDN, fleet health poll, central auth, recordings offload, etc.) �
 - Replacing per-node **pbx3** / **pbx3api** install.
 - Wildcard DNS or DNS-01 LE (still HTTP-01 per FQDN on node).
 - Hosting **pbx3spa** on each PBX (`:44300`).
-- Full **tenant move** automation (directory enables it later).
+- Full **tenant move** automation → **`IMPLEMENTATION_PLAN.md`** § **Phase S8** + **`TENANT_MIGRATION_RUNBOOK.md`** (catalog `move-tenant.sh` exists; export/import + LE dual-node workflow planned).
 
 ### LE follow-on still on node (not directory)
 

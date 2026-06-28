@@ -4,9 +4,11 @@
 
 **Quick path:** **`tools/onboard-fleet-instance.sh`** — complete [Operator pre-flight (Mac)](#operator-pre-flight-mac) first, then see [Automation](#automation--onboard-fleet-instancesh-s64). Manual phases A–D are for debugging or when SSH/AWS is split across people.
 
+**Unified checklist (S8):** **`NEW_INSTANCE_CHECKLIST.md`** — single linear path for new/rebuilt nodes. **Tenant move:** **`TENANT_MIGRATION_RUNBOOK.md`**.
+
 **Validated example:** `bzy54n.pbx3.com` joined fleet bucket `08jzwn-pbx3` alongside golden `08jzwn.pbx3.com` (May 2026).
 
-**Related docs:** `OPS_S3_RUNBOOK.md` (bucket policy, CORS, golden node), `tools/README.md` (registrar scripts), `DESIGN_RULES.md` (fleet bucket naming).
+**Related docs:** `OPS_S3_RUNBOOK.md` (bucket policy, CORS, golden node), `tools/README.md` (registrar scripts), `DESIGN_RULES.md` (fleet bucket naming), **`IMPLEMENTATION_PLAN.md`** § Phase S8.
 
 ---
 

@@ -35,7 +35,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (index) → **TLS_IMPLEMENTATION_STEPS.md** (linear checklist) → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**Option A** spec + §11–§12). **pbx3spa**/workingdocs has stubs pointing here. |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
-| Fleet / S3 catalog / onboard | **pbx3-directory/docs/IMPLEMENTATION_PLAN.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`unregister-instance.sh`** |
+| Fleet / S3 catalog / onboard | **pbx3-directory/docs/IMPLEMENTATION_PLAN.md** § **S8** → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **TENANT_MIGRATION_RUNBOOK.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`move-tenant.sh`** |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
 
 **Source of truth:** Schema and code. Verify against pbx3 db_sql and code when changing behaviour; workingdocs may be outdated.
@@ -69,6 +69,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Tenant panel | **Mix monitor** removed from create/edit (obsolete `cluster.mixmonitor`) |
 
 **Paused:** Operator walking demo panels on golden; will report gaps. **Next slices:** Backup/Certificates/Login help wiring; IVR dynamic keys; KSUID/UID readouts.
+
+**Fleet friction (S8 — planned):** Instance create/rebuild steps scattered; IAM + `.env` not preserved on rebuild; tenant move = `move-tenant.sh` only. See **`IMPLEMENTATION_PLAN.md`** § Phase S8, **`NEW_INSTANCE_CHECKLIST.md`**, **`TENANT_MIGRATION_RUNBOOK.md`**.
 
 ### Prior session (Track B 0–3 on `main`)
 
@@ -122,13 +124,15 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 | **S6.2 Pages live + CORS** | Wait for org + final origin (`app.pbx.com`?) |
 | **pbx3api CORS** | Not configured for cross-origin SPA yet; required for Pages, not for Vite dev proxy |
 | **S7 recordings offload** | Whole phase open (`IMPLEMENTATION_PLAN.md`) — parked with S3 v1 |
+| **S8 fleet lifecycle + tenant move** | **`IMPLEMENTATION_PLAN.md`** § S8 — checklist, onboard hardening, migration runbook + tooling |
 | **Phase 5 install hook** | Registrar hint on postinst — optional |
 | **Golden missing `pkey='default'` tenant** | **Superseded on golden** after test DB restore (now has `default` + four named tenants). Pre-migration layout (`f34ck1`/`5489nv` only) — see **TODO.md** if investigating provision path |
 
 ### Suggested next session pick (user preference order)
 
-1. **Phase 4 field help QA** — operator review on golden demo data; then Backup/Certificates/Login wiring, IVR keys
-2. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
+1. **Phase 4 field help QA** — operator review on golden demo data
+2. **Phase S8 fleet lifecycle** — instance checklist, IAM/`.env` preflight, tenant migration runbook + tooling
+3. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
 
 ### Recent commits (directory branch)
 
