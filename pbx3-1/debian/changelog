@@ -1,3 +1,10 @@
+pbx3 (0.0.3-18) noble; urgency=medium
+
+  * tt_help_core seed (sqlite_message.sql): convert legacy HTML help text to
+    Markdown; document format in SQL header comment.
+
+ -- KOKO <admin@aelintra.com>  Sat, 30 May 2026 20:00:00 +0000
+
 pbx3 (0.0.3-17) noble; urgency=medium
 
   * le-sync-cert-sans.sh: drop certbot --expand so Sync replaces the full SAN
