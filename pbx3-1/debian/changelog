@@ -1,3 +1,9 @@
+pbx3 (0.0.3-19) noble; urgency=medium
+
+  * tt_help_core seed: import Phase 4 help QA copy from golden (sqlite_message.sql).
+
+ -- KOKO <admin@aelintra.com>  Sun, 31 May 2026 12:00:00 +0000
+
 pbx3 (0.0.3-18) noble; urgency=medium
 
   * tt_help_core seed (sqlite_message.sql): convert legacy HTML help text to
