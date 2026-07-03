@@ -666,7 +666,11 @@ curl -sS -o /dev/null -w "%{http_code}\n" \
 
 ### 5.3 Confidentiality
 
-Anyone who knows the URL can read **`catalog/instance-index.json`** (instance hostnames, `api_base_url`). That does **not** grant admin access — Sanctum on each node still required. For stricter fleets, skip public policy and use **§8** (private bucket + API / signed URLs) — Phase D.
+Anyone who knows the URL can read **`catalog/instance-index.json`** (instance hostnames, `api_base_url`). That does **not** grant admin access — Sanctum on each node still required.
+
+**SIP ingress (separate concern):** Published FQDNs in the catalog can aid attackers trying to pass **`fqdninspect`** / Shorewall SIP URI checks on **5060**. Legacy posture often avoids publishing dialable names even though PCAP or DNS can still reveal them. See **`DESIGN_RULES.md`** § *SIP FQDN obscurity vs public catalog*.
+
+For stricter fleets, skip public policy and use **§8** (private bucket + API / signed URLs) — Phase D.
 
 ### 5.4 Optional: `share/` public read
 

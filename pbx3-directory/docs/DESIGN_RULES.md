@@ -164,6 +164,29 @@ Directory failure surfaces as **UX degradation** (no picker list, warning banner
 
 ---
 
+## SIP FQDN obscurity vs public catalog
+
+**Context (legacy PBX3 posture):** For many deployments, **SIP ingress security** has relied on **packet inspection** of inbound INVITEs — Shorewall INLINE rules when **`globals.fqdninspect`** is YES match the expected hostname in the SIP payload (e.g. `sip:<fqdn>` on UDP/TCP **5060**). Operators have **not generally published** those dialable FQDNs; a passive observer could still learn names from **SIP on the wire** or from **DNS** (LE, phones), but the names were not advertised in marketing or public indexes.
+
+**This is a different layer from API security.** Sanctum on `:44300` protects **admin panels**. SIP URI inspection protects **telephony ingress**. A world-readable **`catalog/instance-index.json`** can weaken the **obscurity** leg of SIP defense without breaking Sanctum or `fqdninspect` themselves — it makes correct INVITE targets **cheaper to discover** (scrape JSON) than PCAP or blind scanning.
+
+| Layer | What leaks | Public catalog impact |
+|-------|------------|------------------------|
+| Admin API | `api_base_url`, instance `fqdn` | Low for auth — still need credentials |
+| SIP ingress | Tenant / node FQDNs in INVITE **Request-URI** / **To** | **Higher** — attacker learns strings to satisfy inspection |
+
+**Agreed policy:**
+
+1. **v0 dev / golden** — public `catalog/*` prefix is acceptable with eyes open when FQDNs are already in DNS for LE and phones.
+2. **Production fleets that depend on SIP URI checking** — treat public catalog as **convenience vs obscurity** trade-off; prefer **Phase D private catalog** (auth before `GET`, or signed URLs) before MSP / multi-customer launch.
+3. **Minimize public index content** — use opaque **`id`**, human **`label`** (“Golden”), **`status`**; avoid enumerating every **tenant** `{shortuid}.{apex}` in a world-readable file if those names are SIP inspection targets. Instance **`fqdn`** / **`api_base_url`** may still be required for the admin picker after connect.
+4. **Do not conflate** “directory down” (Rule 3) with “hide SIP names” — break-glass **manual `api_base_url`** remains for operators who already know the node; that path does not require publishing names to the internet.
+5. **Registrar / onboarding** — document which FQDNs are written to catalog vs kept node-local only.
+
+**References:** **`pbx3/workingdocs/LETSENCRYPT_PER_TENANT_FQDN.md`** § `fqdninspect`; **`OPS_S3_RUNBOOK.md`** § 5.3 (confidentiality); **`IMPLEMENTATION_PLAN.md`** Phase D (private catalog + ACL).
+
+---
+
 ## Rule 5 — Directory outage does not change node SLA
 
 Monitoring and ops should treat directory availability separately from **instance health**. An instance can be **fully operational** while the directory is **offline**.
@@ -345,5 +368,5 @@ Before merging directory-related work, confirm:
 | **A — Contract** | Schema is instance metadata only; no “required_for_calls” flags. |
 | **B — Dev feed** | Static URL; nodes unaffected if URL wrong. |
 | **C — SPA picker** | Rules 3 + 6: optional catalog, solo + single-row paths, override + error state. |
-| **D — Central auth** | ACL filters directory view; Rule 4 + break-glass documented. |
+| **D — Central auth** | ACL filters directory view; Rule 4 + break-glass documented; **SIP FQDN obscurity** — prefer private catalog when `fqdninspect` is part of ingress posture (see § SIP FQDN obscurity vs public catalog). |
 | **E — Orchestration** | Tenant move uses directory for **ops** URLs; nodes run local LE/sync scripts. |

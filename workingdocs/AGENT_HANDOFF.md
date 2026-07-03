@@ -17,7 +17,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 **Repo-specific (always):**
 
 - **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, or **`pbx3spa/`** only.
-- **Fleet / S3 / directory:** on **`main`**. **Track B** Phases 0–3 on **`main`**; **Phase 4** on **`helptext`** (pbx3, pbx3api, pbx3spa).
+- **Fleet / S3 / directory:** on **`main`**. **Track B** Phases 0–4 Tier 1–2 + **panelfixes** panel QA merged to **`main`** (2026-07-02). Branches **`helptext`**, **`panelfixes`**, **`directory`** deleted.
 - **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
 
 ---
@@ -42,9 +42,38 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-05-30, Phase 4 pause)
+## Next agent session notes (2026-07-02)
 
-**Program:** **Track B Phase 4** on branch **`helptext`** (pbx3, pbx3api, pbx3spa). Phases 0–3 on **`main`**. Golden **08jzwn** now carries **demo data** for field-help QA.
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa** (`helptext`, `panelfixes`, `directory` merged and deleted).
+
+### Just shipped (panel QA + help)
+
+| Area | Notes |
+|------|--------|
+| **Queues** | Outcome/Divert → tenant destination `FormSelect`; greetnum dropdown |
+| **Trunks** | Trimmed Settings/Advanced (MOH, SWOCLIP, DISA, etc. removed from UI) |
+| **Routes** | Auth (PIN dial) removed from create/detail |
+| **Globals / Network** | `edomain`/`logopts` removed; hostname **read-only**; **Site name** on Home via `GET sysglobals.sitename` |
+| **Help** | **extcode** seed; audit scripts; Tier 1–2 field help QA **done** on golden |
+| **Docs** | SIP FQDN obscurity vs public catalog — **`pbx3-directory/docs/DESIGN_RULES.md`** |
+
+**Golden follow-up:** deploy **pbx3api** for queue/trunk API changes; add **`extcode`** / **`iaxreg`** help rows on golden if missing.
+
+### Suggested “what next?” order
+
+1. **Golden operator QA** — phones for Extension Runtime; inbound **SWOCLIP** create/edit parity; missing help rows on node
+2. **Deploy pbx3api** to golden (queue/trunk API alignment)
+3. **Phase S8** — if fleet rebuild / backups / tenant move is urgent (`IMPLEMENTATION_PLAN.md` § S8)
+4. **`tt_help_core` cleanup** (230 unreferenced rows) or **permissions Phase 1+** when ready for auth work
+5. **Directory / central admin** — instance picker off per-node login; **Phase D private catalog** before production MSP if **`fqdninspect`** is part of ingress posture (`DESIGN_RULES.md`)
+
+**Open items:** **`TODO.md`** (authoritative list). **SPA context:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
+
+---
+
+## Prior session notes (2026-05-30, Phase 4 pause — historical)
+
+**Program:** **Track B Phase 4** merged to **`main`** with **`helptext`** (2026-05-30). Golden **08jzwn** carries **demo data** for field-help QA.
 
 ### Golden **08jzwn** (validated 2026-05-30)
 
@@ -68,7 +97,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | LE / Certificates UX | Sync primary; mismatch warning; **`le-sync-cert-sans.sh`** replaces full SAN list |
 | Tenant panel | **Mix monitor** removed from create/edit (obsolete `cluster.mixmonitor`) |
 
-**Paused:** Operator walking demo panels on golden; will report gaps. **Next slices:** Backup/Certificates/Login help wiring; IVR dynamic keys; KSUID/UID readouts.
+**Done (merged to `main`):** Operator walked Tier 1–2 demo panels on golden (**0.0.3-19**). **Deferred:** Backup/Certificates/Login help wiring; IVR dynamic keys; KSUID readouts; **`tt_help_core` cleanup** (230 unreferenced rows — see **`TODO.md`**).
 
 **Fleet friction (S8 — planned):** Instance create/rebuild steps scattered; IAM + `.env` not preserved on rebuild; tenant move = `move-tenant.sh` only. See **`IMPLEMENTATION_PLAN.md`** § Phase S8, **`NEW_INSTANCE_CHECKLIST.md`**, **`TENANT_MIGRATION_RUNBOOK.md`**.
 
@@ -128,9 +157,13 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 | **Phase 5 install hook** | Registrar hint on postinst — optional |
 | **Golden missing `pkey='default'` tenant** | **Superseded on golden** after test DB restore (now has `default` + four named tenants). Pre-migration layout (`f34ck1`/`5489nv` only) — see **TODO.md** if investigating provision path |
 
+| **Fleet catalog vs SIP obscurity** | Public `catalog/instance-index.json` weakens FQDN obscurity layer — see **`DESIGN_RULES.md`** § SIP FQDN obscurity; Phase D private catalog for production MSP |
+
 ### Suggested next session pick (user preference order)
 
-1. **Phase 4 field help QA** — operator review on golden demo data
+*Superseded by **§ Next agent session notes (2026-07-02)** → Suggested “what next?” order above. Retained for grep:*
+
+1. ~~Phase 4 field help QA~~ — **done** (2026-05-30)
 2. **Phase S8 fleet lifecycle** — instance checklist, IAM/`.env` preflight, tenant migration runbook + tooling
 3. **Open-source org setup** — `OPEN_SOURCE_GITHUB_SETUP.md` (unblocks S6.2 hostname)
 

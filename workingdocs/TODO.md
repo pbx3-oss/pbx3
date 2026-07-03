@@ -1,7 +1,15 @@
 # PBX3 ToDo list
 
-**Branch:** Panel fixes on **`panelfixes`** (pbx3, pbx3api, pbx3spa) · Phase 4 help on **`main`**  
-**Last updated:** 2026-07-02 (evening)
+**Branch:** **`main`** (pbx3, pbx3api, pbx3spa)  
+**Last updated:** 2026-07-02 (late evening)
+
+### Suggested “what next?” order
+
+1. **Golden operator QA** — phones for Extension Runtime; inbound **SWOCLIP** parity; missing help rows on node  
+2. **Deploy pbx3api** to golden (queue/trunk API)  
+3. **Phase S8** — fleet rebuild / backups / tenant move if urgent  
+4. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
+5. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)
 
 ---
 
@@ -9,7 +17,8 @@
 
 - [ ] **Phase S8 — Fleet instance lifecycle & tenant mobility:** Consolidate instance (re)build (**`NEW_INSTANCE_CHECKLIST.md`**), harden **`onboard-fleet-instance.sh`** + IAM/`.env` preflight, **`TENANT_MIGRATION_RUNBOOK.md`** + export/import tooling. **Driver:** golden rebuild lost IAM + `.env`; backups invisible until fixed; tenant move is catalog-only today. See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** § Phase S8.
 
-- [x] **Phase 4 field help QA (2026-05-30):** Golden **08jzwn** demo path walked; Tier 1–2 wiring + Markdown help shipped (**0.0.3-19**). Forward audit: **`pbx3spa/scripts/audit-field-help.mjs`** → **`FIELD_HELP_COVERAGE_AUDIT.md`**. Remaining field gaps mostly Tier 3–4 / not-yet-built panels.
+- [ ] **Fleet catalog — SIP FQDN obscurity vs public S3 index:** Legacy ingress relies on **`fqdninspect`** (SIP INVITE URI string match on **5060**); dialable FQDNs are usually **not published** (sniffing/DNS can still expose them). Public **`catalog/instance-index.json`** aids admin discovery but can weaken that obscurity layer — **not** the same as Sanctum/API risk. **Policy:** v0/golden OK with eyes open; production MSP fleets → **Phase D private catalog** (auth-gated `GET` or signed URLs); minimize tenant FQDN enumeration in public JSON; use **`label`** + opaque **`id`**. See **`pbx3-directory/docs/DESIGN_RULES.md`** § *SIP FQDN obscurity vs public catalog*; **`OPS_S3_RUNBOOK.md`** § 5.3.
+
 - [ ] **Golden `pkey='default'` layout (investigate, low priority):** Pre-migration golden had only `f34ck1`/`5489nv` (node FQDN on `globals` only). Test instance uses **`default`** tenant row with `cluster.fqdn` = node FQDN. Post-restore golden matches test layout. Question: does SPA tenant-create-only provisioning ever skip creating `default`?
 
 - [ ] **pbx3api astamis `PJSIPShowEndpoint/{id}`:** Calling `GET .../astamis/PJSIPShowEndpoint/{id}` returns `AMI Action invalid or unsupported` because **`AstAmiController::$eventList` only whitelists `PJSIPShowEndpoints` (plural)** — singular action never reaches Asterisk. **Follow-up when implementing:** (1) Allow `PJSIPShowEndpoint` (dedicated route/method like other `eventItem` actions, or extend `getlist` with a special case). (2) AMI body must include **`Endpoint: {id}`** (not only `Action:`). (3) Do not use plain `amiQuery()` for this action — use **`amiPjsipShowEndpointForLive()`** or **`amiQueryUntilComplete()`** and return structured JSON or raw response as needed. (4) Document in `astamis` index (`GET astamis`) if exposed.
@@ -22,6 +31,8 @@
 - [ ] **pjsipuser for extensions:** Address pjsipuser handling for extensions (PJSIP endpoint/user config, API/SPA and generator/templates as needed).
   It needs to expose the instance copy of the template and NOT the database column (although that might be an option).  TBD.
   Also, we need to settle the template handling of NAT, e.g. force_rport, Rewrite_contact. 
+
+- [ ] **Class of Service — extension assignment (partial panel):** **`cosrules`** list/create/detail ships (**`ClassOfService*View.vue`**). **Missing:** per-extension daytime/nighttime COS toggles on **`ExtensionDetailView`** (legacy **`sarkextension`**: **`opencos`** / **`closedcos`** per rule); no SPA edit of **`defaultopen`** / **`defaultclosed`** on rules; **`globals.cosstart`** not on Instance Globals. **API today:** **`cosopens`** / **`coscloses`** CRUD exists; **`ExtensionController::create_default_cos_instances()`** seeds junction rows **only at extension create** from rules with default YES. **Action:** Extension detail COS section (or bundled **`PUT extensions/{id}/cos`**); editable defaults on CoS create/edit; wire help **`cosday`**, **`cosnight`**, **`cosopen`**, **`cosclosed`**. See **`pbx3api/workingdocs/COS_AUDIT_PROTOTYPE.md`** §5.2; **`pbx3spa/workingdocs/SAIL65_PANEL_PORT_PLAN.md`** § partial panels.
 
 - [ ] **Extensions edit panel — Runtime section (re-examine):** Review **`ExtensionDetailView.vue`** Runtime block (cfim, cfbs, ringdelay; live SIP IP/latency via `GET extensions/{shortuid}/runtime`). Deferred until phones are registered on a test instance — cannot judge UX, live-data usefulness, or API behaviour without endpoints online. See **`pbx3spa/workingdocs/EXTENSIONS_LIVE_DATA.md`**, **`PANEL_PATTERN_DEPARTURES.md`** § Runtime subsection.
 
@@ -39,6 +50,7 @@
 
 ## Completed / deferred
 
+- [x] **Phase 4 field help QA (2026-05-30):** Golden **08jzwn** demo path walked; Tier 1–2 wiring + Markdown help shipped (**0.0.3-19**). Forward audit: **`pbx3spa/scripts/audit-field-help.mjs`** → **`FIELD_HELP_COVERAGE_AUDIT.md`**. Remaining field gaps mostly Tier 3–4 / not-yet-built panels.
 - [x] **Permissions Phase 0 (SPA admin gate):** `can('admin')`, route guard, optional nav gate — see **`pbx3spa/workingdocs/PERMISSIONS_MINIMAL_DEPLOY_PLAN.md`**. Phase 1+ deferred — see open item above.
 - [x] **Golden demo data migration (2026-05-30):** Test DB → **08jzwn**; globals identity patch; tenant DNS; LE five-SAN cert; **`sqlite_message.sql`** applied for help rows.
 - [x] **LE Sync drops removed tenant SANs (2026-05-30):** `le-sync-cert-sans.sh` no longer uses certbot `--expand`; deb **0.0.3-17**; SPA Certificates UX.
