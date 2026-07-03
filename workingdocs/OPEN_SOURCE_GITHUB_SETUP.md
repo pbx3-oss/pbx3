@@ -10,9 +10,12 @@ Use this when creating a **new GitHub organization** for PBX3 and preparing for 
 
 ### Repos (initial)
 
-- `pbx3` — backend package + installer + workingdocs
+Inventory and version coupling: **`workingdocs/REPOS_AND_RELEASES.md`**. **Policy: multi-repo** (not one amalgamated monorepo).
+
+- `pbx3` — backend package + installer + workingdocs + **`pbx3-directory/`**
 - `pbx3api` — API (Laravel) + nginx installer
 - `pbx3spa` — admin SPA (Vue) + GitHub Pages deploy (S6.2)
+- `pbx3cagi` — Asterisk AGI (C)
 
 Optional later:
 

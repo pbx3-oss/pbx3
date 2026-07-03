@@ -6,4 +6,6 @@
 
 **Session end:** When the user says **`session end`** — **SESSION_END_CHECKLIST.md** (update TODO + AGENT_HANDOFF + pbx3spa SESSION_HANDOFF only).
 
+**Repos / releases:** **REPOS_AND_RELEASES.md** — remotes, deploy targets, multi-repo policy, compatibility matrix.
+
 Other notes in this folder include **`TLS_AND_CERTIFICATES.md`** (TLS doc index — **read first for certificates**), **`CERTIFICATES_PANEL_AND_API.md`**, **`LETSENCRYPT_PER_TENANT_FQDN.md`**, **TODO.md**, **DBSTRUCT_SMOKE_CHECKLIST.md** (post–schema-change checks), and **SQL_CHECK_CONSTRAINT_SIDEPROJECT.md** (SQLite CHECK constraints exploration).
