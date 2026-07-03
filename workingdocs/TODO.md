@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa)  
-**Last updated:** 2026-07-02 (late evening)
+**Last updated:** 2026-07-02 (night)
 
 ### Suggested “what next?” order
 
@@ -14,6 +14,8 @@
 ---
 
 ## Open items
+
+- [ ] **User guides — MkDocs site (`pbx3-docs`):** Published **installer + admin** how-tos (MkDocs Material + GitHub Pages), **not** developer docs. **`workingdocs/`** stays for humans/AI implementers. **Content map:** **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** (nav tree, page inventory, P1–P3 priorities, promote-from-workingdoc table). **Phase 1:** new repo, fix top-level **`nav:`** in `mkdocs.yml`, CI like **`sail6-docs`**. **Phase 2:** P1 pages (install, TLS, login, backup). **Phase 3+:** admin guide from demo script; fleet chapter after S8. Target URL: `docs.pbx.com` (or org Pages). Do not auto-publish `SESSION_HANDOFF`, audits, or `DEV_ENVIRONMENT.md`.
 
 - [ ] **Phase S8 — Fleet instance lifecycle & tenant mobility:** Consolidate instance (re)build (**`NEW_INSTANCE_CHECKLIST.md`**), harden **`onboard-fleet-instance.sh`** + IAM/`.env` preflight, **`TENANT_MIGRATION_RUNBOOK.md`** + export/import tooling. **Driver:** golden rebuild lost IAM + `.env`; backups invisible until fixed; tenant move is catalog-only today. See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** § Phase S8.
 
