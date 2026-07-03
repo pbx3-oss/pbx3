@@ -20,6 +20,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **Fleet / S3 / directory:** on **`main`**. **Track B** Phases 0–4 Tier 1–2 + **panelfixes** panel QA merged to **`main`** (2026-07-02). Branches **`helptext`**, **`panelfixes`**, **`directory`** deleted.
 - **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
 
+**Session end:** When the user says **`session end`**, **`end session`**, or **`update handoff`**, follow **`SESSION_END_CHECKLIST.md`** (update **`TODO.md`**, this file’s **Next agent session notes**, and **`pbx3spa/workingdocs/SESSION_HANDOFF.md`** only).
+
 ---
 
 
@@ -28,6 +30,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Task | Read (in order) |
 |------|------------------|
 | Any / first time | This file (**§ Next agent session notes**), then TODO.md |
+| **Session end** (user request) | **SESSION_END_CHECKLIST.md** → update TODO.md + this file + **pbx3spa/SESSION_HANDOFF.md** |
+| **New session** (user request) | This file § **Next agent session notes** → TODO.md → **pbx3spa/SESSION_HANDOFF.md** (top block); **`SESSION_END_CHECKLIST.md`** § new session |
 | **Track B — release hardening** | **TRACK_B_RELEASE_HARDENING.md** → **STAKEHOLDER_DEMO_SCRIPT.md** → TODO.md → TLS_IMPLEMENTATION_STEPS.md §4.3 |
 | New GitHub org / OSS | **OPEN_SOURCE_GITHUB_SETUP.md** |
 | Install / deploy | INSTALL_SEQUENCE_UBUNTU.md (pbx3 then pbx3api on Ubuntu 24.04) |
@@ -42,32 +46,42 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-02)
+## Next agent session notes (2026-07-02, evening — docs & handoff)
 
-**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa** (`helptext`, `panelfixes`, `directory` merged and deleted).
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**.
 
-### Just shipped (panel QA + help)
+### Shipped this session (documentation)
 
 | Area | Notes |
 |------|--------|
-| **Queues** | Outcome/Divert → tenant destination `FormSelect`; greetnum dropdown |
-| **Trunks** | Trimmed Settings/Advanced (MOH, SWOCLIP, DISA, etc. removed from UI) |
-| **Routes** | Auth (PIN dial) removed from create/detail |
-| **Globals / Network** | `edomain`/`logopts` removed; hostname **read-only**; **Site name** on Home via `GET sysglobals.sitename` |
-| **Help** | **extcode** seed; audit scripts; Tier 1–2 field help QA **done** on golden |
-| **Docs** | SIP FQDN obscurity vs public catalog — **`pbx3-directory/docs/DESIGN_RULES.md`** |
+| **Fleet / SIP** | SIP FQDN obscurity vs public catalog — **`DESIGN_RULES.md`**, **`OPS_S3_RUNBOOK.md`**, TODO (`093bbb3`) |
+| **Handoff** | What-next order on **`main`**; Track B Phase 4 Tier 1–2 complete (`093bbb3`) |
+| **CoS** | **Partial** — rules CRUD only; extension COS assignment open — TODO + **`SAIL65_PANEL_PORT_PLAN.md`** |
+| **User guides** | **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** — installer/admin MkDocs plan; workingdocs stay dev/AI (`67fe32a`) |
+| **Session end** | **`SESSION_END_CHECKLIST.md`** + **`.cursor/rules/session-end-handoff.mdc`** |
 
-**Golden follow-up:** deploy **pbx3api** for queue/trunk API changes; add **`extcode`** / **`iaxreg`** help rows on golden if missing.
+### Golden / operator follow-up (unchanged)
 
-### Suggested “what next?” order
+- Deploy **pbx3api** for queue/trunk API on golden; **`extcode`** / **`iaxreg`** help rows if missing.
+- Golden operator QA: Extension Runtime (phones), inbound **SWOCLIP** create/edit parity.
 
-1. **Golden operator QA** — phones for Extension Runtime; inbound **SWOCLIP** create/edit parity; missing help rows on node
-2. **Deploy pbx3api** to golden (queue/trunk API alignment)
-3. **Phase S8** — if fleet rebuild / backups / tenant move is urgent (`IMPLEMENTATION_PLAN.md` § S8)
-4. **`tt_help_core` cleanup** (230 unreferenced rows) or **permissions Phase 1+** when ready for auth work
-5. **Directory / central admin** — instance picker off per-node login; **Phase D private catalog** before production MSP if **`fqdninspect`** is part of ingress posture (`DESIGN_RULES.md`)
+### New session (for user)
 
-**Open items:** **`TODO.md`** (authoritative list). **SPA context:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
+Read **§ Next agent session notes** (this block) → **`TODO.md`** → **`pbx3spa/SESSION_HANDOFF.md`** (top **Session end** block only). See **`SESSION_END_CHECKLIST.md`** § new session.
+
+### Resume
+
+1. **Product:** TODO suggested order #1–2 (golden QA, API deploy).
+2. **Docs:** Optional handoff trim (`PROJECT_PLAN` collapse) when quiet.
+3. **MkDocs:** **`pbx3-docs`** Phase 1 when ready — content map Phase 1.
+
+**Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
+
+---
+
+## Prior session notes (2026-07-02 — panel QA on `main`)
+
+Queues (outcome/divert/greetnum), trunk field trim, route auth removed, globals/network tidy, **Site name** on Home, **extcode** help — merged **`panelfixes`** → **`main`**. Commits **`7d3bc3f`** (spa), **`428209f`** (api), **`ae06476`** (pbx3).
 
 ---
 
