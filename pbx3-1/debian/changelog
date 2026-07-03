@@ -1,3 +1,11 @@
+pbx3 (0.0.3-20) noble; urgency=medium
+
+  * db_legacy_sql: add idempotent sqlite_normalize_cluster_to_shortuid.sql to
+    repair tenant-scoped cluster columns still on pkey (or KSUID) after a
+    skipped or partial SARK V6 fixRi migration; safe to re-run.
+
+ -- KOKO <admin@aelintra.com>  Fri, 03 Jul 2026 23:20:00 +0000
+
 pbx3 (0.0.3-19) noble; urgency=medium
 
   * tt_help_core seed: import Phase 4 help QA copy from golden (sqlite_message.sql).
