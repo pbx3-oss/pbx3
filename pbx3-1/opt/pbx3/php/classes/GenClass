@@ -1208,7 +1208,7 @@ HERE;
         $this->OUT .= "\n";
 
 		try {
-        $sql = "SELECT * FROM greeting WHERE cluster='" . $row['shortid'] . "' ORDER BY pkey";
+        $sql = "SELECT * FROM greeting WHERE cluster='" . $row['shortuid'] . "' ORDER BY pkey";
 			$GRes = $this->dbh->query($sql);
 			$greetings = $GRes->fetchAll();
 			$GRes = NULL;
@@ -1228,8 +1228,8 @@ $this->OUT .= <<<HERE
 ;
 ;   Conference bridges (if any)
 ;	
-HERE
-    $this->confBridge($row['shortid']);
+HERE;
+    $this->confBridge($row['shortuid']);
 
 
 
