@@ -1,15 +1,15 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa)  
-**Last updated:** 2026-07-02 (repos registry)
+**Last updated:** 2026-07-03 (CoS done; SARK migration revisit)
 
 ### Suggested “what next?” order
 
 1. **Golden operator QA** — phones for Extension Runtime; inbound **SWOCLIP** parity; missing help rows on node  
-2. **Deploy pbx3api** to golden (queue/trunk API)  
-3. **Phase S8** — fleet rebuild / backups / tenant move if urgent  
-4. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
-5. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)
+2. **Phase S8** — fleet rebuild / backups / tenant move if urgent  
+3. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
+4. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
+5. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
 
 ---
 
@@ -36,8 +36,6 @@
   It needs to expose the instance copy of the template and NOT the database column (although that might be an option).  TBD.
   Also, we need to settle the template handling of NAT, e.g. force_rport, Rewrite_contact. 
 
-- [ ] **Class of Service — extension assignment (partial panel):** **`cosrules`** list/create/detail ships (**`ClassOfService*View.vue`**). **Missing:** per-extension daytime/nighttime COS toggles on **`ExtensionDetailView`** (legacy **`sarkextension`**: **`opencos`** / **`closedcos`** per rule); no SPA edit of **`defaultopen`** / **`defaultclosed`** on rules; **`globals.cosstart`** not on Instance Globals. **API today:** **`cosopens`** / **`coscloses`** CRUD exists; **`ExtensionController::create_default_cos_instances()`** seeds junction rows **only at extension create** from rules with default YES. **Action:** Extension detail COS section (or bundled **`PUT extensions/{id}/cos`**); editable defaults on CoS create/edit; wire help **`cosday`**, **`cosnight`**, **`cosopen`**, **`cosclosed`**. See **`pbx3api/workingdocs/COS_AUDIT_PROTOTYPE.md`** §5.2; **`pbx3spa/workingdocs/SAIL65_PANEL_PORT_PLAN.md`** § partial panels.
-
 - [ ] **Extensions edit panel — Runtime section (re-examine):** Review **`ExtensionDetailView.vue`** Runtime block (cfim, cfbs, ringdelay; live SIP IP/latency via `GET extensions/{shortuid}/runtime`). Deferred until phones are registered on a test instance — cannot judge UX, live-data usefulness, or API behaviour without endpoints online. See **`pbx3spa/workingdocs/EXTENSIONS_LIVE_DATA.md`**, **`PANEL_PATTERN_DEPARTURES.md`** § Runtime subsection.
 
 - [ ] **Inbound route panels — SWOCLIP (re-examine):** Review **`swoclip`** (Switch-On-CLIP) on inbound route create/detail panels — label vs help pkey **`swoclip`** (“SWOC?”), default **YES**, interaction with CLIP DDI routing (`pbx3cagi` reads `inroutes.swoclip`). Detail has **`FormToggle`**; create panel omits it today. Confirm field placement, parity create/edit, and whether UX matches operator expectations.
@@ -50,9 +48,13 @@
 
 - [ ] **tt_help_core cleanup — unreferenced rows (final pass):** Reverse audit found **230** `tt_help_core` rows with no SPA field help wiring (**`pbx3spa/scripts/audit-unreferenced-help.mjs`** → **`pbx3spa/workingdocs/HELP_UNREFERENCED_IN_SPA.md`**). Review each: retire legacy-only keys (e.g. DHCP server, factory-reset wizards, BLF bulk editor) vs keep for future panels. Re-run script after SPA changes; prune or rewire as needed. Pair with forward audit **`audit-field-help.mjs`** for missing help on live fields.
 
+- [ ] **SARK V6 migration routines (revisit, low priority — end of list):** Golden demo data still had tenant-scoped **`cluster`** on pkey (e.g. `affcot`) because **`sqlite_fixRi.sql`** was never applied; new SPA/API writes use shortuid, which broke joins (CoS on extensions). Shipped interim repair: **`sqlite_normalize_cluster_to_shortuid.sql`** (idempotent; **pbx3 0.0.3-20**). **Later revisit:** full **`db_legacy_sql`** path (`sqlite_create_legacy.sql`, **`sqlite_fixRi.sql`**, lineio, etc.) — ensure import always runs fixRi (or the normalize script), document operator steps, cover tables fixRi omits (`dateseg`, `holiday`, `page`, `users`, CoS junctions), and decide whether fixRi stays one-shot-only with normalize as the supported repair. Do not run stock fixRi on mixed DBs (NULLs shortuid rows).
+
 ---
 
 ## Completed / deferred
+
+- [x] **Class of Service — extension assignment (2026-07-03):** Rules CRUD + editable **`defaultopen`** / **`defaultclosed`**; extension day/night CoS via **`GET/PUT extensions/{id}/cos`**; **`globals.cosstart`** on Instance Globals; help **`cosday`**, **`cosnight`**, **`cosopen`**, **`cosclosed`**, **`cosstart`**. Fixed cluster pkey/shortuid mismatch (normalize script + API aliases) and Cos model string **`pkey`** (was cast to `0`). Golden validated.
 
 - [x] **Session-end handoff procedure (2026-07-02):** **`SESSION_END_CHECKLIST.md`** + **`.cursor/rules/session-end-handoff.mdc`** (pbx3, pbx3spa, workspace). User trigger: **`session end`** / **`New session — read handoff and summarize.`**
 - [x] **User guides content map (2026-07-02):** **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** — MkDocs vs workingdocs split; P1–P3 page inventory (`67fe32a`).
