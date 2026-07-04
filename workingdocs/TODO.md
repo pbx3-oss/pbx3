@@ -1,19 +1,22 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-04 (golden QA merged; pbx3cagi CFCheck)
+**Last updated:** 2026-07-04 (golden QA merged; pbx3cagi Phase 0 harness)
 
 ### Suggested “what next?” order
 
-1. **Phase S8** — fleet rebuild / backups / tenant move if urgent  
-2. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
-3. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
-4. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
-5. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
+1. **pbx3cagi Phase 0 — AGI test harness** (required before cagi struct refactor) — **`pbx3cagi/workingdocs/TEST_HARNESS.md`**
+2. **Phase S8** — fleet rebuild / backups / tenant move if urgent  
+3. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
+4. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
+5. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
+6. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
 
 ---
 
 ## Open items
+
+- [ ] **pbx3cagi Phase 0 — AGI test harness (required):** Offline scenario tests before Phase 1.1+ refactor. Pipe AGI env + argv to `pbx3cagi`; fixture **tenant** SQLite (golden copy); **AstDB** mock on AGI `DATABASE GET` (fixture `astdb.sqlite3` or key map); **transcript** assertions (`must` / `must-not` on stdout). First scenarios: CFIM local (no hold clip), CFIM external, empty forward. Deliverables 0.1–0.8 in **`pbx3cagi/workingdocs/TEST_HARNESS.md`**; gate in **`REFACTOR_PLAN.md`**. One process per scenario (production isolation); no FastAGI multiplexer.
 
 - [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**; add **`pbx3-docs`** later. Maintain **`REPOS_AND_RELEASES.md`** (inventory, remotes, compatibility matrix). Update local clone remotes; keep **`pbx3-master/`** holding-folder layout. Tag first aligned release row in compatibility matrix when cutting public release.
 
