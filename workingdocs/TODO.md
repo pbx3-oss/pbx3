@@ -1,12 +1,12 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** (pbx3, pbx3api, pbx3spa)  
-**Last updated:** 2026-07-03 (CoS done; SARK migration revisit)
+**Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
+**Last updated:** 2026-07-04 (golden QA merged; pbx3cagi CFCheck)
 
 ### Suggested “what next?” order
 
-1. **Golden operator QA** — phones for Extension Runtime; inbound **SWOCLIP** parity; missing help rows on node  
-2. **Phase S8** — fleet rebuild / backups / tenant move if urgent  
+1. **Phase S8** — fleet rebuild / backups / tenant move if urgent  
+2. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
 3. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
 4. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
 5. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
@@ -53,6 +53,8 @@
 ---
 
 ## Completed / deferred
+
+- [x] **Golden operator QA — runtime / CFIM / GenAst / pbx3cagi (2026-07-04):** **`goldenQA` → `main`** merged and branch deleted (pbx3, pbx3api, pbx3spa, pbx3cagi). **pbx3api:** empty runtime cfim/cfbs allowed; AstDB keys under extension **shortuid**; native AMI **DBGet/DBPut/DBDel**; **DBGetResponse** `Val:` parse fix. **pbx3:** GenClass conference heredoc + **shortuid** for greetings/confBridge. **pbx3cagi 1.0.0-2:** **CFCheck** uses **`strlen(cfnum)`** (local divert no comfort tone); amd64 + arm64 binaries in deb install tree. Golden **08jzwn** validated: CoS, ext-to-ext, CFIM, runtime save/display, GenAst, local CFIM divert audio. **SWOCLIP** OK provisionally; Runtime live SIP/latency partial.
 
 - [x] **Class of Service — extension assignment (2026-07-03):** Rules CRUD + editable **`defaultopen`** / **`defaultclosed`**; extension day/night CoS via **`GET/PUT extensions/{id}/cos`**; **`globals.cosstart`** on Instance Globals; help **`cosday`**, **`cosnight`**, **`cosopen`**, **`cosclosed`**, **`cosstart`**. Fixed cluster pkey/shortuid mismatch (normalize script + API aliases) and Cos model string **`pkey`** (was cast to `0`). Golden validated.
 

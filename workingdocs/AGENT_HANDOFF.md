@@ -16,7 +16,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 **Repo-specific (always):**
 
-- **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, or **`pbx3spa/`** only.
+- **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, **`pbx3spa/`**, or **`pbx3cagi/`** as appropriate.
 - **Fleet / S3 / directory:** on **`main`**. **Track B** Phases 0–4 Tier 1–2 + **panelfixes** panel QA merged to **`main`** (2026-07-02). Branches **`helptext`**, **`panelfixes`**, **`directory`** deleted.
 - **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
 
@@ -46,36 +46,38 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-02, evening — docs & handoff)
+## Next agent session notes (2026-07-04)
 
-**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**.
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. **`goldenQA`** merged and deleted (all repos).
 
-### Shipped this session (documentation)
+### Shipped
 
-| Area | Notes |
+| Repo | Notes |
 |------|--------|
-| **Fleet / SIP** | SIP FQDN obscurity vs public catalog — **`DESIGN_RULES.md`**, **`OPS_S3_RUNBOOK.md`**, TODO (`093bbb3`) |
-| **Handoff** | What-next order on **`main`**; Track B Phase 4 Tier 1–2 complete (`093bbb3`) |
-| **CoS** | **Partial** — rules CRUD only; extension COS assignment open — TODO + **`SAIL65_PANEL_PORT_PLAN.md`** |
-| **User guides** | **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** — installer/admin MkDocs plan; workingdocs stay dev/AI (`67fe32a`) |
-| **Session end** | **`SESSION_END_CHECKLIST.md`** + **`.cursor/rules/session-end-handoff.mdc`** |
+| **pbx3api** | Runtime save: empty cfim/cfbs/ringdelay; AstDB **shortuid** keys + legacy cleanup; native AMI **DBGet/DBPut/DBDel**; **DBGetResponse** `Val:` parse for runtime read |
+| **pbx3** | GenClass: conference heredoc **`HERE;`**; greetings/confBridge use cluster **shortuid** |
+| **pbx3cagi 1.0.0-2** | **CFCheck** `strlen(cfnum)` — local CFIM divert skips comfort tone; **amd64** + **arm64** in `debian/pbx3cagi/.../agi-bin/` |
+| **pbx3spa** | No delta vs pre-QA **`main`** (CoS UI already merged) |
 
-### Golden / operator follow-up (unchanged)
+### Golden / operator follow-up
 
-- Deploy **pbx3api** for queue/trunk API on golden; **`extcode`** / **`iaxreg`** help rows if missing.
-- Golden operator QA: Extension Runtime (phones), inbound **SWOCLIP** create/edit parity.
-
-### New session (for user)
-
-Read **§ Next agent session notes** (this block) → **`TODO.md`** → **`pbx3spa/SESSION_HANDOFF.md`** (top **Session end** block only). See **`SESSION_END_CHECKLIST.md`** § new session.
+- **08jzwn:** pull **`main`** on pbx3, pbx3api, pbx3cagi; install **pbx3cagi 1.0.0-2** (or copy `pbx3cagi.arm64` + symlink).
+- **Deferred QA:** Extension Runtime live SIP IP/latency (phones); **SWOCLIP** create/edit parity (detail has toggle; create omits it).
+- Optional: **`extcode`** / **`iaxreg`** help rows on golden Help messages.
 
 ### Resume
 
-1. **Product:** TODO suggested order #1–2 (golden QA, API deploy).
-2. **Docs:** Optional handoff trim (`PROJECT_PLAN` collapse) when quiet.
-3. **MkDocs:** **`pbx3-docs`** Phase 1 when ready — content map Phase 1.
+1. **Product:** TODO suggested order #1 (**Phase S8**) or #2 (Runtime / SWOCLIP re-examine).
+2. **pbx3cagi:** **`maxin` / `maxout`** counter enforcement (open in TODO).
+3. **Docs:** **`pbx3-docs`** MkDocs Phase 1 when ready.
 
 **Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
+
+---
+
+## Prior session notes (2026-07-02, evening — docs & handoff)
+
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**. Documentation session — fleet/SIP catalog policy, MkDocs content map, session-end checklist. CoS extension assignment completed next session (2026-07-03).
 
 ---
 
