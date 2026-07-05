@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-04 (golden Phase 0 harness signed off on **08jzwn**)
+**Last updated:** 2026-07-04 (session end — Phase 0 golden-signed-off; next: **S8**)
 
 ### Suggested “what next?” order
 
