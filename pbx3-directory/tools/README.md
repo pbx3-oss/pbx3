@@ -1,14 +1,32 @@
 # pbx3-directory tools
 
-**Add a node to the fleet (start here):** **`onboard-fleet-instance.sh`** — one Mac command after AMI boot.
+**Rebuild a failed EC2 (same KSUID):** start with **`../docs/REBUILD_INSTANCE_RUNBOOK.md`** — `fetch-latest-instance-backup.sh` → node `restore-backup-zip.sh` → `onboard-fleet-instance.sh`.
 
-**Before you run it:** complete **Operator pre-flight (Mac)** and **Fleet-ready AMI (EC2)** in **`../docs/INSTANCE_ONBOARDING.md`** § Automation.
+**Add a new node to the fleet:** **`onboard-fleet-instance.sh`** — one Mac command after AMI boot.
+
+**Before onboard:** complete **Operator pre-flight (Mac)** and **Fleet-ready AMI (EC2)** in **`../docs/INSTANCE_ONBOARDING.md`** § Automation.
 
 Registrar scripts update **`catalog/instance-index.json`** and **`instances/`** / **`tenants/`** meta files in the org S3 bucket.
 
 **Requires (onboard + registrar):** logged-in **AWS CLI** session on the Mac (`aws sts get-caller-identity`), `jq`, `ssh`, and operator IAM for fleet bucket + IAM (not the EC2 node role).
 
-## onboard-fleet-instance.sh (S6.4)
+## fetch-latest-instance-backup.sh (S8)
+
+Download the newest `backup.zip` from `instances/{ksuid}/backups/` to `pbx3bak.{epoch}.zip` (Mac/ops credentials).
+
+```bash
+chmod +x fetch-latest-instance-backup.sh
+
+export PBX3_ORG_BUCKET=08jzwn-pbx3
+
+./fetch-latest-instance-backup.sh \
+  --instance-id 3DmAsxePTWQZgynBYXE8obIRqEE \
+  --output-dir ~/Downloads
+```
+
+Optional `--stamp YYYYMMDDTHHMMSSZ` to pin a specific archive. See **`../docs/REBUILD_INSTANCE_RUNBOOK.md`**.
+
+## onboard-fleet-instance.sh (S6.4 / S8.3)
 
 Idempotent: IAM (policy from template) → catalog → node `.env` + S3 smoke. Discovers KSUID from node `globals` — do not pass `--id` by hand.
 
@@ -28,6 +46,8 @@ export PBX3_ORG_BUCKET=08jzwn-pbx3
 `--git-pull` — pull `origin/directory` on node before S3 smoke.  
 `--smoke-backup` — run `pbx3:upload-backup` if a local zip exists.  
 `--skip-iam` / `--skip-catalog` / `--skip-node` — partial re-run.
+
+**S8.3:** Fails if IAM instance profile is not `associated` or EC2 metadata returns no role (404) before S3 smoke. Writes `AWS_DEFAULT_REGION` in node `.env`.
 
 Optional defaults: `~/.pbx3/fleet.yaml` or `--fleet-config PATH` (`org_bucket`, `region`, `ssh_key`, …).
 

@@ -208,6 +208,7 @@ onboard_iam_provision() {
     onboard_aws_write ec2 associate-iam-instance-profile \
       --instance-id "$instance_id" \
       --iam-instance-profile "Arn=${profile_arn}"
+    state=""
     for i in $(seq 1 12); do
       state="$(onboard_aws_read ec2 describe-iam-instance-profile-associations \
         --filters "Name=instance-id,Values=${instance_id}" \
@@ -215,15 +216,45 @@ onboard_iam_provision() {
       [[ "$state" == "associated" ]] && break
       sleep 5
     done
-    [[ "$state" == "associated" ]] || onboard_log "warning: profile state is ${state:-unknown} (may need a minute)"
+    if [[ "$state" != "associated" ]]; then
+      onboard_log "ERROR: IAM instance profile not associated (state=${state:-unknown})"
+      onboard_log "S3 backups will fail until EC2 has role $profile attached."
+      rm -rf "$workdir"
+      exit 1
+    fi
   fi
 
   rm -rf "$workdir"
   onboard_log "IAM ready: role=$role policy=$policy_name"
 }
 
+onboard_verify_iam_metadata() {
+  local role
+  role="$(onboard_ssh_read "bash -s" <<'REMOTE'
+set -euo pipefail
+meta="http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+token=""
+if token=$(curl -sf --connect-timeout 2 -X PUT \
+  "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 60" 2>/dev/null); then
+  curl -sf --connect-timeout 2 -H "X-aws-ec2-metadata-token: ${token}" "$meta" || true
+else
+  curl -sf --connect-timeout 2 "$meta" || true
+fi
+REMOTE
+)"
+  if [[ -z "$role" || "$role" == *"404"* ]]; then
+    onboard_log "ERROR: EC2 instance metadata has no IAM role (404 or empty)."
+    onboard_log "Attach instance profile before S3 smoke — see REBUILD_INSTANCE_RUNBOOK.md Phase 4."
+    exit 1
+  fi
+  onboard_log "IAM metadata role: $role"
+}
+
 onboard_configure_node() {
   local bucket=$1 ksuid=$2
+  local region="${ONBOARD_AWS_REGION:-us-east-1}"
+  onboard_verify_iam_metadata
   onboard_ssh_write "sudo bash -s" <<REMOTE
 set -e
 ENV=/opt/pbx3api/.env
@@ -234,7 +265,11 @@ grep -q '^PBX3_ORG_BUCKET=' "\$ENV" 2>/dev/null && \
 grep -q '^PBX3_DIRECTORY_BACKUP_UPLOAD=' "\$ENV" 2>/dev/null && \
   sed -i 's/^PBX3_DIRECTORY_BACKUP_UPLOAD=.*/PBX3_DIRECTORY_BACKUP_UPLOAD=true/' "\$ENV" || \
   echo 'PBX3_DIRECTORY_BACKUP_UPLOAD=true' >> "\$ENV"
+grep -q '^AWS_DEFAULT_REGION=' "\$ENV" 2>/dev/null && \
+  sed -i 's/^AWS_DEFAULT_REGION=.*/AWS_DEFAULT_REGION=${region}/' "\$ENV" || \
+  echo 'AWS_DEFAULT_REGION=${region}' >> "\$ENV"
 sed -i '/^AWS_ACCESS_KEY_ID=\$/d;/^AWS_SECRET_ACCESS_KEY=\$/d' "\$ENV"
+sed -i '/^AWS_ACCESS_KEY_ID=$/d;/^AWS_SECRET_ACCESS_KEY=$/d' "\$ENV"
 sed -i 's/^# PBX3_ORG_BUCKET=.*/PBX3_ORG_BUCKET=${bucket}/' "\$ENV" 2>/dev/null || true
 sed -i 's/^# PBX3_DIRECTORY_BACKUP_UPLOAD=true/PBX3_DIRECTORY_BACKUP_UPLOAD=true/' "\$ENV" 2>/dev/null || true
 cd /opt/pbx3api
@@ -246,6 +281,13 @@ sudo php artisan config:clear
 sudo -u www-data env HOME=/tmp php artisan tinker --execute="
 use Illuminate\\\\Support\\\\Facades\\\\Storage;
 \\\$disk = Storage::disk('pbx3_org');
+\\\$prefix = 'instances/${ksuid}/backups';
+\\\$dirs = \\\$disk->directories(\\\$prefix);
+if (\\\$dirs === []) {
+  echo 's3_list_ok_empty' . PHP_EOL;
+} else {
+  echo 's3_list_ok_' . count(\\\$dirs) . PHP_EOL;
+}
 \\\$key = 'instances/${ksuid}/_onboard_smoke.txt';
 \\\$disk->put(\\\$key, 'onboard ' . gmdate('c'));
 \\\$disk->delete(\\\$key);

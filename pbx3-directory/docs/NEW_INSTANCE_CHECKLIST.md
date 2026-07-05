@@ -1,20 +1,22 @@
 # New fleet instance — operator checklist
 
-**Status:** Draft (Phase **S8** — see **`IMPLEMENTATION_PLAN.md`** § Phase S8).  
+**Status:** Phase **S8** — see **`IMPLEMENTATION_PLAN.md`** § Phase S8.
+
+**Rebuild a failed EC2 (same KSUID):** use **`REBUILD_INSTANCE_RUNBOOK.md`** only — S3 latest backup → restore → onboard. Do not use § B below for rebuilds.
+
 **Goal:** One linear path to a healthy fleet node (backups, catalog, LE) without tribal knowledge.
 
-**Supersedes as “start here”** (detail remains in linked docs):
-
-| Topic | Deep dive |
-|-------|-----------|
+| Topic | Doc |
+|-------|-----|
+| **Rebuild from S3 (catastrophic EC2 loss)** | **`REBUILD_INSTANCE_RUNBOOK.md`** |
 | Ubuntu install | **`pbx3/workingdocs/INSTALL_SEQUENCE_UBUNTU.md`** |
 | Fleet join (2nd+ node) | **`INSTANCE_ONBOARDING.md`** |
-| S3 / IAM / golden pattern | **`OPS_S3_RUNBOOK.md`** Golden node playbook |
+| S3 / IAM / golden pattern | **`OPS_S3_RUNBOOK.md`** |
 | Automation | **`tools/onboard-fleet-instance.sh`** |
 
 ---
 
-## A — New EC2 instance (greenfield)
+## A — New EC2 instance (greenfield, new KSUID)
 
 - [ ] **A.1** Ubuntu 24.04; SG: inbound **22**, **44300**, **80** (LE), SIP as needed; outbound **443** (S3)
 - [ ] **A.2** `apt install` **pbx3** + **pbx3api** debs; deploy API under **`/opt/pbx3api`**
@@ -29,7 +31,7 @@
 - [ ] **A.5** `curl -k -sS -o /dev/null -w "%{http_code}\n" https://127.0.0.1:44300/up` → **200**
 - [ ] **A.6** DNS **A** for `globals.fqdn` → instance public IP
 - [ ] **A.7** LE: **`le-instance-bootstrap.sh`** or SPA **Certificates → Get certificate**
-- [ ] **A.8** **Mac:** IAM policy scoped to `instances/{KSUID}/*`; role + instance profile; **attach to EC2** (required for S3 backups)
+- [ ] **A.8** **Mac:** IAM policy scoped to `instances/{KSUID}/*`; role + instance profile; **attach to EC2**
 - [ ] **A.9** **Node `.env`** (`/opt/pbx3api/.env`):
 
   ```env
@@ -41,34 +43,19 @@
   No empty `AWS_ACCESS_KEY_ID=` / `AWS_SECRET_ACCESS_KEY=` — use **instance role**.
 
 - [ ] **A.10** `cd /opt/pbx3api && sudo composer install --no-dev && sudo php artisan config:clear`
-- [ ] **A.11** S3 smoke — instance role can list backups prefix (see **`OPS_S3_RUNBOOK.md`** or S8 preflight script)
+- [ ] **A.11** `sudo php artisan pbx3:fleet-preflight` → all green
 - [ ] **A.12** **Mac:** `register-instance.sh` — catalog `id` = node **`globals.id`**
 - [ ] **A.13** Create backup → panel shows **local+S3** (or run `pbx3:upload-backup`)
 
-**Fast path:** **`onboard-fleet-instance.sh`** after A.1–A.5 (must still verify A.8 IAM attach).
+**Fast path:** **`onboard-fleet-instance.sh`** after A.1–A.5 (must still verify IAM attach).
 
 ---
 
 ## B — Rebuild / replace instance (same KSUID)
 
-Use when EC2 is replaced but fleet identity (**`globals.id`**) stays the same.
+**Use `REBUILD_INSTANCE_RUNBOOK.md`** — single path: S3 latest backup → `restore-backup-zip.sh` → `onboard-fleet-instance.sh` → DNS/LE → `pbx3:fleet-preflight`.
 
-- [ ] **B.1** Complete **§ A** stack install (A.2–A.5)
-- [ ] **B.2** Restore DB or run installer on fresh DB — then **patch identity** if DB came from another host:
-
-  ```sql
-  UPDATE globals SET id='…', shortuid='…', fqdn='…', domain='pbx3.com' WHERE pkey='global';
-  UPDATE cluster SET fqdn='{node-fqdn}', domain='pbx3.com' WHERE pkey='default';
-  ```
-
-  `sudo /opt/pbx3/scripts/normalize-globals-identity.sh` — **do not** run **`reloader.sh`**.
-
-- [ ] **B.3** Merge help seeds if needed:  
-  `sudo sqlite3 /opt/pbx3/db/sqlite.db < /opt/pbx3/db/db_sql/sqlite_message.sql`
-- [ ] **B.4** Re-attach **IAM instance profile** (rebuilds often lose this — backups panel empty)
-- [ ] **B.5** Restore **`.env` fleet block** (not in `sqlite.db` — stock Laravel `.env` is not enough)
-- [ ] **B.6** DNS + **Certificates → Sync** if tenant FQDNs changed
-- [ ] **B.7** SPA **Commit**; verify backups panel lists S3 archives
+Do not run **`reloader.sh`** after restore.
 
 ---
 
@@ -86,6 +73,7 @@ Use when EC2 is replaced but fleet identity (**`globals.id`**) stays the same.
 |-------|----------------|
 | API up | `curl -k https://127.0.0.1:44300/up` |
 | KSUID stable | `globals.id` = catalog row `id` = S3 prefix |
+| Fleet preflight | `sudo php artisan pbx3:fleet-preflight` |
 | IAM | `curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/` returns role name |
 | S3 backups | Backups panel or `BackupIndexService` lists `source=s3` or `both` |
 | Catalog | SPA picker shows instance |
