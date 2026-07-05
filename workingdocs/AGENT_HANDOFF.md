@@ -47,23 +47,20 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-04, session end)
+## Next agent session notes (2026-07-05, session end)
 
-**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. Branches **`goldenQA`** and **`phase0`** deleted.
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. Docs-only session; no code changes.
 
-### Shipped this session
+### This session
 
-| Repo | Notes |
+| Item | Notes |
 |------|--------|
-| **pbx3cagi** | **Phase 0 AGI harness** on `main`: synthetic **`minimal-tenant-seed.sql`**, CFIM scenarios, **`make test`**, **`TEST_RECIPE.md`**, **`PBX3CAGI_SQLITE_DB`**. **1.0.0-2** CFCheck (amd64 + arm64). **Golden signed off** on **08jzwn** (seed + live tenant DB). |
-| **pbx3** | **Phase R1** + **S8 → R1 → S7** priority in **`IMPLEMENTATION_PLAN.md`**, **`TODO.md`**, handoff docs. |
-| **pbx3api** / **pbx3spa** | No code changes (CoS/golden QA already on `main`). |
+| **Phase 0** | User confirmed golden **`make test`** PASS (synthetic seed + live **`sqlite.rdonly.db`**) — already signed off in prior handoff |
+| **SPA size review** | ~38k LOC; single bundle ~743 kB / ~183 kB gzip; runs fine on golden/LAN. **No changes** — efficiency deferred until **S8 / R1 / core panels** done |
+| **SPA plan** | Deferred **Phase H** (lazy routes) + **Phase H2** (list/detail extraction) documented in **`pbx3spa/workingdocs/PROJECT_PLAN.md`**, **`PBX3SPA_CODEBASE_ANALYSIS.md`** |
+| **Cleanup** | Deleted obsolete **`pbx3-master/ROLLBACK_NOTE.txt`** (Feb 2025 lowercase rollback; not in git) |
 
-### Phase 0 — complete
-
-Golden **08jzwn:** `make test` PASS with default synthetic fixture **and** **`PBX3CAGI_SQLITE_DB=/opt/pbx3/db/sqlite.rdonly.db`**. Gate cleared. Struct refactor (**Phase 1.3+**) **deferred** until **S8 + R1**.
-
-### Priority order
+### Priority order (unchanged)
 
 | # | Track |
 |---|--------|
@@ -72,20 +69,16 @@ Golden **08jzwn:** `make test` PASS with default synthetic fixture **and** **`PB
 | **3** | **S7** — recordings S3 offload |
 | **4** | **S8.5–S8.6** — tenant migration + export/import |
 
-### Golden / operator follow-up
-
-- **Deferred QA:** Extension Runtime live SIP; **SWOCLIP** create/edit parity.
-
 ### Resume
 
-1. **S8.1–S8.4** — **`NEW_INSTANCE_CHECKLIST.md`**, onboard hardening.
-2. **R1** — port **`sarkrecordings`** + recordings API.
+1. **S8.1–S8.4** — fleet ops.
+2. **R1** — recordings API + **`sarkrecordings`** port.
 
-**Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**. **Harness runbook:** **`pbx3cagi/workingdocs/TEST_RECIPE.md`**.
+**Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
 
 ---
 
-## Prior session notes (2026-07-04 — Phase 0 golden sign-off handoff)
+## Prior session notes (2026-07-04, session end — Phase 0 complete)
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**. Documentation session — fleet/SIP catalog policy, MkDocs content map, session-end checklist. CoS extension assignment completed next session (2026-07-03).
 
