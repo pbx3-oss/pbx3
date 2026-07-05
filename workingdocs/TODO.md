@@ -1,14 +1,14 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-04 (session end — Phase 0 done; S8 → R1 → S7 priority; `phase0` branch deleted)
+**Last updated:** 2026-07-04 (golden Phase 0 harness signed off on **08jzwn**)
 
 ### Suggested “what next?” order
 
 1. **Phase S8** — fleet rebuild / IAM + `.env` preflight / **`NEW_INSTANCE_CHECKLIST.md`** — then **S8.5–S8.6** tenant migration runbook + export/import  
 2. **Phase R1** — call recordings **management** (API list/search/play + SPA panel; local disk first) — **`IMPLEMENTATION_PLAN.md`** § Phase R1  
 3. **Phase S7** — recordings **S3 offload** (mirror backup upload pattern; IAM on same node role as S8.3)  
-4. **pbx3cagi** — golden **`make test`** sign-off; **Phase 1.3+ refactor deferred** until S8 + R1 underway — **`REFACTOR_PLAN.md`**  
+4. **pbx3cagi** — **Phase 1.3+ struct refactor deferred** until S8 + R1 underway (Phase 0 **golden-signed-off**) — **`REFACTOR_PLAN.md`**  
 5. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
 6. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
 7. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
@@ -28,7 +28,7 @@
 
 - [ ] **User guides — MkDocs site (`pbx3-docs`):** Published **installer + admin** how-tos (MkDocs Material + GitHub Pages), **not** developer docs. **`workingdocs/`** stays for humans/AI implementers. **Content map:** **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** (nav tree, page inventory, P1–P3 priorities, promote-from-workingdoc table). **Phase 1:** new repo, fix top-level **`nav:`** in `mkdocs.yml`, CI like **`sail6-docs`**. **Phase 2:** P1 pages (install, TLS, login, backup). **Phase 3+:** admin guide from demo script; fleet chapter after S8. Target URL: `docs.pbx.com` (or org Pages). Do not auto-publish `SESSION_HANDOFF`, audits, or `DEV_ENVIRONMENT.md`.
 
-- [ ] **pbx3cagi refactor (deferred — after S8 + R1 underway):** Phase 0 harness **built** on `main` (synthetic fixture, CFIM scenarios, **`TEST_RECIPE.md`**). Golden **`make test`** sign-off in progress. **Do not start Phase 1.1+ struct refactor** until fleet/recordings momentum established; run harness after each refactor step when resumed. Gate: **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**.
+- [ ] **pbx3cagi refactor (deferred — after S8 + R1 underway):** Phase 0 harness **golden-signed-off** on **08jzwn** (synthetic seed + `/opt/pbx3/db/sqlite.rdonly.db`; all CFIM scenarios PASS). **Do not start Phase 1.1+ struct refactor** until fleet/recordings momentum established; run **`make test`** after each refactor step when resumed. Gate: **`REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**, **`TEST_RECIPE.md`**.
 
 - [ ] **Fleet catalog — SIP FQDN obscurity vs public S3 index:** Legacy ingress relies on **`fqdninspect`** (SIP INVITE URI string match on **5060**); dialable FQDNs are usually **not published** (sniffing/DNS can still expose them). Public **`catalog/instance-index.json`** aids admin discovery but can weaken that obscurity layer — **not** the same as Sanctum/API risk. **Policy:** v0/golden OK with eyes open; production MSP fleets → **Phase D private catalog** (auth-gated `GET` or signed URLs); minimize tenant FQDN enumeration in public JSON; use **`label`** + opaque **`id`**. See **`pbx3-directory/docs/DESIGN_RULES.md`** § *SIP FQDN obscurity vs public catalog*; **`OPS_S3_RUNBOOK.md`** § 5.3.
 
@@ -63,7 +63,7 @@
 
 ## Completed / deferred
 
-- [x] **pbx3cagi Phase 0 — AGI test harness (2026-07-04):** Deliverables 0.1–0.8 on **`main`**. Synthetic **`minimal-tenant-seed.sql`**; CFIM local/external/none scenarios; **`make test`**; **`TEST_RECIPE.md`**. Golden validation ongoing. Gate for Phase 1.1+ refactor when resumed.
+- [x] **pbx3cagi Phase 0 — AGI test harness (2026-07-04):** Deliverables 0.1–0.8 on **`main`**. Synthetic **`minimal-tenant-seed.sql`**; CFIM local/external/none scenarios; **`make test`**; **`TEST_RECIPE.md`**. **Golden 08jzwn signed off:** default seed fixture and **`PBX3CAGI_SQLITE_DB=/opt/pbx3/db/sqlite.rdonly.db`** — all scenarios PASS. Gate cleared for Phase 1.1+ refactor when product priority allows.
 
 - [x] **Golden operator QA — runtime / CFIM / GenAst / pbx3cagi (2026-07-04):** **`goldenQA` → `main`** merged and branch deleted (pbx3, pbx3api, pbx3spa, pbx3cagi). **pbx3api:** empty runtime cfim/cfbs allowed; AstDB keys under extension **shortuid**; native AMI **DBGet/DBPut/DBDel**; **DBGetResponse** `Val:` parse fix. **pbx3:** GenClass conference heredoc + **shortuid** for greetings/confBridge. **pbx3cagi 1.0.0-2:** **CFCheck** uses **`strlen(cfnum)`** (local divert no comfort tone); amd64 + arm64 binaries in deb install tree. Golden **08jzwn** validated: CoS, ext-to-ext, CFIM, runtime save/display, GenAst, local CFIM divert audio. **SWOCLIP** OK provisionally; Runtime live SIP/latency partial.
 
