@@ -39,7 +39,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (index) → **TLS_IMPLEMENTATION_STEPS.md** (linear checklist) → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**Option A** spec + §11–§12). **pbx3spa**/workingdocs has stubs pointing here. |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
-| Fleet / S3 catalog / onboard | **pbx3-directory/docs/IMPLEMENTATION_PLAN.md** § **S8** → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **TENANT_MIGRATION_RUNBOOK.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`move-tenant.sh`** |
+| Fleet / S3 catalog / onboard | **pbx3-directory/docs/IMPLEMENTATION_PLAN.md** § **S8** / **R1** / **S7** → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **TENANT_MIGRATION_RUNBOOK.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`move-tenant.sh`** |
+| Call recordings | **`IMPLEMENTATION_PLAN.md`** § **Phase R1** (local SPA/API) → **Phase S7** (S3 offload) |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
 
 **Source of truth:** Schema and code. Verify against pbx3 db_sql and code when changing behaviour; workingdocs may be outdated.
@@ -50,13 +51,23 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. **`goldenQA`** merged and deleted (all repos).
 
+### Priority order (agreed 2026-07-04)
+
+| # | Track | Doc |
+|---|--------|-----|
+| **1** | **S8.1–S8.4** — fleet checklist, IAM/`.env` hardening, backups visible after rebuild | **`IMPLEMENTATION_PLAN.md`** § S8, **`NEW_INSTANCE_CHECKLIST.md`** |
+| **2** | **R1** — call recordings management (local API + SPA) | **`IMPLEMENTATION_PLAN.md`** § Phase R1 |
+| **3** | **S7** — recordings S3 offload | **`IMPLEMENTATION_PLAN.md`** § S7 |
+| **4** | **S8.5–S8.6** — tenant migration + export/import | **`TENANT_MIGRATION_RUNBOOK.md`** |
+| **—** | **pbx3cagi** Phase 0 harness **built**; golden `make test`; struct refactor **deferred** | **`pbx3cagi/workingdocs/TEST_RECIPE.md`**, **`REFACTOR_PLAN.md`** |
+
 ### Shipped
 
 | Repo | Notes |
 |------|--------|
 | **pbx3api** | Runtime save: empty cfim/cfbs/ringdelay; AstDB **shortuid** keys + legacy cleanup; native AMI **DBGet/DBPut/DBDel**; **DBGetResponse** `Val:` parse for runtime read |
 | **pbx3** | GenClass: conference heredoc **`HERE;`**; greetings/confBridge use cluster **shortuid** |
-| **pbx3cagi 1.0.0-2** | **CFCheck** `strlen(cfnum)` — local CFIM divert skips comfort tone; **amd64** + **arm64** in `debian/pbx3cagi/.../agi-bin/` |
+| **pbx3cagi** | **1.0.0-2** CFCheck fix; **Phase 0 harness** on `main` (synthetic fixture, `make test`, **`TEST_RECIPE.md`**) |
 | **pbx3spa** | No delta vs pre-QA **`main`** (CoS UI already merged) |
 
 ### Golden / operator follow-up
@@ -67,9 +78,9 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ### Resume
 
-1. **Product:** TODO suggested order #1 (**Phase S8**) or #2 (Runtime / SWOCLIP re-examine).
-2. **pbx3cagi:** **`maxin` / `maxout`** counter enforcement (open in TODO).
-3. **Docs:** **`pbx3-docs`** MkDocs Phase 1 when ready.
+1. **Product:** **S8.1–S8.4** → **R1** recordings panel/API → **S7** S3 offload → **S8.5–S8.6** tenant move.
+2. **pbx3cagi:** Golden **`make test`** (`TEST_RECIPE.md`); defer Phase 1.3+ refactor.
+3. **Deferred QA:** Extension Runtime live SIP; **SWOCLIP** create/edit parity.
 
 **Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
 
@@ -168,8 +179,9 @@ cd pbx3spa && npm run dev   # http://localhost:5173
 |------|----------------|
 | **S6.2 Pages live + CORS** | Wait for org + final origin (`app.pbx.com`?) |
 | **pbx3api CORS** | Not configured for cross-origin SPA yet; required for Pages, not for Vite dev proxy |
-| **S7 recordings offload** | Whole phase open (`IMPLEMENTATION_PLAN.md`) — parked with S3 v1 |
-| **S8 fleet lifecycle + tenant move** | **`IMPLEMENTATION_PLAN.md`** § S8 — checklist, onboard hardening, migration runbook + tooling |
+| **Phase R1 recordings management** | Local list/play API + SPA (`sarkrecordings` port) — **`IMPLEMENTATION_PLAN.md`** § R1 — **priority #2** |
+| **S7 recordings S3 offload** | After R1 (or parallel with S8.3 IAM) — **`IMPLEMENTATION_PLAN.md`** § S7 |
+| **S8 fleet lifecycle + tenant move** | **`IMPLEMENTATION_PLAN.md`** § S8 — **priority #1** (S8.1–S8.4 first) |
 | **Phase 5 install hook** | Registrar hint on postinst — optional |
 | **Golden missing `pkey='default'` tenant** | **Superseded on golden** after test DB restore (now has `default` + four named tenants). Pre-migration layout (`f34ck1`/`5489nv` only) — see **TODO.md** if investigating provision path |
 

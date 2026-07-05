@@ -1,28 +1,34 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-04 (golden QA merged; pbx3cagi Phase 0 harness)
+**Last updated:** 2026-07-04 (priority: S8 fleet → R1 recordings → pbx3cagi refactor deferred)
 
 ### Suggested “what next?” order
 
-1. **pbx3cagi Phase 0 — AGI test harness** (required before cagi struct refactor) — **`pbx3cagi/workingdocs/TEST_HARNESS.md`**
-2. **Phase S8** — fleet rebuild / backups / tenant move if urgent  
-3. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
-4. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
-5. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
-6. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
+1. **Phase S8** — fleet rebuild / IAM + `.env` preflight / **`NEW_INSTANCE_CHECKLIST.md`** — then **S8.5–S8.6** tenant migration runbook + export/import  
+2. **Phase R1** — call recordings **management** (API list/search/play + SPA panel; local disk first) — **`IMPLEMENTATION_PLAN.md`** § Phase R1  
+3. **Phase S7** — recordings **S3 offload** (mirror backup upload pattern; IAM on same node role as S8.3)  
+4. **pbx3cagi** — golden **`make test`** sign-off; **Phase 1.3+ refactor deferred** until S8 + R1 underway — **`REFACTOR_PLAN.md`**  
+5. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
+6. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
+7. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
+8. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
 
 ---
 
 ## Open items
 
-- [ ] **pbx3cagi Phase 0 — AGI test harness (required):** Offline scenario tests before Phase 1.1+ refactor. Pipe AGI env + argv to `pbx3cagi`; fixture **tenant** SQLite (golden copy); **AstDB** mock on AGI `DATABASE GET` (fixture `astdb.sqlite3` or key map); **transcript** assertions (`must` / `must-not` on stdout). First scenarios: CFIM local (no hold clip), CFIM external, empty forward. Deliverables 0.1–0.8 in **`pbx3cagi/workingdocs/TEST_HARNESS.md`**; gate in **`REFACTOR_PLAN.md`**. One process per scenario (production isolation); no FastAGI multiplexer.
+- [ ] **Phase S8 — Fleet instance lifecycle & tenant mobility (priority #1):** Consolidate instance (re)build (**`NEW_INSTANCE_CHECKLIST.md`**), harden **`onboard-fleet-instance.sh`** + IAM/`.env` preflight (**S8.1–S8.4** first), then **`TENANT_MIGRATION_RUNBOOK.md`** + export/import tooling (**S8.5–S8.6**). **Driver:** golden rebuild lost IAM + `.env`; backups invisible until fixed; tenant move is catalog-only today. See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** § Phase S8.
+
+- [ ] **Phase R1 — Call recordings management (local-first, priority #2):** Operator list/search/play/download from on-node wav files under `/opt/pbx3/media/recordings/…`. **pbx3api:** `GET /recordings` (tenant, date range, caller/callee), stream/download endpoints. **pbx3spa:** port **`sarkrecordings`** panel (see **`SAIL65_PANEL_PORT_PLAN.md`**). Capture already works (`pbx3cagi` SetRecord + tenant config); **no S3 required** for R1 v1. Spec: **`IMPLEMENTATION_PLAN.md`** § Phase R1. **Defer:** bulk delete UI, per-user listen permissions, `recordings` catalog DB sync.
+
+- [ ] **Phase S7 — Recordings S3 offload (priority #3):** Async PUT to `tenants/{shortuid}/recordings/media/…`, lifecycle tag, presigned play when local file aged off — mirror S5 backup pattern. Do after or parallel with R1 once **S8.3** IAM policy includes recordings prefix. Spec: **`IMPLEMENTATION_PLAN.md`** § Phase S7.
 
 - [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**; add **`pbx3-docs`** later. Maintain **`REPOS_AND_RELEASES.md`** (inventory, remotes, compatibility matrix). Update local clone remotes; keep **`pbx3-master/`** holding-folder layout. Tag first aligned release row in compatibility matrix when cutting public release.
 
 - [ ] **User guides — MkDocs site (`pbx3-docs`):** Published **installer + admin** how-tos (MkDocs Material + GitHub Pages), **not** developer docs. **`workingdocs/`** stays for humans/AI implementers. **Content map:** **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** (nav tree, page inventory, P1–P3 priorities, promote-from-workingdoc table). **Phase 1:** new repo, fix top-level **`nav:`** in `mkdocs.yml`, CI like **`sail6-docs`**. **Phase 2:** P1 pages (install, TLS, login, backup). **Phase 3+:** admin guide from demo script; fleet chapter after S8. Target URL: `docs.pbx.com` (or org Pages). Do not auto-publish `SESSION_HANDOFF`, audits, or `DEV_ENVIRONMENT.md`.
 
-- [ ] **Phase S8 — Fleet instance lifecycle & tenant mobility:** Consolidate instance (re)build (**`NEW_INSTANCE_CHECKLIST.md`**), harden **`onboard-fleet-instance.sh`** + IAM/`.env` preflight, **`TENANT_MIGRATION_RUNBOOK.md`** + export/import tooling. **Driver:** golden rebuild lost IAM + `.env`; backups invisible until fixed; tenant move is catalog-only today. See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** § Phase S8.
+- [ ] **pbx3cagi refactor (deferred — after S8 + R1 underway):** Phase 0 harness **built** on `main` (synthetic fixture, CFIM scenarios, **`TEST_RECIPE.md`**). Golden **`make test`** sign-off in progress. **Do not start Phase 1.1+ struct refactor** until fleet/recordings momentum established; run harness after each refactor step when resumed. Gate: **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**.
 
 - [ ] **Fleet catalog — SIP FQDN obscurity vs public S3 index:** Legacy ingress relies on **`fqdninspect`** (SIP INVITE URI string match on **5060**); dialable FQDNs are usually **not published** (sniffing/DNS can still expose them). Public **`catalog/instance-index.json`** aids admin discovery but can weaken that obscurity layer — **not** the same as Sanctum/API risk. **Policy:** v0/golden OK with eyes open; production MSP fleets → **Phase D private catalog** (auth-gated `GET` or signed URLs); minimize tenant FQDN enumeration in public JSON; use **`label`** + opaque **`id`**. See **`pbx3-directory/docs/DESIGN_RULES.md`** § *SIP FQDN obscurity vs public catalog*; **`OPS_S3_RUNBOOK.md`** § 5.3.
 
@@ -56,6 +62,8 @@
 ---
 
 ## Completed / deferred
+
+- [x] **pbx3cagi Phase 0 — AGI test harness (2026-07-04):** Deliverables 0.1–0.8 on **`main`**. Synthetic **`minimal-tenant-seed.sql`**; CFIM local/external/none scenarios; **`make test`**; **`TEST_RECIPE.md`**. Golden validation ongoing. Gate for Phase 1.1+ refactor when resumed.
 
 - [x] **Golden operator QA — runtime / CFIM / GenAst / pbx3cagi (2026-07-04):** **`goldenQA` → `main`** merged and branch deleted (pbx3, pbx3api, pbx3spa, pbx3cagi). **pbx3api:** empty runtime cfim/cfbs allowed; AstDB keys under extension **shortuid**; native AMI **DBGet/DBPut/DBDel**; **DBGetResponse** `Val:` parse fix. **pbx3:** GenClass conference heredoc + **shortuid** for greetings/confBridge. **pbx3cagi 1.0.0-2:** **CFCheck** uses **`strlen(cfnum)`** (local divert no comfort tone); amd64 + arm64 binaries in deb install tree. Golden **08jzwn** validated: CoS, ext-to-ext, CFIM, runtime save/display, GenAst, local CFIM divert audio. **SWOCLIP** OK provisionally; Runtime live SIP/latency partial.
 

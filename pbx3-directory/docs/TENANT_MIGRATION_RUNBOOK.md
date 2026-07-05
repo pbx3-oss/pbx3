@@ -14,7 +14,8 @@
 | Tenant **`cluster.id`** (KSUID) | **Keep** | Object rows reference tenant KSUID — preserve on import |
 | Tenant **`cluster.shortuid`** / **`pkey`** | Usually keep | Catalog paths use **shortuid** |
 | **`cluster.fqdn`** | Often unchanged | DNS A record must point to **new** node IP after cutover |
-| Recordings on S3 | **Stay** under `tenants/{shortuid}/recordings/` | **`move-tenant.sh`** does not copy prefix |
+| Recordings on S3 | **Stay** under `tenants/{shortuid}/recordings/` | **`move-tenant.sh`** does not copy prefix; implement **Phase S7** upload before move if recordings must survive local ageing |
+| Recordings on node only | Move with tenant DB | **Phase R1** operator access; export/import (**S8.6**) must include recording paths or re-point `rec_final_dest` |
 | Instance backups | Per **`instances/{ksuid}/backups/`** | Historical backups stay on source instance prefix |
 
 ---

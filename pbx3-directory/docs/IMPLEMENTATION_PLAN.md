@@ -29,10 +29,24 @@
 | **B — S3 contract** | Documented keys + JSON schemas for ops/S3 | Schemas + v1 tree in repo |
 | **C — Registrar** | One writer updates catalog + meta files | Script (manual invoke → install hook later) |
 | **D — S3 backup upload** | Node backups land under `instances/…/backups/` | Async PUT after existing `/opt/pbx3/bkup` |
-| **E+** | Recordings, CDN, fleet health, central auth | **ToDo** (below) |
+| **E — Recordings** | Operator find/play + S3 DR | **Phase R1** (local SPA/API) → **Phase S7** (S3 offload) |
 | **F — Fleet lifecycle** | Low-friction instance (re)build + tenant move | **Phase S8** — **`NEW_INSTANCE_CHECKLIST.md`**, **`TENANT_MIGRATION_RUNBOOK.md`**, onboard hardening |
 
 ---
+
+## Current priority (2026-07-04)
+
+Agreed product order — **pbx3cagi struct refactor deferred** until fleet + recordings have momentum:
+
+| Order | Phase | Focus |
+|-------|-------|--------|
+| **1** | **S8.1–S8.4** | Instance checklist, onboard hardening, fleet preflight (IAM + `.env`; backups visible after rebuild) |
+| **2** | **R1** | Call recordings **management** — API + SPA list/search/play from local disk |
+| **3** | **S7** | Recordings **S3 offload** — mirror S5 backup upload; extend IAM from S8.3 |
+| **4** | **S8.5–S8.6** | Tenant migration runbook + export/import tooling |
+| **—** | **pbx3cagi Phase 0** | **Built** on `main`; golden `make test` sign-off; Phase 1.3+ refactor when resumed |
+
+See **`pbx3/workingdocs/TODO.md`** § suggested order.
 
 ## High value (in scope for schemas + v1 layout)
 
@@ -251,9 +265,37 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 ---
 
-### Phase S7 — Recordings offload v1 (~2–3 weeks)
+### Phase R1 — Call recordings management (local-first) (~2–3 weeks)
+
+**Problem:** Capture and tenant config exist (`pbx3cagi` SetRecord, SPA tenant “Call recording” fields, files under `/opt/pbx3/media/recordings/…`) but operators have **no SPA panel** to search, listen, or download. Legacy **`sarkrecordings`** not ported; **no call-recordings API** in pbx3api (only IVR **`GreetingRecordController`**).
+
+**Principle (Rule 1):** R1 works **without S3** — same as telephony. S3 offload is **Phase S7**, not a blocker for operator UX.
+
+**Priority:** **#2** after **S8.1–S8.4** (fleet ops). Ship before or in parallel with **S7** upload work.
+
+| # | Task | Repo | Notes |
+|---|------|------|--------|
+| R1.1 | **`GET /recordings`** — list/search by tenant, date range, caller/callee | pbx3api | Index from filesystem + filename conventions (epoch in path/name); tenant scope via auth |
+| R1.2 | **`GET /recordings/{id}/stream`** (or `/download`) | pbx3api | Serve from local path when file exists |
+| R1.3 | **SPA recordings panel** — port **`sarkrecordings`** | pbx3spa | List, filters, inline play/download; UTC display per **`DESIGN_RULES.md`** |
+| R1.4 | **Nav + routes** | pbx3spa | Wire panel; help keys for search fields |
+| R1.5 | **Golden smoke** | ops | Place test calls with recording enabled; verify list/play |
+| R1.6 | **Optional:** reuse **`manageRecs.php`** logic or replace with API job for `recused` | pbx3 / pbx3api | Storage display on tenant panel already shows `recused` |
+
+**Out of scope R1 v1:** bulk delete UI, legal hold, per-user listen permissions (permissions Phase 1+), MySQL `recordings` catalog table, S3 “archived” badge (S7.7).
+
+**Exit criteria:**
+
+- [ ] Operator finds and plays a recording from golden without SSH or legacy UI.
+- [ ] API returns 404 cleanly when local file missing (S7 adds presigned fallback later).
+
+---
+
+### Phase S7 — Recordings S3 offload v1 (~2–3 weeks)
 
 **Principle (Rule 1):** Calls and recording capture work **without S3**. Upload is **async** after the wav exists on disk (mirror `InstanceBackupDirectoryUpload`).
+
+**Priority:** **#3** — after **R1** operator path exists (or parallel once **S8.3** IAM includes `tenants/…/recordings/*`). Tenant move (**S8**) assumes recordings may already live under `tenants/{shortuid}/recordings/` on S3 — see **`TENANT_MIGRATION_RUNBOOK.md`**.
 
 **On-node today:** tenant `rec_final_dest`, `rec_age` / `recmaxage` (days), spool under `/opt/pbx3/media/recordings/…` and Asterisk monitor paths — see `sqlite_create_tenant.sql`.
 
@@ -264,11 +306,13 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 | S7.3 | **`tenants/…/recordings/policy.json`** on first upload (`maxage_days` from tenant `recmaxage` or default) | pbx3api | Schema `retention-policy.v0.json` |
 | S7.4 | **S3 tag** `class=recording` + lifecycle rule (extend ops script or sibling `apply-recording-lifecycle-rule.sh`) | pbx3-directory/tools | Same pattern as backups; **do not** expire `meta.json` / catalog |
 | S7.5 | **IAM** — node role `PutObject` on `tenants/{hosted-tenant}/recordings/*` for tenants on that instance | ops | Per-node policy like backups |
-| S7.6 | **API playback** — `GET /recordings/{id}/play` returns presigned URL or streams via API when file only on S3 | pbx3api | CDR/search still uses **epoch** on node DB |
-| S7.7 | **SPA** — recording list shows UTC; badge “archived” if S3-only | pbx3spa | ISO display per `DESIGN_RULES.md` |
+| S7.6 | **API playback when S3-only** — presigned URL or stream via API when local file gone | pbx3api | Extends **R1.2**; CDR/search still uses **epoch** on node DB |
+| S7.7 | **SPA “archived” badge** when object is S3-only | pbx3spa | Extends **R1.3** list |
 | S7.8 | **Local retention unchanged** — `rec_age` still deletes from disk; S3 holds DR copy until lifecycle | design | Hybrid like backup option C |
 
 **Defer past S7:** `recordings.db` snapshot to S3, monthly `manifest-{yyyy}-{mm}.jsonl`, bulk Athena search, tenant backup zip under `tenants/…/backups/`.
+
+**Related:** **Phase R1** (local operator UX) — see above; ship before or alongside S7 upload.
 
 ---
 
@@ -330,15 +374,20 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 ### Suggested build order
 
 ```text
-  S5 backups complete  →  S6.1 manual onboard (done)  →  S6.4 onboard script  →  S6.2 Pages
-         │                         │                              │
-         └─────────────────────────┴──────────────────────────────┴──→  S7 recordings
-                                                                              │
-                                                                              └──→  S8 fleet lifecycle + tenant move  →  S9 polish
-                           S3 v1 exit review
+  S5 backups (done)  →  S6 onboard (done)
+         │
+         ├──→  S8.1–S8.4  fleet checklist + IAM/`.env` hardening     ← priority #1
+         │
+         ├──→  R1  recordings management (local API + SPA)           ← priority #2
+         │
+         ├──→  S7  recordings S3 offload (mirror S5; IAM w/ S8.3)   ← priority #3
+         │
+         └──→  S8.5–S8.6  tenant migration runbook + export/import  ← after S8.1–4 (+ R1/S7 as needed)
+
+  pbx3cagi Phase 0 harness: built on main; golden sign-off; Phase 1.3+ refactor deferred
 ```
 
-**Next session pick:** **Track B Phase 4** help QA (paused) · **S8** instance checklist + tenant migration (fleet friction) · or **S7** (recordings). S6.1 + S6.4 fleet onboard validated; golden rebuild exposed IAM/`.env` gaps → **S8**.
+**Next session pick:** **S8.1–S8.4** (instance checklist, onboard hardening) · **R1** (recordings SPA/API) · golden **`make test`** for pbx3cagi. S6.1 + S6.4 fleet onboard validated; golden rebuild exposed IAM/`.env` gaps → **S8**.
 
 ---
 
