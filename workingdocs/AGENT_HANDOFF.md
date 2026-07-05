@@ -47,46 +47,47 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-04)
+## Next agent session notes (2026-07-04, session end)
 
-**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. **`goldenQA`** merged and deleted (all repos).
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. Branches **`goldenQA`** and **`phase0`** deleted (all repos where they existed).
 
-### Priority order (agreed 2026-07-04)
-
-| # | Track | Doc |
-|---|--------|-----|
-| **1** | **S8.1–S8.4** — fleet checklist, IAM/`.env` hardening, backups visible after rebuild | **`IMPLEMENTATION_PLAN.md`** § S8, **`NEW_INSTANCE_CHECKLIST.md`** |
-| **2** | **R1** — call recordings management (local API + SPA) | **`IMPLEMENTATION_PLAN.md`** § Phase R1 |
-| **3** | **S7** — recordings S3 offload | **`IMPLEMENTATION_PLAN.md`** § S7 |
-| **4** | **S8.5–S8.6** — tenant migration + export/import | **`TENANT_MIGRATION_RUNBOOK.md`** |
-| **—** | **pbx3cagi** Phase 0 harness **built**; golden `make test`; struct refactor **deferred** | **`pbx3cagi/workingdocs/TEST_RECIPE.md`**, **`REFACTOR_PLAN.md`** |
-
-### Shipped
+### Shipped this session
 
 | Repo | Notes |
 |------|--------|
-| **pbx3api** | Runtime save: empty cfim/cfbs/ringdelay; AstDB **shortuid** keys + legacy cleanup; native AMI **DBGet/DBPut/DBDel**; **DBGetResponse** `Val:` parse for runtime read |
-| **pbx3** | GenClass: conference heredoc **`HERE;`**; greetings/confBridge use cluster **shortuid** |
-| **pbx3cagi** | **1.0.0-2** CFCheck fix; **Phase 0 harness** on `main` (synthetic fixture, `make test`, **`TEST_RECIPE.md`**) |
-| **pbx3spa** | No delta vs pre-QA **`main`** (CoS UI already merged) |
+| **pbx3cagi** | **Phase 0 AGI harness** on `main`: `PBX3CAGI_SQLITE_DB`, synthetic **`minimal-tenant-seed.sql`**, CFIM scenarios, `make test`, **`TEST_RECIPE.md`**. **1.0.0-2** CFCheck fix (amd64 + arm64). Struct refactor **deferred**. |
+| **pbx3** | Priority docs: **Phase R1** (recordings management) + **S8 → R1 → S7** order in **`IMPLEMENTATION_PLAN.md`**, **`TODO.md`**, **`AGENT_HANDOFF.md`**. **`TENANT_MIGRATION_RUNBOOK.md`** recordings cross-refs. |
+| **pbx3api** / **pbx3spa** | No code changes this session (golden QA from prior session already on `main`). |
+
+**Recent commits (pushed):** pbx3cagi `5921a9e`/`02074af`/`4428bc0`; pbx3 `3a36782`.
+
+### Priority order (canonical)
+
+| # | Track | Doc |
+|---|--------|-----|
+| **1** | **S8.1–S8.4** — fleet checklist, IAM/`.env` hardening | **`NEW_INSTANCE_CHECKLIST.md`**, **`IMPLEMENTATION_PLAN.md`** § S8 |
+| **2** | **R1** — call recordings management (local API + SPA) | **`IMPLEMENTATION_PLAN.md`** § Phase R1 |
+| **3** | **S7** — recordings S3 offload | **`IMPLEMENTATION_PLAN.md`** § S7 |
+| **4** | **S8.5–S8.6** — tenant migration + export/import | **`TENANT_MIGRATION_RUNBOOK.md`** |
+| **—** | **pbx3cagi** golden **`make test`** sign-off; Phase 1.3+ refactor when resumed | **`pbx3cagi/workingdocs/TEST_RECIPE.md`** |
 
 ### Golden / operator follow-up
 
-- **08jzwn:** pull **`main`** on pbx3, pbx3api, pbx3cagi; install **pbx3cagi 1.0.0-2** (or copy `pbx3cagi.arm64` + symlink).
-- **Deferred QA:** Extension Runtime live SIP IP/latency (phones); **SWOCLIP** create/edit parity (detail has toggle; create omits it).
-- Optional: **`extcode`** / **`iaxreg`** help rows on golden Help messages.
+- **Harness:** on golden Linux — `cd pbx3cagi-1.0.0/csource && make test` (see **`TEST_RECIPE.md`**). User running extended golden testing over next few days.
+- **Deploy:** **pbx3cagi 1.0.0-2** on **08jzwn** if not already installed.
+- **Deferred QA:** Extension Runtime live SIP; **SWOCLIP** create/edit parity.
 
 ### Resume
 
-1. **Product:** **S8.1–S8.4** → **R1** recordings panel/API → **S7** S3 offload → **S8.5–S8.6** tenant move.
-2. **pbx3cagi:** Golden **`make test`** (`TEST_RECIPE.md`); defer Phase 1.3+ refactor.
-3. **Deferred QA:** Extension Runtime live SIP; **SWOCLIP** create/edit parity.
+1. **S8.1–S8.4** — fleet ops (user priority).
+2. **R1** — recordings API + SPA panel (port **`sarkrecordings`**).
+3. Golden harness sign-off; then **S7** / **S8.5–S8.6** as planned.
 
 **Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
 
 ---
 
-## Prior session notes (2026-07-02, evening — docs & handoff)
+## Prior session notes (2026-07-04 — golden QA + harness mid-session)
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**. Documentation session — fleet/SIP catalog policy, MkDocs content map, session-end checklist. CoS extension assignment completed next session (2026-07-03).
 

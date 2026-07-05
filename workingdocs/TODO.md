@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-04 (priority: S8 fleet → R1 recordings → pbx3cagi refactor deferred)
+**Last updated:** 2026-07-04 (session end — Phase 0 done; S8 → R1 → S7 priority; `phase0` branch deleted)
 
 ### Suggested “what next?” order
 
