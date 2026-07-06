@@ -8,7 +8,7 @@
 
 **Validated example:** `bzy54n.pbx3.com` joined fleet bucket `08jzwn-pbx3` alongside golden `08jzwn.pbx3.com` (May 2026).
 
-**Related docs:** `OPS_S3_RUNBOOK.md` (bucket policy, CORS, golden node), `tools/README.md` (registrar scripts), `DESIGN_RULES.md` (fleet bucket naming), **`IMPLEMENTATION_PLAN.md`** § Phase S8.
+**Related docs:** `OPS_S3_RUNBOOK.md` (bucket policy, CORS, golden node), **`OPERATOR_MAC_SETUP.md`** (SSH + AWS CLI from Mac), `tools/README.md` (registrar scripts), `DESIGN_RULES.md` (fleet bucket naming), **`IMPLEMENTATION_PLAN.md`** § Phase S8.
 
 ---
 
@@ -375,6 +375,8 @@ Manual phases A–D above remain the **reference** if you need to debug step-by-
 
 ### Operator pre-flight (Mac)
 
+**Full guide:** **`OPERATOR_MAC_SETUP.md`** (golden SSH, AWS CLI, troubleshooting for operators and AI agents). Summary below.
+
 Run these on your **laptop or ops workstation** — not on the PBX EC2 instance.
 
 #### 1. Tools installed
@@ -426,7 +428,19 @@ Or put `org_bucket` and `region` in `~/.pbx3/fleet.yaml` (see below).
 
 #### 5. SSH to the new node (required)
 
-The script reads `globals` and configures `.env` over SSH. You need **non-interactive** key-based login:
+The script reads `globals` and configures `.env` over SSH. You need **non-interactive** key-based login.
+
+**Golden example** (Jeff’s Mac key path):
+
+```bash
+KEY=~/Documents/pemfiles/pbx3test.pem
+ssh -i "$KEY" -o BatchMode=yes ubuntu@08jzwn.pbx3.com \
+  'sqlite3 /opt/pbx3/db/sqlite.db "SELECT shortuid, fqdn, id FROM globals WHERE pkey='"'"'global'"'"';"'
+```
+
+Must return one line like `08jzwn|08jzwn.pbx3.com|3DmAsxePTWQZgynBYXE8obIRqEE` without a password prompt.
+
+Generic form:
 
 ```bash
 ssh -i ~/path/to/key.pem -o BatchMode=yes ubuntu@YOUR_NODE_HOST \
@@ -437,9 +451,9 @@ Must return one line like `bzy54n|bzy54n.pbx3.com|3E3gAOVG…` without a passwor
 
 Also have ready:
 
-- **EC2 instance id** (e.g. `i-0bb601e7b1253c3f5`) — for IAM instance profile attach
+- **EC2 instance id** — golden: `i-02ec2b05b5baacb5d`; look up with **`OPERATOR_MAC_SETUP.md`** § EC2 id
 - **`--ssh ubuntu@host`** (FQDN or public IP)
-- **`--ssh-key`** path if not in `~/.ssh/config`
+- **`--ssh-key`** path if not in `~/.ssh/config` (golden: `~/Documents/pemfiles/pbx3test.pem`)
 
 EC2 security group must allow **TCP 22** from your current IP.
 

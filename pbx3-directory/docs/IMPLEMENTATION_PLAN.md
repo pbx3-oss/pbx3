@@ -326,7 +326,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 | # | Task | Repo / owner | Notes |
 |---|------|----------------|-------|
-| **S8.1** | **`NEW_INSTANCE_CHECKLIST.md`** — single linear checklist | **pbx3-directory/docs** | Install → identity → IAM → `.env` → LE → backup/S3 smoke → catalog register; **rebuild/restore** subsection (identity patch, help seeds, re-attach IAM). Stub shipped; flesh out from golden + bzy54n lessons. |
+| **S8.1** | **`NEW_INSTANCE_CHECKLIST.md`** + **`REBUILD_INSTANCE_RUNBOOK.md`** + **`OPERATOR_MAC_SETUP.md`** | **pbx3-directory/docs** | Install → identity → IAM → `.env` → LE → backup/S3 smoke → catalog register; **rebuild** = S3 restore path; **Mac SSH/AWS** = operator guide for agents. |
 | **S8.2** | **Fleet-ready AMI spec** | docs + ops | Packages + `/up` + `globals.id`; **no** `PBX3_ORG_BUCKET` until onboard; optional baked `scripts/fleet-node-preflight.sh`. Pair with **INSTANCE_ONBOARDING.md** § Fleet-ready AMI. |
 | **S8.3** | **Harden `onboard-fleet-instance.sh`** | pbx3-directory/tools | Idempotent: IAM policy + role + **verify** `associate-iam-instance-profile`; write `.env` fleet block from template (strip empty AWS keys); run S3 list smoke; fail loudly on metadata 404. |
 | **S8.4** | **Install / fleet health validator** | pbx3api | Extend `validate_install_health` (or `pbx3:fleet-preflight`): `globals.id`, `PBX3_ORG_BUCKET`, instance-profile creds, `Storage::disk('pbx3_org')->directories(instances/{ksuid}/backups)`; surfaced in installer or `GET /up` detail. |

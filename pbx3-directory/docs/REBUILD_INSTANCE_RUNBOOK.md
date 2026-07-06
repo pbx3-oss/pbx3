@@ -9,6 +9,8 @@ Rebuild = empty EC2 → install stack → restore **latest S3 backup** → rejoi
 
 **Recovery point:** Time of the last successful S3 upload (not the moment the old instance failed).
 
+**Mac SSH + AWS CLI (read first):** **`OPERATOR_MAC_SETUP.md`** — golden host, key path, `aws sts`, common agent failures.
+
 ---
 
 ## Before you start (preconditions)
@@ -32,7 +34,13 @@ aws s3 ls s3://08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/backups/
 
 You must see at least one `{stamp}/` prefix with `backup.zip` inside.
 
-**Mac prerequisites:** AWS CLI with **ops/admin** credentials (`aws sts get-caller-identity` — ARN must **not** be `assumed-role/pbx3-node-…`), `jq`, `ssh`, pbx3 `.deb` + pbx3api source for the new node.
+**Mac prerequisites:** See **`OPERATOR_MAC_SETUP.md`** (SSH to golden, AWS CLI session, `PBX3_ORG_BUCKET`, ops vs node role). Quick check:
+
+```bash
+export PBX3_ORG_BUCKET=08jzwn-pbx3
+export AWS_DEFAULT_REGION=us-east-1
+aws sts get-caller-identity   # ARN must NOT contain assumed-role/pbx3-node-
+```
 
 ---
 
@@ -177,6 +185,7 @@ Catalog row (`instance-index.json`) usually **persists** in S3 — onboard verif
 
 | Topic | Doc |
 |-------|-----|
+| **Mac SSH + AWS CLI** | **`OPERATOR_MAC_SETUP.md`** |
 | Greenfield (new fleet node, new KSUID) | **`NEW_INSTANCE_CHECKLIST.md`** § A |
 | Install order | **`pbx3/workingdocs/INSTALL_SEQUENCE_UBUNTU.md`** |
 | S3 / IAM detail | **`OPS_S3_RUNBOOK.md`** |

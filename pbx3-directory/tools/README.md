@@ -1,5 +1,7 @@
 # pbx3-directory tools
 
+**Mac SSH + AWS CLI:** **`../docs/OPERATOR_MAC_SETUP.md`** — read before running scripts (golden key, `aws sts`, agent pitfalls).
+
 **Rebuild a failed EC2 (same KSUID):** start with **`../docs/REBUILD_INSTANCE_RUNBOOK.md`** — `fetch-latest-instance-backup.sh` → node `restore-backup-zip.sh` → `onboard-fleet-instance.sh`.
 
 **Add a new node to the fleet:** **`onboard-fleet-instance.sh`** — one Mac command after AMI boot.

@@ -9,6 +9,7 @@
 | Topic | Doc |
 |-------|-----|
 | **Rebuild from S3 (catastrophic EC2 loss)** | **`REBUILD_INSTANCE_RUNBOOK.md`** |
+| **Mac SSH + AWS CLI** | **`OPERATOR_MAC_SETUP.md`** |
 | Ubuntu install | **`pbx3/workingdocs/INSTALL_SEQUENCE_UBUNTU.md`** |
 | Fleet join (2nd+ node) | **`INSTANCE_ONBOARDING.md`** |
 | S3 / IAM / golden pattern | **`OPS_S3_RUNBOOK.md`** |
