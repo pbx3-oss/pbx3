@@ -49,6 +49,39 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-06, session end)
 
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**.
+
+### Shipped / validated this session
+
+| Item | Notes |
+|------|--------|
+| **S8 rebuild drill #2** | Lab `i-09b5e1853b40f10db` → restore `20260706T001010Z` → onboard → preflight → SPA OK; lab terminated |
+| **Golden restored** | Re-onboard `i-02ec2b05b5baacb5d`; IAM + S3 smoke on production |
+| **Runbook** | Phase 1: `apt upgrade`, `ssmtp` before pbx3 — **`15c5e9b`** on **`main`** |
+| **Package** | **`pbx3 0.0.3-21`** (restore + hostname sync) |
+
+### Golden (production)
+
+| Field | Value |
+|-------|--------|
+| EC2 | `i-02ec2b05b5baacb5d` · `54.236.153.81` |
+| FQDN | `08jzwn.pbx3.com` |
+| KSUID | `3DmAsxePTWQZgynBYXE8obIRqEE` |
+| IAM | `pbx3-node-08jzwn` |
+
+### Resume
+
+1. **S8.5–S8.6** — tenant migration runbook + export/import.
+2. **R1** — call recordings API + SPA panel.
+
+**SPA dev:** log in with **`https://08jzwn.pbx3.com:44300/api`** or set **`VITE_API_PROXY_TARGET`** to golden; Home IPs are under **System info → Network** (not the page title).
+
+**Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
+
+---
+
+## Next agent session notes (2026-07-06, morning) — historical
+
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. **`s8build`** merged and deleted (pbx3 + pbx3api).
 
 ### Shipped (S8.1–S8.4)
