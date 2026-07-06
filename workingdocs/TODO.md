@@ -1,24 +1,25 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-05 (session end — SPA hygiene deferred; next **S8**)
+**Last updated:** 2026-07-06 (session end — S8.1–S8.4 shipped; rebuild drill paused mid-flight)
 
 ### Suggested “what next?” order
 
-1. **Phase S8** — fleet rebuild / IAM + `.env` preflight / **`NEW_INSTANCE_CHECKLIST.md`** — then **S8.5–S8.6** tenant migration runbook + export/import  
-2. **Phase R1** — call recordings **management** (API list/search/play + SPA panel; local disk first) — **`IMPLEMENTATION_PLAN.md`** § Phase R1  
-3. **Phase S7** — recordings **S3 offload** (mirror backup upload pattern; IAM on same node role as S8.3)  
-4. **pbx3cagi** — **Phase 1.3+ struct refactor deferred** until S8 + R1 underway (Phase 0 **golden-signed-off**) — **`REFACTOR_PLAN.md`**  
-5. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
-6. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
-7. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
-8. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
+1. **Finish S8 rebuild drill** — new lab EC2 → install **pbx3 0.0.3-21** → restore S3 backup `20260706T001010Z` → onboard → `pbx3:fleet-preflight` — **`REBUILD_INSTANCE_RUNBOOK.md`**
+2. **Phase S8.5–S8.6** — tenant migration runbook + export/import tooling  
+3. **Phase R1** — call recordings **management** (API list/search/play + SPA panel; local disk first) — **`IMPLEMENTATION_PLAN.md`** § Phase R1  
+4. **Phase S7** — recordings **S3 offload** (mirror backup upload pattern; IAM on same node role as S8.3)  
+5. **pbx3cagi** — **Phase 1.3+ struct refactor deferred** until S8 + R1 underway (Phase 0 **golden-signed-off**) — **`REFACTOR_PLAN.md`**  
+6. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
+7. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
+8. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
+9. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
 
 ---
 
 ## Open items
 
-- [ ] **Phase S8 — Fleet instance lifecycle & tenant mobility (priority #1):** Consolidate instance (re)build (**`NEW_INSTANCE_CHECKLIST.md`**), harden **`onboard-fleet-instance.sh`** + IAM/`.env` preflight (**S8.1–S8.4** first), then **`TENANT_MIGRATION_RUNBOOK.md`** + export/import tooling (**S8.5–S8.6**). **Driver:** golden rebuild lost IAM + `.env`; backups invisible until fixed; tenant move is catalog-only today. See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** § Phase S8.
+- [ ] **Phase S8 — Fleet instance lifecycle & tenant mobility (priority #1):** **S8.1–S8.4 shipped on `main`** (`REBUILD_INSTANCE_RUNBOOK.md`, `fetch-latest-instance-backup.sh`, `restore-backup-zip.sh`, `sync-hostname-from-globals.sh`, onboard hardening, **`pbx3:fleet-preflight`**). **In progress:** second full rebuild drill — lab EC2 terminated; launch new **`t4g.micro`** (no IAM at launch), install **`pbx3 0.0.3-21`**, restore backup **`20260706T001010Z`**, onboard, preflight. **Then:** **`TENANT_MIGRATION_RUNBOOK.md`** + export/import (**S8.5–S8.6**). See **`IMPLEMENTATION_PLAN.md`** § Phase S8.
 
 - [ ] **Phase R1 — Call recordings management (local-first, priority #2):** Operator list/search/play/download from on-node wav files under `/opt/pbx3/media/recordings/…`. **pbx3api:** `GET /recordings` (tenant, date range, caller/callee), stream/download endpoints. **pbx3spa:** port **`sarkrecordings`** panel (see **`SAIL65_PANEL_PORT_PLAN.md`**). Capture already works (`pbx3cagi` SetRecord + tenant config); **no S3 required** for R1 v1. Spec: **`IMPLEMENTATION_PLAN.md`** § Phase R1. **Defer:** bulk delete UI, per-user listen permissions, `recordings` catalog DB sync.
 
@@ -64,6 +65,8 @@
 ---
 
 ## Completed / deferred
+
+- [x] **Phase S8.1–S8.4 — fleet rebuild tooling (2026-07-05/06):** **`s8build` → `main`** (pbx3 + pbx3api); branch deleted. Runbook **`REBUILD_INSTANCE_RUNBOOK.md`**, Mac ops **`OPERATOR_MAC_SETUP.md`**, S3 fetch + node restore + hostname sync, onboard IAM fail-fast, **`pbx3:fleet-preflight`**. First full lab rebuild on **`i-09272d75c5c410038`** validated (restore, onboard, SPA via proxy). **`pbx3 0.0.3-21`** on **`main`** (includes restore scripts). Lab torn down; golden **`i-02ec2b05b5baacb5d`** retains IAM + DNS.
 
 - [x] **pbx3cagi Phase 0 — AGI test harness (2026-07-04):** Deliverables 0.1–0.8 on **`main`**. Synthetic **`minimal-tenant-seed.sql`**; CFIM local/external/none scenarios; **`make test`**; **`TEST_RECIPE.md`**. **Golden 08jzwn signed off:** default seed fixture and **`PBX3CAGI_SQLITE_DB=/opt/pbx3/db/sqlite.rdonly.db`** — all scenarios PASS. Gate cleared for Phase 1.1+ refactor when product priority allows.
 

@@ -47,7 +47,51 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-05, session end)
+## Next agent session notes (2026-07-06, session end)
+
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. **`s8build`** merged and deleted (pbx3 + pbx3api).
+
+### Shipped (S8.1–S8.4)
+
+| Item | Location |
+|------|----------|
+| Rebuild runbook | **`pbx3-directory/docs/REBUILD_INSTANCE_RUNBOOK.md`** |
+| Mac SSH/AWS guide | **`pbx3-directory/docs/OPERATOR_MAC_SETUP.md`** |
+| Fetch latest S3 backup | **`pbx3-directory/tools/fetch-latest-instance-backup.sh`** |
+| Node restore + hostname sync | **`pbx3-1/opt/pbx3/scripts/restore-backup-zip.sh`**, **`sync-hostname-from-globals.sh`** |
+| Onboard hardening | **`pbx3-directory/tools/lib/onboard-common.sh`** |
+| Fleet preflight | **`pbx3api`** — `pbx3:fleet-preflight`, **`FleetPreflightService`** |
+| Package | **`pbx3 0.0.3-21`** on **`main`** (`2e018f4`) — use for new lab install |
+
+### Fleet reference (golden test, us-east-1)
+
+| | Golden | Lab (drill) |
+|--|--------|-------------|
+| FQDN | `08jzwn.pbx3.com` | same identity after restore |
+| KSUID | `3DmAsxePTWQZgynBYXE8obIRqEE` | |
+| EC2 | `i-02ec2b05b5baacb5d` (`54.236.153.81`) | **terminated** `i-09272d75c5c410038` |
+| Bucket | `08jzwn-pbx3` | |
+| S3 backup (use) | `20260706T001010Z` | |
+
+DNS still → golden. IAM **`pbx3-node-08jzwn`** on golden after lab teardown.
+
+### Golden / operator follow-up
+
+- Golden on **`0.0.3-21`** (user built/pushed). Optional `apt install` on golden if not already upgraded.
+- Mac **`pbx3spa/.env.development`**: revert **`VITE_API_PROXY_TARGET`** to **`https://08jzwn.pbx3.com:44300`** if still pointing at old lab IP.
+
+### Resume
+
+1. Launch new lab EC2: **`t4g.micro`**, AMI **`ami-09f7444a9a9604198`**, SG **`sg-0dc14081063abb41f`**, key **`pbx3test`**, **no IAM profile**.
+2. Phase 1 — `apt install ./pbx3_0.0.3-21_all.deb`, deploy pbx3api, installers, `/up` → 200.
+3. Phases 2–4 per **`REBUILD_INSTANCE_RUNBOOK.md`** (same S3 backup; onboard with new instance id).
+4. `pbx3:fleet-preflight` + SPA smoke via Vite proxy to new IP.
+
+**Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
+
+---
+
+## Next agent session notes (2026-07-05, session end) — historical
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. Docs-only session; no code changes.
 
