@@ -7,6 +7,22 @@
 
 **Manual baseline:** Two full lab rebuilds validated (2026-07-05/06): `fetch-latest-instance-backup.sh` → `restore-backup-zip.sh` → `onboard-fleet-instance.sh` → `pbx3:fleet-preflight` → SPA smoke. DNS/LE cutover deferred as routine ops.
 
+**Agent-assisted rebuild (Mode 4):** The same path was executed end-to-end by an **AI coding agent** (Cursor/Codex) reading in-repo docs and running Mac/node scripts — validated as a practical **Tier B** product option before full orchestrator automation. See § Deployment modes — Mode 4.
+
+---
+
+## Product tiers (intentional)
+
+| Tier | Name | What the customer does | What ships in git |
+|------|------|------------------------|-------------------|
+| **A** | Manual runbook | Follow **`REBUILD_INSTANCE_RUNBOOK.md`**; run scripts by hand | Runbook + `pbx3-directory/tools/*` + node scripts |
+| **B** | **Agent-assisted** | Launch/terminate EC2 in AWS console; prompt an AI agent to execute the runbook | Tier A + **`workingdocs/`** (`AGENT_HANDOFF.md`, `OPERATOR_MAC_SETUP.md`, `SESSION_END_CHECKLIST.md`) |
+| **C** | Orchestrated (S8.9) | SPA rebuild wizard; orchestrator launches EC2 and IAM | Future orchestrator + SPA panel |
+
+**Distribution:** `workingdocs/` and **`pbx3-directory/docs/`** are part of the git packages — not a separate doc site — so Tier B works out of the box for customers using AI-assisted IDEs.
+
+Tier **B** does not replace Tier **C**; many MSPs may stay on B until scale justifies orchestrator investment.
+
 ---
 
 ## Vision
@@ -190,9 +206,62 @@ Orchestrator v0: SPA generates **CloudFormation / launch template link** with Us
 
 Lower automation, no AWS creds in product — good **Phase B** milestone.
 
-### Mode 3 — Manual runbook (today)
+### Mode 3 — Manual runbook
 
-**`REBUILD_INSTANCE_RUNBOOK.md`** — reference implementation for support and regression.
+**`REBUILD_INSTANCE_RUNBOOK.md`** — operator runs each phase; reference for support and regression.
+
+### Mode 4 — Agent-assisted rebuild (Tier B, available now)
+
+Human + **AI agent** executes Mode 3. The agent reads in-repo docs and runs the same scripts; the human retains **approval gates** for destructive or account-level actions.
+
+```text
+Operator (AWS console)     AI agent (Mac + SSH)              Node
+        │                          │                          │
+   Launch EC2 ──────────────────────┼── Phase 1 install ───────►│
+        │                          ├── fetch S3 / restore ────►│
+        │                          ├── onboard-fleet-instance ─►│
+   Terminate old (optional) ◄──────┼── preflight + SPA smoke ──►│
+   DNS cutover (optional)   ◄──────┘                          │
+```
+
+**Agent read order:**
+
+1. **`pbx3/workingdocs/AGENT_HANDOFF.md`** § Next agent session notes  
+2. **`REBUILD_INSTANCE_RUNBOOK.md`** (this path)  
+3. **`OPERATOR_MAC_SETUP.md`** (Mac AWS/SSH; ops identity rules)  
+4. **`pbx3/workingdocs/TODO.md`** (priorities only if scope expands)
+
+**Kickoff prompt (copy for a new agent session):**
+
+```text
+Rebuild fleet node from S3 — follow REBUILD_INSTANCE_RUNBOOK.md on main.
+Instance KSUID: {ksuid}. Org bucket: {bucket}. Region: {region}.
+Use latest S3 backup unless I specify a stamp.
+Ask before: terminating EC2, DNS cutover, IAM-impacting changes on production.
+After restore: pbx3:fleet-preflight must be all green before we call it done.
+```
+
+**Human responsibilities (not delegated to agent):**
+
+| Action | Why |
+|--------|-----|
+| Launch / terminate EC2 | AWS console or approved automation; explicit confirm |
+| Hold Mac ops AWS credentials | Never on node; see **`OPERATOR_MAC_SETUP.md`** |
+| DNS / LE cutover | Customer DNS or Route53; optional for lab drill |
+| `git commit` / production package bumps | Unless operator explicitly requests |
+
+**Agent responsibilities:**
+
+- `git pull` on `main`; run **`fetch-latest-instance-backup.sh`**, **`restore-backup-zip.sh`**, **`onboard-fleet-instance.sh`** from Mac  
+- SSH Phase 1 install steps when no fleet AMI yet  
+- Verify **`pbx3:fleet-preflight`**; report KSUID / hostname / public IP  
+- Re-onboard production node if IAM moved to lab during drill  
+
+**Validated:** Golden test fleet rebuild drills **2026-07-05/06** (pbx3 **0.0.3-21**).
+
+**Limitations:** Requires operator Mac with AWS CLI + SSH; agent behaviour varies by tool; no central job audit log (chat + git handoff instead).
+
+**Future:** Optional `pbx3-directory/tools/rebuild-instance-agent-checklist.sh` — non-interactive phase gates without an LLM (same steps, scripted prompts).
 
 ---
 
@@ -212,6 +281,7 @@ Lower automation, no AWS creds in product — good **Phase B** milestone.
 
 | Phase | Deliverable | Customer touch |
 |-------|-------------|----------------|
+| **—** | **Mode 4 agent-assisted** (Tier B) | Docs + kickoff prompt; **available now** on `main` |
 | **B1** | `pbx3-first-boot-rebuild.sh` + systemd; doc in **`REBUILD_INSTANCE_RUNBOOK.md`** § Automated | Launch template + UserData; no SPA |
 | **B2** | Fleet AMI build pipeline; **`INSTANCE_ONBOARDING.md`** AMI section | Pick AMI at launch |
 | **B3** | Orchestrator MVP: `POST rebuild` + IAM + launch only | Semi-auto |

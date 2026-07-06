@@ -11,6 +11,18 @@ Rebuild = empty EC2 → install stack → restore **latest S3 backup** → rejoi
 
 **Mac SSH + AWS CLI (read first):** **`OPERATOR_MAC_SETUP.md`** — golden host, key path, `aws sts`, common agent failures.
 
+**Agent-assisted rebuild (Tier B):** An AI agent can execute this runbook end-to-end using in-repo docs and tools — see **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4. Kickoff for a new agent session:
+
+```text
+Rebuild fleet node from S3 — follow REBUILD_INSTANCE_RUNBOOK.md on main.
+Instance KSUID: {ksuid}. Org bucket: {bucket}. Region: {region}.
+Use latest S3 backup unless I specify a stamp.
+Ask before: terminating EC2, DNS cutover, IAM-impacting changes on production.
+After restore: pbx3:fleet-preflight must be all green before we call it done.
+```
+
+Read first: **`pbx3/workingdocs/AGENT_HANDOFF.md`** § Next agent session notes → this file → **`OPERATOR_MAC_SETUP.md`**.
+
 ---
 
 ## Before you start (preconditions)

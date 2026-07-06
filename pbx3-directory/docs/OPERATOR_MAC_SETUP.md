@@ -4,7 +4,7 @@
 
 **Use for:** `fetch-latest-instance-backup.sh`, `onboard-fleet-instance.sh`, registrar scripts, rebuild dry-runs, and manual S3/IAM ops.
 
-**Related:** **`REBUILD_INSTANCE_RUNBOOK.md`**, **`INSTANCE_ONBOARDING.md`** § Operator pre-flight, **`OPS_S3_RUNBOOK.md`**.
+**Related:** **`REBUILD_INSTANCE_RUNBOOK.md`** (agent kickoff prompt § Tier B), **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4, **`INSTANCE_ONBOARDING.md`** § Operator pre-flight, **`OPS_S3_RUNBOOK.md`**.
 
 ---
 
