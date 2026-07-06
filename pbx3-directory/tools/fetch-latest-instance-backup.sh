@@ -80,7 +80,7 @@ PY
 resolve_latest_stamp() {
   local prefixes
   prefixes="$(aws_fetch s3 ls "s3://${BUCKET}/instances/${INSTANCE_ID}/backups/" \
-    | awk '{print $2}' | tr -d '/' | sort || true)"
+    | awk '/ PRE / { gsub(/\//, "", $2); print $2 }' | sort || true)"
   if [[ -z "$prefixes" ]]; then
     echo "fetch-latest-instance-backup: no backups under instances/${INSTANCE_ID}/backups/" >&2
     exit 1
@@ -102,7 +102,7 @@ OUTFILE="${OUTPUT_DIR}/pbx3bak.${EPOCH}.zip"
 S3_KEY="instances/${INSTANCE_ID}/backups/${STAMP}/backup.zip"
 
 echo "fetch-latest-instance-backup: s3://${BUCKET}/${S3_KEY} -> ${OUTFILE}" >&2
-aws_fetch s3 cp "s3://${BUCKET}/${S3_KEY}" "$OUTFILE"
+aws_fetch s3 cp "s3://${BUCKET}/${S3_KEY}" "$OUTFILE" --only-show-errors >&2
 
 if [[ ! -s "$OUTFILE" ]]; then
   echo "fetch-latest-instance-backup: download failed or empty file" >&2
