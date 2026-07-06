@@ -36,6 +36,11 @@ if [ -x "$NORM" ] && [ -f /opt/pbx3/db/sqlite.db ]; then
 	"$NORM" || true
 fi
 
+# Ensure /etc/asterisk/*.conf symlinks point at /opt/pbx3/etc/asterisk/configs/ (installer.sh does this on first provision; apt upgrade alone does not re-run installer).
+if command -v php >/dev/null 2>&1 && [ -f "$SYSPATH/php/utilities/runLinker.php" ]; then
+	php "$SYSPATH/php/utilities/runLinker.php" >/dev/null 2>&1 || true
+fi
+
 if [ ! -f /opt/pbx3/db/sqlite.db ]; then
 	cat <<'EOF'
 

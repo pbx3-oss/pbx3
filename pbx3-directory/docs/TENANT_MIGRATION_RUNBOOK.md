@@ -72,6 +72,14 @@ Fleet health:
 cd /opt/pbx3api && sudo -u www-data php artisan pbx3:fleet-preflight
 ```
 
+**Asterisk config symlinks:** `installer.sh` runs `runLinker.php` on first provision. **`apt install` / upgrade** also runs it from package **postinst** (from **0.0.3-22**). If a node was upgraded **before** that fix and extensions do not register after Commit, run once:
+
+```bash
+sudo php /opt/pbx3/php/utilities/runLinker.php
+```
+
+Then **Commit** again (or `core reload`). Verify e.g. `ls -l /etc/asterisk/pjsip.conf` → `/opt/pbx3/etc/asterisk/configs/pjsip.conf`. This is **not** run on every Commit — only install/upgrade (or manual repair).
+
 Re-onboard if IAM/`.env` drifted while the node was down — **`onboard-fleet-instance.sh`** (see **`INSTANCE_ONBOARDING.md`**).
 
 **Do not** run `reloader.sh` on a configured node.
@@ -154,6 +162,22 @@ sudo -u www-data php artisan tenant:import "$ZIP" --replace
 
 Verify in SPA (proxy to bzy54n): tenant list, extensions, inbound routes, queues.
 
+**Firewall (automatic):** `tenant:import` runs **`update-fqdn-inline.sh`** after the DB merge (same hook as tenant create/update/delete in the API). That rebuilds `/etc/shorewall/pbx3_inline_fqdn` from **`cluster.fqdn`** and restarts Shorewall. No manual firewall step is required after import.
+
+**Prerequisite:** Destination **`globals.fqdninspect`** should be **`YES`** if the fleet uses SIP URI string matching on UDP/TCP 5060 (golden **08jzwn** has this on). When **`fqdninspect`** is **`NO`**, the script clears inline FQDN rules and public SIP is limited to the VPC CIDR — phones on the internet will not register. Set via SPA → System Globals → “Filter my FQDN for SIP?” or:
+
+```bash
+sudo sqlite3 /opt/pbx3/db/sqlite.db "UPDATE globals SET fqdninspect='YES';"
+sudo /opt/pbx3/scripts/update-fqdn-inline.sh
+```
+
+Confirm rules after import:
+
+```bash
+sudo cat /etc/shorewall/pbx3_inline_fqdn
+sudo iptables -L net-fw -n | grep -i string
+```
+
 **Trunks:** Create or map trunks on **bzy54n** so outbound route `path1`…`path4` resolve. Trunks are **not** in the export zip.
 
 ---
@@ -164,6 +188,33 @@ On **bzy54n** (and later on **08jzwn** after source cleanup):
 
 1. SPA → **Commit** (runs `genAst.sh` + reload)
 2. Place a test call on **bzy54n** before DNS cutover (use node API URL or hosts override)
+
+### Troubleshooting: extensions not registering after Commit
+
+**Symptom:** DB and SPA show extensions; Asterisk does not (UDP REGISTER fails or ext-to-ext does nothing).
+
+**Cause:** Generated configs live under `/opt/pbx3/etc/asterisk/configs/`, but Asterisk reads `/etc/asterisk/`. Those paths are connected by **symlinks** from `runLinker.php` (from `installer.sh` on first provision, and from package **postinst** on `apt upgrade` from **0.0.3-22** onward). Nodes upgraded earlier may still have stock `/etc/asterisk` files — a one-time gap, not something Commit should fix on every run.
+
+**Fix (once per node if symlinks were never created):**
+
+```bash
+sudo php /opt/pbx3/php/utilities/runLinker.php
+```
+
+Then **Commit** again (SPA) or `sudo asterisk -rx 'core reload'`. Verify e.g. `ls -l /etc/asterisk/pjsip.conf` points at `/opt/pbx3/etc/asterisk/configs/pjsip.conf`.
+
+### Troubleshooting: phones blocked after import (stale or missing firewall STRING rules)
+
+**Symptom:** Extensions in DB; REGISTER fails from the internet; `iptables -L net-fw` shows golden/source FQDNs, or no STRING rules at all.
+
+**Cause:** Stale **`pbx3_inline_fqdn`** from a clone/restore (rules from another node), or **`fqdninspect=NO`** so inline rules are empty. Import now regenerates rules automatically; older pbx3api builds did not.
+
+**Fix:**
+
+1. Ensure **`globals.fqdninspect=YES`** on the destination (see Phase 3).
+2. Re-run import (or once manually): `sudo /opt/pbx3/scripts/update-fqdn-inline.sh`
+3. Verify **`cluster.fqdn`** for imported tenants appears in `pbx3_inline_fqdn` (two lines per FQDN: TCP + UDP 5060).
+4. Phones must send the tenant hostname in SIP (not IP-only) for STRING match to pass.
 
 ---
 
@@ -184,7 +235,7 @@ Per **`LETSENCRYPT_PER_TENANT_FQDN.md`** §4.2 / **`TLS_IMPLEMENTATION_STEPS.md`
 
 1. **bzy54n:** Certificates → **Sync with tenant list** (tenant FQDN must be in SANs)
 2. **08jzwn:** After tenant removed on source → **Sync** to drop moved tenant FQDN from cert
-3. **Commit** on both if firewall inline FQDN list changed
+3. **Commit** on both after cert sync (import/delete already refresh firewall inline FQDN rules)
 
 ---
 

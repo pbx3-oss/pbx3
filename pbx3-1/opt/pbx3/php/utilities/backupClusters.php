@@ -159,8 +159,7 @@ function createTenantMiniDb($dbh,$backupDb,$tenantRow) {
 		"page",
 		"meetme",
 		"queue",
-		"route",
-		"users"
+		"route"
 	);
 
 	$tenantId = $tenantRow['id'];

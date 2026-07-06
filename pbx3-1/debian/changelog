@@ -1,3 +1,10 @@
+pbx3 (0.0.3-22) noble; urgency=medium
+
+  * postinst: run runLinker.php on install/upgrade so /etc/asterisk symlinks
+    to /opt/pbx3/etc/asterisk/configs/ without re-running installer.sh
+
+ -- KOKO <admin@aelintra.com>  Mon, 07 Jul 2026 12:00:00 +0000
+
 pbx3 (0.0.3-21) noble; urgency=medium
 
   * bump to -21 for S8 restore changes
