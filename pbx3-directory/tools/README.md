@@ -118,6 +118,25 @@ Updates tenant meta for a new hosting instance; sets `moved_at` and `previous_in
   --cname f34ck1.pbx3.com
 ```
 
+## Tenant export / import (S8.6)
+
+Run on the **PBX node** (not Mac). See **`../docs/TENANT_MIGRATION_RUNBOOK.md`**.
+
+```bash
+# Source node — export one tenant (shortuid, pkey, or cluster KSUID)
+cd /opt/pbx3api
+sudo -u www-data php artisan tenant:export affcot
+sudo -u www-data php artisan tenant:export affcot --include-recordings
+
+# Copy pbx3tenant.{shortuid}.{epoch}.zip to destination /opt/pbx3/bkup/
+
+# Destination node — import (preserves cluster.id KSUID)
+sudo -u www-data php artisan tenant:import /opt/pbx3/bkup/pbx3tenant.affcot.*.zip
+sudo -u www-data php artisan tenant:import /opt/pbx3/bkup/pbx3tenant.affcot.*.zip --replace
+```
+
+Zip layout: `manifest.json`, `tenant.sqlite.db`, optional `media/greetings/{shortuid}/`, `media/recordings/`. Trunks are **not** exported (instance-owned).
+
 ## upload-instance-backup.sh (Phase 4)
 
 Uploads a local `pbx3bak.{unixtime}.zip` to `instances/{ksuid}/backups/{stamp}/` with manifest + policy + meta update. Same layout as pbx3api async upload.

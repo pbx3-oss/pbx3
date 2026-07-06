@@ -17,10 +17,11 @@
 
 /**
  *  Backup builder
- *  splits the current (or given) DB into a bunch of "mini" DBs, one for each Tenent 
+ *  splits the current (or given) DB into a bunch of "mini" DBs, one for each Tenant 
  *  then it calls the dumper for each DB
  *  finally, it gathers all the other stuff together and zips it  
  *     
+ *  Prefer tenant:export (pbx3api artisan) for fleet moves — see TENANT_MIGRATION_RUNBOOK.md.
  */
 
  require_once __DIR__ . "/../config.php";
@@ -28,7 +29,7 @@
 
 $bfolder = BACKUPS;
 $sfolder = SNAPSHOTS;
-$tenant = "";
+$filterTenant = "";
 
 
 $shortopts = "";
@@ -53,11 +54,7 @@ if (in_array("inputdb",$options)) {
 
 if (in_array("tenant",$options)) {
 	if ($options["tenant"]) {	
-		if (!preg_match("/^[a-zA-Z0-9]{27}$/",$options["tenant"])) {
-			echo "Tenant format is not a valid KSUID - ^[a-zA-Z0-9]{27}\$ \n";
-			exit;
-		}
-		$tenant = $options["tenant"];
+		$filterTenant = $options["tenant"];
 	}
 }
 
@@ -80,6 +77,7 @@ $sqlitedb = "sqlite:" . SYSDB;
 /*** connect to SQLite database ***/
 try {
 	$dbh = new PDO($sqlitedb);
+	$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 }
 catch (Exception $e) {
 	echo "Oops failed to open $sqlitedb" . " $e\n";
@@ -90,37 +88,61 @@ catch (Exception $e) {
  * get a list of tenants
  */
 try { 
-	$tenants = $dbh->query("select id,pkey from cluster")->fetchall();
+	$tenants = $dbh->query("select id, shortuid, pkey from cluster")->fetchall(PDO::FETCH_ASSOC);
 }
 catch (Exception $e) {
 	echo "Oops on tenant list fetch " . " $e\n";
 	exit(8);
 }
  
-foreach($tenants as $tenant) {
+foreach($tenants as $tenantRow) {
 // ignore the default tenant - it always belongs to the instance
-	if ($tenant['pkey'] == "default") {
+	if ($tenantRow['pkey'] == "default") {
 		continue;
-	}	
-	$backupDb = establishTenantFolders($tenant['id']);
-	createTenantMiniDb($dbh,$backupDb,$tenant['id']);
+	}
+	if ($filterTenant !== "") {
+		if ($filterTenant !== $tenantRow['id']
+			&& $filterTenant !== $tenantRow['shortuid']
+			&& $filterTenant !== $tenantRow['pkey']) {
+			continue;
+		}
+	}
+	$backupDb = establishTenantFolders($tenantRow['id']);
+	createTenantMiniDb($dbh,$backupDb,$tenantRow);
 }
 
 exit;
+
+/**
+ * Resolve cluster identifiers stored in tenant rows (shortuid, legacy pkey, or KSUID).
+ *
+ * @param PDO $dbh
+ * @param array $tenantRow cluster id/shortuid/pkey
+ * @return array
+ */
+function clusterAliasesForTenant($dbh, $tenantRow) {
+	$aliases = array();
+	foreach (array('pkey', 'shortuid', 'id') as $col) {
+		if (!empty($tenantRow[$col])) {
+			$aliases[$tenantRow[$col]] = true;
+		}
+	}
+	return array_keys($aliases);
+}
 
 /**
  * createTenantMiniDb
  *
  * @param handle $dbh - sqlite handle
  * @param string $backupDb - path to the backup db
- * @param string $tenant - name of the tenant to backup
+ * @param array $tenantRow - cluster row (id, shortuid, pkey)
  * @return void
  * run a series of selections on the main db and insert them into the tenantdb
  * 
  */
-function createTenantMiniDb($dbh,$backupDb,$tenant) {
+function createTenantMiniDb($dbh,$backupDb,$tenantRow) {
 /**
- * list of tables to split into each miniDb
+ * list of tables to split into each miniDb (no trunks — instance-owned)
  */
 	$tablesToSplit = array(
 		"agent",
@@ -138,9 +160,12 @@ function createTenantMiniDb($dbh,$backupDb,$tenant) {
 		"meetme",
 		"queue",
 		"route",
-		"trunks",
 		"users"
 	);
+
+	$tenantId = $tenantRow['id'];
+	$aliases = clusterAliasesForTenant($dbh, $tenantRow);
+	$placeholders = implode(',', array_fill(0, count($aliases), '?'));
 
 /**
  * first, attach the new target db to our session
@@ -158,8 +183,8 @@ function createTenantMiniDb($dbh,$backupDb,$tenant) {
  * 	Insert the cluster row upon which all the other table rows depend for their RI
  */
 	try {
-		$dbh->query(
-			"INSERT INTO backup.cluster SELECT * from cluster WHERE id='$tenant' ");
+		$stmt = $dbh->prepare("INSERT INTO backup.cluster SELECT * from cluster WHERE id = ?");
+		$stmt->execute(array($tenantId));
 	}
 	catch (Exception $e) {
 		echo "Oops on tenant insert to backup DB $e\n";
@@ -172,8 +197,9 @@ function createTenantMiniDb($dbh,$backupDb,$tenant) {
 	foreach($tablesToSplit as $key => $table ) {
 		echo "table is $table \n"; 
 		try {
-			$dbh->query(
-				"INSERT INTO backup.$table SELECT * from $table WHERE cluster='$tenant' ");
+			$stmt = $dbh->prepare(
+				"INSERT INTO backup.$table SELECT * from $table WHERE cluster IN ($placeholders)");
+			$stmt->execute($aliases);
 		}
 		catch (Exception $e) {
 			echo "Oops on $table insert $e\n";
@@ -234,4 +260,3 @@ function establishTenantFolders($tenant) {
 
 	return $backupDb;
 }
-
