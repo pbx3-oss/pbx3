@@ -357,6 +357,11 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 | S9.2 | Optional object tags `org`, `instance_id`, `tenant` on PUT (in addition to `class`) |
 | S9.3 | `postinst` registrar hook (Phase 5) |
 | S9.4 | Mark `S3_LAYOUT_PROPOSAL.md` **implemented** sections vs **planned** in header |
+| **S9.5** | **Snapshots SPA panel** | **pbx3spa** | Split **`SnapshotsView`** + `/snapshots` nav; **`BackupView`** = archives only (local + S3). See **`SIDEBAR_NAV_GROUPING.md`**. |
+| **S9.6** | **Snapshot on Commit** | **pbx3api** | After successful **`syscommands/commit`** (`genAst.sh`), call **`create_new_snapshot()`**; legacy **`snap.sh`** / **`GenClass`** path is stubbed — do not rely on it. |
+| **S9.7** | **Snapshot FIFO retention** | **pbx3api** (+ optional **pbx3** script) | Keep newest **9** under `/opt/pbx3/snap/` (mirror backup option C local leg); env **`PBX3_SNAPSHOT_MAX_COUNT`**; run on commit + manual `snapshots/new`. Revive or replace commented logic in **`snap.sh`**. |
+
+**Snapshots vs backups:** Snapshots = quick DB rollback around Commit; backups = full DR zip + S3. Do not merge panels.
 
 ---
 

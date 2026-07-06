@@ -1,22 +1,25 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-06 (session end — S8 rebuild drill complete; next **S8.5–S8.6**)
+**Last updated:** 2026-07-06 (snapshots UX + commit-on-commit backlog added)
 
 ### Suggested “what next?” order
 
 1. **Phase S8.5–S8.6** — tenant migration runbook + export/import tooling  
 2. **Phase R1** — call recordings **management** (API list/search/play + SPA panel; local disk first) — **`IMPLEMENTATION_PLAN.md`** § Phase R1  
 3. **Phase S7** — recordings **S3 offload** (mirror backup upload pattern; IAM on same node role as S8.3)  
-4. **pbx3cagi** — **Phase 1.3+ struct refactor deferred** until S8 + R1 underway (Phase 0 **golden-signed-off**) — **`REFACTOR_PLAN.md`**  
-5. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
-6. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
-7. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
-8. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
+4. **Snapshots UX + commit hook** — separate SPA panel, snapshot on Commit, FIFO retention (**`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7); after R1 or parallel ops polish  
+5. **pbx3cagi** — **Phase 1.3+ struct refactor deferred** until S8 + R1 underway (Phase 0 **golden-signed-off**) — **`REFACTOR_PLAN.md`**  
+6. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
+7. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
+8. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
+9. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
 
 ---
 
 ## Open items
+
+- [ ] **Snapshots — separate panel, commit hook, FIFO retention (ops polish):** **Backups** (`backup.zip`, local 9 + S3 30d) and **snapshots** (`sqlite.db` copies in `/opt/pbx3/snap/`) are different jobs but share **`BackupView.vue`** — long backup lists push snapshots below the fold. **Gap:** legacy **`snap.sh`** is a stub; SPA **`GET syscommands/commit`** runs `genAst.sh` + reload but does **not** call **`create_new_snapshot()`** (legacy SARK took a snap on commit). **No snapshot FIFO** today (old “keep 9” in `snap.sh` commented out; backups have **`LocalBackupRetention`**). **Target:** **(1)** **pbx3spa** — `/snapshots` panel (extract from BackupView); **(2)** **pbx3api** — `create_new_snapshot()` after successful Commit; **(3)** **`SnapshotRetention`** (e.g. 9 newest, env `PBX3_SNAPSHOT_MAX_COUNT`); optional revive **`snap.sh`** or deprecate in favour of API. See **`IMPLEMENTATION_PLAN.md`** § **S9.5–S9.7**. **Priority:** after **R1** or parallel low-touch ops; not blocking fleet rebuild.
 
 - [ ] **Phase S8 — Fleet instance lifecycle & tenant mobility (priority #1):** **S8.1–S8.4 shipped and validated** (two full lab rebuilds; runbook **`REBUILD_INSTANCE_RUNBOOK.md`** incl. Phase 1 apt/ssmtp notes — **`15c5e9b`**). **Remaining:** **`TENANT_MIGRATION_RUNBOOK.md`** + export/import (**S8.5–S8.6**). Optional hardening: add **`ssmtp`** to pbx3 `Depends` + `chmod +x /etc/ssmtp` in **`installer.sh`**. See **`IMPLEMENTATION_PLAN.md`** § Phase S8.
 
