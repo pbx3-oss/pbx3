@@ -1,3 +1,9 @@
+pbx3 (0.0.3-21) noble; urgency=medium
+
+  * bump to -21 for S8 restore changes
+
+ -- KOKO <admin@aelintra.com>  Sun, 06 Jul 2026 23:20:00 +0000
+
 pbx3 (0.0.3-20) noble; urgency=medium
 
   * db_legacy_sql: add idempotent sqlite_normalize_cluster_to_shortuid.sql to
