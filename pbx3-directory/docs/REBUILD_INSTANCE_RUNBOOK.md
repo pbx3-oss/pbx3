@@ -48,18 +48,31 @@ aws sts get-caller-identity   # ARN must NOT contain assumed-role/pbx3-node-
 
 On the **new** instance (SSH as `ubuntu`):
 
-1. Ubuntu **24.04** LTS.
+1. Ubuntu **24.04** LTS (ARM **`t4g.*`** is the usual golden-lab shape).
 2. Security group: inbound **22**, **44300**, **80** (LE); outbound **443** (S3).
-3. Install packages:
+3. **Patch the AMI first** (especially on AWS ARM images — currency issues otherwise):
+
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   ```
+
+4. **Mail relay** — install **before** `pbx3` so `installer.sh` can set `ssmtp.conf` permissions:
+
+   ```bash
+   sudo apt install -y ssmtp
+   sudo chmod +x /etc/ssmtp
+   ```
+
+5. Install PBX stack:
 
    ```bash
    sudo apt install ./pbx3_*.deb
    # deploy pbx3api to /opt/pbx3api — see pbx3/workingdocs/INSTALL_SEQUENCE_UBUNTU.md
-   sudo /opt/pbx3/scripts/installer.sh
+   sudo DOMAIN_TLD=pbx3.com /opt/pbx3/scripts/installer.sh
    sudo /opt/pbx3api/scripts/installer.sh
    ```
 
-4. Confirm API health (throwaway DB is OK — it will be replaced):
+6. Confirm API health (throwaway DB is OK — it will be replaced):
 
    ```bash
    curl -k -sS -o /dev/null -w "%{http_code}\n" https://127.0.0.1:44300/up
