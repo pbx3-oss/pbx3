@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-06 (snapshots UX + commit-on-commit backlog added)
+**Last updated:** 2026-07-06 (session end — snapshots backlog committed; backup retention clarified)
 
 ### Suggested “what next?” order
 
@@ -67,6 +67,8 @@
 ---
 
 ## Completed / deferred
+
+- [x] **Snapshots backlog (S9.5–S9.7, 2026-07-06):** Separate SPA panel, snapshot-on-commit, FIFO retention — open item + **`IMPLEMENTATION_PLAN.md`** rows; **`ea34c69`** on **`main`**.
 
 - [x] **Phase S8 rebuild drill #2 (2026-07-06):** Lab **`i-09b5e1853b40f10db`** (`54.144.41.8`) — Phase 1 **`0.0.3-21`**, restore **`20260706T001010Z`**, onboard, **`pbx3:fleet-preflight`** green, SPA smoke (login with lab API URL). DNS/LE not tested (by design). Lab terminated; golden **`i-02ec2b05b5baacb5d`** re-onboarded (IAM + S3 smoke).
 

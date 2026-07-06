@@ -52,6 +52,38 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**.
 
+### Shipped this session
+
+| Item | Notes |
+|------|--------|
+| **Snapshots backlog** | **S9.5–S9.7** in **`IMPLEMENTATION_PLAN.md`** + TODO open item — **`ea34c69`** pushed |
+| **Backup retention Q&A** | Local prune is **count FIFO (9)**, not time-based; **local+S3** is expected until 10th local backup; S3 lifecycle **30d** — see **`DESIGN_RULES.md`** § option C, **`LocalBackupRetention`** |
+
+### Golden (production)
+
+| Field | Value |
+|-------|--------|
+| EC2 | `i-02ec2b05b5baacb5d` · `54.236.153.81` |
+| FQDN | `08jzwn.pbx3.com` |
+| KSUID | `3DmAsxePTWQZgynBYXE8obIRqEE` |
+| IAM | `pbx3-node-08jzwn` |
+| Latest backup | `20260706T001010Z` / `pbx3bak.1783296610.zip` — **local+S3** (normal with fewer than 10 local zips) |
+
+### Resume
+
+1. **S8.5–S8.6** — tenant migration runbook + export/import.
+2. **R1** — call recordings API + SPA panel.
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** at login, or **`VITE_API_PROXY_TARGET`** to golden.
+
+**Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
+
+---
+
+## Next agent session notes (2026-07-06, drill complete) — historical
+
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**.
+
 ### Shipped / validated this session
 
 | Item | Notes |
