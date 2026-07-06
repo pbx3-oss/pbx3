@@ -201,6 +201,7 @@ Catalog row (`instance-index.json`) usually **persists** in S3 — onboard verif
 | Topic | Doc |
 |-------|-----|
 | **Mac SSH + AWS CLI** | **`OPERATOR_MAC_SETUP.md`** |
+| **Self-service rebuild (design)** | **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9) |
 | Greenfield (new fleet node, new KSUID) | **`NEW_INSTANCE_CHECKLIST.md`** § A |
 | Install order | **`pbx3/workingdocs/INSTALL_SEQUENCE_UBUNTU.md`** |
 | S3 / IAM detail | **`OPS_S3_RUNBOOK.md`** |

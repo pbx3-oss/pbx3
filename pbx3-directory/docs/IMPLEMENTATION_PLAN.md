@@ -333,9 +333,10 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 | **S8.5** | **`TENANT_MIGRATION_RUNBOOK.md`** | pbx3-directory/docs | End-to-end: export tenant data → import on destination (preserve `cluster.id` KSUID) → DNS → **Certificates Sync** on dest + source → SPA **Commit** both → `move-tenant.sh` → optional recordings note. Cross-link **LETSENCRYPT_PER_TENANT_FQDN.md** §4.2 / **TLS_IMPLEMENTATION_STEPS.md** §4.2. |
 | **S8.6** | **Tenant export/import tooling** | pbx3 + pbx3api | Inventory: `backupClusters.php` per-tenant mini-DBs, full backup restore, API gaps. Target: one command or API pair (`tenant:export` / `tenant:import`) for operator move; preserve object KSUIDs. |
 | **S8.7** | **Instance stop/start runbook** | docs | EC2 stop/start vs decommission: catalog `status`, unregister vs maintenance, LE/DNS expectations, when to detach IAM. |
-| **S8.8** | **Worked example + regression** | ops | Document golden rebuild (2026-05): test DB restore + globals patch + `sqlite_message.sql` + IAM + `.env`; tenant move smoke **affcot** (or test tenant) **08jzwn ↔ bzy54n** when S8.5–6 exist. |
+| **S8.8** | **Worked example + regression** | ops | Golden lab rebuilds validated (2026-07): **`REBUILD_INSTANCE_RUNBOOK.md`** path, `0.0.3-21`, preflight + SPA; tenant move smoke when S8.5–6 exist. |
+| **S8.9** | **Self-service rebuild automation** | pbx3 + pbx3api + pbx3spa + ops | Design **`SELF_SERVICE_REBUILD_DESIGN.md`**: fleet AMI, first-boot S3 restore, orchestrator API, SPA wizard; node does restore, control plane does IAM/launch. |
 
-**Out of scope S8 v1:** Terraform for full fleet; automatic DNS API; SPA tenant-move wizard (S8.7/S8.8 docs + scripts first).
+**Out of scope S8 v1:** Terraform for full fleet; automatic DNS API (optional in S8.9 B6); SPA tenant-move wizard (S8.5/S8.6 docs + scripts first).
 
 **Exit criteria:**
 
@@ -383,6 +384,8 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
          ├──→  S7  recordings S3 offload (mirror S5; IAM w/ S8.3)   ← priority #3
          │
          └──→  S8.5–S8.6  tenant migration runbook + export/import  ← after S8.1–4 (+ R1/S7 as needed)
+         │
+         └──→  S8.9  self-service rebuild (AMI + orchestrator + SPA)  ← after S8.5–6 or parallel
 
   pbx3cagi Phase 0 harness: built on main; golden sign-off; Phase 1.3+ refactor deferred
 ```
