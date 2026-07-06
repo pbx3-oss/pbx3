@@ -112,6 +112,8 @@ ssh -i ~/path/to/pbx3test.pem ubuntu@NEW_EC2_IP \
 - **Never** run **`reloader.sh`** after restore.
 - Because the backup came from **this instance’s S3 prefix**, `globals.id` (KSUID) is already correct — **no identity SQL patch** for a same-node rebuild.
 
+`restore-backup-zip.sh` also runs **`sync-hostname-from-globals.sh`** so the OS hostname matches **`globals.shortuid`** (installer may have left a throwaway name like `mgp30c`).
+
 Merge help seeds (safe, idempotent):
 
 ```bash
@@ -198,6 +200,7 @@ Catalog row (`instance-index.json`) usually **persists** in S3 — onboard verif
 | Script | Where | Role |
 |--------|-------|------|
 | `fetch-latest-instance-backup.sh` | Mac — `pbx3-directory/tools` | Download newest `backup.zip` → `pbx3bak.{epoch}.zip` |
-| `restore-backup-zip.sh` | Node — `/opt/pbx3/scripts` | Full restore from local zip |
+| `restore-backup-zip.sh` | Node — `/opt/pbx3/scripts` | Full restore from local zip + hostname sync |
+| `sync-hostname-from-globals.sh` | Node — `/opt/pbx3/scripts` | OS hostname ← `globals.shortuid` (also called by restore) |
 | `onboard-fleet-instance.sh` | Mac — `pbx3-directory/tools` | IAM + `.env` + catalog + S3 smoke |
 | `pbx3:fleet-preflight` | Node — `php artisan` | Pass/fail fleet health checks |

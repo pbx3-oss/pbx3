@@ -130,6 +130,10 @@ if [[ -x /opt/pbx3/scripts/normalize-globals-identity.sh ]]; then
   /bin/sh /opt/pbx3/scripts/normalize-globals-identity.sh || true
 fi
 
+if [[ -x /opt/pbx3/scripts/sync-hostname-from-globals.sh ]]; then
+  /bin/sh /opt/pbx3/scripts/sync-hostname-from-globals.sh || true
+fi
+
 if [[ -x /opt/pbx3/scripts/srkreload ]]; then
   echo "restore-backup-zip: requesting Asterisk reload"
   /bin/sh /opt/pbx3/scripts/srkreload || true
