@@ -16,17 +16,10 @@
 #  VMAIL ageing
 01 * * * * root sh $SCRIPTS/agevmail.sh >/dev/null 2>&1
 
-# age call recordings daily at 2:00AM
-0 2 * * * root bash $SCRIPTS/agerecordings.sh >/dev/null 2>&1
-
-# age grace recordings daily at 3:00AM
-0 3 * * * root sh $SCRIPTS/agegracerecordings.sh >/dev/null 2>&1
-
-# calculate recordings storage used by each tenant daily
-0 3 * * * root php $UTILITIES/manageRecs.php >/dev/null 2>&1
-
-#recording offload every 10 minutes
-*/10 * * * * root sh $SCRIPTS/offload_simple.sh >/dev/null 2>&1
+# Call recordings offload + retention are handled by pbx3api (Phase R1.5):
+#   /etc/cron.d/pbx3-recordings  (pbx3:recordings-offload / pbx3:recordings-retain)
+# Legacy shell jobs (offload_simple.sh, agerecordings.sh, agegracerecordings.sh,
+# manageRecs.php) are retired — do not re-add them here.
 
 #fetch manufacturer MAC list once a week
 0 0 * * 0 root sh $SCRIPTS/getmaclist.sh

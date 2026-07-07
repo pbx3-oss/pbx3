@@ -1,3 +1,15 @@
+pbx3 (0.0.3-23) noble; urgency=medium
+
+  * db_sql: add recordings catalog table to sqlite_create_tenant.sql and
+    idempotent sqlite_add_recordings_table.sql (Phase R1.5 local archive index).
+  * postinst: apply sqlite_add_recordings_table.sql to an existing instance DB
+    on upgrade (CREATE TABLE IF NOT EXISTS; no-op if already present).
+  * cron.d/pbx3: retire legacy recording shell jobs (offload_simple.sh,
+    agerecordings.sh, agegracerecordings.sh, manageRecs.php) — offload and
+    retention move to pbx3api (/etc/cron.d/pbx3-recordings).
+
+ -- KOKO <admin@aelintra.com>  Mon, 07 Jul 2026 19:30:00 +0000
+
 pbx3 (0.0.3-22) noble; urgency=medium
 
   * postinst: run runLinker.php on install/upgrade so /etc/asterisk symlinks
