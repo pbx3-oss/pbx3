@@ -16,7 +16,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 **Repo-specific (always):**
 
-- **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, **`pbx3spa/`**, or **`pbx3cagi/`** as appropriate.
+- **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, **`pbx3spa/`**, **`pbx3cagi/`**, or **`pbx3sbc/`** (SBC edge, moved into holding folder 2026-07-07) as appropriate.
 - **Fleet / S3 / directory:** on **`main`**. **Track B** Phases 0–4 Tier 1–2 + **panelfixes** panel QA merged to **`main`** (2026-07-02). Branches **`helptext`**, **`panelfixes`**, **`directory`** deleted.
 - **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
 

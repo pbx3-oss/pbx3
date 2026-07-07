@@ -4,7 +4,7 @@
 **Audience:** Product, implementers (pbx3api, pbx3spa, pbx3-directory, control-plane service, pbx3sbc).
 **New here?** Read **`FLEET_SYSTEM_OVERVIEW.md`** first — plain-language, diagram-led introduction to the fleet for non-implementers.
 **Depends on:** **S8.5** (`TENANT_MIGRATION_RUNBOOK.md`), **S8.6** (`tenant:export` / `tenant:import`, shipped `main`), **Central admin Model B** (`CENTRAL_ADMIN_DIRECTION.md`).
-**Key enabler:** **pbx3sbc** (OpenSIPS SIP edge, `~/Git/pbx3sbc`) — when the fleet is SBC-fronted, tenant cutover is an SBC routing-table change, **not a DNS change**. See §2.1.
+**Key enabler:** **pbx3sbc** (OpenSIPS SIP edge, sibling repo `pbx3-master/pbx3sbc`) — when the fleet is SBC-fronted, tenant cutover is an SBC routing-table change, **not a DNS change**. See §2.1.
 **Supersedes for product path:** operator CLI runbook remains the **support/engineering** reference; this doc defines the **panel-first** experience.
 
 ---
@@ -825,7 +825,7 @@ tenant → node  ← ALREADY in S3 (meta.instance_id) ─┤→ compile → SBC 
 | **Phase B — Fleet shell** | §4, `CENTRAL_ADMIN_DIRECTION.md` | `pbx3spa` instance picker; `schema/instance-index.json` |
 | **Phase B′ — Control plane** | §2.5–2.6, §6 | `pbx3-directory/tools/` (registrar scripts to adopt); `DESIGN_RULES.md` |
 | **Phase C — Move wizard** | §5–6, §13.2–13.4 | `TenantMobilityService.php`; `FleetPreflightService.php`; §13.3 contracts |
-| **SBC / peering** | §2.1–2.4, §11.8 | `~/Git/pbx3sbc` `PEERING-PLAN.md`, `routing-logic.md` |
+| **SBC / peering** | §2.1–2.4, §11.8 | `pbx3sbc/` `PEERING-PLAN.md`, `routing-logic.md` |
 | **Inbound DID mobility** | §11.8–11.10 | Deferred for v1 MVP (§13.4) |
 
 ### 13.2 v1 MVP scope (what “done” means first)
@@ -900,7 +900,7 @@ Orchestrator calls **source** and **dest** `api_base_url` with fleet credentials
 | Instance backup → S3 | `pbx3api/app/Services/Directory/InstanceBackupDirectoryUpload.php` | `instances/{ksuid}/backups/` only |
 | Registrar / catalog scripts | `pbx3-directory/tools/` | Adopt into control-plane API (B′) |
 | Directory schemas | `pbx3-directory/schema/` | v0 catalog; extensions in §13.3 |
-| SBC edge | `~/Git/pbx3sbc` | OpenSIPS + `pbx3sbc-admin`; `PEERING-PLAN.md` |
+| SBC edge | `pbx3sbc/` (sibling repo) | OpenSIPS + `pbx3sbc-admin`; `PEERING-PLAN.md` |
 | Control-plane service | **Not started** | `pbx3-directory/README.md` = stub only |
 | Fleet Console UI | `pbx3spa` | Model B picker; move wizard = Phase C |
 | AGI outbound | `pbx3cagi/.../pbx3cagi.c` | Path loop §11.3 |
@@ -938,4 +938,4 @@ When implementing, keep these sections aligned:
 - **`pbx3-directory/tools/`** — `register-instance.sh`, `register-tenant.sh`, `move-tenant.sh`, `onboard-fleet-instance.sh`.
 - **`pbx3-directory/schema/`** — `tenant-meta.v0.json`, `instance-record.v0.json`, `pbx3-node-s3-writer.policy.json.tmpl`.
 - **`pbx3cagi/.../pbx3cagi.c`** — outbound route / path loop (Phase A).
-- **pbx3sbc** (`~/Git/pbx3sbc`) — `docs/PROJECT-CONTEXT.md`, `docs/architecture/routing-logic.md`, `workingdocs/PEERING-PLAN.md`, `scripts/add-domain.sh` / `add-dispatcher.sh`; admin **`pbx3sbc-admin`** (behind `SbcFleetAdapter`, §2.5).
+- **pbx3sbc** (sibling repo `pbx3-master/pbx3sbc`) — `docs/PROJECT-CONTEXT.md`, `docs/architecture/routing-logic.md`, `workingdocs/PEERING-PLAN.md`, `scripts/add-domain.sh` / `add-dispatcher.sh`; admin **`pbx3sbc-admin`** (behind `SbcFleetAdapter`, §2.5).
