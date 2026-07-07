@@ -214,6 +214,28 @@ Until a trigger fires: **invest in pbx3sbc** (HA doc, peering Phase 0, adapter A
 
 **When the alternative wins (honest caveat):** small/static fleet + single-person ops + dSIPRouter genuinely off the table → role-gated panels in one app is a defensible ship-faster call; the separate-*service* discipline still matters most for the backend/trust tier.
 
+#### 2.5.1 Physical deployment — ops note (2026-07-07)
+
+**Settled:** control plane is **not** on the SBC (`pbx3sbc-admin` stays edge-only; §2.5). **Open:** which **host** runs the separate service — an ops choice, not an architectural gate.
+
+**Either suffices:** a **small EC2** in the fleet VPC **or** a **local VM** (dev Mac / lab hypervisor). The service is **low-traffic management** (infrequent catalog writes, move jobs, presigns) and **fail-safe** — calls continue if it is down; worst case is no move/onboard until it returns. HA (second instance, queue failover) can wait.
+
+| Requirement | Implication |
+|-------------|-------------|
+| S3 gatekeeper writes (`catalog/*`, `tenants/*/meta.json`, presigns) | AWS credentials with org/fleet IAM (see below) |
+| `NodeApiAdapter` | Outbound HTTPS to every fleet node `:44300` |
+| `SbcFleetAdapter` | Outbound HTTPS to `pbx3sbc-admin` API |
+| Durable jobs (move orchestrator) | Persistent host + small DB/queue — not serverless-first for v1 |
+
+| Option | Fit | Notes |
+|--------|-----|-------|
+| **Small EC2** (e.g. `t3.small` / `t4g.small`) | **Production fleet** (lean) | **Instance role** for S3 — no long-lived keys; same network neighborhood as nodes + SBC; natural when fleet is already AWS-hosted |
+| **Local VM / dev host** | **B′/C build + lab** | Static IAM in `.env` or shared ops profile; must reach node + SBC APIs over VPN/internet; fine for golden validation before committing to a hosted box |
+
+**Not on the table:** co-hosting fleet superadmin **inside** the SBC stack (see §2.5). The SBC is an **API client** of the control plane, not its home.
+
+**§6** orchestrator endpoints run on this same host; no separate “orchestrator box” in v1.
+
 ### 2.6 S3 gatekeeper — org-level security domain (2026-07-07)
 
 **Observation:** S3 is **not owned by any instance or tenant**. It is **org/fleet infrastructure** — shared bucket, stable prefixes (`catalog/`, `instances/{ksuid}/`, `tenants/{shortuid}/`), cross-cutting metadata (instance index, tenant homing, DID inventory, export staging). Instances and tenants each have **their own security subsystems** (Sanctum on `:44300`, local users, Shorewall). S3 needs a **third**, quite separate security arrangement — and that points to a **separate service** (whatever it is written in).
@@ -505,7 +527,7 @@ Recordings under `tenants/{shortuid}/recordings/` are **unchanged** by a move (c
 
 Start **thin**; it can later merge with the S8.9 rebuild orchestrator (`SELF_SERVICE_REBUILD_DESIGN.md`).
 
-- **Home (settled §2.5):** **fleet control-plane service** — separate deployable (grown from `pbx3-directory` stub / Laravel+Filament stack like `pbx3sbc-admin`). **Not** a fleet namespace inside tenant `pbx3api`. Owns **S3 gatekeeper** (§2.6), job queue, and adapters. Holds fleet ops identity for catalog writes; calls node APIs via `NodeApiAdapter`.
+- **Home (settled §2.5):** **fleet control-plane service** — separate deployable (grown from `pbx3-directory` stub / Laravel+Filament stack like `pbx3sbc-admin`). **Not** a fleet namespace inside tenant `pbx3api`. Owns **S3 gatekeeper** (§2.6), job queue, and adapters. Holds fleet ops identity for catalog writes; calls node APIs via `NodeApiAdapter`. **Physical host:** small EC2 or local VM — see **§2.5.1** (ops choice; not on SBC).
 - **Endpoints (sketch — implement in control plane):**
   - `POST /fleet/tenant-moves` → `{tenant, source_instance, dest_instance, options}` → `job_id`
   - `GET /fleet/tenant-moves/{id}` → state + per-phase status + next human action
@@ -823,7 +845,7 @@ tenant → node  ← ALREADY in S3 (meta.instance_id) ─┤→ compile → SBC 
 | **Phase A — Egress + AGI** | §3, §11 #2–3, #10–12 | `pbx3cagi` route loop; `pjsip_trunk_*.tmpl`; `TRUNK_ROUTE_MULTITENANCY.md` |
 | **§2.6.1 — IAM tighten** | §2.6.1 | `schema/pbx3-node-s3-writer.policy.json.tmpl`, `OPS_S3_RUNBOOK.md` §7 |
 | **Phase B — Fleet shell** | §4, `CENTRAL_ADMIN_DIRECTION.md` | `pbx3spa` instance picker; `schema/instance-index.json` |
-| **Phase B′ — Control plane** | §2.5–2.6, §6 | `pbx3-directory/tools/` (registrar scripts to adopt); `DESIGN_RULES.md` |
+| **Phase B′ — Control plane** | §2.5–2.6, **§2.5.1** (hosting), §6 | `pbx3-directory/tools/` (registrar scripts to adopt); `DESIGN_RULES.md` |
 | **Phase C — Move wizard** | §5–6, §13.2–13.4 | `TenantMobilityService.php`; `FleetPreflightService.php`; §13.3 contracts |
 | **SBC / peering** | §2.1–2.4, §11.8 | `pbx3sbc/` `PEERING-PLAN.md`, `routing-logic.md` |
 | **Inbound DID mobility** | §11.8–11.10 | Deferred for v1 MVP (§13.4) |
