@@ -48,7 +48,39 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-07, session end — R1 recordings shipped)
+## Next agent session notes (2026-07-07, session end — R1.5 recordings local archive shipped)
+
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**.
+
+### Shipped
+
+| Repo | Commit | Notes |
+|------|--------|--------|
+| **pbx3api** | **`27ff302`…`f5237de`** | R1.5: offload, retention, reconcile, SQLite index, cron examples; archive perms fix (`852b034`); installer drops backup + recordings cron |
+| **pbx3** | **`ac2d90a`/`a8c9cb2`/`efdc78a`** | `recordings` table + migration SQL; postinst applies on upgrade; legacy recording cron retired; **`pbx3 0.0.3-23`** deb built on golden |
+
+**Golden validated:** tenant **dhbm8x** — offload → archive, list/play from SQLite index; retention age-out + grace purge smoke-tested. **bzy54n:** R1.5 parity (6 recordings offloaded); still on **0.0.3-22** deb (SQL seeded manually).
+
+**Cron (both nodes):** `/etc/cron.d/pbx3-recordings` (offload */10, retain 02:30); `/etc/cron.d/pbx3-backup` (daily 02:00). Prior backups were SPA-manual only.
+
+### Golden / operator follow-up
+
+- **08jzwn:** **pbx3 0.0.3-23** installed; **pbx3api** on **`main`** (`f5237de`).
+- **bzy54n:** upgrade to **`pbx3_0.0.3-23_all.deb`** when convenient (functionally at R1.5).
+- **apt upgrade over SSH:** use `DEBIAN_FRONTEND=noninteractive` + `-o Dpkg::Options::="--force-confold"` for `/etc/cron.d/pbx3` (live edits vs package).
+- **`rec_mount`:** deferred (on-prem SAN/EFS — not fleet canonical).
+
+### Resume
+
+1. **S7** — recordings S3 offload (needs gatekeeper presigns + **`PBX3_RECORDINGS_BUCKET`**).
+2. Optional parallel: **§2.6.1** IAM tighten.
+3. **bzy54n** — install **0.0.3-23** deb.
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** at login.
+
+---
+
+## Next agent session notes (2026-07-07, session end — R1 recordings shipped) — historical
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. **`r1`** merged to **`main`** in **pbx3api** + **pbx3spa**; local **`r1`** branches may be deleted.
 

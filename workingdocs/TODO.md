@@ -1,14 +1,14 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-07 (session end — R1 recordings shipped; **RECORDINGS_STORAGE_DESIGN.md**)
+**Last updated:** 2026-07-07 (session end — R1.5 recordings local archive shipped; **pbx3 0.0.3-23**)
 
 ### Suggested “what next?” order
 
-1. **Phase R1.5** — recordings **local archive offload** + SQLite `recordings` index — **`RECORDINGS_STORAGE_DESIGN.md`** §7 (R1.5)  
-2. **Phase S7** — recordings **S3 offload** (dedicated `PBX3_RECORDINGS_BUCKET`, presigns, PCI §6.2–6.4) — **`RECORDINGS_STORAGE_DESIGN.md`** §7  
-3. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. Early win: **§2.6.1** node IAM tighten; then **Phase A** / **B′** control plane.  
-4. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
+1. **Phase S7** — recordings **S3 offload** (dedicated `PBX3_RECORDINGS_BUCKET`, presigns, PCI §6.2–6.4) — **`RECORDINGS_STORAGE_DESIGN.md`** §7  
+2. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. Early win: **§2.6.1** IAM tighten; then **Phase A** / **B′** control plane.  
+3. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
+4. **bzy54n** — upgrade **pbx3 0.0.3-23** deb (functionally at R1.5 via manual seed).  
 5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
 6. **Extension Runtime re-examine** · **SWOCLIP** · **`tt_help_core` cleanup** · **Directory Phase D** · **SARK migration** (end of list)
 
@@ -22,9 +22,7 @@
 
 - [ ] **Phase S8 — Fleet (optional polish):** **S8.1–S8.6 shipped and drill-validated** (affcot **08jzwn → bzy54n**). Remaining optional: LE Sync post-cutover; **`move-tenant.sh`** if catalog workflow preferred over **`register-tenant.sh`** for first-time tenants. See **`TENANT_MIGRATION_RUNBOOK.md`**.
 
-- [ ] **Phase R1.5 — Recordings local archive + SQLite index (priority #1):** Spool → `/opt/pbx3/media/recordings/{tenant}/{yyyy}/{mm}/{dd}/`; `recordings` table in tenant SQLite (moves with miniDB); offload cron; retention (`recmaxage`, `rec_grace`, `recmaxsize`); API queries DB with filesystem fallback. Spec: **`RECORDINGS_STORAGE_DESIGN.md`** §7 R1.5, §6.1.
-
-- [ ] **Phase S7 — Recordings S3 offload (priority #2):** Dedicated **`PBX3_RECORDINGS_BUCKET`** (not org/catalog bucket); async upload; presigned play; PCI controls (§6.2–6.3); SQLite `s3_key`. After R1.5 + gatekeeper presigns. **`RECORDINGS_STORAGE_DESIGN.md`** §7 S7; defer S7+.3 PSP handoff until customer need.
+- [ ] **Phase S7 — Recordings S3 offload (priority #1):** Dedicated **`PBX3_RECORDINGS_BUCKET`** (not org/catalog bucket); async upload; presigned play; PCI controls (§6.2–6.3); SQLite `s3_key`. After R1.5 + gatekeeper presigns. **`RECORDINGS_STORAGE_DESIGN.md`** §7 S7; defer S7+.3 PSP handoff until customer need.
 
 - [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**; add **`pbx3-docs`** later. Maintain **`REPOS_AND_RELEASES.md`** (inventory, remotes, compatibility matrix). Update local clone remotes; keep **`pbx3-master/`** holding-folder layout. Tag first aligned release row in compatibility matrix when cutting public release.
 
@@ -38,6 +36,8 @@
 - [ ] **Golden `pkey='default'` layout (investigate, low priority):** Pre-migration golden had only `f34ck1`/`5489nv` (node FQDN on `globals` only). Test instance uses **`default`** tenant row with `cluster.fqdn` = node FQDN. Post-restore golden matches test layout. Question: does SPA tenant-create-only provisioning ever skip creating `default`?
 
 - [ ] **pbx3api astamis `PJSIPShowEndpoint/{id}`:** Calling `GET .../astamis/PJSIPShowEndpoint/{id}` returns `AMI Action invalid or unsupported` because **`AstAmiController::$eventList` only whitelists `PJSIPShowEndpoints` (plural)** — singular action never reaches Asterisk. **Follow-up when implementing:** (1) Allow `PJSIPShowEndpoint` (dedicated route/method like other `eventItem` actions, or extend `getlist` with a special case). (2) AMI body must include **`Endpoint: {id}`** (not only `Action:`). (3) Do not use plain `amiQuery()` for this action — use **`amiPjsipShowEndpointForLive()`** or **`amiQueryUntilComplete()`** and return structured JSON or raw response as needed. (4) Document in `astamis` index (`GET astamis`) if exposed.
+
+- [ ] **LDAP — overall strategy deferred (kicked down the road):** How LDAP is provisioned/used across instance vs tenant is **not yet decided**; parking all LDAP work until a design is chosen. Known loose ends to fold in when picked up: **(1)** the config-source mismatch below (LDAPHelperClass vs `globals`/`cluster`); **(2)** backup export writes **`/tmp/pbx3.local.ldif`** and fails with `Permission denied` when the file is owned by another user (seen on golden scheduled `pbx3:backup-run` — backup still completes/uploads; ldif export is skipped). Fix ownership/tmp path (per-run temp file or `/opt/pbx3` scratch) and decide whether LDAP data belongs in the backup at all. See `create_new_backup()` LDAP dump step.
 
 - [ ] **LDAP: LDAPHelperClass reads from `globals` but instance `globals` has no LDAP columns.**  
   Instance schema (`sqlite_create_instance.sql`) does not define `ldapbase`, `ldapou`, `ldapuser`, `ldappass` on `globals`. Those columns exist on the tenant `cluster` table (`sqlite_create_tenant.sql`).  
@@ -67,6 +67,10 @@
 ---
 
 ## Completed / deferred
+
+- [x] **Phase R1.5 — Recordings local archive + SQLite index (2026-07-07):** **pbx3api** **`27ff302`…`f5237de`** + **pbx3** **`ac2d90a`/`a8c9cb2`/`efdc78a`** (`0.0.3-23`). Offload spool → `{tenant}/{yyyy}/{mm}/{dd}/`; `recordings` table + index on offload; retention (`recmaxage`, `rec_grace`, `recmaxsize`, `recused`); API SQLite-first + spool fallback. Cron: **`/etc/cron.d/pbx3-recordings`** (offload every 10 min, retain daily 02:30). Golden + **bzy54n** validated (list/play/archive; retention smoke on golden). **`rec_mount`** deferred (on-prem SAN/EFS corner case). **`pbx3api` installer** drops backup + recordings cron on install.
+
+- [x] **Scheduled instance backups (2026-07-07):** Prior S3 backups were **SPA manual** (`GET /backups/new`). Installed **`/etc/cron.d/pbx3-backup`** on **08jzwn** + **bzy54n** (daily 02:00 `pbx3:backup-run`). Verified on golden (zip + S3 upload). LDAP ldif export logs `Permission denied` on `/tmp/pbx3.local.ldif` — non-fatal; see LDAP deferred item.
 
 - [x] **Phase R1 — Call recordings management (2026-07-07):** **pbx3api** **`4f52853`** + **pbx3spa** **`ea0fefc`** on **`main`** (`r1` merged). `GET /recordings`, stream/download; SPA Recordings panel (filters, tenant name, play/download). Golden smoke: tenant **duns** on **08jzwn** (`/var/spool/asterisk/monitor`). **`RECORDINGS_STORAGE_DESIGN.md`** — storage/search/ageing/PCI shape for R1.5/S7.
 
