@@ -39,7 +39,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (index) → **TLS_IMPLEMENTATION_STEPS.md** (linear checklist) → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**Option A** spec + §11–§12). **pbx3spa**/workingdocs has stubs pointing here. |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
-| Fleet / S3 catalog / onboard | **pbx3-directory/docs/IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`fetch-latest-instance-backup.sh`** |
+| Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`fetch-latest-instance-backup.sh`** |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`IMPLEMENTATION_PLAN.md`** § **Phase R1** (local SPA/API) → **Phase S7** (S3 offload) |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
@@ -48,7 +48,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-07, session end)
+## Next agent session notes (2026-07-07, session end — fleet mobility design)
+
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. Docs-only session in **`pbx3/pbx3-directory/`** (no runtime/API changes).
+
+### Shipped (docs)
+
+| Doc | Purpose |
+|-----|---------|
+| **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** | S8.10 panel-first tenant move: SBC-required fleet, Egress, control-plane + **S3 gatekeeper**, DID homing in S3, gotchas, **§13** implementer map |
+| **`FLEET_SYSTEM_OVERVIEW.md`** | Stakeholder intro — Instance / Tenant / SBC / S3 responsibilities (slides source later) |
+| **`IMPLEMENTATION_PLAN.md`** | S8.10 row + control-plane / B′ |
+| **`pbx3-directory/README.md`** | Pointer to overview |
+
+**Key decisions (settled in design):** fleet requires **SBC tier**; cutover = **`domain.setid`** repoint; **S3** owns tenant homing + DID inventory; **separate control-plane service** (not pbx3api namespace); **`tenants/*` node IAM** too broad — tighten per §2.6.1.
+
+### Fleet state (unchanged)
+
+**08jzwn** + **bzy54n** on **`main`**; **affcot** on **bzy54n**; **pbx3 0.0.3-22** / **pbx3cagi 1.0.0-3**.
+
+### Resume
+
+1. **R1** — call recordings (still priority #1 per TODO).
+2. **S8.10 build** when ready — start **§2.6.1** IAM or **Phase A** (Egress + AGI); read **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13 before **B′/C**.
+3. Stakeholder **slides** — derive from **`FLEET_SYSTEM_OVERVIEW.md`**.
+
+---
+
+## Next agent session notes (2026-07-07, session end) — historical
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. **`s8-tenant-move`** merged and deleted.
 

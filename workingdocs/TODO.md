@@ -1,24 +1,27 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-07 (session end — S8 drill closed; fleet on 0.0.3-22 / pbx3cagi 1.0.0-3)
+**Last updated:** 2026-07-07 (session end — S8.10 fleet mobility + stakeholder overview docs)
 
 ### Suggested “what next?” order
 
 1. **Phase R1** — call recordings **management** (API list/search/play + SPA panel; local disk first) — **`IMPLEMENTATION_PLAN.md`** § Phase R1  
 2. **Phase S7** — recordings **S3 offload** (mirror backup upload pattern; IAM on same node role as S8.3)  
-3. **Snapshots UX + commit hook** — separate SPA panel, snapshot on Commit, FIFO retention (**`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7); after R1 or parallel ops polish  
-4. **pbx3cagi** — **Phase 1.3+ struct refactor deferred** until R1 underway (Phase 0 **golden-signed-off**; **1.0.0-3** `_all.deb` on **`main`**) — **`REFACTOR_PLAN.md`**  
-5. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
-6. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
-7. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
-8. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
+3. **S8.10 fleet mobility (implementation)** — design complete; **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13 + **`FLEET_SYSTEM_OVERVIEW.md`**. Early win: **§2.6.1** node IAM tighten; then **Phase A** (Egress + AGI); **B′** control plane before **C** move wizard.  
+4. **Snapshots UX + commit hook** — separate SPA panel, snapshot on Commit, FIFO retention (**`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7); after R1 or parallel ops polish  
+5. **pbx3cagi** — **Phase 1.3+ struct refactor deferred** until R1 underway (Phase 0 **golden-signed-off**; **1.0.0-3** `_all.deb` on **`main`**) — **`REFACTOR_PLAN.md`**  
+6. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
+7. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
+8. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
+9. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
 
 ---
 
 ## Open items
 
 - [ ] **Snapshots — separate panel, commit hook, FIFO retention (ops polish):** **Backups** (`backup.zip`, local 9 + S3 30d) and **snapshots** (`sqlite.db` copies in `/opt/pbx3/snap/`) are different jobs but share **`BackupView.vue`** — long backup lists push snapshots below the fold. **Gap:** legacy **`snap.sh`** is a stub; SPA **`GET syscommands/commit`** runs `genAst.sh` + reload but does **not** call **`create_new_snapshot()`** (legacy SARK took a snap on commit). **No snapshot FIFO** today (old “keep 9” in `snap.sh` commented out; backups have **`LocalBackupRetention`**). **Target:** **(1)** **pbx3spa** — `/snapshots` panel (extract from BackupView); **(2)** **pbx3api** — `create_new_snapshot()` after successful Commit; **(3)** **`SnapshotRetention`** (e.g. 9 newest, env `PBX3_SNAPSHOT_MAX_COUNT`); optional revive **`snap.sh`** or deprecate in favour of API. See **`IMPLEMENTATION_PLAN.md`** § **S9.5–S9.7**. **Priority:** after **R1** or parallel low-touch ops; not blocking fleet rebuild.
+
+- [ ] **Phase S8.10 — Fleet mobility Fleet Console (design → build):** **Design shipped** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (SBC-required fleet, control-plane + S3 gatekeeper, move wizard, §13 implementer map) + stakeholder **`FLEET_SYSTEM_OVERVIEW.md`**. **Build order:** **A** Egress + AGI; **B** fleet shell; **B′** control-plane + gatekeeper + **§2.6.1** IAM tighten (`pbx3-node-s3-writer.policy.json.tmpl`); **C** move wizard. **Contracts TODO:** `sbc-fleet.v0.json`, `did-inventory.v0.json`, `tenant-move-job.v0.json`, node mobility HTTP API (§13.3). CLI path remains **`TENANT_MIGRATION_RUNBOOK.md`**.
 
 - [ ] **Phase S8 — Fleet (optional polish):** **S8.1–S8.6 shipped and drill-validated** (affcot **08jzwn → bzy54n**). Remaining optional: LE Sync post-cutover; **`move-tenant.sh`** if catalog workflow preferred over **`register-tenant.sh`** for first-time tenants. See **`TENANT_MIGRATION_RUNBOOK.md`**.
 
@@ -32,7 +35,8 @@
 
 - [ ] **pbx3cagi refactor (deferred — after S8 + R1 underway):** Phase 0 harness **golden-signed-off** on **08jzwn** (synthetic seed + `/opt/pbx3/db/sqlite.rdonly.db`; all CFIM scenarios PASS). **Do not start Phase 1.1+ struct refactor** until fleet/recordings momentum established; run **`make test`** after each refactor step when resumed. Gate: **`REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**, **`TEST_RECIPE.md`**.
 
-- [ ] **Fleet catalog — SIP FQDN obscurity vs public S3 index:** Legacy ingress relies on **`fqdninspect`** (SIP INVITE URI string match on **5060**); dialable FQDNs are usually **not published** (sniffing/DNS can still expose them). Public **`catalog/instance-index.json`** aids admin discovery but can weaken that obscurity layer — **not** the same as Sanctum/API risk. **Policy:** v0/golden OK with eyes open; production MSP fleets → **Phase D private catalog** (auth-gated `GET` or signed URLs); minimize tenant FQDN enumeration in public JSON; use **`label`** + opaque **`id`**. See **`pbx3-directory/docs/DESIGN_RULES.md`** § *SIP FQDN obscurity vs public catalog*; **`OPS_S3_RUNBOOK.md`** § 5.3.
+- [ ] **Fleet S3 node IAM (§2.6.1 — early win):** Drop blanket **`tenants/*`** write from **`pbx3-node-s3-writer.policy.json.tmpl`** + **`OPS_S3_RUNBOOK.md`** §7; safe now (backups use **`instances/{ksuid}/`** only). Future recordings/staging via control-plane presigns. See **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6.1.
+ Legacy ingress relies on **`fqdninspect`** (SIP INVITE URI string match on **5060**); dialable FQDNs are usually **not published** (sniffing/DNS can still expose them). Public **`catalog/instance-index.json`** aids admin discovery but can weaken that obscurity layer — **not** the same as Sanctum/API risk. **Policy:** v0/golden OK with eyes open; production MSP fleets → **Phase D private catalog** (auth-gated `GET` or signed URLs); minimize tenant FQDN enumeration in public JSON; use **`label`** + opaque **`id`**. See **`pbx3-directory/docs/DESIGN_RULES.md`** § *SIP FQDN obscurity vs public catalog*; **`OPS_S3_RUNBOOK.md`** § 5.3.
 
 - [ ] **Golden `pkey='default'` layout (investigate, low priority):** Pre-migration golden had only `f34ck1`/`5489nv` (node FQDN on `globals` only). Test instance uses **`default`** tenant row with `cluster.fqdn` = node FQDN. Post-restore golden matches test layout. Question: does SPA tenant-create-only provisioning ever skip creating `default`?
 
@@ -66,6 +70,8 @@
 ---
 
 ## Completed / deferred
+
+- [x] **S8.10 fleet mobility + stakeholder docs (2026-07-07):** **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (panel-first move, SBC cutover, control-plane + S3 gatekeeper, gotchas, §13 implementer readiness) + **`FLEET_SYSTEM_OVERVIEW.md`** (stakeholder intro). **`IMPLEMENTATION_PLAN.md`** S8.10 row updated; **`pbx3-directory/README.md`** pointer.
 
 - [x] **S8.5–S8.6 tenant migration + fleet packages (2026-07-07):** **`s8-tenant-move` → `main`** (pbx3 **`9076e9e`/`e4f9a88`**, pbx3api **`a7cb907`**). **`pbx3 0.0.3-22`** deb on **`main`** (postinst **runLinker**); **`pbx3cagi 1.0.0-3`** sailhpe **`_all.deb`**. Golden + **bzy54n** on **`main`** API; affcot live on bzy54n. Node updates: **`git pull`** — avoid **`scp`** into `/opt/pbx3api`.
 

@@ -2,6 +2,8 @@
 
 **Status:** Stub only — not a deployed service yet. Defines the **instance directory** (control-plane index) for **Model B** central admin.
 
+**New here?** Read **`docs/FLEET_SYSTEM_OVERVIEW.md`** — plain-language, diagram-led introduction to the whole fleet (Instance / Tenant / SBC / S3).
+
 **Product direction:** **pbx3spa** repo — **`workingdocs/CENTRAL_ADMIN_DIRECTION.md`**
 
 **Current priority:** Branch **`directory`**. **Start:** **`docs/IMPLEMENTATION_PLAN.md`** (phases + ToDo) → **`docs/DESIGN_RULES.md`** → **`docs/S3_LAYOUT_PROPOSAL.md`** → **`docs/OPS_S3_RUNBOOK.md`** (bucket/IAM/CORS) → **`schema/`**.

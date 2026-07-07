@@ -335,6 +335,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 | **S8.7** | **Instance stop/start runbook** | docs | EC2 stop/start vs decommission: catalog `status`, unregister vs maintenance, LE/DNS expectations, when to detach IAM. |
 | **S8.8** | **Worked example + regression** | ops | Golden lab rebuilds validated (2026-07): **`REBUILD_INSTANCE_RUNBOOK.md`** path, `0.0.3-21`, preflight + SPA; tenant move smoke when S8.5–6 exist. |
 | **S8.9** | **Self-service rebuild automation** | pbx3 + pbx3api + pbx3spa + ops | Design **`SELF_SERVICE_REBUILD_DESIGN.md`**: fleet AMI, first-boot S3 restore, orchestrator API, SPA wizard; node does restore, control plane does IAM/launch. |
+| **S8.10** | **Tenant mobility — Fleet Console (panel-first)** | pbx3 + pbx3cagi + pbx3api + pbx3spa + **pbx3sbc** + control-plane | Design **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (**§13** implementer map): **fleet requires SBC tier** (§2.2); cutover = SBC `domain.setid` repoint; **`Egress → SBC`** (Phase A); Fleet Console (**B**); control-plane + S3 gatekeeper (**B′**); move wizard + orchestrator (**C**). Direct-to-node = solo/Rule 6 only. |
 
 **Out of scope S8 v1:** Terraform for full fleet; automatic DNS API (optional in S8.9 B6); SPA tenant-move wizard (S8.5/S8.6 docs + scripts first).
 
