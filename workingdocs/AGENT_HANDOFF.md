@@ -48,7 +48,45 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-06, session end)
+## Next agent session notes (2026-07-06, session end — tenant migration drill)
+
+**Branch:** **`main`** — **pbx3cagi** **`bf8774e`** (1.0.0-3 packaging). **pbx3** + **pbx3api** — **`s8-tenant-move`** (pending merge to **`main`**). **pbx3spa** — **`main`** (handoff only).
+
+### Shipped / validated
+
+| Item | Notes |
+|------|--------|
+| **S8.5–S8.6 drill** | **affcot** `9wvvnb` golden → **bzy54n**; DNS; UDP register + calls; golden cleanup; S3 **`tenants/9wvvnb/meta.json`** |
+| **pbx3api `s8-tenant-move`** | `TenantMobilityService` import fixes; auto **`update-fqdn-inline`** after import |
+| **pbx3 `s8-tenant-move`** | **`TENANT_MIGRATION_RUNBOOK.md`** firewall/symlink; postinst **runLinker**; **0.0.3-22** changelog |
+| **pbx3cagi `main`** | **1.0.0-3** sailhpe-style **`_all.deb`** (pre-staged amd64+arm64, no compile in debuild) |
+
+### Fleet reference
+
+| | **08jzwn** (golden) | **bzy54n** |
+|--|--|--|
+| FQDN | `08jzwn.pbx3.com` | `bzy54n.pbx3.com` |
+| KSUID | `3DmAsxePTWQZgynBYXE8obIRqEE` | `3E3gAOVGBhvc6vEPTBIYCBPycIk` |
+| Tenants | default, duns, sandycroft, willand | cluster1 (`wfh69h`), **affcot** (`9wvvnb`) |
+
+### Golden / operator follow-up
+
+- Merge **`s8-tenant-move`** → **`main`**; build/install **`pbx3 0.0.3-22`**, **`pbx3cagi 1.0.0-3`** on fleet nodes as needed.
+- LE Sync optional (UDP drill skipped TLS).
+- **`fqdninspect=YES`** on nodes using SIP STRING match on 5060.
+
+### Resume
+
+1. Merge **`s8-tenant-move`** and deploy package bumps to fleet.
+2. **R1** — call recordings API + SPA panel.
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** or proxy **bzy54n** for affcot testing.
+
+**Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
+
+---
+
+## Next agent session notes (2026-07-06, session end — snapshots backlog)
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**.
 

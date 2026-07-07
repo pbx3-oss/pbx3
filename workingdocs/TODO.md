@@ -1,15 +1,15 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-06 (session end — snapshots backlog committed; backup retention clarified)
+**Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi); migration fixes on **`s8-tenant-move`** (pbx3 + pbx3api) pending merge  
+**Last updated:** 2026-07-06 (session end — affcot migration drill; pbx3cagi 1.0.0-3 packaging)
 
 ### Suggested “what next?” order
 
-1. **Phase S8.5–S8.6** — tenant migration runbook + export/import tooling  
+1. **Merge `s8-tenant-move`** (pbx3 + pbx3api) — tenant import firewall hook, postinst runLinker, runbook; ship **`pbx3 0.0.3-22`** + deploy to fleet  
 2. **Phase R1** — call recordings **management** (API list/search/play + SPA panel; local disk first) — **`IMPLEMENTATION_PLAN.md`** § Phase R1  
 3. **Phase S7** — recordings **S3 offload** (mirror backup upload pattern; IAM on same node role as S8.3)  
 4. **Snapshots UX + commit hook** — separate SPA panel, snapshot on Commit, FIFO retention (**`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7); after R1 or parallel ops polish  
-5. **pbx3cagi** — **Phase 1.3+ struct refactor deferred** until S8 + R1 underway (Phase 0 **golden-signed-off**) — **`REFACTOR_PLAN.md`**  
+5. **pbx3cagi** — **Phase 1.3+ struct refactor deferred** until R1 underway (Phase 0 **golden-signed-off**; **1.0.0-3** `_all.deb` on **`main`**) — **`REFACTOR_PLAN.md`**  
 6. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
 7. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
 8. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
@@ -21,7 +21,7 @@
 
 - [ ] **Snapshots — separate panel, commit hook, FIFO retention (ops polish):** **Backups** (`backup.zip`, local 9 + S3 30d) and **snapshots** (`sqlite.db` copies in `/opt/pbx3/snap/`) are different jobs but share **`BackupView.vue`** — long backup lists push snapshots below the fold. **Gap:** legacy **`snap.sh`** is a stub; SPA **`GET syscommands/commit`** runs `genAst.sh` + reload but does **not** call **`create_new_snapshot()`** (legacy SARK took a snap on commit). **No snapshot FIFO** today (old “keep 9” in `snap.sh` commented out; backups have **`LocalBackupRetention`**). **Target:** **(1)** **pbx3spa** — `/snapshots` panel (extract from BackupView); **(2)** **pbx3api** — `create_new_snapshot()` after successful Commit; **(3)** **`SnapshotRetention`** (e.g. 9 newest, env `PBX3_SNAPSHOT_MAX_COUNT`); optional revive **`snap.sh`** or deprecate in favour of API. See **`IMPLEMENTATION_PLAN.md`** § **S9.5–S9.7**. **Priority:** after **R1** or parallel low-touch ops; not blocking fleet rebuild.
 
-- [ ] **Phase S8 — Fleet instance lifecycle & tenant mobility (priority #1):** **S8.1–S8.4 shipped and validated** (two full lab rebuilds; runbook **`REBUILD_INSTANCE_RUNBOOK.md`** incl. Phase 1 apt/ssmtp notes — **`15c5e9b`**). **Remaining:** **`TENANT_MIGRATION_RUNBOOK.md`** + export/import (**S8.5–S8.6**). Optional hardening: add **`ssmtp`** to pbx3 `Depends` + `chmod +x /etc/ssmtp` in **`installer.sh`**. See **`IMPLEMENTATION_PLAN.md`** § Phase S8.
+- [ ] **Phase S8 — Fleet instance lifecycle & tenant mobility:** **S8.1–S8.4 shipped**; **S8.5–S8.6 drill validated** (affcot **08jzwn → bzy54n**, ext-to-ext UDP, catalog `9wvvnb` on bzy54n KSUID). **Pending merge:** **`s8-tenant-move`** (pbx3 + pbx3api) — `tenant:import` Shorewall refresh, postinst **runLinker**, runbook firewall/symlink notes; **`pbx3 0.0.3-22`**. Optional: LE Sync post-cutover; install **`pbx3cagi 1.0.0-3`** fleet-wide. See **`TENANT_MIGRATION_RUNBOOK.md`**, **`IMPLEMENTATION_PLAN.md`** § Phase S8.
 
 - [ ] **Phase R1 — Call recordings management (local-first, priority #2):** Operator list/search/play/download from on-node wav files under `/opt/pbx3/media/recordings/…`. **pbx3api:** `GET /recordings` (tenant, date range, caller/callee), stream/download endpoints. **pbx3spa:** port **`sarkrecordings`** panel (see **`SAIL65_PANEL_PORT_PLAN.md`**). Capture already works (`pbx3cagi` SetRecord + tenant config); **no S3 required** for R1 v1. Spec: **`IMPLEMENTATION_PLAN.md`** § Phase R1. **Defer:** bulk delete UI, per-user listen permissions, `recordings` catalog DB sync.
 
@@ -67,6 +67,10 @@
 ---
 
 ## Completed / deferred
+
+- [x] **Phase S8.5–S8.6 tenant migration drill (2026-07-06):** **affcot** (`9wvvnb`) exported golden → imported **bzy54n**; DNS cutover; phone register + ext-to-ext calls; golden tenant removed; S3 catalog **`register-tenant.sh`** → bzy54n KSUID `3E3gAOVGBhvc6vEPTBIYCBPycIk`. Fixes on **`s8-tenant-move`**: import SQLite/ATTACH, auto **`update-fqdn-inline`**, runbook, postinst **runLinker** (**0.0.3-22** changelog). Ops: **`fqdninspect=YES`**, manual **`runLinker.php`** if symlinks missing.
+
+- [x] **pbx3cagi 1.0.0-3 packaging (2026-07-06):** Sailhpe-style **`Architecture: all`** `_all.deb`; stage **`usr/share/asterisk/agi-bin/pbx3cagi.{amd64,arm64}`** at package root; no compile in **`debuild`**. **`bf8774e`** on **`main`**.
 
 - [x] **Snapshots backlog (S9.5–S9.7, 2026-07-06):** Separate SPA panel, snapshot-on-commit, FIFO retention — open item + **`IMPLEMENTATION_PLAN.md`** rows; **`ea34c69`** on **`main`**.
 
