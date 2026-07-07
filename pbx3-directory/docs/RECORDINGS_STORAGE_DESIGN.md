@@ -1,6 +1,6 @@
 # Recordings storage & search — design
 
-**Status:** Design (2026-07-07; amended — SQLite catalog, tenant mobility, deletion/ageing §6.1, PCI DSS §6.2)  
+**Status:** Design (2026-07-07; amended — SQLite catalog, deletion §6.1, PCI §6.2–6.3 dedicated bucket)  
 **Related:** **`IMPLEMENTATION_PLAN.md`** § Phase R1 / § Phase S7 · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 · **`DESIGN_RULES.md`** (Rule 1 fail-safe)
 
 This document captures the agreed **shape** of call recordings storage and search: how the legacy system worked, what **Phase R1** shipped, and how **local archive offload** (R1.5) and **S3 offload** (S7) should extend it. It is written as durable history so implementers do not have to rediscover the reasoning.
@@ -136,6 +136,7 @@ flowchart LR
 
 | Property | Value |
 |----------|-------|
+| **Bucket** | **Dedicated recordings bucket** (§6.3) — **not** the shared org bucket that hosts public `catalog/` |
 | Prefix | `tenants/{shortuid}/recordings/media/{yyyy}/{mm}/{dd}/{object}.wav` |
 | Writer | Async upload after local file stable — **presigned PUT** from control-plane gatekeeper (§5) |
 | Reader | `ListObjectsV2` by prefix + presigned GET for play/download when local copy gone |
@@ -360,7 +361,7 @@ Call recordings can contain **cardholder data (CHD)** — e.g. a caller reading 
 
 | Area | Control | Implementation notes |
 |------|---------|----------------------|
-| **Access control** | S3 **Block Public Access** at **bucket and account** level | Recordings prefix must never be public; contrast with public `catalog/` (read-only, no CHD) |
+| **Access control** | S3 **Block Public Access** at **bucket and account** level | Dedicated recordings bucket (§6.3); never co-located with public `catalog/` |
 | | **Least privilege** IAM | Read-only where appropriate; node roles scoped to `tenants/{hosted_shortuid}/recordings/*` (see §5, `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.6.1); gatekeeper is sole broad writer via presigns; audit permissions regularly |
 | **Encryption in transit** | **HTTPS/TLS** only | Enforce `aws:SecureTransport` in bucket policy; API playback proxy over TLS |
 | **Encryption at rest** | **S3 default encryption with AWS KMS** | KMS CMK for the recordings bucket/prefix meets strict crypto requirements; key policy scoped and audited |
@@ -377,7 +378,72 @@ Call recordings can contain **cardholder data (CHD)** — e.g. a caller reading 
 
 ### Scope note
 
-This is a **future S7+ concern**, not a blocker for R1 (local, no S3) or R1.5 (local archive). It is documented here so the S3 offload design accounts for PCI from the start rather than retrofitting. Refer to the official **AWS Compliance Validation for Amazon S3** documentation for the authoritative, current control list and shared-responsibility boundaries.
+This is a **future S7+ concern**, not a blocker for R1 (local, no S3) or R1.5 (local archive). It is documented here so the S3 offload design accounts for PCI from the start rather than retrofitting. **Bucket layout decision:** §6.3. Refer to the official **AWS Compliance Validation for Amazon S3** documentation for the authoritative, current control list and shared-responsibility boundaries.
+
+### 6.3 PCI scope & S3 bucket structure (settled 2026-07-07)
+
+**Decision:** call recordings that may hold **cardholder data (CHD)** must live in a **dedicated S3 bucket**, separate from the shared **org fleet bucket** (`PBX3_ORG_BUCKET`) used today for `catalog/`, instance backups, and tenant catalog metadata.
+
+**Within our capability:** yes — the gatekeeper / control-plane model (§5, `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.6) can own presigns, KMS, CloudTrail, and IAM for a recordings bucket without re-architecting telephony or tenant mobility. Formal PCI attestation still requires QSA / organisational process; the **technical environment** is achievable.
+
+#### Why the current single-bucket layout is insufficient
+
+Today (S5/S8) one org bucket typically holds:
+
+```
+catalog/                      ← public or public-ish GET (instance-index.json)
+instances/{ksuid}/backups/    ← no CHD
+tenants/{shortuid}/meta.json  ← no CHD
+tenants/{shortuid}/dids.json
+(tenants/{shortuid}/recordings/  ← planned S7 — may contain CHD)
+```
+
+PCI requires **Block Public Access** at **bucket and account** level for the CDE. That conflicts with a **public `catalog/`** prefix in the **same** bucket. Enabling account-wide BPA would also block the public catalog across all buckets. **Prefix isolation inside one bucket is not enough** for PCI scope separation when any prefix is intentionally public.
+
+#### Target bucket layout
+
+```mermaid
+flowchart TB
+  subgraph pci [PCI CDE scope]
+    recBucket["pbx3-org-recordings<br/>BPA on, KMS CMK, TLS-only<br/>CloudTrail data events"]
+  end
+  subgraph nonpci [Out of PCI CDE]
+    fleetBucket["pbx3-org-fleet PBX3_ORG_BUCKET<br/>catalog/, instances/, tenants meta/dids"]
+  end
+  subgraph audit [Audit]
+    auditBucket["pbx3-org-audit-logs<br/>Object Lock WORM"]
+  end
+  recBucket --> auditBucket
+```
+
+| Bucket | Contents | PCI scope | Access |
+|--------|----------|-----------|--------|
+| **`pbx3-{org}-recordings`** (new) | `tenants/{shortuid}/recordings/media/…`, `policy.json` per tenant | **In scope** when CHD present | Private only; gatekeeper presigns; node never holds bucket-wide keys |
+| **`pbx3-{org}-fleet`** (existing `PBX3_ORG_BUCKET`) | `catalog/`, `instances/{ksuid}/`, `tenants/{shortuid}/meta.json`, `dids.json`, export staging | **Out of scope** (no CHD) | Public or authenticated `catalog/`; existing node/gatekeeper IAM |
+| **`pbx3-{org}-audit-logs`** (new) | CloudTrail log delivery | Audit trail | Object Lock; no application access |
+
+**Prefix shape unchanged** inside the recordings bucket: `tenants/{shortuid}/recordings/media/{yyyy}/{mm}/{dd}/…` — only the **bucket boundary** moves. SQLite `s3_key` stores the full key (bucket + prefix + object) or bucket name in config with relative key in row — implementer choice at S7.
+
+**Config sketch:** `PBX3_RECORDINGS_BUCKET` (dedicated) alongside existing `PBX3_ORG_BUCKET` (fleet). Gatekeeper and upload jobs use the recordings bucket; registrar / catalog / backups stay on org bucket.
+
+#### What does **not** need to change
+
+- Tenant-stable prefix under `tenants/{shortuid}/recordings/` (move semantics unchanged)
+- Gatekeeper as sole writer + presigned PUT/GET for nodes
+- SQLite catalog + `s3_key` as durable locator
+- Local spool → archive → S3 offload lifecycle (§6, §6.1)
+- §2.6.1 IAM tightening (no blanket `tenants/*` on node role)
+
+#### Scope reduction (strongly recommended)
+
+Even with a dedicated bucket, **avoid capturing CHD** where possible (pause/resume recording during card capture, DTMF suppression). If no CHD is stored, recordings may fall **outside** the CDE — bucket controls remain good hygiene. Most contact centres use **both** suppression and locked storage.
+
+#### Ops follow-ups (S7)
+
+- Provision recordings + audit buckets; document in **`OPS_S3_RUNBOOK.md`**
+- Bucket policies: `aws:SecureTransport`, KMS default encryption, deny public ACLs
+- Security Hub PCI standard on recordings bucket
+- Do **not** place recordings under public `catalog/` bucket
 
 ---
 
@@ -434,22 +500,24 @@ Mirror **`InstanceBackupDirectoryUpload`** pattern. Ship after or parallel with 
 
 | # | Task | Repo | Notes |
 |---|------|------|-------|
-| S7.1 | **`InstanceRecordingUpload`** (or shared `OrgObjectUpload`) | pbx3api | PUT to `tenants/{shortuid}/recordings/media/{y}/{m}/{d}/{object}.wav` |
-| S7.2 | **Upload trigger** | pbx3api / cron | After offload or on age-eligible stable file; `PBX3_RECORDING_UPLOAD_ENABLED` |
-| S7.3 | **`policy.json`** on first upload | pbx3api | `maxage_days` from `recmaxage`; schema `retention-policy.v0.json` |
-| S7.4 | **Lifecycle + tag** | pbx3-directory/tools | `class=recording`; do not expire catalog/meta |
-| S7.5 | **Presigned PUT** | control plane | Gatekeeper scoped to hosted tenants — not blanket node `tenants/*` |
-| S7.6 | **S3 playback fallback** | pbx3api | Presigned GET or API proxy when local missing |
-| S7.7 | **SPA archived badge** | pbx3spa | When row is S3-only |
-| S7.8 | **Update SQLite on upload** | pbx3api | Set `s3_key`, `location`; `local_path` optional |
-| S7.9 | **Reconciliation job** | pbx3api | Backfill index from S3 prefix + local; repair drift |
-| S7.10 | **PCI DSS controls** (§6.2) | control plane / ops | Block Public Access; KMS at-rest + TLS-only; CloudTrail to separate bucket; Security Hub PCI checks; least-privilege IAM audit |
+| S7.1 | **Dedicated recordings bucket** (§6.3) | ops / gatekeeper | `PBX3_RECORDINGS_BUCKET`; BPA, KMS CMK, TLS-only policy; separate from `PBX3_ORG_BUCKET` |
+| S7.2 | **`InstanceRecordingUpload`** (or shared upload base) | pbx3api | PUT to recordings bucket: `tenants/{shortuid}/recordings/media/{y}/{m}/{d}/{object}.wav` |
+| S7.3 | **Upload trigger** | pbx3api / cron | After offload or on age-eligible stable file; `PBX3_RECORDING_UPLOAD_ENABLED` |
+| S7.4 | **`policy.json`** on first upload | pbx3api | `maxage_days` from `recmaxage`; on recordings bucket |
+| S7.5 | **Lifecycle + tag** | pbx3-directory/tools | `class=recording` on recordings bucket only |
+| S7.6 | **Presigned PUT/GET** | control plane | Gatekeeper scoped to hosted tenants; recordings bucket only |
+| S7.7 | **S3 playback fallback** | pbx3api | Presigned GET or API proxy when local missing |
+| S7.8 | **SPA archived badge** | pbx3spa | When row is S3-only |
+| S7.9 | **Update SQLite on upload** | pbx3api | Set `s3_key` (full bucket+key), `location`; `local_path` optional |
+| S7.10 | **Reconciliation job** | pbx3api | Backfill index from recordings bucket + local; repair drift |
+| S7.11 | **PCI DSS controls** (§6.2–6.3) | control plane / ops | CloudTrail → audit bucket (Object Lock); Security Hub PCI; IAM audit |
 
 **Exit criteria:**
 
 - [ ] Finished call recording async PUT to tenant prefix on golden
 - [ ] Playback works from S3 when local file aged off; `s3_key` set on row
 - [ ] Lifecycle aligned with tenant `recmaxage`
+- [ ] Recordings land in **dedicated** bucket (not org/catalog bucket); PCI controls applied
 - [ ] Search works on destination after tenant import (rows + S3 keys)
 
 **Defer past S7:** `recordings` table snapshot export to S3, monthly manifest jsonl (optional DR), Athena, tenant backup zip under `tenants/…/backups/`.
@@ -478,6 +546,7 @@ Record these for the next design review — do not block R1.5 kickoff on all ans
 | 5 | Offload: move vs copy from spool? | **Move** (legacy `rsync --remove-source-files`) | Copy + spool retention for grace period |
 | 6 | Queue `Qexec` unswept files | Offload like regular wav; parser already flags `is_queue` | Separate sweep job |
 | 7 | Soft-delete recovery window | **Delete bin** + optional `deleted_at` tombstone (R1.5) | S3 versioning only (defer) |
+| 8 | S3 bucket for recordings | **Settled:** dedicated `PBX3_RECORDINGS_BUCKET` (§6.3) | Same org bucket as catalog (rejected — PCI vs public catalog) |
 
 ---
 
