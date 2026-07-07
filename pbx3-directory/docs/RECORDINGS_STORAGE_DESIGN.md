@@ -1,6 +1,6 @@
 # Recordings storage & search — design
 
-**Status:** Design (2026-07-07; amended same day — SQLite catalog + tenant mobility)  
+**Status:** Design (2026-07-07; amended — SQLite catalog, tenant mobility, deletion/ageing §6.1)  
 **Related:** **`IMPLEMENTATION_PLAN.md`** § Phase R1 / § Phase S7 · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 · **`DESIGN_RULES.md`** (Rule 1 fail-safe)
 
 This document captures the agreed **shape** of call recordings storage and search: how the legacy system worked, what **Phase R1** shipped, and how **local archive offload** (R1.5) and **S3 offload** (S7) should extend it. It is written as durable history so implementers do not have to rediscover the reasoning.
@@ -263,15 +263,90 @@ Cross-reference **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 �
 
 ## 6. Retention hybrid
 
-Same pattern as instance backups (option C in **`DESIGN_RULES.md`**):
+Same pattern as instance backups (option C in **`DESIGN_RULES.md`**): local disk is the **hot cache**; S3 is the **DR / long-term** copy until lifecycle expires it.
 
 | Store | Policy | Mechanism |
 |-------|--------|-----------|
 | Spool | Hours / until offloaded | Offload job removes after stable |
-| Local archive | `rec_age` / `recmaxage` (days) | PHP/cron job replaces `agerecordings.sh` |
-| S3 | `policy.json` `maxage_days` | Lifecycle rule + `class=recording` tag |
+| Local archive | `recmaxage` (days), optional `recmaxsize` (bytes) | PHP retention job (§6.1) replaces `agerecordings.sh` |
+| S3 | `policy.json` `maxage_days` ← `recmaxage` | Lifecycle rule + `class=recording` tag |
 
-Local eviction does **not** delete S3 copy until S3 lifecycle expires it.
+Local eviction does **not** delete the S3 copy until S3 lifecycle expires it. The SQLite row **survives** local deletion when `s3_key` is set (§6.1).
+
+### 6.1 Deletion & ageing
+
+Legacy used **four** tenant fields and a **two-stage** local delete. The new design keeps the semantics where they still apply and extends them across **local file**, **SQLite index**, and **S3**.
+
+#### Tenant config (cluster table)
+
+| Field | Default | Role |
+|-------|---------|------|
+| `recmaxage` | 60 (days) | **Primary** per-tenant max age — used by retention job and S3 `policy.json` |
+| `rec_age` | 60 (days) | Legacy duplicate of age limit; prefer `recmaxage` for new code |
+| `rec_grace` | 5 (days) | Soft-delete grace: how long files stay in the delete bin before permanent purge |
+| `recmaxsize` | 0 (unlimited) | Max **bytes** per tenant on local storage; evict **oldest first** when exceeded |
+
+All four are already in `sqlite_create_tenant.sql` and exposed in the SPA tenant advanced panel.
+
+#### Legacy two-stage delete (reference)
+
+```mermaid
+flowchart LR
+  live["/media/recordings live"] -->|"agerecordings.sh 02:00<br/>mtime greater than recmaxage"| bin["archive/deletes/"]
+  bin -->|"agegracerecordings.sh 03:00<br/>mtime greater than rec_grace"| gone["rm permanent"]
+```
+
+- **`agerecordings.sh`** — per tenant, `find … -mtime +recmaxage` → **move** to delete bin (recoverable).
+- **`agegracerecordings.sh`** — `find deletes … -mtime +rec_grace` → **permanent** `rm`.
+
+Both scripts carry legacy notes that grace/delete-bin is *"no longer necessary with S3"* — fleet target is hybrid local + S3 lifecycle, not delete-bin-only.
+
+#### Tri-store consistency on delete
+
+Retention must keep **local file**, **`recordings` row**, and **S3 object** aligned.
+
+| Event | Local file | SQLite `recordings` row | S3 object |
+|-------|------------|-------------------------|-----------|
+| Age out, **S3 copy exists** | Move to delete bin → purge after `rec_grace` | **Keep row**; set `location = s3_only`, clear `local_path` | Unchanged until lifecycle |
+| Age out, **local-only** (no `s3_key`) | Delete bin → purge after `rec_grace` | **DELETE row** after permanent purge |
+| `recmaxsize` exceeded | Evict oldest until under cap | Same rules as age-out per row | Unchanged if uploaded |
+| S3 lifecycle expires object | — | **DELETE row** (reconciliation job) | Deleted by lifecycle |
+| Operator manual delete (future UI) | Delete if present | DELETE or tombstone | DELETE via gatekeeper presign |
+
+**Row lifetime rule:** a row is removed only when **no copy remains** (local and S3 both gone). If S3 still holds the object, local deletion transitions the row to `s3_only` — still searchable and playable via presigned GET.
+
+#### When retention runs (R1.5 / S7)
+
+| Job | Schedule (legacy analogue) | Action |
+|-----|---------------------------|--------|
+| **Age-out** | Daily ~02:00 (`agerecordings.sh`) | Per hosted tenant: find archive (+ spool if policy includes) files older than `recmaxage`; soft-delete to `{archive_root}/deletes/{tenant}/` or mark row |
+| **Grace purge** | Daily ~03:00 (`agegracerecordings.sh`) | Permanent delete from delete bin after `rec_grace`; delete SQLite row if no `s3_key` |
+| **Size cap** | Same age-out pass or separate | If `recmaxsize` > 0 and `recused` over cap, evict oldest recordings until under limit |
+| **S3 lifecycle** | AWS-managed | Expire `tenants/{shortuid}/recordings/media/…` per `policy.json` |
+| **Reconciliation** | Nightly (S7.9) | Remove rows whose `s3_key` no longer exists; fix drift |
+
+**Tenant move:** retention policy (`recmaxage`, `rec_grace`, `recmaxsize`) travels in the tenant miniDB. The **destination node** runs retention for **hosted** tenants — same as extensions or queues.
+
+#### Soft delete: delete bin vs tombstone (open)
+
+| Approach | Fit | Notes |
+|----------|-----|-------|
+| **Delete bin** (legacy) | On-prem / local archive | `{archive_root}/deletes/{tenant}/`; recoverable for `rec_grace` days |
+| **Row tombstone** (`deleted_at` column) | Fleet + SPA | Row hidden from list; hard-delete after grace; no second filesystem tree |
+| **S3 versioning** | Fleet DR | Version stack on object; heavier ops; defer unless compliance requires |
+
+**Lean for R1.5:** keep **delete bin** for local parity; add optional `deleted_at` on the row when soft-deleting so the API can hide tombstoned rows before filesystem purge. Revisit full S3 versioning in S7+.
+
+#### Index updates on delete
+
+| Step | SQLite change |
+|------|----------------|
+| Soft-delete (age-out) | Optional `deleted_at` set; or row unchanged until purge |
+| Local purge, S3 remains | `local_path = NULL`, `location = s3_only` |
+| Local + S3 gone | `DELETE FROM recordings WHERE id = ?` |
+| Reconciliation sees missing S3 key | `DELETE` orphan row |
+
+Operator list (`GET /recordings`) excludes rows with `deleted_at` set (when tombstone column ships).
 
 ---
 
@@ -309,7 +384,7 @@ Reintroduce legacy offload semantics in PHP; keep R1 working if offload disabled
 | R1.5.7 | **`recordings_archive` disk** | pbx3api | `filesystems.php`; default `/opt/pbx3/media/recordings`; env `PBX3_RECORDINGS_ARCHIVE_ROOT` |
 | R1.5.8 | **Cron / scheduler** | pbx3api | Artisan command every 10 min (replaces `offload_simple.sh`) |
 | R1.5.9 | **`rec_mount` integration** | pbx3 / ops | Mount external FS at archive root when tenant/instance config set; document in ops runbook |
-| R1.5.10 | **Retention job** | pbx3api | Per-tenant `recmaxage`; delete rows when files aged out |
+| R1.5.10 | **Retention job** | pbx3api | Age-out + grace purge + `recmaxsize`; tri-store rules (§6.1); replaces `agerecordings.sh` / `agegracerecordings.sh` |
 | R1.5.11 | **`recused` tally** | pbx3api | Replace `manageRecs.php` — sum spool + archive per tenant |
 | R1.5.12 | **Golden smoke** | ops | Offload test file; verify list/play from archive + DB row |
 
@@ -318,7 +393,7 @@ Reintroduce legacy offload semantics in PHP; keep R1 working if offload disabled
 - [ ] File moves from spool to date-folder archive without operator action
 - [ ] Recordings panel shows offloaded files; play/download unchanged
 - [ ] `recordings` rows populated on offload; search uses SQLite on destination after import
-- [ ] Retention respects per-tenant `recmaxage`
+- [ ] Retention respects `recmaxage`, `rec_grace`, and `recmaxsize`; rows become `s3_only` when local purged but S3 remains
 
 ---
 
@@ -370,6 +445,7 @@ Record these for the next design review — do not block R1.5 kickoff on all ans
 | 4 | Long-term `rec_mount` (customer NFS)? | **Support** for on-prem installs | Fleet-deprecated; S3 only |
 | 5 | Offload: move vs copy from spool? | **Move** (legacy `rsync --remove-source-files`) | Copy + spool retention for grace period |
 | 6 | Queue `Qexec` unswept files | Offload like regular wav; parser already flags `is_queue` | Separate sweep job |
+| 7 | Soft-delete recovery window | **Delete bin** + optional `deleted_at` tombstone (R1.5) | S3 versioning only (defer) |
 
 ---
 
@@ -383,7 +459,7 @@ Record these for the next design review — do not block R1.5 kickoff on all ans
 | R1 SPA | `pbx3spa/src/views/RecordingsListView.vue` |
 | Filesystem config | `pbx3api/config/filesystems.php` — `recordings` disk |
 | Legacy offload | `pbx3/pbx3-1/opt/pbx3/scripts/rewrite-offload_simple.sh`, `etc/cron.d/pbx3` |
-| Legacy retention | `pbx3/pbx3-1/opt/pbx3/scripts/agerecordings.sh` |
+| Legacy retention | `agerecordings.sh`, `agegracerecordings.sh` |
 | Legacy usage | `pbx3/pbx3-1/opt/pbx3/php/utilities/manageRecs.php` |
 | Legacy MySQL catalog | `pbx3/pbx3-1/opt/pbx3/db/db_mysql/mysql_create_catalog.sql` — `recordings` table |
 | Tenant mobility | `pbx3api/app/Services/Tenant/TenantMobilityService.php` — `TENANT_DATA_TABLES` |
