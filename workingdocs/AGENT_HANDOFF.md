@@ -41,16 +41,43 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
 | Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`fetch-latest-instance-backup.sh`** |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
-| Call recordings | **`IMPLEMENTATION_PLAN.md`** § **Phase R1** (local SPA/API) → **Phase S7** (S3 offload) |
+| Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
 
 **Source of truth:** Schema and code. Verify against pbx3 db_sql and code when changing behaviour; workingdocs may be outdated.
 
 ---
 
-## Next agent session notes (2026-07-07, session end — fleet mobility design)
+## Next agent session notes (2026-07-07, session end — R1 recordings shipped)
 
-**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. Docs-only session in **`pbx3/pbx3-directory/`** (no runtime/API changes).
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. **`r1`** merged to **`main`** in **pbx3api** + **pbx3spa**; local **`r1`** branches may be deleted.
+
+### Shipped
+
+| Repo | Commit | Notes |
+|------|--------|--------|
+| **pbx3api** | **`4f52853`** | R1 API: `RecordingController`, `RecordingIndexService`, `/recordings` routes; spool disk `PBX3_RECORDINGS_ROOT` |
+| **pbx3spa** | **`ea0fefc`** | Recordings panel, nav, tenant-name filters, play/download |
+| **pbx3** | **`b90e93f`…`4f19530`** | **`RECORDINGS_STORAGE_DESIGN.md`** — three-tier storage, SQLite index, ageing, dedicated S3 bucket, PCI + third-party PSP handoff |
+
+**Golden validated:** tenant **duns** — list, play, download from **`https://08jzwn.pbx3.com:44300/api`**. SPA runs locally against golden.
+
+### Golden / operator follow-up
+
+- **08jzwn** `/opt/pbx3api` on **`main`** (`git pull` done; php-fpm reloaded).
+- Recordings read spool: **`/var/spool/asterisk/monitor/{tenant_shortuid}/`** (not `/opt/pbx3/media/recordings` until R1.5).
+
+### Resume
+
+1. **R1.5** — local archive offload + `recordings` SQLite table (**`RECORDINGS_STORAGE_DESIGN.md`** §7).
+2. Optional parallel: **§2.6.1** IAM tighten (drop `tenants/*` on node policy).
+3. **S7** after R1.5 + gatekeeper presigns (dedicated recordings bucket).
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** at login.
+
+---
+
+## Next agent session notes (2026-07-07, session end — fleet mobility design) — historical
 
 ### Shipped (docs)
 

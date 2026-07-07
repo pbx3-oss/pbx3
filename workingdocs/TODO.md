@@ -1,19 +1,16 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-07 (session end — S8.10 fleet mobility + stakeholder overview docs)
+**Last updated:** 2026-07-07 (session end — R1 recordings shipped; **RECORDINGS_STORAGE_DESIGN.md**)
 
 ### Suggested “what next?” order
 
-1. **Phase R1** — call recordings **management** (API list/search/play + SPA panel; local disk first) — **`IMPLEMENTATION_PLAN.md`** § Phase R1 · **`RECORDINGS_STORAGE_DESIGN.md`**  
-2. **Phase S7** — recordings **S3 offload** (mirror backup upload pattern; IAM on same node role as S8.3) — **`RECORDINGS_STORAGE_DESIGN.md`** §7  
-3. **S8.10 fleet mobility (implementation)** — design complete; **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13 + **`FLEET_SYSTEM_OVERVIEW.md`**. Early win: **§2.6.1** node IAM tighten; then **Phase A** (Egress + AGI); **B′** control plane before **C** move wizard.  
-4. **Snapshots UX + commit hook** — separate SPA panel, snapshot on Commit, FIFO retention (**`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7); after R1 or parallel ops polish  
-5. **pbx3cagi** — **Phase 1.3+ struct refactor deferred** until R1 underway (Phase 0 **golden-signed-off**; **1.0.0-3** `_all.deb` on **`main`**) — **`REFACTOR_PLAN.md`**  
-6. **Extension Runtime re-examine** — live SIP IP/latency when phones registered; **SWOCLIP** create/edit parity  
-7. **`tt_help_core` cleanup** (230 rows) or **permissions Phase 1+**  
-8. **Directory / central admin** — instance picker; Phase D private catalog for production MSP (`DESIGN_RULES.md`)  
-9. **SARK migration routines** (end of list) — revisit `db_legacy_sql` import / fixRi path
+1. **Phase R1.5** — recordings **local archive offload** + SQLite `recordings` index — **`RECORDINGS_STORAGE_DESIGN.md`** §7 (R1.5)  
+2. **Phase S7** — recordings **S3 offload** (dedicated `PBX3_RECORDINGS_BUCKET`, presigns, PCI §6.2–6.4) — **`RECORDINGS_STORAGE_DESIGN.md`** §7  
+3. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. Early win: **§2.6.1** node IAM tighten; then **Phase A** / **B′** control plane.  
+4. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
+5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+6. **Extension Runtime re-examine** · **SWOCLIP** · **`tt_help_core` cleanup** · **Directory Phase D** · **SARK migration** (end of list)
 
 ---
 
@@ -25,9 +22,9 @@
 
 - [ ] **Phase S8 — Fleet (optional polish):** **S8.1–S8.6 shipped and drill-validated** (affcot **08jzwn → bzy54n**). Remaining optional: LE Sync post-cutover; **`move-tenant.sh`** if catalog workflow preferred over **`register-tenant.sh`** for first-time tenants. See **`TENANT_MIGRATION_RUNBOOK.md`**.
 
-- [ ] **Phase R1 — Call recordings management (local-first, priority #2):** Operator list/search/play/download from on-node wav files under `/opt/pbx3/media/recordings/…`. **pbx3api:** `GET /recordings` (tenant, date range, caller/callee), stream/download endpoints. **pbx3spa:** port **`sarkrecordings`** panel (see **`SAIL65_PANEL_PORT_PLAN.md`**). Capture already works (`pbx3cagi` SetRecord + tenant config); **no S3 required** for R1 v1. Spec: **`IMPLEMENTATION_PLAN.md`** § Phase R1 · shape: **`RECORDINGS_STORAGE_DESIGN.md`**. **Defer:** bulk delete UI, per-user listen permissions, `recordings` catalog DB sync.
+- [ ] **Phase R1.5 — Recordings local archive + SQLite index (priority #1):** Spool → `/opt/pbx3/media/recordings/{tenant}/{yyyy}/{mm}/{dd}/`; `recordings` table in tenant SQLite (moves with miniDB); offload cron; retention (`recmaxage`, `rec_grace`, `recmaxsize`); API queries DB with filesystem fallback. Spec: **`RECORDINGS_STORAGE_DESIGN.md`** §7 R1.5, §6.1.
 
-- [ ] **Phase S7 — Recordings S3 offload (priority #3):** Async PUT to `tenants/{shortuid}/recordings/media/…`, lifecycle tag, presigned play when local file aged off — mirror S5 backup pattern. Do after or parallel with R1 once **S8.3** IAM policy includes recordings prefix. Spec: **`IMPLEMENTATION_PLAN.md`** § Phase S7 · **`RECORDINGS_STORAGE_DESIGN.md`** §7 (R1.5 local offload first).
+- [ ] **Phase S7 — Recordings S3 offload (priority #2):** Dedicated **`PBX3_RECORDINGS_BUCKET`** (not org/catalog bucket); async upload; presigned play; PCI controls (§6.2–6.3); SQLite `s3_key`. After R1.5 + gatekeeper presigns. **`RECORDINGS_STORAGE_DESIGN.md`** §7 S7; defer S7+.3 PSP handoff until customer need.
 
 - [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**; add **`pbx3-docs`** later. Maintain **`REPOS_AND_RELEASES.md`** (inventory, remotes, compatibility matrix). Update local clone remotes; keep **`pbx3-master/`** holding-folder layout. Tag first aligned release row in compatibility matrix when cutting public release.
 
@@ -70,6 +67,8 @@
 ---
 
 ## Completed / deferred
+
+- [x] **Phase R1 — Call recordings management (2026-07-07):** **pbx3api** **`4f52853`** + **pbx3spa** **`ea0fefc`** on **`main`** (`r1` merged). `GET /recordings`, stream/download; SPA Recordings panel (filters, tenant name, play/download). Golden smoke: tenant **duns** on **08jzwn** (`/var/spool/asterisk/monitor`). **`RECORDINGS_STORAGE_DESIGN.md`** — storage/search/ageing/PCI shape for R1.5/S7.
 
 - [x] **S8.10 fleet mobility + stakeholder docs (2026-07-07):** **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (panel-first move, SBC cutover, control-plane + S3 gatekeeper, gotchas, §13 implementer readiness) + **`FLEET_SYSTEM_OVERVIEW.md`** (stakeholder intro). **`IMPLEMENTATION_PLAN.md`** S8.10 row updated; **`pbx3-directory/README.md`** pointer.
 
