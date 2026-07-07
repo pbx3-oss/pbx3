@@ -1,6 +1,6 @@
 # Recordings storage & search — design
 
-**Status:** Design (2026-07-07) — context for future R1.5 / S7 work  
+**Status:** Design (2026-07-07; amended same day — SQLite catalog + tenant mobility)  
 **Related:** **`IMPLEMENTATION_PLAN.md`** § Phase R1 / § Phase S7 · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 · **`DESIGN_RULES.md`** (Rule 1 fail-safe)
 
 This document captures the agreed **shape** of call recordings storage and search: how the legacy system worked, what **Phase R1** shipped, and how **local archive offload** (R1.5) and **S3 offload** (S7) should extend it. It is written as durable history so implementers do not have to rediscover the reasoning.
@@ -168,28 +168,82 @@ On POSIX, operators could run `find /opt/pbx3/media/recordings … -name '*555*'
 | Search caller/callee | Filename parse + substring match on scan | Filter **after** prefix list, or **index** |
 | Play / download | `response()->file()` | Local if present; else presigned GET |
 
-### 4.3 Index tiers (documented choice)
+### 4.3 Index approach (settled 2026-07-07)
 
-Implement search in layers — do not jump to Athena for v1.
+**Preferred:** tenant-scoped **`recordings` table** in SQLite (§4.5) — indexed SQL search, moves with tenant miniDB, aligns with legacy MySQL catalog.
 
-| Level | Mechanism | When |
+Supplementary mechanisms (not primary operator search):
+
+| Level | Mechanism | Role |
 |-------|-----------|------|
-| **v1** | Tenant + date prefix list; filter caller/callee on returned page | S7 initial ship |
-| **v2** | Monthly `manifest-{yyyy}-{mm}.jsonl` under tenant recordings prefix; optional per-node sqlite catalog | When prefix-only search is too slow |
-| **v3** | Athena / OpenSearch | Compliance-scale, deferred |
+| **Primary** | SQLite `recordings` table (`cluster` = tenant shortuid) | Interactive list/search/play resolution |
+| **Reconciliation** | Filesystem scan + S3 prefix list | Backfill or repair index drift |
+| **Export / DR** | Optional monthly `manifest-{yyyy}-{mm}.jsonl` under tenant S3 prefix | Portable backup of metadata; not the live query path |
+| **Compliance** | Athena / OpenSearch | Large fleet / legal discovery — deferred |
+
+Do not use S3 prefix listing alone as the operator search path once the SQLite catalog ships.
 
 ### 4.4 Multi-root API
 
-`RecordingIndexService` (or successor) becomes a **union**:
+`RecordingIndexService` (or successor) queries the **`recordings` table first** when present; falls back to filesystem scan (R1 behaviour) if the table is empty or a row is missing (**Rule 1** — search is not in the call path).
 
-1. Scan spool root(s)
-2. Scan local archive root(s)
-3. If enabled, list S3 prefix(es) for requested tenant/date window
-4. **Dedupe** on stable id (same encoding as R1: base64url of `{tenant}/{filename}.wav` or S3 key)
-5. Expose `location`: `local` | `archive` | `s3` | `s3_only`
-6. Stream: local path first; S3 presigned fallback (S7.6)
+**Read path:**
+
+1. `SELECT … FROM recordings WHERE cluster = ?` (+ date / caller / callee filters)
+2. Resolve blob: `local_path` if file exists on this node; else presigned GET from `s3_key`
+3. Reconciliation job (nightly or on-demand): compare table vs spool/archive/S3; insert missing rows, clear stale `local_path`
+
+**Union / dedupe** (during transition or reconciliation):
+
+1. Scan spool root(s) and local archive root(s)
+2. If enabled, list S3 prefix(es) for requested tenant/date window
+3. **Dedupe** on stable id (R1 encoding or table `id`)
+4. Expose `location`: `spool` | `archive` | `s3` | `s3_only`
 
 SPA: **“archived”** badge when `location === 's3_only'` (S7.7).
+
+### 4.5 Tenant-scoped SQLite catalog (preferred)
+
+Recordings belong to **tenants**. Search metadata lives in a **`recordings` table** in the tenant-scoped SQLite schema — same pattern as `queue`, `greeting`, `inroutes` (one node DB file; rows scoped by `cluster` = tenant shortuid).
+
+**Mobility:** The table **moves with the tenant** via `tenant:export` / `tenant:import` (`TenantMobilityService`). Add `recordings` to `TENANT_DATA_TABLES` when the table ships. This is **tenant-owned metadata**, not stranded on the old instance after a move.
+
+**Legacy precedent:** MySQL catalog `recordings` table (`caller-id`, `callee-id`, `cdate`, `tenant-id`, `s3key`) — see `mysql_create_catalog.sql`.
+
+**Proposed schema (sketch):**
+
+```sql
+CREATE TABLE recordings (
+  id          TEXT PRIMARY KEY,       -- ksuid or stable id
+  cluster     TEXT NOT NULL,          -- tenant shortuid (RI)
+  epoch       INTEGER NOT NULL,
+  callerid    TEXT,
+  dnid        TEXT,                   -- callee (calledid)
+  queue       TEXT,
+  extension   TEXT,
+  filename    TEXT NOT NULL,
+  local_path  TEXT,                   -- null when s3_only on this node
+  s3_key      TEXT,                   -- durable locator; survives tenant move
+  location    TEXT NOT NULL,          -- spool | archive | s3 | s3_only
+  filesize    INTEGER,
+  z_created   datetime,
+  UNIQUE(cluster, filename)
+);
+-- indexes: (cluster, epoch), (cluster, callerid), (cluster, dnid)
+```
+
+**Locators after tenant move:**
+
+| Field | On move |
+|-------|---------|
+| `s3_key` | **Unchanged** — S3 prefix is tenant-stable (`tenants/{shortuid}/recordings/…`) |
+| `local_path` | Valid only on the node that holds the file; cleared or stale after move |
+| Row itself | **Imported** on destination with tenant miniDB |
+| On-node wavs | Optional `tenant:export --include-recordings`; otherwise S3-backed rows still searchable/playable |
+
+**Write path:** insert or update row when recording is stable — at offload (R1.5), on S3 upload complete (S7), with reconciliation backfill from filesystem/S3.
+
+**Rule 1:** SQLite is for **operator search and blob pointers**, not capture. MixMonitor still writes to spool if the DB is unavailable; API falls back to filesystem scan.
 
 ---
 
@@ -202,7 +256,7 @@ Cross-reference **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 �
 | Node IAM | Drop blanket `tenants/*` write; backups stay on `instances/{ksuid}/` |
 | Upload | Gatekeeper `POST /s3/presign` — scoped PUT to `tenants/{hosted_shortuid}/recordings/*` |
 | Fail-safe | Gatekeeper down → calls continue; local disk authoritative until upload succeeds |
-| Tenant move | S3 recordings **stay** under `tenants/{shortuid}/recordings/`; optional `--include-recordings` only for on-node wav bundle |
+| Tenant move | S3 recordings **stay** under `tenants/{shortuid}/recordings/`; **`recordings` table rows move** with tenant miniDB; optional `--include-recordings` for on-node wav bundle |
 | Control plane | Same service as S3 gatekeeper — not a separate recordings app |
 
 ---
@@ -249,17 +303,21 @@ Reintroduce legacy offload semantics in PHP; keep R1 working if offload disabled
 | R1.5.1 | **`RecordingOffloadService`** | pbx3api | Scan spool for stable `.wav` (age > N minutes, not open); move to archive path |
 | R1.5.2 | **Archive layout** | pbx3api / config | `{archive_root}/{tenant}/{yyyy}/{mm}/{dd}/{filename}.wav` |
 | R1.5.3 | **`recordings_archive` disk** | pbx3api | `filesystems.php`; default `/opt/pbx3/media/recordings`; env `PBX3_RECORDINGS_ARCHIVE_ROOT` |
-| R1.5.4 | **Multi-root indexer** | pbx3api | Extend `RecordingIndexService` — union spool + archive; dedupe prefer archive |
-| R1.5.5 | **Cron / scheduler** | pbx3api | Artisan command every 10 min (replaces `offload_simple.sh`) |
-| R1.5.6 | **`rec_mount` integration** | pbx3 / ops | Mount external FS at archive root when tenant/instance config set; document in ops runbook |
-| R1.5.7 | **Retention job** | pbx3api | Per-tenant `recmaxage`; replace `agerecordings.sh` |
-| R1.5.8 | **`recused` tally** | pbx3api | Replace `manageRecs.php` — sum spool + archive per tenant |
-| R1.5.9 | **Golden smoke** | ops | Offload test file; verify list/play from archive path |
+| R1.5.4 | **`recordings` table + model** | pbx3api + schema | `sqlite_create_tenant.sql`; add to `TenantMobilityService::TENANT_DATA_TABLES` |
+| R1.5.5 | **Index on offload** | pbx3api | Insert/update row when file moves spool → archive |
+| R1.5.6 | **API queries SQLite** | pbx3api | `GET /recordings` from table; filesystem fallback (Rule 1) |
+| R1.5.7 | **`recordings_archive` disk** | pbx3api | `filesystems.php`; default `/opt/pbx3/media/recordings`; env `PBX3_RECORDINGS_ARCHIVE_ROOT` |
+| R1.5.8 | **Cron / scheduler** | pbx3api | Artisan command every 10 min (replaces `offload_simple.sh`) |
+| R1.5.9 | **`rec_mount` integration** | pbx3 / ops | Mount external FS at archive root when tenant/instance config set; document in ops runbook |
+| R1.5.10 | **Retention job** | pbx3api | Per-tenant `recmaxage`; delete rows when files aged out |
+| R1.5.11 | **`recused` tally** | pbx3api | Replace `manageRecs.php` — sum spool + archive per tenant |
+| R1.5.12 | **Golden smoke** | ops | Offload test file; verify list/play from archive + DB row |
 
 **Exit criteria:**
 
 - [ ] File moves from spool to date-folder archive without operator action
 - [ ] Recordings panel shows offloaded files; play/download unchanged
+- [ ] `recordings` rows populated on offload; search uses SQLite on destination after import
 - [ ] Retention respects per-tenant `recmaxage`
 
 ---
@@ -277,26 +335,26 @@ Mirror **`InstanceBackupDirectoryUpload`** pattern. Ship after or parallel with 
 | S7.5 | **Presigned PUT** | control plane | Gatekeeper scoped to hosted tenants — not blanket node `tenants/*` |
 | S7.6 | **S3 playback fallback** | pbx3api | Presigned GET or API proxy when local missing |
 | S7.7 | **SPA archived badge** | pbx3spa | When row is S3-only |
-| S7.8 | **Sidecar metadata** | pbx3api | `.txt` or S3 object metadata at upload |
-| S7.9 | **Multi-root indexer S3 leg** | pbx3api | Prefix list for tenant + date; merge with local |
+| S7.8 | **Update SQLite on upload** | pbx3api | Set `s3_key`, `location`; `local_path` optional |
+| S7.9 | **Reconciliation job** | pbx3api | Backfill index from S3 prefix + local; repair drift |
 
 **Exit criteria:**
 
 - [ ] Finished call recording async PUT to tenant prefix on golden
-- [ ] Playback works from S3 when local file aged off
+- [ ] Playback works from S3 when local file aged off; `s3_key` set on row
 - [ ] Lifecycle aligned with tenant `recmaxage`
+- [ ] Search works on destination after tenant import (rows + S3 keys)
 
-**Defer past S7:** `recordings.db` snapshot, monthly manifest, Athena, tenant backup zip under `tenants/…/backups/`.
+**Defer past S7:** `recordings` table snapshot export to S3, monthly manifest jsonl (optional DR), Athena, tenant backup zip under `tenants/…/backups/`.
 
 ---
 
-### Phase S7+ — Scale search (deferred)
+### Phase S7+ — Scale search & compliance (deferred)
 
 | # | Task | Notes |
 |---|------|-------|
-| S7+.1 | Monthly `manifest-{yyyy}-{mm}.jsonl` per tenant | Written at upload or nightly aggregation |
-| S7+.2 | Optional sqlite `recordings_index` on node | Fast caller/callee search for hosted tenants |
-| S7+.3 | Athena / compliance export | Large fleet / legal discovery |
+| S7+.1 | Monthly `manifest-{yyyy}-{mm}.jsonl` per tenant | Optional DR / portable metadata export — not primary search |
+| S7+.2 | Athena / OpenSearch | Large fleet / legal discovery |
 
 ---
 
@@ -308,7 +366,7 @@ Record these for the next design review — do not block R1.5 kickoff on all ans
 |---|----------|------|--------------|
 | 1 | Local archive layout: tenant-first vs legacy date-first? | **Tenant-first** `{tenant}/{yyyy}/{mm}/{dd}/` | Date-first for legacy parity |
 | 2 | S3 object name: keep capture filename vs normalize? | **Keep capture name** — epoch + parties visible in key | `{call_id}.wav` + sidecar only |
-| 3 | Search index when prefix-list is slow? | **Manifest jsonl** (S7+) | Per-node sqlite |
+| 3 | Search index | **Settled:** tenant-scoped SQLite `recordings` table; moves with miniDB | Manifest jsonl as optional DR export only |
 | 4 | Long-term `rec_mount` (customer NFS)? | **Support** for on-prem installs | Fleet-deprecated; S3 only |
 | 5 | Offload: move vs copy from spool? | **Move** (legacy `rsync --remove-source-files`) | Copy + spool retention for grace period |
 | 6 | Queue `Qexec` unswept files | Offload like regular wav; parser already flags `is_queue` | Separate sweep job |
@@ -327,6 +385,8 @@ Record these for the next design review — do not block R1.5 kickoff on all ans
 | Legacy offload | `pbx3/pbx3-1/opt/pbx3/scripts/rewrite-offload_simple.sh`, `etc/cron.d/pbx3` |
 | Legacy retention | `pbx3/pbx3-1/opt/pbx3/scripts/agerecordings.sh` |
 | Legacy usage | `pbx3/pbx3-1/opt/pbx3/php/utilities/manageRecs.php` |
+| Legacy MySQL catalog | `pbx3/pbx3-1/opt/pbx3/db/db_mysql/mysql_create_catalog.sql` — `recordings` table |
+| Tenant mobility | `pbx3api/app/Services/Tenant/TenantMobilityService.php` — `TENANT_DATA_TABLES` |
 | Tenant fields | `sqlite_create_tenant.sql`, `pbx3api/app/Models/Tenant.php` |
 | S7 spec | **`IMPLEMENTATION_PLAN.md`** § Phase S7 |
 | Fleet / IAM | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6.1 |
@@ -339,8 +399,8 @@ Record these for the next design review — do not block R1.5 kickoff on all ans
 |-----|---------|--------|
 | Legacy | Spool → `/media/recordings/{ddmmyy}/` (+ optional NFS) | `find` / glob |
 | R1 (now) | Spool only | Filesystem scan + filename parse |
-| R1.5 (next local) | Spool → tenant/date archive | Multi-root scan |
-| S7 (fleet) | + S3 `tenants/{shortuid}/recordings/media/…` | Prefix list + sidecar; index later |
-| S7+ (scale) | Same | Manifest / sqlite / Athena |
+| R1.5 (next local) | Spool → tenant/date archive | **SQLite `recordings` table** + filesystem fallback |
+| S7 (fleet) | + S3 `tenants/{shortuid}/recordings/media/…` | SQLite + `s3_key`; presigned play when local gone |
+| S7+ (scale) | Same | Optional manifest export; Athena for compliance |
 
-**Bottom line:** Keep the **spool → archive** lifecycle. Replace **find/glob** with **date-shaped keys + prefix listing** on S3. Use **tenant-stable S3 prefixes** so recordings survive fleet moves. Implement offload and indexing in **PHP** (`pbx3api`), not shell rsync, so one service can manage local archive, metadata, and S3 upload consistently.
+**Bottom line:** Keep the **spool → archive** lifecycle. Replace **find/glob** with a **tenant-scoped SQLite catalog** (moves with miniDB) plus **`s3_key`** as the durable locator. Use **tenant-stable S3 prefixes** for fleet archive. Implement offload, indexing, and upload in **PHP** (`pbx3api`), not shell rsync.
