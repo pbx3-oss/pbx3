@@ -267,6 +267,8 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 ### Phase R1 — Call recordings management (local-first) (~2–3 weeks)
 
+**Design (storage + search shape):** **`RECORDINGS_STORAGE_DESIGN.md`** — legacy recap, three-tier target (spool → local archive → S3), search strategy, phased R1 / R1.5 / S7 plan.
+
 **Problem:** Capture and tenant config exist (`pbx3cagi` SetRecord, SPA tenant “Call recording” fields, files under `/opt/pbx3/media/recordings/…`) but operators have **no SPA panel** to search, listen, or download. Legacy **`sarkrecordings`** not ported; **no call-recordings API** in pbx3api (only IVR **`GreetingRecordController`**).
 
 **Principle (Rule 1):** R1 works **without S3** — same as telephony. S3 offload is **Phase S7**, not a blocker for operator UX.
@@ -292,6 +294,8 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 ---
 
 ### Phase S7 — Recordings S3 offload v1 (~2–3 weeks)
+
+**Design (storage + search shape):** **`RECORDINGS_STORAGE_DESIGN.md`** §3.3, §4, §7 — S3 key layout, prefix search (not find/glob), presigned upload/playback, multi-root API, R1.5 → S7 sequencing.
 
 **Principle (Rule 1):** Calls and recording capture work **without S3**. Upload is **async** after the wav exists on disk (mirror `InstanceBackupDirectoryUpload`).
 
