@@ -48,6 +48,43 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
+## Next agent session notes (2026-07-07, session end)
+
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**. **`s8-tenant-move`** merged and deleted.
+
+### Shipped / fleet state
+
+| Item | Notes |
+|------|--------|
+| **pbx3 `main`** | **`e4f9a88`** — **`pbx3_0.0.3-22_all.deb`** + postinst **runLinker**; runbook firewall/symlink |
+| **pbx3api `main`** | **`a7cb907`** — tenant import hardening; auto **`update-fqdn-inline`** |
+| **pbx3cagi `main`** | **`bf8774e`** — **1.0.0-3** sailhpe **`_all.deb`** packaging |
+| **Fleet** | **08jzwn** + **bzy54n** API on **`main`**; **affcot** on **bzy54n**; packages installed |
+
+### Fleet reference
+
+| | **08jzwn** (golden) | **bzy54n** |
+|--|--|--|
+| FQDN | `08jzwn.pbx3.com` | `bzy54n.pbx3.com` |
+| KSUID | `3DmAsxePTWQZgynBYXE8obIRqEE` | `3E3gAOVGBhvc6vEPTBIYCBPycIk` |
+| Tenants | default, duns, sandycroft, willand | cluster1 (`wfh69h`), **affcot** (`9wvvnb`) |
+
+### Operator notes
+
+- Node API updates: **`cd /opt/pbx3api && git pull origin main && composer install --no-dev`** — do not **`scp`** hotfixes.
+- Golden git push needs Mac/credentials; **`.deb`** artifacts committed from builder like prior releases.
+- **`fqdninspect=YES`** on nodes using SIP STRING match on 5060.
+
+### Resume
+
+1. **R1** — call recordings API + SPA panel.
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · affcot: **`https://bzy54n.pbx3.com:44300/api`**.
+
+**Open items:** **`TODO.md`**. **SPA:** **`pbx3spa/workingdocs/SESSION_HANDOFF.md`**.
+
+---
+
 ## Next agent session notes (2026-07-06, session end — tenant migration drill)
 
 **Branch:** **`main`** — **pbx3cagi** **`bf8774e`** (1.0.0-3 packaging). **pbx3** + **pbx3api** — **`s8-tenant-move`** (pending merge to **`main`**). **pbx3spa** — **`main`** (handoff only).
