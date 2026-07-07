@@ -1,6 +1,6 @@
 # Recordings storage & search — design
 
-**Status:** Design (2026-07-07; amended — SQLite catalog, deletion §6.1, PCI §6.2–6.3 dedicated bucket)  
+**Status:** Design (2026-07-07; amended — SQLite catalog, deletion §6.1, PCI §6.2–6.4 PSP handoff)  
 **Related:** **`IMPLEMENTATION_PLAN.md`** § Phase R1 / § Phase S7 · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 · **`DESIGN_RULES.md`** (Rule 1 fail-safe)
 
 This document captures the agreed **shape** of call recordings storage and search: how the legacy system worked, what **Phase R1** shipped, and how **local archive offload** (R1.5) and **S3 offload** (S7) should extend it. It is written as durable history so implementers do not have to rediscover the reasoning.
@@ -351,11 +351,13 @@ Operator list (`GET /recordings`) excludes rows with `deleted_at` set (when tomb
 
 ---
 
-## 6.2 PCI DSS compliance (S3 — future S7+)
+### 6.2 PCI DSS compliance (S3 — future S7+)
 
-Call recordings can contain **cardholder data (CHD)** — e.g. a caller reading a card number to an agent. When recordings are offloaded to S3 (Phase S7), the bucket falls in scope for **PCI DSS**. AWS uses a **shared responsibility model**: AWS secures the underlying infrastructure; **we** are responsible for configuring access control, encryption, and logging to protect the cardholder data environment (CDE).
+Call recordings **can** contain **cardholder data (CHD)** if agents take card details on a recorded line. When recordings are offloaded to S3 (Phase S7), any bucket holding CHD falls in scope for **PCI DSS**. AWS uses a **shared responsibility model**: AWS secures the underlying infrastructure; **we** are responsible for configuring access control, encryption, and logging to protect the cardholder data environment (CDE).
 
-**Best-effort mitigation first:** where feasible, avoid storing CHD at all (pause/resume recording during card capture, or DTMF suppression). PCI controls below apply to whatever CHD does land in S3.
+**Strict PCI posture (settled 2026-07-07):** **pause/resume recording** (or DTMF masking alone) is **not** sufficient to survive PCI DSS scrutiny — auditors treat the PBX and its recordings as in-scope if CHD can be spoken on a recorded call. Customers requiring **strict PCI DSS compliance** must **hand off card capture to a specialist third-party payment provider** (PCI-validated PSP / payment IVR). PBX3 must be **prepared to facilitate** that handoff (§6.4); CHD must not traverse PBX3 storage or recordings when strict mode is required.
+
+For customers who accept recordings in scope, the S3 controls below still apply to the dedicated recordings bucket (§6.3).
 
 ### Required controls (our responsibility)
 
@@ -434,16 +436,65 @@ flowchart TB
 - Local spool → archive → S3 offload lifecycle (§6, §6.1)
 - §2.6.1 IAM tightening (no blanket `tenants/*` on node role)
 
-#### Scope reduction (strongly recommended)
-
-Even with a dedicated bucket, **avoid capturing CHD** where possible (pause/resume recording during card capture, DTMF suppression). If no CHD is stored, recordings may fall **outside** the CDE — bucket controls remain good hygiene. Most contact centres use **both** suppression and locked storage.
-
 #### Ops follow-ups (S7)
 
 - Provision recordings + audit buckets; document in **`OPS_S3_RUNBOOK.md`**
 - Bucket policies: `aws:SecureTransport`, KMS default encryption, deny public ACLs
 - Security Hub PCI standard on recordings bucket
 - Do **not** place recordings under public `catalog/` bucket
+
+### 6.4 Third-party payment capture (strict PCI — future)
+
+When a customer requires **strict PCI DSS compliance**, card data must be captured **outside** the PBX3 trust boundary by a **specialist third-party** payment service (hosted payment IVR, agent-assisted payment bridge, tokenisation platform, etc.). PBX3 is the **call router and tenant platform**, not the cardholder data environment for payment.
+
+#### Why pause/resume is insufficient
+
+| Approach | PCI scrutiny |
+|----------|----------------|
+| Pause MixMonitor during card entry | **Insufficient** — risk of mis-pause, agent error, overlapping channels; QSA typically keeps PBX + recordings in scope |
+| DTMF suppression / mask in recording | **Insufficient alone** — voice CHD (caller reading card aloud) still captured; not a substitute for a validated PSP |
+| **Transfer / refer to PCI-validated PSP** | **Expected pattern** — CHD entered and stored only on provider side; PBX3 recording excludes payment segment if call is bridged correctly |
+
+#### PBX3 facilitation (design intent)
+
+PBX3 should support **routing the call to the payment provider** without storing CHD:
+
+```mermaid
+sequenceDiagram
+  participant Caller
+  participant PBX3 as PBX3_node
+  participant PSP as PCI_validated_PSP
+  participant Agent
+  Caller->>PBX3: Inbound call recorded
+  PBX3->>Agent: Agent answers
+  Agent->>PBX3: Initiate payment e.g. feature code custom app
+  PBX3->>PSP: Transfer or refer leg to PSP
+  Caller->>PSP: Card entry on PSP platform
+  PSP->>PBX3: Token or success callback only
+  PBX3->>Agent: Resume call with token reference
+  Note over PBX3: Recording on PBX3 leg must not contain CHD
+```
+
+**Integration surfaces (to be productised — deferred past S7 core):**
+
+| Mechanism | Notes |
+|-----------|--------|
+| **Custom app / AGI** | Dial out or refer to PSP SIP URI or PSTN destination; tenant-configurable |
+| **Feature code / CoS** | Agent-triggered payment handoff (legacy lineage includes `PCICARDS`-style hooks in dialplan tooling) |
+| **API / webhook** | PSP returns token or transaction id; store **token only** in tenant DB if needed — never PAN/CVV |
+| **Tenant flag** | e.g. `pci_payment_mode: strict` — documents that recordings must not be used for card capture; UI warns operators |
+| **Route / trunk** | Dedicated trunk or URI to payment provider per tenant |
+
+**PBX3 does not:** validate as a Level 1 merchant PCI entity for card processing, host PAN storage, or replace a QSA engagement. **Customers** choose and contract the PSP; **we** provide dialplan + integration hooks so strict customers can keep CHD off PBX3.
+
+#### Two customer profiles
+
+| Profile | Card capture | Recordings | S3 |
+|---------|--------------|------------|-----|
+| **Standard** | On-agent (customer accepts PCI scope on recordings) | Full call recording; dedicated bucket + §6.2 controls | `PBX3_RECORDINGS_BUCKET` with KMS, CloudTrail, etc. |
+| **Strict PCI** | **Third-party PSP only** | PBX3 facilitates handoff; no CHD in wav/SQLite | Recordings bucket may still exist for non-payment calls; payment legs must not carry CHD |
+
+**Open for implementation:** PSP catalogue, certified integrations, and SPA configuration UX — document requirement here; build when a customer mandates strict PCI.
 
 ---
 
@@ -524,12 +575,13 @@ Mirror **`InstanceBackupDirectoryUpload`** pattern. Ship after or parallel with 
 
 ---
 
-### Phase S7+ — Scale search & compliance (deferred)
+### Phase S7+ — Scale search, compliance & payment handoff (deferred)
 
 | # | Task | Notes |
 |---|------|-------|
 | S7+.1 | Monthly `manifest-{yyyy}-{mm}.jsonl` per tenant | Optional DR / portable metadata export — not primary search |
 | S7+.2 | Athena / OpenSearch | Large fleet / legal discovery |
+| S7+.3 | **Third-party payment handoff** (§6.4) | Custom app / refer to PCI-validated PSP; tenant config; token-only callback; operator docs for strict PCI customers |
 
 ---
 
@@ -547,6 +599,7 @@ Record these for the next design review — do not block R1.5 kickoff on all ans
 | 6 | Queue `Qexec` unswept files | Offload like regular wav; parser already flags `is_queue` | Separate sweep job |
 | 7 | Soft-delete recovery window | **Delete bin** + optional `deleted_at` tombstone (R1.5) | S3 versioning only (defer) |
 | 8 | S3 bucket for recordings | **Settled:** dedicated `PBX3_RECORDINGS_BUCKET` (§6.3) | Same org bucket as catalog (rejected — PCI vs public catalog) |
+| 9 | Strict PCI card capture | **Settled:** third-party PSP handoff (§6.4); PBX3 facilitates routing | Pause/resume recording (rejected — insufficient for QSA) |
 
 ---
 
