@@ -1,6 +1,6 @@
 # Recordings storage & search — design
 
-**Status:** Design (2026-07-07; amended — SQLite catalog, tenant mobility, deletion/ageing §6.1)  
+**Status:** Design (2026-07-07; amended — SQLite catalog, tenant mobility, deletion/ageing §6.1, PCI DSS §6.2)  
 **Related:** **`IMPLEMENTATION_PLAN.md`** § Phase R1 / § Phase S7 · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 · **`DESIGN_RULES.md`** (Rule 1 fail-safe)
 
 This document captures the agreed **shape** of call recordings storage and search: how the legacy system worked, what **Phase R1** shipped, and how **local archive offload** (R1.5) and **S3 offload** (S7) should extend it. It is written as durable history so implementers do not have to rediscover the reasoning.
@@ -350,6 +350,37 @@ Operator list (`GET /recordings`) excludes rows with `deleted_at` set (when tomb
 
 ---
 
+## 6.2 PCI DSS compliance (S3 — future S7+)
+
+Call recordings can contain **cardholder data (CHD)** — e.g. a caller reading a card number to an agent. When recordings are offloaded to S3 (Phase S7), the bucket falls in scope for **PCI DSS**. AWS uses a **shared responsibility model**: AWS secures the underlying infrastructure; **we** are responsible for configuring access control, encryption, and logging to protect the cardholder data environment (CDE).
+
+**Best-effort mitigation first:** where feasible, avoid storing CHD at all (pause/resume recording during card capture, or DTMF suppression). PCI controls below apply to whatever CHD does land in S3.
+
+### Required controls (our responsibility)
+
+| Area | Control | Implementation notes |
+|------|---------|----------------------|
+| **Access control** | S3 **Block Public Access** at **bucket and account** level | Recordings prefix must never be public; contrast with public `catalog/` (read-only, no CHD) |
+| | **Least privilege** IAM | Read-only where appropriate; node roles scoped to `tenants/{hosted_shortuid}/recordings/*` (see §5, `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.6.1); gatekeeper is sole broad writer via presigns; audit permissions regularly |
+| **Encryption in transit** | **HTTPS/TLS** only | Enforce `aws:SecureTransport` in bucket policy; API playback proxy over TLS |
+| **Encryption at rest** | **S3 default encryption with AWS KMS** | KMS CMK for the recordings bucket/prefix meets strict crypto requirements; key policy scoped and audited |
+| **Monitoring & logging** | **CloudTrail** for all bucket access + API calls | Log S3 data events for the recordings bucket |
+| | **Immutable audit trail** | Ship CloudTrail logs to a **separate, secured** S3 bucket (Object Lock / restricted access) |
+| **Compliance validation** | **AWS Security Hub** CSPM against the **PCI DSS** standard | Automated posture checks; remediate findings |
+
+### PBX3 alignment
+
+- **Trust boundary:** the S3 gatekeeper / control plane (`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.6) is the right owner for these controls — it already governs org-level S3 mutations and presigns. PCI controls are an extension of the gatekeeper's remit, not a new subsystem.
+- **Presigned URLs:** short-lived, scoped presigns (upload and playback) support least-privilege and TLS-only access without handing nodes broad keys.
+- **Tenant isolation:** per-tenant prefixes (`tenants/{shortuid}/recordings/`) plus scoped IAM limit blast radius if one tenant/node is compromised.
+- **Retention vs audit:** recording lifecycle (§6, §6.1) deletes CHD on schedule; **audit logs** (CloudTrail) are retained separately and are not subject to recording `recmaxage`.
+
+### Scope note
+
+This is a **future S7+ concern**, not a blocker for R1 (local, no S3) or R1.5 (local archive). It is documented here so the S3 offload design accounts for PCI from the start rather than retrofitting. Refer to the official **AWS Compliance Validation for Amazon S3** documentation for the authoritative, current control list and shared-responsibility boundaries.
+
+---
+
 ## 7. Phased build plan
 
 ### Phase R1 — Call recordings management (DONE)
@@ -412,6 +443,7 @@ Mirror **`InstanceBackupDirectoryUpload`** pattern. Ship after or parallel with 
 | S7.7 | **SPA archived badge** | pbx3spa | When row is S3-only |
 | S7.8 | **Update SQLite on upload** | pbx3api | Set `s3_key`, `location`; `local_path` optional |
 | S7.9 | **Reconciliation job** | pbx3api | Backfill index from S3 prefix + local; repair drift |
+| S7.10 | **PCI DSS controls** (§6.2) | control plane / ops | Block Public Access; KMS at-rest + TLS-only; CloudTrail to separate bucket; Security Hub PCI checks; least-privilege IAM audit |
 
 **Exit criteria:**
 
