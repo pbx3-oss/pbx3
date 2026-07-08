@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-07 (session end — R1.5 recordings local archive shipped; **pbx3 0.0.3-23**)
+**Last updated:** 2026-07-07 (session end — §2.6.1 node IAM tighten shipped; S7 deferred; **bzy54n 0.0.3-23**)
 
 ### Suggested “what next?” order
 

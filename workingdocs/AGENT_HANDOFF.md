@@ -48,7 +48,42 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-07, session end — R1.5 recordings local archive shipped)
+## Next agent session notes (2026-07-07, session end — §2.6.1 node IAM tighten; S7 deferred)
+
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**.
+
+### Shipped
+
+| Repo | Commit | Notes |
+|------|--------|--------|
+| **pbx3** | **`a4628fe`** | §2.6.1 — node S3 writer policy drops blanket `tenants/*` (template + golden/bzy54n JSON); `OPS_S3_RUNBOOK.md` §3.1/§7.1; `apply-node-s3-writer-policy.sh` auto-prunes at 5-version IAM limit; recordings bucket naming clarification (`RECORDINGS_STORAGE_DESIGN.md` §6.3); TODO (S7 deferred) |
+| **pbx3api** | **`34d8bd8`** | `FleetPreflightService` — new **`S3 tenants/* denied`** deny-probe check |
+
+**IAM applied live:** golden policy **v6**, bzy54n **v2** — nodes now `instances/{own_ksuid}/*` only. Smoke on both: backup PUT **PASS**, `tenants/*` PUT **DENIED**. `pbx3:fleet-preflight` **all green** on both nodes (git pull done, config cleared).
+
+### Decisions this session
+
+- **S7 (recordings S3) deferred** — R1.5 local tier proves the operator path; building upload/presign now = work twice (needs the B′ gatekeeper). Revisit after B′.
+- **S8.10 panel tenant moves = priority** (stakeholder weight). Path: **§2.6.1 done** → **SBC standup** (image tested) → **Phase A** Egress → **B/B′** control plane + gatekeeper → **C** move wizard.
+- **Gatekeeper** lives in the **fleet control-plane service** (Phase B′), on its own host (small EC2 or lab VM) — **not** on a node or the SBC.
+- **Bucket naming:** `08jzwn-pbx3` is the **fleet slug** (first node stood up), not instance-owned; one recordings bucket per fleet, keyed by tenant.
+
+### Golden / operator follow-up
+
+- **bzy54n:** now on **pbx3 0.0.3-23** (R1.5 parity; smoke-tested — offload/list/play/retention OK).
+- Node IAM policies tightened in place (same role/policy names) — no reboot; backups unaffected.
+
+### Resume
+
+1. **SBC standup** — bring up `pbx3sbc` image on golden fleet; validate phone→SBC→node and node→Egress→SBC→carrier (gate for Phase A). See `pbx3sbc/workingdocs/PEERING-PLAN.md`.
+2. **Phase A** — per-node `Egress` trunk (fleet AMI) + AGI path simplification.
+3. Then **B/B′** control plane + gatekeeper → **C** move wizard.
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** at login.
+
+---
+
+## Next agent session notes (2026-07-07, session end — R1.5 recordings local archive shipped) — historical
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**.
 
