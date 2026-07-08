@@ -256,21 +256,20 @@ Follow **Quick recipe §A–E** above with bucket **`08jzwn-pbx3`**, region **`u
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "ListOrgBucket",
+      "Sid": "ListInstanceBackupPrefix",
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
       "Resource": "arn:aws:s3:::08jzwn-pbx3",
       "Condition": {
         "StringLike": {
           "s3:prefix": [
-            "instances/3DmAsxePTWQZgynBYXE8obIRqEE/*",
-            "tenants/*"
+            "instances/3DmAsxePTWQZgynBYXE8obIRqEE/*"
           ]
         }
       }
     },
     {
-      "Sid": "WriteInstanceAndTenantObjects",
+      "Sid": "WriteInstanceObjects",
       "Effect": "Allow",
       "Action": [
         "s3:PutObject",
@@ -280,15 +279,14 @@ Follow **Quick recipe §A–E** above with bucket **`08jzwn-pbx3`**, region **`u
         "s3:DeleteObject"
       ],
       "Resource": [
-        "arn:aws:s3:::08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/*",
-        "arn:aws:s3:::08jzwn-pbx3/tenants/*"
+        "arn:aws:s3:::08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/*"
       ]
     }
   ]
 }
 ```
 
-**Name:** `pbx3-node-08jzwn-s3-writer` (or similar). Node does **not** need `catalog/*` write unless registrar runs on-box.
+**Name:** `pbx3-node-08jzwn-s3-writer` (or similar). Node does **not** need `catalog/*` or `tenants/*` write — registrar and gatekeeper use **ops IAM** (Mac) or the **control plane** (§2.6.1).
 
 #### 3.2 Create role + instance profile
 
@@ -715,42 +713,46 @@ Prefer **EC2 instance profile** (IAM role). No long-lived keys on disk if avoida
 
 ### 7.1 Policy (node writer)
 
-Replace `BUCKET`, `INSTANCE_KSUID`, `ORG` as needed. Node should **not** need `catalog/*` unless registrar runs on-box.
+Replace `BUCKET`, `INSTANCE_KSUID` as needed. Node should **not** need `catalog/*` or `tenants/*` — those prefixes are owned by **ops/registrar IAM** (Mac) and the future **fleet gatekeeper** (`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.6.1). Nodes write **only** `instances/{own_ksuid}/*` (backups). Future recordings upload and tenant migration staging use **gatekeeper presigns**, not blanket `tenants/*` on the node role.
+
+Template: **`schema/pbx3-node-s3-writer.policy.json.tmpl`**. Apply with **`tools/apply-node-s3-writer-policy.sh`**.
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "ListOrgBucket",
+      "Sid": "ListInstanceBackupPrefix",
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
       "Resource": "arn:aws:s3:::BUCKET",
       "Condition": {
         "StringLike": {
           "s3:prefix": [
-            "instances/INSTANCE_KSUID/*",
-            "tenants/*"
+            "instances/INSTANCE_KSUID/*"
           ]
         }
       }
     },
     {
-      "Sid": "WriteInstanceAndTenantObjects",
+      "Sid": "WriteInstanceObjects",
       "Effect": "Allow",
       "Action": [
         "s3:PutObject",
+        "s3:PutObjectTagging",
         "s3:GetObject",
+        "s3:GetObjectTagging",
         "s3:DeleteObject"
       ],
       "Resource": [
-        "arn:aws:s3:::BUCKET/instances/INSTANCE_KSUID/*",
-        "arn:aws:s3:::BUCKET/tenants/*"
+        "arn:aws:s3:::BUCKET/instances/INSTANCE_KSUID/*"
       ]
     }
   ]
 }
 ```
+
+**Migrate existing fleet nodes:** update the IAM policy in place (same policy name on the role); re-run backup smoke (`aws s3 cp` to `instances/{ksuid}/backups/_iam-test.txt`). Verify `pbx3:fleet-preflight` includes **S3 tenants/* denied** (green). No node reboot required.
 
 Attach role to instance; on node **no** `AWS_ACCESS_KEY_ID` in `.env` if the SDK picks up instance metadata.
 
@@ -793,7 +795,7 @@ CLI without PHP (ops): `pbx3-directory/tools/upload-instance-backup.sh --zip /op
 Separate IAM user or role for humans/CI with:
 
 - `s3:GetObject`, `s3:PutObject` on `catalog/*`
-- `s3:PutObject` on `instances/*`, `tenants/*`
+- Node IAM (instance role): `s3:PutObject` on `instances/{own_ksuid}/*` only — **not** `tenants/*` (§2.6.1; gatekeeper owns tenant prefixes)
 
 Run from laptop:
 

@@ -53,7 +53,7 @@ export PBX3_ORG_BUCKET=08jzwn-pbx3
 
 Optional defaults: `~/.pbx3/fleet.yaml` or `--fleet-config PATH` (`org_bucket`, `region`, `ssh_key`, …).
 
-Policy template: **`../schema/pbx3-node-s3-writer.policy.json.tmpl`** (`__BUCKET__`, `__INSTANCE_KSUID__`).
+Policy template: **`../schema/pbx3-node-s3-writer.policy.json.tmpl`** (`__BUCKET__`, `__INSTANCE_KSUID__`). **§2.6.1:** nodes get `instances/{ksuid}/*` only — no `tenants/*` (gatekeeper / presign path for future recordings and staging).
 
 ## Environment
 

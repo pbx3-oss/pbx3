@@ -2,21 +2,20 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "ListOrgBucket",
+      "Sid": "ListInstanceBackupPrefix",
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
       "Resource": "arn:aws:s3:::__BUCKET__",
       "Condition": {
         "StringLike": {
           "s3:prefix": [
-            "instances/__INSTANCE_KSUID__/*",
-            "tenants/*"
+            "instances/__INSTANCE_KSUID__/*"
           ]
         }
       }
     },
     {
-      "Sid": "WriteInstanceAndTenantObjects",
+      "Sid": "WriteInstanceObjects",
       "Effect": "Allow",
       "Action": [
         "s3:PutObject",
@@ -26,8 +25,7 @@
         "s3:DeleteObject"
       ],
       "Resource": [
-        "arn:aws:s3:::__BUCKET__/instances/__INSTANCE_KSUID__/*",
-        "arn:aws:s3:::__BUCKET__/tenants/*"
+        "arn:aws:s3:::__BUCKET__/instances/__INSTANCE_KSUID__/*"
       ]
     }
   ]

@@ -5,8 +5,8 @@
 
 ### Suggested “what next?” order
 
-1. **Phase S7** — recordings **S3 offload** (dedicated `PBX3_RECORDINGS_BUCKET`, presigns, PCI §6.2–6.4) — **`RECORDINGS_STORAGE_DESIGN.md`** §7  
-2. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. Early win: **§2.6.1** IAM tighten; then **Phase A** / **B′** control plane.  
+1. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. **§2.6.1 IAM tighten done**; next: SBC standup → **Phase A** (Egress) → **B′** control plane → **C** panel moves.  
+2. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient; revisit after B′ gatekeeper).  
 3. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
 4. **bzy54n** — upgrade **pbx3 0.0.3-23** deb (functionally at R1.5 via manual seed).  
 5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
@@ -30,7 +30,7 @@
 
 - [ ] **pbx3cagi refactor (deferred — after S8 + R1 underway):** Phase 0 harness **golden-signed-off** on **08jzwn** (synthetic seed + `/opt/pbx3/db/sqlite.rdonly.db`; all CFIM scenarios PASS). **Do not start Phase 1.1+ struct refactor** until fleet/recordings momentum established; run **`make test`** after each refactor step when resumed. Gate: **`REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**, **`TEST_RECIPE.md`**.
 
-- [ ] **Fleet S3 node IAM (§2.6.1 — early win):** Drop blanket **`tenants/*`** write from **`pbx3-node-s3-writer.policy.json.tmpl`** + **`OPS_S3_RUNBOOK.md`** §7; safe now (backups use **`instances/{ksuid}/`** only). Future recordings/staging via control-plane presigns. See **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6.1.
+- [x] **Fleet S3 node IAM (§2.6.1 — 2026-07-07):** Dropped blanket **`tenants/*`** from **`pbx3-node-s3-writer.policy.json.tmpl`** + golden/bzy54n policy JSON; **`OPS_S3_RUNBOOK.md`** §3.1 / §7.1 updated. **`FleetPreflightService`** deny probe (`S3 tenants/* denied`). Future recordings/staging via control-plane presigns. Apply live policies with **`apply-node-s3-writer-policy.sh`** on fleet nodes.
  Legacy ingress relies on **`fqdninspect`** (SIP INVITE URI string match on **5060**); dialable FQDNs are usually **not published** (sniffing/DNS can still expose them). Public **`catalog/instance-index.json`** aids admin discovery but can weaken that obscurity layer — **not** the same as Sanctum/API risk. **Policy:** v0/golden OK with eyes open; production MSP fleets → **Phase D private catalog** (auth-gated `GET` or signed URLs); minimize tenant FQDN enumeration in public JSON; use **`label`** + opaque **`id`**. See **`pbx3-directory/docs/DESIGN_RULES.md`** § *SIP FQDN obscurity vs public catalog*; **`OPS_S3_RUNBOOK.md`** § 5.3.
 
 - [ ] **Golden `pkey='default'` layout (investigate, low priority):** Pre-migration golden had only `f34ck1`/`5489nv` (node FQDN on `globals` only). Test instance uses **`default`** tenant row with `cluster.fqdn` = node FQDN. Post-restore golden matches test layout. Question: does SPA tenant-create-only provisioning ever skip creating `default`?

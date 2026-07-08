@@ -36,10 +36,33 @@ POLICY_ARN="arn:aws:iam::${ACCOUNT}:policy/${POLICY_NAME}"
 
 if aws iam get-policy --policy-arn "$POLICY_ARN" >/dev/null 2>&1; then
   echo "Updating IAM policy ${POLICY_ARN} ..."
-  aws iam create-policy-version \
+  if ! aws iam create-policy-version \
     --policy-arn "$POLICY_ARN" \
     --policy-document "file://${POLICY_FILE}" \
-    --set-as-default
+    --set-as-default 2>"${POLICY_FILE}.err"; then
+    if grep -q LimitExceeded "${POLICY_FILE}.err" 2>/dev/null; then
+      echo "Policy version limit reached — deleting oldest non-default version and retrying ..."
+      OLD_VERSION="$(aws iam list-policy-versions --policy-arn "$POLICY_ARN" \
+        --query 'Versions[?IsDefaultVersion==`false`] | sort_by(@, &CreateDate) | [0].VersionId' \
+        --output text)"
+      if [[ -n "$OLD_VERSION" && "$OLD_VERSION" != "None" ]]; then
+        aws iam delete-policy-version --policy-arn "$POLICY_ARN" --version-id "$OLD_VERSION"
+        aws iam create-policy-version \
+          --policy-arn "$POLICY_ARN" \
+          --policy-document "file://${POLICY_FILE}" \
+          --set-as-default
+      else
+        cat "${POLICY_FILE}.err" >&2
+        rm -f "${POLICY_FILE}.err"
+        exit 1
+      fi
+    else
+      cat "${POLICY_FILE}.err" >&2
+      rm -f "${POLICY_FILE}.err"
+      exit 1
+    fi
+  fi
+  rm -f "${POLICY_FILE}.err"
   echo "Done. Attached roles pick up the new default version immediately."
 else
   echo "Creating IAM policy ${POLICY_NAME} ..."

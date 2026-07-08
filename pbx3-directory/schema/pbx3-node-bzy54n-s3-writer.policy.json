@@ -2,21 +2,20 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "ListOrgBucket",
+      "Sid": "ListInstanceBackupPrefix",
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
       "Resource": "arn:aws:s3:::08jzwn-pbx3",
       "Condition": {
         "StringLike": {
           "s3:prefix": [
-            "instances/3E3gAOVGBhvc6vEPTBIYCBPycIk/*",
-            "tenants/*"
+            "instances/3E3gAOVGBhvc6vEPTBIYCBPycIk/*"
           ]
         }
       }
     },
     {
-      "Sid": "WriteInstanceAndTenantObjects",
+      "Sid": "WriteInstanceObjects",
       "Effect": "Allow",
       "Action": [
         "s3:PutObject",
@@ -26,8 +25,7 @@
         "s3:DeleteObject"
       ],
       "Resource": [
-        "arn:aws:s3:::08jzwn-pbx3/instances/3E3gAOVGBhvc6vEPTBIYCBPycIk/*",
-        "arn:aws:s3:::08jzwn-pbx3/tenants/*"
+        "arn:aws:s3:::08jzwn-pbx3/instances/3E3gAOVGBhvc6vEPTBIYCBPycIk/*"
       ]
     }
   ]
