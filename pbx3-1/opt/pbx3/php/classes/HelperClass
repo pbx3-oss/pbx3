@@ -197,20 +197,27 @@ public function check_pid()  {
  */
 public function createPjsipTrunkInstance($tuple) {
 
-	switch ($tuple['pjsipreg']) {
-		case "SND":
-			$templateFile = PJSIP_TRUNK_SNDREG_TEMPLATE;
-			break;
-		case "RCV":
-			$templateFile = PJSIP_TRUNK_RCVREG_TEMPLATE;
-			break;									
-		default: 
-			$templateFile = PJSIP_TRUNK_TRUSTED_TEMPLATE;					
-	}
-	$targetFile = ASTTRUNKS . '/' . $tuple['pkey'] . '_' . PJSIP_TRUNK;
+	$pkey = (string)($tuple['pkey'] ?? '');
+	$fleetEgress = ($pkey === 'Egress' || $pkey === 'EgressFailover');
 
-	if (!file_exists($targetFile) || 0 == filesize( $targetFile )) {
-		$rc = $this->request_syscmd ("/bin/cp $templateFile $targetFile >/dev/null 2>&1");		
+	if ($fleetEgress) {
+		$templateFile = PJSIP_TRUNK_EGRESS_TEMPLATE;
+	} else {
+		switch ($tuple['pjsipreg']) {
+			case "SND":
+				$templateFile = PJSIP_TRUNK_SNDREG_TEMPLATE;
+				break;
+			case "RCV":
+				$templateFile = PJSIP_TRUNK_RCVREG_TEMPLATE;
+				break;
+			default:
+				$templateFile = PJSIP_TRUNK_TRUSTED_TEMPLATE;
+		}
+	}
+	$targetFile = ASTTRUNKS . '/' . $pkey . '_' . PJSIP_TRUNK;
+
+	if ($fleetEgress || !file_exists($targetFile) || 0 == filesize($targetFile)) {
+		$rc = $this->request_syscmd ("/bin/cp $templateFile $targetFile >/dev/null 2>&1");
 		$rc = $this->request_syscmd ("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
 		$rc = $this->request_syscmd ("/bin/chmod 664 $targetFile >/dev/null 2>&1");
 		return true;
@@ -225,8 +232,10 @@ public function createPjsipTrunkInstance($tuple) {
  */
 public function getPjsipTrunkInstance($tuple) {
 
-	$targetFile = ASTTRUNKS . '/' . $tuple['pkey'] . '_' . PJSIP_TRUNK;
-	if (!file_exists($targetFile)) {		
+	$pkey = (string)($tuple['pkey'] ?? '');
+	$fleetEgress = ($pkey === 'Egress' || $pkey === 'EgressFailover');
+	$targetFile = ASTTRUNKS . '/' . $pkey . '_' . PJSIP_TRUNK;
+	if ($fleetEgress || !file_exists($targetFile)) {
 		$this->createPjsipTrunkInstance($tuple);
 	}
 	if (file_exists($targetFile)) {

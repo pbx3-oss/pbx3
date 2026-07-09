@@ -136,6 +136,7 @@ define('PJSIP_TRUNK',					'trunk.conf');
 define('PJSIP_TRUNK_SNDREG_TEMPLATE',	ASTMPL . '/pjsip_trunk_sndreg.tmpl');
 define('PJSIP_TRUNK_RCVREG_TEMPLATE',	ASTMPL . '/pjsip_trunk_rcvreg.tmpl');
 define('PJSIP_TRUNK_TRUSTED_TEMPLATE',	ASTMPL . '/pjsip_trunk_trusted.tmpl');
+define('PJSIP_TRUNK_EGRESS_TEMPLATE',	ASTMPL . '/pjsip_trunk_egress.tmpl');
 define('PJSIP_READY_TRUNKS',            ASTLOCALCONF . '/pjsip_ready_trunks.conf');
 
 define('SOUNDIR',                       '/usr/share/asterisk' . SYSPREFIX . '/sounds/');

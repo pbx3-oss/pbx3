@@ -88,6 +88,7 @@ PJSIP_TRUNK=trunk.conf
 PJSIP_TRUNK_SNDREG_TEMPLATE=/opt/pbx3/etc/asterisk/templates/pjsip_trunk_sndreg.tmpl
 PJSIP_TRUNK_RCVREG_TEMPLATE=/opt/pbx3/etc/asterisk/templates/pjsip_trunk_rcvreg.tmpl
 PJSIP_TRUNK_TRUSTED_TEMPLATE=/opt/pbx3/etc/asterisk/templates/pjsip_trunk_trusted.tmpl
+PJSIP_TRUNK_EGRESS_TEMPLATE=/opt/pbx3/etc/asterisk/templates/pjsip_trunk_egress.tmpl
 PJSIP_READY_TRUNKS=/opt/pbx3/etc/asterisk/configs/pjsip_ready_trunks.conf
 SOUNDIR=/usr/share/asterisk/pbx3/sounds/
 SHOREWALL=/etc/shorewall
