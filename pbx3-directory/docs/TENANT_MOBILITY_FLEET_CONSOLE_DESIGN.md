@@ -149,7 +149,7 @@ HA mechanism (SRV, floating IP, etc.) is **TBD in pbx3sbc fleet docs** — out o
 - Media anchoring / transcoding / RTPEngine at edge (RTP stays direct)
 - Billing, rate decks, wholesale LCR product
 - Lawful intercept, recording at edge
-- WebRTC gateway, MS Teams SBC, etc.
+- WebRTC gateway, MS Teams SBC, etc. — **WebRTC/WSS on fleet edge:** interim node `:8089`; target SBC `proto_wss` per **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1
 
 #### `SbcFleetAdapter` — integration contract (de-risk swap later)
 

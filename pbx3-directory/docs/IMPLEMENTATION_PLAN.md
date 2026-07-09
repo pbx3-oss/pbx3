@@ -340,6 +340,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 | **S8.8** | **Worked example + regression** | ops | Golden lab rebuilds validated (2026-07): **`REBUILD_INSTANCE_RUNBOOK.md`** path, `0.0.3-21`, preflight + SPA; tenant move smoke when S8.5–6 exist. |
 | **S8.9** | **Self-service rebuild automation** | pbx3 + pbx3api + pbx3spa + ops | Design **`SELF_SERVICE_REBUILD_DESIGN.md`**: fleet AMI, first-boot S3 restore, orchestrator API, SPA wizard; node does restore, control plane does IAM/launch. |
 | **S8.10** | **Tenant mobility — Fleet Console (panel-first)** | pbx3 + pbx3cagi + pbx3api + pbx3spa + **pbx3sbc** + control-plane | Design **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (**§13** implementer map): **fleet requires SBC tier** (§2.2); cutover = SBC `domain.setid` repoint; **`Egress → SBC`** (Phase A); Fleet Console (**B**); control-plane + S3 gatekeeper (**B′**); move wizard + orchestrator (**C**). Direct-to-node = solo/Rule 6 only. |
+| **S8.11** | **WebRTC edge normalization (WSS→SIP)** | **pbx3sbc** + pbx3 + pbx3api + pbx3spa + control-plane | Design anchors: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 and **`pbx3sbc/docs/MASTER-PROJECT-PLAN.md`** §4. Goal: SBC terminates WSS/TLS and routes downstream as normal SIP to fleet nodes; keep WebRTC complexity at edge. |
 
 **Out of scope S8 v1:** Terraform for full fleet; automatic DNS API (optional in S8.9 B6); SPA tenant-move wizard (S8.5/S8.6 docs + scripts first).
 
@@ -351,6 +352,29 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 - [ ] Rebuild golden from backup/AMI without losing backup panel S3 visibility (documented regression).
 
 **Dependencies:** S5 backups (done), S6 onboard (done), LE Sync fix (**0.0.3-17**). Can run **in parallel** with Track B Phase 4 help QA.
+
+---
+
+### Phase W1 — WebRTC edge normalization (~2–4 weeks after UDP edge)
+
+**Why:** Fleet edge must support WebRTC endpoints on the same stable SBC address used by desk phones. This closes the gap where WebRTC clients register to node `:8089` and do not follow SBC cutover semantics.
+
+**Non-goal (v1):** Full WebRTC feature platform (MS Teams SBC, advanced policy, etc.). Focus is protocol normalization and fleet mobility consistency.
+
+| # | Task | Repo | Notes |
+|---|------|------|-------|
+| W1.1 | Add WSS/TLS listeners on SBC | pbx3sbc | `proto_wss` + TLS cert management on SBC pool FQDN/SRV target |
+| W1.2 | Registrar/NAT path for WebSocket clients | pbx3sbc | Handle `;transport=wss` contacts and registration lifecycle like UDP endpoints |
+| W1.3 | Route WebRTC signaling to node backends | pbx3sbc | Preserve `domain` → `setid` mobility model; no node-direct bypass in fleet mode |
+| W1.4 | Media strategy decision | pbx3sbc + product | Decide RTPEngine edge anchoring vs Asterisk-only based on app profile (codecs, ICE/TURN, mixed endpoint calls) |
+| W1.5 | Provisioning/profile docs | docs + pbx3spa | Endpoint profile points to SBC WSS URL; document interim node `:8089` mode as legacy/hybrid only |
+| W1.6 | Fleet preflight update | control-plane + pbx3api | Add “WebRTC edge ready” check (SBC WSS listener + cert + routing) before claiming WebRTC mobility |
+
+**Acceptance criteria:**
+
+- [ ] WebRTC client registers to SBC WSS endpoint (not node endpoint) and makes/receives calls through fleet path.
+- [ ] Tenant move via SBC repoint keeps WebRTC endpoint reachable without client reconfiguration.
+- [ ] Operational docs include fallback/interim mode and explicit limitations.
 
 ---
 
@@ -398,6 +422,8 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
          └──→  S8.9  self-service rebuild (AMI + orchestrator + SPA)  ← after S8.5–6 or parallel
 
   pbx3cagi Phase 0 harness: built on main; golden sign-off; Phase 1.3+ refactor deferred
+         │
+         └──→  W1  WebRTC edge normalization (WSS→SIP on SBC)            ← after UDP edge + S8.10 path
 ```
 
 **Next session pick:** **S8.1–S8.4** (instance checklist, onboard hardening) · **R1** (recordings SPA/API) · golden **`make test`** for pbx3cagi. S6.1 + S6.4 fleet onboard validated; golden rebuild exposed IAM/`.env` gaps → **S8**.

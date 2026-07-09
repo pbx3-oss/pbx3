@@ -209,7 +209,78 @@ A single SBC is acceptable for **lab / golden validation**. **Production fleet**
 
 **Not a blocker for:** Peering Phase 0–1 on single `sbc.pbx3.com`, Phase A Egress on golden/bzy54n.
 
-**Is a blocker for:** Customer-facing “production fleet” SLA claims before SRV pool + ≥2 members are documented and tested.
+**Is a blocker for:** “production fleet” SLA claims before SRV pool + ≥2 members are documented and tested.
+
+### 6.1 WebRTC / WSS endpoints (fleet edge)
+
+**Business driver:** Fleet product should support WebRTC client apps (browser or embedded) on the **same stable edge** as desk phones — not as a separate direct-to-node bypass.
+
+**Status:** **Out of fleet v1** (UDP SIP soak, peering, Phase A Egress, move wizard). **Feasible on pbx3sbc** — separate track after UDP edge is proven. See **`pbx3sbc/docs/MASTER-PROJECT-PLAN.md`** §4 (TLS & WebRTC).
+
+#### Today
+
+| Layer | WebRTC / WSS |
+|-------|----------------|
+| **pbx3sbc** | **Not implemented** — `socket=udp:0.0.0.0:5060` only (`proto_udp.so`). No `proto_ws` / `proto_wss`, no TLS listener. |
+| **Fleet node (Asterisk)** | **Implemented** — `transport-wss` on `:8089`; `pjsip_webrtc.tmpl` (`webrtc=yes`, DTLS, opus). |
+
+WebRTC clients today register **directly to the node** (`wss://<node-fqdn>:8089/...`), not through the SBC.
+
+#### Fleet tension
+
+Fleet posture requires phones (and soft clients) to use the **stable SBC address** so tenant move = SBC repoint only. WebRTC hitting the **node** breaks that:
+
+- Registrations and INVITEs bypass the SBC edge.
+- Tenant move does **not** carry WebRTC clients with `domain.setid` repoint.
+- Node firewall must admit **browser/WebRTC** sources as well as SBC — weakens “SBC-only SIP ingress.”
+
+So **desk-phone fleet v1** and **WebRTC fleet** are not the same milestone.
+
+#### Target architecture (v2 track)
+
+```text
+WebRTC app  →  wss://<sbc-pool-fqdn>  →  OpenSIPS (proto_wss + TLS)
+                    →  usrloc / dispatcher  →  Asterisk backend (UDP/TCP)
+                    →  media: see below
+```
+
+**Signaling (OpenSIPS — feasible):**
+
+- `proto_wss` + TLS cert on SBC (LE on pool FQDN / SRV name).
+- Extend registrar / `nathelper` / Contact handling for `;transport=wss` (same class of work as UDP NAT fixes).
+- Same `domain` → `setid` mobility model as UDP endpoints.
+
+**Media (harder than signaling):**
+
+- SBC today is **RTP bypass** — media flows endpoint ↔ Asterisk; SBC handles signaling only.
+- WebRTC uses **DTLS-SRTP + ICE**. Scenarios:
+  - **WebRTC ↔ WebRTC** (app-to-app via PBX) — Asterisk may anchor; SBC may stay signaling-only if SDP/ICE paths are consistent.
+  - **WebRTC ↔ PSTN or UDP desk phone** — often needs **media anchoring** (e.g. **RTPEngine** on the edge, or full media through Asterisk). **Decision deferred** until the target app media profile is known (codec, ICE, TURN use).
+
+**TURN/STUN:** WebRTC apps often need **STUN/TURN** for NAT traversal. Clarify whether the app brings its own TURN, expects MSP-provided TURN, or relies on Asterisk/OpenSIPS. Not part of pbx3sbc v1.
+
+#### Interim posture (lab / early rollout)
+
+Until WSS lands on the SBC:
+
+| Mode | Path | Mobility |
+|------|------|----------|
+| **Interim (hybrid)** | WebRTC → **node** `:8089` WSS; desk phones → **SBC** UDP | Desk phones mobile on move; **WebRTC not mobile** until WSS-on-SBC ships |
+| **Target (fleet)** | All endpoints → **SBC** (UDP + WSS) | Full mobility on tenant move |
+
+**Sales/engineering honesty:** onboard WebRTC on the **interim** path for pilot; contract fleet **move** and **single edge URL** for WebRTC as a **phase-2 deliverable** tied to the WSS track.
+
+#### Implementation order (does not block v1)
+
+```text
+1. UDP edge stable     — soak, peering, Phase A (current plan)
+2. TLS on SBC          — proto_tls / cert management (prerequisite for WSS)
+3. WSS listener        — proto_wss, registrar paths for WebSocket clients
+4. Media strategy      — RTPEngine vs Asterisk-only; per target app media profile
+5. Provision template  — wss://<sbc-pool> for app; same SRV pool as desk phones
+```
+
+**Does not block:** SBC soak (UDP phones), peering Phases 0–4, Phase A Egress, move wizard v1 (UDP endpoints).
 
 ---
 
@@ -244,9 +315,10 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 3. SBC peering 0–4   — carrier outbound + inbound DID → backend (PEERING-PLAN)
 4. B′ control plane  — gatekeeper, §2.6.1 IAM (done), Fleet Console shell
 5. Phase C           — move wizard (SBC repoint + tenant export/import)
+6. WebRTC / WSS      — §6.1; after UDP edge proven; interim = node :8089 for pilot fleets
 ```
 
-**Deferred:** S7 recordings S3 until B′ gatekeeper. Solo trunk model unchanged throughout.
+**Deferred:** S7 recordings S3 until B′ gatekeeper. Solo trunk model unchanged throughout. **WebRTC fleet mobility** deferred to step 6 (interim hybrid supported).
 
 ---
 
@@ -256,7 +328,9 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 |------|--------|------|
 | SBC SRV pool runbook | pbx3sbc fleet docs | **Direction locked:** SRV + identical pool; document record templates, weights, and phone provisioning examples |
 | `GET_DOMAIN_FROM_SOURCE_IP` hostname gap | pbx3sbc | **Noted** — store Asterisk source IP in dispatcher `attrs`; gate for peering Phase 1 |
-| Phone TLS termination | Product | SBC vs node — separate from trunk placement |
+| **WebRTC / WSS on SBC** | pbx3sbc | §6.1 — `proto_wss` + TLS; media (RTPEngine?) TBD; **interim:** node `:8089` |
+| WebRTC app profile | Product | Codecs, ICE, TURN — gates media design for §6.1 step 4 |
+| Phone TLS termination | Product | SBC vs node — overlaps §6.1 TLS track |
 | `sbc-fleet.v0.json` schema | pbx3-directory | Directory contract for adapter; `sip_proxy_fqdn` = SRV name |
 
 ---
@@ -271,6 +345,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 | **`IMPLEMENTATION_PLAN.md`** § S8.10 | Program schedule |
 | **`TENANT_MIGRATION_RUNBOOK.md`** | Direct-to-node / break-glass migration |
 | **`DID_ASSIGNMENT_DESIGN.md`** | Mode A (inroutes-only) vs Mode B (central registry); S3 layout; projection |
+| **`pbx3sbc/docs/MASTER-PROJECT-PLAN.md`** §4 | TLS & WebRTC on OpenSIPS (planned) |
 | **`DESIGN_RULES.md`** Rule 6 | Solo frictionless path |
 
 ---
@@ -279,6 +354,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 
 | Date | Change |
 |------|--------|
+| 2026-07-09 | §6.1 WebRTC/WSS — out of v1; interim node :8089; target WSS on SBC |
 | 2026-07-09 | DID: two-layer model — regex `inroutes` on node; SBC delivery projection only; per-DID default |
 | 2026-07-09 | Caveats: trusted-peer default (not registration); SRV pool HA preference; dispatcher IP lookup noted |
 | 2026-07-09 | Initial decision doc — fleet = SBC peering only; solo = node trunks; Phase A Egress spec; HA prerequisite |
