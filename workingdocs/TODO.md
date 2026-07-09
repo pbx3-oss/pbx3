@@ -1,16 +1,17 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi)  
-**Last updated:** 2026-07-07 (session end — §2.6.1 node IAM tighten shipped; S7 deferred; **bzy54n 0.0.3-23**)
+**Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi, **pbx3sbc**)  
+**Last updated:** 2026-07-08 (session end — pbx3sbc inter-extension calling shipped on **`sbc.pbx3.com`**)
 
 ### Suggested “what next?” order
 
-1. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. **§2.6.1 IAM tighten done**; next: SBC standup → **Phase A** (Egress) → **B′** control plane → **C** panel moves.  
-2. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient; revisit after B′ gatekeeper).  
-3. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
-4. **bzy54n** — upgrade **pbx3 0.0.3-23** deb (functionally at R1.5 via manual seed).  
-5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-6. **Extension Runtime re-examine** · **SWOCLIP** · **`tt_help_core` cleanup** · **Directory Phase D** · **SARK migration** (end of list)
+1. **SBC soak + peering** — extension calling validated (**`dhbm8x`** tenant); next: more tenants/handsets, then carrier/PSTN path per **`pbx3sbc/workingdocs/PEERING-PLAN.md`**.  
+2. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. **§2.6.1 IAM tighten done**; SBC standup **in progress** → **Phase A** (Egress) → **B′** control plane → **C** panel moves.  
+3. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient; revisit after B′ gatekeeper).  
+4. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
+5. **bzy54n** — upgrade **pbx3 0.0.3-23** deb (functionally at R1.5 via manual seed).  
+6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+7. **Extension Runtime re-examine** · **SWOCLIP** · **`tt_help_core` cleanup** · **Directory Phase D** · **SARK migration** (end of list)
 
 ---
 
@@ -18,7 +19,9 @@
 
 - [ ] **Snapshots — separate panel, commit hook, FIFO retention (ops polish):** **Backups** (`backup.zip`, local 9 + S3 30d) and **snapshots** (`sqlite.db` copies in `/opt/pbx3/snap/`) are different jobs but share **`BackupView.vue`** — long backup lists push snapshots below the fold. **Gap:** legacy **`snap.sh`** is a stub; SPA **`GET syscommands/commit`** runs `genAst.sh` + reload but does **not** call **`create_new_snapshot()`** (legacy SARK took a snap on commit). **No snapshot FIFO** today (old “keep 9” in `snap.sh` commented out; backups have **`LocalBackupRetention`**). **Target:** **(1)** **pbx3spa** — `/snapshots` panel (extract from BackupView); **(2)** **pbx3api** — `create_new_snapshot()` after successful Commit; **(3)** **`SnapshotRetention`** (e.g. 9 newest, env `PBX3_SNAPSHOT_MAX_COUNT`); optional revive **`snap.sh`** or deprecate in favour of API. See **`IMPLEMENTATION_PLAN.md`** § **S9.5–S9.7**. **Priority:** after **R1** or parallel low-touch ops; not blocking fleet rebuild.
 
-- [ ] **Phase S8.10 — Fleet mobility Fleet Console (design → build):** **Design shipped** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (SBC-required fleet, control-plane + S3 gatekeeper, move wizard, §13 implementer map) + stakeholder **`FLEET_SYSTEM_OVERVIEW.md`**. **Build order:** **A** Egress + AGI; **B** fleet shell; **B′** control-plane + gatekeeper + **§2.6.1** IAM tighten (`pbx3-node-s3-writer.policy.json.tmpl`); **C** move wizard. **Contracts TODO:** `sbc-fleet.v0.json`, `did-inventory.v0.json`, `tenant-move-job.v0.json`, node mobility HTTP API (§13.3). CLI path remains **`TENANT_MIGRATION_RUNBOOK.md`**.
+- [ ] **Phase S8.10 — Fleet mobility Fleet Console (design → build):** **Design shipped** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (SBC-required fleet, control-plane + S3 gatekeeper, move wizard, §13 implementer map) + stakeholder **`FLEET_SYSTEM_OVERVIEW.md`**. **Build order:** **A** Egress + AGI; **B** fleet shell; **B′** control-plane + gatekeeper + **§2.6.1** IAM tighten (`pbx3-node-s3-writer.policy.json.tmpl`); **C** move wizard. **SBC standup in progress** — **`sbc.pbx3.com`** + **`dhbm8x`** tenant: extension-to-extension validated 2026-07-08; carrier peering + multi-tenant still open. **Contracts TODO:** `sbc-fleet.v0.json`, `did-inventory.v0.json`, `tenant-move-job.v0.json`, node mobility HTTP API (§13.3). CLI path remains **`TENANT_MIGRATION_RUNBOOK.md`**.
+
+- [ ] **pbx3sbc — multi-tenant dispatcher reverse lookup:** `GET_DOMAIN_FROM_SOURCE_IP` matches dispatcher destination IP only; hostname entries (`sip:08jzwn.pbx3.com`) fail. Single-tenant fallback works. For production multi-tenant: store Asterisk source IP in dispatcher `attrs` or add DNS-aware lookup. See **`pbx3sbc/config/opensips.cfg.template`** `route[GET_DOMAIN_FROM_SOURCE_IP]`.
 
 - [ ] **Phase S8 — Fleet (optional polish):** **S8.1–S8.6 shipped and drill-validated** (affcot **08jzwn → bzy54n**). Remaining optional: LE Sync post-cutover; **`move-tenant.sh`** if catalog workflow preferred over **`register-tenant.sh`** for first-time tenants. See **`TENANT_MIGRATION_RUNBOOK.md`**.
 
@@ -67,6 +70,8 @@
 ---
 
 ## Completed / deferred
+
+- [x] **pbx3sbc — inter-extension calling via SBC (2026-07-08):** **`pbx3sbc` `8174dfe`** on **`main`**. **`sbc.pbx3.com`** + tenant **`dhbm8x.pbx3.com`** → Golden **`08jzwn`**. Fixes: INVITE NAT (`received`), Yealink 401/407 relay, Snom `line=` on NAT rewrite, single-tenant dispatcher fallback. Snom 1000 + Yealinks 1001/1002 all directions. Live server hot-patched; PSTN peering not tested. **`pbx3sbc/workingdocs/QUICK-START.md`**.
 
 - [x] **Phase R1.5 — Recordings local archive + SQLite index (2026-07-07):** **pbx3api** **`27ff302`…`f5237de`** + **pbx3** **`ac2d90a`/`a8c9cb2`/`efdc78a`** (`0.0.3-23`). Offload spool → `{tenant}/{yyyy}/{mm}/{dd}/`; `recordings` table + index on offload; retention (`recmaxage`, `rec_grace`, `recmaxsize`, `recused`); API SQLite-first + spool fallback. Cron: **`/etc/cron.d/pbx3-recordings`** (offload every 10 min, retain daily 02:30). Golden + **bzy54n** validated (list/play/archive; retention smoke on golden). **`rec_mount`** deferred (on-prem SAN/EFS corner case). **`pbx3api` installer** drops backup + recordings cron on install.
 

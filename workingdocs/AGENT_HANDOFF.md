@@ -48,7 +48,36 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-07, session end — §2.6.1 node IAM tighten; S7 deferred)
+## Next agent session notes (2026-07-08, session end — pbx3sbc inter-extension calling)
+
+**Branch:** **`main`** in **pbx3sbc** (**`8174dfe`** pushed); **pbx3sbc-admin** **`205e1a2`** (MI `ds_reload`; from prior session). **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi** unchanged.
+
+### Shipped
+
+| Repo | Commit | Notes |
+|------|--------|--------|
+| **pbx3sbc** | **`8174dfe`** | Inter-extension calling via SBC: INVITE NAT routing (`COALESCE(received, contact)`), Yealink 401/407 auth relay (`force_rport`, defer outbound `create_dialog`), Snom `line=` URI param preservation (`GET_ENDPOINT_URI_PARAMS`), single-tenant dispatcher hostname fallback |
+
+**Live:** **`sbc.pbx3.com`** (`3.93.26.82`) — config patched in place + OpenSIPS restarted. Tenant **`dhbm8x.pbx3.com`** → Golden **`08jzwn.pbx3.com`**. **Validated:** Snom 1000 ↔ Yealinks 1001/1002 all directions.
+
+### Golden / operator follow-up
+
+- Live **`/etc/opensips/opensips.cfg`** was hot-patched on the server; future installs should use template from **`8174dfe`** (not ad-hoc Python patches).
+- **`GET_DOMAIN_FROM_SOURCE_IP`** still fails when dispatcher uses hostname (`sip:08jzwn.pbx3.com`) — single-tenant fallback works; multi-tenant needs IP in dispatcher attrs or DNS-aware reverse lookup.
+- **UFW** on SBC had restrictive SIP rules — opened `5060/udp`+`tcp` during session; confirm installer defaults.
+- **PSTN/carrier peering** path not exercised this session (extension-to-extension only).
+
+### Resume
+
+1. **SBC soak** — more tenants/handsets; watch for new vendor SIP quirks (Yealink `:5060` in URI, Snom `line=`).
+2. **SBC peering** — outbound carrier path per **`pbx3sbc/workingdocs/PEERING-PLAN.md`**.
+3. Then **Phase A** Egress on nodes (fleet plan unchanged).
+
+**SBC test:** phones → **`dhbm8x.pbx3.com`** → **`sbc.pbx3.com`** → Golden **`08jzwn.pbx3.com`**.
+
+---
+
+## Next agent session notes (2026-07-07, session end — §2.6.1 node IAM tighten; S7 deferred) — historical
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**.
 
