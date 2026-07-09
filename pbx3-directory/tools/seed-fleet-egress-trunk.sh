@@ -48,4 +48,11 @@ if [[ -n "$SBC_FAILOVER" ]]; then
   seed_trunk "EgressFailover" "$SBC_FAILOVER"
 fi
 
+# Fleet nodes: repoint legacy carrier route paths to Egress (pbx3cagi reads sqlite.rdonly.db)
+sqlite3 "$INSTANCE_DB" <<'SQL'
+UPDATE route SET path1='Egress', path2='None', path3='None', path4='None',
+  z_updated=datetime('now'), z_updater='seed-fleet-egress'
+WHERE path1 LIKE 'PDH%' OR path1 LIKE '%IAX%';
+SQL
+
 echo "Run: commit / regen Asterisk config on node after seeding."
