@@ -217,7 +217,48 @@ A new operator running **one** PBX to evaluate the product must **not** need S3,
 
 ---
 
-## Central SPA hosting (agreed 2026-05)
+## Rule 7 — Replaceable edge; SIP is the runtime API
+
+The fleet **edge** (SBC / session border) is a **discrete, swappable component**. **pbx3sbc** is the **default** implementation, not the abstraction.
+
+| Layer | Contract | Replaceable? |
+|-------|----------|--------------|
+| **Runtime (calls)** | **SIP** — REGISTER, INVITE, RTP between endpoints, edge, nodes, carriers | Universal; no PBX3-proprietary wire protocol |
+| **Fleet edge (signaling)** | Stable phone/carrier address; `tenant domain` → backend node | **Yes** — via **`SbcFleetAdapter`** (see **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.4) |
+| **Fleet intent (ops)** | S3 directory — homing, DID assignment, instance index | Edge-agnostic JSON; projected to edge DB |
+| **Nodes** | Standard downstream SIP peer (`Egress` → edge URI) | Any edge that accepts that pattern |
+
+**Default implementation:** **pbx3sbc** (OpenSIPS). **Alternatives:** another SBC product, customer-operated edge, or dSIPRouter — implement the same **adapter contract**, not OpenSIPS table names in the orchestrator.
+
+**Adapter surface (minimum):** `preflight`, `repointTenant`, `projectTenantDids` (or bulk projector), `registerNode`, `health`, `rollbackRepoint`. Move wizard and nodes call the **adapter**, never `opensipsctl` or `dr_rules` directly.
+
+**Anti-patterns (do not ship):**
+
+- Fleet Console or control plane **inside** `pbx3sbc-admin` (couples orchestrator to one edge).
+- OpenSIPS-specific schema as **home of record** for tenant homing (use S3 directory; edge DB is **compiled projection**).
+- Node dialplan, AGI, or trunk generator assuming **one vendor’s** edge config format.
+
+**Implication:** Swapping edge = new adapter + projector from catalog → edge config. **Nodes and move orchestration stay unchanged.**
+
+---
+
+## Rule 8 — Fleet metadata feeds the SPA; not the reverse
+
+Catalog and fleet structures exist to **inform** operators and the central SPA. They must **not** be shaped by SPA internals, and the **runtime fleet must not depend** on SPA-specific metadata.
+
+| Direction | Allowed | Forbidden |
+|-----------|---------|-----------|
+| **Fleet → SPA** | S3 `catalog/*`, `tenants/*/meta.json`, optional `dids.json` → instance picker, fleet badges, “Manage in Fleet Admin” links | — |
+| **SPA → fleet** | User **actions** (start move, assign DID) via **control-plane API** with fleet schemas | SPA routes, Vue form keys, panel layout, or `localStorage` shape **defining** S3 schema or edge config |
+| **Node → SPA** | After instance select, **all panel data** from that node’s **`api_base_url`** (Sanctum) | Node sqlite or API reading SPA build artifacts |
+
+**SIP remains the primary integration API** for telephony. S3/catalog is **ops metadata** (async, human/orchestrator oriented) — same posture as Rule 1: feeds the console, never the media/signaling path.
+
+**Schema rule:** `schema/*.v0.json` describe **fleet and ops facts** (`instance_id`, `fqdn`, `e164`, `status`) — not SPA field names, help pkeys, or nav groups. If the SPA needs a display label, **derive** it in the SPA from fleet fields; do not add `spa_nav_label` to catalog rows.
+
+**Implication:** A different admin UI (or no central SPA) can consume the same S3 layout. Retiring or rewriting **pbx3spa** does not require rewriting fleet catalog or edge routing.
+
+---
 
 **Decision:** Production **pbx3spa** is hosted **once**, on **GitHub Pages** (custom domain when ready). It is **not** deployed onto PBX **instances** in production.
 
@@ -283,7 +324,9 @@ The SPA origin (e.g. `https://yourorg.github.io` or `https://app.example.com`) d
 3. **Directory down → can still log into permitted nodes.**  
 4. **Auth/clearance on instance API (central ACL filters the map later).**  
 5. **Directory SLA ≠ node SLA.**  
-6. **One box to try it → no S3/catalog required.**
+6. **One box to try it → no S3/catalog required.**  
+7. **Edge is replaceable; SIP is the wire API; adapter not OpenSIPS.**  
+8. **Catalog feeds SPA; SPA does not define fleet schema.**
 
 ---
 
@@ -358,6 +401,8 @@ Before merging directory-related work, confirm:
 - [ ] Install/quick-start docs do not require S3 or directory setup for a single-node trial.
 - [ ] Docs and diagrams show directory **beside** nodes, not **in front of** SIP/RTP.
 - [ ] Production SPA hosting documented as **GitHub Pages** (central); instances **API-only**.
+- [ ] Edge changes go through **`SbcFleetAdapter`** (or documented break-glass); orchestrator does not embed OpenSIPS specifics (Rule 7).
+- [ ] S3/catalog schemas hold **fleet ops facts** only — no SPA-specific fields; catalog is not required for calls (Rules 1, 8).
 
 ---
 
@@ -370,3 +415,4 @@ Before merging directory-related work, confirm:
 | **C — SPA picker** | Rules 3 + 6: optional catalog, solo + single-row paths, override + error state. |
 | **D — Central auth** | ACL filters directory view; Rule 4 + break-glass documented; **SIP FQDN obscurity** — prefer private catalog when `fqdninspect` is part of ingress posture (see § SIP FQDN obscurity vs public catalog). |
 | **E — Orchestration** | Tenant move uses directory for **ops** URLs; nodes run local LE/sync scripts. |
+| **S8 — Fleet edge** | Rules 7 + 8: **`SbcFleetAdapter`**; S3 intent → edge projection; catalog → SPA one-way. See **`FLEET_TRUNK_PEERING_DECISION.md`** §2.4. |

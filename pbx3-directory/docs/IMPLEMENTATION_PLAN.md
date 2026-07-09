@@ -16,6 +16,7 @@
 | **Phase D central auth** | **Deferred** | Before building: **evaluate Supabase vs RDS** (and whether catalog moves off JSON). See ToDo § Product & auth. |
 | **Nodes / telephony** | **No directory dependency** | `DESIGN_RULES.md` Rule 1 — unchanged. |
 | **Solo / trial** | **No catalog required** | Rule 6 — one node = install + SPA login only; directory/S3 when fleet or backups opted in. |
+| **Fleet edge** | **Replaceable SBC** via **`SbcFleetAdapter`**; SIP runtime API | Rules 7–8 — pbx3sbc default; catalog → SPA one-way. **`FLEET_TRUNK_PEERING_DECISION.md`** §2.4. |
 
 **Rejected for Phase 2:** Supabase/Postgres/RDS/DynamoDB as the catalog source of truth (unnecessary for rare reads of a small fleet; avoids running a DB before central auth is defined).
 

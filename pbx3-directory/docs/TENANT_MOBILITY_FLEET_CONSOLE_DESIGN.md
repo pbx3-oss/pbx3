@@ -153,6 +153,8 @@ HA mechanism (SRV, floating IP, etc.) is **TBD in pbx3sbc fleet docs** — out o
 
 #### `SbcFleetAdapter` — integration contract (de-risk swap later)
 
+**Founding principle:** **`DESIGN_RULES.md`** Rules **7–8** — edge is replaceable; SIP is the wire API; catalog feeds SPA one-way. Fleet Console talks to the edge **only** through this adapter, not OpenSIPS specifics.
+
 Fleet Console orchestrator talks to the edge through a **small adapter interface**, not OpenSIPS specifics. First implementation: **pbx3sbc** via `pbx3sbc-admin` API (or thin wrapper). A future dSIPRouter or other backend could implement the same contract without rewriting the move wizard.
 
 | Method | Purpose |

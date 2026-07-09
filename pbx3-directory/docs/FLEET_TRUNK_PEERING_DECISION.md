@@ -41,6 +41,17 @@ Moving trunks to the SBC **does** concentrate PSTN failure domain on the edge ti
 
 **Principle (unchanged):** Runtime call path (phone → SBC → node → carrier) must survive control-plane or catalog outages. Management path (Fleet Console, S3 mutations) is best-effort for *changes*, not a runtime dependency for established calls.
 
+### 2.4 Founding principle — replaceable edge; one-way catalog (Rules 7–8)
+
+**`DESIGN_RULES.md`** Rules **7** and **8** are fleet founding constraints:
+
+1. **SIP is the runtime API** — phones, carriers, and nodes integrate via standard SIP/RTP. The edge is a **discrete component** behind **`SbcFleetAdapter`**, not hard-wired to pbx3sbc/OpenSIPS internals.
+2. **Fleet metadata feeds the SPA; not the reverse** — S3/catalog (`instance-index`, `meta.json`, optional `dids.json`) is an **ops signpost** for pickers and orchestration. Schemas hold **fleet facts**, not SPA routes, form keys, or panel layout. After instance select, panel truth is the **node API**.
+
+**Swap story:** catalog intent (S3) → adapter projects to edge → SIP to nodes. Replace edge = new adapter implementation; nodes, tenant DB, and orchestrator job model unchanged.
+
+**Customer-operated edge:** supported in principle — same adapter contract or documented manual projection; PBX3 nodes remain standard **`Egress`** downstream peers.
+
 ---
 
 ## 3. Layer ownership
@@ -347,6 +358,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 | **`DID_ASSIGNMENT_DESIGN.md`** | Mode A (inroutes-only) vs Mode B (central registry); S3 layout; projection |
 | **`pbx3sbc/docs/MASTER-PROJECT-PLAN.md`** §4 | TLS & WebRTC on OpenSIPS (planned) |
 | **`DESIGN_RULES.md`** Rule 6 | Solo frictionless path |
+| **`DESIGN_RULES.md`** Rules 7–8 | Replaceable edge; catalog → SPA one-way |
 
 ---
 
@@ -354,6 +366,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 
 | Date | Change |
 |------|--------|
+| 2026-07-09 | §2.4 founding Rules 7–8 — replaceable edge; SIP runtime API; catalog → SPA one-way |
 | 2026-07-09 | §6.1 WebRTC/WSS — out of v1; interim node :8089; target WSS on SBC |
 | 2026-07-09 | DID: two-layer model — regex `inroutes` on node; SBC delivery projection only; per-DID default |
 | 2026-07-09 | Caveats: trusted-peer default (not registration); SRV pool HA preference; dispatcher IP lookup noted |

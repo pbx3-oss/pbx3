@@ -2,7 +2,7 @@
 
 **Audience:** anyone technical-ish who wants to understand *how the PBX3 fleet fits together* — product, ops, new engineers, interested stakeholders. Not a build spec.
 **Reading time:** ~10 minutes.
-**Deeper docs:** design detail in `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`; **trunk/peering placement** in `FLEET_TRUNK_PEERING_DECISION.md`; rules in `DESIGN_RULES.md`; migration steps in `TENANT_MIGRATION_RUNBOOK.md`.
+**Deeper docs:** design detail in `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`; **trunk/peering placement** in `FLEET_TRUNK_PEERING_DECISION.md`; **founding rules** (replaceable edge, catalog → SPA) in `DESIGN_RULES.md` Rules 7–8; rules in `DESIGN_RULES.md`; migration steps in `TENANT_MIGRATION_RUNBOOK.md`.
 
 ---
 
