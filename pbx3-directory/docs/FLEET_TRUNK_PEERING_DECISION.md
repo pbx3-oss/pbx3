@@ -359,6 +359,8 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 | **`pbx3sbc/docs/MASTER-PROJECT-PLAN.md`** §4 | TLS & WebRTC on OpenSIPS (planned) |
 | **`DESIGN_RULES.md`** Rule 6 | Solo frictionless path |
 | **`DESIGN_RULES.md`** Rules 7–8 | Replaceable edge; catalog → SPA one-way |
+| **`ARCHITECTURE_REVIEW_SCORECARD.md`** | Honest positioning, drills, red-team checklist |
+| **`ARCHITECTURE_PEER_REVIEW.md`** | Full external challenge narrative (grounding) |
 
 ---
 

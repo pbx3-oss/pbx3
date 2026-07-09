@@ -2,7 +2,7 @@
 
 **Audience:** anyone technical-ish who wants to understand *how the PBX3 fleet fits together* — product, ops, new engineers, interested stakeholders. Not a build spec.
 **Reading time:** ~10 minutes.
-**Deeper docs:** design detail in `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`; **trunk/peering placement** in `FLEET_TRUNK_PEERING_DECISION.md`; **founding rules** (replaceable edge, catalog → SPA) in `DESIGN_RULES.md` Rules 7–8; rules in `DESIGN_RULES.md`; migration steps in `TENANT_MIGRATION_RUNBOOK.md`.
+**Deeper docs:** design detail in `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`; **trunk/peering placement** in `FLEET_TRUNK_PEERING_DECISION.md`; **founding rules** (replaceable edge, catalog → SPA) in `DESIGN_RULES.md` Rules 7–8; **honest architecture scorecard** in `ARCHITECTURE_REVIEW_SCORECARD.md`; **architecture peer review** (grounding narrative) in `ARCHITECTURE_PEER_REVIEW.md`; rules in `DESIGN_RULES.md`; migration steps in `TENANT_MIGRATION_RUNBOOK.md`.
 
 ---
 
@@ -320,6 +320,8 @@ You can start solo and grow into a fleet; the node software is the same.
 |--------------|------|
 | Understand the design decisions | `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` |
 | Know the non-negotiable rules | `DESIGN_RULES.md` |
+| Challenge the design / run drills | `ARCHITECTURE_REVIEW_SCORECARD.md` |
+| Stay grounded (why we chose this shape) | `ARCHITECTURE_PEER_REVIEW.md` |
 | Actually perform a move (CLI) | `TENANT_MIGRATION_RUNBOOK.md` |
 | Understand the directory / S3 layout | `S3_LAYOUT_PROPOSAL.md`, `OVERVIEW.md` |
 | See the central-admin direction | `pbx3spa/workingdocs/CENTRAL_ADMIN_DIRECTION.md` |

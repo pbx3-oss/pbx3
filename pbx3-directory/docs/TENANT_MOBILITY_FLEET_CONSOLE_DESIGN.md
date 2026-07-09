@@ -940,7 +940,9 @@ When implementing, keep these sections aligned:
 - **`SELF_SERVICE_REBUILD_DESIGN.md`** — S8.9 rebuild orchestrator + job state machine (sibling; possible shared engine).
 - **`LETSENCRYPT_PER_TENANT_FQDN.md`** §4.2 / **`TLS_IMPLEMENTATION_STEPS.md`** §4.2 — cert sync on move.
 - **`IMPLEMENTATION_PLAN.md`** § Phase S8 — fleet lifecycle plan (S8.10 row for this design).
-- **`DESIGN_RULES.md`** — Rule 1 (fail-safe), EC2 fleet model, solo Rule 6.
+- **`DESIGN_RULES.md`** — Rule 1 (fail-safe), EC2 fleet model, solo Rule 6, Rules 7–8 (edge + catalog).
+- **`ARCHITECTURE_REVIEW_SCORECARD.md`** — honest positioning vs peers, scenario drills, PR red-team checklist.
+- **`ARCHITECTURE_PEER_REVIEW.md`** — full external architecture challenge (grounding narrative, 2026-07-09).
 - **`OPS_S3_RUNBOOK.md`** §7 — node IAM; **must align with §2.6.1** (tightened policy).
 - **`S3_LAYOUT_PROPOSAL.md`** — bucket tree, identifier mapping.
 

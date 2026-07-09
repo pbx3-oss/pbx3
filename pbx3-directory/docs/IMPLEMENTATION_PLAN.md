@@ -1,7 +1,7 @@
 # Instance directory & S3 catalog — implementation plan
 
 **Branch:** `directory` (pbx3, pbx3api, pbx3spa)  
-**Read first:** `DESIGN_RULES.md` · **Layout:** `S3_LAYOUT_PROPOSAL.md` (improved v1) · **Schemas:** `../schema/`
+**Read first:** `DESIGN_RULES.md` · **Layout:** `S3_LAYOUT_PROPOSAL.md` (improved v1) · **Schemas:** `../schema/` · **Review:** `ARCHITECTURE_REVIEW_SCORECARD.md` · **Grounding:** `ARCHITECTURE_PEER_REVIEW.md`
 
 **Product model:** EC2-style fleet console — low-traffic admin; catalog changes rarely; **nodes never depend on S3/directory for calls.**
 
