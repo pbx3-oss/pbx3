@@ -103,7 +103,9 @@ Phase A ships **before** SBC peering Phases 1–4. Goal: every fleet node dials 
 | Trunk `pkey` | Purpose | Cardinality |
 |--------------|---------|-------------|
 | **`Egress`** | Primary signalling peer to SBC pool | **1 per instance** (required on fleet nodes) |
-| **`EgressFailover`** | Secondary SBC pool member | **0–1** (optional) |
+| **`EgressFailover`** | Secondary SBC pool member | **0–1** (optional) — **seed only today**; cagi failover **not implemented** |
+
+**Future — trunk availability & SBC failover:** **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Lab uses **`qualify_frequency=0`** because SBC does not answer OPTIONS for Egress qualify; production needs OPTIONS handling, visible trunk health, and **EgressFailover** (or SRV) when SBC pool members fail.
 
 **Properties (conceptual — align with existing trunk schema / generator):**
 
@@ -214,7 +216,7 @@ A single SBC is acceptable for **lab / golden validation**. **Production fleet**
 | **Pool of identical SBC instances** | Same `pbx3sbc` image; shared or replicated MySQL routing DB; horizontal scale-out — no special “primary/secondary” roles in application logic |
 | **DNS SRV pool (preferred)** | Phone-facing name resolves to **multiple SRV targets** (one per pool member). Most SIP phones support **multiple outbound proxy / path definitions** — provision primary + secondary SRV targets (or equivalent phone failover list) rather than a single hidden VIP |
 | **Directory record** | `sbc-fleet` with `sip_proxy_fqdn` (SRV name), `admin_api_url`, `member_hosts` — see **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §4.1 |
-| **Node `Egress` / `EgressFailover`** | Point at SRV name or two pool members — mirrors phone-side redundancy |
+| **Node `Egress` / `EgressFailover`** | Point at SRV name or two pool members — mirrors phone-side redundancy. **Availability:** fleet nodes must **qualify** Egress via OPTIONS; SBC must respond — see **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. |
 
 **Design intent:** Operate a **pool of interchangeable SBCs** behind SRV, not a bespoke active/passive pair. Floating IP remains a valid ops alternative but is **not** the preferred product direction.
 
@@ -368,6 +370,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 
 | Date | Change |
 |------|--------|
+| 2026-07-09 | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — future OPTIONS qualify, EgressFailover, trunk health; §4/§6 cross-links |
 | 2026-07-09 | §2.4 founding Rules 7–8 — replaceable edge; SIP runtime API; catalog → SPA one-way |
 | 2026-07-09 | §6.1 WebRTC/WSS — out of v1; interim node :8089; target WSS on SBC |
 | 2026-07-09 | DID: two-layer model — regex `inroutes` on node; SBC delivery projection only; per-DID default |
