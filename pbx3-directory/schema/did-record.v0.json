@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/did-record.v0.json",
+  "title": "PBX3 fleet DID record (v0)",
+  "description": "One E.164 number assigned to a tenant. Used inside tenants/{shortuid}/dids.json and optionally as catalog/dids/{e164_key}.json for conditional assign.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["e164", "status"],
+  "properties": {
+    "e164": {
+      "type": "string",
+      "pattern": "^\\+[1-9]\\d{1,14}$",
+      "description": "E.164 with leading + (e.g. +442071234567)"
+    },
+    "tenant_shortuid": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "description": "Required on standalone catalog/dids/{e164_key}.json; omitted when nested under tenants/{shortuid}/dids.json"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "reserved", "porting", "released"],
+      "description": "active = routable; reserved = assigned but not yet in tenant inroutes; porting = cutover pending; released = soft-delete, not routable"
+    },
+    "carrier": {
+      "type": "string",
+      "description": "Carrier of record or trunk label (ops metadata, optional)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Operator display label"
+    },
+    "assigned_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Operator notes (port-in ref, ticket id, etc.)"
+    }
+  }
+}

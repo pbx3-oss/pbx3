@@ -1,0 +1,9 @@
+{
+  "tenant_shortuid": "f34ck1",
+  "updated_at": "2026-07-09T12:00:00Z",
+  "dids": [
+    { "e164": "+442071234567", "status": "active", "carrier": "gamma" },
+    { "e164": "+441611234567", "status": "active", "carrier": "gamma" },
+    { "e164": "+12125550100", "status": "reserved", "carrier": "bandwidth", "notes": "port-in pending" }
+  ]
+}

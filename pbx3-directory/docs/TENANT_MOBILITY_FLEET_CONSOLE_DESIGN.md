@@ -335,6 +335,8 @@ For **migration staging**, the orchestrator (gatekeeper) issues presigns to **so
 
 ## 3. Outbound routing — fleet vs solo (Phase A)
 
+**Decision record:** **`FLEET_TRUNK_PEERING_DECISION.md`** — locked placement (fleet = SBC peering only; solo = node trunks), Phase A `Egress` spec, HA prerequisite, implementation order.
+
 ### Problem today (blocks tenant move on direct fleets)
 
 Outbound routes store **real trunk `pkey` strings** in `route.path1..path4`. Trunks are **instance-owned** and **excluded** from the tenant export mini-DB. After import, `path1='ael3'` dangles unless that trunk exists on the destination — a failure a panel admin cannot diagnose.
@@ -800,19 +802,7 @@ tenant → node  ← ALREADY in S3 (meta.instance_id) ─┤→ compile → SBC 
 
 `dids.json` sits next to `meta.json` under the tenant's **stable** prefix (unchanged across moves), so DID ownership survives moves exactly like recordings do. A flat list suits dispersed enterprises (§11.9) — no prefix assumption.
 
-**`dids.json` sketch (needs a `did-inventory.v0.json` schema):**
-
-```json
-{
-  "tenant_shortuid": "f34ck1",
-  "updated_at": "2026-07-07T17:30:00Z",
-  "dids": [
-    { "e164": "+442071234567", "carrier": "gamma", "status": "active" },
-    { "e164": "+441611234567", "carrier": "gamma", "status": "active" },
-    { "e164": "+12125550100",  "carrier": "bandwidth", "status": "active" }
-  ]
-}
-```
+**`dids.json` sketch** — schema **`did-inventory.v0.json`**; full design **`DID_ASSIGNMENT_DESIGN.md`** (Mode A vs B, projection rules).
 
 **Rule 1 preserved:** the directory is ops metadata (async), never in the SIP/RTP path. Calls route from the SBC's **MySQL** `dr_rules` (fast, local); S3 is the *authoring + compile* source, projected to MySQL out-of-band — same posture as `catalog/instance-index.json` feeding the SPA, never the live call.
 
@@ -827,7 +817,7 @@ tenant → node  ← ALREADY in S3 (meta.instance_id) ─┤→ compile → SBC 
 - **Disaster-resilient** — SBC routing tables are rebuildable from S3; node loss doesn't lose DID ownership.
 - **Dispersed-friendly** — flat per-tenant list; prefix compression stays optional (§11.9).
 
-**Follow-ups:** (a) add `schema/did-inventory.v0.json`; (b) extend registrar with `assign-did.sh` / `release-did.sh` (+ `move-tenant.sh` already covers the node pivot); (c) build the S3 → SBC `dr_rules` projector (part of `SbcFleetAdapter`); (d) reconcile job asserts directory `dids` ≡ SBC `dr_rules` ≡ (optionally) tenant `inroutes`.
+**Follow-ups:** (a) ~~add `schema/did-inventory.v0.json`~~ **done** (`did-record`, `did-inventory`, `did-index` + **`DID_ASSIGNMENT_DESIGN.md`**); (b) extend registrar with `assign-did.sh` / `release-did.sh` (+ `move-tenant.sh` already covers the node pivot); (c) build the S3 → SBC `dr_rules` projector (part of `SbcFleetAdapter`); (d) reconcile job asserts directory `dids` ≡ SBC `dr_rules` ≡ (optionally) tenant `inroutes`.
 
 **Open question (unchanged, now sharper):** the *authoring UI* for `dids.json` — tenant panel, fleet DID-inventory panel, or both — is still a product/persona call (§10). The **home of record** is settled: the S3 directory.
 
@@ -848,7 +838,7 @@ tenant → node  ← ALREADY in S3 (meta.instance_id) ─┤→ compile → SBC 
 | **Phase B′ — Control plane** | §2.5–2.6, **§2.5.1** (hosting), §6 | `pbx3-directory/tools/` (registrar scripts to adopt); `DESIGN_RULES.md` |
 | **Phase C — Move wizard** | §5–6, §13.2–13.4 | `TenantMobilityService.php`; `FleetPreflightService.php`; §13.3 contracts |
 | **SBC / peering** | §2.1–2.4, §11.8 | `pbx3sbc/` `PEERING-PLAN.md`, `routing-logic.md` |
-| **Inbound DID mobility** | §11.8–11.10 | Deferred for v1 MVP (§13.4) |
+| **Inbound DID mobility** | §11.8–11.10, **`DID_ASSIGNMENT_DESIGN.md`** | Deferred for v1 MVP (§13.4) |
 
 ### 13.2 v1 MVP scope (what “done” means first)
 
@@ -879,7 +869,7 @@ These do **not** exist yet; draft in `pbx3-directory/schema/` (or OpenAPI on con
 |----------|-------|--------|-------|
 | **`sbc-fleet.v0.json`** | directory schema | **TODO** | §4.1 fields: `sip_proxy_fqdn`, `admin_api_url`, `member_hosts` |
 | **`instance-record` + `sbc_dispatcher_setid`** | directory schema | **TODO** | Extend `instance-record.v0.json` |
-| **`did-inventory.v0.json`** | directory schema | **TODO** | §11.10 `tenants/{shortuid}/dids.json` |
+| **`did-inventory.v0.json`** (+ `did-record`, `did-index`) | directory schema | **Drafted** | **`DID_ASSIGNMENT_DESIGN.md`**; example `schema/did-inventory.example.json` |
 | **`tenant-move-job.v0.json`** | control plane | **TODO** | Job state + `tenants/{shortuid}/migration/{job_id}/job.json` |
 | **Node mobility HTTP API** | pbx3api | **TODO** | Wrap `TenantMobilityService` — see §13.3.1 |
 | **`SbcFleetAdapter` HTTP API** | pbx3sbc-admin | **TODO** | §2.4 methods; may not exist beyond Filament CRUD today |

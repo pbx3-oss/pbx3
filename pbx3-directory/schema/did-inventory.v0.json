@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/did-inventory.v0.json",
+  "title": "PBX3 tenant DID inventory (v0)",
+  "description": "tenants/{tenant_shortuid}/dids.json — per-tenant authored DID list (flat; scattered area codes OK). Gatekeeper-only write.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_shortuid", "updated_at", "dids"],
+  "properties": {
+    "tenant_shortuid": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dids": {
+      "type": "array",
+      "items": {
+        "$ref": "did-record.v0.json",
+        "description": "tenant_shortuid on each item is omitted; path is authoritative"
+      },
+      "description": "Flat list; no assumption of contiguous blocks"
+    }
+  }
+}

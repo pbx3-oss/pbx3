@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/did-index.v0.json",
+  "title": "PBX3 fleet DID delivery index (v0)",
+  "description": "catalog/did-index.json — compiled rollup DID → tenant → node for SBC projection and reconcile. Written by gatekeeper/registrar only; rebuildable from tenants/*/dids.json + tenants/*/meta.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["updated_at", "entries"],
+  "properties": {
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["e164", "e164_key", "tenant_shortuid", "instance_id", "status"],
+        "properties": {
+          "e164": {
+            "type": "string",
+            "pattern": "^\\+[1-9]\\d{1,14}$"
+          },
+          "e164_key": {
+            "type": "string",
+            "pattern": "^[1-9]\\d{1,14}$",
+            "description": "Digits only, no + — S3 object key suffix for catalog/dids/{e164_key}.json"
+          },
+          "tenant_shortuid": { "type": "string" },
+          "instance_id": {
+            "type": "string",
+            "description": "From tenants/{shortuid}/meta.json.instance_id at compile time"
+          },
+          "sbc_dispatcher_setid": {
+            "type": "integer",
+            "description": "Compiled from instance-record; used by SBC dr_rules projector"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "reserved", "porting", "released"]
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 **Status:** Stub only — not a deployed service yet. Defines the **instance directory** (control-plane index) for **Model B** central admin.
 
-**New here?** Read **`docs/FLEET_SYSTEM_OVERVIEW.md`** — plain-language, diagram-led introduction to the whole fleet (Instance / Tenant / SBC / S3).
+**New here?** Read **`docs/FLEET_SYSTEM_OVERVIEW.md`** — plain-language, diagram-led introduction to the whole fleet (Instance / Tenant / SBC / S3). **Trunk/peering placement:** **`docs/FLEET_TRUNK_PEERING_DECISION.md`**. **DID assignment (central registry vs inroutes-only):** **`docs/DID_ASSIGNMENT_DESIGN.md`**.
 
 **Product direction:** **pbx3spa** repo — **`workingdocs/CENTRAL_ADMIN_DIRECTION.md`**
 
@@ -32,6 +32,9 @@ pbx3-directory/
     instance-index.json       ← example catalog (same key in S3: catalog/instance-index.json)
     instance-meta.v0.json     ← instances/{ksuid}/meta.json
     tenant-meta.v0.json       ← tenants/{shortuid}/meta.json
+    did-record.v0.json        ← single DID (catalog/dids/{e164_key}.json)
+    did-inventory.v0.json     ← tenants/{shortuid}/dids.json
+    did-index.v0.json         ← catalog/did-index.json (compiled)
     backup-manifest.v0.json
     retention-policy.v0.json  ← policy.json (backups/recordings)
 ```
