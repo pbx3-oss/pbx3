@@ -1,17 +1,18 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi, **pbx3sbc**)  
-**Last updated:** 2026-07-08 (session end — pbx3sbc inter-extension calling shipped on **`sbc.pbx3.com`**)
+**Last updated:** 2026-07-09 (session end — **`fleet-egress`** merged to **`main`**; nodes + SBC git pull)
 
 ### Suggested “what next?” order
 
-1. **SBC soak + peering** — extension calling validated (**`dhbm8x`** tenant); next: more tenants/handsets per **`pbx3sbc/workingdocs/SBC_SOAK_ENDPOINT_REFERENCE.md`**, then carrier/PSTN path per **`pbx3sbc/workingdocs/PEERING-PLAN.md`**.  
-2. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. **§2.6.1 IAM tighten done**; SBC standup **in progress** → **Phase A** (Egress) → **B′** control plane → **C** panel moves.  
-3. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient; revisit after B′ gatekeeper).  
-4. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
-5. **bzy54n** — upgrade **pbx3 0.0.3-23** deb (functionally at R1.5 via manual seed).  
-6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-7. **Extension Runtime re-examine** · **SWOCLIP** · **`tt_help_core` cleanup** · **Directory Phase D** · **SARK migration** (end of list)
+1. **Golden deploy Phase A** — run **`seed-fleet-egress-trunk.sh`** on **08jzwn** (then **bzy54n**); set **`PBX3_FLEET_MODE`** / **`PBX3_SBC_EGRESS_HOST`** in **`/opt/pbx3api/.env`**; rebuild/install **pbx3cagi** deb; **`pbx3:fleet-preflight`** should go all green.  
+2. **SBC soak + apply template** — git pulled on **`sbc.pbx3.com`** (`d84c192`); reload OpenSIPS from **`opensips.cfg.template`**; backfill dispatcher **`attrs`** (`source_ip`) for multi-tenant **`GET_DOMAIN_FROM_SOURCE_IP`**; more tenants/handsets per **`SBC_SOAK_ENDPOINT_REFERENCE.md`**.  
+3. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. **Phase A + B′ scaffold on `main`**; next: live deploy (above) → carrier peering soak → **C** move wizard.  
+4. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient; revisit after B′ gatekeeper).  
+5. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
+6. **bzy54n** — upgrade **pbx3 0.0.3-23** deb (functionally at R1.5 via manual seed).  
+7. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+8. **Extension Runtime re-examine** · **SWOCLIP** · **`tt_help_core` cleanup** · **Directory Phase D** · **SARK migration** (end of list)
 
 ---
 
@@ -19,9 +20,9 @@
 
 - [ ] **Snapshots — separate panel, commit hook, FIFO retention (ops polish):** **Backups** (`backup.zip`, local 9 + S3 30d) and **snapshots** (`sqlite.db` copies in `/opt/pbx3/snap/`) are different jobs but share **`BackupView.vue`** — long backup lists push snapshots below the fold. **Gap:** legacy **`snap.sh`** is a stub; SPA **`GET syscommands/commit`** runs `genAst.sh` + reload but does **not** call **`create_new_snapshot()`** (legacy SARK took a snap on commit). **No snapshot FIFO** today (old “keep 9” in `snap.sh` commented out; backups have **`LocalBackupRetention`**). **Target:** **(1)** **pbx3spa** — `/snapshots` panel (extract from BackupView); **(2)** **pbx3api** — `create_new_snapshot()` after successful Commit; **(3)** **`SnapshotRetention`** (e.g. 9 newest, env `PBX3_SNAPSHOT_MAX_COUNT`); optional revive **`snap.sh`** or deprecate in favour of API. See **`IMPLEMENTATION_PLAN.md`** § **S9.5–S9.7**. **Priority:** after **R1** or parallel low-touch ops; not blocking fleet rebuild.
 
-- [ ] **Phase S8.10 — Fleet mobility Fleet Console (design → build):** **Design shipped** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (SBC-required fleet, control-plane + S3 gatekeeper, move wizard, §13 implementer map) + stakeholder **`FLEET_SYSTEM_OVERVIEW.md`**. **Build order:** **A** Egress + AGI; **B** fleet shell; **B′** control-plane + gatekeeper + **§2.6.1** IAM tighten (`pbx3-node-s3-writer.policy.json.tmpl`); **C** move wizard. **SBC standup in progress** — **`sbc.pbx3.com`** + **`dhbm8x`** tenant: extension-to-extension validated 2026-07-08; carrier peering + multi-tenant still open. **Contracts TODO:** `sbc-fleet.v0.json`, `did-inventory.v0.json`, `tenant-move-job.v0.json`, node mobility HTTP API (§13.3). CLI path remains **`TENANT_MIGRATION_RUNBOOK.md`**.
+- [ ] **Phase S8.10 — Fleet mobility Fleet Console (design → build):** **Design shipped** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`**. **On `main` (2026-07-09):** **Phase A** Egress trunk seed script + AMI template; **pbx3api** fleet posture + route normalization; **pbx3spa** fleet nav + **`FleetTenantsView`** stub; **pbx3cagi** fleet outbound via **`Egress`** only; **B′** gatekeeper scaffold (`pbx3-directory/gatekeeper/`); **`sbc-fleet.v0.json`**. **Not live yet:** egress seed + fleet `.env` on nodes; **pbx3cagi** deb reinstall; SBC template reload. **Build order remaining:** deploy Phase A → SBC peering soak → **C** move wizard. **Contracts TODO:** `did-inventory.v0.json`, `tenant-move-job.v0.json`, node mobility HTTP API (§13.3). CLI path: **`TENANT_MIGRATION_RUNBOOK.md`**.
 
-- [ ] **pbx3sbc — multi-tenant dispatcher reverse lookup:** `GET_DOMAIN_FROM_SOURCE_IP` matches dispatcher destination IP only; hostname entries (`sip:08jzwn.pbx3.com`) fail. Single-tenant fallback works. For production multi-tenant: store Asterisk source IP in dispatcher `attrs` or add DNS-aware lookup. See **`pbx3sbc/config/opensips.cfg.template`** `route[GET_DOMAIN_FROM_SOURCE_IP]`.
+- [ ] **pbx3sbc — multi-tenant dispatcher reverse lookup:** Template + **`add-dispatcher.sh`** now accept **`source_ip`** in dispatcher **`attrs`** (`main` **`d84c192`**). **Live backfill still needed** on **`sbc.pbx3.com`** for hostname rows (`sip:08jzwn.pbx3.com`). Single-tenant fallback works until then. See **`opensips.cfg.template`** `route[GET_DOMAIN_FROM_SOURCE_IP]`.
 
 - [ ] **Phase S8 — Fleet (optional polish):** **S8.1–S8.6 shipped and drill-validated** (affcot **08jzwn → bzy54n**). Remaining optional: LE Sync post-cutover; **`move-tenant.sh`** if catalog workflow preferred over **`register-tenant.sh`** for first-time tenants. See **`TENANT_MIGRATION_RUNBOOK.md`**.
 
@@ -70,6 +71,8 @@
 ---
 
 ## Completed / deferred
+
+- [x] **Fleet egress + B′ scaffold merged to `main` (2026-07-09):** **`fleet-egress`** fast-forwarded in **pbx3** **`9a25470`**, **pbx3api** **`2e25076`**, **pbx3spa** **`308af87`**, **pbx3cagi** **`9fe15e2`**, **pbx3sbc** **`d84c192`**. **Pulled live:** **08jzwn** + **bzy54n** `/opt/pbx3api`; **sbc** `/home/ubuntu/pbx3sbc` (SSH key **`opensips.pem`**). **`pbx3:fleet-preflight`** fails only on missing **Egress** trunk (expected until seed).
 
 - [x] **pbx3sbc — inter-extension calling via SBC (2026-07-08):** **`pbx3sbc` `8174dfe`** on **`main`**. **`sbc.pbx3.com`** + tenant **`dhbm8x.pbx3.com`** → Golden **`08jzwn`**. Fixes: INVITE NAT (`received`), Yealink 401/407 relay, Snom `line=` on NAT rewrite, single-tenant dispatcher fallback. Snom 1000 + Yealinks 1001/1002 all directions. Live server hot-patched; PSTN peering not tested. **`pbx3sbc/workingdocs/QUICK-START.md`**.
 

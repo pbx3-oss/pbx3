@@ -48,7 +48,41 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-08, session end — pbx3sbc inter-extension calling)
+## Next agent session notes (2026-07-09, session end — fleet-egress merged; nodes + SBC pulled)
+
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**, **pbx3sbc** ( **`fleet-egress`** merged and branch may be deleted when convenient).
+
+### Shipped
+
+| Repo | Commit | Notes |
+|------|--------|--------|
+| **pbx3** | **`9a25470`** | `seed-fleet-egress-trunk.sh`, gatekeeper scaffold, `sbc-fleet.v0.json`, onboard fleet `.env` hooks |
+| **pbx3api** | **`2e25076`** | `FleetPostureService`, `GET /fleet-posture`, route normalization, Egress preflight check |
+| **pbx3spa** | **`308af87`** | Fleet nav, `FleetTenantsView` stub, hide route trunk picker in fleet mode |
+| **pbx3cagi** | **`9fe15e2`** | Fleet mode: dial **`Egress`** only (no path failover loop) |
+| **pbx3sbc** | **`d84c192`** | Dispatcher `source_ip` attrs, drouting peering route blocks, soak endpoint reference doc |
+
+**Deploy:** **`fleet-egress` → `main`** pushed on all five repos. **Pulled on instances:** **08jzwn** + **bzy54n** `/opt/pbx3api` → **`2e25076`**; **sbc** (`3.93.26.82`) `/home/ubuntu/pbx3sbc` → **`d84c192`** (SSH: **`opensips.pem`**, not **`pbx3test.pem`**).
+
+### Golden / operator follow-up
+
+- **`pbx3:fleet-preflight`** on both nodes: all green except **`[FAIL] Egress trunk`** — run **`seed-fleet-egress-trunk.sh`** (script not on node yet; SCP from Mac or clone **`pbx3`** tools path).
+- Set **`PBX3_FLEET_MODE=true`** and **`PBX3_SBC_EGRESS_HOST=sbc.pbx3.com`** in **`/opt/pbx3api/.env`**; **`php artisan config:clear`**.
+- Rebuild/install **pbx3cagi** deb on nodes for fleet AGI behaviour (**`9fe15e2`**).
+- **SBC:** git updated; OpenSIPS **not** reloaded from template this session — live config still hot-patched from **`8174dfe`** era.
+- Backfill dispatcher **`attrs`** with Asterisk source IP for hostname rows (multi-tenant **`GET_DOMAIN_FROM_SOURCE_IP`**).
+
+### Resume
+
+1. **Deploy Phase A on golden** — egress seed + fleet `.env` + **pbx3cagi** deb → preflight all green.
+2. **SBC** — apply template reload + dispatcher attrs backfill; continue soak per **`SBC_SOAK_ENDPOINT_REFERENCE.md`**.
+3. **Carrier peering** path per **`PEERING-PLAN.md`** (template blocks on `main`; not exercised live).
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** at login (local **`pbx3spa`** on **`main`** for fleet UI).
+
+---
+
+## Next agent session notes (2026-07-08, session end — pbx3sbc inter-extension calling) — historical
 
 **Branch:** **`main`** in **pbx3sbc** (**`8174dfe`** pushed); **pbx3sbc-admin** **`205e1a2`** (MI `ds_reload`; from prior session). **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi** unchanged.
 
