@@ -265,6 +265,12 @@ grep -q '^PBX3_ORG_BUCKET=' "\$ENV" 2>/dev/null && \
 grep -q '^PBX3_DIRECTORY_BACKUP_UPLOAD=' "\$ENV" 2>/dev/null && \
   sed -i 's/^PBX3_DIRECTORY_BACKUP_UPLOAD=.*/PBX3_DIRECTORY_BACKUP_UPLOAD=true/' "\$ENV" || \
   echo 'PBX3_DIRECTORY_BACKUP_UPLOAD=true' >> "\$ENV"
+grep -q '^PBX3_FLEET_MODE=' "\$ENV" 2>/dev/null && \
+  sed -i 's/^PBX3_FLEET_MODE=.*/PBX3_FLEET_MODE=true/' "\$ENV" || \
+  echo 'PBX3_FLEET_MODE=true' >> "\$ENV"
+grep -q '^PBX3_SBC_EGRESS_HOST=' "\$ENV" 2>/dev/null && \
+  sed -i 's/^PBX3_SBC_EGRESS_HOST=.*/PBX3_SBC_EGRESS_HOST=${PBX3_SBC_EGRESS_HOST:-sbc.pbx3.com}/' "\$ENV" || \
+  echo 'PBX3_SBC_EGRESS_HOST=${PBX3_SBC_EGRESS_HOST:-sbc.pbx3.com}' >> "\$ENV"
 grep -q '^AWS_DEFAULT_REGION=' "\$ENV" 2>/dev/null && \
   sed -i 's/^AWS_DEFAULT_REGION=.*/AWS_DEFAULT_REGION=${region}/' "\$ENV" || \
   echo 'AWS_DEFAULT_REGION=${region}' >> "\$ENV"

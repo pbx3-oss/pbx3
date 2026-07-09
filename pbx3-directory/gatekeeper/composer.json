@@ -1,0 +1,14 @@
+{
+  "name": "aelintra/pbx3-gatekeeper",
+  "description": "Fleet S3 gatekeeper — registrar API (Phase B′)",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "aws/aws-sdk-php": "^3.300"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pbx3\\Gatekeeper\\": "src/"
+    }
+  }
+}

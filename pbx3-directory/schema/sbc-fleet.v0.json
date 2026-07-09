@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/sbc-fleet.v0.json",
+  "title": "PBX3 fleet SBC pool record (v0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sip_proxy_fqdn"],
+  "properties": {
+    "sip_proxy_fqdn": {
+      "type": "string",
+      "format": "hostname",
+      "description": "Stable SRV pool name phones register to (e.g. sbc.pbx3.com)"
+    },
+    "admin_api_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "SbcFleetAdapter backend base URL (pbx3sbc-admin)"
+    },
+    "member_hosts": {
+      "type": "array",
+      "items": { "type": "string", "format": "hostname" },
+      "description": "Optional explicit SBC pool members (lab / break-glass)"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

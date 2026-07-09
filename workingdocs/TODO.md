@@ -5,7 +5,7 @@
 
 ### Suggested “what next?” order
 
-1. **SBC soak + peering** — extension calling validated (**`dhbm8x`** tenant); next: more tenants/handsets, then carrier/PSTN path per **`pbx3sbc/workingdocs/PEERING-PLAN.md`**.  
+1. **SBC soak + peering** — extension calling validated (**`dhbm8x`** tenant); next: more tenants/handsets per **`pbx3sbc/workingdocs/SBC_SOAK_ENDPOINT_REFERENCE.md`**, then carrier/PSTN path per **`pbx3sbc/workingdocs/PEERING-PLAN.md`**.  
 2. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. **§2.6.1 IAM tighten done**; SBC standup **in progress** → **Phase A** (Egress) → **B′** control plane → **C** panel moves.  
 3. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient; revisit after B′ gatekeeper).  
 4. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  

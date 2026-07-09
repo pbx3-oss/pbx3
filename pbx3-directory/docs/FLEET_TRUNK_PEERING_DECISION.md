@@ -129,11 +129,11 @@ Fleet vs solo behaviour is gated by instance posture (e.g. directory / fleet fla
 
 ### 4.4 Phase A deliverables (checklist)
 
-- [ ] Fleet AMI / **`NEW_INSTANCE_CHECKLIST.md`** / onboarding: seed `Egress` (+ optional `EgressFailover`).
-- [ ] Generator / trunk templates for fleet peer URIs.
-- [ ] **pbx3cagi:** `path1` → `Egress` convention; no multi-trunk failover on node.
-- [ ] **pbx3spa / pbx3api:** fleet route panels — dialplan + policy; hide trunk paths.
-- [ ] Move preflight (later Phase C): verify destination has `Egress`, not per-route trunk resolution.
+- [x] Fleet AMI / onboarding: **`seed-fleet-egress-trunk.sh`** seeds `Egress` (+ optional `EgressFailover`).
+- [x] Generator uses trusted peer template for `Egress` host (existing `pjsip_trunk_trusted.tmpl`).
+- [x] **pbx3cagi:** fleet mode — single `Egress` dial; no multi-trunk failover on node.
+- [x] **pbx3spa / pbx3api:** `GET fleet-posture`; route panels hide trunk paths on fleet nodes.
+- [x] Move preflight: **`FleetPreflightService`** verifies active `Egress` trunk.
 
 ---
 
@@ -321,7 +321,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 ## 9. Implementation sequence (locked order)
 
 ```text
-1. SBC soak          — more tenants/handsets on current edge (in progress)
+1. SBC soak          — more tenants/handsets on current edge (in progress); brand list: **`pbx3sbc/workingdocs/SBC_SOAK_ENDPOINT_REFERENCE.md`**
 2. Phase A           — Egress trunk on fleet nodes; SPA/cagi fleet route behaviour
 3. SBC peering 0–4   — carrier outbound + inbound DID → backend (PEERING-PLAN)
 4. B′ control plane  — gatekeeper, §2.6.1 IAM (done), Fleet Console shell

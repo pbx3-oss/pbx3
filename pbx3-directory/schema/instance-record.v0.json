@@ -57,6 +57,11 @@
       "type": "string",
       "format": "date-time",
       "description": "Last successful health probe (optional badge; not required for v0 picker)"
+    },
+    "sbc_dispatcher_setid": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "OpenSIPS dispatcher setid for this node backend (SbcFleetAdapter / peering)"
     }
   }
 }
