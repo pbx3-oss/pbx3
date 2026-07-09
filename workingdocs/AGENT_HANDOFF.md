@@ -48,7 +48,39 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-09, session end — fleet-egress merged; nodes + SBC pulled)
+## Next agent session notes (2026-07-09, session end — Phase A live; SBC soak; peering next)
+
+**Branch:** **`fleet-phase-a`** in **pbx3** (**`67d2376`** pushed), **pbx3api**, **pbx3spa**, **pbx3cagi**. **`main`** in **pbx3sbc** (**`1d9433d`**), **pbx3sbc-admin** (**`4282261`** pushed).
+
+### Shipped
+
+| Area | Notes |
+|------|--------|
+| **Phase A (08jzwn + bzy54n)** | Egress trunk seed, **`PBX3_FLEET_MODE`** / **`PBX3_SBC_EGRESS_HOST`**, **pbx3cagi 1.0.0-4**, **`pbx3:fleet-preflight`** all green |
+| **pbx3 `67d2376`** | **`pjsip_trunk_egress.tmpl`** — outbound-only Egress (no `identify` on SBC IP); fixes relayed phone REGISTER collision. Hot-patched on both nodes |
+| **SBC soak** | Golden + SBC reboot; registrations + extension calls OK. Live OpenSIPS + fail2ban whitelist persisted |
+| **pbx3sbc-admin `4282261`** | Filament **`->profile()`** for password change; deployed on **`sbc.pbx3.com`** |
+
+**Test carrier:** Operator has a relay carrier for PSTN lab tests (may need **registrant** or trusted peer) — exercise in peering Phase 0–2, not this session.
+
+### Golden / operator follow-up
+
+- Nodes run **hot-patches** for egress PJSIP template — merge **`fleet-phase-a` → `main`** and install **pbx3** deb when convenient.
+- **SBC peering not live:** no **`dr_*`** data; live **`opensips.cfg`** lacks **`do_routing`** branches (template on **`main`** has them). Next: Phase 0 schema + carrier seed + template reload.
+- **Egress PJSIP** shows **Unavailable** on golden — OPTIONS qualify to SBC fails; outbound uses **`Dial(PJSIP/num@Egress)`** via **pbx3cagi** fleet mode. Optional: **`qualify_frequency=0`** on egress template.
+- **pbx3cagi** on golden: canonical repo **`~/Git/pbx3cagi`** (duplicate dirs removed).
+
+### Resume
+
+1. **SBC peering Phase 0–2** — test carrier (trusted peer + registration if needed); golden outbound → SBC → PSTN relay.
+2. **Merge `fleet-phase-a` → `main`** across fleet repos; deb install on nodes.
+3. **pbx3sbc-admin** — Carrier Peers + Inbound DIDs CRUD when peering tables exist (**`PEERING-PLAN.md`** §16).
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`**
+
+---
+
+## Next agent session notes (2026-07-09, session end — fleet-egress merged; nodes + SBC pulled) — historical
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**, **pbx3sbc** ( **`fleet-egress`** merged and branch may be deleted when convenient).
 

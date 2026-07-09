@@ -1,18 +1,18 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** (pbx3, pbx3api, pbx3spa, pbx3cagi, **pbx3sbc**)  
-**Last updated:** 2026-07-09 (session end — **`fleet-egress`** merged to **`main`**; nodes + SBC git pull)
+**Branch:** **`fleet-phase-a`** (pbx3, pbx3api, pbx3spa, pbx3cagi); **`main`** (**pbx3sbc** **`1d9433d`**, **pbx3sbc-admin** **`4282261`**)  
+**Last updated:** 2026-07-09 (session end — Phase A live on both nodes; SBC soak + admin profile)
 
 ### Suggested “what next?” order
 
-1. **Golden deploy Phase A** — run **`seed-fleet-egress-trunk.sh`** on **08jzwn** (then **bzy54n**); set **`PBX3_FLEET_MODE`** / **`PBX3_SBC_EGRESS_HOST`** in **`/opt/pbx3api/.env`**; rebuild/install **pbx3cagi** deb; **`pbx3:fleet-preflight`** should go all green.  
-2. **SBC soak + apply template** — git pulled on **`sbc.pbx3.com`** (`d84c192`); reload OpenSIPS from **`opensips.cfg.template`**; backfill dispatcher **`attrs`** (`source_ip`) for multi-tenant **`GET_DOMAIN_FROM_SOURCE_IP`**; more tenants/handsets per **`SBC_SOAK_ENDPOINT_REFERENCE.md`**.  
-3. **S8.10 fleet mobility (implementation)** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. **Phase A + B′ scaffold on `main`**; next: live deploy (above) → carrier peering soak → **C** move wizard.  
-4. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient; revisit after B′ gatekeeper).  
-5. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
-6. **bzy54n** — upgrade **pbx3 0.0.3-23** deb (functionally at R1.5 via manual seed).  
-7. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-8. **Extension Runtime re-examine** · **SWOCLIP** · **`tt_help_core` cleanup** · **Directory Phase D** · **SARK migration** (end of list)
+1. **SBC peering Phase 0–2 (lab)** — **`dr_*` schema** + reload OpenSIPS peering routes from template; seed **test carrier** (trusted peer; registration path if required); outbound **`do_routing("0")`**; test golden **`Egress`** → SBC → PSTN relay. See **`PEERING-PLAN.md`**.  
+2. **Merge `fleet-phase-a` → `main`** — pbx3 (**`67d2376`** egress PJSIP template), pbx3api, pbx3spa, pbx3cagi; build/install **pbx3** + **pbx3cagi** debs on nodes (replace hot-patches).  
+3. **SBC polish** — align live **`opensips.cfg`** with **`1d9433d`** if not already; dispatcher **`source_ip`** attrs backfill; **pbx3sbc-admin** Carrier Peers + DIDs UI (peering §16) when Phase 0–2 data exists.  
+4. **S8.10 fleet mobility** — peering soak → inbound DID (Phases 3–5) → **C** move wizard. **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13.  
+5. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient).  
+6. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
+7. **Egress template polish** — `qualify_frequency=0` on **`pjsip_trunk_egress.tmpl`** (OPTIONS to SBC marks endpoint Unavail; cosmetic).  
+8. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
 
 ---
 
@@ -20,7 +20,7 @@
 
 - [ ] **Snapshots — separate panel, commit hook, FIFO retention (ops polish):** **Backups** (`backup.zip`, local 9 + S3 30d) and **snapshots** (`sqlite.db` copies in `/opt/pbx3/snap/`) are different jobs but share **`BackupView.vue`** — long backup lists push snapshots below the fold. **Gap:** legacy **`snap.sh`** is a stub; SPA **`GET syscommands/commit`** runs `genAst.sh` + reload but does **not** call **`create_new_snapshot()`** (legacy SARK took a snap on commit). **No snapshot FIFO** today (old “keep 9” in `snap.sh` commented out; backups have **`LocalBackupRetention`**). **Target:** **(1)** **pbx3spa** — `/snapshots` panel (extract from BackupView); **(2)** **pbx3api** — `create_new_snapshot()` after successful Commit; **(3)** **`SnapshotRetention`** (e.g. 9 newest, env `PBX3_SNAPSHOT_MAX_COUNT`); optional revive **`snap.sh`** or deprecate in favour of API. See **`IMPLEMENTATION_PLAN.md`** § **S9.5–S9.7**. **Priority:** after **R1** or parallel low-touch ops; not blocking fleet rebuild.
 
-- [ ] **Phase S8.10 — Fleet mobility Fleet Console (design → build):** **Design shipped** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`**. **On `main` (2026-07-09):** **Phase A** Egress trunk seed script + AMI template; **pbx3api** fleet posture + route normalization; **pbx3spa** fleet nav + **`FleetTenantsView`** stub; **pbx3cagi** fleet outbound via **`Egress`** only; **B′** gatekeeper scaffold (`pbx3-directory/gatekeeper/`); **`sbc-fleet.v0.json`**. **Not live yet:** egress seed + fleet `.env` on nodes; **pbx3cagi** deb reinstall; SBC template reload. **Build order remaining:** deploy Phase A → SBC peering soak → **C** move wizard. **Contracts TODO:** `did-inventory.v0.json`, `tenant-move-job.v0.json`, node mobility HTTP API (§13.3). CLI path: **`TENANT_MIGRATION_RUNBOOK.md`**.
+- [ ] **Phase S8.10 — Fleet mobility Fleet Console (design → build):** **Design shipped** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`**. **Phase A live (2026-07-09):** **08jzwn** + **bzy54n** — egress seed, fleet `.env`, **pbx3cagi 1.0.0-4**, **`pbx3:fleet-preflight`** all green; **pbx3** **`67d2376`** egress PJSIP template (no `identify` on SBC IP — fixes relayed REGISTER). **SBC:** extension calling + reboot soak OK; **peering not live** (`dr_*` empty; test carrier available for Phase 0–2). **Build order remaining:** SBC peering soak (trusted peer + optional registrant) → merge **`fleet-phase-a`** → inbound DID → **C** move wizard. **Contracts TODO:** `did-inventory.v0.json`, `tenant-move-job.v0.json`, node mobility HTTP API (§13.3). CLI path: **`TENANT_MIGRATION_RUNBOOK.md`**.
 
 - [ ] **pbx3sbc — multi-tenant dispatcher reverse lookup:** Template + **`add-dispatcher.sh`** now accept **`source_ip`** in dispatcher **`attrs`** (`main` **`d84c192`**). **Live backfill still needed** on **`sbc.pbx3.com`** for hostname rows (`sip:08jzwn.pbx3.com`). Single-tenant fallback works until then. See **`opensips.cfg.template`** `route[GET_DOMAIN_FROM_SOURCE_IP]`.
 
@@ -71,6 +71,10 @@
 ---
 
 ## Completed / deferred
+
+- [x] **Phase A fleet egress live on 08jzwn + bzy54n (2026-07-09):** **`seed-fleet-egress-trunk.sh`**, fleet `.env`, **pbx3cagi 1.0.0-4**, **`pbx3:fleet-preflight`** all green. **pbx3** egress PJSIP fix **`67d2376`** on **`fleet-phase-a`** (hot-patched on nodes). Golden **pbx3cagi** dirs consolidated under **`~/Git/pbx3cagi`**.
+
+- [x] **SBC soak + admin (2026-07-09):** Golden + SBC reboot; phones register and call. **pbx3sbc** REGISTER/NAT on **`main`** **`1d9433d`** (live config persisted). **pbx3sbc-admin** profile + password change **`4282261`** deployed on **`sbc.pbx3.com`**.
 
 - [x] **Fleet egress + B′ scaffold merged to `main` (2026-07-09):** **`fleet-egress`** fast-forwarded in **pbx3** **`9a25470`**, **pbx3api** **`2e25076`**, **pbx3spa** **`308af87`**, **pbx3cagi** **`9fe15e2`**, **pbx3sbc** **`d84c192`**. **Pulled live:** **08jzwn** + **bzy54n** `/opt/pbx3api`; **sbc** `/home/ubuntu/pbx3sbc` (SSH key **`opensips.pem`**). **`pbx3:fleet-preflight`** fails only on missing **Egress** trunk (expected until seed).
 
