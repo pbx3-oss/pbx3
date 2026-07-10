@@ -52,14 +52,14 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-10 — S8.10 movewizard scaffold)
 
-**Branch:** **`movewizard`** — **pbx3** **`c75430e`**, **pbx3api** **`0fb0019`** (live on **08jzwn** + **bzy54n**), **pbx3spa** **`c696c4f`**, **pbx3sbc-admin** **`6036bcb`** (live on SBC). **`main`** unchanged for merge later.
+**Branch:** **`movewizard`** — **pbx3** **`384eb33`**, **pbx3api** **`0fb0019`** (live on **08jzwn** + **bzy54n**), **pbx3spa** **`1d27b54`**, **pbx3sbc-admin** **`6036bcb`** (live on SBC). **`main`** unchanged for merge later.
 
 ### Shipped
 
 - Gatekeeper: `tenant-move-job.v0.json`, `POST /s3/presign`, tenant-moves create/get/run/advance, phase runner, CORS, `.env` loader.
 - pbx3api: `/api/fleet/*` (preflight, export/import via presign, commit, certs sync, delete) + `PBX3_FLEET_SERVICE_TOKEN`.
 - pbx3sbc-admin: `/api/fleet` health/preflight/repoint/rollback-repoint.
-- SPA: Fleet tenants (named) → Move wizard → job view; Vite `/fleet-gk` proxy.
+- SPA: Fleet tenants (named + **Hosted on**) → Move wizard → job view; Vite `/fleet-gk` proxy.
 - Catalog: instance `sbc_dispatcher_setid` 2/3; registered duns/sandycroft/willand/affcot/cluster1; removed orphan `5489nv`/`f34ck1` meta.
 - Lab smoke: gatekeeper Mac OK; node + SBC fleet preflight OK. **No live tenant move this session.**
 

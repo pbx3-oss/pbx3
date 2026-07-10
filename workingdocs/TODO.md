@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`movewizard`** (S8.10) — pbx3 **`c75430e`**, pbx3api **`0fb0019`**, pbx3spa **`c696c4f`**, pbx3sbc-admin **`6036bcb`**. Nodes/SBC pulled to `movewizard` for fleet APIs. **`main`** still has 0.0.3-25 / peering tips until merge.  
-**Last updated:** 2026-07-10 (session end — S8.10 move wizard scaffold; lab move not run)
+**Branch:** **`movewizard`** (S8.10) — pbx3 **`384eb33`**, pbx3api **`0fb0019`**, pbx3spa **`1d27b54`**, pbx3sbc-admin **`6036bcb`**. Nodes/SBC pulled to `movewizard` for fleet APIs. **`main`** still has 0.0.3-25 / peering tips until merge.  
+**Last updated:** 2026-07-10 (session end — S8.10 scaffold + Hosted on column; lab move not run)
 
 ### Suggested “what next?” order
 
