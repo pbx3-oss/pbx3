@@ -15,3 +15,14 @@ direct_media=no
 type=aor
 contact=sip:$host
 qualify_frequency=0
+
+; Unauthenticated inbound DID INVITEs arrive from the SBC IP. Phone
+; REGISTERs/INVITEs also come from that IP but carry digest auth — keep
+; endpoint_identifier_order=username,ip,anonymous so username wins.
+; Asterisk 20 requires endpoint= on identify (section name alone is not enough).
+; Dial failures after identify were OpenSIPS FROM_CARRIER matching fleet
+; nodes in dr_gateways (fixed separately) — not identify itself.
+[$trunk]
+type=identify
+endpoint=$trunk
+match=$host

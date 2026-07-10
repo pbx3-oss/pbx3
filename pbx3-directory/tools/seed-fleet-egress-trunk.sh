@@ -31,16 +31,16 @@ seed_trunk() {
   sqlite3 "$INSTANCE_DB" <<SQL
 INSERT INTO trunks (
   id, shortuid, pkey, active, cluster, cname, description, host, technology, transport,
-  peername, pjsipreg, callprogress, swoclip, z_created, z_updated, z_updater
+  peername, pjsipreg, privileged, callprogress, swoclip, z_created, z_updated, z_updater
 ) VALUES (
   '${id}', '${shortuid}', '${pkey}', 'YES', 'default', '${pkey}', 'Fleet SBC egress peer',
-  '${host}', 'SIP', 'udp', '${pkey}', NULL, 'YES', 'YES', datetime('now'), datetime('now'), 'seed-fleet-egress'
+  '${host}', 'SIP', 'udp', '${pkey}', NULL, 'NO', 'YES', 'YES', datetime('now'), datetime('now'), 'seed-fleet-egress'
 )
 ON CONFLICT(cluster, pkey) DO UPDATE SET
   active='YES', host='${host}', technology='SIP', transport='udp', peername='${pkey}',
-  pjsipreg=NULL, z_updated=datetime('now'), z_updater='seed-fleet-egress';
+  pjsipreg=NULL, privileged='NO', z_updated=datetime('now'), z_updater='seed-fleet-egress';
 SQL
-  echo "OK: trunks.pkey=${pkey} → ${host}"
+  echo "OK: trunks.pkey=${pkey} → ${host} (privileged=NO → context Ingress)"
 }
 
 seed_trunk "Egress" "$SBC_HOST"

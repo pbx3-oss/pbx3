@@ -74,6 +74,8 @@
 
 ## Completed / deferred
 
+- [x] **bzy54n Linphone softphone (2026-07-10):** Registered on **bzy54n** with no issues; makes and receives calls across the SBC.
+
 - [x] **Phase A fleet egress + PSTN lab (2026-07-09):** **08jzwn** + **bzy54n** — register, ext-to-ext, PSTN outbound via **Egress** → SBC → test carrier. **`qualify_frequency=0`**, routes → **Egress**, **`117340f`/`ded9b76`**. **SBC peering Phase 0–2** live (**`8c702fb`**). **Ops:** **`systemctl restart asterisk`** after egress template change (not **`pjsip reload` alone**).
 
 - [x] **bzy54n standup + affcot phone (2026-07-09):** SBC dispatcher **setid 3** + domains **`9wvvnb`/`wfh69h`**; Snom register auth **`59507r`** (not ext **1101**); PSTN **`01924918076`** validated.

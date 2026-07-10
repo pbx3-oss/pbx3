@@ -64,6 +64,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **08jzwn (golden)** | Egress **`qualify_frequency=0`**, routes → **Egress**, **`genAst.sh`**; **`pbx3:fleet-preflight`** green |
 | **bzy54n** | Same egress parity; SBC **dispatcher setid 3** (`98.82.174.36`); domains **`9wvvnb.pbx3.com`**, **`wfh69h.pbx3.com`** → setid 3; **`pbx3:fleet-preflight`** green |
 | **affcot phone (Snom 1101)** | Register via SBC — auth username **`59507r`** (not extension **1101**); PSTN **`01924918076`** outbound **validated** on bzy54n |
+| **bzy54n Linphone (2026-07-10)** | Softphone registered on **bzy54n** — no issues; makes and receives calls **across the SBC** |
+| **Phone types (lab)** | **Snom**, **Yealink**, **Linphone** validated via SBC; more vendors to be added over time |
 | **pbx3 `117340f`/`ded9b76`** | Egress qualify off + route repoint in repo; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** for future OPTIONS/failover |
 
 ### Golden / operator follow-up
