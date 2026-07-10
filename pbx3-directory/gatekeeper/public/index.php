@@ -23,6 +23,14 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $path = rtrim($path, '/') ?: '/';
 
+if ($method === 'OPTIONS') {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept');
+    header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
+    http_response_code(204);
+    exit;
+}
+
 try {
     if ($path === '/health') {
         JsonResponse::send(200, ['status' => 'ok']);
