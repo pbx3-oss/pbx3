@@ -50,9 +50,38 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-10 — pbx3 0.0.3-25 on fleet)
+## Next agent session notes (2026-07-10 — S8.10 movewizard scaffold)
 
-**Branch:** **`main`** — **pbx3** **`1bed066`** (**0.0.3-25**), **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** **`138d65d`**.
+**Branch:** **`movewizard`** — **pbx3** **`c75430e`**, **pbx3api** **`0fb0019`** (live on **08jzwn** + **bzy54n**), **pbx3spa** **`c696c4f`**, **pbx3sbc-admin** **`6036bcb`** (live on SBC). **`main`** unchanged for merge later.
+
+### Shipped
+
+- Gatekeeper: `tenant-move-job.v0.json`, `POST /s3/presign`, tenant-moves create/get/run/advance, phase runner, CORS, `.env` loader.
+- pbx3api: `/api/fleet/*` (preflight, export/import via presign, commit, certs sync, delete) + `PBX3_FLEET_SERVICE_TOKEN`.
+- pbx3sbc-admin: `/api/fleet` health/preflight/repoint/rollback-repoint.
+- SPA: Fleet tenants (named) → Move wizard → job view; Vite `/fleet-gk` proxy.
+- Catalog: instance `sbc_dispatcher_setid` 2/3; registered duns/sandycroft/willand/affcot/cluster1; removed orphan `5489nv`/`f34ck1` meta.
+- Lab smoke: gatekeeper Mac OK; node + SBC fleet preflight OK. **No live tenant move this session.**
+
+### Golden / operator follow-up
+
+- Gatekeeper lab: `pbx3/pbx3-directory/gatekeeper` → `php -S 127.0.0.1:8090 -t public` (`.env` gitignored; token **`movewizard-fleet-token`** / gatekeeper API **`movewizard-smoke-token`**).
+- SPA `.env.development`: `VITE_FLEET_GATEKEEPER_URL=/fleet-gk`, proxy to `:8090`, token smoke.
+- Nodes/SBC on **`movewizard`** — do not assume `main` until merge.
+- SBC domain for affcot = **`9wvvnb.pbx3.com`** (not `affcot.pbx3.com`).
+
+### Resume
+
+1. **Controlled lab move** via Fleet tenants → Move (or curl `/run`) — real export/import/repoint.
+2. Then harden auth / merge **`movewizard` → `main`** when green.
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **affcot:** **`https://bzy54n.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`** · **Gatekeeper:** **`http://127.0.0.1:8090`**
+
+---
+
+## Next agent session notes (2026-07-10 — pbx3 0.0.3-25 on fleet) — historical
+
+**Branch:** **`main`** — **pbx3** **`1bed066`** (**0.0.3-25**), **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** **`138d65d`**. Superseded same day by **`movewizard`** S8.10 scaffold.
 
 ### Shipped
 
@@ -64,10 +93,9 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **After egress template / `genAst.sh`:** **`systemctl restart asterisk`** (not **`pjsip reload` alone**).
 - **SBC admin:** **`http://sbc.pbx3.com/admin`**.
 
-### Resume
+### Resume — historical
 
-1. **S8.10** — fleet mobility move wizard (**`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13).
-2. Optional: peering Phase 2 failover / Phase 5 `alias_db`.
+See **S8.10 movewizard** block above.
 
 **SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **affcot:** **`https://bzy54n.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`**
 

@@ -1,27 +1,30 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** everywhere (pbx3 **`1bed066`** / **0.0.3-25**, pbx3sbc **`b914e1c`**, pbx3sbc-admin **`138d65d`**, pbx3api/spa/cagi at tip).  
-**Last updated:** 2026-07-10 (session end — pbx3 **0.0.3-25** on golden + bzy54n)
+**Branch:** **`movewizard`** (S8.10) — pbx3 **`c75430e`**, pbx3api **`0fb0019`**, pbx3spa **`c696c4f`**, pbx3sbc-admin **`6036bcb`**. Nodes/SBC pulled to `movewizard` for fleet APIs. **`main`** still has 0.0.3-25 / peering tips until merge.  
+**Last updated:** 2026-07-10 (session end — S8.10 move wizard scaffold; lab move not run)
 
 ### Suggested “what next?” order
 
-1. **S8.10 fleet mobility** — move wizard / control-plane. **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. Peering soak is done; identify deb shipped.  
-2. **Optional peering polish** — Phase 2 outbound failover (second carrier in `gwlist`); Phase 5 `alias_db` one-off DIDs.  
-3. **Ops runbook** — document **`systemctl restart asterisk`** after egress template / **`genAst.sh`** (not **`pjsip reload` alone**).  
-4. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient).  
-5. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
-6. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-7. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
+1. **S8.10 lab move** — controlled panel/API move (e.g. a non-critical tenant or reverse affcot) on **`movewizard`**. Gatekeeper on Mac `:8090`; fleet token **`movewizard-fleet-token`**.  
+2. **S8.10 harden** — production gatekeeper auth (not `VITE_*` token); catalog reconcile; optional `default`/orphan cleanup.  
+3. **Optional peering polish** — Phase 2 outbound failover; Phase 5 `alias_db`.  
+4. **Ops runbook** — **`systemctl restart asterisk`** after egress / **`genAst.sh`**.  
+5. **Phase S7** — recordings S3 offload — **deferred**.  
+6. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
+7. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+8. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
 
 ---
 
 ## Open items
 
+- [ ] **S8.10 — first live panel move (next session):** Scaffold shipped on **`movewizard`**. **Do not** treat Start move as smoke — it runs real export/import/SBC repoint. Suggested: pick a lab tenant, confirm source/dest, watch job view through verifying + cleanup. Affcot already on **bzy54n** (`9wvvnb`). Gatekeeper: `pbx3-directory/gatekeeper` + `.env` (lab). SPA: `VITE_FLEET_GATEKEEPER_*` in `.env.development`.
+
 - [ ] **Fleet Egress availability & SBC failover (future — not Phase A lab):** Documented **`pbx3-directory/docs/FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. SBC must respond **OPTIONS** from fleet nodes so Egress qualify works; re-enable **`qualify_frequency`** on egress template; implement **EgressFailover** (or SRV) + **pbx3cagi** sequential dial; SPA/preflight trunk health. Lab workaround **`qualify_frequency=0`** (**`117340f`**) — do not treat as final.
 
 - [ ] **Snapshots — separate panel, commit hook, FIFO retention (ops polish):** **Backups** (`backup.zip`, local 9 + S3 30d) and **snapshots** (`sqlite.db` copies in `/opt/pbx3/snap/`) are different jobs but share **`BackupView.vue`** — long backup lists push snapshots below the fold. **Gap:** legacy **`snap.sh`** is a stub; SPA **`GET syscommands/commit`** runs `genAst.sh` + reload but does **not** call **`create_new_snapshot()`** (legacy SARK took a snap on commit). **No snapshot FIFO** today (old “keep 9” in `snap.sh` commented out; backups have **`LocalBackupRetention`**). **Target:** **(1)** **pbx3spa** — `/snapshots` panel (extract from BackupView); **(2)** **pbx3api** — `create_new_snapshot()` after successful Commit; **(3)** **`SnapshotRetention`** (e.g. 9 newest, env `PBX3_SNAPSHOT_MAX_COUNT`); optional revive **`snap.sh`** or deprecate in favour of API. See **`IMPLEMENTATION_PLAN.md`** § **S9.5–S9.7**. **Priority:** after **R1** or parallel low-touch ops; not blocking fleet rebuild.
 
-- [ ] **Phase S8.10 — Fleet mobility Fleet Console (design → build):** **Design shipped** — **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`**. **Phase A + peering Phases 0–4 lab validated (2026-07-10).** **Next:** build move wizard (**C**). **Contracts TODO:** `did-inventory.v0.json`, `tenant-move-job.v0.json`, node mobility HTTP API (§13.3). CLI path: **`TENANT_MIGRATION_RUNBOOK.md`**.
+- [x] **Phase S8.10 — Fleet mobility scaffold (2026-07-10):** On **`movewizard`**: `tenant-move-job.v0.json`; gatekeeper presign + tenant-moves + phase runner; pbx3api `/api/fleet/*`; pbx3sbc-admin `/api/fleet` repoint; SPA Fleet tenants Move wizard + job view. Catalog: `sbc_dispatcher_setid` on instances; named tenants registered (duns/sandycroft/willand/affcot/cluster1). Orphan shortuid-only rows removed. **Still open:** first live move; merge to `main`; production auth for gatekeeper.
 
 - [ ] **pbx3sbc — multi-tenant dispatcher reverse lookup:** Template + **`add-dispatcher.sh`** accept **`source_ip`** in dispatcher **`attrs`**. **Live:** golden **setid 2** (`54.236.153.81`), **bzy54n setid 3** (`98.82.174.36`); tenant domains on SBC. **Optional backfill:** hostname dispatcher rows (`sip:08jzwn.pbx3.com`) if needed. See **`opensips.cfg.template`** `route[GET_DOMAIN_FROM_SOURCE_IP]`.
 
