@@ -3,17 +3,21 @@
 declare(strict_types=1);
 
 /**
- * PBX3 fleet gatekeeper — minimal registrar API (Phase B′ slice 1).
+ * PBX3 fleet gatekeeper — registrar + move job APIs (S8.10).
  * Sole writer for catalog and tenants meta.json objects in S3.
  */
 
 require_once dirname(__DIR__).'/vendor/autoload.php';
 
 use Pbx3\Gatekeeper\Auth;
+use Pbx3\Gatekeeper\Env;
 use Pbx3\Gatekeeper\Http\JsonResponse;
 use Pbx3\Gatekeeper\S3Presign;
 use Pbx3\Gatekeeper\S3Registrar;
 use Pbx3\Gatekeeper\TenantMoveJobStore;
+use Pbx3\Gatekeeper\TenantMoveRunner;
+
+Env::load(dirname(__DIR__).'/.env');
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
@@ -27,6 +31,9 @@ try {
     Auth::requireBearer();
 
     $registrar = new S3Registrar();
+    $presign = new S3Presign();
+    $jobs = new TenantMoveJobStore();
+    $runner = new TenantMoveRunner($jobs, $presign, $registrar);
 
     if ($method === 'GET' && $path === '/api/v1/catalog') {
         JsonResponse::send(200, $registrar->getCatalog());
@@ -53,10 +60,8 @@ try {
 
     if ($method === 'POST' && $path === '/api/v1/s3/presign') {
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
-        JsonResponse::send(200, (new S3Presign())->create($body));
+        JsonResponse::send(200, $presign->create($body));
     }
-
-    $jobs = new TenantMoveJobStore();
 
     if ($method === 'POST' && $path === '/api/v1/tenant-moves') {
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
@@ -68,14 +73,24 @@ try {
         JsonResponse::send(200, $jobs->get($m[1], is_string($shortuid) ? $shortuid : null));
     }
 
+    if ($method === 'POST' && preg_match('#^/api/v1/tenant-moves/([A-Za-z0-9_-]+)/run$#', $path, $m)) {
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $shortuid = $body['tenant_shortuid'] ?? ($_GET['tenant'] ?? null);
+        JsonResponse::send(200, $runner->runUntilGate($m[1], is_string($shortuid) ? $shortuid : null));
+    }
+
     if ($method === 'POST' && preg_match('#^/api/v1/tenant-moves/([A-Za-z0-9_-]+)/advance$#', $path, $m)) {
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
-        // Thin slice: operator/control-plane patches state; full phase runner is next.
-        if (empty($body['state'])) {
-            JsonResponse::send(422, ['error' => 'state required until orchestrator runner ships']);
-        }
         $shortuid = $body['tenant_shortuid'] ?? null;
-        JsonResponse::send(200, $jobs->patchState($m[1], $body, is_string($shortuid) ? $shortuid : null));
+        $short = is_string($shortuid) ? $shortuid : null;
+
+        if (! empty($body['confirm'])) {
+            JsonResponse::send(200, $runner->confirm($m[1], (string) $body['confirm'], $short));
+        }
+        if (! empty($body['state'])) {
+            JsonResponse::send(200, $jobs->patchState($m[1], $body, $short));
+        }
+        JsonResponse::send(200, $runner->runUntilGate($m[1], $short));
     }
 
     JsonResponse::send(404, ['error' => 'Not found', 'path' => $path]);

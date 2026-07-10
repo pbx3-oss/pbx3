@@ -27,7 +27,8 @@ php -S 127.0.0.1:8090 -t public
 | `POST` | `/api/v1/s3/presign` | Scoped PUT/GET for `tenants/{shortuid}/migration/{job_id}/…` only |
 | `POST` | `/api/v1/tenant-moves` | Create move job (`job.json` in S3) |
 | `GET` | `/api/v1/tenant-moves/{job_id}` | Read job (`?tenant=shortuid` optional) |
-| `POST` | `/api/v1/tenant-moves/{job_id}/advance` | Patch job state (thin; full runner next) |
+| `POST` | `/api/v1/tenant-moves/{job_id}/run` | Run automated phases until human gate |
+| `POST` | `/api/v1/tenant-moves/{job_id}/advance` | `{confirm: verifying\|cleanup}` or `{state}` patch or empty = run |
 
 ### Presign body
 
@@ -41,10 +42,18 @@ php -S 127.0.0.1:8090 -t public
 
 Returns `{ url, method, key, expires_in, bucket }`. Nodes use the URL for export PUT / import GET — no `tenants/*` on the node IAM role.
 
+### Runner env (gatekeeper `.env`)
+
+| Var | Purpose |
+|-----|---------|
+| `PBX3_FLEET_SERVICE_TOKEN` | Bearer to node + SBC fleet APIs |
+| `PBX3_SBC_ADMIN_API_URL` | e.g. `http://sbc.pbx3.com/api` |
+| `PBX3_FLEET_HTTP_VERIFY` | `false` for self-signed lab TLS |
+| `PBX3_LE_EMAIL` | optional cert sync on dest |
+
 ## Deferred (slice 2+)
 
-- Full phase orchestrator (call node `/api/fleet/*` + SBC repoint automatically)
-- `SbcFleetAdapter` proxy (SBC HTTP lives on pbx3sbc-admin; gatekeeper will call it)
+- SPA Move wizard
 - Audit log persistence
 
 ## Related

@@ -70,7 +70,7 @@ final class TenantMoveJobStore
                 'prefix' => $prefix,
                 'export_zip_key' => null,
             ],
-            'phases' => new \stdClass,
+            'phases' => [],
             'error' => null,
             'rollback' => [
                 'safe_to_abort' => true,
@@ -160,6 +160,22 @@ final class TenantMoveJobStore
         $this->writeJob($shortuid, $jobId, $job);
 
         return $job;
+    }
+
+    /**
+     * Persist a full job document (used by TenantMoveRunner).
+     *
+     * @param  array<string, mixed>  $job
+     */
+    public function writePublic(array $job): void
+    {
+        $shortuid = (string) ($job['tenant_shortuid'] ?? '');
+        $jobId = (string) ($job['job_id'] ?? '');
+        if ($shortuid === '' || $jobId === '') {
+            throw new \InvalidArgumentException('job_id and tenant_shortuid required', 422);
+        }
+        $job['updated_at'] = $this->nowIso();
+        $this->writeJob($shortuid, $jobId, $job);
     }
 
     /** @return array<string, mixed>|null */
