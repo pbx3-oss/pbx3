@@ -50,9 +50,32 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-10 — SBC peering Phases 3–4 lab green)
+## Next agent session notes (2026-07-10 — pbx3 0.0.3-25 on fleet)
 
-**Branch:** **`main`** — **pbx3** **`3af4519`**, **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** **`138d65d`**.
+**Branch:** **`main`** — **pbx3** **`1bed066`** (**0.0.3-25**), **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** **`138d65d`**.
+
+### Shipped
+
+- **pbx3 0.0.3-25** built, pushed (**`1bed066`**), installed on **08jzwn** + **bzy54n** — Egress identify + `endpoint=` + username-first identifier order (no longer hot-patch-only).
+- Earlier same day: SBC peering Phases 3–4 lab green (Magrathea DID, hangup, Active Calls) — see historical block below.
+
+### Golden / operator follow-up
+
+- **After egress template / `genAst.sh`:** **`systemctl restart asterisk`** (not **`pjsip reload` alone**).
+- **SBC admin:** **`http://sbc.pbx3.com/admin`**.
+
+### Resume
+
+1. **S8.10** — fleet mobility move wizard (**`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13).
+2. Optional: peering Phase 2 failover / Phase 5 `alias_db`.
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **affcot:** **`https://bzy54n.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`**
+
+---
+
+## Next agent session notes (2026-07-10 — SBC peering Phases 3–4 lab green) — historical
+
+**Branch:** **`main`** — **pbx3** **`3af4519`**, **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** **`138d65d`**. Superseded later same day by **0.0.3-25** install (**`1bed066`**).
 
 ### Shipped (live lab)
 
@@ -62,20 +85,13 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Hangup** | Both directions after **`record_route()`** on **`FROM_CARRIER`** (**`60253f0`**) |
 | **Active Calls** | Two dialogs per call after **`create_dialog()`** on peering paths (**`b914e1c`**) |
 | **Internal dials** | Broke when golden was in **`dr_gateways`** + **`is_from_gw`** → **`FROM_CARRIER`**; fixed by skipping carrier path when **`CHECK_IS_FROM_ASTERISK`** |
-| **Egress identify** | **`type=identify`** + **`endpoint=`** (Asterisk 20) + **`username,ip,anonymous`**; **`privileged=NO`** → Ingress. Live hot-patch; repo **`3af4519`** (deb **0.0.3-25** still TODO) |
+| **Egress identify** | **`type=identify`** + **`endpoint=`** (Asterisk 20) + **`username,ip,anonymous`**; **`privileged=NO`** → Ingress. Packaged as **0.0.3-25**. |
 | **Admin UI** | Peering **Peers** + **Number routes** (name-first, not raw gwid) **`138d65d`** on **`http://sbc.pbx3.com/admin`** |
 | **Outbound** | Still **ael.vcloudpbx.com** gwid **1**; Magrathea IPs gwid **3–9, 11**; golden gwid **10** |
 
-### Golden / operator follow-up
+### Resume — historical
 
-- **After egress template / `genAst.sh`:** **`systemctl restart asterisk`** (not **`pjsip reload` alone**).
-- Identify/globals live on both nodes; package as **pbx3 0.0.3-25** when convenient.
-- **SBC admin:** **`http://sbc.pbx3.com/admin`**.
-
-### Resume
-
-1. **S8.10** — fleet mobility move wizard (**`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13).
-2. Optional: **pbx3 0.0.3-25** deb; peering Phase 2 failover / Phase 5 alias_db.
+Identify deb shipped; see block above for current resume.
 
 **SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **affcot:** **`https://bzy54n.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`**
 

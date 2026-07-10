@@ -1,24 +1,21 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** everywhere (pbx3 **`3af4519`**, pbx3sbc **`b914e1c`**, pbx3sbc-admin **`138d65d`**, pbx3api/spa/cagi at tip).  
-**Last updated:** 2026-07-10 (session end — SBC peering Phases 3–4 lab green; Magrathea DID + hangup + Active Calls)
+**Branch:** **`main`** everywhere (pbx3 **`1bed066`** / **0.0.3-25**, pbx3sbc **`b914e1c`**, pbx3sbc-admin **`138d65d`**, pbx3api/spa/cagi at tip).  
+**Last updated:** 2026-07-10 (session end — pbx3 **0.0.3-25** on golden + bzy54n)
 
 ### Suggested “what next?” order
 
-1. **S8.10 fleet mobility** — move wizard / control-plane. **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. Peering soak is done.  
-2. **pbx3 deb for Egress identify** — package **`0.0.3-25`** (identify + `endpoint=` + username-first order) so **08jzwn** / **bzy54n** are not hot-patch-only.  
-3. **Optional peering polish** — Phase 2 outbound failover (second carrier in `gwlist`); Phase 5 `alias_db` one-off DIDs.  
-4. **Ops runbook** — document **`systemctl restart asterisk`** after egress template / **`genAst.sh`** (not **`pjsip reload` alone**).  
-5. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient).  
-6. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
-7. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-8. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
+1. **S8.10 fleet mobility** — move wizard / control-plane. **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §13. Peering soak is done; identify deb shipped.  
+2. **Optional peering polish** — Phase 2 outbound failover (second carrier in `gwlist`); Phase 5 `alias_db` one-off DIDs.  
+3. **Ops runbook** — document **`systemctl restart asterisk`** after egress template / **`genAst.sh`** (not **`pjsip reload` alone**).  
+4. **Phase S7** — recordings **S3 offload** — **deferred** (R1.5 local tier sufficient).  
+5. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
+6. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+7. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
 
 ---
 
 ## Open items
-
-- [ ] **pbx3 package Egress identify (0.0.3-25):** Live on **08jzwn** + **bzy54n** (hot-patch). Repo **`3af4519`** has template + `endpoint_identifier_order` + seed `privileged=NO`. Build/install deb when convenient.
 
 - [ ] **Fleet Egress availability & SBC failover (future — not Phase A lab):** Documented **`pbx3-directory/docs/FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. SBC must respond **OPTIONS** from fleet nodes so Egress qualify works; re-enable **`qualify_frequency`** on egress template; implement **EgressFailover** (or SRV) + **pbx3cagi** sequential dial; SPA/preflight trunk health. Lab workaround **`qualify_frequency=0`** (**`117340f`**) — do not treat as final.
 
@@ -76,9 +73,11 @@
 
 ## Completed / deferred
 
-- [x] **SBC peering Phases 3–4 lab (2026-07-10):** Magrathea inbound DID **`01924918076`** → golden **1000**; CLI E.164 OK; hangup both ways (`record_route` on `FROM_CARRIER`); Active Calls shows two legs (`create_dialog` on peering). **Gotchas fixed:** skip `FROM_CARRIER` when source is fleet Asterisk; Egress `type=identify` + `endpoint=` + `username,ip,anonymous`. **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** Peers/Number routes **`138d65d`**, **pbx3** identify **`3af4519`**.
+- [x] **pbx3 0.0.3-25 Egress identify (2026-07-10):** Built/pushed **`1bed066`**; installed on **08jzwn** + **bzy54n**. Template `type=identify` + `endpoint=` + `username,ip,anonymous`; seed `privileged=NO`.
 
-- [x] **Merge `fleet-phase-a` → `main` (2026-07-10):** Fleet repos on **`main`**; **pbx3 0.0.3-24** / **pbx3cagi 1.0.0-4** installed on nodes earlier in session.
+- [x] **SBC peering Phases 3–4 lab (2026-07-10):** Magrathea inbound DID **`01924918076`** → golden **1000**; CLI E.164 OK; hangup both ways (`record_route` on `FROM_CARRIER`); Active Calls shows two legs (`create_dialog` on peering). **Gotchas fixed:** skip `FROM_CARRIER` when source is fleet Asterisk; Egress `type=identify` + `endpoint=` + `username,ip,anonymous`. **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** Peers/Number routes **`138d65d`**, **pbx3** identify **`3af4519`** / deb **0.0.3-25**.
+
+- [x] **Merge `fleet-phase-a` → `main` (2026-07-10):** Fleet repos on **`main`**; **pbx3 0.0.3-24** / **pbx3cagi 1.0.0-4** installed on nodes earlier in session; **0.0.3-25** later same day.
 
 - [x] **bzy54n Linphone softphone (2026-07-10):** Registered on **bzy54n** with no issues; makes and receives calls across the SBC.
 
