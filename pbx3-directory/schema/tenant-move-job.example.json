@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "job_id": "2N9iExampleJobId00000000001",
+  "tenant_shortuid": "9wvvnb",
+  "tenant_fqdn": "affcot.pbx3.com",
+  "source_instance_id": "08jzwnExampleInstanceId00001",
+  "dest_instance_id": "bzy54nExampleInstanceId00001",
+  "source_api_base_url": "https://08jzwn.pbx3.com:44300/api",
+  "dest_api_base_url": "https://bzy54n.pbx3.com:44300/api",
+  "dest_sbc_dispatcher_setid": 3,
+  "previous_sbc_dispatcher_setid": 2,
+  "state": "awaiting_cleanup",
+  "posture": "sbc",
+  "options": {
+    "include_recordings": false,
+    "replace_on_dest": false
+  },
+  "staging": {
+    "prefix": "tenants/9wvvnb/migration/2N9iExampleJobId00000000001/",
+    "export_zip_key": "tenants/9wvvnb/migration/2N9iExampleJobId00000000001/pbx3tenant.9wvvnb.1720612800.zip"
+  },
+  "phases": {
+    "preflight": { "status": "ok", "finished_at": "2026-07-10T18:00:01Z" },
+    "exporting": { "status": "ok", "finished_at": "2026-07-10T18:01:10Z" },
+    "importing": { "status": "ok", "finished_at": "2026-07-10T18:02:05Z" },
+    "configuring": { "status": "ok", "finished_at": "2026-07-10T18:02:40Z" },
+    "cutover": { "status": "ok", "finished_at": "2026-07-10T18:02:42Z", "message": "domain.setid → 3" },
+    "catalog": { "status": "ok", "finished_at": "2026-07-10T18:02:43Z" },
+    "verifying": { "status": "ok", "finished_at": "2026-07-10T18:05:00Z", "message": "operator confirmed test call" }
+  },
+  "error": null,
+  "rollback": {
+    "safe_to_abort": true,
+    "hint": "Before source delete: SbcFleetAdapter.rollbackRepoint to setid 2; catalog instance_id can flip back. After source delete: re-import from staging zip."
+  },
+  "next_human_action": "Confirm delete of tenant 9wvvnb on source instance (irreversible).",
+  "created_at": "2026-07-10T18:00:00Z",
+  "updated_at": "2026-07-10T18:05:00Z",
+  "completed_at": null
+}

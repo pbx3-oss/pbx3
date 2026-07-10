@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/tenant-move-job.v0.json",
+  "title": "PBX3 tenant move job (v0)",
+  "description": "tenants/{shortuid}/migration/{job_id}/job.json — durable move orchestrator state (S8.10 Phase C)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "tenant_shortuid",
+    "source_instance_id",
+    "dest_instance_id",
+    "state",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "job_id": {
+      "type": "string",
+      "minLength": 8,
+      "description": "Opaque job id (KSUID or UUID)"
+    },
+    "tenant_shortuid": {
+      "type": "string",
+      "description": "Tenant cluster.shortuid"
+    },
+    "tenant_fqdn": {
+      "type": "string",
+      "format": "hostname",
+      "description": "Tenant SIP/domain FQDN (for SBC repoint)"
+    },
+    "source_instance_id": {
+      "type": "string",
+      "description": "Source node globals.id KSUID"
+    },
+    "dest_instance_id": {
+      "type": "string",
+      "description": "Destination node globals.id KSUID"
+    },
+    "source_api_base_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "dest_api_base_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "dest_sbc_dispatcher_setid": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "OpenSIPS dispatcher setid for dest node"
+    },
+    "previous_sbc_dispatcher_setid": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Setid before cutover — used by rollbackRepoint"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "preflight",
+        "exporting",
+        "transferring",
+        "importing",
+        "configuring",
+        "cutover",
+        "awaiting_certs",
+        "verifying",
+        "catalog",
+        "awaiting_cleanup",
+        "completed",
+        "failed",
+        "aborted"
+      ]
+    },
+    "posture": {
+      "type": "string",
+      "enum": ["sbc", "direct"],
+      "default": "sbc",
+      "description": "sbc = automated domain.setid cutover; direct = awaiting_dns human gate (not MVP)"
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include_recordings": { "type": "boolean", "default": false },
+        "replace_on_dest": { "type": "boolean", "default": false }
+      }
+    },
+    "staging": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "description": "S3 prefix tenants/{shortuid}/migration/{job_id}/"
+        },
+        "export_zip_key": {
+          "type": "string",
+          "description": "Object key for export zip under staging prefix"
+        }
+      }
+    },
+    "phases": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["pending", "running", "ok", "failed", "skipped"]
+          },
+          "started_at": { "type": "string", "format": "date-time" },
+          "finished_at": { "type": "string", "format": "date-time" },
+          "message": { "type": "string" }
+        }
+      },
+      "description": "Per-phase status keyed by state name"
+    },
+    "error": {
+      "type": ["string", "null"],
+      "description": "Last failure message when state=failed"
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "safe_to_abort": {
+          "type": "boolean",
+          "description": "True before awaiting_cleanup (source still intact)"
+        },
+        "hint": {
+          "type": "string",
+          "description": "Operator-facing rollback guidance"
+        }
+      }
+    },
+    "next_human_action": {
+      "type": ["string", "null"],
+      "description": "What the operator must confirm (verifying, awaiting_cleanup, etc.)"
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "completed_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  }
+}
