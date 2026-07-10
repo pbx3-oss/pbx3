@@ -50,7 +50,40 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-09 — fleet egress PSTN lab validated + pushed)
+## Next agent session notes (2026-07-09 — Phase A egress validated both nodes; bzy54n phone + PSTN)
+
+**Branch:** **`fleet-phase-a`** in **pbx3** (**`ded9b76`**), **pbx3api**, **pbx3spa**, **pbx3cagi**. **`main`** in **pbx3sbc** (**`8c702fb`** / **`27bbe8f`**), **pbx3sbc-admin** (**`4282261`**).
+
+**Rollback:** **`FLEET_EGRESS_LAB_ROLLBACK.md`** — tags `rollback/*-20260709`, `fleet-*-lab-validated-20260709`.
+
+### Shipped (live lab)
+
+| Area | Notes |
+|------|--------|
+| **SBC peering Phase 0–2** | **`dr_*`** seeded; **`opensips.cfg`** peering blocks live; carrier **gwid 1** (ael.vcloudpbx.com); **`do_routing(0)`** + ACK **`t_relay()`** fix — golden PSTN outbound **validated** (180/200, audio OK) |
+| **08jzwn (golden)** | Egress **`qualify_frequency=0`**, routes → **Egress**, **`genAst.sh`**; **`pbx3:fleet-preflight`** green |
+| **bzy54n** | Same egress parity; SBC **dispatcher setid 3** (`98.82.174.36`); domains **`9wvvnb.pbx3.com`**, **`wfh69h.pbx3.com`** → setid 3; **`pbx3:fleet-preflight`** green |
+| **affcot phone (Snom 1101)** | Register via SBC — auth username **`59507r`** (not extension **1101**); PSTN **`01924918076`** outbound **validated** on bzy54n |
+| **pbx3 `117340f`/`ded9b76`** | Egress qualify off + route repoint in repo; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** for future OPTIONS/failover |
+
+### Golden / operator follow-up
+
+- **After egress template / `genAst.sh` on a node:** run **`systemctl restart asterisk`** — **`pjsip reload` alone** left stale sorcery state on bzy54n → instant **503** on outbound until restart.
+- **Snom multi-line:** remove stale **`dhbm8x`/`fkdd5d`** line if OPTIONS still hit golden from same handset.
+- Nodes still on **hot-patches** — merge **`fleet-phase-a` → `main`** and install **pbx3** + **pbx3cagi** debs when convenient.
+- **SBC admin:** **`http://sbc.pbx3.com/admin`** (HTTP only; **`admin@example.com`** — password from install output).
+
+### Resume
+
+1. **Merge `fleet-phase-a` → `main`** — pbx3, pbx3api, pbx3spa, pbx3cagi; build/install debs on **08jzwn** + **bzy54n**.
+2. **SBC peering Phases 3–4** — inbound DID groups; **pbx3sbc-admin** Carrier Peers + DIDs CRUD (**`PEERING-PLAN.md`** §16).
+3. **S8.10** — fleet mobility move wizard after peering soak.
+
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **affcot:** **`https://bzy54n.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`**
+
+---
+
+## Next agent session notes (2026-07-09 — fleet egress PSTN lab validated + pushed) — historical
 
 **Branch:** **`fleet-phase-a`** in **pbx3** (**`117340f`**), **pbx3spa** (**`c27e6d5`**), **pbx3api**, **pbx3cagi**. **`main`** in **pbx3sbc** (**`8c702fb`** — peering egress + ACK fix).
 
