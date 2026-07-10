@@ -872,7 +872,7 @@ Draft in `pbx3-directory/schema/` (or OpenAPI on control-plane repo) **before** 
 | **`sbc-fleet.v0.json`** | directory schema | **Done** | `sip_proxy_fqdn`, `admin_api_url`, `member_hosts` |
 | **`instance-record` + `sbc_dispatcher_setid`** | directory schema | **Done** | `instance-record.v0.json` includes `sbc_dispatcher_setid` |
 | **`did-inventory.v0.json`** (+ `did-record`, `did-index`) | directory schema | **Drafted** | **`DID_ASSIGNMENT_DESIGN.md`**; example `schema/did-inventory.example.json` |
-| **`tenant-move-job.v0.json`** | control plane | **Done** | + example; gatekeeper `POST /api/v1/s3/presign` + `POST/GET /api/v1/tenant-moves` (thin; runner next) |
+| **`tenant-move-job.v0.json`** | control plane | **Done** | + example; gatekeeper presign, tenant-moves, **`/run` phase runner** (human gates: verifying, cleanup) |
 | **Node mobility HTTP API** | pbx3api | **Done (movewizard)** | `/api/fleet/*` + `PBX3_FLEET_SERVICE_TOKEN` |
 | **`SbcFleetAdapter` HTTP API** | pbx3sbc-admin | **Done (movewizard)** | `/api/fleet/repoint`, `rollback-repoint`, `preflight`, `health` |
 | **Fleet→node auth** | control plane + pbx3api | **v1 interim** | Shared fleet service bearer (`PBX3_FLEET_SERVICE_TOKEN`); not Sanctum admin; revisit §10 Q7 for SSO |
