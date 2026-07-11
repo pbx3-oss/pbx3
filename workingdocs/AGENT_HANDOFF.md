@@ -54,7 +54,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-11 — Fleet UI home + SBC stylesync)
 
-**Branch:** **`main`** — **pbx3** **`9e00e30`** (docs), **pbx3api** **`0fb0019`**, **pbx3spa** **`089477b`** (docs), **pbx3sbc-admin** **`624b0f3`**. SBC admin live on **`main`** stylesync. Fleet nodes unchanged this session.
+**Branch:** **`main`** — **pbx3** **`9ccd055`** (docs), **pbx3api** **`0fb0019`**, **pbx3spa** **`6bcd0f1`** (docs), **pbx3sbc-admin** **`624b0f3`**. SBC admin live on **`main`** stylesync. Fleet nodes unchanged this session.
 
 ### Shipped
 
