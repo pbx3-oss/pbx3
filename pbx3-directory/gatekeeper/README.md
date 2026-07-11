@@ -14,6 +14,18 @@ composer install
 php -S 127.0.0.1:8090 -t public
 ```
 
+## Auth
+
+Bearer **`GATEKEEPER_API_TOKEN`** on every `/api/v1/*` call.
+
+| Environment | How the SPA gets the token |
+|-------------|----------------------------|
+| **Lab / Vite DEV** | Optional `VITE_FLEET_GATEKEEPER_TOKEN` in `.env.development` (browser-visible; DEV only) |
+| **Production SPA** | Operator pastes token into **Fleet tenants** → sessionStorage for that tab. **Do not** set `VITE_FLEET_GATEKEEPER_TOKEN` in production builds. |
+| **Future** | Dedicated control-plane login (separate fleet auth tier) — see `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.5–2.6 |
+
+Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side only; never in the SPA).
+
 ## API (Bearer `GATEKEEPER_API_TOKEN`)
 
 | Method | Path | Purpose |

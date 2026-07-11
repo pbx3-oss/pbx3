@@ -50,32 +50,40 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-10 — S8.10 movewizard scaffold)
+## Next agent session notes (2026-07-10 — S8.10 live moves + phone POC)
 
-**Branch:** **`movewizard`** — **pbx3** **`384eb33`**, **pbx3api** **`0fb0019`** (live on **08jzwn** + **bzy54n**), **pbx3spa** **`1d27b54`**, **pbx3sbc-admin** **`6036bcb`** (live on SBC). **`main`** unchanged for merge later.
+**Branch:** **`movewizard`** — **pbx3** **`8d14a4e`**, **pbx3api** **`0fb0019`** (08jzwn + bzy54n), **pbx3spa** **`29ea623`**, **pbx3sbc-admin** **`6036bcb`**. Ops-only this session (no code commit). **`main`** still pending merge.
 
-### Shipped
+### Shipped (lab validated)
 
-- Gatekeeper: `tenant-move-job.v0.json`, `POST /s3/presign`, tenant-moves create/get/run/advance, phase runner, CORS, `.env` loader.
-- pbx3api: `/api/fleet/*` (preflight, export/import via presign, commit, certs sync, delete) + `PBX3_FLEET_SERVICE_TOKEN`.
-- pbx3sbc-admin: `/api/fleet` health/preflight/repoint/rollback-repoint.
-- SPA: Fleet tenants (named + **Hosted on**) → Move wizard → job view; Vite `/fleet-gk` proxy.
-- Catalog: instance `sbc_dispatcher_setid` 2/3; registered duns/sandycroft/willand/affcot/cluster1; removed orphan `5489nv`/`f34ck1` meta.
-- Lab smoke: gatekeeper Mac OK; node + SBC fleet preflight OK. **No live tenant move this session.**
+- **willand** (`0ggybk`) 08jzwn → bzy54n — job `tmj_bf41c7b45dfc97d72135faf1` **completed**. Added missing SBC domain `0ggybk.pbx3.com` setid 2 before Start.
+- **affcot** (`9wvvnb`) bzy54n → 08jzwn — job `tmj_7efdc9646309ff3641d21839` **completed**. Snom followed remount (domain setid 3→2). Dest **`/fleet/commit`** (`genAst` + reload) ran in configuring phase. Linphone 1102 did not return — parked (client flaky).
+- Homing now: **affcot + duns** on **08jzwn**; **willand + cluster1** on **bzy54n** (sandycroft still golden).
 
 ### Golden / operator follow-up
 
-- Gatekeeper lab: `pbx3/pbx3-directory/gatekeeper` → `php -S 127.0.0.1:8090 -t public` (`.env` gitignored; token **`movewizard-fleet-token`** / gatekeeper API **`movewizard-smoke-token`**).
-- SPA `.env.development`: `VITE_FLEET_GATEKEEPER_URL=/fleet-gk`, proxy to `:8090`, token smoke.
-- Nodes/SBC on **`movewizard`** — do not assume `main` until merge.
-- SBC domain for affcot = **`9wvvnb.pbx3.com`** (not `affcot.pbx3.com`).
+- Gatekeeper Mac `:8090` still lab tokens; SPA `/fleet-gk` proxy.
+- Every tenant needs an SBC **`domain`** row before move preflight (willand gap).
+- Dispatcher destinations remain IPs by setid — move remaps **domain.setid** only (by design; FQDN backfill deferred).
+- Nodes/SBC still on **`movewizard`**.
 
 ### Resume
 
-1. **Controlled lab move** via Fleet tenants → Move (or curl `/run`) — real export/import/repoint.
-2. Then harden auth / merge **`movewizard` → `main`** when green.
+1. **S8.10 harden** — production gatekeeper auth; catalog reconcile.
+2. **Merge `movewizard` → `main`** when green.
+3. UI polish later.
 
-**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **affcot:** **`https://bzy54n.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`** · **Gatekeeper:** **`http://127.0.0.1:8090`**
+**SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **bzy54n:** **`https://bzy54n.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`** · **Gatekeeper:** **`http://127.0.0.1:8090`**
+
+---
+
+## Next agent session notes (2026-07-10 — S8.10 movewizard scaffold) — historical
+
+**Branch:** **`movewizard`** — scaffold + Hosted on column. Superseded same day by live moves + phone POC above.
+
+### Resume — historical
+
+See **S8.10 live moves** block above.
 
 ---
 
