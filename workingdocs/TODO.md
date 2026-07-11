@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — pbx3 (docs tip after this commit), pbx3api **`d8c560c`** (S9.6–S9.7; golden pulled), pbx3spa **`103ab34`** (S9.5 Snapshots panel), pbx3sbc-admin **`624b0f3`**.  
+**Branch:** **`main`** — pbx3 **477aa7a**, pbx3api **`d8c560c`** (S9.6–S9.7; golden pulled), pbx3spa **`103ab34`** (S9.5 Snapshots panel), pbx3sbc-admin **`624b0f3`**.  
 **Last updated:** 2026-07-11 (S9.5–S9.7 snapshots done)
 
 ### Suggested “what next?” order
