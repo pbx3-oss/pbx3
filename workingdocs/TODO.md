@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — pbx3 **`9ccd055`**, pbx3api **`0fb0019`**, pbx3spa **`6bcd0f1`**, pbx3sbc-admin **`624b0f3`** (stylesync). Nodes on prior tips; SBC admin pulled to `main`.  
+**Branch:** **`main`** — pbx3 **`2ee36f9`**, pbx3api **`0fb0019`**, pbx3spa **`5977b62`**, pbx3sbc-admin **`624b0f3`** (stylesync). Nodes on prior tips; SBC admin pulled to `main`.  
 **Last updated:** 2026-07-11 (session end — Fleet UI home settled; SBC Filament stylesync shipped)
 
 ### Suggested “what next?” order
