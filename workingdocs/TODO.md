@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — pbx3 **`2ee36f9`**, pbx3api **`0fb0019`**, pbx3spa **`5977b62`**, pbx3sbc-admin **`624b0f3`** (stylesync). Nodes on prior tips; SBC admin pulled to `main`.  
-**Last updated:** 2026-07-11 (session end — Fleet UI home settled; SBC Filament stylesync shipped)
+**Branch:** **`main`** — pbx3 (docs tip after this commit), pbx3api **`d8c560c`** (S9.6–S9.7; golden pulled), pbx3spa **`103ab34`** (S9.5 Snapshots panel), pbx3sbc-admin **`624b0f3`**.  
+**Last updated:** 2026-07-11 (S9.5–S9.7 snapshots done)
 
 ### Suggested “what next?” order
 
@@ -9,16 +9,17 @@
 2. **Ops runbook** — **`systemctl restart asterisk`** after egress / **`genAst.sh`**.  
 3. **Fleet mode UX** (future) — evolve lab `/fleet/*` peer-nav into tenant vs fleet mode swap; see open item below.  
 4. **Phase S7** — recordings S3 offload — **deferred**.  
-5. **Snapshots UX + commit hook** — **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7  
-6. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-7. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-8. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
+5. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+6. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+7. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
 
 ---
 
 ## Open items
 
 - [x] **pbx3sbc-admin stylesync (2026-07-11):** Filament theme kinship with pbx3spa (slate/blue, brand in topbar, sidebar width/spacing, table canvas/row density). Branch **`stylesync` → `main`** **`624b0f3`**; live on **`sbc.pbx3.com/admin`**.
+
+- [x] **Snapshots — S9.5–S9.7 (2026-07-11):** **pbx3api** **`d8c560c`** — snapshot on Commit + **`SnapshotRetention`** (`PBX3_SNAPSHOT_MAX_COUNT`, default 9); validated on golden. **pbx3spa** **`103ab34`** — dedicated **`/snapshots`** panel; **Backup** archives-only. See **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7.
 
 - [ ] **Fleet mode in pbx3spa (settled UI — 2026-07-11):** **One SPA, two modes, two APIs — never one screen that mixes both.** Fleet = **first-class context** (dedicated layout; not peer nav). Tenant mode → node `pbx3api`; Fleet mode → gatekeeper only (`fleet` abilities; optional step-up). Evolve lab S8.10 sidebar peer into **Enter Fleet** / shell swap. Dedicated fleet auth replaces session-paste token. **Later escape hatch:** second surface/hosting if personas split — do not pre-build. Design: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4. Control-plane **service** remains a separate instance.
 
@@ -28,8 +29,6 @@
 
 - [x] **S8.10 — live panel moves + phone POC (2026-07-10):** **willand** (`0ggybk`) 08jzwn→bzy54n job `tmj_bf41c7b45dfc97d72135faf1`. **affcot** (`9wvvnb`) bzy54n→08jzwn job `tmj_7efdc9646309ff3641d21839` — Snom followed SBC remount (setid 3→2); dest commit/`genAst` ran. Preflight gap: willand needed SBC `domain` row before move (added setid 2 then cutover). Linphone 1102 flaky — parked. **Merged to `main`** same day.
 - [ ] **Fleet Egress availability & SBC failover (future — not Phase A lab):** Documented **`pbx3-directory/docs/FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. SBC must respond **OPTIONS** from fleet nodes so Egress qualify works; re-enable **`qualify_frequency`** on egress template; implement **EgressFailover** (or SRV) + **pbx3cagi** sequential dial; SPA/preflight trunk health. Lab workaround **`qualify_frequency=0`** (**`117340f`**) — do not treat as final. (May fold into **failover + shadowing** mini-project when that is planned.)
-
-- [ ] **Snapshots — separate panel, commit hook, FIFO retention (ops polish):** **Backups** (`backup.zip`, local 9 + S3 30d) and **snapshots** (`sqlite.db` copies in `/opt/pbx3/snap/`) are different jobs but share **`BackupView.vue`** — long backup lists push snapshots below the fold. **Gap:** legacy **`snap.sh`** is a stub; SPA **`GET syscommands/commit`** runs `genAst.sh` + reload but does **not** call **`create_new_snapshot()`** (legacy SARK took a snap on commit). **No snapshot FIFO** today (old “keep 9” in `snap.sh` commented out; backups have **`LocalBackupRetention`**). **Target:** **(1)** **pbx3spa** — `/snapshots` panel (extract from BackupView); **(2)** **pbx3api** — `create_new_snapshot()` after successful Commit; **(3)** **`SnapshotRetention`** (e.g. 9 newest, env `PBX3_SNAPSHOT_MAX_COUNT`); optional revive **`snap.sh`** or deprecate in favour of API. See **`IMPLEMENTATION_PLAN.md`** § **S9.5–S9.7**. **Priority:** after **R1** or parallel low-touch ops; not blocking fleet rebuild.
 
 - [x] **Phase S8.10 — Fleet mobility scaffold (2026-07-10):** On **`movewizard`** then **`main`**: `tenant-move-job.v0.json`; gatekeeper presign + tenant-moves + phase runner; pbx3api `/api/fleet/*`; pbx3sbc-admin `/api/fleet` repoint; SPA Fleet tenants Move wizard + job view (**lab** — peer nav; product = Fleet **mode** in same SPA). **Still open:** Fleet mode UX + dedicated fleet auth.
 
