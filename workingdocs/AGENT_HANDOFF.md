@@ -39,7 +39,9 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (index) → **TLS_IMPLEMENTATION_STEPS.md** (linear checklist) → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**Option A** spec + §11–§12). **pbx3spa**/workingdocs has stubs pointing here. |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
-| Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`fetch-latest-instance-backup.sh`** |
+| Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`fetch-latest-instance-backup.sh`** |
+| **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
+| **Failover + shadowing** (parked) | TODO open item — plan later; scraps in peering polish + **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** |
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **Fleet Egress availability / SBC failover** (future) | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — OPTIONS qualify, EgressFailover, health UI |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
@@ -50,29 +52,47 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-10 — S8.10 merged to main)
+## Next agent session notes (2026-07-11 — Fleet UI home + SBC stylesync)
 
-**Branch:** **`main`** — **pbx3** **`79700ee`**, **pbx3api** **`0fb0019`**, **pbx3spa** **`c828fe0`**, **pbx3sbc-admin** **`6036bcb`**. Fast-forward merge from **`movewizard`**.
+**Branch:** **`main`** — **pbx3** **`9e00e30`** (docs), **pbx3api** **`0fb0019`**, **pbx3spa** **`089477b`** (docs), **pbx3sbc-admin** **`624b0f3`**. SBC admin live on **`main`** stylesync. Fleet nodes unchanged this session.
 
 ### Shipped
 
-- Live moves + Snom phone POC (willand, affcot reverse) — see prior block.
-- Interim gatekeeper auth: SPA sessionStorage paste; `VITE_FLEET_GATEKEEPER_TOKEN` **DEV-only**.
-- Catalog reconcile OK; sandycroft SBC domain added.
-- **`movewizard` → `main`** in pbx3 / pbx3api / pbx3spa / pbx3sbc-admin.
+- **Fleet Console UI settled:** one `pbx3spa`, **two modes** (tenant vs fleet), separate **control-plane API**; never mix on one screen. Fleet = first-class context; later split-hosting escape hatch if personas diverge. Docs: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5/§4, **`CENTRAL_ADMIN_DIRECTION.md`**, **`FLEET_SYSTEM_OVERVIEW.md`**.
+- **Failover + shadowing** parked as TODO mini-project (no design pass).
+- **pbx3sbc-admin stylesync → `main`:** Filament slate/blue kinship with SPA (topbar brand, sidebar width/spacing, table canvas/density). Live **`http://sbc.pbx3.com/admin`**.
 
 ### Golden / operator follow-up
 
-- Pull **`main`** on nodes (`/opt/pbx3api`) + SBC admin if still on old tip.
-- Lab gatekeeper + SPA `/fleet-gk` unchanged for Mac ops.
-- Full control-plane login still future.
+- None required for stylesync (already pulled on SBC).
+- Lab fleet `/fleet/*` peer-nav remains interim until Fleet **mode** UX.
 
 ### Resume
 
-1. Optional: confirm nodes on `main` fleet APIs.
-2. Peering polish / UI polish / S7 as priorities allow.
+1. **Optional peering polish** (Phase 2 failover / Phase 5 `alias_db`), or **Fleet mode** shell swap, or snapshots — pick by priority.
+2. S7 / egress failover / cagi / shadowing remain deferred.
 
 **SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **bzy54n:** **`https://bzy54n.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`** · **Gatekeeper:** **`http://127.0.0.1:8090`**
+
+---
+
+## Next agent session notes (2026-07-10 — S8.10 day complete) — historical
+
+**Branch:** **`main`** — **pbx3** **`9e00e30`**, **pbx3api** **`0fb0019`**, **pbx3spa** **`089477b`**, **pbx3sbc-admin** **`6036bcb`**. Superseded by **2026-07-11** block above (sbc-admin now **`624b0f3`**).
+
+### Resume — historical
+
+See **2026-07-11** block above.
+
+---
+
+## Next agent session notes (2026-07-10 — S8.10 merged to main) — historical
+
+**Branch:** **`main`** merge tips before final handoff bump. Superseded by **day complete** block above (nodes pulled; tips `9e00e30` / `089477b`).
+
+### Resume — historical
+
+See **S8.10 day complete** block above.
 
 ---
 

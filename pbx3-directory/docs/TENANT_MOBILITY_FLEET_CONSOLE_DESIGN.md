@@ -179,9 +179,9 @@ Move job **`cutover`** step calls `repointTenant` only; catalog `tenant-meta.ins
 
 Until a trigger fires: **invest in pbx3sbc** (HA doc, peering Phase 0, adapter API on `pbx3sbc-admin`), not a platform migration.
 
-### 2.5 Superadmin homing — separate control-plane app (leaning, 2026-07-07)
+### 2.5 Superadmin homing — separate control-plane + one SPA / two modes (settled)
 
-**Question:** where does fleet **superadmin** functionality live? (`CENTRAL_ADMIN_DIRECTION` §4 already names *"Superuser / MSP — one login, many instances"*.)
+**Question:** where does fleet **superadmin** functionality live? (`CENTRAL_ADMIN_DIRECTION` §4 — Model B central tenant admin; fleet is a **higher** plane — see UI decision below.)
 
 **Superadmin is a distinct plane, not a bigger tenant admin:**
 
@@ -191,10 +191,11 @@ Until a trigger fires: **invest in pbx3sbc** (HA doc, peering Phase 0, adapter A
 | System of record | node sqlite via `:44300` | **S3 directory + edge routing** |
 | Worst-case mistake | breaks one tenant | strands/moves many tenants; repoints the edge |
 | Needs | CRUD panels | CRUD **+ durable jobs + credentials + adapters + ACL tier** |
+| SPA mode | **Tenant mode** — instance picker → node panels | **Fleet mode** — fleet-only shell (instances, tenants, moves) |
 
-**Ruled out:** SPA-only (browser can't hold secrets / run jobs / write S3); a "primary node" `pbx3api` (breaks shared-nothing, SPOF snowflake); inside tenant `pbx3api` (fleet-destroying power in the tenant trust tier).
+**Ruled out:** SPA-only (browser can't hold secrets / run jobs / write S3); a "primary node" `pbx3api` (breaks shared-nothing, SPOF snowflake); inside tenant `pbx3api` (fleet-destroying power in the tenant trust tier); **fleet ops and tenant objects on the same screen / same nav tree** (product UX — “Don’t make me think”).
 
-**Decision (leaning): a dedicated fleet control-plane service** — Laravel+Filament, own origin + own auth, owning **S3 directory (home of record) + orchestrator (queues) + adapters** (`S3DirectoryAdapter`, `SbcFleetAdapter`, `NodeApiAdapter`). This is the `pbx3-directory` stub becoming a real service.
+**Decision — backend:** a dedicated **fleet control-plane service** (Laravel-class), own origin + own auth tier, owning **S3 directory (home of record) + orchestrator (queues) + adapters** (`S3DirectoryAdapter`, `SbcFleetAdapter`, `NodeApiAdapter`). This is the `pbx3-directory` stub becoming a real service. **Not** optional: directory mutations and move jobs live here, not in the browser and not in tenant `pbx3api`.
 
 **Do NOT home superadmin inside `pbx3sbc-admin`.** Tempting (already Laravel+Filament, already owns SBC MySQL), but it **couples the control plane to the edge platform and spends the dSIPRouter escape hatch**:
 
@@ -208,13 +209,27 @@ Until a trigger fires: **invest in pbx3sbc** (HA doc, peering Phase 0, adapter A
 
 **Role of `pbx3sbc-admin` under this decision:** stays a **thin local edge admin / break-glass tool for the SBC only**, *behind* the adapter — it does **not** grow into the fleet console.
 
-**Settled on merit (survives independent scrutiny — follows from prior commitments, not from a stated preference):** the control plane is a **separate service/backend + trust tier**, sits on the **caller side** of `SbcFleetAdapter`, and **must fail safe**. This rests on three preference-independent arguments: (1) **trust boundary** — fleet-destroying power must not share an app/token tier with tenant operators (multi-tenant security, not aesthetics); (2) **fail-safe is a `DESIGN_RULES` rule** — nodes + SBC keep routing if the console is down; superadmin is never a runtime dependency of a call; (3) **S3 home-of-record + adapter seam (§11.10)** — the orchestrator must not live inside a target it orchestrates. The security boundary lives in the **backend + auth tier**, *not* in the number of visible UIs.
+**Settled on merit (backend):** the control plane is a **separate service + trust tier**, sits on the **caller side** of `SbcFleetAdapter`, and **must fail safe**. Arguments: (1) **trust boundary** — fleet-destroying power must not share an app/token tier with tenant operators; (2) **fail-safe** (`DESIGN_RULES`) — nodes + SBC keep routing if the console is down; (3) **S3 home-of-record + adapter seam (§11.10)** — the orchestrator must not live inside a target it orchestrates.
 
-**Genuinely open (taste / product calls — do not over-anchor):**
-- **UI presentation** — one unified operator shell (role-gated superadmin panels, single padlock) vs two visibly separate apps. **Either satisfies the trust boundary** as long as the *backend* control plane + auth tier is separate. Weak lean: two apps; low confidence.
-- **Identity model** — shared central IdP with operators (SSO, ACL-scoped) vs wholly separate superadmin credentials (§5 leaves open).
+**UI presentation — settled (2026-07-11):** **one `pbx3spa`, two modes** — not a second SPA/repo. Treat Fleet as a **first-class context** (same idea as an AWS account / GitHub org switcher): dedicated layout module, fleet token only, nav owned by that layout — not a peer item in the tenant sidebar.
 
-**When the alternative wins (honest caveat):** small/static fleet + single-person ops + dSIPRouter genuinely off the table → role-gated panels in one app is a defensible ship-faster call; the separate-*service* discipline still matters most for the backend/trust tier.
+| Rule | Detail |
+|------|--------|
+| **Product rule** | **One SPA, two modes, two APIs — never one screen that mixes both.** |
+| **Tenant mode** | Model B (or solo): pick instance → administer that node via `pbx3api`. Sidebar = tenant/instance panels only. |
+| **Fleet mode** | Explicit enter (e.g. “Fleet console”); **replace** shell (title/chrome/sidebar). Fleet-only nav: Instances, Tenants, Moves, Jobs. Calls **gatekeeper only** with a **fleet** token/abilities. Exit returns to last instance context; clear fleet token from memory on exit. |
+| **Abilities** | `admin` / panel abilities → node API only. `fleet` / `fleet_*` → control plane only. Most customer admins get **zero** fleet. Having both abilities still shows **one mode at a time**. |
+| **Step-up (recommended)** | Entering Fleet may require re-auth / SSO group / fleet credential (lab: session-paste gatekeeper token). |
+| **Enforcement** | Route guards + layout ownership so tenant layout never mounts fleet routes (and vice versa). Policy alone is not enough. |
+
+**Why not a second SPA (for now):** control-plane **backend** already provides the security boundary; a second Vue (or Filament) app doubles code/CI without strengthening that boundary. Cognitive separation is a **context/mode swap**, not a second bookmark. Fits current stage (same operators do tenant + fleet).
+
+**Escape hatch (later):** if product traction splits personas (customer tenant-admin vs MSP/NOC fleet-ops), compliance wants an isolated fleet URL, or ops UX outgrows Vue — **split hosting or a second surface** from the same or forked UI without undoing the gatekeeper. Revisit then; do not pre-build two apps.
+
+**Lab today → product:** S8.10 `/fleet/*` + sidebar “Fleet tenants” **peer** of tenant panels is interim convenience. Evolve into **Fleet mode** (layout swap); do not leave fleet as a permanent peer item in the tenant nav.
+
+**Still open:**
+- **Identity model** — shared central IdP with operators (SSO, ACL-scoped) vs wholly separate fleet credentials (§5 leaves open).
 
 #### 2.5.1 Physical deployment — ops note (2026-07-07)
 
@@ -429,11 +444,15 @@ Tenant move on **direct-to-node** (S8.5–S8.6 runbook) still needs trunk pkey a
 
 ## 4. Fleet Console shell (Phase B)
 
-Depends on **Central admin Model B** instance directory (`CENTRAL_ADMIN_DIRECTION.md` §3). Move is a cross-node action, so a fleet-wide view is a hard prerequisite.
+**Home:** **Fleet mode** inside **`pbx3spa`** (§2.5) — same codebase as Model B tenant admin; **different mode** (shell/nav swap). Depends on instance directory (`CENTRAL_ADMIN_DIRECTION.md` §3) for catalog data. Control-plane/gatekeeper is a **separate backend**; the SPA is not.
 
-- **Fleet → Instances** — list from directory (`instance-index.json` / API): label, fqdn, status, version.
-- **Fleet → Tenants** — fleet-wide tenant list assembled from catalog `tenants/{shortuid}/meta.json` (current `instance_id`, fqdn, status). This is the launch point for **[Move tenant…]**.
-- Per-node SPA tenant panel shows **"Manage in Fleet Admin"** when `VITE_INSTANCE_DIRECTORY_URL` is set; no move UI on the node.
+**Product rule:** one SPA, two modes, two APIs — never one screen that mixes fleet and tenant.
+
+Move is a cross-node action, so a fleet-wide view is a hard prerequisite.
+
+- **Fleet mode → Instances** — list from directory (`instance-index.json` / API): label, fqdn, status, version.
+- **Fleet mode → Tenants** — fleet-wide tenant list from catalog `tenants/{shortuid}/meta.json` (current `instance_id`, fqdn, status). Launch point for **[Move tenant…]**.
+- **Tenant mode:** no move UI; optional **"Enter Fleet"** (ability-gated) or **"Manage in Fleet Admin"** entry that switches mode — not a peer nav item beside Extensions/Trunks.
 
 ### 4.1 Directory schema additions (fleet + SBC)
 
@@ -595,8 +614,8 @@ If a single implementer must sequence: **Phase A first** (also improves daily ou
 5. **SBC vs node filter boundary:** node route denies by pattern (e.g. intl codes); SBC may apply additional carrier/LCR rules — document who wins on overlap.
 7. **Fleet service auth (mechanism):** trust tier is settled (§2.6 — org/fleet identity, separate from tenant/instance), but the **mechanism** by which the control plane authenticates to node APIs **and** the SBC admin API (dedicated service token vs admin bearer) is open. Must not break `AUTH_PATTERNS.md` whoami contract.
 8. **DID assignment/inventory authoring (§11.9):** tenant panel ("claim a DID") vs fleet DID-inventory panel (MSP number management) vs both. Delivery row is derived either way; this is *where ownership is entered*.
-9. **Superadmin UI presentation (§2.5):** one unified operator shell (role-gated) vs two visibly separate apps. Backend separation settled; UI is taste. Weak lean: two apps.
-10. **Superadmin identity model (§2.5):** shared central IdP with operators (SSO, ACL-scoped) vs wholly separate superadmin credentials.
+9. ~~**Superadmin UI presentation (§2.5)**~~ — **settled 2026-07-11:** one `pbx3spa`, two modes (tenant vs fleet); separate control-plane API; never mix both on one screen. Lab `/fleet/*` as peer nav → evolve to Fleet mode.
+10. **Superadmin identity model (§2.5):** shared central IdP with operators (SSO, ACL-scoped) vs wholly separate fleet credentials.
 
 ### Settled (no longer open)
 
@@ -606,6 +625,7 @@ If a single implementer must sequence: **Phase A first** (also improves daily ou
 - **Cutover for fleet** — SBC `domain.setid` repoint; no DNS gate on happy path.
 - **SBC routing source of truth** (was Q2) — **directory (S3) owns `tenant→node` and `DID→tenant`; SBC DB is a compiled projection** (§11.10). Console never treats the SBC as home of record; consistency via re-projection + reconcile job.
 - **Orchestrator / control-plane home** (was Q6) — **separate fleet control-plane service** (§2.5), not a fleet namespace inside tenant `pbx3api`. Also the **S3 gatekeeper** (§2.6).
+- **Fleet Console UI** (was open Q9) — **one SPA, two modes** (§2.5); separate control-plane backend; never mix fleet + tenant on one screen. Lab peer-nav `/fleet/*` → Fleet mode.
 - **Fleet trust tier** — **three domains: tenant / instance / org-fleet (S3)** (§2.6); org-fleet security is its own subsystem, owned by the control plane.
 - **Node IAM `tenants/*` gap** — v1 interim: drop blanket `tenants/*` from node instance profile (§2.6.1); safe now; future bulk via gatekeeper presigns.
 - **Gotchas 1–5** — registration drain (5 min reg helps); standardized trunk pkeys on takeover; AGI defers dial to Asterisk (no path failover); node firewall = SBC IP(s) only on 5060 (UFW, retire Shorewall STRING match); RTP stays on Asterisk (dsiprouter revisit if media becomes unsolvable).
@@ -916,7 +936,7 @@ Orchestrator calls **source** and **dest** `api_base_url` with fleet credentials
 | Directory schemas | `pbx3-directory/schema/` | v0 catalog; extensions in §13.3 |
 | SBC edge | `pbx3sbc/` (sibling repo) | OpenSIPS + `pbx3sbc-admin`; `PEERING-PLAN.md` |
 | Control-plane service | **Not started** | `pbx3-directory/README.md` = stub only |
-| Fleet Console UI | `pbx3spa` | Model B picker; move wizard = Phase C |
+| Fleet Console UI | `pbx3spa` | One SPA / two modes (§2.5); Model B tenant mode + Fleet mode; move wizard = Phase C |
 | AGI outbound | `pbx3cagi/.../pbx3cagi.c` | Path loop §11.3 |
 
 ### 13.6 Document hygiene

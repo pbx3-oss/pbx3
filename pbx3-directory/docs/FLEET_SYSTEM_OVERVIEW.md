@@ -93,7 +93,7 @@ flowchart TB
 - The **SBC** looks at the tenant's domain and forwards to whichever **node** currently hosts it.
 - **Nodes** run the actual phone system (Asterisk) and the tenant data.
 - **S3** is the shared filing cabinet — where each tenant lives, backups, recordings.
-- The **control plane** is the management brain used by fleet admins; it changes routing and coordinates moves. **Calls do not depend on it.**
+- The **control plane** is the management brain used by fleet admins; it changes routing and coordinates moves. **Calls do not depend on it.** Operators reach it via **Fleet mode** in the same admin SPA (not mixed with tenant panels on one screen) — see `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.5.
 
 ---
 
@@ -307,7 +307,7 @@ You can start solo and grow into a fleet; the node software is the same.
 | **Instance / Node** | One PBX server (Asterisk + local DB + firewall + certs). Hosts tenants. |
 | **SBC** | Session Border Controller — the fleet's single front door for phones and carriers. |
 | **S3 directory** | Shared store recording which tenant lives on which node, plus backups/recordings. |
-| **Control plane** | The fleet management brain (superadmin, tenant moves). Not in the call path. |
+| **Control plane** | The fleet management brain (superadmin, tenant moves). Not in the call path. UI: **Fleet mode** in `pbx3spa` (separate API). |
 | **DID / DDI** | A phone number that reaches a tenant from the outside world. |
 | **Egress trunk** | The standard outbound pipe from a node to the SBC. |
 | **Cutover** | The moment a tenant's traffic switches to the new node. |
