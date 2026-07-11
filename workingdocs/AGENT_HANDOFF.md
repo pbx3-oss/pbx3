@@ -50,30 +50,39 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-10 — S8.10 live moves + phone POC)
+## Next agent session notes (2026-07-10 — S8.10 merged to main)
 
-**Branch:** **`movewizard`** — **pbx3** **`8d14a4e`**, **pbx3api** **`0fb0019`** (08jzwn + bzy54n), **pbx3spa** **`29ea623`**, **pbx3sbc-admin** **`6036bcb`**. Ops-only this session (no code commit). **`main`** still pending merge.
+**Branch:** **`main`** — **pbx3** **`79700ee`**, **pbx3api** **`0fb0019`**, **pbx3spa** **`c828fe0`**, **pbx3sbc-admin** **`6036bcb`**. Fast-forward merge from **`movewizard`**.
 
-### Shipped (lab validated)
+### Shipped
 
-- **willand** (`0ggybk`) 08jzwn → bzy54n — job `tmj_bf41c7b45dfc97d72135faf1` **completed**. Added missing SBC domain `0ggybk.pbx3.com` setid 2 before Start.
-- **affcot** (`9wvvnb`) bzy54n → 08jzwn — job `tmj_7efdc9646309ff3641d21839` **completed**. Snom followed remount (domain setid 3→2). Dest **`/fleet/commit`** (`genAst` + reload) ran in configuring phase. Linphone 1102 did not return — parked (client flaky).
-- Homing now: **affcot + duns** on **08jzwn**; **willand + cluster1** on **bzy54n** (sandycroft still golden).
+- Live moves + Snom phone POC (willand, affcot reverse) — see prior block.
+- Interim gatekeeper auth: SPA sessionStorage paste; `VITE_FLEET_GATEKEEPER_TOKEN` **DEV-only**.
+- Catalog reconcile OK; sandycroft SBC domain added.
+- **`movewizard` → `main`** in pbx3 / pbx3api / pbx3spa / pbx3sbc-admin.
 
 ### Golden / operator follow-up
 
-- Gatekeeper Mac `:8090` still lab tokens; SPA `/fleet-gk` proxy.
-- Every tenant needs an SBC **`domain`** row before move preflight (willand gap).
-- Dispatcher destinations remain IPs by setid — move remaps **domain.setid** only (by design; FQDN backfill deferred).
-- Nodes/SBC still on **`movewizard`**.
+- Pull **`main`** on nodes (`/opt/pbx3api`) + SBC admin if still on old tip.
+- Lab gatekeeper + SPA `/fleet-gk` unchanged for Mac ops.
+- Full control-plane login still future.
 
 ### Resume
 
-1. **S8.10 harden** — production gatekeeper auth; catalog reconcile.
-2. **Merge `movewizard` → `main`** when green.
-3. UI polish later.
+1. Optional: confirm nodes on `main` fleet APIs.
+2. Peering polish / UI polish / S7 as priorities allow.
 
 **SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **bzy54n:** **`https://bzy54n.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`** · **Gatekeeper:** **`http://127.0.0.1:8090`**
+
+---
+
+## Next agent session notes (2026-07-10 — S8.10 live moves + phone POC) — historical
+
+**Branch:** **`movewizard`** — willand + affcot phone POC. Superseded by merge to **`main`** above.
+
+### Resume — historical
+
+See **S8.10 merged to main** block above.
 
 ---
 
