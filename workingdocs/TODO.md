@@ -5,7 +5,7 @@
 
 ### Suggested “what next?” order
 
-1. **Optional peering polish** — Phase 2 outbound failover; Phase 5 `alias_db`.  
+1. **Optional peering polish** — Phase 2 outbound failover (**blocked** on second SIP provider). **Phase 5 `alias_db` done** (2026-07-11).  
 2. **Ops runbook** — **`systemctl restart asterisk`** after egress / **`genAst.sh`**.  
 3. **Fleet mode UX** (future) — evolve lab `/fleet/*` peer-nav into tenant vs fleet mode swap; see open item below.  
 4. **Phase S7** — recordings S3 offload — **deferred**.  
