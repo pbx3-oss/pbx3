@@ -52,27 +52,56 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-11 — Fleet UI home + SBC stylesync)
+## Next agent session notes (2026-07-13 — Brindley lab + peering address model)
 
-**Branch:** **`main`** — **pbx3** **`2ee36f9`** (docs), **pbx3api** **`0fb0019`**, **pbx3spa** **`5977b62`** (docs), **pbx3sbc-admin** **`624b0f3`**. SBC admin live on **`main`** stylesync. Fleet nodes unchanged this session.
+**Branch:** live lab on SBC/golden; docs updated in tree (commit when asked). Prior tip: **2026-07-11 S9 + Phase 5**.
 
-### Shipped
+### Shipped / validated (lab)
 
-- **Fleet Console UI settled:** one `pbx3spa`, **two modes** (tenant vs fleet), separate **control-plane API**; never mix on one screen. Fleet = first-class context; later split-hosting escape hatch if personas diverge. Docs: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5/§4, **`CENTRAL_ADMIN_DIRECTION.md`**, **`FLEET_SYSTEM_OVERVIEW.md`**.
-- **Failover + shadowing** parked as TODO mini-project (no design pass).
-- **pbx3sbc-admin stylesync → `main`:** Filament slate/blue kinship with SPA (topbar brand, sidebar width/spacing, table canvas/density). Live **`http://sbc.pbx3.com/admin`**.
+- **Carrier REGISTER:** `uac_auth` + `uac_registrant` + admin **Peering → Registrations**; Brindley lab REGISTER OK.
+- **DID `01924910444` → golden 1000:** SBC alias + golden `inroutes`; hairpin fixed (rdonly inroute); operator **Commit** published rdonly/genAst. Demo trunks cleaned to **Egress** only.
+- **Docs:** **`PEERING-PLAN.md` §0.1** — DNS outbound / IP inbound (Magrathea pattern); no ITSP profiles. **`FLEET_TRUNK_PEERING_DECISION.md` §4.3.1** — solo vs fleet trunk panel. Brindley Peer gwid 30 flipped to FQDN.
 
 ### Golden / operator follow-up
 
-- None required for stylesync (already pulled on SBC).
-- Lab fleet `/fleet/*` peer-nav remains interim until Fleet **mode** UX.
+- Peering UX polish for logical carrier = FQDN + IP set remains open (**TODO**).
 
 ### Resume
 
-1. **Optional peering polish** (Phase 2 failover / Phase 5 `alias_db`), or **Fleet mode** shell swap, or snapshots — pick by priority.
-2. S7 / egress failover / cagi / shadowing remain deferred.
+1. Twilio/second carrier with §0.1 address split; Phase 2 failover when ready.
+2. Fleet mode / Egress availability deferred.
+
+---
+
+## Next agent session notes (2026-07-11 — S9 snapshots + peering Phase 5) — historical
+
+**Branch:** **`main`** — **pbx3** **`3705b8b`**, **pbx3api** **`d8c560c`**, **pbx3spa** **`103ab34`**, **pbx3sbc** **`05ea925`**, **pbx3sbc-admin** **`2df6a60`**. Golden API on **`d8c560c`**. SBC config applied + Phase 5 call validated.
+
+### Shipped
+
+- **S9.5–S9.7 snapshots:** Commit → `create_new_snapshot()` + FIFO (`PBX3_SNAPSHOT_MAX_COUNT`); SPA **`/snapshots`** panel; Backup archives-only. Golden Commit snap confirmed.
+- **Peering Phase 5 `alias_db`:** SBC `FROM_CARRIER` fallthrough; admin **DID aliases**; Magrathea DID lab call via alias path; Phase 4 prefix restored. Lab alias row left for `01924918076` → `dhbm8x.pbx3.com`.
+
+### Golden / operator follow-up
+
+- None pending. **Phase 2 outbound failover** waits on second SIP provider (user returning when acquired).
+
+### Resume
+
+1. **Peering Phase 2** when second carrier ready — or **Fleet mode** shell / **S7** / ops note by priority.
+2. Egress availability, failover+shadowing, cagi remain deferred.
 
 **SPA dev:** **`https://08jzwn.pbx3.com:44300/api`** · **bzy54n:** **`https://bzy54n.pbx3.com:44300/api`** · **SBC admin:** **`http://sbc.pbx3.com/admin`** · **Gatekeeper:** **`http://127.0.0.1:8090`**
+
+---
+
+## Next agent session notes (2026-07-11 — Fleet UI home + SBC stylesync) — historical
+
+**Branch:** **`main`** — tips superseded by **S9 + Phase 5** block above (sbc-admin now **`2df6a60`**, spa **`103ab34`**, api **`d8c560c`**).
+
+### Resume — historical
+
+See **2026-07-11 — S9 snapshots + peering Phase 5** block above.
 
 ---
 

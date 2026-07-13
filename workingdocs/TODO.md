@@ -1,13 +1,13 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — pbx3 **477aa7a**, pbx3api **`d8c560c`** (S9.6–S9.7; golden pulled), pbx3spa **`103ab34`** (S9.5 Snapshots panel), pbx3sbc-admin **`624b0f3`**.  
-**Last updated:** 2026-07-11 (S9.5–S9.7 snapshots done)
+**Branch:** **`main`** — pbx3 **`3705b8b`**, pbx3api **`d8c560c`** (S9; golden), pbx3spa **`103ab34`** (Snapshots), pbx3sbc **`05ea925`** (Phase 5 alias_db), pbx3sbc-admin **`2df6a60`**.  
+**Last updated:** 2026-07-13 (Brindley lab + peering §0.1 DNS/IP model docs)
 
 ### Suggested “what next?” order
 
-1. **Optional peering polish** — Phase 2 outbound failover (**blocked** on second SIP provider). **Phase 5 `alias_db` done** (2026-07-11).  
-2. **Ops runbook** — **`systemctl restart asterisk`** after egress / **`genAst.sh`**.  
-3. **Fleet mode UX** (future) — evolve lab `/fleet/*` peer-nav into tenant vs fleet mode swap; see open item below.  
+1. **Peering Phase 2 outbound failover** — **blocked** until second SIP provider; then second `dr_gateways` + gwlist failover.  
+2. **Fleet mode UX** (future) — evolve lab `/fleet/*` peer-nav into tenant vs fleet mode swap; see open item below.  
+3. **Ops runbook** — **`systemctl restart asterisk`** after egress / **`genAst.sh`**.  
 4. **Phase S7** — recordings S3 offload — **deferred**.  
 5. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 6. **Failover + shadowing** (parked) — plan as its own mini-project later.  
@@ -21,9 +21,15 @@
 
 - [x] **Snapshots — S9.5–S9.7 (2026-07-11):** **pbx3api** **`d8c560c`** — snapshot on Commit + **`SnapshotRetention`** (`PBX3_SNAPSHOT_MAX_COUNT`, default 9); validated on golden. **pbx3spa** **`103ab34`** — dedicated **`/snapshots`** panel; **Backup** archives-only. See **`IMPLEMENTATION_PLAN.md`** § S9.5–S9.7.
 
+- [x] **Peering Phase 5 — alias_db (2026-07-11):** **pbx3sbc** **`05ea925`** — `FROM_CARRIER` fallthrough to `alias_db_lookup` → domain dispatcher. **pbx3sbc-admin** **`2df6a60`** — **Peering → DID aliases**. Lab-validated Magrathea DID via alias; Phase 4 prefix restored. Lab alias row `01924918076` → `dhbm8x.pbx3.com` left in place.
+
+- [ ] **Peering Phase 2 — outbound failover (blocked):** Needs second SIP/ITSP (second `dr_gateways` row + outbound `gwlist` with `use_next_gw` / `DR_FAILOVER`). Resume when credentials/IPs available. See **`pbx3sbc/workingdocs/PEERING-PLAN.md`** Phase 2.
+
+- [ ] **Peering — DNS outbound + inbound IP set (UX polish):** Decision locked **`PEERING-PLAN.md` §0.1** (Magrathea-shaped: FQDN outbound gwid + separate inbound IP gwids; no ITSP profiles). Today: multiple Peers/descriptions. Later: optional admin grouping of one logical carrier (same tables). Fail2ban whitelist inbound IPs.
+
 - [ ] **Fleet mode in pbx3spa (settled UI — 2026-07-11):** **One SPA, two modes, two APIs — never one screen that mixes both.** Fleet = **first-class context** (dedicated layout; not peer nav). Tenant mode → node `pbx3api`; Fleet mode → gatekeeper only (`fleet` abilities; optional step-up). Evolve lab S8.10 sidebar peer into **Enter Fleet** / shell swap. Dedicated fleet auth replaces session-paste token. **Later escape hatch:** second surface/hosting if personas split — do not pre-build. Design: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4. Control-plane **service** remains a separate instance.
 
-- [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps today: peering Phase 2 outbound failover / Phase 5 `alias_db`; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
+- [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
 
 - [x] **S8.10 — interim gatekeeper auth harden (2026-07-10):** Production SPA must not bake `VITE_FLEET_GATEKEEPER_TOKEN`. Token from **sessionStorage** (Fleet tenants paste) or **DEV-only** Vite env. Gatekeeper README documents lab vs prod vs future control-plane login. Catalog reconcile: nodes/SBC aligned; added missing SBC domain **sandycroft** `vqcwd4.pbx3.com` setid 2.
 

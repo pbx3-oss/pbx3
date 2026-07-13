@@ -129,6 +129,17 @@ Phase A ships **before** SBC peering Phases 1–4. Goal: every fleet node dials 
 
 Fleet vs solo behaviour is gated by instance posture (e.g. directory / fleet flag in instance meta, or presence of `Egress` trunk template). Solo installs keep today’s trunk picker and real carrier trunks on the node.
 
+### 4.3.1 Two postures — trunk panel visibility (2026-07-13)
+
+| Posture | Node trunks panel | Carrier / PJSIP peers |
+|---------|-------------------|------------------------|
+| **Solo** (no SBC) | **Show** real carrier trunks (old behaviour) — the node *is* the PSTN edge | On the node |
+| **Fleet** | Show **`Egress`** (+ later **EgressFailover**) as the node’s PSTN face — status/SBC host — **not** Magrathea/Twilio peers | On **SBC admin** (Peers / Registrations / Number routes / DID aliases) |
+
+Hiding carrier trunks on a fleet node is **correct** (carrier peering is SBC-side). Hiding *everything* with no Egress stand-in is a UX gap — operators lose “see the wire” confidence. Do **not** put carrier Peers back on the golden trunks list under fleet posture.
+
+**Rejected:** per-ITSP “provider profiles” / wizards (Twilio pack, etc.). Too many providers, each different; profiles rot. Keep generic SIP objects on the SBC (and solo node trunks as today). Detail: **`pbx3sbc/workingdocs/PEERING-PLAN.md`** §0.1.
+
 ### 4.4 Phase A deliverables (checklist)
 
 - [x] Fleet AMI / onboarding: **`seed-fleet-egress-trunk.sh`** seeds `Egress` (+ optional `EgressFailover`).
@@ -370,6 +381,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 
 | Date | Change |
 |------|--------|
+| 2026-07-13 | §4.3.1 — solo vs fleet trunk panel; reject ITSP profiles; DNS outbound / IP inbound → **PEERING-PLAN** §0.1 |
 | 2026-07-09 | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — future OPTIONS qualify, EgressFailover, trunk health; §4/§6 cross-links |
 | 2026-07-09 | §2.4 founding Rules 7–8 — replaceable edge; SIP runtime API; catalog → SPA one-way |
 | 2026-07-09 | §6.1 WebRTC/WSS — out of v1; interim node :8089; target WSS on SBC |
