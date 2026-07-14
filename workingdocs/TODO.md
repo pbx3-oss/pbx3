@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Branch:** **`testpack`** — settle test cadence + critical-path pack.  
+**Branch:** **`main`** — tip after critical-path test pack start.  
 **Last updated:** 2026-07-14 (test cadence settled)
 
 ### Suggested “what next?” order
