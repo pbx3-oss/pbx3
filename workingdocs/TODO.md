@@ -5,8 +5,8 @@
 
 ### Suggested “what next?” order
 
-1. **Peering Phase 2 outbound failover** — **lab done 2026-07-13** (Magrathea gwid 20 + Brindley gwid 1); Twilio optional for real diversity.  
-2. **Fleet mode UX** (future) — evolve lab `/fleet/*` peer-nav into tenant vs fleet mode swap; see open item below.  
+1. **Fleet mode UX (`fleetadmin`)** — SPA shell swap in progress / lab-ready; merge when soaked.  
+2. **Peering — DNS outbound + inbound IP set (UX polish)** — optional admin grouping.  
 3. **Ops runbook** — **`systemctl restart asterisk`** after egress / **`genAst.sh`**.  
 4. **Phase S7** — recordings S3 offload — **deferred**.  
 5. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
@@ -27,7 +27,7 @@
 
 - [ ] **Peering — DNS outbound + inbound IP set (UX polish):** Decision locked **`PEERING-PLAN.md` §0.1** (Magrathea-shaped: FQDN outbound gwid + separate inbound IP gwids; no ITSP profiles). Today: multiple Peers/descriptions. Later: optional admin grouping of one logical carrier (same tables). Fail2ban whitelist inbound IPs.
 
-- [ ] **Fleet mode in pbx3spa (settled UI — 2026-07-11):** **One SPA, two modes, two APIs — never one screen that mixes both.** Fleet = **first-class context** (dedicated layout; not peer nav). Tenant mode → node `pbx3api`; Fleet mode → gatekeeper only (`fleet` abilities; optional step-up). Evolve lab S8.10 sidebar peer into **Enter Fleet** / shell swap. Dedicated fleet auth replaces session-paste token. **Later escape hatch:** second surface/hosting if personas split — do not pre-build. Design: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4. Control-plane **service** remains a separate instance.
+- [ ] **Fleet mode in pbx3spa (`fleetadmin` — 2026-07-13 WIP):** **Enter Fleet / Exit Fleet** shell swap landed on branch **`fleetadmin`**: `FleetLayout`, `/fleet/*` guards, peer nav removed. Lab gatekeeper token paste remains. **Still open:** dedicated fleet auth, Jobs nav, SSO/`fleet` abilities, merge to `main` after soak. Design: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.
 
 - [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
 
