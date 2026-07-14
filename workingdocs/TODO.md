@@ -26,7 +26,7 @@
 
 - [x] **Ops — Asterisk after Egress / genAst (2026-07-13):** **`workingdocs/OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — `systemctl restart asterisk` required after egress template changes; `pjsip reload` alone is not enough (Phase A lab).
 
-- [ ] **Peering — DNS outbound + inbound IP set (UX polish):** Decision locked **`PEERING-PLAN.md` §0.1** (Magrathea-shaped: FQDN outbound gwid + separate inbound IP gwids; no ITSP profiles). Today: multiple Peers/descriptions. Later: optional admin grouping of one logical carrier (same tables). Fail2ban whitelist inbound IPs.
+- [x] **Peering — logical carrier Peers UX (attrs):** **`PEERING-PLAN.md` §0.1** + pbx3sbc-admin Peers form/table group by `carrier=` / `role=` in **`attrs`** (no OpenSIPS/schema change). Lab seed + Magrathea/Brindley backfill. Remaining: Fail2ban whitelist inbound IPs.
 
 - [x] **Fleet mode in pbx3spa (2026-07-13 → `main`):** **Enter Fleet / Exit Fleet** shell swap, `/fleet/*` guards, Instances / Tenants / **Jobs**, `FleetTokenGate`. **pbx3spa** **`ba31dd4`**, gatekeeper list API **pbx3** **`c047743`**. Branch **`fleetadmin` deleted**. **Still open:** dedicated fleet auth (not paste-token), SSO/`fleet` abilities. Design: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.
 
