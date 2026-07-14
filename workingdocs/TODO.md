@@ -1,16 +1,15 @@
 # PBX3 ToDo list
 
-**Branch:** **`lehttps`** (+ control host lab) — tip after SBC admin LE; control EC2 stood up.  
-**Last updated:** 2026-07-14 (control.pbx3.com gatekeeper live)
+**Branch:** **`main`** — tip after Number routes prefix overlap.  
+**Last updated:** 2026-07-14 (prefix overlap live on sbc.pbx3.com/admin)
 
 ### Suggested “what next?” order
 
-1. **Number routes — prefix overlap UX** — warn/dup-check (independent SBC-admin polish).  
-2. **Fleet auth polish (later)** — cookie/SSO; trim paste UX.  
-3. **Phase S7** — recordings S3 offload — **deferred**.  
-4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-5. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
+1. **Fleet auth polish (later)** — cookie/SSO; trim paste UX.  
+2. **Phase S7** — recordings S3 offload — **deferred**.  
+3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
 
 ---
 
@@ -26,7 +25,7 @@
 
 - [ ] **Fleet auth polish (later):** cookie sessions / SSO step-up; drop paste UX when unused.
 
-- [ ] **pbx3sbc-admin — Number routes prefix overlap (later):** No check today for duplicate/confusing prefixes. OpenSIPS longest-prefix (+ priority on equal length) already picks a winner; still want operator warn or reject identical `groupid`+`prefix`, optional “nested under …” hint. Come back after Peers UX settle-in.
+- [x] **pbx3sbc-admin — Number routes prefix overlap (2026-07-14):** Reject identical `groupid`+`prefix`; amber “nested under / shorter than …” hint + post-save warning. OpenSIPS longest-prefix unchanged. Branch **`overlap` → `main`**; live on **`sbc.pbx3.com/admin`**.
 
 - [x] **pbx3sbc-admin stylesync (2026-07-11):** Filament theme kinship with pbx3spa (slate/blue, brand in topbar, sidebar width/spacing, table canvas/row density). Branch **`stylesync` → `main`** **`624b0f3`**; live on **`sbc.pbx3.com/admin`**.
 
