@@ -5,8 +5,8 @@
 
 ### Suggested “what next?” order
 
-1. **Fleet auth — SPA login UI** — wire Fleet mode to `POST /api/v1/auth/login` (infra live on **`control.pbx3.com`**; paste-token still works as break-glass).  
-2. **Number routes — prefix overlap UX** — warn/dup-check (independent SBC-admin polish).  
+1. **Number routes — prefix overlap UX** — warn/dup-check (independent SBC-admin polish).  
+2. **Fleet auth polish (later)** — cookie/SSO; trim paste UX.  
 3. **Phase S7** — recordings S3 offload — **deferred**.  
 4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 5. **Failover + shadowing** (parked) — plan as its own mini-project later.  
