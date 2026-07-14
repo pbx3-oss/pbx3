@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — pbx3 **`3705b8b`**, pbx3api **`d8c560c`** (S9; golden), pbx3spa **`103ab34`** (Snapshots), pbx3sbc **`05ea925`** (Phase 5 alias_db), pbx3sbc-admin **`2df6a60`**.  
-**Last updated:** 2026-07-13 (Brindley lab + peering §0.1 DNS/IP model docs)
+**Last updated:** 2026-07-13 (Phase 2 Magrathea→Brindley outbound failover lab)
 
 ### Suggested “what next?” order
 
-1. **Peering Phase 2 outbound failover** — **blocked** until second SIP provider; then second `dr_gateways` + gwlist failover.  
+1. **Peering Phase 2 outbound failover** — **lab done 2026-07-13** (Magrathea gwid 20 + Brindley gwid 1); Twilio optional for real diversity.  
 2. **Fleet mode UX** (future) — evolve lab `/fleet/*` peer-nav into tenant vs fleet mode swap; see open item below.  
 3. **Ops runbook** — **`systemctl restart asterisk`** after egress / **`genAst.sh`**.  
 4. **Phase S7** — recordings S3 offload — **deferred**.  
@@ -23,7 +23,7 @@
 
 - [x] **Peering Phase 5 — alias_db (2026-07-11):** **pbx3sbc** **`05ea925`** — `FROM_CARRIER` fallthrough to `alias_db_lookup` → domain dispatcher. **pbx3sbc-admin** **`2df6a60`** — **Peering → DID aliases**. Lab-validated Magrathea DID via alias; Phase 4 prefix restored. Lab alias row `01924918076` → `dhbm8x.pbx3.com` left in place.
 
-- [ ] **Peering Phase 2 — outbound failover (blocked):** Needs second SIP/ITSP (second `dr_gateways` row + outbound `gwlist` with `use_next_gw` / `DR_FAILOVER`). Resume when credentials/IPs available. See **`pbx3sbc/workingdocs/PEERING-PLAN.md`** Phase 2.
+- [x] **Peering Phase 2 — outbound failover (2026-07-13 lab):** Magrathea outbound **gwid 20** `sip:sipipgw.magrathea.net:5060` + Brindley **gwid 1**; rule gwlist **`20,1`**. `DR_FAILOVER`/`use_next_gw` already in SBC config. Seed script updated. Brindley→Magrathea upstream means diversity is limited; proves SBC mechanics. True multi-ITSP still optional (Twilio).
 
 - [ ] **Peering — DNS outbound + inbound IP set (UX polish):** Decision locked **`PEERING-PLAN.md` §0.1** (Magrathea-shaped: FQDN outbound gwid + separate inbound IP gwids; no ITSP profiles). Today: multiple Peers/descriptions. Later: optional admin grouping of one logical carrier (same tables). Fail2ban whitelist inbound IPs.
 
