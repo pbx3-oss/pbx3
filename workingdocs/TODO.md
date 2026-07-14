@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — Pack A critical-path tests on main.  
-**Last updated:** 2026-07-14 (Pack A done)
+**Branch:** **`fleetauthpolish`** — trim paste + Exit Fleet revoke.  
+**Last updated:** 2026-07-14 (fleet auth polish slice)
 
 ### Suggested “what next?” order
 
-1. **Fleet auth polish (later)** — cookie/SSO; trim paste UX.  
+1. **Fleet auth polish (remaining)** — cookie sessions / SSO step-up (paste trim + exit revoke done).  
 2. **Phase S7** — recordings S3 offload — **deferred**.  
 3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
@@ -23,7 +23,9 @@
 
 - [x] **Fleet auth — SPA login UI (2026-07-14):** FleetTokenGate email/password → `POST /api/v1/auth/login`; sessionStorage Bearer; advanced paste for break-glass. Dev proxy → `https://control.pbx3.com`. Branch **`fleetauth`** (pbx3spa).
 
-- [ ] **Fleet auth polish (later):** cookie sessions / SSO step-up; drop paste UX when unused.
+- [x] **Fleet auth polish — paste trim + Exit Fleet revoke (2026-07-14):** Break-glass paste collapsed under “Break-glass (ops only)”; Exit Fleet / reset call `logoutFleet` (server revoke + clear); removed redundant “Clear fleet token” topbar. Soft step-up = must Sign in again after exit. Branch **`fleetauthpolish`**.
+
+- [ ] **Fleet auth polish (later):** cookie sessions / SSO step-up; `fleet` abilities on control plane.
 
 - [x] **Critical-path test pack Pack A (2026-07-14):** Offline regression net complete — **`TEST_CADENCE.md`**, **`CRITICAL_PATH_TEST_PACK.md`**. Prefix overlap, gatekeeper UserStore + break-glass, fleet list fixtures, SnapshotRetention, recordings HTTP 404/list (mocked), SPA fleet token Vitest. Branch **`packa` → `main`**. Ongoing habit: leave a unit/contract test when touching logic. Pack B = lab recipes; Pack C = UI E2E later.
 
