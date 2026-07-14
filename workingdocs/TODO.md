@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Branch:** **`packa`** — Pack A critical-path tests complete.  
+**Branch:** **`main`** — Pack A critical-path tests on main.  
 **Last updated:** 2026-07-14 (Pack A done)
 
 ### Suggested “what next?” order
