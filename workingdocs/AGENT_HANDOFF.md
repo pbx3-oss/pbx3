@@ -53,23 +53,32 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-14 — S10, design rules, S7 PCI baseline)
+## Next agent session notes (2026-07-14 — S7 recordings S3 + S7.10 sweeper)
 
-**Branch:** **`main`** — **pbx3** **`d0801c5`** (docs: S10, Rules 9–14, S7 PCI-shaped). **pbx3spa** **`e8da6de`** (prior handoff; no SPA code this session). **pbx3api** **`f872963`**, **pbx3sbc-admin** **`f40d581`** unchanged this session.
+**Branch:** **`main`** — **pbx3** **`ed484f3`**, **pbx3api** **`6f46712`**, **pbx3spa** **`6e23fa3`**. Control host gatekeeper deployed with **`PBX3_RECORDINGS_BUCKET`**. Golden `/opt/pbx3api` on **`6f46712`** with upload env wired.
 
-### Shipped (docs)
-- **Phase S10** — fleet admin panel actions planned (`IMPLEMENTATION_PLAN.md` § S10 / S8.12): abilities → catalog onboard/decommission → job control → reconcile → DID → fleet users; Mac scripts = break-glass.
-- **Rule 9** — cloud/object-store portability (S3 API + IaaS adapter; not AWS-locked).
-- **DESIGN_RULES** restructure — Parts A–D; **Rules 10–14** (split trust, fail-safe control plane, browser powerless, HoR vs projection, durable gated jobs). Cursor **`design-rules-escalation.mdc`**: flag user asks that would break rules.
-- **S7 PCI-shaped baseline** — dedicated private recordings bucket + presigns + SSE-S3; KMS/CloudTrail/QSA/PSP = **S7+**. Search = SQLite; S3 = blobs. Plan/TODO updated.
+### Shipped
+- **S7.1–S7.10 (PCI-shaped baseline):** dedicated **`08jzwn-pbx3-recordings`**; gatekeeper **`presign-recordings`**; async upload; `s3_key` / Storage UI; policy.json + lifecycle 60d; `s3_only` play proxy; retention keeps S3-backed rows searchable; **reconcile sweeper** local↔SQLite↔S3.
+- Ops: **`OPS_S3_RUNBOOK.md`** §13 + `create-recordings-bucket.sh` / `apply-recordings-lifecycle-rule.sh`.
 
 ### Golden / operator follow-up
-- Same as morning: rotate SBC Filament admin password if needed; control host IP dynamic; no gatekeeper tokens in SPA builds; Fleet login UI kinship still open.
+- Rotate SBC Filament admin password if still pending; control host IP dynamic.
+- Fleet login UI kinship still open.
+- Optional: install cron.d recordings example on golden if schedule:run not covering reconcile.
 
 ### Resume
-1. **Implement S7** (bucket + gatekeeper recordings presigns + upload/`s3_key`/archived play) — design settled.
-2. Or **S10.1** gatekeeper abilities toward panel onboard/decommission.
-3. Do not start attested PCI or IdP/cookie work without a customer ask.
+1. **S10.1** — gatekeeper `fleet_*` abilities → SPA Fleet guards (unlocks panel onboard/decommission).
+2. Or Fleet login UI kinship / egress availability.
+3. Do **not** start S7+ attestation or IdP/cookie without a customer ask.
+
+---
+
+## Next agent session notes (2026-07-14 — S10, design rules, S7 PCI baseline) — historical
+
+**Branch:** **`main`** — docs tip before evening S7 implement. Superseded by block above.
+
+### Resume (superseded)
+See block above.
 
 ---
 

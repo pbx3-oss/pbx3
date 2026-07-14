@@ -1,17 +1,17 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — session end 2026-07-14 (pm).  
-**Last updated:** 2026-07-14 (session end — S10 / Rules 10–14 / S7 baseline)
+**Branch:** **`main`** — session end 2026-07-14 (evening).  
+**Last updated:** 2026-07-14 (session end — S7 recordings S3 offload + S7.10 sweeper shipped)
 
 ### Suggested “what next?” order
 
-1. **Phase S7** — recordings S3 offload **implement** — PCI-shaped baseline settled (`RECORDINGS_STORAGE_DESIGN.md` §6.2 / §7); start with recordings bucket + gatekeeper presigns.  
-2. **Phase S10** — fleet admin actions — **`IMPLEMENTATION_PLAN.md`** § Phase S10 (start **S10.1** abilities).  
-3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-6. **Fleet login UI kinship (UX)** — restyle `FleetTokenGate` toward **`LoginView`** (on TODO).  
-7. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`**.
+1. **Phase S10** — fleet admin actions — start **S10.1** gatekeeper abilities (`IMPLEMENTATION_PLAN.md` § Phase S10).  
+2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+3. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+4. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+5. **Fleet login UI kinship (UX)** — restyle `FleetTokenGate` toward **`LoginView`** (on TODO).  
+6. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`**.  
+7. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
 
 ---
 
@@ -66,7 +66,9 @@
 
 - [x] **Phase S7 — PCI staging settled (docs 2026-07-14):** S7 = PCI-**shaped** baseline (dedicated private bucket, BPA, TLS, SSE-S3, gatekeeper presigns, non-attested wording); attested KMS/CloudTrail/Security Hub/QSA/PSP = **S7+**. Search stays SQLite on node; S3 = blobs only. **`d0801c5`**.
 
-- [ ] **Phase S7 — Recordings S3 offload (implement):** Dedicated **`PBX3_RECORDINGS_BUCKET`**; gatekeeper recordings **presigns**; async upload; SQLite `s3_key` / SPA archived; play when local gone. R1.5 done. Plan: **`RECORDINGS_STORAGE_DESIGN.md`** §7; **`IMPLEMENTATION_PLAN.md`** § Phase S7.
+- [x] **Phase S7 — Recordings S3 offload (2026-07-14 evening):** Dedicated bucket **`08jzwn-pbx3-recordings`** (BPA/TLS/SSE-S3); gatekeeper **`POST /api/v1/s3/presign-recordings`**; pbx3api **`pbx3:recordings-s3-upload`** + `s3_key` + S3-only play proxy; SPA **Storage** column; `policy.json` + lifecycle `class=recording` 60d; retention keeps **`s3_only`** searchable; **S7.10** **`pbx3:recordings-reconcile`** sweeper (nightly 03:15). Live on control + golden. Tips: **pbx3** **`ed484f3`**, **pbx3api** **`6f46712`**, **pbx3spa** **`6e23fa3`**. Ops: **`OPS_S3_RUNBOOK.md`** §13. **Not** PCI-attested.
+
+- [ ] **S7+ — Attested PCI / scale (deferred):** KMS CMK; CloudTrail→WORM audit bucket; Security Hub; QSA; PSP handoff; Athena/manifests. Do not start without customer ask. Design §6.2 / §7 S7+.
 
 - [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**; add **`pbx3-docs`** later. Maintain **`REPOS_AND_RELEASES.md`** (inventory, remotes, compatibility matrix). Update local clone remotes; keep **`pbx3-master/`** holding-folder layout. Tag first aligned release row in compatibility matrix when cutting public release.
 
