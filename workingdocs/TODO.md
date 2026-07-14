@@ -1,20 +1,23 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — pbx3 tip after Peers carrier UX (see git).  
-**Last updated:** 2026-07-13 (Number routes overlap check noted)
+**Branch:** **`main`** — tip after Peers carrier UX + SBC admin sidebar.  
+**Last updated:** 2026-07-13 (session end — Peers UX, sidebar, LE TODO)
 
 ### Suggested “what next?” order
 
-1. **Fleet auth** (later) — dedicated control-plane login replaces gatekeeper paste-token.  
-2. **Number routes — prefix overlap UX** — warn/dup-check (OpenSIPS longest-prefix OK; admin silent today).  
-3. **Phase S7** — recordings S3 offload — **deferred**.  
-4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-5. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
+1. **TLS / Let’s Encrypt — SBC + control EC2** — HTTPS (and SIP TLS where needed) for `sbc.pbx3.com` admin/API and the fleet control-plane host (gatekeeper / Fleet Console backend); control EC2 not built yet.  
+2. **Fleet auth** (later) — dedicated control-plane login replaces gatekeeper paste-token (pairs with control EC2).  
+3. **Number routes — prefix overlap UX** — warn/dup-check (OpenSIPS longest-prefix OK; admin silent today).  
+4. **Phase S7** — recordings S3 offload — **deferred**.  
+5. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+6. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+7. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
 
 ---
 
 ## Open items
+
+- [ ] **TLS / Let’s Encrypt — SBC + control-plane EC2:** Lab SBC admin is HTTP today (`http://sbc.pbx3.com/admin`). Add **LE** (certbot) for **SBC** (`sbc.pbx3.com` — nginx/admin + any public HTTPS; SIP TLS as needed) and for the **fleet control EC2** (gatekeeper + Fleet Console API; host not stood up yet). Distinct from **node** LE Sync (tenant SANs on Asterisk/nginx — already shipped). Align with control-plane standup / fleet auth.
 
 - [ ] **pbx3sbc-admin — Number routes prefix overlap (later):** No check today for duplicate/confusing prefixes. OpenSIPS longest-prefix (+ priority on equal length) already picks a winner; still want operator warn or reject identical `groupid`+`prefix`, optional “nested under …” hint. Come back after Peers UX settle-in.
 

@@ -53,7 +53,26 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-13 — Brindley lab + peering address model)
+## Next agent session notes (2026-07-13 — Peers carrier UX + SBC admin nav)
+
+**Branch:** **`main`** — **pbx3sbc-admin** **`374afb0`** (Peers attrs grouping + sidebar), **pbx3sbc** **`5d90d84`**, **pbx3** tip includes Peers TODO + **LE for SBC/control EC2** + prefix-overlap note (TODO.md may be unpushed for LE tip only). Prior tip: Brindley lab + §0.1.
+
+### Shipped
+- **Logical carrier Peers UX:** `attrs` `carrier=` / `role=`; table group by carrier; route **counts** (link to Number routes Peer filter). Lab backfill Magrathea/Brindley + **bzy54n** Asterisk Peer gwid **12**. Live on **`http://sbc.pbx3.com/admin`**.
+- **Sidebar:** Peering → Routing → Fail2Ban → Logs.
+- **Product clarity (not code):** Number routes = prefix→Peer; DID aliases = local-AOR escape hatch — **not for fleet delivery**; overlap UX deferred (**TODO**).
+
+### Golden / operator follow-up
+- Optional: Fail2ban whitelist inbound Magrathea IPs (still noted under Peers TODO remainder).
+- **LE** for SBC + future control EC2 — tip #1 on TODO (not started).
+
+### Resume
+1. **TLS / Let’s Encrypt** on SBC (`sbc.pbx3.com`) and plan for control-plane EC2; or **Fleet auth** with control host standup.
+2. Number routes prefix-overlap warn when ready; Fail2ban inbound whitelist as small SBC ops item.
+
+---
+
+## Next agent session notes (2026-07-13 — Brindley lab + peering address model) — historical
 
 **Branch:** live lab on SBC/golden; docs updated in tree (commit when asked). Prior tip: **2026-07-11 S9 + Phase 5**.
 
@@ -65,7 +84,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ### Golden / operator follow-up
 
-- Peering UX polish for logical carrier = FQDN + IP set remains open (**TODO**).
+- Peering UX polish for logical carrier = FQDN + IP set — **done** later same day (carrier attrs UX).
 
 ### Resume
 
