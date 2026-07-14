@@ -38,7 +38,7 @@ SPA Fleet mode uses control-plane **email/password login** (Bearer in sessionSto
 
 ## Operator notes
 
-- Prefer fleet user login in SPA; break-glass `GATEKEEPER_API_TOKEN` for emergencies only. Cookie/SSO: **`workingdocs/FLEET_AUTH_COOKIE_SSO.md`**.  
+- Prefer fleet user login in SPA; break-glass `GATEKEEPER_API_TOKEN` for emergencies only. Identity / cookies / SSO / abilities: **`workingdocs/FLEET_AUTH_COOKIE_SSO.md`**.  
 - After stop/start without EIP, **update DNS** before renew/client use.  
 - Redeploy code: rsync gatekeeper tree (exclude `.env`), `composer install` with **php8.4**, `sudo systemctl reload php8.4-fpm`.  
 - Policy JSON in repo: `pbx3-directory/schema/pbx3-control-gatekeeper-s3.policy.json`.

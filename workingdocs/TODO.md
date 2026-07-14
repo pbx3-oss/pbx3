@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — tip after fleet auth polish slice; cookie/SSO deferred.  
-**Last updated:** 2026-07-14 (FLEET_AUTH_COOKIE_SSO deferral)
+**Last updated:** 2026-07-14 (fleet auth identity stance settled)
 
 ### Suggested “what next?” order
 
@@ -9,7 +9,7 @@
 2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 3. **Failover + shadowing** (parked) — plan as its own mini-project later.  
 4. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-5. **Fleet auth cookie/SSO (blocked)** — see **`FLEET_AUTH_COOKIE_SSO.md`** (needs same-site Fleet UI and/or IdP choice).
+5. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (SSO-agnostic; abilities in-house; big IdP only when needed).
 
 ---
 
@@ -25,7 +25,7 @@
 
 - [x] **Fleet auth polish — paste trim + Exit Fleet revoke (2026-07-14):** Break-glass paste collapsed under “Break-glass (ops only)”; Exit Fleet / reset call `logoutFleet` (server revoke + clear); removed redundant “Clear fleet token” topbar. Soft step-up = must Sign in again after exit. Branch **`fleetauthpolish` → `main`**.
 
-- [ ] **Fleet auth — cookie sessions / SSO (deferred — topology/IdP):** Not same workstep as paste/exit. HttpOnly cookies need **same-site** Fleet UI (or BFF); current Pages→`control.pbx3.com` + CORS `*` blocks credentials. SSO needs IdP + ability mapping. Soft step-up already via Exit Fleet revoke. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
+- [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough without a big IdP. **SSO-agnostic:** we own `fleet` / `fleet_*` abilities; optional OIDC later maps groups → abilities. Cookies need same-site Fleet UI (or BFF). Soft step-up via Exit Fleet revoke. Design: **`FLEET_AUTH_COOKIE_SSO.md`**. Optional next auth feature when needed: abilities on gatekeeper users (no IdP required).
 
 - [x] **Critical-path test pack Pack A (2026-07-14):** Offline regression net complete — **`TEST_CADENCE.md`**, **`CRITICAL_PATH_TEST_PACK.md`**. Prefix overlap, gatekeeper UserStore + break-glass, fleet list fixtures, SnapshotRetention, recordings HTTP 404/list (mocked), SPA fleet token Vitest. Branch **`packa` → `main`**. Ongoing habit: leave a unit/contract test when touching logic. Pack B = lab recipes; Pack C = UI E2E later.
 

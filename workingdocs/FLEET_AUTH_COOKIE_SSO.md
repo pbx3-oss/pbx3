@@ -1,45 +1,100 @@
-# Fleet auth — cookies & SSO (settled deferral 2026-07-14)
+# Fleet auth — identity, cookies, SSO, abilities (settled 2026-07-14)
 
-**Context:** Paste trim + Exit Fleet revoke shipped (`fleetauthpolish` → `main`). Remaining polish item was **cookie sessions** and **SSO step-up**.
+**Status:** Settled product stance for this stage of the project.  
+**Also covers:** cookie topology deferral; when (not) to adopt a big IdP engine.
 
-## Verdict
+---
 
-**Not the same workstep as paste/exit polish.** Both remain **deferred** until hosting / IdP decisions land. Bearer in `sessionStorage` + gatekeeper login stays the production-shaped path for now.
+## Outcome (short)
 
-## Why cookies are blocked today
+| Topic | Outcome |
+|-------|---------|
+| **Try-it-out / lab auth** | **Done enough** — gatekeeper email/password, Bearer session, break-glass, soft step-up (Exit Fleet revokes). No big IdP required. |
+| **HttpOnly cookies** | **Deferred** — needs same-site Fleet UI (or BFF); blocked by cross-origin SPA + CORS `*`. |
+| **SSO / external IdP** | **Deferred** — optional later; **not** a barrier to try the product. |
+| **SSO-agnostic design** | **Yes** — we own **abilities**; external IdPs only assert identity (+ groups). Wire OIDC (etc.) **as and when needed**. |
+| **Fleet abilities (`fleet` / `fleet_*`)** | **Can be built with what we have** (SQLite users + route checks) without Keycloak/Authentik/etc. |
+
+Do **not** pull a big identity engine until a customer/compliance requirement forces shared SSO. Do **not** implement Set-Cookie login until Fleet UI is same-site with the gatekeeper (or behind a same-site proxy).
+
+---
+
+## What we already shipped (auth path)
+
+- Gatekeeper SQLite users + session tokens (`login` / `me` / `logout`).
+- SPA Fleet Sign in (email/password) → Bearer in `sessionStorage`.
+- Break-glass `GATEKEEPER_API_TOKEN` retained; paste UX collapsed (“ops only”).
+- Exit Fleet / reset call `logoutFleet` — next Enter Fleet must Sign in again (**soft step-up** without SSO).
+- Pack A tests: UserStore lifecycle + break-glass Auth.
+
+**Implicit product rule:** local fleet login remains the default **demo / try-it-out** path forever. SSO is an add-on for orgs that already have a central IdP.
+
+---
+
+## Abilities — independent of IdP
+
+Design §2.5: node `admin` / panel abilities → **pbx3api** only; `fleet` / `fleet_*` → **gatekeeper** only. Most customer admins get **zero** fleet.
+
+Today every authenticated fleet principal can hit the whole gatekeeper API (no per-ability checks yet).
+
+**We can add abilities without an IdP:**
+
+1. Persist abilities on the gatekeeper user (column or join table).
+2. Return them from `login` / `me`.
+3. Enforce on gatekeeper routes; SPA only hides UI (server still decides).
+4. Break-glass = full ops set (or explicit `fleet_*`).
+
+That mirrors Sanctum abilities on the node — just on control-plane users.
+
+**When an IdP arrives later:** it supplies identity + optional groups/roles via standard protocols; **one mapper** turns claims → our ability names. The ability vocabulary stays ours.
+
+---
+
+## SSO-agnostic stance
+
+**IdP** = Identity Provider — central authority for *who* someone is (and often group membership), e.g. Keycloak, Authentik, Google Workspace, Microsoft Entra. Almost all expose **APIs** and, more importantly for us, **OIDC/SAML**.
+
+**Mindful split:**
+
+1. **PBX3 owns abilities** and enforces them on gatekeeper APIs.  
+2. **Whoever authenticates** must only hand us a stable subject (+ optional groups) via a **standard protocol**.
+
+Then Keycloak vs Authentik vs Entra vs “SQLite login only” are **identity backends**, not product rewrites. We stay **SSO-agnostic**: optional OIDC connector(s) when needed — not “we are a Keycloak app.”
+
+Open-source peers usually ship local users for trial and optional OIDC so the deployer brings their own IdP. We follow that shape.
+
+**Big engines are a hell of a barrier for “let’s try it out.”** Correct: IdP/SSO stays tip-blocked; password login stays the open-box path.
+
+---
+
+## Cookies — why same-site Fleet UI
 
 | Fact | Implication |
 |------|-------------|
-| Fleet SPA is (or will be) on a **different origin** than `control.pbx3.com` (Pages / node SPA host) | Cookie set by gatekeeper is **cross-site** for browser fetches |
-| Gatekeeper CORS is `Access-Control-Allow-Origin: *` | Browsers **reject** `credentials: 'include'` with `*`; cookie auth cannot work without a concrete allowlist + `Allow-Credentials: true` |
-| Vite DEV uses `/fleet-gk` **same-origin proxy** | Cookies *could* work in DEV only — misleading if production stays cross-origin |
+| SPA often on a **different origin** than `control.pbx3.com` | Gatekeeper `Set-Cookie` is cross-site for browser calls |
+| Gatekeeper CORS is `Access-Control-Allow-Origin: *` | Cannot use `credentials: 'include'` with `*` |
+| Vite `/fleet-gk` proxy is same-origin **in DEV only** | Cookie auth in DEV alone would mislead |
 
-**Paths that unlock HttpOnly cookies (pick one later):**
+**Unlock paths (later):** serve Fleet UI from control (`/fleet/` or same-site subdomain); or a BFF/reverse proxy; or stay on Bearer and harden XSS separately.
 
-1. **Serve Fleet UI from the control host** (e.g. `https://control.pbx3.com/fleet/` or `fleet.pbx3.com` same-site as API) — preferred for cookie sessions.  
-2. Keep SPA on Pages but use a **BFF / same-site reverse proxy** in front of both.  
-3. Stay on **Bearer** (current) and harden XSS surface separately.
+Until unlocked: **Bearer + sessionStorage** remains correct.
 
-Until (1) or (2), **do not implement Set-Cookie login** — it would either be DEV-only theatre or a broken prod path.
+---
 
-## Why SSO is deferred
+## What to build when (priority)
 
-Design §2.5 still leaves **identity model** open: shared central IdP (SSO, ACL-scoped) vs separate fleet credentials. Lab user `fleet@pbx3.com` is good enough for soak. SSO needs:
+| When | Work |
+|------|------|
+| **Now / next need** | Optional: gatekeeper **abilities** (SQLite + enforce) if we have more than one fleet operator role |
+| **Customer asks for SSO** | OIDC connector → map groups → abilities; keep local login |
+| **Fleet UI hosted same-site** | Optional HttpOnly cookie sessions + CORS allowlist + CSRF |
+| **Never as a lab gate** | Mandatory Keycloak/Authentik install just to click Fleet |
 
-- Chosen IdP (e.g. Google Workspace / Microsoft Entra / Auth0)  
-- How `fleet` / `fleet_*` abilities map from groups  
-- Whether Enter Fleet is step-up re-auth or ambient SSO
-
-**Soft step-up already shipped** without SSO: Exit Fleet revokes the gatekeeper session; next Enter Fleet requires Sign in again.
-
-## What remains when unblocked
-
-1. Gatekeeper: issue `HttpOnly; Secure; SameSite=Lax` (or `None` only if truly cross-site with allowlist) session cookie on login; accept cookie **or** Bearer; CSRF strategy for cookie mode.  
-2. SPA: `credentials: 'include'` only when same-site; stop storing Bearer when cookie mode is on.  
-3. CORS: replace `*` with allowlist when credentials are used.  
-4. SSO: OIDC/SAML against chosen IdP; map groups → abilities; optional step-up on Enter Fleet.
+---
 
 ## Related
 
-- **`TEST_CADENCE.md` / Pack A** — auth unit tests stay valid for Bearer + break-glass.  
-- **`CONTROL_HOST.md`** — login UI is live; update ops notes if this doc changes deployment of SPA onto control.
+- §2.5 abilities / modes — **`pbx3-directory/docs/TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`**
+- Control host ops — **`pbx3-directory/docs/CONTROL_HOST.md`**
+- Pack A auth tests — **`CRITICAL_PATH_TEST_PACK.md`**, gatekeeper `tests/`
+- Tip order — **`TODO.md`** item “Fleet auth cookie/SSO (blocked)”
