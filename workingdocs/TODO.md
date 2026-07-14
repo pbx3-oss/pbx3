@@ -1,12 +1,12 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — pbx3 tip after ops runbook (see git).  
-**Last updated:** 2026-07-13 (ops runbook Asterisk after egress / genAst)
+**Branch:** **`main`** — pbx3 tip after Peers carrier UX (see git).  
+**Last updated:** 2026-07-13 (Number routes overlap check noted)
 
 ### Suggested “what next?” order
 
-1. **Peering — DNS outbound + inbound IP set (UX polish)** — optional admin grouping.  
-2. **Fleet auth** (later) — dedicated control-plane login replaces gatekeeper paste-token.  
+1. **Fleet auth** (later) — dedicated control-plane login replaces gatekeeper paste-token.  
+2. **Number routes — prefix overlap UX** — warn/dup-check (OpenSIPS longest-prefix OK; admin silent today).  
 3. **Phase S7** — recordings S3 offload — **deferred**.  
 4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 5. **Failover + shadowing** (parked) — plan as its own mini-project later.  
@@ -15,6 +15,8 @@
 ---
 
 ## Open items
+
+- [ ] **pbx3sbc-admin — Number routes prefix overlap (later):** No check today for duplicate/confusing prefixes. OpenSIPS longest-prefix (+ priority on equal length) already picks a winner; still want operator warn or reject identical `groupid`+`prefix`, optional “nested under …” hint. Come back after Peers UX settle-in.
 
 - [x] **pbx3sbc-admin stylesync (2026-07-11):** Filament theme kinship with pbx3spa (slate/blue, brand in topbar, sidebar width/spacing, table canvas/row density). Branch **`stylesync` → `main`** **`624b0f3`**; live on **`sbc.pbx3.com/admin`**.
 
