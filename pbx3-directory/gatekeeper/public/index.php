@@ -16,6 +16,7 @@ use Pbx3\Gatekeeper\S3Presign;
 use Pbx3\Gatekeeper\S3Registrar;
 use Pbx3\Gatekeeper\TenantMoveJobStore;
 use Pbx3\Gatekeeper\TenantMoveRunner;
+use Pbx3\Gatekeeper\UserStore;
 
 Env::load(dirname(__DIR__).'/.env');
 
@@ -36,7 +37,37 @@ try {
         JsonResponse::send(200, ['status' => 'ok']);
     }
 
+    // Public auth endpoints (infrastructure — no Bearer required)
+    if ($method === 'POST' && $path === '/api/v1/auth/login') {
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $email = is_string($body['email'] ?? null) ? $body['email'] : '';
+        $password = is_string($body['password'] ?? null) ? $body['password'] : '';
+        JsonResponse::send(200, UserStore::login($email, $password));
+    }
+
+    if ($method === 'GET' && $path === '/api/v1/auth/status') {
+        JsonResponse::send(200, [
+            'auth' => 'fleet-user-or-break-glass',
+            'users_configured' => UserStore::userCount() > 0,
+            'login' => '/api/v1/auth/login',
+        ]);
+    }
+
     Auth::requireBearer();
+
+    if ($method === 'GET' && $path === '/api/v1/auth/me') {
+        JsonResponse::send(200, [
+            'user' => Auth::user(),
+            'break_glass' => Auth::isBreakGlass(),
+        ]);
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/auth/logout') {
+        if (! Auth::isBreakGlass()) {
+            UserStore::revokeToken(Auth::bearerToken());
+        }
+        JsonResponse::send(200, ['ok' => true]);
+    }
 
     $registrar = new S3Registrar();
     $presign = new S3Presign();

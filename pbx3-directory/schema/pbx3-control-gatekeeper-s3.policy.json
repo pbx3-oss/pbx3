@@ -1,0 +1,32 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListOrgBucketPrefixes",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::08jzwn-pbx3",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": ["catalog/*", "tenants/*", "instances/*"]
+        }
+      }
+    },
+    {
+      "Sid": "CatalogAndTenantWrites",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectTagging",
+        "s3:PutObject",
+        "s3:PutObjectTagging",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::08jzwn-pbx3/catalog/*",
+        "arn:aws:s3:::08jzwn-pbx3/tenants/*",
+        "arn:aws:s3:::08jzwn-pbx3/instances/*"
+      ]
+    }
+  ]
+}

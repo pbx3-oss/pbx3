@@ -16,13 +16,19 @@ php -S 127.0.0.1:8090 -t public
 
 ## Auth
 
-Bearer **`GATEKEEPER_API_TOKEN`** on every `/api/v1/*` call.
+| Mode | How |
+|------|-----|
+| **Fleet user (preferred)** | `POST /api/v1/auth/login` with `{ "email", "password" }` → Bearer token (store hashed in SQLite). Bootstrap: `php bin/create-fleet-user.php --email … --password …` |
+| **Break-glass** | Static `GATEKEEPER_API_TOKEN` still accepted as Bearer (ops / emergency). |
+| **SPA (interim)** | Paste either login token or break-glass into Fleet token gate. Login form wiring comes next. |
+
+Bearer **required** on every `/api/v1/*` **except** `/api/v1/auth/login` and `/api/v1/auth/status`. `GET /health` stays open.
 
 | Environment | How the SPA gets the token |
 |-------------|----------------------------|
 | **Lab / Vite DEV** | Optional `VITE_FLEET_GATEKEEPER_TOKEN` in `.env.development` (browser-visible; DEV only) |
-| **Production SPA** | Operator pastes token into **Fleet tenants** → sessionStorage for that tab. **Do not** set `VITE_FLEET_GATEKEEPER_TOKEN` in production builds. |
-| **Future** | Dedicated control-plane login (separate fleet auth tier) — see `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.5–2.6 |
+| **Production SPA** | Login response token (preferred) or operator paste into **Fleet** gate. **Do not** bake tokens into production builds. |
+| **Future** | Cookie session / SSO step-up — see `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.5–2.6 |
 
 Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side only; never in the SPA).
 

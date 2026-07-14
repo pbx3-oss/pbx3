@@ -1,17 +1,16 @@
 # PBX3 ToDo list
 
-**Branch:** **`lehttps`** (lab) — tip after SBC admin LE HTTPS.  
-**Last updated:** 2026-07-14 (SBC admin Let’s Encrypt live)
+**Branch:** **`lehttps`** (+ control host lab) — tip after SBC admin LE; control EC2 stood up.  
+**Last updated:** 2026-07-14 (control.pbx3.com gatekeeper live)
 
 ### Suggested “what next?” order
 
-1. **Fleet auth** (later) — dedicated control-plane login replaces gatekeeper paste-token (pairs with **control EC2** standup + LE on that host).  
-2. **TLS / Let’s Encrypt — control EC2** — remaining half of the old tip #1; SBC **admin** HTTPS is done. SIP TLS still deferred.  
-3. **Number routes — prefix overlap UX** — warn/dup-check (OpenSIPS longest-prefix OK; admin silent today).  
-4. **Phase S7** — recordings S3 offload — **deferred**.  
-5. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-6. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-7. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
+1. **Fleet auth — SPA login UI** — wire Fleet mode to `POST /api/v1/auth/login` (infra live on **`control.pbx3.com`**; paste-token still works as break-glass).  
+2. **Number routes — prefix overlap UX** — warn/dup-check (independent SBC-admin polish).  
+3. **Phase S7** — recordings S3 offload — **deferred**.  
+4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+5. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
 
 ---
 
@@ -19,7 +18,11 @@
 
 - [x] **TLS / Let’s Encrypt — SBC admin HTTPS (2026-07-14):** **`https://sbc.pbx3.com/admin`** — certbot webroot, nginx 443 + HTTP→HTTPS, `APP_URL=https://sbc.pbx3.com`. SG needed world **80/443** (was office-IP-only). Runbook **`pbx3sbc/workingdocs/LE_HTTPS_SBC_ADMIN.md`**; nginx template **`pbx3sbc-admin/deploy/nginx-pbx3sbc-admin.conf`**. Branch **`lehttps`**. **Ops:** rotate Filament admin password. SIP TLS out of scope.
 
-- [ ] **TLS / Let’s Encrypt — control-plane EC2:** Host not stood up yet (gatekeeper / Fleet Console API). Distinct from **node** LE Sync and from SBC admin LE above. Align with control-plane standup / fleet auth.
+- [x] **TLS / Let’s Encrypt — control EC2 (2026-07-14 lab):** Host **`control.pbx3.com`** (`t4g.small`, us-east-1f, dynamic IP). Gatekeeper under nginx+LE; IAM instance profile **`pbx3-control-gatekeeper`**. Runbook **`pbx3-directory/docs/CONTROL_HOST.md`**.
+
+- [x] **Fleet auth infra (2026-07-14):** Gatekeeper SQLite users + session tokens; `POST /api/v1/auth/login`, `/me`, `/logout`; bootstrap `bin/create-fleet-user.php`; break-glass `GATEKEEPER_API_TOKEN` retained. Lab user **`fleet@pbx3.com`**. Branch **`fleetauth`**. **Still open:** SPA login form (replace paste box).
+
+- [ ] **Fleet auth — SPA login UI:** Fleet mode calls `https://control.pbx3.com/api/v1/auth/login`; store returned Bearer in sessionStorage; keep break-glass paste as fallback.
 
 - [ ] **pbx3sbc-admin — Number routes prefix overlap (later):** No check today for duplicate/confusing prefixes. OpenSIPS longest-prefix (+ priority on equal length) already picks a winner; still want operator warn or reject identical `groupid`+`prefix`, optional “nested under …” hint. Come back after Peers UX settle-in.
 
