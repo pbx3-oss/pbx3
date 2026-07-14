@@ -1,16 +1,15 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — tip after critical-path test pack start.  
-**Last updated:** 2026-07-14 (test cadence settled)
+**Branch:** **`packa`** — Pack A critical-path tests complete.  
+**Last updated:** 2026-07-14 (Pack A done)
 
 ### Suggested “what next?” order
 
-1. **Critical-path test pack (thin)** — finish Pack A rows in **`CRITICAL_PATH_TEST_PACK.md`** (policy **`TEST_CADENCE.md`**). Ongoing: leave a unit/contract test when touching logic.  
-2. **Fleet auth polish (later)** — cookie/SSO; trim paste UX.  
-3. **Phase S7** — recordings S3 offload — **deferred**.  
-4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-5. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
+1. **Fleet auth polish (later)** — cookie/SSO; trim paste UX.  
+2. **Phase S7** — recordings S3 offload — **deferred**.  
+3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
 
 ---
 
@@ -26,7 +25,7 @@
 
 - [ ] **Fleet auth polish (later):** cookie sessions / SSO step-up; drop paste UX when unused.
 
-- [ ] **Critical-path test pack (2026-07-14 — started):** Settled cadence **`TEST_CADENCE.md`**; inventory **`CRITICAL_PATH_TEST_PACK.md`**. Pack A offline first (pure logic → API contracts); Pack B stays lab recipes; UI E2E last. Already green: prefix overlap unit tests; gatekeeper `UserStore` auth lifecycle tests. Finish remaining Pack A rows before calling the stack production-shaped.
+- [x] **Critical-path test pack Pack A (2026-07-14):** Offline regression net complete — **`TEST_CADENCE.md`**, **`CRITICAL_PATH_TEST_PACK.md`**. Prefix overlap, gatekeeper UserStore + break-glass, fleet list fixtures, SnapshotRetention, recordings HTTP 404/list (mocked), SPA fleet token Vitest. Branch **`packa`**. Ongoing habit: leave a unit/contract test when touching logic. Pack B = lab recipes; Pack C = UI E2E later.
 
 - [x] **pbx3sbc-admin — Number routes prefix overlap (2026-07-14):** Reject identical `groupid`+`prefix`; amber “nested under / shorter than …” hint + post-save warning. OpenSIPS longest-prefix unchanged. Branch **`overlap` → `main`**; live on **`sbc.pbx3.com/admin`**.
 

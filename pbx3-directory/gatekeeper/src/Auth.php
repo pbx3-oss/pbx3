@@ -63,4 +63,11 @@ final class Auth
     {
         return self::$breakGlass;
     }
+
+    /** Clear request auth state (tests only). */
+    public static function resetForTests(): void
+    {
+        self::$user = null;
+        self::$breakGlass = false;
+    }
 }

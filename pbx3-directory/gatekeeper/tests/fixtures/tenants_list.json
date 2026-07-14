@@ -1,0 +1,11 @@
+{
+  "tenants": [
+    {
+      "shortuid": "9wvvnb",
+      "instance_id": "08jzwn",
+      "fqdn": "affcot.pbx3.com",
+      "status": "active",
+      "label": "Affcot"
+    }
+  ]
+}
