@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`fleetauthpolish`** — trim paste + Exit Fleet revoke.  
-**Last updated:** 2026-07-14 (fleet auth polish slice)
+**Branch:** **`main`** — tip after fleet auth paste/exit polish.  
+**Last updated:** 2026-07-14 (fleet auth paste/exit on main)
 
 ### Suggested “what next?” order
 
