@@ -587,7 +587,7 @@ Mirror backup upload *job shape*; writers use **presigned PUT** (not node `tenan
 | S7.7 | **Update SQLite on upload** | pbx3api | Set `s3_key`, `location`; keep `local_path` while on disk |
 | S7.8 | **S3 playback fallback** | pbx3api | Presigned GET or API proxy when local missing (`s3_only`) |
 | S7.9 | **SPA archived badge** | pbx3spa | When row is S3-only |
-| S7.10 | **Reconciliation job** | pbx3api | Repair drift local ↔ SQLite ↔ S3 (lightweight) |
+| S7.10 | **Reconciliation job** | pbx3api | Repair drift local ↔ SQLite ↔ S3 — **`pbx3:recordings-reconcile`** (nightly 03:15; `--no-drift` for backfill-only) |
 
 **Exit criteria:**
 

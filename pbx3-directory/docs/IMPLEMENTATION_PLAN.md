@@ -317,6 +317,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 | S7.7 | **SPA “archived” badge** | pbx3spa | When `location === s3_only` — **Storage column** (Local / Local + S3 / S3 only) |
 | S7.8 | **Local retention unchanged** | design | Hybrid like backup option C — S3 DR until lifecycle |
 | S7.9 | **Ops wording** | docs | Runbook: private encrypted DR; **not PCI-attested** — **OPS_S3_RUNBOOK.md** §13 |
+| S7.10 | **Reconciliation sweeper** | pbx3api | `pbx3:recordings-reconcile` — archive backfill + local/S3 drift repair; schedule 03:15 |
 
 **Exit criteria:** golden async PUT; play after local age-off; dedicated bucket only; non-attested documented.
 
