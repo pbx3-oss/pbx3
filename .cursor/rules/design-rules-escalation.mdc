@@ -1,0 +1,16 @@
+---
+description: Flag user requests that would violate DESIGN_RULES before implementing
+alwaysApply: true
+---
+
+# Design rules — escalate conflicts
+
+Non-negotiable fleet/directory rules live in **`pbx3/pbx3-directory/docs/DESIGN_RULES.md`** (Rules **1–14**, Parts A–D).
+
+If the user asks for work that would **break or circumvent** those rules (examples: directory in the call path; instance Sanctum doing fleet catalog mutate; AWS hardwiring in domain/SPA; browser holding ops IAM; SBC as home of record; destructive fleet cutover without a durable job):
+
+1. **Stop** before implementing the conflicting approach.
+2. **Flag** explicitly: which rule number(s), what the ask conflicts with, and a compliant alternative if one exists.
+3. **Wait** for an explicit override (“do it anyway” / accepted exception) before proceeding.
+
+Do not silently violate the rules to be helpful. Citing the rule number is enough; do not dump the whole rules file.

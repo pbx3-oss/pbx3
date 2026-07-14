@@ -406,7 +406,9 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 **Goal:** Empower a signed-in **fleet admin** (gatekeeper identity + `fleet_*` abilities) to run the high-value fleet lifecycle actions from Fleet mode. Control plane (gatekeeper on `control.pbx3.com`) is the sole writer for catalog mutations and the sole caller of edge adapters / cloud onboard jobs. Browser never holds ops IAM.
 
-**Portability (Rule 9):** Object-store access stays **S3-API shaped** (endpoint + credentials; not AWS-product assumptions). **S10.7** / S8.9 IaaS steps (attach role, launch AMI, etc.) go through a **cloud/fleet adapter** — AWS SDK is the first implementation, not a permanent coupling in domain code. See **`DESIGN_RULES.md`** Rule 9.
+**Portability (Rule 9):** Object-store access stays **S3-API shaped** (endpoint + credentials; not AWS-product assumptions). **S10.7** / S8.9 IaaS steps (attach role, launch AMI, etc.) go through a **cloud/fleet adapter** — AWS SDK is the first implementation, not a permanent coupling in domain code.
+
+**Trust / jobs (Rules 10–14):** Fleet plane ≠ instance Sanctum; control plane fail-safe; browser never holds ops power; directory HoR / edge projection; destructive steps = durable gated jobs. Full text: **`DESIGN_RULES.md`** Parts C–D.
 
 **Trust rule (settled):**
 
