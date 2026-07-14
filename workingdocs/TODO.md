@@ -5,9 +5,9 @@
 
 ### Suggested “what next?” order
 
-1. **Fleet mode UX (`fleetadmin`)** — SPA shell swap in progress / lab-ready; merge when soaked.  
-2. **Peering — DNS outbound + inbound IP set (UX polish)** — optional admin grouping.  
-3. **Ops runbook** — **`systemctl restart asterisk`** after egress / **`genAst.sh`**.  
+1. **Peering — DNS outbound + inbound IP set (UX polish)** — optional admin grouping.  
+2. **Ops runbook** — **`systemctl restart asterisk`** after egress / **`genAst.sh`**.  
+3. **Fleet auth** (later) — dedicated control-plane login replaces gatekeeper paste-token.  
 4. **Phase S7** — recordings S3 offload — **deferred**.  
 5. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 6. **Failover + shadowing** (parked) — plan as its own mini-project later.  
@@ -27,7 +27,7 @@
 
 - [ ] **Peering — DNS outbound + inbound IP set (UX polish):** Decision locked **`PEERING-PLAN.md` §0.1** (Magrathea-shaped: FQDN outbound gwid + separate inbound IP gwids; no ITSP profiles). Today: multiple Peers/descriptions. Later: optional admin grouping of one logical carrier (same tables). Fail2ban whitelist inbound IPs.
 
-- [ ] **Fleet mode in pbx3spa (`fleetadmin` — 2026-07-13 WIP):** **Enter Fleet / Exit Fleet** shell swap landed on branch **`fleetadmin`**: `FleetLayout`, `/fleet/*` guards, peer nav removed. Lab gatekeeper token paste remains. **Still open:** dedicated fleet auth, Jobs nav, SSO/`fleet` abilities, merge to `main` after soak. Design: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.
+- [x] **Fleet mode in pbx3spa (2026-07-13 → `main`):** **Enter Fleet / Exit Fleet** shell swap, `/fleet/*` guards, Instances / Tenants / **Jobs**, `FleetTokenGate`. **pbx3spa** **`ba31dd4`**, gatekeeper list API **pbx3** **`c047743`**. Branch **`fleetadmin` deleted**. **Still open:** dedicated fleet auth (not paste-token), SSO/`fleet` abilities. Design: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.
 
 - [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
 
