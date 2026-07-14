@@ -32,19 +32,20 @@
 | **D — S3 backup upload** | Node backups land under `instances/…/backups/` | Async PUT after existing `/opt/pbx3/bkup` |
 | **E — Recordings** | Operator find/play + S3 DR | **Phase R1** (local SPA/API) → **Phase S7** (S3 offload) |
 | **F — Fleet lifecycle** | Low-friction instance (re)build + tenant move | **Phase S8** — **`NEW_INSTANCE_CHECKLIST.md`**, **`TENANT_MIGRATION_RUNBOOK.md`**, onboard hardening |
+| **G — Fleet admin console** | Panel-first fleet-admin actions (not Mac CLI) | **Phase S10** — abilities-gated onboard / decommission / move ops / edge / reconcile |
 
 ---
 
-## Current priority (2026-07-04)
+## Current priority (2026-07-14)
 
-Agreed product order — **pbx3cagi struct refactor deferred** until fleet + recordings have momentum:
+Agreed product order — **pbx3cagi struct refactor deferred** until fleet + recordings have momentum. **S8.1–S8.10** scaffold + fleet login are largely on **`main`**; next fleet product slice is **S10** when chosen over S7/egress.
 
 | Order | Phase | Focus |
 |-------|-------|--------|
-| **1** | **S8.1–S8.4** | Instance checklist, onboard hardening, fleet preflight (IAM + `.env`; backups visible after rebuild) |
-| **2** | **R1** | Call recordings **management** — API + SPA list/search/play from local disk |
-| **3** | **S7** | Recordings **S3 offload** — mirror S5 backup upload; extend IAM from S8.3 |
-| **4** | **S8.5–S8.6** | Tenant migration runbook + export/import tooling |
+| **done** | **S8.1–S8.10** (core) | Checklist, onboard, preflight, tenant move tooling, Fleet mode + gatekeeper login |
+| **1** | **S7** *or* **S10** | Recordings S3 offload **or** fleet admin panel actions (product pick) |
+| **2** | **S10** (if not #1) | Abilities → catalog onboard/decommission → job/edge/reconcile — see § Phase S10 |
+| **3** | **Egress availability** | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (future) |
 | **—** | **pbx3cagi Phase 0** | **Built** on `main`; golden `make test` sign-off; Phase 1.3+ refactor when resumed |
 
 See **`pbx3/workingdocs/TODO.md`** § suggested order.
@@ -342,6 +343,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 | **S8.9** | **Self-service rebuild automation** | pbx3 + pbx3api + pbx3spa + ops | Design **`SELF_SERVICE_REBUILD_DESIGN.md`**: fleet AMI, first-boot S3 restore, orchestrator API, SPA wizard; node does restore, control plane does IAM/launch. |
 | **S8.10** | **Tenant mobility — Fleet Console (panel-first)** | pbx3 + pbx3cagi + pbx3api + pbx3spa + **pbx3sbc** + control-plane | Design **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (**§13** implementer map): **fleet requires SBC tier** (§2.2); cutover = SBC `domain.setid` repoint; **`Egress → SBC`** (Phase A); Fleet Console (**B**); control-plane + S3 gatekeeper (**B′**); move wizard + orchestrator (**C**). Direct-to-node = solo/Rule 6 only. |
 | **S8.11** | **WebRTC edge normalization (WSS on SBC)** | **pbx3sbc** + pbx3 + pbx3api + pbx3spa + control-plane | Design: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1. Goal: SBC terminates WSS for **endpoint simplicity** (same VIP as desk phones); forward toward home instance; **RTP bypass** while backends are WebRTC-capable (PBX3 + last-gen SARK). Interim/beta: node `:8089`. |
+| **S8.12** | **Fleet admin actions (panel-first)** | control-plane + pbx3spa (+ adapter) | **See Phase S10** — onboard / decommission / catalog edit / job control / reconcile / DID / fleet-user manage. Ability-gated; Mac scripts remain break-glass. |
 
 **Out of scope S8 v1:** Terraform for full fleet; automatic DNS API (optional in S8.9 B6); SPA tenant-move wizard (S8.5/S8.6 docs + scripts first).
 
@@ -395,6 +397,63 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 ---
 
+### Phase S10 — Fleet admin actions (panel-first) (~3–5 weeks)
+
+**Status:** Planned (2026-07-14). Wish-list packaged from Fleet Console product path after S8.10 shell + gatekeeper login.
+
+**Problem:** S8.10 gave Fleet **mode** (Instances / Tenants / Jobs) and move jobs; ops still lands Mac IAM + `register-instance.sh` / `unregister-instance.sh` for node lifecycle. Product persona is a **fleet admin** — panel-driven, not CLI — and those powers must **never** leak to instance/tenant Sanctum `admin`.
+
+**Goal:** Empower a signed-in **fleet admin** (gatekeeper identity + `fleet_*` abilities) to run the high-value fleet lifecycle actions from Fleet mode. Control plane (gatekeeper on `control.pbx3.com`) is the sole writer for catalog mutations and the sole caller of edge adapters / AWS onboard jobs. Browser never holds ops IAM.
+
+**Trust rule (settled):**
+
+| Actor | May |
+|-------|-----|
+| **Fleet admin** (`fleet` / `fleet_*` on gatekeeper) | Onboard, decommission, move/job control, catalog edit, reconcile, DID assign, manage fleet users (by ability) |
+| **Instance / tenant admin** (Sanctum on `:44300`) | Node panels only; optional “Enter Fleet” / deep-link if they also hold fleet credentials — **no** catalog mutate via node API |
+
+**Ability sketch (gatekeeper users — no IdP required):**
+
+| Ability | Example actions |
+|---------|-----------------|
+| `fleet_read` | Instances / tenants / jobs lists; health / preflight views |
+| `fleet_instances` | Register (onboard catalog), decommission, metadata, maintenance / drain |
+| `fleet_moves` | Move wizard; job cancel / retry / rollback |
+| `fleet_edge` | DID assign; emergency repoint; S3↔SBC reconcile |
+| `fleet_admin` | Fleet user manage + all of the above |
+
+Mac CLI (`onboard-fleet-instance.sh`, `register-instance.sh`, `unregister-instance.sh`) remains **break-glass / lab**; product path is gatekeeper API + SPA.
+
+| # | Task | Repo / owner | Notes |
+|---|------|----------------|-------|
+| **S10.1** | **Gatekeeper abilities** | gatekeeper + pbx3spa | Persist abilities on fleet users; `/me` returns them; SPA route/action guards. Require at least `fleet_read` to enter Fleet mode; mutate endpoints check specific `fleet_*`. Break-glass token = ops-only (document as full power or map to `fleet_admin`). |
+| **S10.2** | **Instance lifecycle (catalog)** | gatekeeper + pbx3spa | **Register** live node (`register-instance` equivalent); **decommission** (soft `decommissioned` hide vs hard remove); **edit** label/notes/environment; **maintenance / drain** (in catalog but ineligible as move dest). v1 = catalog + verify reachable `/up`; full IAM attach / `.env` write = **S10.2b** (orchestrator job, shares logic with S8.9). |
+| **S10.3** | **Move job control** | gatekeeper + pbx3spa | Polish cancel / retry / rollback on tenant-move jobs; audit who started. Move wizard already S8.10 — this makes job ops panel-complete for `fleet_moves`. |
+| **S10.4** | **Catalog integrity** | gatekeeper (+ SBC adapter) | Reconcile / drift report: S3 home-of-record ↔ SBC `domain.setid` (+ DID projection when present). Read-only first; optional “force project from catalog” under `fleet_edge`. |
+| **S10.5** | **Edge / DID actions** | gatekeeper + pbx3sbc-admin + pbx3spa | Via **`SbcFleetAdapter`** only (no raw Filament as product path): register tenant domain; register/update node dispatcher set; **DID → tenant** assign/reassign (`dids.json` + project). Ties **`DID_ASSIGNMENT_DESIGN.md`**. |
+| **S10.6** | **Fleet user manage** | gatekeeper + pbx3spa | Create/disable fleet users; assign `fleet_*` abilities; revoke sessions. `fleet_admin` only. |
+| **S10.7** | **Orchestrated onboard / rebuild (optional)** | control-plane + SPA | Greenfield IAM join + `.env` smoke, and/or S8.9 rebuild wizard — durable jobs; node stays on `pbx3-node-*` role. Do not start until S10.1–S10.2 catalog path is trusted. |
+
+**v1 panel wish-list (ship before expanding S10.7):** onboard (catalog register), decommission, move + job control, catalog edit/maintenance, reconcile/drift, DID assign, fleet user manage.
+
+**Explicitly not fleet-admin (stay instance/tenant):** extension/trunk/IVR CRUD, local users, day-to-day Certificates LE UI, call-recording listen, Shorewall. Fleet may **trigger** post-move cert sync as a **job step**; cert panel remains node-local.
+
+**Out of scope S10 v1:** Cookies/SSO IdP (`FLEET_AUTH_COOKIE_SSO.md`); Terraform fleet; baking gatekeeper tokens into SPA builds; co-hosting superadmin inside `pbx3sbc-admin`.
+
+**Exit criteria:**
+
+- [ ] Instance/tenant Sanctum admin **cannot** call register/decommission/move mutate APIs.
+- [ ] Fleet admin with `fleet_instances` can register + decommission a lab node from Fleet mode without Mac registrar scripts.
+- [ ] `fleet_moves` can complete move job control (retry/rollback) from Jobs UI.
+- [ ] Abilities enforced on gatekeeper; SPA hides actions the session lacks.
+- [ ] Audit log (or job trail) records who onboarded / decommissioned / moved.
+
+**Dependencies:** S8.10 Fleet mode + gatekeeper login (done); control host catalog IAM (`CONTROL_HOST.md`). **S10.5** benefits from DID schema draft. **S10.7** shares engine with **S8.9**. Parallel-friendly with **S7** / egress availability once S10.1 lands.
+
+**Related:** **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5–2.6, §4, §13 · **`INSTANCE_ONBOARDING.md`** · **`FLEET_AUTH_COOKIE_SSO.md`** (abilities in-house) · **`SELF_SERVICE_REBUILD_DESIGN.md`** (S10.7 overlap).
+
+---
+
 ### Explicitly deferred (post–S3 v1)
 
 | Item | Why wait |
@@ -421,13 +480,15 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
          └──→  S8.5–S8.6  tenant migration runbook + export/import  ← after S8.1–4 (+ R1/S7 as needed)
          │
          └──→  S8.9  self-service rebuild (AMI + orchestrator + SPA)  ← after S8.5–6 or parallel
+         │
+         └──→  S10  fleet admin actions (abilities + panel lifecycle)   ← after S8.10 auth; see § Phase S10
 
   pbx3cagi Phase 0 harness: built on main; golden sign-off; Phase 1.3+ refactor deferred
          │
          └──→  W1  WebRTC edge normalization (WSS→SIP on SBC)            ← after UDP edge + S8.10 path
 ```
 
-**Next session pick:** **S8.1–S8.4** (instance checklist, onboard hardening) · **R1** (recordings SPA/API) · golden **`make test`** for pbx3cagi. S6.1 + S6.4 fleet onboard validated; golden rebuild exposed IAM/`.env` gaps → **S8**.
+**Next session pick:** product priority (**S7** / egress / Fleet login UI) or start **S10.1** (gatekeeper abilities) toward panel onboard/decommission. S8.1–S8.10 scaffold + fleet login are on **`main`**.
 
 ---
 

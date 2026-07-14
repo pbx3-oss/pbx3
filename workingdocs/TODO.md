@@ -1,16 +1,17 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — session end 2026-07-14.  
-**Last updated:** 2026-07-14 (session end)
+**Last updated:** 2026-07-14 (Phase S10 planned)
 
 ### Suggested “what next?” order
 
 1. **Phase S7** — recordings S3 offload — **deferred** until priority shift.  
-2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-3. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-4. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-5. **Fleet login UI kinship (UX)** — restyle `FleetTokenGate` toward **`LoginView`** (on TODO).  
-6. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (SSO-agnostic; abilities in-house; big IdP only when needed).
+2. **Phase S10** — fleet admin actions (panel-first) — **`IMPLEMENTATION_PLAN.md`** § Phase S10 (abilities → onboard/decommission → …).  
+3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+6. **Fleet login UI kinship (UX)** — restyle `FleetTokenGate` toward **`LoginView`** (on TODO).  
+7. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (SSO-agnostic; abilities in-house; big IdP only when needed).
 
 ---
 
@@ -26,7 +27,9 @@
 
 - [x] **Fleet auth polish — paste trim + Exit Fleet revoke (2026-07-14):** Break-glass paste collapsed under “Break-glass (ops only)”; Exit Fleet / reset call `logoutFleet` (server revoke + clear); removed redundant “Clear fleet token” topbar. Soft step-up = must Sign in again after exit. Branch **`fleetauthpolish` → `main`**.
 
-- [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough without a big IdP. **SSO-agnostic:** we own `fleet` / `fleet_*` abilities; optional OIDC later maps groups → abilities. Cookies need same-site Fleet UI (or BFF). Soft step-up via Exit Fleet revoke. Design: **`FLEET_AUTH_COOKIE_SSO.md`**. Optional next auth feature when needed: abilities on gatekeeper users (no IdP required).
+- [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough without a big IdP. **SSO-agnostic:** we own `fleet` / `fleet_*` abilities; optional OIDC later maps groups → abilities. Cookies need same-site Fleet UI (or BFF). Soft step-up via Exit Fleet revoke. Design: **`FLEET_AUTH_COOKIE_SSO.md`**. Optional next auth feature when needed: abilities on gatekeeper users (no IdP required) — **S10.1**.
+
+- [ ] **Phase S10 — Fleet admin actions (panel-first) (planned 2026-07-14):** Gatekeeper `fleet_*` abilities; SPA Fleet mode actions for **fleet admin only** (not instance/tenant Sanctum): catalog **onboard/register**, **decommission**, metadata/maintenance, move **job control**, S3↔SBC **reconcile**, **DID assign**, **fleet user manage**; optional later orchestrated IAM onboard/rebuild (**S10.7** / S8.9). Mac registrar scripts = break-glass. Plan: **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** § Phase S10 (also S8.12 pointer). Start: **S10.1** abilities.
 
 - [ ] **Fleet login UI kinship (UX):** `FleetTokenGate` looks like a lab form tacked into Fleet pages (placeholder-only inputs, flat `.token-box`) — not like **`LoginView`** (centered card, labels, title/subtitle, primary CTA language). Restyle / promote Fleet sign-in to match main SPA login before calling Fleet mode operator-ready. Keep break-glass collapsed.
 

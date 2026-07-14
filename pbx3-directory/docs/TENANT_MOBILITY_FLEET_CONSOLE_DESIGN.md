@@ -861,6 +861,7 @@ tenant → node  ← ALREADY in S3 (meta.instance_id) ─┤→ compile → SBC 
 | **Phase C — Move wizard** | §5–6, §13.2–13.4 | `TenantMobilityService.php`; `FleetPreflightService.php`; §13.3 contracts |
 | **SBC / peering** | §2.1–2.4, §11.8 | `pbx3sbc/` `PEERING-PLAN.md`, `routing-logic.md` |
 | **Inbound DID mobility** | §11.8–11.10, **`DID_ASSIGNMENT_DESIGN.md`** | Deferred for v1 MVP (§13.4) |
+| **Phase S10 — Fleet admin actions** | **`IMPLEMENTATION_PLAN.md`** § Phase S10 | Abilities-gated panel: onboard, decommission, catalog edit, job control, reconcile, DID, fleet users. Not instance/tenant Sanctum. |
 
 ### 13.2 v1 MVP scope (what “done” means first)
 
