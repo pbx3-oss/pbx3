@@ -187,4 +187,10 @@ SQL);
     {
         self::pdo()->prepare('DELETE FROM api_tokens WHERE id = ?')->execute([$tokenId]);
     }
+
+    /** Drop PDO so the next call re-opens GATEKEEPER_AUTH_DB (tests only). */
+    public static function resetForTests(): void
+    {
+        self::$pdo = null;
+    }
 }

@@ -1,15 +1,16 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — tip after Number routes prefix overlap.  
-**Last updated:** 2026-07-14 (prefix overlap live on sbc.pbx3.com/admin)
+**Branch:** **`testpack`** — settle test cadence + critical-path pack.  
+**Last updated:** 2026-07-14 (test cadence settled)
 
 ### Suggested “what next?” order
 
-1. **Fleet auth polish (later)** — cookie/SSO; trim paste UX.  
-2. **Phase S7** — recordings S3 offload — **deferred**.  
-3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
+1. **Critical-path test pack (thin)** — finish Pack A rows in **`CRITICAL_PATH_TEST_PACK.md`** (policy **`TEST_CADENCE.md`**). Ongoing: leave a unit/contract test when touching logic.  
+2. **Fleet auth polish (later)** — cookie/SSO; trim paste UX.  
+3. **Phase S7** — recordings S3 offload — **deferred**.  
+4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+5. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
 
 ---
 
@@ -24,6 +25,8 @@
 - [x] **Fleet auth — SPA login UI (2026-07-14):** FleetTokenGate email/password → `POST /api/v1/auth/login`; sessionStorage Bearer; advanced paste for break-glass. Dev proxy → `https://control.pbx3.com`. Branch **`fleetauth`** (pbx3spa).
 
 - [ ] **Fleet auth polish (later):** cookie sessions / SSO step-up; drop paste UX when unused.
+
+- [ ] **Critical-path test pack (2026-07-14 — started):** Settled cadence **`TEST_CADENCE.md`**; inventory **`CRITICAL_PATH_TEST_PACK.md`**. Pack A offline first (pure logic → API contracts); Pack B stays lab recipes; UI E2E last. Already green: prefix overlap unit tests; gatekeeper `UserStore` auth lifecycle tests. Finish remaining Pack A rows before calling the stack production-shaped.
 
 - [x] **pbx3sbc-admin — Number routes prefix overlap (2026-07-14):** Reject identical `groupid`+`prefix`; amber “nested under / shorter than …” hint + post-save warning. OpenSIPS longest-prefix unchanged. Branch **`overlap` → `main`**; live on **`sbc.pbx3.com/admin`**.
 

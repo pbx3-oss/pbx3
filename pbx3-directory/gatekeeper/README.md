@@ -14,6 +14,15 @@ composer install
 php -S 127.0.0.1:8090 -t public
 ```
 
+## Tests (Pack A)
+
+```bash
+composer install   # pulls phpunit from require-dev
+composer test      # UserStore create / login / revoke / bad password
+```
+
+See **`pbx3/workingdocs/CRITICAL_PATH_TEST_PACK.md`**.
+
 ## Auth
 
 | Mode | How |
