@@ -17,6 +17,7 @@
 | **Nodes / telephony** | **No directory dependency** | `DESIGN_RULES.md` Rule 1 — unchanged. |
 | **Solo / trial** | **No catalog required** | Rule 6 — one node = install + SPA login only; directory/S3 when fleet or backups opted in. |
 | **Fleet edge** | **Replaceable SBC** via **`SbcFleetAdapter`**; SIP runtime API | Rules 7–8 — pbx3sbc default; catalog → SPA one-way. **`FLEET_TRUNK_PEERING_DECISION.md`** §2.4. |
+| **Cloud / object store** | **S3-API portable** + **cloud/IaaS adapter** | **Rule 9** — not AWS-locked; MinIO/R2/etc. viable; onboard/rebuild IaaS behind adapter (AWS first). |
 
 **Rejected for Phase 2:** Supabase/Postgres/RDS/DynamoDB as the catalog source of truth (unnecessary for rare reads of a small fleet; avoids running a DB before central auth is defined).
 
@@ -403,7 +404,9 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 **Problem:** S8.10 gave Fleet **mode** (Instances / Tenants / Jobs) and move jobs; ops still lands Mac IAM + `register-instance.sh` / `unregister-instance.sh` for node lifecycle. Product persona is a **fleet admin** — panel-driven, not CLI — and those powers must **never** leak to instance/tenant Sanctum `admin`.
 
-**Goal:** Empower a signed-in **fleet admin** (gatekeeper identity + `fleet_*` abilities) to run the high-value fleet lifecycle actions from Fleet mode. Control plane (gatekeeper on `control.pbx3.com`) is the sole writer for catalog mutations and the sole caller of edge adapters / AWS onboard jobs. Browser never holds ops IAM.
+**Goal:** Empower a signed-in **fleet admin** (gatekeeper identity + `fleet_*` abilities) to run the high-value fleet lifecycle actions from Fleet mode. Control plane (gatekeeper on `control.pbx3.com`) is the sole writer for catalog mutations and the sole caller of edge adapters / cloud onboard jobs. Browser never holds ops IAM.
+
+**Portability (Rule 9):** Object-store access stays **S3-API shaped** (endpoint + credentials; not AWS-product assumptions). **S10.7** / S8.9 IaaS steps (attach role, launch AMI, etc.) go through a **cloud/fleet adapter** — AWS SDK is the first implementation, not a permanent coupling in domain code. See **`DESIGN_RULES.md`** Rule 9.
 
 **Trust rule (settled):**
 
@@ -432,7 +435,7 @@ Mac CLI (`onboard-fleet-instance.sh`, `register-instance.sh`, `unregister-instan
 | **S10.4** | **Catalog integrity** | gatekeeper (+ SBC adapter) | Reconcile / drift report: S3 home-of-record ↔ SBC `domain.setid` (+ DID projection when present). Read-only first; optional “force project from catalog” under `fleet_edge`. |
 | **S10.5** | **Edge / DID actions** | gatekeeper + pbx3sbc-admin + pbx3spa | Via **`SbcFleetAdapter`** only (no raw Filament as product path): register tenant domain; register/update node dispatcher set; **DID → tenant** assign/reassign (`dids.json` + project). Ties **`DID_ASSIGNMENT_DESIGN.md`**. |
 | **S10.6** | **Fleet user manage** | gatekeeper + pbx3spa | Create/disable fleet users; assign `fleet_*` abilities; revoke sessions. `fleet_admin` only. |
-| **S10.7** | **Orchestrated onboard / rebuild (optional)** | control-plane + SPA | Greenfield IAM join + `.env` smoke, and/or S8.9 rebuild wizard — durable jobs; node stays on `pbx3-node-*` role. Do not start until S10.1–S10.2 catalog path is trusted. |
+| **S10.7** | **Orchestrated onboard / rebuild (optional)** | control-plane + SPA | Greenfield IAM join + `.env` smoke, and/or S8.9 rebuild wizard — durable jobs behind **cloud adapter** (Rule 9); node stays on `pbx3-node-*` role. Do not start until S10.1–S10.2 catalog path is trusted. |
 
 **v1 panel wish-list (ship before expanding S10.7):** onboard (catalog register), decommission, move + job control, catalog edit/maintenance, reconcile/drift, DID assign, fleet user manage.
 

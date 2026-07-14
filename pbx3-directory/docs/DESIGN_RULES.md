@@ -260,6 +260,32 @@ Catalog and fleet structures exist to **inform** operators and the central SPA. 
 
 ---
 
+## Rule 9 — Cloud provider portability; object store via interface
+
+**Observation (2026-07-14):** Lab and first fleets may run on **AWS**, but product must **not** become tightly coupled to AWS as a vendor. Many clouds and on-prem products offer **S3-compatible object storage** (MinIO, Cloudflare R2, Backblaze B2, Wasabi, Ceph RGW, etc.). Compute / IAM / instance lifecycle differ more widely — those interactions must also sit behind a seam, not leak into SPA, node panels, or gatekeeper business logic.
+
+**Object store (primary):** Treat the org bucket as an **S3 API** surface — keys, GET/PUT/LIST, presigns, optional lifecycle tags — not as “AWS S3 the product.”
+
+| Layer | Owns | Must not |
+|-------|------|----------|
+| **App / control plane** | Key layout (`catalog/`, `instances/…`, `tenants/…`), Laravel `pbx3_org` (or equivalent) disk, catalog schemas, gatekeeper write APIs | Hard-code AWS console URLs, account-specific ARN shapes, or `us-east-1` assumptions in product paths |
+| **Storage adapter** | Endpoint, credentials, path-style vs virtual-host, region/signing quirks | Change key layout per vendor |
+| **Ops scripts** | Provider-specific IAM/lifecycle until rewritten | Become the only way product code talks to the bucket |
+
+**Compute / IAM (secondary — Phase S8.9 / S10.7):** Actions such as “attach instance profile”, “launch AMI”, “associate role” are **not** universal. Encapsulate behind a **cloud/fleet adapter** (name optional: `CloudFleetAdapter`, `IaaSAdapter`) with intent-level methods. First implementation may use the AWS SDK; a second provider or bare-metal path implements the same contract (or documents “unsupported”). SPA and move wizard call **gatekeeper → adapter**, never AWS APIs directly.
+
+**Anti-patterns (do not ship):**
+
+- Gatekeeper / SPA / `pbx3api` importing AWS SDK types into domain services (except inside an adapter package).
+- Env vars or docs that assume **only** AWS role ARNs with no equivalent for “static keys + custom endpoint” (already needed for MinIO-class labs).
+- Catalog or job JSON that records AWS-only fields as home of record (`i-0abc…` as sole identity) — EC2 instance id may be **ops metadata**; fleet identity remains **`globals.id` (KSUID)** + FQDN.
+
+**Implication:** Switching Dynamo/object-store vendor = new **storage** config (and maybe ops runbook). Switching IaaS for onboard/rebuild = new **cloud adapter** implementation. **Directory layout, move jobs, and SBC adapter stay unchanged.** Sibling of Rule 7 (replaceable edge): replaceable **cloud backend**.
+
+**Related:** Storage notes under SPA hosting § below · **`OPS_S3_RUNBOOK.md`** · **`IMPLEMENTATION_PLAN.md`** S9.1 (non-AWS endpoint) · Phase **S10** / **S8.9** orchestrator jobs.
+
+---
+
 **Decision:** Production **pbx3spa** is hosted **once**, on **GitHub Pages** (custom domain when ready). It is **not** deployed onto PBX **instances** in production.
 
 ### Topology
@@ -294,10 +320,10 @@ The SPA origin (e.g. `https://yourorg.github.io` or `https://app.example.com`) d
 2. **Each instance API** — allow SPA origin + `Authorization` header for API calls (Bearer token after login; configure per node or via install template).
 3. **Build-time env** — `VITE_INSTANCE_DIRECTORY_URL` is baked at build; use separate builds or CI vars for staging vs production catalog URLs. Local dev may use Vite `/dev-catalog` proxy (no bucket CORS).
 
-### Storage portability (directory / backups)
+### Storage portability (directory / backups) — see **Rule 9**
 
-- **Application code** uses S3-shaped keys and Laravel `pbx3_org` disk (endpoint + bucket env).
-- **Ops scripts** (`register-instance.sh`, `apply-backup-lifecycle-rule.sh`, etc.) use standard AWS CLI; lifecycle/IAM details vary by provider — rewrite ops steps, not app layout.
+- **Application code** uses S3-shaped keys and Laravel `pbx3_org` disk (endpoint + bucket env) — vendor via config, not code forks.
+- **Ops scripts** (`register-instance.sh`, `apply-backup-lifecycle-rule.sh`, etc.) may use AWS CLI today; lifecycle/IAM details vary by provider — rewrite ops steps, not app layout.
 - **SPA hosting** is independent of bucket vendor.
 
 ### Phased rollout
@@ -326,7 +352,8 @@ The SPA origin (e.g. `https://yourorg.github.io` or `https://app.example.com`) d
 5. **Directory SLA ≠ node SLA.**  
 6. **One box to try it → no S3/catalog required.**  
 7. **Edge is replaceable; SIP is the wire API; adapter not OpenSIPS.**  
-8. **Catalog feeds SPA; SPA does not define fleet schema.**
+8. **Catalog feeds SPA; SPA does not define fleet schema.**  
+9. **Cloud is replaceable; object store is S3-API shaped; IaaS behind an adapter — not AWS-locked.**
 
 ---
 
@@ -403,6 +430,7 @@ Before merging directory-related work, confirm:
 - [ ] Production SPA hosting documented as **GitHub Pages** (central); instances **API-only**.
 - [ ] Edge changes go through **`SbcFleetAdapter`** (or documented break-glass); orchestrator does not embed OpenSIPS specifics (Rule 7).
 - [ ] S3/catalog schemas hold **fleet ops facts** only — no SPA-specific fields; catalog is not required for calls (Rules 1, 8).
+- [ ] Object-store and IaaS/IAM calls sit behind config + **adapters** (Rule 9); no new AWS-only hardwiring in domain or SPA code.
 
 ---
 
@@ -416,3 +444,4 @@ Before merging directory-related work, confirm:
 | **D — Central auth** | ACL filters directory view; Rule 4 + break-glass documented; **SIP FQDN obscurity** — prefer private catalog when `fqdninspect` is part of ingress posture (see § SIP FQDN obscurity vs public catalog). |
 | **E — Orchestration** | Tenant move uses directory for **ops** URLs; nodes run local LE/sync scripts. |
 | **S8 — Fleet edge** | Rules 7 + 8: **`SbcFleetAdapter`**; S3 intent → edge projection; catalog → SPA one-way. See **`FLEET_TRUNK_PEERING_DECISION.md`** §2.4. |
+| **S10 / S8.9** | Rule 9: catalog + object store via S3 API; onboard/rebuild IaaS via **cloud adapter** (AWS first impl). |
