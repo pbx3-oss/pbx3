@@ -255,7 +255,7 @@ Cross-reference **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 �
 | Topic | Recording implication |
 |-------|----------------------|
 | Node IAM | Drop blanket `tenants/*` write; backups stay on `instances/{ksuid}/` |
-| Upload | Gatekeeper `POST /s3/presign` — scoped PUT to `tenants/{hosted_shortuid}/recordings/*` |
+| Upload | Gatekeeper `POST /s3/presign` — scoped PUT on **`PBX3_RECORDINGS_BUCKET`** to `tenants/{hosted_shortuid}/recordings/*` (not org/catalog bucket) |
 | Fail-safe | Gatekeeper down → calls continue; local disk authoritative until upload succeeds |
 | Tenant move | S3 recordings **stay** under `tenants/{shortuid}/recordings/`; **`recordings` table rows move** with tenant miniDB; optional `--include-recordings` for on-node wav bundle |
 | Control plane | Same service as S3 gatekeeper — not a separate recordings app |
@@ -351,36 +351,51 @@ Operator list (`GET /recordings`) excludes rows with `deleted_at` set (when tomb
 
 ---
 
-### 6.2 PCI DSS compliance (S3 — future S7+)
+### 6.2 PCI DSS — staged approach (settled 2026-07-14)
 
-Call recordings **can** contain **cardholder data (CHD)** if agents take card details on a recorded line. When recordings are offloaded to S3 (Phase S7), any bucket holding CHD falls in scope for **PCI DSS**. AWS uses a **shared responsibility model**: AWS secures the underlying infrastructure; **we** are responsible for configuring access control, encryption, and logging to protect the cardholder data environment (CDE).
+Call recordings **can** contain **cardholder data (CHD)** if agents take card details on a recorded line. A bucket that *may* hold CHD can fall in **PCI DSS** scope. Full attestation is **process + controls + often QSA** — most current PBX3 customers do **not** require that now. Do **not** slow S7 on compliance theatre; do **not** ship a layout that blocks PCI later.
 
-**Strict PCI posture (settled 2026-07-07):** **pause/resume recording** (or DTMF masking alone) is **not** sufficient to survive PCI DSS scrutiny — auditors treat the PBX and its recordings as in-scope if CHD can be spoken on a recorded call. Customers requiring **strict PCI DSS compliance** must **hand off card capture to a specialist third-party payment provider** (PCI-validated PSP / payment IVR). PBX3 must be **prepared to facilitate** that handoff (§6.4); CHD must not traverse PBX3 storage or recordings when strict mode is required.
+**Strict PCI posture (settled 2026-07-07):** **pause/resume recording** (or DTMF masking alone) is **not** sufficient under QSA scrutiny. Customers requiring **strict PCI DSS** must **hand off card capture to a specialist PSP** (§6.4). That facilitation is **S7+**, not an S7 ship gate.
 
-For customers who accept recordings in scope, the S3 controls below still apply to the dedicated recordings bucket (§6.3).
+#### Two bars (do not conflate)
 
-### Required controls (our responsibility)
+| Bar | When | Meaning |
+|-----|------|---------|
+| **S7 baseline — PCI-shaped** | Ship gate for Phase S7 | Private dedicated bucket, least-privilege **presigns**, TLS-only, encryption at rest (**SSE-S3** OK), honest “**not PCI-attested**” docs. Engineering readiness so attested controls can bolt on **without** key/layout rewrite. |
+| **S7+ attested / CDE hardening** | Customer demand or sales requires PCI posture | KMS CMK, CloudTrail data events → WORM audit bucket, Security Hub PCI CSPM, IAM/review cadence, organisational attestation. Optional **strict** profile = PSP handoff (§6.4). |
+
+**Product language (S7):** “Private encrypted DR store for call recordings; **not** a PCI DSS certified cardholder data environment.” Customers who accept spoken CHD on recorded lines own that risk until they buy S7+ / strict.
+
+#### S7 baseline controls (our responsibility — ship these)
 
 | Area | Control | Implementation notes |
 |------|---------|----------------------|
-| **Access control** | S3 **Block Public Access** at **bucket and account** level | Dedicated recordings bucket (§6.3); never co-located with public `catalog/` |
-| | **Least privilege** IAM | Read-only where appropriate; node roles scoped to `tenants/{hosted_shortuid}/recordings/*` (see §5, `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.6.1); gatekeeper is sole broad writer via presigns; audit permissions regularly |
-| **Encryption in transit** | **HTTPS/TLS** only | Enforce `aws:SecureTransport` in bucket policy; API playback proxy over TLS |
-| **Encryption at rest** | **S3 default encryption with AWS KMS** | KMS CMK for the recordings bucket/prefix meets strict crypto requirements; key policy scoped and audited |
-| **Monitoring & logging** | **CloudTrail** for all bucket access + API calls | Log S3 data events for the recordings bucket |
-| | **Immutable audit trail** | Ship CloudTrail logs to a **separate, secured** S3 bucket (Object Lock / restricted access) |
-| **Compliance validation** | **AWS Security Hub** CSPM against the **PCI DSS** standard | Automated posture checks; remediate findings |
+| **Bucket boundary** | Dedicated **`PBX3_RECORDINGS_BUCKET`** | Never co-locate with public `catalog/` (§6.3) |
+| **Access control** | **Block Public Access** on recordings bucket | Account-wide BPA only if it does not break intentional public catalog on the **fleet** bucket |
+| | **Least privilege** via **gatekeeper presigns** | Nodes do **not** get blanket `tenants/*` (mobility §2.6.1); short-lived PUT/GET scoped to hosted tenant prefix |
+| **Encryption in transit** | **HTTPS/TLS** only | Bucket policy `aws:SecureTransport`; API playback over TLS |
+| **Encryption at rest** | **SSE-S3** (S3-managed keys) default | Enough for baseline DR; upgrade path to **KMS CMK** is bucket config, not app rewrite |
+| **Ops honesty** | Document non-attested | **`OPS_S3_RUNBOOK.md`** — no claim of PCI certification |
 
-### PBX3 alignment
+#### S7+ attested controls (defer — not S7 exit criteria)
 
-- **Trust boundary:** the S3 gatekeeper / control plane (`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §2.6) is the right owner for these controls — it already governs org-level S3 mutations and presigns. PCI controls are an extension of the gatekeeper's remit, not a new subsystem.
-- **Presigned URLs:** short-lived, scoped presigns (upload and playback) support least-privilege and TLS-only access without handing nodes broad keys.
-- **Tenant isolation:** per-tenant prefixes (`tenants/{shortuid}/recordings/`) plus scoped IAM limit blast radius if one tenant/node is compromised.
-- **Retention vs audit:** recording lifecycle (§6, §6.1) deletes CHD on schedule; **audit logs** (CloudTrail) are retained separately and are not subject to recording `recmaxage`.
+| Area | Control | Notes |
+|------|---------|-------|
+| **Encryption at rest** | **KMS CMK** + scoped key policy | Replace or wrap SSE-S3 when customer requires |
+| **Monitoring** | **CloudTrail** data events on recordings bucket | |
+| **Immutable audit** | Separate audit-log bucket with **Object Lock** | Not subject to recording `recmaxage` |
+| **Compliance tooling** | **Security Hub** (or equiv.) PCI standard | Find/remediate loop |
+| **Process** | QSA / SAQ / customer questionnaires | Outside product sprint |
 
-### Scope note
+#### PBX3 alignment
 
-This is a **future S7+ concern**, not a blocker for R1 (local, no S3) or R1.5 (local archive). It is documented here so the S3 offload design accounts for PCI from the start rather than retrofitting. **Bucket layout decision:** §6.3. Refer to the official **AWS Compliance Validation for Amazon S3** documentation for the authoritative, current control list and shared-responsibility boundaries.
+- **Trust boundary:** gatekeeper / control plane owns recordings-bucket presigns and (later) attested controls — same seam as catalog (mobility §2.6).
+- **Tenant isolation:** `tenants/{shortuid}/recordings/` prefixes limit blast radius.
+- **Rule 9:** treat recordings bucket as S3-API portable; do not hard-wire AWS-only attestation APIs into domain code.
+
+#### Scope note
+
+R1 / R1.5 stay local (no S3). **S7 ships the baseline shape.** Attestation and PSP are **S7+**. **Bucket layout:** §6.3.
 
 ### 6.3 PCI scope & S3 bucket structure (settled 2026-07-07)
 
@@ -406,23 +421,23 @@ PCI requires **Block Public Access** at **bucket and account** level for the CDE
 
 ```mermaid
 flowchart TB
-  subgraph pci [PCI CDE scope]
-    recBucket["pbx3-org-recordings<br/>BPA on, KMS CMK, TLS-only<br/>CloudTrail data events"]
+  subgraph s7 [S7 baseline — PCI-shaped]
+    recBucket["pbx3-org-recordings<br/>BPA on, TLS-only, SSE-S3<br/>gatekeeper presigns"]
   end
-  subgraph nonpci [Out of PCI CDE]
+  subgraph nonpci [Fleet — not recordings]
     fleetBucket["pbx3-org-fleet PBX3_ORG_BUCKET<br/>catalog/, instances/, tenants meta/dids"]
   end
-  subgraph audit [Audit]
-    auditBucket["pbx3-org-audit-logs<br/>Object Lock WORM"]
+  subgraph s7plus [S7+ attested — when demanded]
+    auditBucket["pbx3-org-audit-logs<br/>CloudTrail → Object Lock"]
   end
-  recBucket --> auditBucket
+  recBucket -.->|optional later| auditBucket
 ```
 
-| Bucket | Contents | PCI scope | Access |
-|--------|----------|-----------|--------|
-| **`pbx3-{org}-recordings`** (new) | `tenants/{shortuid}/recordings/media/…`, `policy.json` per tenant | **In scope** when CHD present | Private only; gatekeeper presigns; node never holds bucket-wide keys |
-| **`pbx3-{org}-fleet`** (existing `PBX3_ORG_BUCKET`) | `catalog/`, `instances/{ksuid}/`, `tenants/{shortuid}/meta.json`, `dids.json`, export staging | **Out of scope** (no CHD) | Public or authenticated `catalog/`; existing node/gatekeeper IAM |
-| **`pbx3-{org}-audit-logs`** (new) | CloudTrail log delivery | Audit trail | Object Lock; no application access |
+| Bucket | Contents | When | Access |
+|--------|----------|------|--------|
+| **`pbx3-{org}-recordings`** (new) | `tenants/{shortuid}/recordings/media/…`, `policy.json` per tenant | **S7 ship** | Private; BPA; TLS-only; SSE-S3; gatekeeper presigns; node never holds bucket-wide keys |
+| **`pbx3-{org}-fleet`** (existing `PBX3_ORG_BUCKET`) | `catalog/`, `instances/{ksuid}/`, `tenants/{shortuid}/meta.json`, `dids.json`, export staging | Already | Public or authenticated `catalog/`; existing node/gatekeeper IAM — **no recordings** |
+| **`pbx3-{org}-audit-logs`** (new) | CloudTrail log delivery | **S7+ only** | Object Lock; no application access |
 
 **Naming — `{org}` is the fleet slug, not the hosting instance.** `pbx3-{org}-recordings` and `pbx3-{org}-fleet` are **org/fleet-scoped** buckets. `{org}` is the fleet short id chosen when the fleet is first provisioned — the same stem as the existing `PBX3_ORG_BUCKET`. On the golden test fleet that stem happens to be **`08jzwn`** (so the buckets are `08jzwn-pbx3` and, for S7, `08jzwn-pbx3-recordings`) **because `08jzwn` was the first node stood up**, not because the bucket belongs to the golden instance. One recordings bucket serves **every instance in the fleet**; objects are keyed by **tenant** (`tenants/{shortuid}/recordings/…`), so a tenant move (e.g. `08jzwn → bzy54n`) changes only the catalog `meta.json.instance_id` — the bucket name and S3 keys are unchanged. **Do not** create a per-instance recordings bucket (e.g. `bzy54n-pbx3-recordings`) when a tenant migrates. For a greenfield fleet, prefer a neutral slug (`acme-pbx3`, `acme-pbx3-recordings`) to avoid this ambiguity.
 
@@ -438,12 +453,19 @@ flowchart TB
 - Local spool → archive → S3 offload lifecycle (§6, §6.1)
 - §2.6.1 IAM tightening (no blanket `tenants/*` on node role)
 
-#### Ops follow-ups (S7)
+#### Ops follow-ups
 
-- Provision recordings + audit buckets; document in **`OPS_S3_RUNBOOK.md`**
-- Bucket policies: `aws:SecureTransport`, KMS default encryption, deny public ACLs
-- Security Hub PCI standard on recordings bucket
-- Do **not** place recordings under public `catalog/` bucket
+**S7 (baseline):**
+
+- Provision **recordings** bucket; document in **`OPS_S3_RUNBOOK.md`** (non-attested wording)
+- Bucket policies: BPA, `aws:SecureTransport`, **SSE-S3** default encryption, deny public ACLs
+- Gatekeeper credentials/presign path for recordings bucket only
+- Do **not** place recordings under the public `catalog/` / fleet bucket
+
+**S7+ (attested — deferred):**
+
+- KMS CMK default encryption; CloudTrail data events → **audit** bucket (Object Lock)
+- Security Hub (or equiv.) PCI standard; IAM audit cadence
 
 ### 6.4 Third-party payment capture (strict PCI — future)
 
@@ -493,10 +515,11 @@ sequenceDiagram
 
 | Profile | Card capture | Recordings | S3 |
 |---------|--------------|------------|-----|
-| **Standard** | On-agent (customer accepts PCI scope on recordings) | Full call recording; dedicated bucket + §6.2 controls | `PBX3_RECORDINGS_BUCKET` with KMS, CloudTrail, etc. |
-| **Strict PCI** | **Third-party PSP only** | PBX3 facilitates handoff; no CHD in wav/SQLite | Recordings bucket may still exist for non-payment calls; payment legs must not carry CHD |
+| **Standard (S7)** | On-agent; customer accepts risk if CHD spoken on recorded line | Full call recording; **PCI-shaped** dedicated bucket (§6.2 baseline) | `PBX3_RECORDINGS_BUCKET` — BPA, TLS, SSE-S3, presigns; **not attested** |
+| **Standard hardened (S7+)** | Same as standard | Same app path | + KMS CMK, CloudTrail→WORM, Security Hub, process |
+| **Strict PCI (S7+)** | **Third-party PSP only** | PBX3 facilitates handoff; no CHD in wav/SQLite | Recordings bucket for non-payment calls only; payment legs must not carry CHD |
 
-**Open for implementation:** PSP catalogue, certified integrations, and SPA configuration UX — document requirement here; build when a customer mandates strict PCI.
+**Open for implementation:** PSP catalogue, certified integrations, SPA `pci_mode` UX — build when a customer mandates strict or attested PCI.
 
 ---
 
@@ -547,43 +570,48 @@ Reintroduce legacy offload semantics in PHP; keep R1 working if offload disabled
 
 ---
 
-### Phase S7 — Recordings S3 offload v1 (~2–3 weeks)
+### Phase S7 — Recordings S3 offload v1 (~2–3 weeks) — **PCI-shaped baseline**
 
-Mirror **`InstanceBackupDirectoryUpload`** pattern. Ship after or parallel with R1.5 once gatekeeper presign path exists.
+**Settled 2026-07-14:** Ship **DR offload + baseline shape** (§6.2). Do **not** include KMS CMK, CloudTrail→WORM, Security Hub, QSA, or PSP handoff in S7 exit criteria. R1.5 is **done** on `main`; extend gatekeeper presign for the **recordings** bucket (migration staging presign today is not enough).
+
+Mirror backup upload *job shape*; writers use **presigned PUT** (not node `tenants/*` IAM — supersedes older plan text that suggested node PutObject on recordings).
 
 | # | Task | Repo | Notes |
 |---|------|------|-------|
-| S7.1 | **Dedicated recordings bucket** (§6.3) | ops / gatekeeper | `PBX3_RECORDINGS_BUCKET`; BPA, KMS CMK, TLS-only policy; separate from `PBX3_ORG_BUCKET` |
-| S7.2 | **`InstanceRecordingUpload`** (or shared upload base) | pbx3api | PUT to recordings bucket: `tenants/{shortuid}/recordings/media/{y}/{m}/{d}/{object}.wav` |
-| S7.3 | **Upload trigger** | pbx3api / cron | After offload or on age-eligible stable file; `PBX3_RECORDING_UPLOAD_ENABLED` |
-| S7.4 | **`policy.json`** on first upload | pbx3api | `maxage_days` from `recmaxage`; on recordings bucket |
-| S7.5 | **Lifecycle + tag** | pbx3-directory/tools | `class=recording` on recordings bucket only |
-| S7.6 | **Presigned PUT/GET** | control plane | Gatekeeper scoped to hosted tenants; recordings bucket only |
-| S7.7 | **S3 playback fallback** | pbx3api | Presigned GET or API proxy when local missing |
-| S7.8 | **SPA archived badge** | pbx3spa | When row is S3-only |
-| S7.9 | **Update SQLite on upload** | pbx3api | Set `s3_key` (full bucket+key), `location`; `local_path` optional |
-| S7.10 | **Reconciliation job** | pbx3api | Backfill index from recordings bucket + local; repair drift |
-| S7.11 | **PCI DSS controls** (§6.2–6.3) | control plane / ops | CloudTrail → audit bucket (Object Lock); Security Hub PCI; IAM audit |
+| S7.1 | **Dedicated recordings bucket** (§6.3) | ops | `PBX3_RECORDINGS_BUCKET`; **BPA**, **TLS-only**, **SSE-S3**; separate from `PBX3_ORG_BUCKET`. Document non-attested in runbook |
+| S7.2 | **Gatekeeper presigned PUT/GET** | control plane | Scope: recordings bucket + `tenants/{hosted_shortuid}/recordings/*` only |
+| S7.3 | **`InstanceRecordingUpload`** (or shared upload base) | pbx3api | Request presign → PUT object `…/media/{y}/{m}/{d}/{object}.wav` (+ optional `.txt`) |
+| S7.4 | **Upload trigger** | pbx3api / cron | After R1.5 offload or age-eligible stable file; `PBX3_RECORDING_UPLOAD_ENABLED` (+ tenant allowlist for golden) |
+| S7.5 | **`policy.json`** on first upload | pbx3api | `maxage_days` from `recmaxage`; on recordings bucket |
+| S7.6 | **Lifecycle + tag** | pbx3-directory/tools | `class=recording` on recordings bucket only |
+| S7.7 | **Update SQLite on upload** | pbx3api | Set `s3_key`, `location`; keep `local_path` while on disk |
+| S7.8 | **S3 playback fallback** | pbx3api | Presigned GET or API proxy when local missing (`s3_only`) |
+| S7.9 | **SPA archived badge** | pbx3spa | When row is S3-only |
+| S7.10 | **Reconciliation job** | pbx3api | Repair drift local ↔ SQLite ↔ S3 (lightweight) |
 
 **Exit criteria:**
 
-- [ ] Finished call recording async PUT to tenant prefix on golden
-- [ ] Playback works from S3 when local file aged off; `s3_key` set on row
+- [ ] Finished call recording async PUT to tenant prefix on golden (dedicated bucket)
+- [ ] Playback works from S3 when local file aged off; `s3_key` / `location` set
 - [ ] Lifecycle aligned with tenant `recmaxage`
-- [ ] Recordings land in **dedicated** bucket (not org/catalog bucket); PCI controls applied
+- [ ] No recordings objects in org/catalog bucket
 - [ ] Search works on destination after tenant import (rows + S3 keys)
+- [ ] Ops docs state store is **not PCI-attested**
 
-**Defer past S7:** `recordings` table snapshot export to S3, monthly manifest jsonl (optional DR), Athena, tenant backup zip under `tenants/…/backups/`.
+**Defer past S7:** attested PCI stack (§6.2 S7+ table), PSP handoff (§6.4), monthly manifest jsonl, Athena, tenant backup zip under `tenants/…/backups/`.
 
 ---
 
-### Phase S7+ — Scale search, compliance & payment handoff (deferred)
+### Phase S7+ — Attested PCI, scale search & payment handoff (deferred)
 
 | # | Task | Notes |
 |---|------|-------|
-| S7+.1 | Monthly `manifest-{yyyy}-{mm}.jsonl` per tenant | Optional DR / portable metadata export — not primary search |
-| S7+.2 | Athena / OpenSearch | Large fleet / legal discovery |
-| S7+.3 | **Third-party payment handoff** (§6.4) | Custom app / refer to PCI-validated PSP; tenant config; token-only callback; operator docs for strict PCI customers |
+| S7+.1 | **KMS CMK** default encryption on recordings bucket | Bucket/key policy; app path unchanged |
+| S7+.2 | **CloudTrail** data events → **audit** bucket (Object Lock) | Separate from recording lifecycle |
+| S7+.3 | **Security Hub** (or equiv.) PCI standard + IAM audit cadence | Process + tooling |
+| S7+.4 | **Third-party payment handoff** (§6.4) | Strict profile; custom app / refer to PSP; token-only; SPA/tenant flag |
+| S7+.5 | Monthly `manifest-{yyyy}-{mm}.jsonl` per tenant | Optional DR metadata — not primary search |
+| S7+.6 | Athena / OpenSearch | Large fleet / legal discovery |
 
 ---
 
@@ -600,8 +628,9 @@ Record these for the next design review — do not block R1.5 kickoff on all ans
 | 5 | Offload: move vs copy from spool? | **Move** (legacy `rsync --remove-source-files`) | Copy + spool retention for grace period |
 | 6 | Queue `Qexec` unswept files | Offload like regular wav; parser already flags `is_queue` | Separate sweep job |
 | 7 | Soft-delete recovery window | **Delete bin** + optional `deleted_at` tombstone (R1.5) | S3 versioning only (defer) |
-| 8 | S3 bucket for recordings | **Settled:** dedicated `PBX3_RECORDINGS_BUCKET` (§6.3) | Same org bucket as catalog (rejected — PCI vs public catalog) |
-| 9 | Strict PCI card capture | **Settled:** third-party PSP handoff (§6.4); PBX3 facilitates routing | Pause/resume recording (rejected — insufficient for QSA) |
+| 8 | S3 bucket for recordings | **Settled:** dedicated `PBX3_RECORDINGS_BUCKET` (§6.3) | Same org bucket as catalog (rejected — public catalog vs private recordings) |
+| 9 | Strict PCI card capture | **Settled:** third-party PSP handoff (§6.4); **S7+** | Pause/resume recording (rejected — insufficient for QSA) |
+| 10 | S7 vs full PCI in one phase | **Settled 2026-07-14:** S7 = PCI-shaped baseline; attested controls = S7+ (§6.2) | Ship KMS/CloudTrail/Security Hub in S7 (rejected — slows non-PCI customers) |
 
 ---
 
@@ -632,7 +661,7 @@ Record these for the next design review — do not block R1.5 kickoff on all ans
 | Legacy | Spool → `/media/recordings/{ddmmyy}/` (+ optional NFS) | `find` / glob |
 | R1 (now) | Spool only | Filesystem scan + filename parse |
 | R1.5 (next local) | Spool → tenant/date archive | **SQLite `recordings` table** + filesystem fallback |
-| S7 (fleet) | + S3 `tenants/{shortuid}/recordings/media/…` | SQLite + `s3_key`; presigned play when local gone |
-| S7+ (scale) | Same | Optional manifest export; Athena for compliance |
+| S7 (fleet) | + dedicated recordings bucket (PCI-shaped baseline) | SQLite + `s3_key`; presigned play when local gone |
+| S7+ | Same keys/layout | KMS/CloudTrail/attestation; PSP strict; optional Athena/manifests |
 
-**Bottom line:** Keep the **spool → archive** lifecycle. Replace **find/glob** with a **tenant-scoped SQLite catalog** (moves with miniDB) plus **`s3_key`** as the durable locator. Use **tenant-stable S3 prefixes** for fleet archive. Implement offload, indexing, and upload in **PHP** (`pbx3api`), not shell rsync.
+**Bottom line:** Keep **spool → archive → S3**. Search via **SQLite + `s3_key`**. S7 ships **private dedicated bucket + presigns + SSE-S3** (not attested PCI). Attestation and PSP wait for demand. Upload via **presigns** in `pbx3api` / gatekeeper — not shell rsync, not blanket node `tenants/*` IAM.

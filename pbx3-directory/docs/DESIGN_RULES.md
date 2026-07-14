@@ -441,7 +441,7 @@ Important, but situational — do not treat as the same bar as Rules 1–14.
 
 - **Rule 1:** Recording capture and playback on disk work **without S3**; upload is **async** after the wav exists locally.
 - **Search on node:** Keep **epoch** (or DB datetime from epoch) for `BETWEEN` — authoritative index stays on node until a later manifest track.
-- **S3 layout:** `tenants/{tenant_shortuid}/recordings/media/{yyyy}/{mm}/{dd}/{call_id}.wav` (+ optional `.txt`); `policy.json` + tag `class=recording` for lifecycle.
+- **S3:** Dedicated **`PBX3_RECORDINGS_BUCKET`** (not org/catalog); keys `tenants/{tenant_shortuid}/recordings/media/…`; gatekeeper **presigns**; S7 = **PCI-shaped baseline** (BPA, TLS, SSE-S3) — **not** attested PCI (§6.2 in **`RECORDINGS_STORAGE_DESIGN.md`**).
 - **Retention hybrid:** Node `rec_age` / `recmaxage` evicts local files; S3 holds DR copy until lifecycle (same spirit as backup option C).
 - **SPA:** Show ISO 8601 UTC for call time; epoch stays internal; “archived” when object is S3-only.
 

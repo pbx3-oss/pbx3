@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — session end 2026-07-14.  
-**Last updated:** 2026-07-14 (Phase S10 planned)
+**Last updated:** 2026-07-14 (S7 PCI-shaped baseline)
 
 ### Suggested “what next?” order
 
@@ -64,7 +64,7 @@
 
 - [ ] **Phase S8 — Fleet (optional polish):** **S8.1–S8.6 shipped and drill-validated** (affcot **08jzwn → bzy54n**). Remaining optional: LE Sync post-cutover; **`move-tenant.sh`** if catalog workflow preferred over **`register-tenant.sh`** for first-time tenants. See **`TENANT_MIGRATION_RUNBOOK.md`**.
 
-- [ ] **Phase S7 — Recordings S3 offload (priority #1):** Dedicated **`PBX3_RECORDINGS_BUCKET`** (not org/catalog bucket); async upload; presigned play; PCI controls (§6.2–6.3); SQLite `s3_key`. After R1.5 + gatekeeper presigns. **`RECORDINGS_STORAGE_DESIGN.md`** §7 S7; defer S7+.3 PSP handoff until customer need.
+- [ ] **Phase S7 — Recordings S3 offload (PCI-shaped baseline, 2026-07-14):** Dedicated **`PBX3_RECORDINGS_BUCKET`** (BPA, TLS-only, **SSE-S3**); gatekeeper **presigned** PUT/GET (no node `tenants/*`); async upload; SQLite `s3_key` / SPA archived; play when local gone. **Not** in S7: KMS CMK, CloudTrail→WORM, Security Hub, QSA, PSP — those are **S7+**. Docs: **`RECORDINGS_STORAGE_DESIGN.md`** §6.2 / §7; **`IMPLEMENTATION_PLAN.md`** § Phase S7. R1.5 done.
 
 - [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**; add **`pbx3-docs`** later. Maintain **`REPOS_AND_RELEASES.md`** (inventory, remotes, compatibility matrix). Update local clone remotes; keep **`pbx3-master/`** holding-folder layout. Tag first aligned release row in compatibility matrix when cutting public release.
 

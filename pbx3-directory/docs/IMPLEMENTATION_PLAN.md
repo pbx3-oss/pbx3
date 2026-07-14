@@ -195,7 +195,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 1. **Two instances** in `catalog/instance-index.json` with distinct buckets/roles (proves `OPS_S3_RUNBOOK.md` is repeatable).
 2. **Backups:** operator can see **local + S3** archives; **restore or download** works when only S3 has the zip (presigned GET or rehydrate to `bkup/`).
-3. **Recordings:** at least one tenant on golden — finished call recording **async PUT** to `tenants/{shortuid}/recordings/media/{yyyy}/{mm}/{dd}/{call_id}.wav`; **playback** works from S3 when local file is gone (presigned or API proxy); lifecycle/tag `class=recording` aligned with `policy.json`.
+3. **Recordings (S7 baseline):** at least one tenant on golden — async PUT to dedicated **`PBX3_RECORDINGS_BUCKET`** prefix `tenants/{shortuid}/recordings/media/…`; **playback** when local gone (presign/proxy); lifecycle/tag `class=recording`. PCI-**shaped** only (not attested) — see **`RECORDINGS_STORAGE_DESIGN.md`** §6.2.
 4. **Ops:** lifecycle apply script reads **`maxage_days`** from `instances/{ksuid}/backups/policy.json` (and tenant `recordings/policy.json` when present), not a hard-coded `30` CLI arg only.
 5. **Docs:** runbook covers **S3-compatible** endpoint (not AWS-only); deferred items listed explicitly below.
 
@@ -296,30 +296,33 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 ---
 
-### Phase S7 — Recordings S3 offload v1 (~2–3 weeks)
+### Phase S7 — Recordings S3 offload v1 (~2–3 weeks) — **PCI-shaped baseline**
 
-**Design (storage + search shape):** **`RECORDINGS_STORAGE_DESIGN.md`** §3.3, §4, §7 — S3 key layout, prefix search (not find/glob), presigned upload/playback, multi-root API, R1.5 → S7 sequencing.
+**Design:** **`RECORDINGS_STORAGE_DESIGN.md`** §3.3, §4, §6.2–§6.3, §7 — dedicated bucket, presigned upload/playback, SQLite `s3_key`. **Settled 2026-07-14:** S7 = **DR + PCI-shaped store** (private bucket, BPA, TLS-only, SSE-S3, gatekeeper presigns, honest non-attested docs). **Not** in S7: KMS CMK, CloudTrail→WORM audit bucket, Security Hub, QSA, PSP payment handoff (**S7+**).
 
-**Principle (Rule 1):** Calls and recording capture work **without S3**. Upload is **async** after the wav exists on disk (mirror `InstanceBackupDirectoryUpload`).
+**Principle (Rule 1):** Calls and capture work **without S3**. Upload is **async** after the wav exists (R1.5 archive path is on `main`).
 
-**Priority:** **#3** — after **R1** operator path exists (or parallel once **S8.3** IAM includes `tenants/…/recordings/*`). Tenant move (**S8**) assumes recordings may already live under `tenants/{shortuid}/recordings/` on S3 — see **`TENANT_MIGRATION_RUNBOOK.md`**.
+**IAM (supersedes older draft):** Do **not** re-open node `tenants/*` PutObject. Writers use **gatekeeper short-lived presigns** on **`PBX3_RECORDINGS_BUCKET`** only (§2.6.1 / Rule 9–12).
 
-**On-node today:** tenant `rec_final_dest`, `rec_age` / `recmaxage` (days), spool under `/opt/pbx3/media/recordings/…` and Asterisk monitor paths — see `sqlite_create_tenant.sql`.
+**Prereqs done:** R1 + R1.5. **Priority:** product pick vs S10 / egress.
 
 | # | Task | Repo | Notes |
 |---|------|------|--------|
-| S7.1 | **`InstanceRecordingDirectoryUpload`** (or shared `OrgObjectUpload` base) | pbx3api | PUT `tenants/{shortuid}/recordings/media/{y}/{m}/{d}/{call_id}.wav`; optional `.txt` sidecar |
-| S7.2 | **Trigger** — after recording finalized or nightly scan of age-eligible files | pbx3api / cron | Config: `PBX3_RECORDING_UPLOAD_ENABLED`, tenant allowlist for golden |
-| S7.3 | **`tenants/…/recordings/policy.json`** on first upload (`maxage_days` from tenant `recmaxage` or default) | pbx3api | Schema `retention-policy.v0.json` |
-| S7.4 | **S3 tag** `class=recording` + lifecycle rule (extend ops script or sibling `apply-recording-lifecycle-rule.sh`) | pbx3-directory/tools | Same pattern as backups; **do not** expire `meta.json` / catalog |
-| S7.5 | **IAM** — node role `PutObject` on `tenants/{hosted-tenant}/recordings/*` for tenants on that instance | ops | Per-node policy like backups |
-| S7.6 | **API playback when S3-only** — presigned URL or stream via API when local file gone | pbx3api | Extends **R1.2**; CDR/search still uses **epoch** on node DB |
-| S7.7 | **SPA “archived” badge** when object is S3-only | pbx3spa | Extends **R1.3** list |
-| S7.8 | **Local retention unchanged** — `rec_age` still deletes from disk; S3 holds DR copy until lifecycle | design | Hybrid like backup option C |
+| S7.1 | **Dedicated recordings bucket** | ops | `PBX3_RECORDINGS_BUCKET`; BPA; `aws:SecureTransport`; **SSE-S3**; never org/catalog bucket |
+| S7.2 | **Gatekeeper recordings presign** | control plane | PUT/GET scoped to `tenants/{hosted}/recordings/*` on recordings bucket |
+| S7.3 | **Upload service + trigger** | pbx3api / cron | Presign → PUT; `PBX3_RECORDING_UPLOAD_ENABLED`; golden allowlist OK |
+| S7.4 | **`policy.json` + lifecycle tag** | pbx3api + tools | `maxage_days` from `recmaxage`; `class=recording` |
+| S7.5 | **SQLite `s3_key` / `location`** | pbx3api | Set on upload; `s3_only` when local retention purges disk |
+| S7.6 | **Playback when S3-only** | pbx3api | Presigned GET or API proxy; search stays epoch/SQLite on node |
+| S7.7 | **SPA “archived” badge** | pbx3spa | When `location === s3_only` |
+| S7.8 | **Local retention unchanged** | design | Hybrid like backup option C — S3 DR until lifecycle |
+| S7.9 | **Ops wording** | docs | Runbook: private encrypted DR; **not PCI-attested** |
 
-**Defer past S7:** `recordings.db` snapshot to S3, monthly `manifest-{yyyy}-{mm}.jsonl`, bulk Athena search, tenant backup zip under `tenants/…/backups/`.
+**Exit criteria:** golden async PUT; play after local age-off; dedicated bucket only; non-attested documented.
 
-**Related:** **Phase R1** (local operator UX) — see above; ship before or alongside S7 upload.
+**Defer (S7+):** KMS CMK; CloudTrail → Object Lock audit bucket; Security Hub PCI; PSP strict handoff; Athena/manifests. See design §6.2 / §7 S7+.
+
+**Related:** **`RECORDINGS_STORAGE_DESIGN.md`** (authoritative); R1/R1.5 shipped.
 
 ---
 
