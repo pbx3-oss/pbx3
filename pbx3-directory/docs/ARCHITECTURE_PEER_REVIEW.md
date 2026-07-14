@@ -85,9 +85,11 @@ Runtime design is ahead of: central auth (Phase D deferred), gatekeeper for S3 r
 
 Fine at small fleet, low churn. Competitors at scale use **Postgres + job queue + event log**. The gatekeeper idea is the right mitigation; until it exists, **catalog races** are the biggest architectural risk vs “boring central DB.” Not wrong — **immature relative to scale**, not wrong at v0.
 
-### 3.6 SBC HA via SRV pool is pragmatic, not carrier-grade active/active
+### 3.6 SBC HA — active–passive (updated 2026-07-14)
 
-SRV pools of stateless-ish OpenSIPS with shared DB is standard DIY. Ribbon/Oracle/AudioCodes SBCs offer deeper active/active and tooling. For your market that may be enough; **measure** failover time and registration recovery, don’t infer from design docs.
+**Prior note:** SRV pools of OpenSIPS with shared DB is standard DIY; commercial SBCs offer deeper tooling.
+
+**Product direction now:** Prefer **active–passive + VIP** with **local MySQL projections** (no shared live DB on the call path). Still measure failover time and registration recovery — don’t infer from design docs. See **`FLEET_TRUNK_PEERING_DECISION.md`** §6.
 
 ### 3.7 Security/compliance runway
 

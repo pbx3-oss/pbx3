@@ -129,7 +129,7 @@ This one indirection is what makes the fleet flexible:
 - **Moving a tenant** = change one row in the SBC's table (tenant domain → new node). Seconds, reversible, no DNS wait.
 - **Security concentrates** at the edge — scanners and bad actors hit the SBC, not every node.
 
-Production fleets run **two or more identical SBCs** for redundancy.
+Production fleets run **two or more identical SBCs** for redundancy — typically **active–passive behind one VIP** (signaling only / RTP bypass). A shared live routing database is **not** required; each member keeps a local store (**SQLite preferred** for single-file portability, with optional Litestream to S3; lab may still use MySQL).
 
 ### 3.4 S3 — the fleet's memory
 

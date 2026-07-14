@@ -45,11 +45,11 @@ When primary SBC is unreachable, outbound PSTN must not silently black-hole. Can
 | Approach | Notes |
 |----------|--------|
 | **`EgressFailover` trunk** | Second row in instance DB (`pjsip_trunk_egress.tmpl` clone), **`contact=sip:<sbc2>`**; seed script already supports **`PBX3_SBC_EGRESS_FAILOVER_HOST`** |
-| **pbx3cagi failover** | Today fleet mode **forces single Egress** — **no** path rotation. Failover requires **explicit Phase A+** work: try Egress, then EgressFailover (or SRV-ordered contacts) |
-| **DNS SRV on Egress AOR** | Single trunk, **`contact=sip:sbc-pool.example.com`** with SRV to pool members — aligns with **`FLEET_TRUNK_PEERING_DECISION.md`** §6 |
-| **SBC-side only** | Node always sends to one SRV name; pool health is **SBC/DNS** concern — node qualify still needed for “can I reach the pool entry point?” |
+| **pbx3cagi failover** | Today fleet mode **forces single Egress** — **no** path rotation. Failover requires **explicit Phase A+** work: try Egress, then EgressFailover |
+| **Stable SBC VIP (preferred)** | Single trunk contact = SBC VIP — aligns with **`FLEET_TRUNK_PEERING_DECISION.md`** §6 (**active–passive**, not shared-DB SRV pool) |
+| **SBC-side only** | Node always sends to the VIP; pair health is **SBC/VIP** concern — node qualify still needed for “can I reach the edge entry point?” |
 
-**Explicitly out of scope for v1 lab:** Multi-SBC failover without HA pool + documented SRV (§6 prerequisite for production fleet SLA).
+**Explicitly out of scope for v1 lab:** Multi-SBC failover without documented active–passive + VIP (§6 prerequisite for production fleet SLA).
 
 ### R4 — Do not break outbound dial for qualify failure (behaviour policy)
 
@@ -81,7 +81,7 @@ Product must decide:
 1. **SBC OPTIONS handler** for fleet Asterisk sources (R1) — unblocks re-enabling qualify on Egress template.
 2. **Re-enable `qualify_frequency`** (e.g. 30) on egress template after R1 verified on golden + second node.
 3. **SPA / API** trunk health from Asterisk endpoint state or AMI (R2).
-4. **`EgressFailover` + cagi** sequential dial or SRV contact (R3) — after SBC HA pool (§6) or second lab SBC exists.
+4. **`EgressFailover` + cagi** sequential dial (R3) — after SBC active–passive VIP (§6) or second lab SBC exists.
 5. **Peering `DR_FAILOVER`** on SBC for carrier leg — separate from node→SBC leg; already partially in template.
 
 ---
@@ -90,7 +90,7 @@ Product must decide:
 
 | Doc | Section |
 |-----|---------|
-| **`FLEET_TRUNK_PEERING_DECISION.md`** | §4 Egress trunks, §6 SBC HA / SRV pool |
+| **`FLEET_TRUNK_PEERING_DECISION.md`** | §4 Egress trunks, §6 SBC HA / active–passive VIP |
 | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** | §11.8 inbound/outbound asymmetry; §3 Phase A |
 | **`FLEET_EGRESS_LAB_ROLLBACK.md`** | qualify workaround + live patches |
 | **`pbx3sbc/workingdocs/PEERING-PLAN.md`** | Carrier failover (`DR_FAILOVER`) — not node→SBC |

@@ -86,11 +86,11 @@ The wizard should **detect posture from the directory** and present the right cu
 | Tenant mobility | DNS cutover per move; TTL; human gates | `domain.setid` repoint; seconds; panel-automated |
 | Load balancing / growth | Sticky tenants; painful re-homing | Move tenant data + repoint; phones unchanged |
 | Edge security | Per-node `fqdninspect`, STRING rules, scan exposure | Centralized domain validation, door-knock, scanner drops |
-| Phone provisioning | Per-tenant DNS → node IP | One stable SBC address (or SRV pool) for all phones |
+| Phone provisioning | Per-tenant DNS → node IP | One stable SBC **VIP** for all phones (and later webphones over WSS) |
 | Outbound | Per-node carrier trunks; collision on move | `Egress → SBC`; carrier/LCR at edge (optional) |
 | TLS | Per-node per-tenant LE churn | Phone TLS at SBC (one cert surface — TBD) |
 
-**Multi-SBC:** Production fleets will run **≥2 identical SBCs** for redundancy. OpenSIPS is stateless at the edge (signaling only; RTP bypass); horizontal scale and failover are design goals of pbx3sbc. Exact HA topology (DNS SRV / round-robin, anycast, active-passive pair) is a **fleet infra prerequisite** — see §2.3 — not part of the move wizard itself.
+**Multi-SBC:** Production fleets run **≥2 identical SBCs** for redundancy (signaling capacity is not the driver — RTP bypass stays default). **HA settled 2026-07-14:** **active–passive + VIP**, **local MySQL per member**, no shared live routing DB — see §2.3 and **`FLEET_TRUNK_PEERING_DECISION.md`** §6. Not part of the move wizard itself.
 
 **What stays direct-to-node:** Single-box evaluation, lab, and **Rule 6** solo installs — no catalog, no SBC, admin on node URL. Fleet features (Fleet Console, tenant move wizard, catalog) are **opt-in** when `org` + directory + SBC are provisioned.
 
@@ -105,13 +105,13 @@ The wizard should **detect posture from the directory** and present the right cu
 
 Before tenant mobility is shippable as a fleet product, operators provision:
 
-1. **≥1 SBC** (≥2 for production) from identical pbx3sbc images; shared MySQL routing DB (or replicated).
+1. **≥1 SBC** (≥2 for production) from identical pbx3sbc images. **HA (settled 2026-07-14):** active–passive behind a **VIP**; each member has a **local** DB (projection of directory/S3 — **not** a shared live DB on the call path). **Preferred local engine:** SQLite (+ optional **Litestream** to S3) for single-file portability — lab MySQL until spike. See **`FLEET_TRUNK_PEERING_DECISION.md`** §6 / §6.0.
 2. **Per fleet node:** one dispatcher `setid` → `sip:{node-private-or-public-ip}:5060` (health-checked).
 3. **Per tenant domain:** `domain` row → current host node's `setid`.
-4. **Per fleet node:** instance trunks `Egress` (+ optional `EgressFailover`) → SBC pool; **UFW** (or successor): SIP **5060/tcp+udp from SBC IP(s) only** — no `fqdninspect` / Shorewall STRING match on fleet nodes.
-5. **Phone provisioning template:** registrar/proxy = SBC address (stable); tenant domain in AoR unchanged on move.
+4. **Per fleet node:** instance trunks `Egress` (+ optional `EgressFailover`) → SBC **VIP**; **UFW** (or successor): SIP **5060/tcp+udp from SBC IP(s) only** — no `fqdninspect` / Shorewall STRING match on fleet nodes.
+5. **Phone provisioning template:** registrar/proxy = SBC VIP (stable); tenant domain in AoR unchanged on move. Webphone target (later): same VIP over WSS — **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1.
 
-HA mechanism (SRV, floating IP, etc.) is **TBD in pbx3sbc fleet docs** — out of scope for S8.10 wizard, but blocks "production fleet" label until defined.
+Active–passive runbook + failover drill still required for "production fleet" label — out of scope for S8.10 wizard.
 
 ### 2.4 SBC platform — continue pbx3sbc (settled 2026-07-07)
 
@@ -140,7 +140,7 @@ HA mechanism (SRV, floating IP, etc.) is **TBD in pbx3sbc fleet docs** — out o
 - Registration proxy; endpoint location for Asterisk→phone signaling
 - NAT traversal; basic scanner / door-knock protection
 - RTP bypass (signaling only at edge)
-- **≥2 SBC instances** + shared/replicated routing DB (HA — topology TBD)
+- **≥2 SBC instances** — active–passive + VIP; local DB per member (**SQLite preferred**, lab MySQL) — settled 2026-07-14 §6 / §6.0
 - `pbx3sbc-admin` domain + dispatcher CRUD (seed of edge admin)
 - **Peering Phase 0–1** per `PEERING-PLAN.md` when egress is needed (Asterisk → SBC → carrier; inbound carrier → DID → backend)
 
@@ -692,7 +692,7 @@ Likely trip points when implementing SBC-fronted fleet + tenant mobility. Severi
 
 | # | Gotcha | Sev | Mitigation |
 |---|--------|-----|------------|
-| 16 | **Shared MySQL routing DB** across SBC pool — HA depends on DB replication/failover; edge is only as good as DB availability. | **H** | §2.3 HA doc: DB + ≥2 SBCs; rehearse failover. **Rebuildable from S3 (§11.10):** SBC MySQL is a projection of the directory home-of-record, so DB loss = re-project, not data loss. |
+| 16 | **SBC routing DB availability** — shared live MySQL **rejected**. Prefer local **SQLite** (+ Litestream) for portability; lab still MySQL. Active–passive needs correct file/projection on promote. | **M** | §6 / §6.0. Call path = local file only. Catalog remains HoR; Litestream assists standby/S3 copies; full rebuild = re-project. |
 | 17 | **`pbx3sbc-admin` vs Fleet Console** — two UIs until adapter ships; manual `domain`/`dispatcher` edits can drift from catalog. | **M** | **Decided §2.5:** `pbx3sbc-admin` = thin local/break-glass edge admin **behind** the adapter; control plane is **sole writer** for moves via `SbcFleetAdapter`. Manual edits = break-glass only; reconcile job (S3 ≡ SBC, §11.10) flags drift. |
 | 18 | **Dispatcher health marks node down** — during move, if dest node fails health check, SBC won't send traffic even after repoint. | **M** | Preflight (`SbcFleetAdapter.preflight`, §2.4): dest dispatcher **UP**; move only when `pbx3:fleet-preflight` green. |
 

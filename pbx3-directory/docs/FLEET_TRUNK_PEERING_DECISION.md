@@ -37,7 +37,7 @@ Phones already register to the SBC (`tenant.pbx3.com` → SBC → node). Inbound
 
 ### 2.3 Acceptable tradeoff: SBC as PSTN choke point
 
-Moving trunks to the SBC **does** concentrate PSTN failure domain on the edge tier. That is intentional for fleet product shape — the same tier that already owns phone registration. Mitigation is **redundant SBC instances + shared routing DB**, not distributing carriers back onto nodes.
+Moving trunks to the SBC **does** concentrate PSTN failure domain on the edge tier. That is intentional for fleet product shape — the same tier that already owns phone registration. Mitigation is **redundant SBC instances (active–passive + VIP)** with **local projected routing DBs**, not distributing carriers back onto nodes — see §6.
 
 **Principle (unchanged):** Runtime call path (phone → SBC → node → carrier) must survive control-plane or catalog outages. Management path (Fleet Console, S3 mutations) is best-effort for *changes*, not a runtime dependency for established calls.
 
@@ -220,92 +220,106 @@ without a separate “singleton vs block” data model on Asterisk. That flexibi
 
 ## 6. SBC high availability — fleet prerequisite
 
-A single SBC is acceptable for **lab / golden validation**. **Production fleet** label requires:
+**Settled 2026-07-14.**
+
+A single SBC is acceptable for **lab / golden validation**. **Production fleet** label requires **≥2 SBC hosts** for redundancy — not for signaling capacity. A signaling-only OpenSIPS box handles far more call setup than we expect unless media is anchored at the edge (see §6.1 — **do not** put RTP on the SBC by default).
 
 | Requirement | Notes |
 |-------------|--------|
-| **Pool of identical SBC instances** | Same `pbx3sbc` image; shared or replicated MySQL routing DB; horizontal scale-out — no special “primary/secondary” roles in application logic |
-| **DNS SRV pool (preferred)** | Phone-facing name resolves to **multiple SRV targets** (one per pool member). Most SIP phones support **multiple outbound proxy / path definitions** — provision primary + secondary SRV targets (or equivalent phone failover list) rather than a single hidden VIP |
-| **Directory record** | `sbc-fleet` with `sip_proxy_fqdn` (SRV name), `admin_api_url`, `member_hosts` — see **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §4.1 |
-| **Node `Egress` / `EgressFailover`** | Point at SRV name or two pool members — mirrors phone-side redundancy. **Availability:** fleet nodes must **qualify** Egress via OPTIONS; SBC must respond — see **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. |
+| **Active–passive pair (preferred)** | Two identical `pbx3sbc` images; **one VIP** (or equivalent single phone-facing address) on the active member; warm standby for box failure. Idle capacity is insurance, not waste to monetize via active–active. |
+| **No shared live routing DB** | Shared MySQL/RDS only relocates the SPOF and forces owning a resilient DB. **Product rule:** call path must not depend on a live shared DB. Each member has a **local** DB; directory/S3 remains home-of-record; standby stays warm via projection, file copy, or **Litestream** restore (see §6.0). |
+| **Local DB portability (preferred direction)** | Prefer **SQLite** (OpenSIPS `db_sqlite`) for the on-box store — **single-file** portability matches projected/rebuildable edge. Lab today remains **MySQL**; migrate when packaged and soak-tested. See §6.0. |
+| **Directory record** | `sbc-fleet` with `sip_proxy_fqdn` (**VIP / stable edge name**), `admin_api_url`, `member_hosts` — see **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §4.1 |
+| **Node `Egress` / `EgressFailover`** | Point at the stable SBC address (VIP). Optional second URI for break-glass. **Availability:** fleet nodes must **qualify** Egress via OPTIONS; SBC must respond — see **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. |
 
-**Design intent:** Operate a **pool of interchangeable SBCs** behind SRV, not a bespoke active/passive pair. Floating IP remains a valid ops alternative but is **not** the preferred product direction.
+**Rejected as default:** shared live MySQL behind an SRV “identical pool,” and horizontal scale-out of signaling for volume. SRV / active–active remains a later ops option if drills prove we need it — not the product direction.
 
-**Not a blocker for:** Peering Phase 0–1 on single `sbc.pbx3.com`, Phase A Egress on golden/bzy54n.
+**Not a blocker for:** Peering on single `sbc.pbx3.com`, Phase A Egress on golden/bzy54n, lab mobility.
 
-**Is a blocker for:** “production fleet” SLA claims before SRV pool + ≥2 members are documented and tested.
+**Is a blocker for:** “production fleet” SLA claims before active–passive + failover rehearsal are documented and tested.
 
+### 6.0 Local DB engine — SQLite + Litestream (direction 2026-07-14)
+
+**Motivation:** Raw **single-file portability** of SQLite is advantageous for this project — copy/replace/re-project an edge DB, keep standby in sync, and avoid operating a second database product on the SBC just to hold a projection of S3.
+
+| Piece | Role |
+|-------|------|
+| **OpenSIPS `db_sqlite`** | Local routing (+ optional soft-state) on each SBC member. Optional in many packages — must be in the SBC image. |
+| **Litestream** | Continuous WAL → object storage (S3); restore onto standby or replacement host. Complements active–passive; **does not** create multi-writer or shared-live-DB semantics. Call path still reads **local** SQLite only. |
+| **Directory / S3 HoR** | Still authoritative for fleet facts (`tenant→node`, DID delivery compile). Litestream protects **on-box** state (and speeds standby catch-up); full logical rebuild remains **re-project from catalog**. |
+
+**Pros (why we lean this way):** one file per member; dispose/rebuild edge easily; cultural fit with PBX3 node SQLite; Litestream = boring standby/S3 copies without Galera.
+
+**Cons / gates before flipping lab off MySQL:**
+
+- OpenSIPS multiprocess write churn (`usrloc`, `dialog` db flush, `acc`) vs SQLite single-writer — soak under REGISTER load; tune WAL / `db_mode` or keep hot tables carefully.
+- `pbx3sbc-admin` (Laravel) is MySQL-oriented today — plan admin → projection → SQLite (or dual path) before cutover.
+- Confirm `db_sqlite.so` in installed OpenSIPS packages on the SBC image.
+
+**Status:** Direction of travel for **portability**, not a lab cutover today. Current `sbc.pbx3.com` stays MySQL until an explicit SQLite+Litestream spike passes soak.
 ### 6.1 WebRTC / WSS endpoints (fleet edge)
 
-**Business driver:** Fleet product should support WebRTC client apps (browser or embedded) on the **same stable edge** as desk phones — not as a separate direct-to-node bypass.
+**Settled 2026-07-14** (product framing). Implementation of WSS-on-SBC remains a later track.
 
-**Status:** **Out of fleet v1** (UDP SIP soak, peering, Phase A Egress, move wizard). **Feasible on pbx3sbc** — separate track after UDP edge is proven. See **`pbx3sbc/docs/MASTER-PROJECT-PLAN.md`** §4 (TLS & WebRTC).
+**Business driver:** Same **stable edge** for webphones as desk phones — **endpoint setup simplicity** (one WSS/SIP proxy forever; instance move = edge repoint). Not a requirement to make last-gen backends understand WebRTC (they already do).
 
-#### Today
+#### Signaling vs media (do not conflate)
+
+Browser WebRTC **always** has a media path (ICE → DTLS-SRTP). **SIP-over-WSS** is only signaling. Terminating WSS on an SBC and forwarding classic SIP (UDP/TCP) to the home instance does **not** by itself put RTP through the SBC, and does **not** make a non-WebRTC Asterisk speak browser media.
+
+| Path | Role |
+|------|------|
+| **SIP over WSS** | Call control (REGISTER/INVITE/…) |
+| **DTLS-SRTP / ICE** | Audio — negotiated in SDP; peer is usually Asterisk (or a media gateway), not “whatever terminated WSS” |
+
+#### Backend compatibility
+
+| Backend | Webphone (browser) |
+|---------|-------------------|
+| **PBX3** | Supported — PJSIP + WSS/WebRTC |
+| **Last-gen SARK** | Supported — also PJSIP + WSS; beta webphone testing uses this path |
+| **Older SARK (no WSS)** | Signaling-only WSS→UDP gateway does **not** yield audio. Full support would need a **media gateway** (e.g. rtpengine). **May never be worth it** — separate go/no-go, not implied by WSS-on-SBC. |
+
+#### RTP at the edge
+
+**Default remains RTP bypass** (signaling only at SBC). Do not anchor media for capacity or “because SBCs do media.” Revisit media anchoring only for a concrete need (e.g. WebRTC↔legacy non-WebRTC protocol translation, topology hiding). That is a **separate project** from active–passive HA and from WSS signaling normalization.
+
+#### Today (beta / interim)
 
 | Layer | WebRTC / WSS |
 |-------|----------------|
-| **pbx3sbc** | **Not implemented** — `socket=udp:0.0.0.0:5060` only (`proto_udp.so`). No `proto_ws` / `proto_wss`, no TLS listener. |
-| **Fleet node (Asterisk)** | **Implemented** — `transport-wss` on `:8089`; `pjsip_webrtc.tmpl` (`webrtc=yes`, DTLS, opus). |
+| **pbx3sbc** | **Not implemented** — UDP SIP edge only. No `proto_wss` / TLS listener yet. |
+| **Instance (Asterisk)** | **In use** — `transport-wss` (e.g. `:8089`); webphone splits SIP (WSS) and media; results good in beta. |
 
-WebRTC clients today register **directly to the node** (`wss://<node-fqdn>:8089/...`), not through the SBC.
+WebRTC clients today register **directly to the instance** (`wss://<instance-fqdn>:8089/...`), not through the SBC. Desk phones → SBC UDP; webphone → node WSS. Acceptable pilot/hybrid.
 
-#### Fleet tension
-
-Fleet posture requires phones (and soft clients) to use the **stable SBC address** so tenant move = SBC repoint only. WebRTC hitting the **node** breaks that:
-
-- Registrations and INVITEs bypass the SBC edge.
-- Tenant move does **not** carry WebRTC clients with `domain.setid` repoint.
-- Node firewall must admit **browser/WebRTC** sources as well as SBC — weakens “SBC-only SIP ingress.”
-
-So **desk-phone fleet v1** and **WebRTC fleet** are not the same milestone.
-
-#### Target architecture (v2 track)
+#### Target (fleet edge for webphone)
 
 ```text
-WebRTC app  →  wss://<sbc-pool-fqdn>  →  OpenSIPS (proto_wss + TLS)
-                    →  usrloc / dispatcher  →  Asterisk backend (UDP/TCP)
-                    →  media: see below
+Webphone  →  wss://<sbc-vip-fqdn>  →  OpenSIPS (proto_wss + TLS)
+                 →  usrloc / dispatcher  →  home instance SIP (UDP/TCP or as needed)
+                 →  media: still endpoint ↔ home instance (bypass), while backends are WebRTC-capable
 ```
 
-**Signaling (OpenSIPS — feasible):**
+**Why SBC still attracts here:** one client config forever across PBX3 and last-gen SARK fleets — not protocol rescue for last-gen (already WSS-capable).
 
-- `proto_wss` + TLS cert on SBC (LE on pool FQDN / SRV name).
-- Extend registrar / `nathelper` / Contact handling for `;transport=wss` (same class of work as UDP NAT fixes).
-- Same `domain` → `setid` mobility model as UDP endpoints.
+**Signaling work (later track):** `proto_wss` + TLS on SBC VIP; registrar/NAT for `;transport=wss`; same `domain` → `setid` mobility as UDP phones.
 
-**Media (harder than signaling):**
+**Media strategy for WSS-capable homes:** prefer **Asterisk-anchored / bypass SBC** (beta-proven shape). RTPEngine at edge only if a future requirement forces protocol translation (e.g. older non-WSS SARK webphone).
 
-- SBC today is **RTP bypass** — media flows endpoint ↔ Asterisk; SBC handles signaling only.
-- WebRTC uses **DTLS-SRTP + ICE**. Scenarios:
-  - **WebRTC ↔ WebRTC** (app-to-app via PBX) — Asterisk may anchor; SBC may stay signaling-only if SDP/ICE paths are consistent.
-  - **WebRTC ↔ PSTN or UDP desk phone** — often needs **media anchoring** (e.g. **RTPEngine** on the edge, or full media through Asterisk). **Decision deferred** until the target app media profile is known (codec, ICE, TURN use).
+**TURN/STUN:** app / MSP concern; not pbx3sbc v1.
 
-**TURN/STUN:** WebRTC apps often need **STUN/TURN** for NAT traversal. Clarify whether the app brings its own TURN, expects MSP-provided TURN, or relies on Asterisk/OpenSIPS. Not part of pbx3sbc v1.
-
-#### Interim posture (lab / early rollout)
-
-Until WSS lands on the SBC:
-
-| Mode | Path | Mobility |
-|------|------|----------|
-| **Interim (hybrid)** | WebRTC → **node** `:8089` WSS; desk phones → **SBC** UDP | Desk phones mobile on move; **WebRTC not mobile** until WSS-on-SBC ships |
-| **Target (fleet)** | All endpoints → **SBC** (UDP + WSS) | Full mobility on tenant move |
-
-**Sales/engineering honesty:** onboard WebRTC on the **interim** path for pilot; contract fleet **move** and **single edge URL** for WebRTC as a **phase-2 deliverable** tied to the WSS track.
-
-#### Implementation order (does not block v1)
+#### Implementation order (does not block UDP fleet v1)
 
 ```text
-1. UDP edge stable     — soak, peering, Phase A (current plan)
-2. TLS on SBC          — proto_tls / cert management (prerequisite for WSS)
-3. WSS listener        — proto_wss, registrar paths for WebSocket clients
-4. Media strategy      — RTPEngine vs Asterisk-only; per target app media profile
-5. Provision template  — wss://<sbc-pool> for app; same SRV pool as desk phones
+1. UDP edge stable     — soak, peering, Phase A (current)
+2. TLS on SBC          — prerequisite for WSS (pairs with LE todo for sbc FQDN)
+3. WSS listener        — proto_wss; forward toward home instance; RTP stays bypass
+4. Provision template  — wss://<sbc-vip> for webphone; same VIP as desk phones
+5. Media gateway        — only if older non-WSS backends must get browser webphone (optional / maybe never)
 ```
 
-**Does not block:** SBC soak (UDP phones), peering Phases 0–4, Phase A Egress, move wizard v1 (UDP endpoints).
-
+**Does not block:** SBC soak (UDP phones), peering, Phase A Egress, move wizard v1 (UDP endpoints).
 ---
 
 ## 7. Solo / direct-to-node (Rule 6)
@@ -339,10 +353,10 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 3. SBC peering 0–4   — carrier outbound + inbound DID → backend (PEERING-PLAN)
 4. B′ control plane  — gatekeeper, §2.6.1 IAM (done), Fleet Console shell
 5. Phase C           — move wizard (SBC repoint + tenant export/import)
-6. WebRTC / WSS      — §6.1; after UDP edge proven; interim = node :8089 for pilot fleets
+6. WebRTC / WSS      — §6.1; after UDP edge proven; interim = node :8089 (beta); SBC WSS = endpoint simplicity
 ```
 
-**Deferred:** S7 recordings S3 until B′ gatekeeper. Solo trunk model unchanged throughout. **WebRTC fleet mobility** deferred to step 6 (interim hybrid supported).
+**Deferred:** S7 recordings S3 until B′ gatekeeper. Solo trunk model unchanged throughout. **WebRTC fleet mobility** deferred to step 6 (interim hybrid supported / in beta).
 
 ---
 
@@ -350,13 +364,13 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 
 | Item | Owner | Note |
 |------|--------|------|
-| SBC SRV pool runbook | pbx3sbc fleet docs | **Direction locked:** SRV + identical pool; document record templates, weights, and phone provisioning examples |
-| `GET_DOMAIN_FROM_SOURCE_IP` hostname gap | pbx3sbc | **Noted** — store Asterisk source IP in dispatcher `attrs`; gate for peering Phase 1 |
-| **WebRTC / WSS on SBC** | pbx3sbc | §6.1 — `proto_wss` + TLS; media (RTPEngine?) TBD; **interim:** node `:8089` |
-| WebRTC app profile | Product | Codecs, ICE, TURN — gates media design for §6.1 step 4 |
+| SBC active–passive runbook | pbx3sbc fleet docs | **Direction locked (2026-07-14):** VIP + warm standby; local DB; S3 re-project; failover drill |
+| **SBC local DB — SQLite + Litestream** | pbx3sbc | §6.0 — preferred for **single-file portability**; lab MySQL until spike/soak; gate: write churn + Filament |
+| `GET_DOMAIN_FROM_SOURCE_IP` hostname gap | pbx3sbc | **Noted** — store Asterisk source IP in dispatcher `attrs`; optional polish |
+| **WebRTC / WSS on SBC** | pbx3sbc | §6.1 — `proto_wss` + TLS on VIP; RTP bypass; **interim/beta:** node `:8089` |
+| Older non-WSS SARK webphone | Product | Needs media gateway — optional / maybe never; not implied by WSS-on-SBC |
 | Phone TLS termination | Product | SBC vs node — overlaps §6.1 TLS track |
-| `sbc-fleet.v0.json` schema | pbx3-directory | Directory contract for adapter; `sip_proxy_fqdn` = SRV name |
-
+| `sbc-fleet.v0.json` schema | pbx3-directory | Directory contract for adapter; `sip_proxy_fqdn` = VIP / stable edge name |
 ---
 
 ## 11. References
@@ -381,6 +395,8 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 
 | Date | Change |
 |------|--------|
+| 2026-07-14 | §6.0 — prefer **SQLite** on-box for portability + **Litestream** for S3/standby WAL; lab stays MySQL until soak. §6 HA/WebRTC settlements earlier same day. |
+| 2026-07-14 | §6 HA settled: **active–passive + VIP**; **no shared live DB**. §6.1: webphone SIP≠media; beta = node WSS; PBX3 + last-gen SARK OK; SBC WSS for endpoint simplicity; RTP bypass; older SARK needs media GW (maybe never) |
 | 2026-07-13 | §4.3.1 — solo vs fleet trunk panel; reject ITSP profiles; DNS outbound / IP inbound → **PEERING-PLAN** §0.1 |
 | 2026-07-09 | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — future OPTIONS qualify, EgressFailover, trunk health; §4/§6 cross-links |
 | 2026-07-09 | §2.4 founding Rules 7–8 — replaceable edge; SIP runtime API; catalog → SPA one-way |
