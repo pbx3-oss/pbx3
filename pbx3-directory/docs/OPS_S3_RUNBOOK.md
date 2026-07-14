@@ -1020,9 +1020,22 @@ s3://{PBX3_RECORDINGS_BUCKET}/tenants/{tenant_shortuid}/recordings/media/{yyyy}/
 s3://{PBX3_RECORDINGS_BUCKET}/tenants/{tenant_shortuid}/recordings/policy.json   # optional; maxage_days
 ```
 
-Tag uploads with `class=recording` when lifecycle is applied (ops script later; mirror backup `class=backup`).
+Tag uploads with `class=recording` (pbx3api does this on media PUT). Write `policy.json` on first successful upload per tenant (`maxage_days` from `cluster.recmaxage`).
 
-### 13.6 Verify
+### 13.6 Lifecycle (ops laptop)
+
+Mirror backup lifecycle, but on the **recordings** bucket only:
+
+```bash
+./pbx3-directory/tools/apply-recordings-lifecycle-rule.sh 08jzwn-pbx3-recordings 60
+# or read days from a tenant policy:
+./pbx3-directory/tools/apply-recordings-lifecycle-rule.sh 08jzwn-pbx3-recordings dhbm8x
+aws s3api get-bucket-lifecycle-configuration --bucket 08jzwn-pbx3-recordings
+```
+
+Objects tagged `class=recording` under `tenants/` expire after N days. Local retention can clear the on-node copy earlier; SQLite row becomes **`s3_only`** (still playable) until S3 lifecycle deletes the object.
+
+### 13.7 Verify
 
 ```bash
 aws s3api get-public-access-block --bucket 08jzwn-pbx3-recordings
@@ -1036,7 +1049,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" \
 
 Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recordings/*`.
 
-### 13.7 Mistakes cheat sheet
+### 13.8 Mistakes cheat sheet
 
 | Mistake | Fix |
 |---------|-----|
@@ -1045,6 +1058,7 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 | Per-instance bucket (`bzy54n-pbx3-recordings`) | Wrong — one fleet recordings bucket; keys by tenant shortuid |
 | Node role `tenants/*` PutObject | Rejected (§2.6.1) — use gatekeeper presigns |
 | Calling this “PCI certified” | Docs must say **not attested** until S7+ / QSA |
+| Apply backup lifecycle script to recordings bucket | Use **`apply-recordings-lifecycle-rule.sh`** (`class=recording`, prefix `tenants/`) |
 
 ---
 
@@ -1065,6 +1079,7 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 
 | Date | Note |
 |------|------|
+| 2026-07-14 | **§13.6 Recordings lifecycle** — `apply-recordings-lifecycle-rule.sh`; `policy.json` / `class=recording` |
 | 2026-07-14 | **§13 Recordings bucket (S7)** — dedicated `-recordings` bucket; script `create-recordings-bucket.sh`; gatekeeper IAM template; non-attested wording |
 | 2026-05 | Initial ops runbook (bucket, catalog policy, CORS, IAM, Laravel note) |
 | 2026-05 | **Quick recipe** — console steps, folder upload |
