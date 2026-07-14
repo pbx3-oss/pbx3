@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — tip after fleet auth polish slice; cookie/SSO deferred.  
-**Last updated:** 2026-07-14 (fleet auth identity stance settled)
+**Branch:** **`main`** — session end 2026-07-14.  
+**Last updated:** 2026-07-14 (session end)
 
 ### Suggested “what next?” order
 
@@ -9,7 +9,8 @@
 2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 3. **Failover + shadowing** (parked) — plan as its own mini-project later.  
 4. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-5. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (SSO-agnostic; abilities in-house; big IdP only when needed).
+5. **Fleet login UI kinship (UX)** — restyle `FleetTokenGate` toward **`LoginView`** (on TODO).  
+6. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (SSO-agnostic; abilities in-house; big IdP only when needed).
 
 ---
 
@@ -19,7 +20,7 @@
 
 - [x] **TLS / Let’s Encrypt — control EC2 (2026-07-14 lab):** Host **`control.pbx3.com`** (`t4g.small`, us-east-1f, dynamic IP). Gatekeeper under nginx+LE; IAM instance profile **`pbx3-control-gatekeeper`**. Runbook **`pbx3-directory/docs/CONTROL_HOST.md`**.
 
-- [x] **Fleet auth infra (2026-07-14):** Gatekeeper SQLite users + session tokens; `POST /api/v1/auth/login`, `/me`, `/logout`; bootstrap `bin/create-fleet-user.php`; break-glass `GATEKEEPER_API_TOKEN` retained. Lab user **`fleet@pbx3.com`**. Branch **`fleetauth`**. **Still open:** SPA login form (replace paste box).
+- [x] **Fleet auth infra (2026-07-14):** Gatekeeper SQLite users + session tokens; `POST /api/v1/auth/login`, `/me`, `/logout`; bootstrap `bin/create-fleet-user.php`; break-glass `GATEKEEPER_API_TOKEN` retained. Lab user **`fleet@pbx3.com`**. Branch **`fleetauth`**. SPA login UI shipped same day.
 
 - [x] **Fleet auth — SPA login UI (2026-07-14):** FleetTokenGate email/password → `POST /api/v1/auth/login`; sessionStorage Bearer; advanced paste for break-glass. Dev proxy → `https://control.pbx3.com`. Branch **`fleetauth`** (pbx3spa).
 

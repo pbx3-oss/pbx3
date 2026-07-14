@@ -53,24 +53,33 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-13 — Peers carrier UX + SBC admin nav)
+## Next agent session notes (2026-07-14)
 
-**Branch:** **`main`** — **pbx3sbc-admin** **`374afb0`** (Peers attrs grouping + sidebar), **pbx3sbc** **`5d90d84`**, **pbx3** tip includes Peers TODO + **LE for SBC/control EC2** + prefix-overlap note (TODO.md may be unpushed for LE tip only). Prior tip: Brindley lab + §0.1.
+**Branch:** **`main`** everywhere relevant — **pbx3** **`6ae0a56`+**, **pbx3spa** **`3618666`**, **pbx3api** **`f872963`**, **pbx3sbc-admin** **`f40d581`**, **pbx3sbc** LE runbook on **`main`**. Feature branches from this arc deleted after merge (`lehttps`, `fleetauth`, `overlap`, `packa`, `fleetauthpolish`).
 
 ### Shipped
-- **Logical carrier Peers UX:** `attrs` `carrier=` / `role=`; table group by carrier; route **counts** (link to Number routes Peer filter). Lab backfill Magrathea/Brindley + **bzy54n** Asterisk Peer gwid **12**. Live on **`http://sbc.pbx3.com/admin`**.
-- **Sidebar:** Peering → Routing → Fail2Ban → Logs.
-- **Product clarity (not code):** Number routes = prefix→Peer; DID aliases = local-AOR escape hatch — **not for fleet delivery**; overlap UX deferred (**TODO**).
+- **SBC admin LE HTTPS:** **`https://sbc.pbx3.com/admin`** — certbot webroot, SG world 80/443, `APP_URL`. Runbook **`pbx3sbc/workingdocs/LE_HTTPS_SBC_ADMIN.md`**.
+- **Control host:** **`control.pbx3.com`** (`t4g.small`, IAM **`pbx3-control-gatekeeper`**). Gatekeeper + LE. Docs **`CONTROL_HOST.md`**.
+- **Fleet auth:** SQLite users/tokens; SPA email/password login; break-glass retained; paste collapsed; Exit Fleet → `logoutFleet` (soft step-up). Lab **`fleet@pbx3.com`**.
+- **Number routes prefix overlap:** reject dup `groupid`+`prefix`; nested hints. Live on SBC admin. **`f40d581`**.
+- **Pack A critical-path tests:** settled cadence **`TEST_CADENCE.md`** / inventory **`CRITICAL_PATH_TEST_PACK.md`** — prefix, gatekeeper auth+break-glass+list fixtures, SnapshotRetention, recordings HTTP, SPA fleet token Vitest.
+- **Identity stance:** **`FLEET_AUTH_COOKIE_SSO.md`** — try-it-out auth enough; SSO-agnostic; abilities in-house without IdP; cookies need same-site UI; no big IdP for demos.
+- **Fleet HA / peering architecture** (earlier same day in longer arc): active–passive + VIP; no shared live routing DB; SQLite preference + Litestream optional — see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.
 
 ### Golden / operator follow-up
-- Optional: Fail2ban whitelist inbound Magrathea IPs (still noted under Peers TODO remainder).
-- **LE** for SBC + future control EC2 — tip #1 on TODO (not started).
+- Rotate Filament admin password on SBC if not done.
+- Control host IP is dynamic — DNS/EIP when convenient.
+- Do not bake gatekeeper tokens into production SPA builds.
+- Fleet login still looks like lab chrome (“wiki login”) — **TODO** kinship with **`LoginView`**.
 
 ### Resume
-1. **TLS / Let’s Encrypt** on SBC (`sbc.pbx3.com`) and plan for control-plane EC2; or **Fleet auth** with control host standup.
-2. Number routes prefix-overlap warn when ready; Fail2ban inbound whitelist as small SBC ops item.
+1. Product priority pick: **S7** recordings offload, **Egress availability**, or light **Fleet login UI kinship**.
+2. Auth: optional gatekeeper **abilities** when multi-operator needed; cookies/SSO stay blocked per **`FLEET_AUTH_COOKIE_SSO.md`**.
+3. Do not start SSO/IdP engines for try-it-out.
 
 ---
+
+## Next agent session notes (2026-07-13 — Peers carrier UX + SBC admin nav) — historical
 
 ## Next agent session notes (2026-07-13 — Brindley lab + peering address model) — historical
 
