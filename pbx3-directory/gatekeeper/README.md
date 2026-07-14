@@ -38,6 +38,7 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `POST` | `/api/v1/tenants/{shortuid}/move` | Move tenant homing |
 | `POST` | `/api/v1/s3/presign` | Scoped PUT/GET for `tenants/{shortuid}/migration/{job_id}/…` only |
 | `POST` | `/api/v1/tenant-moves` | Create move job (`job.json` in S3) |
+| `GET` | `/api/v1/tenant-moves` | List recent move jobs (lab-scale S3 scan; `?limit=50`) |
 | `GET` | `/api/v1/tenant-moves/{job_id}` | Read job (`?tenant=shortuid` optional) |
 | `POST` | `/api/v1/tenant-moves/{job_id}/run` | Run automated phases until human gate |
 | `POST` | `/api/v1/tenant-moves/{job_id}/advance` | `{confirm: verifying\|cleanup}` or `{state}` patch or empty = run |

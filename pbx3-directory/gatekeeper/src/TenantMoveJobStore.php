@@ -178,6 +178,55 @@ final class TenantMoveJobStore
         $this->writeJob($shortuid, $jobId, $job);
     }
 
+    /**
+     * List move jobs (lab-scale: scan S3 for tenants/{shortuid}/migration/{jobId}/job.json).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function list(int $limit = 50): array
+    {
+        $limit = max(1, min(200, $limit));
+        $jobs = [];
+        $token = null;
+
+        do {
+            $params = [
+                'Bucket' => $this->bucket,
+                'Prefix' => 'tenants/',
+                'MaxKeys' => 200,
+            ];
+            if ($token !== null) {
+                $params['ContinuationToken'] = $token;
+            }
+            $result = $this->s3->listObjectsV2($params);
+            foreach ($result['Contents'] ?? [] as $obj) {
+                $key = (string) ($obj['Key'] ?? '');
+                if (! str_ends_with($key, '/job.json')) {
+                    continue;
+                }
+                if (! preg_match('#^tenants/([a-z0-9]+)/migration/([A-Za-z0-9_-]+)/job\.json$#', $key, $m)) {
+                    continue;
+                }
+                $job = $this->readJob($m[1], $m[2]);
+                if ($job !== null) {
+                    $jobs[] = $job;
+                }
+            }
+            $token = ! empty($result['IsTruncated'])
+                ? ($result['NextContinuationToken'] ?? null)
+                : null;
+        } while ($token !== null && count($jobs) < 500);
+
+        usort($jobs, static function (array $a, array $b): int {
+            $ua = (string) ($a['updated_at'] ?? $a['created_at'] ?? '');
+            $ub = (string) ($b['updated_at'] ?? $b['created_at'] ?? '');
+
+            return strcmp($ub, $ua);
+        });
+
+        return array_slice($jobs, 0, $limit);
+    }
+
     /** @return array<string, mixed>|null */
     private function readJob(string $shortuid, string $jobId): ?array
     {

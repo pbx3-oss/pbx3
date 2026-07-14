@@ -76,6 +76,11 @@ try {
         JsonResponse::send(201, $jobs->create($body));
     }
 
+    if ($method === 'GET' && $path === '/api/v1/tenant-moves') {
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 50;
+        JsonResponse::send(200, ['jobs' => $jobs->list($limit)]);
+    }
+
     if ($method === 'GET' && preg_match('#^/api/v1/tenant-moves/([A-Za-z0-9_-]+)$#', $path, $m)) {
         $shortuid = $_GET['tenant'] ?? null;
         JsonResponse::send(200, $jobs->get($m[1], is_string($shortuid) ? $shortuid : null));
