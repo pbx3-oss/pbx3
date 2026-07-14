@@ -1,17 +1,16 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — pbx3 **`3705b8b`**, pbx3api **`d8c560c`** (S9; golden), pbx3spa **`103ab34`** (Snapshots), pbx3sbc **`05ea925`** (Phase 5 alias_db), pbx3sbc-admin **`2df6a60`**.  
-**Last updated:** 2026-07-13 (Phase 2 Magrathea→Brindley outbound failover lab)
+**Branch:** **`main`** — pbx3 tip after ops runbook (see git).  
+**Last updated:** 2026-07-13 (ops runbook Asterisk after egress / genAst)
 
 ### Suggested “what next?” order
 
 1. **Peering — DNS outbound + inbound IP set (UX polish)** — optional admin grouping.  
-2. **Ops runbook** — **`systemctl restart asterisk`** after egress / **`genAst.sh`**.  
-3. **Fleet auth** (later) — dedicated control-plane login replaces gatekeeper paste-token.  
-4. **Phase S7** — recordings S3 offload — **deferred**.  
-5. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-6. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-7. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
+2. **Fleet auth** (later) — dedicated control-plane login replaces gatekeeper paste-token.  
+3. **Phase S7** — recordings S3 offload — **deferred**.  
+4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+5. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
 
 ---
 
@@ -24,6 +23,8 @@
 - [x] **Peering Phase 5 — alias_db (2026-07-11):** **pbx3sbc** **`05ea925`** — `FROM_CARRIER` fallthrough to `alias_db_lookup` → domain dispatcher. **pbx3sbc-admin** **`2df6a60`** — **Peering → DID aliases**. Lab-validated Magrathea DID via alias; Phase 4 prefix restored. Lab alias row `01924918076` → `dhbm8x.pbx3.com` left in place.
 
 - [x] **Peering Phase 2 — outbound failover (2026-07-13 lab):** Magrathea outbound **gwid 20** `sip:sipipgw.magrathea.net:5060` + Brindley **gwid 1**; rule gwlist **`20,1`**. `DR_FAILOVER`/`use_next_gw` already in SBC config. Seed script updated. Brindley→Magrathea upstream means diversity is limited; proves SBC mechanics. True multi-ITSP still optional (Twilio).
+
+- [x] **Ops — Asterisk after Egress / genAst (2026-07-13):** **`workingdocs/OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — `systemctl restart asterisk` required after egress template changes; `pjsip reload` alone is not enough (Phase A lab).
 
 - [ ] **Peering — DNS outbound + inbound IP set (UX polish):** Decision locked **`PEERING-PLAN.md` §0.1** (Magrathea-shaped: FQDN outbound gwid + separate inbound IP gwids; no ITSP profiles). Today: multiple Peers/descriptions. Later: optional admin grouping of one logical carrier (same tables). Fail2ban whitelist inbound IPs.
 
