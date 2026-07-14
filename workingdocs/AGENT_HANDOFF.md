@@ -53,29 +53,32 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-14)
+## Next agent session notes (2026-07-14 — S10, design rules, S7 PCI baseline)
 
-**Branch:** **`main`** everywhere relevant — **pbx3** **`6ae0a56`+**, **pbx3spa** **`3618666`**, **pbx3api** **`f872963`**, **pbx3sbc-admin** **`f40d581`**, **pbx3sbc** LE runbook on **`main`**. Feature branches from this arc deleted after merge (`lehttps`, `fleetauth`, `overlap`, `packa`, `fleetauthpolish`).
+**Branch:** **`main`** — **pbx3** **`d0801c5`** (docs: S10, Rules 9–14, S7 PCI-shaped). **pbx3spa** **`e8da6de`** (prior handoff; no SPA code this session). **pbx3api** **`f872963`**, **pbx3sbc-admin** **`f40d581`** unchanged this session.
 
-### Shipped
-- **SBC admin LE HTTPS:** **`https://sbc.pbx3.com/admin`** — certbot webroot, SG world 80/443, `APP_URL`. Runbook **`pbx3sbc/workingdocs/LE_HTTPS_SBC_ADMIN.md`**.
-- **Control host:** **`control.pbx3.com`** (`t4g.small`, IAM **`pbx3-control-gatekeeper`**). Gatekeeper + LE. Docs **`CONTROL_HOST.md`**.
-- **Fleet auth:** SQLite users/tokens; SPA email/password login; break-glass retained; paste collapsed; Exit Fleet → `logoutFleet` (soft step-up). Lab **`fleet@pbx3.com`**.
-- **Number routes prefix overlap:** reject dup `groupid`+`prefix`; nested hints. Live on SBC admin. **`f40d581`**.
-- **Pack A critical-path tests:** settled cadence **`TEST_CADENCE.md`** / inventory **`CRITICAL_PATH_TEST_PACK.md`** — prefix, gatekeeper auth+break-glass+list fixtures, SnapshotRetention, recordings HTTP, SPA fleet token Vitest.
-- **Identity stance:** **`FLEET_AUTH_COOKIE_SSO.md`** — try-it-out auth enough; SSO-agnostic; abilities in-house without IdP; cookies need same-site UI; no big IdP for demos.
-- **Fleet HA / peering architecture** (earlier same day in longer arc): active–passive + VIP; no shared live routing DB; SQLite preference + Litestream optional — see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.
+### Shipped (docs)
+- **Phase S10** — fleet admin panel actions planned (`IMPLEMENTATION_PLAN.md` § S10 / S8.12): abilities → catalog onboard/decommission → job control → reconcile → DID → fleet users; Mac scripts = break-glass.
+- **Rule 9** — cloud/object-store portability (S3 API + IaaS adapter; not AWS-locked).
+- **DESIGN_RULES** restructure — Parts A–D; **Rules 10–14** (split trust, fail-safe control plane, browser powerless, HoR vs projection, durable gated jobs). Cursor **`design-rules-escalation.mdc`**: flag user asks that would break rules.
+- **S7 PCI-shaped baseline** — dedicated private recordings bucket + presigns + SSE-S3; KMS/CloudTrail/QSA/PSP = **S7+**. Search = SQLite; S3 = blobs. Plan/TODO updated.
 
 ### Golden / operator follow-up
-- Rotate Filament admin password on SBC if not done.
-- Control host IP is dynamic — DNS/EIP when convenient.
-- Do not bake gatekeeper tokens into production SPA builds.
-- Fleet login still looks like lab chrome (“wiki login”) — **TODO** kinship with **`LoginView`**.
+- Same as morning: rotate SBC Filament admin password if needed; control host IP dynamic; no gatekeeper tokens in SPA builds; Fleet login UI kinship still open.
 
 ### Resume
-1. Product priority pick: **S7** recordings offload, **Egress availability**, or light **Fleet login UI kinship**.
-2. Auth: optional gatekeeper **abilities** when multi-operator needed; cookies/SSO stay blocked per **`FLEET_AUTH_COOKIE_SSO.md`**.
-3. Do not start SSO/IdP engines for try-it-out.
+1. **Implement S7** (bucket + gatekeeper recordings presigns + upload/`s3_key`/archived play) — design settled.
+2. Or **S10.1** gatekeeper abilities toward panel onboard/decommission.
+3. Do not start attested PCI or IdP/cookie work without a customer ask.
+
+---
+
+## Next agent session notes (2026-07-14 — LE, control, fleet auth, Pack A) — historical
+
+**Branch:** **`main`** — morning tip before pm docs arc. SBC LE, control host, fleet auth, Pack A, identity stance — see **`3bc815f`** handoff commit / TODO [x] items.
+
+### Resume (superseded)
+See block above.
 
 ---
 
