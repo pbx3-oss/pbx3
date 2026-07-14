@@ -27,6 +27,8 @@
 
 - [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough without a big IdP. **SSO-agnostic:** we own `fleet` / `fleet_*` abilities; optional OIDC later maps groups → abilities. Cookies need same-site Fleet UI (or BFF). Soft step-up via Exit Fleet revoke. Design: **`FLEET_AUTH_COOKIE_SSO.md`**. Optional next auth feature when needed: abilities on gatekeeper users (no IdP required).
 
+- [ ] **Fleet login UI kinship (UX):** `FleetTokenGate` looks like a lab form tacked into Fleet pages (placeholder-only inputs, flat `.token-box`) — not like **`LoginView`** (centered card, labels, title/subtitle, primary CTA language). Restyle / promote Fleet sign-in to match main SPA login before calling Fleet mode operator-ready. Keep break-glass collapsed.
+
 - [x] **Critical-path test pack Pack A (2026-07-14):** Offline regression net complete — **`TEST_CADENCE.md`**, **`CRITICAL_PATH_TEST_PACK.md`**. Prefix overlap, gatekeeper UserStore + break-glass, fleet list fixtures, SnapshotRetention, recordings HTTP 404/list (mocked), SPA fleet token Vitest. Branch **`packa` → `main`**. Ongoing habit: leave a unit/contract test when touching logic. Pack B = lab recipes; Pack C = UI E2E later.
 
 - [x] **pbx3sbc-admin — Number routes prefix overlap (2026-07-14):** Reject identical `groupid`+`prefix`; amber “nested under / shorter than …” hint + post-save warning. OpenSIPS longest-prefix unchanged. Branch **`overlap` → `main`**; live on **`sbc.pbx3.com/admin`**.

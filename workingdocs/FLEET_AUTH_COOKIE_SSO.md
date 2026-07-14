@@ -83,8 +83,9 @@ Until unlocked: **Bearer + sessionStorage** remains correct.
 
 ## What to build when (priority)
 
-| When | Work |
+| **When** | **Work** |
 |------|------|
+| **UX (open)** | Restyle Fleet sign-in (`FleetTokenGate`) for kinship with **`LoginView`** — see TODO “Fleet login UI kinship” |
 | **Now / next need** | Optional: gatekeeper **abilities** (SQLite + enforce) if we have more than one fleet operator role |
 | **Customer asks for SSO** | OIDC connector → map groups → abilities; keep local login |
 | **Fleet UI hosted same-site** | Optional HttpOnly cookie sessions + CORS allowlist + CSRF |
