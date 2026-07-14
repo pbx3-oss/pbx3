@@ -22,7 +22,9 @@
 
 - [x] **Fleet auth infra (2026-07-14):** Gatekeeper SQLite users + session tokens; `POST /api/v1/auth/login`, `/me`, `/logout`; bootstrap `bin/create-fleet-user.php`; break-glass `GATEKEEPER_API_TOKEN` retained. Lab user **`fleet@pbx3.com`**. Branch **`fleetauth`**. **Still open:** SPA login form (replace paste box).
 
-- [ ] **Fleet auth — SPA login UI:** Fleet mode calls `https://control.pbx3.com/api/v1/auth/login`; store returned Bearer in sessionStorage; keep break-glass paste as fallback.
+- [x] **Fleet auth — SPA login UI (2026-07-14):** FleetTokenGate email/password → `POST /api/v1/auth/login`; sessionStorage Bearer; advanced paste for break-glass. Dev proxy → `https://control.pbx3.com`. Branch **`fleetauth`** (pbx3spa).
+
+- [ ] **Fleet auth polish (later):** cookie sessions / SSO step-up; drop paste UX when unused.
 
 - [ ] **pbx3sbc-admin — Number routes prefix overlap (later):** No check today for duplicate/confusing prefixes. OpenSIPS longest-prefix (+ priority on equal length) already picks a winner; still want operator warn or reject identical `groupid`+`prefix`, optional “nested under …” hint. Come back after Peers UX settle-in.
 
