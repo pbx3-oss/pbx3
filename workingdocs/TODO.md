@@ -25,7 +25,7 @@
 
 - [ ] **Fleet auth polish (later):** cookie sessions / SSO step-up; drop paste UX when unused.
 
-- [x] **Critical-path test pack Pack A (2026-07-14):** Offline regression net complete — **`TEST_CADENCE.md`**, **`CRITICAL_PATH_TEST_PACK.md`**. Prefix overlap, gatekeeper UserStore + break-glass, fleet list fixtures, SnapshotRetention, recordings HTTP 404/list (mocked), SPA fleet token Vitest. Branch **`packa`**. Ongoing habit: leave a unit/contract test when touching logic. Pack B = lab recipes; Pack C = UI E2E later.
+- [x] **Critical-path test pack Pack A (2026-07-14):** Offline regression net complete — **`TEST_CADENCE.md`**, **`CRITICAL_PATH_TEST_PACK.md`**. Prefix overlap, gatekeeper UserStore + break-glass, fleet list fixtures, SnapshotRetention, recordings HTTP 404/list (mocked), SPA fleet token Vitest. Branch **`packa` → `main`**. Ongoing habit: leave a unit/contract test when touching logic. Pack B = lab recipes; Pack C = UI E2E later.
 
 - [x] **pbx3sbc-admin — Number routes prefix overlap (2026-07-14):** Reject identical `groupid`+`prefix`; amber “nested under / shorter than …” hint + post-save warning. OpenSIPS longest-prefix unchanged. Branch **`overlap` → `main`**; live on **`sbc.pbx3.com/admin`**.
 
