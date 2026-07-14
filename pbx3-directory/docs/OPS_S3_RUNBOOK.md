@@ -897,13 +897,166 @@ Full golden walkthrough: **Golden node playbook** (top of this doc).
 
 ---
 
-## 13. Related docs
+## 13. Recordings bucket (Phase S7 — dedicated, PCI-shaped)
+
+**Not** the org/fleet bucket (§3). Call recordings that may contain CHD live in a **separate** private bucket. Design: **`RECORDINGS_STORAGE_DESIGN.md`** §6.2–§6.3.
+
+**Wording:** this is **private encrypted DR** (Block Public Access, TLS-only, SSE-S3, gatekeeper presigns). It is **not PCI-attested**. KMS CMK, CloudTrail→WORM, Security Hub, QSA = **S7+**.
+
+### 13.1 Naming
+
+| Piece | Pattern | Golden lab |
+|-------|---------|------------|
+| Org/fleet bucket (`PBX3_ORG_BUCKET`) | `{stem}-pbx3` | `08jzwn-pbx3` |
+| Recordings bucket (`PBX3_RECORDINGS_BUCKET`) | `{stem}-pbx3-recordings` | `08jzwn-pbx3-recordings` |
+
+`{stem}` is the **fleet slug** when the fleet was first provisioned — same stem as the org bucket. One recordings bucket serves **every instance** in the fleet. Object keys are `tenants/{shortuid}/recordings/media/…` — tenant moves do **not** rename the bucket. Prefer a neutral stem for greenfield (`acme-pbx3`, `acme-pbx3-recordings`).
+
+### 13.2 Quick recipe (console)
+
+1. **S3** → **Create bucket**.
+2. **Name:** `{ORG_BUCKET}-recordings` (e.g. `08jzwn-pbx3-recordings`). No dots.
+3. **Region:** same as the org/fleet bucket (e.g. `us-east-1`).
+4. **Block Public Access:** leave **all ON** (unlike the catalog bucket — do **not** open public read).
+5. **Default encryption:** SSE-S3 (AES-256). SSE-KMS is **S7+**.
+6. **Object Ownership:** ACLs disabled / Bucket owner enforced.
+7. **Create bucket**.
+8. **Permissions** → **Bucket policy** → paste **DenyInsecureTransport** (replace bucket name):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyInsecureTransport",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::08jzwn-pbx3-recordings",
+        "arn:aws:s3:::08jzwn-pbx3-recordings/*"
+      ],
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    }
+  ]
+}
+```
+
+9. Do **not** add a public `catalog/*` policy on this bucket.
+10. Attach **gatekeeper** IAM (§13.4). Nodes do **not** get blanket `tenants/*` PutObject.
+
+### 13.3 CLI (preferred — script)
+
+From the **pbx3** clone on your Mac (admin / root credentials — **not** a `pbx3-node-*` role):
+
+```bash
+export AWS_PROFILE=YOUR_PROFILE   # if needed
+aws sts get-caller-identity
+
+./pbx3-directory/tools/create-recordings-bucket.sh 08jzwn-pbx3 us-east-1
+```
+
+The script creates the bucket (or hardens an existing one), sets BPA all ON, SSE-S3, BucketOwnerEnforced, and the DenyInsecureTransport policy. Template: **`schema/pbx3-recordings-bucket-policy.json.tmpl`**.
+
+**Manual CLI** (same outcome as the script):
+
+```bash
+export ORG_BUCKET=08jzwn-pbx3
+export REGION=us-east-1
+export REC_BUCKET="${ORG_BUCKET}-recordings"
+
+# us-east-1 omits LocationConstraint
+aws s3api create-bucket --bucket "$REC_BUCKET" --region "$REGION"
+
+aws s3api put-public-access-block --bucket "$REC_BUCKET" --public-access-block-configuration \
+  "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+
+aws s3api put-bucket-encryption --bucket "$REC_BUCKET" --server-side-encryption-configuration '{
+  "Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}, "BucketKeyEnabled": true}]
+}'
+
+aws s3api put-bucket-ownership-controls --bucket "$REC_BUCKET" --ownership-controls \
+  'Rules=[{ObjectOwnership=BucketOwnerEnforced}]'
+
+sed "s/RECORDINGS_BUCKET/${REC_BUCKET}/g" \
+  pbx3-directory/schema/pbx3-recordings-bucket-policy.json.tmpl > /tmp/rec-bucket-policy.json
+aws s3api put-bucket-policy --bucket "$REC_BUCKET" --policy file:///tmp/rec-bucket-policy.json
+```
+
+### 13.4 Gatekeeper IAM (control host)
+
+Writers/readers use **short-lived gatekeeper presigns**, not node instance roles.
+
+1. Fill **`schema/pbx3-control-gatekeeper-recordings.policy.json.tmpl`** (or use lab filled **`…recordings.policy.json`** for `08jzwn-pbx3-recordings`).
+2. Create / update managed policy **`pbx3-control-gatekeeper-recordings`** and attach to role **`pbx3-control-gatekeeper`**:
+
+```bash
+ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+sed "s/RECORDINGS_BUCKET/08jzwn-pbx3-recordings/g" \
+  pbx3-directory/schema/pbx3-control-gatekeeper-recordings.policy.json.tmpl > /tmp/gk-rec.json
+
+aws iam create-policy \
+  --policy-name pbx3-control-gatekeeper-recordings \
+  --policy-document file:///tmp/gk-rec.json \
+  --description "Gatekeeper recordings bucket (S7 PCI-shaped)"
+
+aws iam attach-role-policy \
+  --role-name pbx3-control-gatekeeper \
+  --policy-arn "arn:aws:iam::${ACCOUNT}:policy/pbx3-control-gatekeeper-recordings"
+```
+
+Scope: `ListBucket` + object Get/Put/Delete/tagging under `tenants/*/recordings/*` on the **recordings** bucket only. Org catalog policy (`pbx3-control-gatekeeper-s3`) stays separate.
+
+3. On the control host `.env`: `PBX3_RECORDINGS_BUCKET=08jzwn-pbx3-recordings` (alongside `PBX3_ORG_BUCKET`). See **`CONTROL_HOST.md`**.
+
+### 13.5 Object key layout
+
+```text
+s3://{PBX3_RECORDINGS_BUCKET}/tenants/{tenant_shortuid}/recordings/media/{yyyy}/{mm}/{dd}/{object}.wav
+s3://{PBX3_RECORDINGS_BUCKET}/tenants/{tenant_shortuid}/recordings/policy.json   # optional; maxage_days
+```
+
+Tag uploads with `class=recording` when lifecycle is applied (ops script later; mirror backup `class=backup`).
+
+### 13.6 Verify
+
+```bash
+aws s3api get-public-access-block --bucket 08jzwn-pbx3-recordings
+aws s3api get-bucket-encryption --bucket 08jzwn-pbx3-recordings
+aws s3api get-bucket-policy --bucket 08jzwn-pbx3-recordings
+
+# Must NOT be public (expect 403):
+curl -sS -o /dev/null -w "%{http_code}\n" \
+  "https://08jzwn-pbx3-recordings.s3.us-east-1.amazonaws.com/tenants/x/recordings/media/y.wav"
+```
+
+Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recordings/*`.
+
+### 13.7 Mistakes cheat sheet
+
+| Mistake | Fix |
+|---------|-----|
+| Put recordings in `08jzwn-pbx3` (org bucket) | Wrong — catalog may be public; use dedicated `-recordings` bucket |
+| Turn off Block Public Access “like catalog” | Never — recordings stay fully private |
+| Per-instance bucket (`bzy54n-pbx3-recordings`) | Wrong — one fleet recordings bucket; keys by tenant shortuid |
+| Node role `tenants/*` PutObject | Rejected (§2.6.1) — use gatekeeper presigns |
+| Calling this “PCI certified” | Docs must say **not attested** until S7+ / QSA |
+
+---
+
+## 14. Related docs
 
 | Doc | Topic |
 |-----|--------|
 | **`S3_LAYOUT_PROPOSAL.md`** | Key layout, manifest, policies |
 | **`DESIGN_RULES.md`** | Rules 1, 3, 6 — telephony vs directory vs solo |
-| **`IMPLEMENTATION_PLAN.md`** | Phases 2–5 |
+| **`IMPLEMENTATION_PLAN.md`** | Phases 2–5 / S7 |
+| **`RECORDINGS_STORAGE_DESIGN.md`** | S7 storage, PCI-shaped baseline |
+| **`CONTROL_HOST.md`** | Gatekeeper host + `PBX3_RECORDINGS_BUCKET` |
 | **`../schema/instance-index.json`** | Example catalog (same name in S3) |
 
 ---
@@ -912,6 +1065,7 @@ Full golden walkthrough: **Golden node playbook** (top of this doc).
 
 | Date | Note |
 |------|------|
+| 2026-07-14 | **§13 Recordings bucket (S7)** — dedicated `-recordings` bucket; script `create-recordings-bucket.sh`; gatekeeper IAM template; non-attested wording |
 | 2026-05 | Initial ops runbook (bucket, catalog policy, CORS, IAM, Laravel note) |
 | 2026-05 | **Quick recipe** — console steps, folder upload |
 | 2026-05 | Single catalog name: `instance-index.json` (repo + S3) |

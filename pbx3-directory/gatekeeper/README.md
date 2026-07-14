@@ -10,6 +10,7 @@ Replaces direct `aws s3 cp` from Mac scripts for catalog mutations (calls still 
 cd pbx3-directory/gatekeeper
 cp .env.example .env
 # Set PBX3_ORG_BUCKET, GATEKEEPER_API_TOKEN, AWS_DEFAULT_REGION
+# For S7 recordings presigns also set PBX3_RECORDINGS_BUCKET (dedicated; not org bucket)
 composer install
 php -S 127.0.0.1:8090 -t public
 ```
@@ -51,7 +52,8 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `POST` | `/api/v1/instances` | Register/upsert instance |
 | `POST` | `/api/v1/tenants` | Register tenant meta |
 | `POST` | `/api/v1/tenants/{shortuid}/move` | Move tenant homing |
-| `POST` | `/api/v1/s3/presign` | Scoped PUT/GET for `tenants/{shortuid}/migration/{job_id}/…` only |
+| `POST` | `/api/v1/s3/presign` | Scoped PUT/GET for `tenants/{shortuid}/migration/{job_id}/…` only (org bucket) |
+| `POST` | `/api/v1/s3/presign-recordings` | S7: PUT/GET on **`PBX3_RECORDINGS_BUCKET`**, keys `tenants/{shortuid}/recordings/…` only |
 | `POST` | `/api/v1/tenant-moves` | Create move job (`job.json` in S3) |
 | `GET` | `/api/v1/tenant-moves` | List recent move jobs (lab-scale S3 scan; `?limit=50`) |
 | `GET` | `/api/v1/tenant-moves/{job_id}` | Read job (`?tenant=shortuid` optional) |
@@ -69,6 +71,19 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 ```
 
 Returns `{ url, method, key, expires_in, bucket }`. Nodes use the URL for export PUT / import GET — no `tenants/*` on the node IAM role.
+
+### Recordings presign body (S7)
+
+```json
+{
+  "method": "PUT",
+  "key": "tenants/9wvvnb/recordings/media/2026/07/14/1716123456-9wvvnb-1000-2000.wav",
+  "expires_in": 900,
+  "tagging": "class=recording"
+}
+```
+
+`tagging` is optional (PUT only) — passed through to the S3 `PutObject` command for lifecycle. Returns `{ url, method, key, expires_in, bucket }` on the **recordings** bucket. Requires `PBX3_RECORDINGS_BUCKET` and control-host IAM policy **`pbx3-control-gatekeeper-recordings`**. See **`OPS_S3_RUNBOOK.md`** §13.
 
 ### Runner env (gatekeeper `.env`)
 

@@ -27,21 +27,29 @@ SPA Fleet mode uses control-plane **email/password login** (Bearer in sessionSto
 | PHP | **8.4** (ondrej PPA) + php-fpm — lockfile needs ≥8.4 |
 | nginx | HTTPS + HTTP→HTTPS; ACME webroot under `public/.well-known` |
 | LE | `control.pbx3.com` — `certbot.timer` + deploy hook reloads nginx |
-| IAM | Instance profile **`pbx3-control-gatekeeper`** + policy **`pbx3-control-gatekeeper-s3`** on bucket `08jzwn-pbx3` (`catalog/*`, `tenants/*`, `instances/*`) |
+| IAM | Instance profile **`pbx3-control-gatekeeper`** + **`pbx3-control-gatekeeper-s3`** on org bucket `08jzwn-pbx3` (`catalog/*`, `tenants/*`, `instances/*`) + **`pbx3-control-gatekeeper-recordings`** on `08jzwn-pbx3-recordings` (`tenants/*/recordings/*`) |
 
 **Endpoints:**
 
 - `GET https://control.pbx3.com/health` — no auth  
 - `GET https://control.pbx3.com/api/v1/*` — Bearer `GATEKEEPER_API_TOKEN`
 
-`.env` lives at `/etc/pbx3-gatekeeper/.env` (symlinked into app). Contains org bucket, gatekeeper token, fleet service token, `PBX3_SBC_ADMIN_API_URL=https://sbc.pbx3.com/api`.
+`.env` lives at `/etc/pbx3-gatekeeper/.env` (symlinked into app). Contains org bucket, gatekeeper token, fleet service token, `PBX3_SBC_ADMIN_API_URL=https://sbc.pbx3.com/api`. For S7 also set **`PBX3_RECORDINGS_BUCKET=08jzwn-pbx3-recordings`** (dedicated; never the org/catalog bucket).
+
+## Recordings bucket (S7)
+
+Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 — **not** attested). Create / harden: **`OPS_S3_RUNBOOK.md`** §13 · tool **`tools/create-recordings-bucket.sh`**. IAM JSON: **`schema/pbx3-control-gatekeeper-recordings.policy.json`**.
+
+**Gatekeeper `.env`:** set `PBX3_RECORDINGS_BUCKET=08jzwn-pbx3-recordings`. API: `POST /api/v1/s3/presign-recordings`.
+
+**Node (`pbx3api`) `.env` for upload:** `PBX3_RECORDING_UPLOAD_ENABLED=true`, `PBX3_GATEKEEPER_URL=https://control.pbx3.com`, `PBX3_GATEKEEPER_TOKEN=<break-glass or fleet token>`, optional `PBX3_RECORDING_UPLOAD_TENANTS=duns`.
 
 ## Operator notes
 
 - Prefer fleet user login in SPA; break-glass `GATEKEEPER_API_TOKEN` for emergencies only. Identity / cookies / SSO / abilities: **`workingdocs/FLEET_AUTH_COOKIE_SSO.md`**.  
 - After stop/start without EIP, **update DNS** before renew/client use.  
 - Redeploy code: rsync gatekeeper tree (exclude `.env`), `composer install` with **php8.4**, `sudo systemctl reload php8.4-fpm`.  
-- Policy JSON in repo: `pbx3-directory/schema/pbx3-control-gatekeeper-s3.policy.json`.
+- Policy JSON in repo: `pbx3-directory/schema/pbx3-control-gatekeeper-s3.policy.json` (org) + `…-recordings.policy.json` (S7).
 
 ## Verify
 

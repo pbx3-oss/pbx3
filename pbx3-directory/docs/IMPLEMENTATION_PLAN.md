@@ -308,12 +308,12 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 | # | Task | Repo | Notes |
 |---|------|------|--------|
-| S7.1 | **Dedicated recordings bucket** | ops | `PBX3_RECORDINGS_BUCKET`; BPA; `aws:SecureTransport`; **SSE-S3**; never org/catalog bucket |
-| S7.2 | **Gatekeeper recordings presign** | control plane | PUT/GET scoped to `tenants/{hosted}/recordings/*` on recordings bucket |
-| S7.3 | **Upload service + trigger** | pbx3api / cron | Presign → PUT; `PBX3_RECORDING_UPLOAD_ENABLED`; golden allowlist OK |
-| S7.4 | **`policy.json` + lifecycle tag** | pbx3api + tools | `maxage_days` from `recmaxage`; `class=recording` |
+| S7.1 | **Dedicated recordings bucket** | ops | `PBX3_RECORDINGS_BUCKET`; BPA; `aws:SecureTransport`; **SSE-S3**; never org/catalog bucket — **done** lab `08jzwn-pbx3-recordings` + **`OPS_S3_RUNBOOK.md`** §13 + `create-recordings-bucket.sh` (2026-07-14) |
+| S7.2 | **Gatekeeper recordings presign** | control plane | PUT/GET scoped to `tenants/{hosted}/recordings/*` on recordings bucket — **`POST /api/v1/s3/presign-recordings`** |
+| S7.3 | **Upload service + trigger** | pbx3api / cron | Presign → PUT; `PBX3_RECORDING_UPLOAD_ENABLED`; golden allowlist OK — **`pbx3:recordings-s3-upload`** |
+| S7.4 | **`policy.json` + lifecycle tag** | pbx3api + tools | `maxage_days` from `recmaxage`; `class=recording` — tagging on PUT; lifecycle script later |
 | S7.5 | **SQLite `s3_key` / `location`** | pbx3api | Set on upload; `s3_only` when local retention purges disk |
-| S7.6 | **Playback when S3-only** | pbx3api | Presigned GET or API proxy; search stays epoch/SQLite on node |
+| S7.6 | **Playback when S3-only** | pbx3api | Presigned GET or API proxy; search stays epoch/SQLite on node — **API proxies via gatekeeper GET** |
 | S7.7 | **SPA “archived” badge** | pbx3spa | When `location === s3_only` |
 | S7.8 | **Local retention unchanged** | design | Hybrid like backup option C — S3 DR until lifecycle |
 | S7.9 | **Ops wording** | docs | Runbook: private encrypted DR; **not PCI-attested** |

@@ -13,6 +13,7 @@ use Pbx3\Gatekeeper\Auth;
 use Pbx3\Gatekeeper\Env;
 use Pbx3\Gatekeeper\Http\JsonResponse;
 use Pbx3\Gatekeeper\S3Presign;
+use Pbx3\Gatekeeper\S3RecordingsPresign;
 use Pbx3\Gatekeeper\S3Registrar;
 use Pbx3\Gatekeeper\TenantMoveJobStore;
 use Pbx3\Gatekeeper\TenantMoveRunner;
@@ -100,6 +101,12 @@ try {
     if ($method === 'POST' && $path === '/api/v1/s3/presign') {
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         JsonResponse::send(200, $presign->create($body));
+    }
+
+    // S7 — dedicated recordings bucket (never org/catalog). Scoped tenants/{shortuid}/recordings/*
+    if ($method === 'POST' && $path === '/api/v1/s3/presign-recordings') {
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        JsonResponse::send(200, (new S3RecordingsPresign())->create($body));
     }
 
     if ($method === 'POST' && $path === '/api/v1/tenant-moves') {
