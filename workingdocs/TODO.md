@@ -1,15 +1,15 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — tip after fleet auth paste/exit polish.  
-**Last updated:** 2026-07-14 (fleet auth paste/exit on main)
+**Branch:** **`main`** — tip after fleet auth polish slice; cookie/SSO deferred.  
+**Last updated:** 2026-07-14 (FLEET_AUTH_COOKIE_SSO deferral)
 
 ### Suggested “what next?” order
 
-1. **Fleet auth polish (remaining)** — cookie sessions / SSO step-up (paste trim + exit revoke done).  
-2. **Phase S7** — recordings S3 offload — **deferred**.  
-3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**
+1. **Phase S7** — recordings S3 offload — **deferred** until priority shift.  
+2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+3. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+4. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+5. **Fleet auth cookie/SSO (blocked)** — see **`FLEET_AUTH_COOKIE_SSO.md`** (needs same-site Fleet UI and/or IdP choice).
 
 ---
 
@@ -23,9 +23,9 @@
 
 - [x] **Fleet auth — SPA login UI (2026-07-14):** FleetTokenGate email/password → `POST /api/v1/auth/login`; sessionStorage Bearer; advanced paste for break-glass. Dev proxy → `https://control.pbx3.com`. Branch **`fleetauth`** (pbx3spa).
 
-- [x] **Fleet auth polish — paste trim + Exit Fleet revoke (2026-07-14):** Break-glass paste collapsed under “Break-glass (ops only)”; Exit Fleet / reset call `logoutFleet` (server revoke + clear); removed redundant “Clear fleet token” topbar. Soft step-up = must Sign in again after exit. Branch **`fleetauthpolish`**.
+- [x] **Fleet auth polish — paste trim + Exit Fleet revoke (2026-07-14):** Break-glass paste collapsed under “Break-glass (ops only)”; Exit Fleet / reset call `logoutFleet` (server revoke + clear); removed redundant “Clear fleet token” topbar. Soft step-up = must Sign in again after exit. Branch **`fleetauthpolish` → `main`**.
 
-- [ ] **Fleet auth polish (later):** cookie sessions / SSO step-up; `fleet` abilities on control plane.
+- [ ] **Fleet auth — cookie sessions / SSO (deferred — topology/IdP):** Not same workstep as paste/exit. HttpOnly cookies need **same-site** Fleet UI (or BFF); current Pages→`control.pbx3.com` + CORS `*` blocks credentials. SSO needs IdP + ability mapping. Soft step-up already via Exit Fleet revoke. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
 
 - [x] **Critical-path test pack Pack A (2026-07-14):** Offline regression net complete — **`TEST_CADENCE.md`**, **`CRITICAL_PATH_TEST_PACK.md`**. Prefix overlap, gatekeeper UserStore + break-glass, fleet list fixtures, SnapshotRetention, recordings HTTP 404/list (mocked), SPA fleet token Vitest. Branch **`packa` → `main`**. Ongoing habit: leave a unit/contract test when touching logic. Pack B = lab recipes; Pack C = UI E2E later.
 

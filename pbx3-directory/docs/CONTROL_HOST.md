@@ -17,7 +17,7 @@
 | First lab user | `fleet@pbx3.com` (password in ops secret store — generated at bootstrap) |
 | Break-glass | Static `GATEKEEPER_API_TOKEN` still works as Bearer |
 
-SPA still pastes a Bearer for now; next slice is login form → store returned token (same sessionStorage key).
+SPA Fleet mode uses control-plane **email/password login** (Bearer in sessionStorage). Break-glass paste is collapsed (ops only). Exit Fleet revokes the session.
 
 ## What’s running
 
@@ -38,7 +38,7 @@ SPA still pastes a Bearer for now; next slice is login form → store returned t
 
 ## Operator notes
 
-- **Fleet auth (login UI)** is **not** done — SPA still pastes gatekeeper bearer token.  
+- Prefer fleet user login in SPA; break-glass `GATEKEEPER_API_TOKEN` for emergencies only. Cookie/SSO: **`workingdocs/FLEET_AUTH_COOKIE_SSO.md`**.  
 - After stop/start without EIP, **update DNS** before renew/client use.  
 - Redeploy code: rsync gatekeeper tree (exclude `.env`), `composer install` with **php8.4**, `sudo systemctl reload php8.4-fpm`.  
 - Policy JSON in repo: `pbx3-directory/schema/pbx3-control-gatekeeper-s3.policy.json`.
