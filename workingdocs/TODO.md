@@ -1,16 +1,17 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked.  
-**Last updated:** 2026-07-15 (session end — S10.8 login chooser + fleet shell auth gate)
+**Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked; **pbx3-docs** live on aelintra Pages.  
+**Last updated:** 2026-07-15 (session end — MkDocs `pbx3-docs` seed + Pages)
 
 ### Suggested “what next?” order
 
 1. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 2. **Failover + shadowing** (parked) — plan as its own mini-project later.  
 3. **S10.7 / S8.9 orchestrated onboard/rebuild (parked)** — wait for AWS vs S3-compatible / adapter stance (Rule 9). Mode 4 + Mac scripts remain.  
-4. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-5. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
-6. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
+4. **pbx3-docs polish** (optional) — human edit pass; SBC chapter / recordings page when useful. Live: **https://aelintra.github.io/pbx3-docs/**.  
+5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+6. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
+7. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
 
 ---
 
@@ -46,7 +47,7 @@
 
 - [ ] **Phase S10 — remaining:** **S10.7**/S10.2b orchestrated IAM onboard/rebuild — **parked** (2026-07-15) pending cloud-adapter / portability discussion; Mode 4 + Mac scripts stay. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10.
 
-- [ ] **S10.7 — Orchestrated onboard / rebuild (parked 2026-07-15):** Greenfield IAM join + S8.9 rebuild wizard behind cloud adapter (Rule 9). Explicitly not next. **Interim:** agent-assisted Mode 4 — planned MkDocs page in **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** row **28b**; source **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4. Design: **`SELF_SERVICE_REBUILD_DESIGN.md`**.
+- [ ] **S10.7 — Orchestrated onboard / rebuild (parked 2026-07-15):** Greenfield IAM join + S8.9 rebuild wizard behind cloud adapter (Rule 9). Explicitly not next. **Interim:** agent-assisted Mode 4 — MkDocs page seeded (**`pbx3-docs`** Fleet → Agent-assisted); source **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4. Design: **`SELF_SERVICE_REBUILD_DESIGN.md`**.
 
 - [x] **Fleet entry — login chooser (2026-07-15):** Shipped S10.8. Nested Enter Fleet remains secondary for dual-hat. Keep Rule 10: two token planes. Ties **`FLEET_AUTH_COOKIE_SSO.md`** § Entry path · **`IMPLEMENTATION_PLAN.md`** § S10.8.
 
@@ -89,9 +90,9 @@
 
 - [ ] **S7+ — Attested PCI / scale (deferred):** KMS CMK; CloudTrail→WORM audit bucket; Security Hub; QSA; PSP handoff; Athena/manifests. Do not start without customer ask. Design §6.2 / §7 S7+.
 
-- [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**; add **`pbx3-docs`** later. Maintain **`REPOS_AND_RELEASES.md`** (inventory, remotes, compatibility matrix). Update local clone remotes; keep **`pbx3-master/`** holding-folder layout. Tag first aligned release row in compatibility matrix when cutting public release.
+- [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**, **`pbx3-docs`**. Maintain **`REPOS_AND_RELEASES.md`**. Interim docs repo already on **`aelintra/pbx3-docs`**. Update local clone remotes; keep **`pbx3-master/`** holding-folder layout.
 
-- [ ] **User guides — MkDocs site (`pbx3-docs`):** Published **installer + admin** how-tos (MkDocs Material + GitHub Pages), **not** developer docs. **`workingdocs/`** stays for humans/AI implementers. **Content map:** **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** (nav tree, page inventory, P1–P3 priorities, promote-from-workingdoc table). **Phase 1:** new repo, fix top-level **`nav:`** in `mkdocs.yml`, CI like **`sail6-docs`**. **Phase 2:** P1 pages (install, TLS, login, backup). **Phase 3+:** admin guide from demo script; fleet chapter after S8. Target URL: `docs.pbx.com` (or org Pages). Do not auto-publish `SESSION_HANDOFF`, audits, or `DEV_ENVIRONMENT.md`.
+- [x] **User guides — MkDocs site (`pbx3-docs`) seed (2026-07-15):** Holding-folder **`pbx3-docs/`** + GitHub **`aelintra/pbx3-docs`** → Pages **https://aelintra.github.io/pbx3-docs/**. Approved nav (Cloud/S3 + intro schematic); operator drafts for install/TLS/admin/fleet/cloud/troubleshoot (lab URLs). Content map updated. **Remaining:** human edit pass; optional SBC / recordings chapters; move to OSS org later. **`workingdocs/`** stay unpublished.
 
 - [ ] **pbx3cagi refactor (deferred — after S8 + R1 underway):** Phase 0 harness **golden-signed-off** on **08jzwn** (synthetic seed + `/opt/pbx3/db/sqlite.rdonly.db`; all CFIM scenarios PASS). **Do not start Phase 1.1+ struct refactor** until fleet/recordings momentum established; run **`make test`** after each refactor step when resumed. Gate: **`REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**, **`TEST_RECIPE.md`**.
 

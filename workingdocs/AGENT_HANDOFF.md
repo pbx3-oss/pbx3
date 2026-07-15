@@ -53,28 +53,28 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-15 — S10.8 login chooser complete)
+## Next agent session notes (2026-07-15 — pbx3-docs MkDocs live)
 
-**Branch:** **`main`** — **pbx3** **`6f4facd`**, **pbx3spa** **`54cced4`** (S10.8 code **`59225b9`**). Gatekeeper already live from S10.6 (no redeploy required for S10.8 SPA-only).
+**Branch:** **`main`** — **pbx3** tip after this handoff commit; content map **`b10f055`**+; **pbx3-docs** **`2a37a00`** on **`aelintra/pbx3-docs`**. Product tips unchanged from S10.8 (**pbx3spa** **`0972146`** handoff tip). No golden/API code change this session.
 
 ### Shipped
-- **S10.6** fleet user manage (gatekeeper + SPA Users) — earlier this day; lab OK (readonly user).
-- **S10.7 parked** — Mode 4 / Mac interim; MkDocs content map row **28b**.
-- **S10.8:** login chooser; `/fleet` Sanctum-free; dual-hat Enter Fleet; Exit (instance) vs Logout; fleet shell single TokenGate + nav locked until Sign in; Link setid Advanced.
+- **`pbx3-docs`** MkDocs Material site: approved nav (intro schematic, Cloud/S3); operator drafts for lab runbook; CI → GitHub Pages.
+- Live: **https://aelintra.github.io/pbx3-docs/** (interim under **aelintra**; moves with OSS org later).
+- Content map refreshed (Cloud/S3 rows, Phase 1/4b, seeded status).
 
 ### Golden / operator follow-up
-- SPA: `npm run dev` on **`pbx3spa` `main`** against golden + `control.pbx3.com`.
-- Control IP still dynamic — refresh SG `/32` if needed.
+- Use Pages site as lab guide; edit in **`pbx3-docs/docs/`** then push `main`.
+- SPA/golden unchanged: `npm run dev` vs **08jzwn** + **control.pbx3.com**.
 
 ### Resume
-1. Product pick: egress availability / failover shadowing planning, or small Fleet UX (DID row Edit).
+1. Product pick still: egress availability / failover shadowing, or small Fleet UX — **or** human edit pass on pbx3-docs.
 2. Do **not** start S10.7 orchestrator or S7+ / IdP without a customer ask.
 
 ---
 
-## Next agent session notes (2026-07-15 — S10.5 complete; Rule 13 dual contract) — historical
+## Next agent session notes (2026-07-15 — S10.8 login chooser complete) — historical
 
-**Branch:** **`main`** — superseded by block above (S10.6–S10.8).
+**Branch:** **`main`** — superseded by block above (docs session). Tips were **pbx3** **`6f4facd`**, **pbx3spa** **`54cced4`** / **`59225b9`**.
 
 ### Resume (superseded)
 See block above.
