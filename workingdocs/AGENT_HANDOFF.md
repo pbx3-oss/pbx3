@@ -53,25 +53,31 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-15 — S10.5 complete; Rule 13 dual contract)
+## Next agent session notes (2026-07-15 — S10.8 login chooser complete)
 
-**Branch:** **`main`** (also **`s105` tip**) — **pbx3** **`f074b07`**, **pbx3spa** **`ee9a4f3`**, **pbx3sbc-admin** **`95bd61c`**. Live on control + SBC (gatekeeper + sbc-admin redeployed this session).
+**Branch:** **`main`** — **pbx3** tip after docs commit, **pbx3spa** tip after S10.8 commit (see tip note after push). Gatekeeper already live from S10.6 (no redeploy required for S10.8 SPA-only).
 
 ### Shipped
-- **Rule 13 dual contract** — standalone SBC Filament vs PBX3 fleet catalog→adapter; one author per fact (`DESIGN_RULES.md`, overview, plan).
-- **S10.5 residue:** `POST …/provision-edge` + SBC `POST /fleet/provision-node` (new setid + Asterisk Peer, `sbc_backend_uri`); SPA Instances **Edge** panel + Tenants **Register on SBC**; **Link** = catch-up only (demote in polish).
-- **Exit Fleet** topbar + leave mode before revoke (`854ca8b`).
-- **S10.8 settled preference:** login **chooser** (Manage instance vs Fleet console) after S10.6 — live OK with nested Enter Fleet until then (`FLEET_AUTH_COOKIE_SSO.md` § Entry path).
+- **S10.6** fleet user manage (gatekeeper + SPA Users) — earlier this day; lab OK (readonly user).
+- **S10.7 parked** — Mode 4 / Mac interim; MkDocs content map row **28b**.
+- **S10.8:** login chooser; `/fleet` Sanctum-free; dual-hat Enter Fleet; Exit (instance) vs Logout; fleet shell single TokenGate + nav locked until Sign in; Link setid Advanced.
 
 ### Golden / operator follow-up
-- Control public IP still dynamic — refresh SG `/32` if needed.
-- After sbc-admin rsync: keep `storage`/`bootstrap/cache` owned by `www-data`.
-- Gatekeeper = thin REST JSON registrar (lab-OK; tighten CORS/cookies later).
+- SPA: `npm run dev` on **`pbx3spa` `main`** against golden + `control.pbx3.com`.
+- Control IP still dynamic — refresh SG `/32` if needed.
 
 ### Resume
-1. **S10.6** fleet user manage.
-2. Or Fleet UX polish bits that don’t need chooser yet (demote Link, Instances kinship).
-3. Do **not** start S7+ attestation or IdP/cookie without a customer ask. **S10.8** login chooser after S10.6 / when Fleet feels complete.
+1. Product pick: egress availability / failover shadowing planning, or small Fleet UX (DID row Edit).
+2. Do **not** start S10.7 orchestrator or S7+ / IdP without a customer ask.
+
+---
+
+## Next agent session notes (2026-07-15 — S10.5 complete; Rule 13 dual contract) — historical
+
+**Branch:** **`main`** — superseded by block above (S10.6–S10.8).
+
+### Resume (superseded)
+See block above.
 
 ---
 

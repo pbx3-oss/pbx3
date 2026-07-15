@@ -33,20 +33,20 @@ Do **not** pull a big identity engine until a customer/compliance requirement fo
 
 ## Entry path — login chooser (final polish)
 
-**Settled preference (2026-07-15):** prefer a **login chooser** as the first decision:
+**Shipped (2026-07-15, S10.8):** login **chooser** is the first decision when fleet is configured (`VITE_INSTANCE_DIRECTORY_URL` + `VITE_FLEET_GATEKEEPER_URL`):
 
 | Choice | Auth | Lands in |
 |--------|------|----------|
 | **Manage instance** | Node Sanctum (catalog picker / URL as today) | Tenant/instance SPA |
-| **Fleet console** | Gatekeeper only | Fleet mode |
+| **Fleet console** | Gatekeeper only | Fleet mode (`/fleet/*` — no Sanctum required) |
 
-**Today (lab scaffolding — acceptable until Fleet is functionally complete):** instance Sanctum login → topbar **Enter Fleet** → gatekeeper Sign in (`FleetTokenGate`). Exit Fleet returns to instance without full SPA logout (topbar Exit Fleet).
+**Secondary:** instance topbar **Enter Fleet** still swaps mode for dual-hat operators. **Exit Fleet** restores Sanctum `returnPath` when present; otherwise `/login` (chooser).
 
-**Why change later:** Fleet ops (catalog, DIDs, moves, edge) should not require a node password. Nested Enter Fleet conflates two planes for operators (Rule 10 still holds for tokens either way).
+**Why:** Fleet ops should not require a node password. Nested Enter Fleet alone conflated two planes (Rule 10 still holds for tokens either way).
 
 **Not blocked on cookies/SSO.** Chooser works with Bearer try-it-out; same-site cookies remain a separate deferral below.
 
-**Track:** **`IMPLEMENTATION_PLAN.md`** § **S10.8** · **`workingdocs/TODO.md`** (after S10.6).
+**Track:** **`IMPLEMENTATION_PLAN.md`** § **S10.8** · **`workingdocs/TODO.md`**.
 
 ---
 

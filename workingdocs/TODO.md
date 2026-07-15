@@ -1,17 +1,16 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — S10.6 live (fleet user manage); S10.7 parked; tip **S10.8**.  
-**Last updated:** 2026-07-15 (S10.6 shipped → main; S10.7 parked pending cloud-adapter discussion)
+**Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked.  
+**Last updated:** 2026-07-15 (session end — S10.8 login chooser + fleet shell auth gate)
 
 ### Suggested “what next?” order
 
-1. **S10.8** — Fleet entry polish: login **chooser** (Manage instance vs Fleet console); TokenGate kinship; demote Link setid.  
-2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-3. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-4. **S10.7 / S8.9 orchestrated onboard/rebuild (parked)** — wait for AWS vs S3-compatible / adapter stance (Rule 9). Mode 4 + Mac scripts remain.  
-5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-6. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
-7. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
+1. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+2. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+3. **S10.7 / S8.9 orchestrated onboard/rebuild (parked)** — wait for AWS vs S3-compatible / adapter stance (Rule 9). Mode 4 + Mac scripts remain.  
+4. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+5. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
+6. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
 
 ---
 
@@ -43,13 +42,15 @@
 
 - [x] **S10.6 — Fleet user manage (2026-07-15):** Create/disable/enable; abilities; revoke sessions; SPA **Users**. Live on control. Tips **pbx3** **`470a788`**, **pbx3spa** **`57efff0`**. Branch **`s105`→`main`** (branch deleted).
 
-- [ ] **Phase S10 — remaining:** **S10.8** entry polish (login chooser). **S10.7**/S10.2b orchestrated IAM onboard/rebuild — **parked** (2026-07-15) pending cloud-adapter / portability discussion; Mode 4 + Mac scripts stay. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10.
+- [x] **S10.8 — Fleet entry polish (2026-07-15):** Login chooser (Manage instance vs Fleet console); `/fleet` without Sanctum; dual-hat Enter Fleet kept; Exit vs Logout split; one **FleetTokenGate** in FleetLayout with nav locked until Sign in; Link setid → Advanced.
+
+- [ ] **Phase S10 — remaining:** **S10.7**/S10.2b orchestrated IAM onboard/rebuild — **parked** (2026-07-15) pending cloud-adapter / portability discussion; Mode 4 + Mac scripts stay. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10.
 
 - [ ] **S10.7 — Orchestrated onboard / rebuild (parked 2026-07-15):** Greenfield IAM join + S8.9 rebuild wizard behind cloud adapter (Rule 9). Explicitly not next. **Interim:** agent-assisted Mode 4 — planned MkDocs page in **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** row **28b**; source **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4. Design: **`SELF_SERVICE_REBUILD_DESIGN.md`**.
 
-- [ ] **Fleet entry — login chooser (final polish, settled preference 2026-07-15):** Today: instance Sanctum login → **Enter Fleet** → gatekeeper Sign in. Product preference: **login chooser** — “Manage instance” vs “Fleet console” as first decision (fleet-only ops never need a node password). Live with nested Enter Fleet until Fleet is functionally complete (after S10.6). Keep Rule 10: two token planes. Ties **`FLEET_AUTH_COOKIE_SSO.md`** § Entry path · **`IMPLEMENTATION_PLAN.md`** § S10.8.
+- [x] **Fleet entry — login chooser (2026-07-15):** Shipped S10.8. Nested Enter Fleet remains secondary for dual-hat. Keep Rule 10: two token planes. Ties **`FLEET_AUTH_COOKIE_SSO.md`** § Entry path · **`IMPLEMENTATION_PLAN.md`** § S10.8.
 
-- [ ] **Fleet login UI kinship (UX):** `FleetTokenGate` still lab-form-like vs **`LoginView`**. Polish Fleet Instances register/actions; demote **Link setid**; optional DID row Edit. Keep break-glass collapsed. Bundle with login chooser when polishing entry.
+- [x] **Fleet login UI kinship (S10.8 slice 2026-07-15):** TokenGate form kinship with LoginView; Link setid demoted to Advanced. Remaining optional: DID row Edit; further Instances polish.
 
 - [x] **Critical-path test pack Pack A (2026-07-14):** Offline regression net complete — **`TEST_CADENCE.md`**, **`CRITICAL_PATH_TEST_PACK.md`**. Prefix overlap, gatekeeper UserStore + break-glass, fleet list fixtures, SnapshotRetention, recordings HTTP 404/list (mocked), SPA fleet token Vitest. Branch **`packa` → `main`**. Ongoing habit: leave a unit/contract test when touching logic. Pack B = lab recipes; Pack C = UI E2E later.
 
