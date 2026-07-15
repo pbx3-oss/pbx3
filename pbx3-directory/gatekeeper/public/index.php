@@ -11,6 +11,7 @@ require_once dirname(__DIR__).'/vendor/autoload.php';
 
 use Pbx3\Gatekeeper\Auth;
 use Pbx3\Gatekeeper\Env;
+use Pbx3\Gatekeeper\FleetAbilities;
 use Pbx3\Gatekeeper\Http\JsonResponse;
 use Pbx3\Gatekeeper\S3Presign;
 use Pbx3\Gatekeeper\S3RecordingsPresign;
@@ -57,8 +58,15 @@ try {
     Auth::requireBearer();
 
     if ($method === 'GET' && $path === '/api/v1/auth/me') {
+        $user = Auth::user();
         JsonResponse::send(200, [
-            'user' => Auth::user(),
+            'user' => $user === null ? null : [
+                'id' => $user['id'],
+                'email' => $user['email'],
+                'name' => $user['name'],
+                'abilities' => $user['abilities'] ?? [],
+            ],
+            'abilities' => Auth::effectiveAbilities(),
             'break_glass' => Auth::isBreakGlass(),
         ]);
     }
@@ -76,61 +84,74 @@ try {
     $runner = new TenantMoveRunner($jobs, $presign, $registrar);
 
     if ($method === 'GET' && $path === '/api/v1/catalog') {
+        Auth::requireAbility(FleetAbilities::READ);
         JsonResponse::send(200, $registrar->getCatalog());
     }
 
     if ($method === 'GET' && $path === '/api/v1/tenants') {
+        Auth::requireAbility(FleetAbilities::READ);
         JsonResponse::send(200, ['tenants' => $registrar->listTenants()]);
     }
 
     if ($method === 'POST' && $path === '/api/v1/instances') {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         JsonResponse::send(201, $registrar->registerInstance($body));
     }
 
     if ($method === 'POST' && $path === '/api/v1/tenants') {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         JsonResponse::send(201, $registrar->registerTenant($body));
     }
 
     if ($method === 'POST' && preg_match('#^/api/v1/tenants/([a-z0-9]+)/move$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::MOVES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         JsonResponse::send(200, $registrar->moveTenant($m[1], $body));
     }
 
     if ($method === 'POST' && $path === '/api/v1/s3/presign') {
+        Auth::requireAbility(FleetAbilities::MOVES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         JsonResponse::send(200, $presign->create($body));
     }
 
     // S7 — dedicated recordings bucket (never org/catalog). Scoped tenants/{shortuid}/recordings/*
+    // Node agents typically use break-glass (fleet_admin).
     if ($method === 'POST' && $path === '/api/v1/s3/presign-recordings') {
+        Auth::requireAbility(FleetAbilities::ADMIN);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         JsonResponse::send(200, (new S3RecordingsPresign())->create($body));
     }
 
     if ($method === 'POST' && $path === '/api/v1/tenant-moves') {
+        Auth::requireAbility(FleetAbilities::MOVES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         JsonResponse::send(201, $jobs->create($body));
     }
 
     if ($method === 'GET' && $path === '/api/v1/tenant-moves') {
+        Auth::requireAbility(FleetAbilities::READ);
         $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 50;
         JsonResponse::send(200, ['jobs' => $jobs->list($limit)]);
     }
 
     if ($method === 'GET' && preg_match('#^/api/v1/tenant-moves/([A-Za-z0-9_-]+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::READ);
         $shortuid = $_GET['tenant'] ?? null;
         JsonResponse::send(200, $jobs->get($m[1], is_string($shortuid) ? $shortuid : null));
     }
 
     if ($method === 'POST' && preg_match('#^/api/v1/tenant-moves/([A-Za-z0-9_-]+)/run$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::MOVES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         $shortuid = $body['tenant_shortuid'] ?? ($_GET['tenant'] ?? null);
         JsonResponse::send(200, $runner->runUntilGate($m[1], is_string($shortuid) ? $shortuid : null));
     }
 
     if ($method === 'POST' && preg_match('#^/api/v1/tenant-moves/([A-Za-z0-9_-]+)/advance$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::MOVES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         $shortuid = $body['tenant_shortuid'] ?? null;
         $short = is_string($shortuid) ? $shortuid : null;

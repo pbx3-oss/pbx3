@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT NOT NULL UNIQUE COLLATE NOCASE,
     name TEXT NOT NULL DEFAULT '',
     password_hash TEXT NOT NULL,
+    abilities TEXT NOT NULL DEFAULT '["fleet_admin"]',
     created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS api_tokens (
@@ -65,24 +66,29 @@ CREATE TABLE IF NOT EXISTS api_tokens (
 );
 CREATE INDEX IF NOT EXISTS api_tokens_user_id ON api_tokens(user_id);
 SQL);
+
+        $cols = $pdo->query('PRAGMA table_info(users)')->fetchAll();
+        $names = array_map(static fn (array $c): string => (string) $c['name'], $cols);
+        if (! in_array('abilities', $names, true)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN abilities TEXT NOT NULL DEFAULT \'["fleet_admin"]\'');
+        }
     }
 
-    /** @return array{id:int,email:string,name:string}|null */
+    /**
+     * @return array{id:int,email:string,name:string,abilities:list<string>,password_hash:string}|null
+     */
     public static function findByEmail(string $email): ?array
     {
-        $st = self::pdo()->prepare('SELECT id, email, name, password_hash FROM users WHERE email = ? COLLATE NOCASE LIMIT 1');
+        $st = self::pdo()->prepare(
+            'SELECT id, email, name, password_hash, abilities FROM users WHERE email = ? COLLATE NOCASE LIMIT 1'
+        );
         $st->execute([trim($email)]);
         $row = $st->fetch();
         if (! is_array($row)) {
             return null;
         }
 
-        return [
-            'id' => (int) $row['id'],
-            'email' => (string) $row['email'],
-            'name' => (string) $row['name'],
-            'password_hash' => (string) $row['password_hash'],
-        ];
+        return self::mapUserRow($row, true);
     }
 
     public static function userCount(): int
@@ -90,8 +96,11 @@ SQL);
         return (int) self::pdo()->query('SELECT COUNT(*) FROM users')->fetchColumn();
     }
 
-    /** @return array{id:int,email:string,name:string} */
-    public static function createUser(string $email, string $password, string $name = ''): array
+    /**
+     * @param  list<string>|null  $abilities  null = DEFAULT_BOOTSTRAP (fleet_admin)
+     * @return array{id:int,email:string,name:string,abilities:list<string>}
+     */
+    public static function createUser(string $email, string $password, string $name = '', ?array $abilities = null): array
     {
         $email = strtolower(trim($email));
         if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -104,19 +113,48 @@ SQL);
         if ($hash === false) {
             throw new \RuntimeException('password_hash failed', 500);
         }
+        $normalized = FleetAbilities::normalize($abilities ?? FleetAbilities::DEFAULT_BOOTSTRAP);
+        if ($normalized === []) {
+            throw new \InvalidArgumentException('At least one valid fleet_* ability required');
+        }
         $now = gmdate('c');
-        $st = self::pdo()->prepare('INSERT INTO users (email, name, password_hash, created_at) VALUES (?, ?, ?, ?)');
-        $st->execute([$email, trim($name) !== '' ? trim($name) : $email, $hash, $now]);
+        $st = self::pdo()->prepare(
+            'INSERT INTO users (email, name, password_hash, abilities, created_at) VALUES (?, ?, ?, ?, ?)'
+        );
+        $st->execute([
+            $email,
+            trim($name) !== '' ? trim($name) : $email,
+            $hash,
+            FleetAbilities::toJson($normalized),
+            $now,
+        ]);
 
         return [
             'id' => (int) self::pdo()->lastInsertId(),
             'email' => $email,
             'name' => trim($name) !== '' ? trim($name) : $email,
+            'abilities' => $normalized,
         ];
     }
 
     /**
-     * @return array{token:string,user:array{id:int,email:string,name:string},expires_at:?string}
+     * @param  list<string>  $abilities
+     */
+    public static function setAbilities(int $userId, array $abilities): void
+    {
+        $normalized = FleetAbilities::normalize($abilities);
+        if ($normalized === []) {
+            throw new \InvalidArgumentException('At least one valid fleet_* ability required');
+        }
+        $st = self::pdo()->prepare('UPDATE users SET abilities = ? WHERE id = ?');
+        $st->execute([FleetAbilities::toJson($normalized), $userId]);
+        if ($st->rowCount() === 0) {
+            throw new \RuntimeException('User not found', 404);
+        }
+    }
+
+    /**
+     * @return array{token:string,token_type:string,user:array{id:int,email:string,name:string,abilities:list<string>},expires_at:?string}
      */
     public static function login(string $email, string $password, int $ttlSeconds = 86400 * 7): array
     {
@@ -143,16 +181,20 @@ SQL);
                 'id' => (int) $row['id'],
                 'email' => (string) $row['email'],
                 'name' => (string) $row['name'],
+                'abilities' => $row['abilities'],
             ],
+            'abilities' => FleetAbilities::expand($row['abilities']),
         ];
     }
 
-    /** @return array{id:int,email:string,name:string}|null */
+    /**
+     * @return array{id:int,email:string,name:string,abilities:list<string>,token_id:int}|null
+     */
     public static function userForToken(string $plainToken): ?array
     {
         $hash = hash('sha256', $plainToken);
         $st = self::pdo()->prepare(<<<'SQL'
-SELECT u.id, u.email, u.name, t.id AS token_id, t.expires_at
+SELECT u.id, u.email, u.name, u.abilities, t.id AS token_id, t.expires_at
 FROM api_tokens t
 JOIN users u ON u.id = t.user_id
 WHERE t.token_hash = ?
@@ -169,12 +211,10 @@ SQL);
             return null;
         }
 
-        return [
-            'id' => (int) $row['id'],
-            'email' => (string) $row['email'],
-            'name' => (string) $row['name'],
-            'token_id' => (int) $row['token_id'],
-        ];
+        $user = self::mapUserRow($row, false);
+        $user['token_id'] = (int) $row['token_id'];
+
+        return $user;
     }
 
     public static function revokeToken(string $plainToken): void
@@ -192,5 +232,28 @@ SQL);
     public static function resetForTests(): void
     {
         self::$pdo = null;
+    }
+
+    /**
+     * @param  array<string,mixed>  $row
+     * @return array{id:int,email:string,name:string,abilities:list<string>,password_hash?:string}
+     */
+    private static function mapUserRow(array $row, bool $withPassword): array
+    {
+        $abilities = FleetAbilities::normalize($row['abilities'] ?? FleetAbilities::DEFAULT_BOOTSTRAP);
+        if ($abilities === []) {
+            $abilities = FleetAbilities::DEFAULT_BOOTSTRAP;
+        }
+        $out = [
+            'id' => (int) $row['id'],
+            'email' => (string) $row['email'],
+            'name' => (string) $row['name'],
+            'abilities' => $abilities,
+        ];
+        if ($withPassword) {
+            $out['password_hash'] = (string) $row['password_hash'];
+        }
+
+        return $out;
     }
 }

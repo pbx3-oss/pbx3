@@ -435,7 +435,7 @@ Mac CLI (`onboard-fleet-instance.sh`, `register-instance.sh`, `unregister-instan
 
 | # | Task | Repo / owner | Notes |
 |---|------|----------------|-------|
-| **S10.1** | **Gatekeeper abilities** | gatekeeper + pbx3spa | Persist abilities on fleet users; `/me` returns them; SPA route/action guards. Require at least `fleet_read` to enter Fleet mode; mutate endpoints check specific `fleet_*`. Break-glass token = ops-only (document as full power or map to `fleet_admin`). |
+| **S10.1** | **Gatekeeper abilities** | gatekeeper + pbx3spa | **Done (2026-07-14):** Persist `abilities` on fleet users; login/`/me` return them; route checks (`fleet_read` / `fleet_instances` / `fleet_moves` / `fleet_admin`); SPA stores abilities, requires `fleet_read`, hides Move without `fleet_moves`. Break-glass = `fleet_admin`. |
 | **S10.2** | **Instance lifecycle (catalog)** | gatekeeper + pbx3spa | **Register** live node (`register-instance` equivalent); **decommission** (soft `decommissioned` hide vs hard remove); **edit** label/notes/environment; **maintenance / drain** (in catalog but ineligible as move dest). v1 = catalog + verify reachable `/up`; full IAM attach / `.env` write = **S10.2b** (orchestrator job, shares logic with S8.9). |
 | **S10.3** | **Move job control** | gatekeeper + pbx3spa | Polish cancel / retry / rollback on tenant-move jobs; audit who started. Move wizard already S8.10 — this makes job ops panel-complete for `fleet_moves`. |
 | **S10.4** | **Catalog integrity** | gatekeeper (+ SBC adapter) | Reconcile / drift report: S3 home-of-record ↔ SBC `domain.setid` (+ DID projection when present). Read-only first; optional “force project from catalog” under `fleet_edge`. |

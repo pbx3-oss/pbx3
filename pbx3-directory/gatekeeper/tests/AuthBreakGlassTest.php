@@ -58,6 +58,8 @@ final class AuthBreakGlassTest extends TestCase
 
         $this->assertTrue(Auth::isBreakGlass());
         $this->assertSame('break-glass@local', Auth::user()['email'] ?? null);
+        $this->assertTrue(Auth::can(\Pbx3\Gatekeeper\FleetAbilities::ADMIN));
+        $this->assertTrue(Auth::can(\Pbx3\Gatekeeper\FleetAbilities::READ));
     }
 
     public function test_session_token_authenticates_without_break_glass(): void

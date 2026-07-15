@@ -35,14 +35,14 @@ Do **not** pull a big identity engine until a customer/compliance requirement fo
 
 Design §2.5: node `admin` / panel abilities → **pbx3api** only; `fleet` / `fleet_*` → **gatekeeper** only. Most customer admins get **zero** fleet.
 
-Today every authenticated fleet principal can hit the whole gatekeeper API (no per-ability checks yet).
+Today gatekeeper enforces `fleet_*` abilities on routes (S10.1). SPA hides actions the session lacks; **server still decides**.
 
-**We can add abilities without an IdP:**
+**Abilities without an IdP (shipped S10.1):**
 
-1. Persist abilities on the gatekeeper user (column or join table).
+1. Persist abilities on the gatekeeper user (SQLite `users.abilities` JSON).
 2. Return them from `login` / `me`.
 3. Enforce on gatekeeper routes; SPA only hides UI (server still decides).
-4. Break-glass = full ops set (or explicit `fleet_*`).
+4. Break-glass = `fleet_admin` (full ops set).
 
 That mirrors Sanctum abilities on the node — just on control-plane users.
 

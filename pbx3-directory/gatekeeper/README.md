@@ -28,11 +28,23 @@ See **`pbx3/workingdocs/CRITICAL_PATH_TEST_PACK.md`**.
 
 | Mode | How |
 |------|-----|
-| **Fleet user (preferred)** | `POST /api/v1/auth/login` with `{ "email", "password" }` → Bearer token (store hashed in SQLite). Bootstrap: `php bin/create-fleet-user.php --email … --password …` |
-| **Break-glass** | Static `GATEKEEPER_API_TOKEN` still accepted as Bearer (ops / emergency). |
-| **SPA (interim)** | Paste either login token or break-glass into Fleet token gate. Login form wiring comes next. |
+| **Fleet user (preferred)** | `POST /api/v1/auth/login` with `{ "email", "password" }` → Bearer token (store hashed in SQLite). Bootstrap: `php bin/create-fleet-user.php --email … --password …` `[--abilities fleet_admin]` |
+| **Break-glass** | Static `GATEKEEPER_API_TOKEN` still accepted as Bearer (ops / emergency) — treated as **`fleet_admin`**. |
+| **SPA** | Login form on FleetTokenGate; optional break-glass paste. Abilities from login/`/me` gate UI (server still enforces). |
 
-Bearer **required** on every `/api/v1/*` **except** `/api/v1/auth/login` and `/api/v1/auth/status`. `GET /health` stays open.
+### Abilities (S10.1)
+
+| Ability | Gates |
+|---------|--------|
+| `fleet_read` | `GET` catalog, tenants, tenant-moves; required to enter Fleet mode |
+| `fleet_instances` | `POST` instances, tenants (register) |
+| `fleet_moves` | Move job create/run/advance; catalog move; org migration `s3/presign` |
+| `fleet_edge` | Reserved for S10.4–S10.5 (reconcile / DID) |
+| `fleet_admin` | All of the above + recordings `presign-recordings` + future fleet-user manage |
+
+`fleet_admin` grants every `fleet_*`. Existing auth DBs get an `abilities` column defaulting to `["fleet_admin"]` on migrate.
+
+Bearer **required** on every `/api/v1/*` **except** `/api/v1/auth/login` and `/api/v1/auth/status`. `GET /health` stays open. `/api/v1/auth/me` and logout need Bearer only (no ability).
 
 | Environment | How the SPA gets the token |
 |-------------|----------------------------|
