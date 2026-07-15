@@ -66,6 +66,7 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `POST` | `/api/v1/dids/release` | Soft-release DID in catalog (+ project) (`fleet_edge`) |
 | `POST` | `/api/v1/dids/project` | Force-project catalog DIDs → SBC inbound `dr_rules` (`fleet_edge`) |
 | `POST` | `/api/v1/tenants/{shortuid}/register-domain` | Ensure SBC `domain` row for tenant fqdn + catalog setid (`fleet_edge`) |
+| `POST` | `/api/v1/instances/{id}/provision-edge` | S10.5: allocate/update dispatcher set + Asterisk Peer; write catalog `sbc_dispatcher_setid` + `sbc_backend_uri` (`fleet_edge`). Body: optional `backend_uri`, `confirm` (required to update existing setid), `source_ip`, `dry_run` |
 | `GET` | `/api/v1/sbc/dispatcher-sets` | Live SBC dispatcher setids (`fleet_read`) — catalog setid must be one of these |
 | `GET` | `/api/v1/reconcile` | S10.4 drift: catalog tenants ↔ SBC `domain.setid` (`fleet_edge`) |
 | `POST` | `/api/v1/reconcile/project` | Apply catalog → SBC for `setid_mismatch` only (`confirm` / `dry_run`) |

@@ -138,6 +138,17 @@ final class SbcFleetClient
         ]);
     }
 
+    /**
+     * S10.5 residue — create/update dispatcher set + Asterisk Peer for a node.
+     *
+     * @param  array<string, mixed>  $body
+     * @return array<string, mixed>
+     */
+    public function provisionNode(array $body): array
+    {
+        return $this->post('/fleet/provision-node', $body);
+    }
+
     /** @return array<string, mixed> */
     private function get(string $path): array
     {

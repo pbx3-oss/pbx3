@@ -15,6 +15,7 @@ use Pbx3\Gatekeeper\DidInventory;
 use Pbx3\Gatekeeper\Env;
 use Pbx3\Gatekeeper\FleetAbilities;
 use Pbx3\Gatekeeper\Http\JsonResponse;
+use Pbx3\Gatekeeper\InstanceEdgeProvision;
 use Pbx3\Gatekeeper\S3Presign;
 use Pbx3\Gatekeeper\S3RecordingsPresign;
 use Pbx3\Gatekeeper\S3Registrar;
@@ -188,6 +189,24 @@ try {
             $m[1],
             $body,
             is_string($actor) ? $actor : null
+        ));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/instances/([A-Za-z0-9_-]+)/provision-edge$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        if (! is_array($body)) {
+            $body = [];
+        }
+        $actor = Auth::user()['email'] ?? null;
+        if (is_string($actor) && $actor !== '') {
+            $body['updated_by'] = $actor;
+        }
+        JsonResponse::send(200, InstanceEdgeProvision::provision(
+            $registrar,
+            new SbcFleetClient(),
+            $m[1],
+            $body
         ));
     }
 

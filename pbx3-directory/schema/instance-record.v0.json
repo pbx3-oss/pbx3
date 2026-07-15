@@ -62,6 +62,10 @@
       "type": "integer",
       "minimum": 1,
       "description": "OpenSIPS dispatcher setid for this node backend (SbcFleetAdapter / peering)"
+    },
+    "sbc_backend_uri": {
+      "type": "string",
+      "description": "SIP URI the SBC dials for this node (e.g. sip:08jzwn.pbx3.com:5060). Defaults to sip:{fqdn}:5060 on provision-edge."
     }
   }
 }

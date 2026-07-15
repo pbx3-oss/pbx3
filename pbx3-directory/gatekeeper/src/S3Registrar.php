@@ -32,6 +32,7 @@ final class S3Registrar
         'org_id',
         'package_version',
         'sbc_dispatcher_setid',
+        'sbc_backend_uri',
     ];
 
     public function __construct()
@@ -391,7 +392,7 @@ final class S3Registrar
             'created_at' => $existing['created_at'] ?? $now,
             'updated_at' => $now,
         ]);
-        foreach (['environment', 'notes', 'region', 'org_id', 'package_version', 'updated_by', 'last_seen_at', 'sbc_dispatcher_setid'] as $opt) {
+        foreach (['environment', 'notes', 'region', 'org_id', 'package_version', 'updated_by', 'last_seen_at', 'sbc_dispatcher_setid', 'sbc_backend_uri'] as $opt) {
             if (array_key_exists($opt, $record)) {
                 $meta[$opt] = $record[$opt];
             }
