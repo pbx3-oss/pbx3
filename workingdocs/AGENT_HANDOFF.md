@@ -55,7 +55,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-15 — S10.5 complete; Rule 13 dual contract)
 
-**Branch:** **`main`** (also **`s105` tip**) — **pbx3** **`e8d2a8e`** (+ handoff commit), **pbx3spa** **`854ca8b`**, **pbx3sbc-admin** **`95bd61c`**. Live on control + SBC (gatekeeper + sbc-admin redeployed this session).
+**Branch:** **`main`** (also **`s105` tip**) — **pbx3** **`f074b07`**, **pbx3spa** **`ee9a4f3`**, **pbx3sbc-admin** **`95bd61c`**. Live on control + SBC (gatekeeper + sbc-admin redeployed this session).
 
 ### Shipped
 - **Rule 13 dual contract** — standalone SBC Filament vs PBX3 fleet catalog→adapter; one author per fact (`DESIGN_RULES.md`, overview, plan).
