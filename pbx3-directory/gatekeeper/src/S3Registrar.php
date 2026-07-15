@@ -258,6 +258,59 @@ final class S3Registrar
         return $meta;
     }
 
+    /** @return array<string, mixed> */
+    public function getTenantMeta(string $shortuid): array
+    {
+        return $this->readJson("tenants/{$shortuid}/meta.json", []);
+    }
+
+    /**
+     * S10.5 — tenants/{shortuid}/dids.json (empty inventory if missing).
+     *
+     * @return array{tenant_shortuid: string, updated_at: string, dids: list<array<string, mixed>>}
+     */
+    public function getDidInventory(string $shortuid): array
+    {
+        $inv = $this->readJson("tenants/{$shortuid}/dids.json", []);
+        if ($inv === []) {
+            return [
+                'tenant_shortuid' => $shortuid,
+                'updated_at' => $this->nowIso(),
+                'dids' => [],
+            ];
+        }
+        if (! isset($inv['dids']) || ! is_array($inv['dids'])) {
+            $inv['dids'] = [];
+        }
+        $inv['tenant_shortuid'] = $shortuid;
+
+        return $inv;
+    }
+
+    /** @param array<string, mixed> $inventory */
+    public function putDidInventory(string $shortuid, array $inventory): void
+    {
+        $inventory['tenant_shortuid'] = $shortuid;
+        if (! isset($inventory['updated_at'])) {
+            $inventory['updated_at'] = $this->nowIso();
+        }
+        if (! isset($inventory['dids']) || ! is_array($inventory['dids'])) {
+            $inventory['dids'] = [];
+        }
+        $this->writeJson("tenants/{$shortuid}/dids.json", $inventory);
+    }
+
+    /** @param array<string, mixed> $index */
+    public function putDidIndex(array $index): void
+    {
+        $this->writeJson('catalog/did-index.json', $index);
+    }
+
+    public function nowIso(): string
+    {
+        return gmdate('Y-m-d\TH:i:s\Z');
+    }
+
     /**
      * Pure helper for tests — merge patch onto a catalog instance row.
      *
@@ -372,8 +425,4 @@ final class S3Registrar
         ]);
     }
 
-    private function nowIso(): string
-    {
-        return gmdate('Y-m-d\TH:i:s\Z');
-    }
 }

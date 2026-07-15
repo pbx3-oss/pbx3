@@ -11,6 +11,7 @@ require_once dirname(__DIR__).'/vendor/autoload.php';
 
 use Pbx3\Gatekeeper\Auth;
 use Pbx3\Gatekeeper\CatalogReconcile;
+use Pbx3\Gatekeeper\DidInventory;
 use Pbx3\Gatekeeper\Env;
 use Pbx3\Gatekeeper\FleetAbilities;
 use Pbx3\Gatekeeper\Http\JsonResponse;
@@ -94,6 +95,47 @@ try {
     if ($method === 'GET' && $path === '/api/v1/tenants') {
         Auth::requireAbility(FleetAbilities::READ);
         JsonResponse::send(200, ['tenants' => $registrar->listTenants()]);
+    }
+
+    // S10.5 — catalog DID ownership (HoR). List = read; assign/release = fleet_edge.
+    if ($method === 'GET' && $path === '/api/v1/dids') {
+        Auth::requireAbility(FleetAbilities::READ);
+        JsonResponse::send(200, (new DidInventory($registrar))->listAll());
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/dids/assign') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        JsonResponse::send(200, (new DidInventory($registrar))->assign(is_array($body) ? $body : []));
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/dids/release') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        JsonResponse::send(200, (new DidInventory($registrar))->release(is_array($body) ? $body : []));
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/dids/project') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $inv = new DidInventory($registrar);
+        $tenant = isset($body['tenant_shortuid']) && is_string($body['tenant_shortuid'])
+            ? strtolower(trim($body['tenant_shortuid']))
+            : null;
+        $filter = ($tenant !== null && $tenant !== '') ? [$tenant] : null;
+        JsonResponse::send(200, $inv->projectToSbc(
+            new SbcFleetClient(),
+            $filter,
+            ! empty($body['dry_run'])
+        ));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/tenants/([a-z0-9]+)/register-domain$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        JsonResponse::send(200, (new DidInventory($registrar))->registerTenantDomain(
+            new SbcFleetClient(),
+            $m[1]
+        ));
     }
 
     // S10.4 — catalog ↔ SBC domain.setid drift + optional force-project (Rule 13)

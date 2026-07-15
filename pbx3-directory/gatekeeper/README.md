@@ -39,7 +39,7 @@ See **`pbx3/workingdocs/CRITICAL_PATH_TEST_PACK.md`**.
 | `fleet_read` | `GET` catalog, tenants, tenant-moves; required to enter Fleet mode |
 | `fleet_instances` | `POST` instances, tenants (register) |
 | `fleet_moves` | Move job create/run/advance; catalog move; org migration `s3/presign` |
-| `fleet_edge` | `GET` reconcile + `POST` reconcile/project (S10.4); DID assign (S10.5) |
+| `fleet_edge` | `GET` reconcile + `POST` reconcile/project (S10.4); `POST` dids/assign + release (S10.5) |
 | `fleet_admin` | All of the above + recordings `presign-recordings` + future fleet-user manage |
 
 `fleet_admin` grants every `fleet_*`. Existing auth DBs get an `abilities` column defaulting to `["fleet_admin"]` on migrate.
@@ -61,6 +61,11 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `GET` | `/health` | Liveness (no auth) |
 | `GET` | `/api/v1/catalog` | Read instance index |
 | `GET` | `/api/v1/tenants` | List tenant meta rows |
+| `GET` | `/api/v1/dids` | S10.5 catalog DID ownership flat list (`fleet_read`) |
+| `POST` | `/api/v1/dids/assign` | Assign/reassign DID → tenant; writes `dids.json` + `did-index`; projects SBC unless `project:false` (`fleet_edge`) |
+| `POST` | `/api/v1/dids/release` | Soft-release DID in catalog (+ project) (`fleet_edge`) |
+| `POST` | `/api/v1/dids/project` | Force-project catalog DIDs → SBC inbound `dr_rules` (`fleet_edge`) |
+| `POST` | `/api/v1/tenants/{shortuid}/register-domain` | Ensure SBC `domain` row for tenant fqdn + catalog setid (`fleet_edge`) |
 | `GET` | `/api/v1/sbc/dispatcher-sets` | Live SBC dispatcher setids (`fleet_read`) — catalog setid must be one of these |
 | `GET` | `/api/v1/reconcile` | S10.4 drift: catalog tenants ↔ SBC `domain.setid` (`fleet_edge`) |
 | `POST` | `/api/v1/reconcile/project` | Apply catalog → SBC for `setid_mismatch` only (`confirm` / `dry_run`) |

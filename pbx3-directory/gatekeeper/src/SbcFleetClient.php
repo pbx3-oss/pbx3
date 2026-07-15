@@ -105,6 +105,39 @@ final class SbcFleetClient
         ]);
     }
 
+    /**
+     * S10.5 — project catalog DID rows onto SBC inbound dr_rules.
+     *
+     * @param  list<array<string, mixed>>  $dids
+     * @return array<string, mixed>
+     */
+    public function projectDids(array $dids, bool $dryRun = false, array $ensureTenants = []): array
+    {
+        return $this->post('/fleet/project-dids', [
+            'dids' => $dids,
+            'dry_run' => $dryRun,
+            'ensure_tenants' => array_values($ensureTenants),
+        ]);
+    }
+
+    /**
+     * S10.5 — ensure domain row exists with setid.
+     *
+     * @return array<string, mixed>
+     */
+    public function registerDomain(string $domain, int $setid): array
+    {
+        $domain = strtolower(trim($domain));
+        if ($domain === '' || $setid < 1) {
+            throw new \InvalidArgumentException('domain and setid (>=1) required', 422);
+        }
+
+        return $this->post('/fleet/domains', [
+            'domain' => $domain,
+            'setid' => $setid,
+        ]);
+    }
+
     /** @return array<string, mixed> */
     private function get(string $path): array
     {

@@ -12,6 +12,11 @@
       "pattern": "^\\+[1-9]\\d{1,14}$",
       "description": "E.164 with leading + (e.g. +442071234567)"
     },
+    "sip_prefix": {
+      "type": "string",
+      "pattern": "^[0-9]{1,20}$",
+      "description": "Optional OpenSIPS dr_rules prefix (digits as carrier presents R-URI user). Default = e164 without +. Lab Magrathea often needs UK national e.g. 01924918076 while e164 is +441924918076."
+    },
     "tenant_shortuid": {
       "type": "string",
       "minLength": 1,
