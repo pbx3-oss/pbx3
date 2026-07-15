@@ -439,11 +439,12 @@ Mac CLI (`onboard-fleet-instance.sh`, `register-instance.sh`, `unregister-instan
 | **S10.2** | **Instance lifecycle (catalog)** | gatekeeper + pbx3spa | **Done (`s102`→`main` 2026-07-14):** Register (+ `verify_up`), soft decommission, PATCH metadata/status; SPA Instances panel; `updated_by`. S10.2b IAM/.env later. |
 | **S10.3** | **Move job control** | gatekeeper + pbx3spa | **Done (`s103`→`main` 2026-07-14):** abort / retry / rollback + `created_by` / `last_action_by`; SPA job actions. |
 | **S10.4** | **Catalog integrity** | gatekeeper + pbx3sbc-admin + pbx3spa | **Done (`s104`):** reconcile + apply catalog→SBC for `setid_mismatch`. SPA copy: Instances = catalog only; Project ≠ undo. See gatekeeper README § Reconcile vs project. DID → **S10.5**. |
-| **S10.5** | **Edge / DID actions** | gatekeeper + pbx3sbc-admin + pbx3spa | **DID path done (`s105`)**; **edge residue (2026-07-15):** `POST …/provision-edge` + SBC `POST /fleet/provision-node` (new setid + Asterisk Peer); SPA Instances **Provision edge**; Tenants **Register on SBC**. Catalog `sbc_backend_uri` (default `sip:{fqdn}:5060`). Rule 13 dual contract. Ties **`DID_ASSIGNMENT_DESIGN.md`**, **`DESIGN_RULES.md` Rule 13**. |
+| **S10.5** | **Edge / DID actions** | gatekeeper + pbx3sbc-admin + pbx3spa | **Done (`s105`→`main` 2026-07-15):** DID path + residue — `provision-edge` / `provision-node`; SPA Provision edge + Register on SBC; `sbc_backend_uri`; Rule 13. |
 | **S10.6** | **Fleet user manage** | gatekeeper + pbx3spa | Create/disable fleet users; assign `fleet_*` abilities; revoke sessions. `fleet_admin` only. |
 | **S10.7** | **Orchestrated onboard / rebuild (optional)** | control-plane + SPA | Greenfield IAM join + `.env` smoke, and/or S8.9 rebuild wizard — durable jobs behind **cloud adapter** (Rule 9); node stays on `pbx3-node-*` role. Do not start until S10.1–S10.2 catalog path is trusted. |
+| **S10.8** | **Fleet entry polish (final)** | pbx3spa (+ gatekeeper auth UX) | **Settled preference 2026-07-15:** **login chooser** — “Manage instance” vs “Fleet console” first (not instance Sanctum before Fleet). Live OK with nested Enter Fleet until then. Bundle TokenGate kinship, demote Link setid. See **`FLEET_AUTH_COOKIE_SSO.md`** § Entry path. |
 
-**v1 panel wish-list (ship before expanding S10.7):** onboard (catalog register), decommission, move + job control, catalog edit/maintenance, reconcile/drift, DID assign, fleet user manage.
+**v1 panel wish-list (ship before expanding S10.7):** onboard (catalog register), decommission, move + job control, catalog edit/maintenance, reconcile/drift, DID assign, fleet user manage; **entry chooser = final polish (S10.8)**.
 
 **Explicitly not fleet-admin (stay instance/tenant):** extension/trunk/IVR CRUD, local users, day-to-day Certificates LE UI, call-recording listen, Shorewall. Fleet may **trigger** post-move cert sync as a **job step**; cert panel remains node-local.
 

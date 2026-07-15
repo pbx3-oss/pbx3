@@ -1,18 +1,17 @@
 # PBX3 ToDo list
 
-**Branch:** **`s105`** (pbx3 / pbx3spa / pbx3sbc-admin) — session end 2026-07-15 (S10.5 DID path).  
-**Last updated:** 2026-07-15 (session end — S10.5 catalog DID + SBC project; edge residue paused for decisions)
+**Branch:** **`main`** / lab **`s105` tip** — S10.5 edge residue live on control + SBC (2026-07-15).  
+**Last updated:** 2026-07-15 (session end — S10.5 complete; S10.6 next; login chooser = S10.8 polish)
 
 ### Suggested “what next?” order
 
-1. **Decide + finish S10.5 residue** — tenant domain register UI; node dispatcher-set register/update (URI source, new vs share setid, Asterisk Peer in same action?). Pause until settled.  
-2. **S10.6** — fleet user manage (`IMPLEMENTATION_PLAN.md` § Phase S10).  
-3. **Fleet Instances / login UI polish** — layout kinship still rough (register form + FleetTokenGate); optional DID row Edit.  
-4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-5. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-7. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`**.  
-8. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
+1. **S10.6** — fleet user manage (`IMPLEMENTATION_PLAN.md` § Phase S10).  
+2. **Fleet UX polish (final)** — login **chooser** (Manage instance vs Fleet console) preferred over instance-first Enter Fleet; plus Instances/FleetTokenGate kinship, demote Link setid, optional DID row Edit. Live with nested Enter Fleet until then.  
+3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+6. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
+7. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
 
 ---
 
@@ -28,7 +27,7 @@
 
 - [x] **Fleet auth polish — paste trim + Exit Fleet revoke (2026-07-14):** Break-glass paste collapsed under “Break-glass (ops only)”; Exit Fleet / reset call `logoutFleet` (server revoke + clear); removed redundant “Clear fleet token” topbar. Soft step-up = must Sign in again after exit. Branch **`fleetauthpolish` → `main`**.
 
-- [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough without a big IdP. **SSO-agnostic:** we own `fleet` / `fleet_*` abilities; optional OIDC later maps groups → abilities. Cookies need same-site Fleet UI (or BFF). Soft step-up via Exit Fleet revoke. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
+- [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough without a big IdP. **SSO-agnostic:** we own `fleet` / `fleet_*` abilities; optional OIDC later maps groups → abilities. Cookies need same-site Fleet UI (or BFF). Soft step-up via Exit Fleet revoke. **Also later:** tighten CORS to SPA origin; login rate-limit. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
 
 - [x] **S10.1 — Gatekeeper abilities (2026-07-14):** Persist `users.abilities`; login/`/me`; route checks; SPA `canFleet` / `fleet_read` gate; break-glass = `fleet_admin`. Live on control. Tips **pbx3** **`0a2632b`**, **pbx3spa** **`d7734b9`**.
 
@@ -38,13 +37,15 @@
 
 - [x] **S10.4 — Catalog ↔ SBC reconcile (2026-07-14):** Gatekeeper `GET /api/v1/reconcile` + `POST /api/v1/reconcile/project` (apply catalog→SBC for `setid_mismatch` only); `SbcSetidGuard` rejects invented `sbc_dispatcher_setid` (must be live dispatcher set). **pbx3sbc-admin** `GET /api/fleet/domains` + `dispatcher-sets`. SPA Fleet **Reconcile** panel (Apply button only when mismatches); Instances **Link setid** from live sets only. Branches **`s104`→`main`**. Tips **pbx3** **`96e432e`**, **pbx3sbc-admin** **`2d232f8`**, **pbx3spa** **`15c5090`**. Live on control + SBC.
 
-- [x] **S10.5 — DID path (2026-07-15):** Catalog DID ownership (`dids.json` + `did-index`) — list/assign/release/project; optional `sip_prefix`; SPA Fleet **DIDs**; SBC `POST /fleet/project-dids` + `POST /fleet/domains`. Assign/release auto-project. Lab Magrathea **`+441924918076`** / prefix **`01924918076`** → **duns** (`dhbm8x`) → setid 2 / gwid 10 — inbound call OK. Branches **`s105`**. Tips **pbx3** **`9b3c8fa`**, **pbx3spa** **`44fefff`**, **pbx3sbc-admin** **`97c9d05`**. Live on control + SBC. No row Edit yet (re-allocate upserts).
+- [x] **S10.5 — DID path (2026-07-15):** Catalog DID ownership (`dids.json` + `did-index`) — list/assign/release/project; optional `sip_prefix`; SPA Fleet **DIDs**; SBC `POST /fleet/project-dids` + `POST /fleet/domains`. Assign/release auto-project. Lab Magrathea **`+441924918076`** / prefix **`01924918076`** → **duns** (`dhbm8x`) → setid 2 / gwid 10 — inbound call OK. Branches **`s105`→`main`**. Tips **pbx3** **`e8d2a8e`**, **pbx3spa** **`f44cc49`** (+ Exit Fleet **`854ca8b`**), **pbx3sbc-admin** **`95bd61c`**. Live on control + SBC.
 
-- [ ] **S10.5 residue — edge register (paused for decisions 2026-07-15):** (1) **Tenant domain register UI** — API `POST /tenants/{shortuid}/register-domain` exists; no Fleet button / auto on allocate. (2) **Node dispatcher-set create/update** — not built; Instances only Link existing setid. Settle before code: node SIP URI source; new setid vs share; whether Asterisk Peer upsert is in the same action; destructive update UX. Design: **`IMPLEMENTATION_PLAN.md`** § S10.5 · **`DID_ASSIGNMENT_DESIGN.md`**.
+- [x] **S10.5 residue — edge register (2026-07-15):** Tenant **Register on SBC**; Instances **Provision edge** (new setid + Asterisk Peer, catalog `sbc_backend_uri` default `sip:{fqdn}:5060`). **Link setid** remains catch-up (confusing — demote in polish). Rule 13 dual contract. Live on control + SBC.
 
-- [ ] **Phase S10 — remaining (panel-first):** **S10.5 residue** (above); **S10.6** fleet user manage; **S10.7**/S10.2b orchestrated IAM onboard. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10. Mac registrar scripts = break-glass.
+- [ ] **Phase S10 — remaining (panel-first):** **S10.6** fleet user manage; **S10.7**/S10.2b orchestrated IAM onboard; **S10.8** entry polish (login chooser). Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10. Mac registrar scripts = break-glass.
 
-- [ ] **Fleet login UI kinship (UX):** `FleetTokenGate` still lab-form-like vs **`LoginView`**. Also polish Fleet Instances register/actions layout (functional but rough). Keep break-glass collapsed.
+- [ ] **Fleet entry — login chooser (final polish, settled preference 2026-07-15):** Today: instance Sanctum login → **Enter Fleet** → gatekeeper Sign in. Product preference: **login chooser** — “Manage instance” vs “Fleet console” as first decision (fleet-only ops never need a node password). Live with nested Enter Fleet until Fleet is functionally complete (after S10.6). Keep Rule 10: two token planes. Ties **`FLEET_AUTH_COOKIE_SSO.md`** § Entry path · **`IMPLEMENTATION_PLAN.md`** § S10.8.
+
+- [ ] **Fleet login UI kinship (UX):** `FleetTokenGate` still lab-form-like vs **`LoginView`**. Polish Fleet Instances register/actions; demote **Link setid**; optional DID row Edit. Keep break-glass collapsed. Bundle with login chooser when polishing entry.
 
 - [x] **Critical-path test pack Pack A (2026-07-14):** Offline regression net complete — **`TEST_CADENCE.md`**, **`CRITICAL_PATH_TEST_PACK.md`**. Prefix overlap, gatekeeper UserStore + break-glass, fleet list fixtures, SnapshotRetention, recordings HTTP 404/list (mocked), SPA fleet token Vitest. Branch **`packa` → `main`**. Ongoing habit: leave a unit/contract test when touching logic. Pack B = lab recipes; Pack C = UI E2E later.
 

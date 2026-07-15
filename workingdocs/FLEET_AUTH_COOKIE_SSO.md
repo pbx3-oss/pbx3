@@ -31,6 +31,25 @@ Do **not** pull a big identity engine until a customer/compliance requirement fo
 
 ---
 
+## Entry path — login chooser (final polish)
+
+**Settled preference (2026-07-15):** prefer a **login chooser** as the first decision:
+
+| Choice | Auth | Lands in |
+|--------|------|----------|
+| **Manage instance** | Node Sanctum (catalog picker / URL as today) | Tenant/instance SPA |
+| **Fleet console** | Gatekeeper only | Fleet mode |
+
+**Today (lab scaffolding — acceptable until Fleet is functionally complete):** instance Sanctum login → topbar **Enter Fleet** → gatekeeper Sign in (`FleetTokenGate`). Exit Fleet returns to instance without full SPA logout (topbar Exit Fleet).
+
+**Why change later:** Fleet ops (catalog, DIDs, moves, edge) should not require a node password. Nested Enter Fleet conflates two planes for operators (Rule 10 still holds for tokens either way).
+
+**Not blocked on cookies/SSO.** Chooser works with Bearer try-it-out; same-site cookies remain a separate deferral below.
+
+**Track:** **`IMPLEMENTATION_PLAN.md`** § **S10.8** · **`workingdocs/TODO.md`** (after S10.6).
+
+---
+
 ## Abilities — independent of IdP
 
 Design §2.5: node `admin` / panel abilities → **pbx3api** only; `fleet` / `fleet_*` → **gatekeeper** only. Most customer admins get **zero** fleet.
