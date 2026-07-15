@@ -154,6 +154,10 @@ try {
     if ($method === 'POST' && $path === '/api/v1/tenant-moves') {
         Auth::requireAbility(FleetAbilities::MOVES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        if (is_string($actor) && $actor !== '' && empty($body['created_by'])) {
+            $body['created_by'] = $actor;
+        }
         JsonResponse::send(201, $jobs->create($body));
     }
 
@@ -189,6 +193,42 @@ try {
             JsonResponse::send(200, $jobs->patchState($m[1], $body, $short));
         }
         JsonResponse::send(200, $runner->runUntilGate($m[1], $short));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/tenant-moves/([A-Za-z0-9_-]+)/abort$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::MOVES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $shortuid = $body['tenant_shortuid'] ?? null;
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $runner->abort(
+            $m[1],
+            is_string($shortuid) ? $shortuid : null,
+            is_string($actor) ? $actor : null
+        ));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/tenant-moves/([A-Za-z0-9_-]+)/retry$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::MOVES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $shortuid = $body['tenant_shortuid'] ?? null;
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $runner->retry(
+            $m[1],
+            is_string($shortuid) ? $shortuid : null,
+            is_string($actor) ? $actor : null
+        ));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/tenant-moves/([A-Za-z0-9_-]+)/rollback$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::MOVES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $shortuid = $body['tenant_shortuid'] ?? null;
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $runner->rollback(
+            $m[1],
+            is_string($shortuid) ? $shortuid : null,
+            is_string($actor) ? $actor : null
+        ));
     }
 
     JsonResponse::send(404, ['error' => 'Not found', 'path' => $path]);

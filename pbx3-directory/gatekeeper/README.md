@@ -73,6 +73,9 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `GET` | `/api/v1/tenant-moves/{job_id}` | Read job (`?tenant=shortuid` optional) |
 | `POST` | `/api/v1/tenant-moves/{job_id}/run` | Run automated phases until human gate |
 | `POST` | `/api/v1/tenant-moves/{job_id}/advance` | `{confirm: verifying\|cleanup}` or `{state}` patch or empty = run |
+| `POST` | `/api/v1/tenant-moves/{job_id}/abort` | Soft-abort before cutover (`fleet_moves`) |
+| `POST` | `/api/v1/tenant-moves/{job_id}/retry` | Resume after `failed` then run until gate |
+| `POST` | `/api/v1/tenant-moves/{job_id}/rollback` | After cutover: SBC rollback-repoint (+ catalog flip) |
 
 ### Presign body
 

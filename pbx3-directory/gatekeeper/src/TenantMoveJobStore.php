@@ -74,9 +74,15 @@ final class TenantMoveJobStore
             'error' => null,
             'rollback' => [
                 'safe_to_abort' => true,
-                'hint' => 'Job not started — abort is a no-op beyond deleting job.json.',
+                'hint' => 'Job not started — abort is a no-op beyond marking aborted.',
             ],
             'next_human_action' => null,
+            'created_by' => isset($body['created_by']) && is_string($body['created_by'])
+                ? $body['created_by']
+                : null,
+            'last_action_by' => isset($body['created_by']) && is_string($body['created_by'])
+                ? $body['created_by']
+                : null,
             'created_at' => $now,
             'updated_at' => $now,
             'completed_at' => null,

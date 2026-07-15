@@ -96,6 +96,166 @@ final class TenantMoveRunner
     }
 
     /**
+     * Soft-abort before cutover (or when still safe_to_abort and cutover not applied).
+     *
+     * @return array<string, mixed>
+     */
+    public function abort(string $jobId, ?string $shortuid = null, ?string $actor = null): array
+    {
+        $job = $this->jobs->get($jobId, $shortuid);
+        $state = (string) ($job['state'] ?? '');
+        if (in_array($state, ['completed', 'aborted'], true)) {
+            throw new \InvalidArgumentException("Job already terminal (state={$state})", 409);
+        }
+        $cutoverOk = (($job['phases']['cutover']['status'] ?? '') === 'ok');
+        if ($cutoverOk) {
+            throw new \InvalidArgumentException(
+                'Cutover already applied — use POST …/rollback instead of abort',
+                409
+            );
+        }
+        if (! ($job['rollback']['safe_to_abort'] ?? true) && $state !== 'failed') {
+            throw new \InvalidArgumentException('Job is not safe to abort', 409);
+        }
+
+        $job['state'] = 'aborted';
+        $job['error'] = null;
+        $job['next_human_action'] = null;
+        $job['completed_at'] = gmdate('Y-m-d\TH:i:s\Z');
+        $job['rollback']['safe_to_abort'] = false;
+        $job['rollback']['hint'] = 'Aborted before cutover — source tenant unchanged.';
+        $job = $this->stampActor($job, $actor);
+        $job['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
+        $this->jobs->writePublic($job);
+
+        return $job;
+    }
+
+    /**
+     * Clear failed state and resume the failed phase, then run until next gate.
+     *
+     * @return array<string, mixed>
+     */
+    public function retry(string $jobId, ?string $shortuid = null, ?string $actor = null): array
+    {
+        $job = $this->jobs->get($jobId, $shortuid);
+        if (($job['state'] ?? '') !== 'failed') {
+            throw new \InvalidArgumentException('Retry only allowed when state=failed', 409);
+        }
+
+        $resume = self::failedPhaseName($job) ?? 'pending';
+        $phases = is_array($job['phases'] ?? null) ? $job['phases'] : [];
+        if (isset($phases[$resume])) {
+            $phases[$resume]['status'] = 'pending';
+            unset($phases[$resume]['finished_at'], $phases[$resume]['message']);
+            $job['phases'] = $phases;
+        }
+
+        $job['state'] = $resume === 'pending' ? 'pending' : $resume;
+        $job['error'] = null;
+        $job['completed_at'] = null;
+        $job['rollback']['safe_to_abort'] = ($resume !== 'awaiting_cleanup');
+        $job['rollback']['hint'] = 'Retrying after failure — abort still possible until cutover.';
+        $job = $this->stampActor($job, $actor);
+        $job['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
+        $this->jobs->writePublic($job);
+
+        return $this->runUntilGate($jobId, (string) ($job['tenant_shortuid'] ?? $shortuid));
+    }
+
+    /**
+     * After cutover: SBC rollback-repoint + optional catalog flip back to source. Terminal aborted.
+     *
+     * @return array<string, mixed>
+     */
+    public function rollback(string $jobId, ?string $shortuid = null, ?string $actor = null): array
+    {
+        $job = $this->jobs->get($jobId, $shortuid);
+        $state = (string) ($job['state'] ?? '');
+        if ($state === 'completed') {
+            throw new \InvalidArgumentException('Source already cleaned up — automated rollback not available', 409);
+        }
+        if ($state === 'aborted') {
+            throw new \InvalidArgumentException('Job already aborted', 409);
+        }
+        $cutoverOk = (($job['phases']['cutover']['status'] ?? '') === 'ok');
+        if (! $cutoverOk) {
+            throw new \InvalidArgumentException('No successful cutover to roll back — use abort', 409);
+        }
+        $prev = (int) ($job['previous_sbc_dispatcher_setid'] ?? 0);
+        $domain = (string) ($job['tenant_fqdn'] ?? '');
+        if ($prev < 1 || $domain === '') {
+            throw new \InvalidArgumentException('previous_sbc_dispatcher_setid and tenant_fqdn required for rollback', 422);
+        }
+
+        $this->requireFleetToken();
+        if ($this->sbcApiBase === '') {
+            throw new \RuntimeException('PBX3_SBC_ADMIN_API_URL not set — cannot rollback', 503);
+        }
+        $this->sbcPost('/fleet/rollback-repoint', [
+            'tenant_domain' => $domain,
+            'previous_setid' => $prev,
+        ]);
+
+        if ((($job['phases']['catalog']['status'] ?? '') === 'ok')) {
+            $this->registrar->moveTenant((string) $job['tenant_shortuid'], [
+                'instance_id' => (string) $job['source_instance_id'],
+            ]);
+            $job = $this->markPhase($job, 'catalog', 'ok', 'rolled back to source_instance_id');
+        }
+
+        $job = $this->markPhase($job, 'cutover', 'ok', 'rolled back to setid '.$prev);
+        $job['state'] = 'aborted';
+        $job['error'] = null;
+        $job['next_human_action'] = null;
+        $job['completed_at'] = gmdate('Y-m-d\TH:i:s\Z');
+        $job['rollback']['safe_to_abort'] = false;
+        $job['rollback']['hint'] = 'Rolled back SBC setid'
+            .(isset($job['phases']['catalog']) ? ' and catalog home' : '')
+            .' — dest tenant row may still exist; clean up manually if needed.';
+        $job = $this->stampActor($job, $actor);
+        $job['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
+        $this->jobs->writePublic($job);
+
+        return $job;
+    }
+
+    /**
+     * Which phase row is failed (for retry resume). Exposed for unit tests.
+     *
+     * @param  array<string, mixed>  $job
+     */
+    public static function failedPhaseName(array $job): ?string
+    {
+        foreach ((array) ($job['phases'] ?? []) as $name => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            if (($row['status'] ?? '') === 'failed') {
+                return (string) $name;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $job
+     * @return array<string, mixed>
+     */
+    private function stampActor(array $job, ?string $actor): array
+    {
+        if ($actor !== null && $actor !== '') {
+            $job['last_action_by'] = $actor;
+            if (empty($job['created_by'])) {
+                $job['created_by'] = $actor;
+            }
+        }
+
+        return $job;
+    }
+
+    /**
      * @param  array<string, mixed>  $job
      * @return array<string, mixed>
      */

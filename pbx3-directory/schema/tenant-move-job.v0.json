@@ -146,6 +146,14 @@
       "type": ["string", "null"],
       "description": "What the operator must confirm (verifying, awaiting_cleanup, etc.)"
     },
+    "created_by": {
+      "type": ["string", "null"],
+      "description": "Fleet operator email (or break-glass) who created the job (S10.3)"
+    },
+    "last_action_by": {
+      "type": ["string", "null"],
+      "description": "Fleet operator who last aborted/retried/rolled back (S10.3)"
+    },
     "created_at": { "type": "string", "format": "date-time" },
     "updated_at": { "type": "string", "format": "date-time" },
     "completed_at": {
