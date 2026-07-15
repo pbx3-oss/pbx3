@@ -83,6 +83,65 @@ try {
         JsonResponse::send(200, ['ok' => true]);
     }
 
+    // S10.6 — fleet user manage (fleet_admin only)
+    if ($method === 'GET' && $path === '/api/v1/fleet-users') {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        JsonResponse::send(200, [
+            'users' => UserStore::listUsers(),
+            'ability_vocab' => FleetAbilities::ALL,
+        ]);
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/fleet-users') {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $email = is_string($body['email'] ?? null) ? $body['email'] : '';
+        $password = is_string($body['password'] ?? null) ? $body['password'] : '';
+        $name = is_string($body['name'] ?? null) ? $body['name'] : '';
+        $abilities = isset($body['abilities']) && is_array($body['abilities']) ? $body['abilities'] : null;
+        JsonResponse::send(201, UserStore::createUser($email, $password, $name, $abilities));
+    }
+
+    if ($method === 'PATCH' && preg_match('#^/api/v1/fleet-users/(\d+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $patch = [];
+        if (array_key_exists('name', $body)) {
+            $patch['name'] = is_string($body['name']) ? $body['name'] : '';
+        }
+        if (array_key_exists('password', $body) && is_string($body['password'])) {
+            $patch['password'] = $body['password'];
+        }
+        if (array_key_exists('abilities', $body)) {
+            $patch['abilities'] = is_array($body['abilities']) ? $body['abilities'] : [];
+        }
+        JsonResponse::send(200, UserStore::updateUser((int) $m[1], $patch));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/fleet-users/(\d+)/disable$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $actorId = Auth::isBreakGlass() ? null : (Auth::user()['id'] ?? null);
+        JsonResponse::send(200, UserStore::disableUser(
+            (int) $m[1],
+            is_int($actorId) ? $actorId : null
+        ));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/fleet-users/(\d+)/enable$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        JsonResponse::send(200, UserStore::enableUser((int) $m[1]));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/fleet-users/(\d+)/revoke-sessions$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $revoked = UserStore::revokeAllTokensForUser((int) $m[1]);
+        $user = UserStore::findById((int) $m[1]);
+        if ($user === null) {
+            throw new \RuntimeException('User not found', 404);
+        }
+        JsonResponse::send(200, ['ok' => true, 'revoked' => $revoked, 'user' => $user]);
+    }
+
     $registrar = new S3Registrar();
     $presign = new S3Presign();
     $jobs = new TenantMoveJobStore();
@@ -318,7 +377,10 @@ try {
 
     JsonResponse::send(404, ['error' => 'Not found', 'path' => $path]);
 } catch (Throwable $e) {
-    $code = (int) ($e->getCode() ?: 500);
+    $code = (int) ($e->getCode() ?: 0);
+    if ($e instanceof InvalidArgumentException && ($code < 400 || $code > 599)) {
+        $code = 422;
+    }
     if ($code < 400 || $code > 599) {
         $code = 500;
     }

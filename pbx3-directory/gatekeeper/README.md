@@ -40,7 +40,7 @@ See **`pbx3/workingdocs/CRITICAL_PATH_TEST_PACK.md`**.
 | `fleet_instances` | `POST` instances, tenants (register) |
 | `fleet_moves` | Move job create/run/advance; catalog move; org migration `s3/presign` |
 | `fleet_edge` | `GET` reconcile + `POST` reconcile/project (S10.4); `POST` dids/assign + release (S10.5) |
-| `fleet_admin` | All of the above + recordings `presign-recordings` + future fleet-user manage |
+| `fleet_admin` | All of the above + recordings `presign-recordings` + fleet-user manage (S10.6) |
 
 `fleet_admin` grants every `fleet_*`. Existing auth DBs get an `abilities` column defaulting to `["fleet_admin"]` on migrate.
 
@@ -60,6 +60,12 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 |--------|------|---------|
 | `GET` | `/health` | Liveness (no auth) |
 | `GET` | `/api/v1/catalog` | Read instance index |
+| `GET` | `/api/v1/fleet-users` | S10.6 list fleet users + ability vocab (`fleet_admin`) |
+| `POST` | `/api/v1/fleet-users` | Create user `{email,password,name?,abilities?}` |
+| `PATCH` | `/api/v1/fleet-users/{id}` | Update name / password / abilities |
+| `POST` | `/api/v1/fleet-users/{id}/disable` | Soft-disable + revoke sessions (cannot self / last admin) |
+| `POST` | `/api/v1/fleet-users/{id}/enable` | Re-enable |
+| `POST` | `/api/v1/fleet-users/{id}/revoke-sessions` | Kill all Bearers for user |
 | `GET` | `/api/v1/tenants` | List tenant meta rows |
 | `GET` | `/api/v1/dids` | S10.5 catalog DID ownership flat list (`fleet_read`) |
 | `POST` | `/api/v1/dids/assign` | Assign/reassign DID → tenant; writes `dids.json` + `did-index`; projects SBC unless `project:false` (`fleet_edge`) |

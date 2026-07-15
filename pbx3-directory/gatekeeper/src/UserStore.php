@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL DEFAULT '',
     password_hash TEXT NOT NULL,
     abilities TEXT NOT NULL DEFAULT '["fleet_admin"]',
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    disabled_at TEXT
 );
 CREATE TABLE IF NOT EXISTS api_tokens (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,15 +73,18 @@ SQL);
         if (! in_array('abilities', $names, true)) {
             $pdo->exec('ALTER TABLE users ADD COLUMN abilities TEXT NOT NULL DEFAULT \'["fleet_admin"]\'');
         }
+        if (! in_array('disabled_at', $names, true)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN disabled_at TEXT');
+        }
     }
 
     /**
-     * @return array{id:int,email:string,name:string,abilities:list<string>,password_hash:string}|null
+     * @return array{id:int,email:string,name:string,abilities:list<string>,disabled_at:?string,password_hash:string}|null
      */
     public static function findByEmail(string $email): ?array
     {
         $st = self::pdo()->prepare(
-            'SELECT id, email, name, password_hash, abilities FROM users WHERE email = ? COLLATE NOCASE LIMIT 1'
+            'SELECT id, email, name, password_hash, abilities, disabled_at FROM users WHERE email = ? COLLATE NOCASE LIMIT 1'
         );
         $st->execute([trim($email)]);
         $row = $st->fetch();
@@ -91,14 +95,56 @@ SQL);
         return self::mapUserRow($row, true);
     }
 
+    /**
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}|null
+     */
+    public static function findById(int $id): ?array
+    {
+        $st = self::pdo()->prepare(<<<'SQL'
+SELECT u.id, u.email, u.name, u.abilities, u.created_at, u.disabled_at,
+       (SELECT COUNT(*) FROM api_tokens t WHERE t.user_id = u.id) AS session_count
+FROM users u
+WHERE u.id = ?
+LIMIT 1
+SQL);
+        $st->execute([$id]);
+        $row = $st->fetch();
+        if (! is_array($row)) {
+            return null;
+        }
+
+        return self::mapPublicUserRow($row);
+    }
+
     public static function userCount(): int
     {
         return (int) self::pdo()->query('SELECT COUNT(*) FROM users')->fetchColumn();
     }
 
     /**
+     * @return list<array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}>
+     */
+    public static function listUsers(): array
+    {
+        $rows = self::pdo()->query(<<<'SQL'
+SELECT u.id, u.email, u.name, u.abilities, u.created_at, u.disabled_at,
+       (SELECT COUNT(*) FROM api_tokens t WHERE t.user_id = u.id) AS session_count
+FROM users u
+ORDER BY u.email COLLATE NOCASE ASC
+SQL)->fetchAll();
+        $out = [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $out[] = self::mapPublicUserRow($row);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * @param  list<string>|null  $abilities  null = DEFAULT_BOOTSTRAP (fleet_admin)
-     * @return array{id:int,email:string,name:string,abilities:list<string>}
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}
      */
     public static function createUser(string $email, string $password, string $name = '', ?array $abilities = null): array
     {
@@ -121,20 +167,27 @@ SQL);
         $st = self::pdo()->prepare(
             'INSERT INTO users (email, name, password_hash, abilities, created_at) VALUES (?, ?, ?, ?, ?)'
         );
-        $st->execute([
-            $email,
-            trim($name) !== '' ? trim($name) : $email,
-            $hash,
-            FleetAbilities::toJson($normalized),
-            $now,
-        ]);
+        try {
+            $st->execute([
+                $email,
+                trim($name) !== '' ? trim($name) : $email,
+                $hash,
+                FleetAbilities::toJson($normalized),
+                $now,
+            ]);
+        } catch (\PDOException $e) {
+            if (str_contains($e->getMessage(), 'UNIQUE')) {
+                throw new \RuntimeException('Email already registered', 409);
+            }
+            throw $e;
+        }
 
-        return [
-            'id' => (int) self::pdo()->lastInsertId(),
-            'email' => $email,
-            'name' => trim($name) !== '' ? trim($name) : $email,
-            'abilities' => $normalized,
-        ];
+        $created = self::findById((int) self::pdo()->lastInsertId());
+        if ($created === null) {
+            throw new \RuntimeException('User create failed', 500);
+        }
+
+        return $created;
     }
 
     /**
@@ -142,25 +195,136 @@ SQL);
      */
     public static function setAbilities(int $userId, array $abilities): void
     {
-        $normalized = FleetAbilities::normalize($abilities);
-        if ($normalized === []) {
-            throw new \InvalidArgumentException('At least one valid fleet_* ability required');
-        }
-        $st = self::pdo()->prepare('UPDATE users SET abilities = ? WHERE id = ?');
-        $st->execute([FleetAbilities::toJson($normalized), $userId]);
-        if ($st->rowCount() === 0) {
-            throw new \RuntimeException('User not found', 404);
-        }
+        self::updateUser($userId, ['abilities' => $abilities]);
     }
 
     /**
-     * @return array{token:string,token_type:string,user:array{id:int,email:string,name:string,abilities:list<string>},expires_at:?string}
+     * @param  array{name?:string,password?:string,abilities?:list<string>}  $patch
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}
+     */
+    public static function updateUser(int $userId, array $patch): array
+    {
+        $existing = self::findById($userId);
+        if ($existing === null) {
+            throw new \RuntimeException('User not found', 404);
+        }
+
+        $name = array_key_exists('name', $patch) ? trim((string) $patch['name']) : $existing['name'];
+        if ($name === '') {
+            $name = $existing['email'];
+        }
+
+        $abilities = $existing['abilities'];
+        if (array_key_exists('abilities', $patch)) {
+            if (! is_array($patch['abilities'])) {
+                throw new \InvalidArgumentException('abilities must be an array');
+            }
+            $abilities = FleetAbilities::normalize($patch['abilities']);
+            if ($abilities === []) {
+                throw new \InvalidArgumentException('At least one valid fleet_* ability required');
+            }
+            self::assertMayDropAdminAbility($userId, $existing['abilities'], $abilities);
+        }
+
+        $sets = ['name = ?', 'abilities = ?'];
+        $params = [$name, FleetAbilities::toJson($abilities)];
+
+        if (array_key_exists('password', $patch) && is_string($patch['password']) && $patch['password'] !== '') {
+            if (strlen($patch['password']) < 10) {
+                throw new \InvalidArgumentException('Password must be at least 10 characters');
+            }
+            $hash = password_hash($patch['password'], PASSWORD_DEFAULT);
+            if ($hash === false) {
+                throw new \RuntimeException('password_hash failed', 500);
+            }
+            $sets[] = 'password_hash = ?';
+            $params[] = $hash;
+        }
+
+        $params[] = $userId;
+        $sql = 'UPDATE users SET '.implode(', ', $sets).' WHERE id = ?';
+        self::pdo()->prepare($sql)->execute($params);
+
+        $updated = self::findById($userId);
+        if ($updated === null) {
+            throw new \RuntimeException('User not found', 404);
+        }
+
+        return $updated;
+    }
+
+    /**
+     * Soft-disable: blocks login; revokes all sessions.
+     *
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}
+     */
+    public static function disableUser(int $userId, ?int $actorUserId = null): array
+    {
+        $existing = self::findById($userId);
+        if ($existing === null) {
+            throw new \RuntimeException('User not found', 404);
+        }
+        if ($actorUserId !== null && $actorUserId === $userId) {
+            throw new \RuntimeException('Cannot disable your own account', 422);
+        }
+        if ($existing['disabled_at'] !== null) {
+            return $existing;
+        }
+        self::assertMayDisableOrDemoteAdmin($userId, $existing['abilities']);
+
+        $now = gmdate('c');
+        self::pdo()->prepare('UPDATE users SET disabled_at = ? WHERE id = ?')->execute([$now, $userId]);
+        self::revokeAllTokensForUser($userId);
+
+        $updated = self::findById($userId);
+        if ($updated === null) {
+            throw new \RuntimeException('User not found', 404);
+        }
+
+        return $updated;
+    }
+
+    /**
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}
+     */
+    public static function enableUser(int $userId): array
+    {
+        $existing = self::findById($userId);
+        if ($existing === null) {
+            throw new \RuntimeException('User not found', 404);
+        }
+        if ($existing['disabled_at'] === null) {
+            return $existing;
+        }
+        self::pdo()->prepare('UPDATE users SET disabled_at = NULL WHERE id = ?')->execute([$userId]);
+
+        $updated = self::findById($userId);
+        if ($updated === null) {
+            throw new \RuntimeException('User not found', 404);
+        }
+
+        return $updated;
+    }
+
+    public static function revokeAllTokensForUser(int $userId): int
+    {
+        $st = self::pdo()->prepare('DELETE FROM api_tokens WHERE user_id = ?');
+        $st->execute([$userId]);
+
+        return $st->rowCount();
+    }
+
+    /**
+     * @return array{token:string,token_type:string,user:array{id:int,email:string,name:string,abilities:list<string>},expires_at:?string,abilities:list<string>}
      */
     public static function login(string $email, string $password, int $ttlSeconds = 86400 * 7): array
     {
         $row = self::findByEmail($email);
         if ($row === null || ! password_verify($password, $row['password_hash'])) {
             throw new \RuntimeException('Invalid email or password', 401);
+        }
+        if ($row['disabled_at'] !== null) {
+            throw new \RuntimeException('Account disabled', 403);
         }
         unset($row['password_hash']);
 
@@ -194,7 +358,7 @@ SQL);
     {
         $hash = hash('sha256', $plainToken);
         $st = self::pdo()->prepare(<<<'SQL'
-SELECT u.id, u.email, u.name, u.abilities, t.id AS token_id, t.expires_at
+SELECT u.id, u.email, u.name, u.abilities, u.disabled_at, t.id AS token_id, t.expires_at
 FROM api_tokens t
 JOIN users u ON u.id = t.user_id
 WHERE t.token_hash = ?
@@ -203,6 +367,11 @@ SQL);
         $st->execute([$hash]);
         $row = $st->fetch();
         if (! is_array($row)) {
+            return null;
+        }
+        if (! empty($row['disabled_at'])) {
+            self::pdo()->prepare('DELETE FROM api_tokens WHERE id = ?')->execute([(int) $row['token_id']]);
+
             return null;
         }
         if (! empty($row['expires_at']) && strtotime((string) $row['expires_at']) < time()) {
@@ -235,8 +404,74 @@ SQL);
     }
 
     /**
+     * @param  list<string>  $before
+     * @param  list<string>  $after
+     */
+    private static function assertMayDropAdminAbility(int $userId, array $before, array $after): void
+    {
+        $hadAdmin = in_array(FleetAbilities::ADMIN, $before, true);
+        $hasAdmin = in_array(FleetAbilities::ADMIN, $after, true);
+        if ($hadAdmin && ! $hasAdmin) {
+            self::assertMayDisableOrDemoteAdmin($userId, $before);
+        }
+    }
+
+    /** @param  list<string>  $abilities */
+    private static function assertMayDisableOrDemoteAdmin(int $userId, array $abilities): void
+    {
+        if (! in_array(FleetAbilities::ADMIN, $abilities, true)) {
+            return;
+        }
+        if (self::countActiveAdmins($userId) < 1) {
+            throw new \RuntimeException('Cannot remove the last active fleet_admin', 422);
+        }
+    }
+
+    /** Active = not disabled. Optionally exclude one user id from the count. */
+    private static function countActiveAdmins(?int $excludeUserId = null): int
+    {
+        $sql = <<<'SQL'
+SELECT COUNT(*) FROM users
+WHERE disabled_at IS NULL
+  AND abilities LIKE '%"fleet_admin"%'
+SQL;
+        $params = [];
+        if ($excludeUserId !== null) {
+            $sql .= ' AND id != ?';
+            $params[] = $excludeUserId;
+        }
+        $st = self::pdo()->prepare($sql);
+        $st->execute($params);
+
+        return (int) $st->fetchColumn();
+    }
+
+    /**
      * @param  array<string,mixed>  $row
-     * @return array{id:int,email:string,name:string,abilities:list<string>,password_hash?:string}
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}
+     */
+    private static function mapPublicUserRow(array $row): array
+    {
+        $abilities = FleetAbilities::normalize($row['abilities'] ?? FleetAbilities::DEFAULT_BOOTSTRAP);
+        if ($abilities === []) {
+            $abilities = FleetAbilities::DEFAULT_BOOTSTRAP;
+        }
+        $disabled = $row['disabled_at'] ?? null;
+
+        return [
+            'id' => (int) $row['id'],
+            'email' => (string) $row['email'],
+            'name' => (string) $row['name'],
+            'abilities' => $abilities,
+            'created_at' => (string) ($row['created_at'] ?? ''),
+            'disabled_at' => $disabled !== null && $disabled !== '' ? (string) $disabled : null,
+            'session_count' => (int) ($row['session_count'] ?? 0),
+        ];
+    }
+
+    /**
+     * @param  array<string,mixed>  $row
+     * @return array{id:int,email:string,name:string,abilities:list<string>,disabled_at:?string,password_hash?:string}
      */
     private static function mapUserRow(array $row, bool $withPassword): array
     {
@@ -244,11 +479,13 @@ SQL);
         if ($abilities === []) {
             $abilities = FleetAbilities::DEFAULT_BOOTSTRAP;
         }
+        $disabled = $row['disabled_at'] ?? null;
         $out = [
             'id' => (int) $row['id'],
             'email' => (string) $row['email'],
             'name' => (string) $row['name'],
             'abilities' => $abilities,
+            'disabled_at' => $disabled !== null && $disabled !== '' ? (string) $disabled : null,
         ];
         if ($withPassword) {
             $out['password_hash'] = (string) $row['password_hash'];
