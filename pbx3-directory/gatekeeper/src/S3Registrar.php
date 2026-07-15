@@ -17,6 +17,23 @@ final class S3Registrar
 
     private const CATALOG_KEY = 'catalog/instance-index.json';
 
+    /** @var list<string> */
+    public const STATUSES = ['active', 'maintenance', 'decommissioned'];
+
+    /** @var list<string> */
+    private const PATCHABLE = [
+        'label',
+        'notes',
+        'environment',
+        'status',
+        'fqdn',
+        'api_base_url',
+        'region',
+        'org_id',
+        'package_version',
+        'sbc_dispatcher_setid',
+    ];
+
     public function __construct()
     {
         $bucket = getenv('PBX3_ORG_BUCKET') ?: '';
@@ -67,49 +84,130 @@ final class S3Registrar
         return $tenants;
     }
 
-    /** @param array<string, mixed> $record */
+    /**
+     * Register or upsert an instance in the catalog.
+     *
+     * Body may include control keys (stripped before write):
+     * - verify_up (bool): probe /up before write; SPA default true
+     * - updated_by (string): actor email (also stamped from Auth in index)
+     *
+     * @param  array<string, mixed>  $record
+     * @return array{catalog: array<string, mixed>, instance_meta: array<string, mixed>}
+     */
     public function registerInstance(array $record): array
     {
+        $verifyUp = ! empty($record['verify_up']);
+        unset($record['verify_up']);
+
+        $updatedBy = null;
+        if (isset($record['updated_by']) && is_string($record['updated_by']) && $record['updated_by'] !== '') {
+            $updatedBy = $record['updated_by'];
+        }
+        unset($record['updated_by']);
+
         foreach (['id', 'fqdn', 'api_base_url', 'label', 'status'] as $key) {
             if (empty($record[$key])) {
                 throw new \InvalidArgumentException("Missing required field: {$key}", 422);
             }
         }
+        $this->assertValidStatus((string) $record['status']);
+
+        if ($verifyUp) {
+            InstanceUpProbe::verify((string) $record['api_base_url']);
+            $record['last_seen_at'] = $this->nowIso();
+        }
+
+        $now = $this->nowIso();
+        if ($updatedBy !== null) {
+            $record['updated_by'] = $updatedBy;
+        }
+        $record['updated_at'] = $now;
+
+        return $this->writeInstanceRecord($record, $now);
+    }
+
+    /**
+     * Partial update of an existing catalog instance.
+     *
+     * @param  array<string, mixed>  $patch
+     * @return array{catalog: array<string, mixed>, instance: array<string, mixed>, instance_meta: array<string, mixed>}
+     */
+    public function patchInstance(string $id, array $patch, ?string $updatedBy = null): array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            throw new \InvalidArgumentException('Instance id required', 422);
+        }
 
         $catalog = $this->getCatalog();
         $instances = $catalog['instances'] ?? [];
-        $found = false;
+        $index = null;
         foreach ($instances as $i => $row) {
-            if (($row['id'] ?? '') === $record['id']) {
-                $instances[$i] = array_merge($row, $record);
-                $found = true;
+            if (($row['id'] ?? '') === $id) {
+                $index = $i;
                 break;
             }
         }
-        if (! $found) {
-            $instances[] = $record;
+        if ($index === null) {
+            throw new \RuntimeException("Instance not found: {$id}", 404);
         }
 
+        $apply = [];
+        foreach (self::PATCHABLE as $key) {
+            if (! array_key_exists($key, $patch)) {
+                continue;
+            }
+            $apply[$key] = $patch[$key];
+        }
+        if ($apply === []) {
+            throw new \InvalidArgumentException('No patchable fields provided', 422);
+        }
+        if (isset($apply['status'])) {
+            $this->assertValidStatus((string) $apply['status']);
+        }
+        if (array_key_exists('sbc_dispatcher_setid', $apply) && $apply['sbc_dispatcher_setid'] !== null) {
+            $apply['sbc_dispatcher_setid'] = (int) $apply['sbc_dispatcher_setid'];
+        }
+
+        $now = $this->nowIso();
+        $merged = array_merge($instances[$index], $apply);
+        $merged['id'] = $id;
+        $merged['updated_at'] = $now;
+        if ($updatedBy !== null && $updatedBy !== '') {
+            $merged['updated_by'] = $updatedBy;
+        }
+
+        $instances[$index] = $merged;
         $catalog['version'] = 1;
-        $catalog['updated_at'] = $this->nowIso();
+        $catalog['updated_at'] = $now;
         $catalog['instances'] = array_values($instances);
         $this->writeJson(self::CATALOG_KEY, $catalog);
 
-        $id = (string) $record['id'];
-        $metaKey = "instances/{$id}/meta.json";
-        $existing = $this->readJson($metaKey, []);
-        $meta = array_merge($existing, [
-            'id' => $id,
-            'fqdn' => $record['fqdn'],
-            'api_base_url' => $record['api_base_url'],
-            'label' => $record['label'],
-            'status' => $record['status'],
-            'created_at' => $existing['created_at'] ?? $this->nowIso(),
-            'updated_at' => $this->nowIso(),
-        ]);
-        $this->writeJson($metaKey, $meta);
+        $meta = $this->syncMetaFromRecord($merged, $now);
 
-        return ['catalog' => $catalog, 'instance_meta' => $meta];
+        return ['catalog' => $catalog, 'instance' => $merged, 'instance_meta' => $meta];
+    }
+
+    /**
+     * Soft decommission — status=decommissioned (SPA confirm required).
+     *
+     * @param  array<string, mixed>  $body
+     * @return array{catalog: array<string, mixed>, instance: array<string, mixed>, instance_meta: array<string, mixed>}
+     */
+    public function decommissionInstance(string $id, array $body, ?string $updatedBy = null): array
+    {
+        if (empty($body['confirm'])) {
+            throw new \InvalidArgumentException('confirm: true required to decommission', 422);
+        }
+        $notes = isset($body['notes']) && is_string($body['notes']) ? trim($body['notes']) : '';
+        $patch = ['status' => 'decommissioned'];
+        if ($notes !== '') {
+            $patch['notes'] = $notes;
+        } else {
+            $patch['notes'] = 'Decommissioned '.$this->nowIso();
+        }
+
+        return $this->patchInstance($id, $patch, $updatedBy);
     }
 
     /** @param array<string, mixed> $record */
@@ -155,6 +253,96 @@ final class S3Registrar
         $meta['instance_id'] = $instanceId;
         $meta['moved_at'] = $now;
         $meta['updated_at'] = $now;
+        $this->writeJson($metaKey, $meta);
+
+        return $meta;
+    }
+
+    /**
+     * Pure helper for tests — merge patch onto a catalog instance row.
+     *
+     * @param  array<string, mixed>  $existing
+     * @param  array<string, mixed>  $patch
+     * @return array<string, mixed>
+     */
+    public static function mergeInstancePatch(array $existing, array $patch): array
+    {
+        $apply = [];
+        foreach (self::PATCHABLE as $key) {
+            if (array_key_exists($key, $patch)) {
+                $apply[$key] = $patch[$key];
+            }
+        }
+        if (isset($apply['status']) && ! in_array((string) $apply['status'], self::STATUSES, true)) {
+            throw new \InvalidArgumentException('Invalid status: '.$apply['status'], 422);
+        }
+
+        return array_merge($existing, $apply);
+    }
+
+    private function assertValidStatus(string $status): void
+    {
+        if (! in_array($status, self::STATUSES, true)) {
+            throw new \InvalidArgumentException(
+                'Invalid status: '.$status.' (expected '.implode('|', self::STATUSES).')',
+                422
+            );
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $record
+     * @return array{catalog: array<string, mixed>, instance_meta: array<string, mixed>}
+     */
+    private function writeInstanceRecord(array $record, string $now): array
+    {
+        $catalog = $this->getCatalog();
+        $instances = $catalog['instances'] ?? [];
+        $found = false;
+        foreach ($instances as $i => $row) {
+            if (($row['id'] ?? '') === $record['id']) {
+                $instances[$i] = array_merge($row, $record);
+                $found = true;
+                break;
+            }
+        }
+        if (! $found) {
+            $instances[] = $record;
+        }
+
+        $catalog['version'] = 1;
+        $catalog['updated_at'] = $now;
+        $catalog['instances'] = array_values($instances);
+        $this->writeJson(self::CATALOG_KEY, $catalog);
+
+        $meta = $this->syncMetaFromRecord($record, $now);
+
+        return ['catalog' => $catalog, 'instance_meta' => $meta];
+    }
+
+    /**
+     * @param  array<string, mixed>  $record
+     * @return array<string, mixed>
+     */
+    private function syncMetaFromRecord(array $record, string $now): array
+    {
+        $id = (string) $record['id'];
+        $metaKey = "instances/{$id}/meta.json";
+        $existing = $this->readJson($metaKey, []);
+        $meta = array_merge($existing, [
+            'id' => $id,
+            'fqdn' => $record['fqdn'] ?? ($existing['fqdn'] ?? ''),
+            'api_base_url' => $record['api_base_url'] ?? ($existing['api_base_url'] ?? ''),
+            'label' => $record['label'] ?? ($existing['label'] ?? ''),
+            'status' => $record['status'] ?? ($existing['status'] ?? 'active'),
+            'created_at' => $existing['created_at'] ?? $now,
+            'updated_at' => $now,
+        ]);
+        foreach (['environment', 'notes', 'region', 'org_id', 'package_version', 'updated_by', 'last_seen_at', 'sbc_dispatcher_setid'] as $opt) {
+            if (array_key_exists($opt, $record)) {
+                $meta[$opt] = $record[$opt];
+            }
+        }
         $this->writeJson($metaKey, $meta);
 
         return $meta;

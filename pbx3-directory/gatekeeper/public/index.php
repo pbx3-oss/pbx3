@@ -29,7 +29,7 @@ $path = rtrim($path, '/') ?: '/';
 if ($method === 'OPTIONS') {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept');
-    header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
+    header('Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS');
     http_response_code(204);
     exit;
 }
@@ -96,7 +96,33 @@ try {
     if ($method === 'POST' && $path === '/api/v1/instances') {
         Auth::requireAbility(FleetAbilities::INSTANCES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        if (is_string($actor) && $actor !== '' && ! isset($body['updated_by'])) {
+            $body['updated_by'] = $actor;
+        }
         JsonResponse::send(201, $registrar->registerInstance($body));
+    }
+
+    if ($method === 'PATCH' && preg_match('#^/api/v1/instances/([A-Za-z0-9_-]+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $registrar->patchInstance(
+            $m[1],
+            $body,
+            is_string($actor) ? $actor : null
+        ));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/instances/([A-Za-z0-9_-]+)/decommission$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $registrar->decommissionInstance(
+            $m[1],
+            $body,
+            is_string($actor) ? $actor : null
+        ));
     }
 
     if ($method === 'POST' && $path === '/api/v1/tenants') {

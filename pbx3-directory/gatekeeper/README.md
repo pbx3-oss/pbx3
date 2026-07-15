@@ -61,7 +61,9 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `GET` | `/health` | Liveness (no auth) |
 | `GET` | `/api/v1/catalog` | Read instance index |
 | `GET` | `/api/v1/tenants` | List tenant meta rows |
-| `POST` | `/api/v1/instances` | Register/upsert instance |
+| `POST` | `/api/v1/instances` | Register/upsert instance (`verify_up` optional; stamps `updated_by`) |
+| `PATCH` | `/api/v1/instances/{id}` | Update label/notes/environment/status/… (`fleet_instances`) |
+| `POST` | `/api/v1/instances/{id}/decommission` | Soft decommission (`confirm: true`, optional `notes`) |
 | `POST` | `/api/v1/tenants` | Register tenant meta |
 | `POST` | `/api/v1/tenants/{shortuid}/move` | Move tenant homing |
 | `POST` | `/api/v1/s3/presign` | Scoped PUT/GET for `tenants/{shortuid}/migration/{job_id}/…` only (org bucket) |
