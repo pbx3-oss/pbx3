@@ -10,12 +10,15 @@ declare(strict_types=1);
 require_once dirname(__DIR__).'/vendor/autoload.php';
 
 use Pbx3\Gatekeeper\Auth;
+use Pbx3\Gatekeeper\CatalogReconcile;
 use Pbx3\Gatekeeper\Env;
 use Pbx3\Gatekeeper\FleetAbilities;
 use Pbx3\Gatekeeper\Http\JsonResponse;
 use Pbx3\Gatekeeper\S3Presign;
 use Pbx3\Gatekeeper\S3RecordingsPresign;
 use Pbx3\Gatekeeper\S3Registrar;
+use Pbx3\Gatekeeper\SbcFleetClient;
+use Pbx3\Gatekeeper\SbcSetidGuard;
 use Pbx3\Gatekeeper\TenantMoveJobStore;
 use Pbx3\Gatekeeper\TenantMoveRunner;
 use Pbx3\Gatekeeper\UserStore;
@@ -93,9 +96,29 @@ try {
         JsonResponse::send(200, ['tenants' => $registrar->listTenants()]);
     }
 
+    // S10.4 — catalog ↔ SBC domain.setid drift + optional force-project (Rule 13)
+    if ($method === 'GET' && $path === '/api/v1/reconcile') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        JsonResponse::send(200, (new CatalogReconcile($registrar, new SbcFleetClient()))->report());
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/reconcile/project') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        JsonResponse::send(200, (new CatalogReconcile($registrar, new SbcFleetClient()))->project(
+            is_array($body) ? $body : []
+        ));
+    }
+
+    if ($method === 'GET' && $path === '/api/v1/sbc/dispatcher-sets') {
+        Auth::requireAbility(FleetAbilities::READ);
+        JsonResponse::send(200, ['sets' => (new SbcFleetClient())->listDispatcherSets()]);
+    }
+
     if ($method === 'POST' && $path === '/api/v1/instances') {
         Auth::requireAbility(FleetAbilities::INSTANCES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $body = SbcSetidGuard::applyToBody(is_array($body) ? $body : [], new SbcFleetClient());
         $actor = Auth::user()['email'] ?? null;
         if (is_string($actor) && $actor !== '' && ! isset($body['updated_by'])) {
             $body['updated_by'] = $actor;
@@ -106,6 +129,7 @@ try {
     if ($method === 'PATCH' && preg_match('#^/api/v1/instances/([A-Za-z0-9_-]+)$#', $path, $m)) {
         Auth::requireAbility(FleetAbilities::INSTANCES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $body = SbcSetidGuard::applyToBody(is_array($body) ? $body : [], new SbcFleetClient());
         $actor = Auth::user()['email'] ?? null;
         JsonResponse::send(200, $registrar->patchInstance(
             $m[1],
