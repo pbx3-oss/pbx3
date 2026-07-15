@@ -55,7 +55,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-15 — S10.8 login chooser complete)
 
-**Branch:** **`main`** — **pbx3** tip after docs commit, **pbx3spa** tip after S10.8 commit (see tip note after push). Gatekeeper already live from S10.6 (no redeploy required for S10.8 SPA-only).
+**Branch:** **** — **pbx3spa**  (S10.8); **pbx3** tip after this docs commit. Gatekeeper already live from S10.6 (no redeploy required for S10.8 SPA-only).
 
 ### Shipped
 - **S10.6** fleet user manage (gatekeeper + SPA Users) — earlier this day; lab OK (readonly user).
