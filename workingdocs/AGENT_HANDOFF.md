@@ -55,7 +55,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-15 — S10.8 login chooser complete)
 
-**Branch:** **`main`** — **pbx3** **`a170c68`**, **pbx3spa** **`59225b9`**. Gatekeeper already live from S10.6 (no redeploy required for S10.8 SPA-only).
+**Branch:** **`main`** — **pbx3** **`6f4facd`**, **pbx3spa** **`54cced4`** (S10.8 code **`59225b9`**). Gatekeeper already live from S10.6 (no redeploy required for S10.8 SPA-only).
 
 ### Shipped
 - **S10.6** fleet user manage (gatekeeper + SPA Users) — earlier this day; lab OK (readonly user).
