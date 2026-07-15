@@ -53,29 +53,41 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-14 — S7 recordings S3 + S7.10 sweeper)
+## Next agent session notes (2026-07-14 — S10.1–S10.3 fleet panel path)
 
-**Branch:** **`main`** — **pbx3** **`ed484f3`**, **pbx3api** **`6f46712`**, **pbx3spa** **`6e23fa3`**. Control host gatekeeper deployed with **`PBX3_RECORDINGS_BUCKET`**. Golden `/opt/pbx3api` on **`6f46712`** with upload env wired.
+**Branch:** **`main`** — **pbx3** **`4498a4c`**, **pbx3spa** **`18f957d`** (S10.1–S10.3 FF-merged). Gatekeeper live on control with abilities + instance lifecycle + move abort/retry/rollback.
 
 ### Shipped
-- **S7.1–S7.10 (PCI-shaped baseline):** dedicated **`08jzwn-pbx3-recordings`**; gatekeeper **`presign-recordings`**; async upload; `s3_key` / Storage UI; policy.json + lifecycle 60d; `s3_only` play proxy; retention keeps S3-backed rows searchable; **reconcile sweeper** local↔SQLite↔S3.
-- Ops: **`OPS_S3_RUNBOOK.md`** §13 + `create-recordings-bucket.sh` / `apply-recordings-lifecycle-rule.sh`.
+- **S10.1:** `fleet_*` abilities on gatekeeper users; `/me` + route enforcement; SPA `canFleet` / `fleet_read` gate; break-glass = `fleet_admin`.
+- **S10.2:** catalog register (`verify_up`), PATCH, soft decommission; Fleet Instances panel (layout polish later); maintenance excluded from move dest.
+- **S10.3:** job `abort` / `retry` / `rollback` + `created_by`/`last_action_by`; SPA job actions + Jobs “Started by”.
+- **Lab ops:** AWS SG `tcp/44300` from control public IP so gatekeeper `/up` probes work (EIP pending).
 
 ### Golden / operator follow-up
-- Rotate SBC Filament admin password if still pending; control host IP dynamic.
-- Fleet login UI kinship still open.
-- Optional: install cron.d recordings example on golden if schedule:run not covering reconcile.
+- Control public IP is dynamic — warn before cycling; refresh SG `/32` after new IP.
+- Optional: delete remote branches `s102` / `s103`.
+- Rotate SBC Filament admin password if still pending.
+- Fleet login UI kinship + Instances layout polish still open.
 
 ### Resume
-1. **S10.1** — gatekeeper `fleet_*` abilities → SPA Fleet guards (unlocks panel onboard/decommission).
-2. Or Fleet login UI kinship / egress availability.
+1. **S10.4** — catalog ↔ SBC reconcile (read-only drift first).
+2. Or Fleet login / Instances UX polish.
 3. Do **not** start S7+ attestation or IdP/cookie without a customer ask.
+
+---
+
+## Next agent session notes (2026-07-14 — S7 recordings S3 + S7.10 sweeper) — historical
+
+**Branch:** **`main`** — **pbx3** **`ed484f3`**, **pbx3api** **`6f46712`**, **pbx3spa** **`6e23fa3`**. Superseded by block above.
+
+### Resume (superseded)
+See block above.
 
 ---
 
 ## Next agent session notes (2026-07-14 — S10, design rules, S7 PCI baseline) — historical
 
-**Branch:** **`main`** — docs tip before evening S7 implement. Superseded by block above.
+**Branch:** **`main`** — docs tip before evening S7 implement. Superseded by later blocks.
 
 ### Resume (superseded)
 See block above.

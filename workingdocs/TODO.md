@@ -1,15 +1,15 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — session end 2026-07-14 (evening).  
-**Last updated:** 2026-07-14 (session end — S7 recordings S3 offload + S7.10 sweeper shipped)
+**Branch:** **`main`** — session end 2026-07-14 (late).  
+**Last updated:** 2026-07-14 (session end — S10.1–S10.3 fleet panel path)
 
 ### Suggested “what next?” order
 
-1. **Phase S10** — fleet admin actions — start **S10.1** gatekeeper abilities (`IMPLEMENTATION_PLAN.md` § Phase S10).  
-2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-3. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-4. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-5. **Fleet login UI kinship (UX)** — restyle `FleetTokenGate` toward **`LoginView`** (on TODO).  
+1. **Phase S10** — continue **S10.4** catalog ↔ SBC reconcile (`IMPLEMENTATION_PLAN.md` § Phase S10).  
+2. **Fleet Instances / login UI polish** — layout kinship still rough (register form + FleetTokenGate).  
+3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
 6. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`**.  
 7. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
 
@@ -27,11 +27,17 @@
 
 - [x] **Fleet auth polish — paste trim + Exit Fleet revoke (2026-07-14):** Break-glass paste collapsed under “Break-glass (ops only)”; Exit Fleet / reset call `logoutFleet` (server revoke + clear); removed redundant “Clear fleet token” topbar. Soft step-up = must Sign in again after exit. Branch **`fleetauthpolish` → `main`**.
 
-- [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough without a big IdP. **SSO-agnostic:** we own `fleet` / `fleet_*` abilities; optional OIDC later maps groups → abilities. Cookies need same-site Fleet UI (or BFF). Soft step-up via Exit Fleet revoke. Design: **`FLEET_AUTH_COOKIE_SSO.md`**. Optional next auth feature when needed: abilities on gatekeeper users (no IdP required) — **S10.1**.
+- [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough without a big IdP. **SSO-agnostic:** we own `fleet` / `fleet_*` abilities; optional OIDC later maps groups → abilities. Cookies need same-site Fleet UI (or BFF). Soft step-up via Exit Fleet revoke. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
 
-- [ ] **Phase S10 — Fleet admin actions (panel-first) (planned 2026-07-14):** Gatekeeper `fleet_*` abilities; SPA Fleet mode actions for **fleet admin only** (not instance/tenant Sanctum): catalog **onboard/register**, **decommission**, metadata/maintenance, move **job control**, S3↔SBC **reconcile**, **DID assign**, **fleet user manage**; optional later orchestrated IAM onboard/rebuild (**S10.7** / S8.9). Mac registrar scripts = break-glass. Plan: **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`** § Phase S10 (also S8.12 pointer). Start: **S10.1** abilities.
+- [x] **S10.1 — Gatekeeper abilities (2026-07-14):** Persist `users.abilities`; login/`/me`; route checks; SPA `canFleet` / `fleet_read` gate; break-glass = `fleet_admin`. Live on control. Tips **pbx3** **`0a2632b`**, **pbx3spa** **`d7734b9`**.
 
-- [ ] **Fleet login UI kinship (UX):** `FleetTokenGate` looks like a lab form tacked into Fleet pages (placeholder-only inputs, flat `.token-box`) — not like **`LoginView`** (centered card, labels, title/subtitle, primary CTA language). Restyle / promote Fleet sign-in to match main SPA login before calling Fleet mode operator-ready. Keep break-glass collapsed.
+- [x] **S10.2 — Instance catalog lifecycle v1 (2026-07-14):** Register (+ `verify_up`), PATCH, soft decommission; SPA Instances panel; move dest excludes maintenance. Branches **`s102`→`main`**. Tips **pbx3** **`1b5e75d`**, **pbx3spa** **`26e93e8`**. Lab: SG **tcp/44300** from control public IP for `/up` probes (EIP pending — refresh `/32` if control IP cycles).
+
+- [x] **S10.3 — Move job control (2026-07-14):** Gatekeeper `abort` / `retry` / `rollback` + `created_by`/`last_action_by`; SPA job actions + Jobs “Started by”. Branches **`s103`→`main`**. Tips **pbx3** **`4498a4c`**, **pbx3spa** **`18f957d`**. Live on control.
+
+- [ ] **Phase S10 — remaining (panel-first):** **S10.4** catalog ↔ SBC reconcile; **S10.5** DID/edge; **S10.6** fleet user manage; **S10.7**/S10.2b orchestrated IAM onboard. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10. Mac registrar scripts = break-glass.
+
+- [ ] **Fleet login UI kinship (UX):** `FleetTokenGate` still lab-form-like vs **`LoginView`**. Also polish Fleet Instances register/actions layout (functional but rough). Keep break-glass collapsed.
 
 - [x] **Critical-path test pack Pack A (2026-07-14):** Offline regression net complete — **`TEST_CADENCE.md`**, **`CRITICAL_PATH_TEST_PACK.md`**. Prefix overlap, gatekeeper UserStore + break-glass, fleet list fixtures, SnapshotRetention, recordings HTTP 404/list (mocked), SPA fleet token Vitest. Branch **`packa` → `main`**. Ongoing habit: leave a unit/contract test when touching logic. Pack B = lab recipes; Pack C = UI E2E later.
 
@@ -49,7 +55,7 @@
 
 - [x] **Peering — logical carrier Peers UX (attrs):** **`PEERING-PLAN.md` §0.1** + pbx3sbc-admin Peers form/table group by `carrier=` / `role=` in **`attrs`** (no OpenSIPS/schema change). Lab seed + Magrathea/Brindley backfill. Remaining: Fail2ban whitelist inbound IPs.
 
-- [x] **Fleet mode in pbx3spa (2026-07-13 → `main`):** **Enter Fleet / Exit Fleet** shell swap, `/fleet/*` guards, Instances / Tenants / **Jobs**, `FleetTokenGate`. **pbx3spa** **`ba31dd4`**, gatekeeper list API **pbx3** **`c047743`**. Branch **`fleetadmin` deleted**. **Still open:** dedicated fleet auth (not paste-token), SSO/`fleet` abilities. Design: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.
+- [x] **Fleet mode in pbx3spa (2026-07-13 → `main`):** **Enter Fleet / Exit Fleet** shell swap, `/fleet/*` guards, Instances / Tenants / **Jobs**, `FleetTokenGate`. **pbx3spa** **`ba31dd4`**, gatekeeper list API **pbx3** **`c047743`**. Branch **`fleetadmin` deleted**.
 
 - [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
 
@@ -58,7 +64,7 @@
 - [x] **S8.10 — live panel moves + phone POC (2026-07-10):** **willand** (`0ggybk`) 08jzwn→bzy54n job `tmj_bf41c7b45dfc97d72135faf1`. **affcot** (`9wvvnb`) bzy54n→08jzwn job `tmj_7efdc9646309ff3641d21839` — Snom followed SBC remount (setid 3→2); dest commit/`genAst` ran. Preflight gap: willand needed SBC `domain` row before move (added setid 2 then cutover). Linphone 1102 flaky — parked. **Merged to `main`** same day.
 - [ ] **Fleet Egress availability & SBC failover (future — not Phase A lab):** Documented **`pbx3-directory/docs/FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. SBC must respond **OPTIONS** from fleet nodes so Egress qualify works; re-enable **`qualify_frequency`** on egress template; implement **EgressFailover** (or SRV) + **pbx3cagi** sequential dial; SPA/preflight trunk health. Lab workaround **`qualify_frequency=0`** (**`117340f`**) — do not treat as final. (May fold into **failover + shadowing** mini-project when that is planned.)
 
-- [x] **Phase S8.10 — Fleet mobility scaffold (2026-07-10):** On **`movewizard`** then **`main`**: `tenant-move-job.v0.json`; gatekeeper presign + tenant-moves + phase runner; pbx3api `/api/fleet/*`; pbx3sbc-admin `/api/fleet` repoint; SPA Fleet tenants Move wizard + job view (**lab** — peer nav; product = Fleet **mode** in same SPA). **Still open:** Fleet mode UX + dedicated fleet auth.
+- [x] **Phase S8.10 — Fleet mobility scaffold (2026-07-10):** On **`movewizard`** then **`main`**: `tenant-move-job.v0.json`; gatekeeper presign + tenant-moves + phase runner; pbx3api `/api/fleet/*`; pbx3sbc-admin `/api/fleet` repoint; SPA Fleet tenants Move wizard + job view (**lab** — peer nav; product = Fleet **mode** in same SPA).
 
 - [ ] **pbx3sbc — multi-tenant dispatcher reverse lookup:** Template + **`add-dispatcher.sh`** accept **`source_ip`** in dispatcher **`attrs`**. **Live:** golden **setid 2** (`54.236.153.81`), **bzy54n setid 3** (`98.82.174.36`); tenant domains on SBC. **Optional backfill:** hostname dispatcher rows (`sip:08jzwn.pbx3.com`) if needed. See **`opensips.cfg.template`** `route[GET_DOMAIN_FROM_SOURCE_IP]`.
 

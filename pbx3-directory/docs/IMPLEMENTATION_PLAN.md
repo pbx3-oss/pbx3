@@ -436,8 +436,8 @@ Mac CLI (`onboard-fleet-instance.sh`, `register-instance.sh`, `unregister-instan
 | # | Task | Repo / owner | Notes |
 |---|------|----------------|-------|
 | **S10.1** | **Gatekeeper abilities** | gatekeeper + pbx3spa | **Done (2026-07-14):** Persist `abilities` on fleet users; login/`/me` return them; route checks (`fleet_read` / `fleet_instances` / `fleet_moves` / `fleet_admin`); SPA stores abilities, requires `fleet_read`, hides Move without `fleet_moves`. Break-glass = `fleet_admin`. |
-| **S10.2** | **Instance lifecycle (catalog)** | gatekeeper + pbx3spa | **Done on `s102`:** Register (+ `verify_up`), soft decommission, PATCH metadata/status; SPA Instances panel; `updated_by`. S10.2b IAM/.env later. |
-| **S10.3** | **Move job control** | gatekeeper + pbx3spa | **In progress on `s103`:** abort / retry / rollback + `created_by` / `last_action_by`; SPA job actions. |
+| **S10.2** | **Instance lifecycle (catalog)** | gatekeeper + pbx3spa | **Done (`s102`→`main` 2026-07-14):** Register (+ `verify_up`), soft decommission, PATCH metadata/status; SPA Instances panel; `updated_by`. S10.2b IAM/.env later. |
+| **S10.3** | **Move job control** | gatekeeper + pbx3spa | **Done (`s103`→`main` 2026-07-14):** abort / retry / rollback + `created_by` / `last_action_by`; SPA job actions. |
 | **S10.4** | **Catalog integrity** | gatekeeper (+ SBC adapter) | Reconcile / drift report: S3 home-of-record ↔ SBC `domain.setid` (+ DID projection when present). Read-only first; optional “force project from catalog” under `fleet_edge`. |
 | **S10.5** | **Edge / DID actions** | gatekeeper + pbx3sbc-admin + pbx3spa | Via **`SbcFleetAdapter`** only (no raw Filament as product path): register tenant domain; register/update node dispatcher set; **DID → tenant** assign/reassign (`dids.json` + project). Ties **`DID_ASSIGNMENT_DESIGN.md`**. |
 | **S10.6** | **Fleet user manage** | gatekeeper + pbx3spa | Create/disable fleet users; assign `fleet_*` abilities; revoke sessions. `fleet_admin` only. |
