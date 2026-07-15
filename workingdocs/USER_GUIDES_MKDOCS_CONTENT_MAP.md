@@ -9,9 +9,11 @@
 
 **Reference implementation:** **`~/Git/sail6-docs`** — `mkdocs-material`, `.github/workflows/ci.yml` → `mkdocs gh-deploy --force` → GitHub Pages.
 
-**Product docs repo (proposed):** **`pbx3-docs`** (new GitHub repo under OSS org). Do **not** mirror all of `workingdocs/`; **promote** stable pages when operator-facing behaviour is shipped.
+**Product docs repo:** **`pbx3-docs/`** (holding-folder sibling under `pbx3-master/`). Promote stable pages when operator-facing behaviour is shipped — do **not** mirror `workingdocs/`.
 
 **Site URL (when ready):** `docs.pbx.com` or `{org}.github.io/pbx3-docs` — separate from admin SPA (`app.pbx.com`).
+
+**Local review:** `cd pbx3-docs && mkdocs serve` (see `pbx3-docs/README.md`).
 
 ---
 
@@ -30,9 +32,9 @@
 ## Proposed MkDocs navigation
 
 ```text
-Home
+Home                          ← same top-level schematic as “What is PBX3?”
 ├── Getting started
-│   ├── What is PBX3?
+│   ├── What is PBX3?         ← system schematic (instances · SBC · Gatekeeper · S3); hero of intro
 │   ├── Solo trial (one node, no fleet)
 │   └── Sign in to the admin UI
 ├── Installation (Installer)
@@ -68,6 +70,11 @@ Home
 │   ├── Agent-assisted onboard / rebuild (interim)
 │   ├── Backups in the org bucket
 │   └── Tenant move (high level)
+├── Cloud / S3 reference (Installer)
+│   ├── Org bucket layout and CORS
+│   ├── Node IAM (writer role)
+│   ├── Control host (gatekeeper on EC2)
+│   └── SPA catalog URL and Pages CORS
 └── Troubleshooting (Both)
     ├── Cannot log in
     ├── Certificate / HTTPS errors
@@ -79,11 +86,11 @@ Home
 
 ## Page inventory (promote from workingdocs)
 
-Status: **planned** until copied into `pbx3-docs` and edited for operators.
+Status: **seeded in `pbx3-docs/`** (2026-07-15) — operator drafts from runbooks; lab URLs included. Expect human edit pass. Live: https://aelintra.github.io/pbx3-docs/
 
 | # | MkDocs page | Audience | Source workingdoc (promote / distill) | Priority | Notes |
 |---|-------------|----------|-------------------------------------|----------|-------|
-| 1 | What is PBX3? | Both | `pbx3/docs/index.md` (expand) | P1 | SPA + API + node; no Laravel detail |
+| 1 | What is PBX3? | Both | Distill `FLEET_SYSTEM_OVERVIEW.md` (topology diagrams) + `pbx3/docs/index.md`; Rule 1 call path vs control plane | P1 | **Lead with one schematic:** instances (Asterisk+API), SBC (SIP edge), Gatekeeper (control), org S3 (catalog/backups). Solo = one box; fleet = full picture. No Laravel / workingdocs. SPA + API + node in prose below the figure. |
 | 2 | Solo trial | Admin | `pbx3-directory/docs/DESIGN_RULES.md` § Rule 6; `pbx3spa/DEV_ENVIRONMENT.md` § solo only | P1 | No S3/catalog required; not local `npm run dev` |
 | 3 | Sign in to the admin UI | Admin | `pbx3spa/DEV_ENVIRONMENT.md` § prod pattern only | P1 | Instance URL / fleet picker; omit Vite proxy |
 | 4 | Requirements | Installer | `INSTALL_SEQUENCE_UBUNTU.md` § Prerequisites | P1 | Ubuntu 24.04; appliance mindset |
@@ -113,14 +120,18 @@ Status: **planned** until copied into `pbx3-docs` and edited for operators.
 | 28 | Onboard a second instance | Installer | `INSTANCE_ONBOARDING.md`; `NEW_INSTANCE_CHECKLIST.md`; `onboard-fleet-instance.sh` | P2 | Script-first; IAM preflight summary |
 | 28a | Rebuild a fleet node from S3 | Installer | `REBUILD_INSTANCE_RUNBOOK.md` (operator steps only) | P2 | Same KSUID/FQDN; S3 restore; no agent prose |
 | 28b | **Agent-assisted onboard / rebuild (interim)** | Installer | Distill **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 + kickoff in **`REBUILD_INSTANCE_RUNBOOK.md`**; greenfield: checklist + onboard script | **P2** | **Interim equivalent of parked S10.7 / S8.9 orchestrator** — human + AI agent (Cursor/etc.) on Mac with AWS CLI + SSH; approval gates for terminate/DNS/IAM. **Not** `AGENT_HANDOFF` session blocks. Frame: until control-plane cloud adapter ships. |
-| 29 | Backups in org bucket | Installer | `OPS_S3_RUNBOOK.md` § backups (operator) | P3 | |
+| 29 | Backups in org bucket | Installer | `OPS_S3_RUNBOOK.md` § backups (operator) | P3 | High level; detail in Cloud / S3 |
 | 30 | Tenant move | Installer | `TENANT_MIGRATION_RUNBOOK.md` (high level); Fleet Jobs when promoting | P3 | Panel path after S8/S10 |
+| 30a | Org bucket layout and CORS | Installer | `OPS_S3_RUNBOOK.md` (operator slices); `S3_LAYOUT_PROPOSAL.md` distill | P2 | **Reference AWS**; call out S3-compatible (Rule 9) |
+| 30b | Node IAM (writer role) | Installer | `OPS_S3_RUNBOOK.md` § node IAM / `apply-node-s3-writer-policy.sh` | P2 | No `tenants/*` blanket; preflight deny probe |
+| 30c | Control host (gatekeeper on EC2) | Installer | `CONTROL_HOST.md`; LE on control | P2 | Dynamic IP / SG `/32` refresh; not product coupling to EC2 |
+| 30d | SPA catalog URL and Pages CORS | Installer | `OPS_S3_RUNBOOK.md` §9; `DESIGN_RULES.md` § SPA hosting | P2 | Pages origin + bucket CORS + node API CORS |
 | 31 | Cannot log in | Both | New (symptoms → checks) | P2 | API URL, TLS, Sanctum, clock |
 | 32 | Certificate errors | Both | `TLS_AND_CERTIFICATES.md` troubleshooting slice | P2 | |
 | 33 | Commit stays dirty | Admin | New | P3 | Generator / pending changes |
 | 34 | Backup not in SPA | Installer | Fleet S3 + IAM (`IMPLEMENTATION_PLAN` § S8 driver) | P3 | |
 
-**Priority:** P1 = first publish set (install + TLS + login + backup). P2 = admin walkthrough + fleet intro. P3 = later.
+**Priority:** P1 = first publish set (install + TLS + login + backup). P2 = admin walkthrough + fleet intro + Cloud / S3 reference. P3 = later.
 
 ---
 
@@ -145,10 +156,11 @@ Status: **planned** until copied into `pbx3-docs` and edited for operators.
 | Phase | Deliverable | Repo |
 |-------|-------------|------|
 | **0 — Map** | This file | `pbx3/workingdocs/` ✓ |
-| **1 — Shell** | `pbx3-docs` repo: `mkdocs.yml` (top-level **`nav:`**), theme, CI `gh-deploy`, Home + placeholder nav | New repo |
-| **2 — P1 pages** | Install + TLS + login + backup (rows 4–8, 9–11, 3, 20) — **rewrite** for operators, not raw copy | `pbx3-docs` |
+| **1 — Shell** | `pbx3-docs` repo: `mkdocs.yml` (top-level **`nav:`**), theme, CI `gh-deploy`, Home + nav + stubs; **What is PBX3?** schematic | `pbx3-docs/` ✓ (local; Pages when remote exists) |
+| **2 — P1 pages** | Home + **What is PBX3?** (schematic first) + Install + TLS + login + backup (rows 1, 4–8, 9–11, 3, 20) — **rewrite** for operators, not raw copy | `pbx3-docs` |
 | **3 — Admin guide** | Demo-script-aligned chapters (rows 13–26) | `pbx3-docs` |
 | **4 — Fleet** | Overview + onboard + rebuild + **agent-assisted interim (28b)** (rows 27–30, 28a–28b) when promoting fleet chapter | `pbx3-docs` |
+| **4b — Cloud / S3** | Reference AWS EC2 + S3 guides (rows 30a–30d); Rule 9 framing (S3-compatible OK) | `pbx3-docs` |
 | **5 — Maintenance** | When workingdoc operator steps change, update MkDocs in same release; no auto-sync until CI copy script is worth it |
 
 **MkDocs config fixes (when creating repo):** Move **`nav`** out of `extra:` (bug in current `pbx3/mkdocs.yml` / sail6 template). Set `repo_url`, `edit_uri`, `site_url`. Pin `mkdocs-material` version in CI like sail6-docs.
