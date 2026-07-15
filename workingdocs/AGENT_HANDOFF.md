@@ -55,7 +55,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-15 — pbx3-docs MkDocs live)
 
-**Branch:** **`main`** — **pbx3** **`abb2bc3`**, **pbx3spa** **`18f3329`**, **pbx3-docs** **`2a37a00`** on **`aelintra/pbx3-docs`**. No golden/API code change this session.
+**Branch:** **`main`** — **pbx3** **`1d8316a`**, **pbx3spa** **`d4d3e71`**, **pbx3-docs** **`2a37a00`** on **`aelintra/pbx3-docs`**. No golden/API code change this session.
 
 ### Shipped
 - **`pbx3-docs`** MkDocs Material site: approved nav (intro schematic, Cloud/S3); operator drafts for lab runbook; CI → GitHub Pages.
