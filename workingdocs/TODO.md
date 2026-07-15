@@ -1,14 +1,14 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** / lab **`s105` tip** — S10.5 edge residue live on control + SBC (2026-07-15).  
-**Last updated:** 2026-07-15 (session end — S10.5 complete; S10.6 next; login chooser = S10.8 polish)
+**Branch:** **`main`** — S10.6 live (fleet user manage); S10.7 parked; tip **S10.8**.  
+**Last updated:** 2026-07-15 (S10.6 shipped → main; S10.7 parked pending cloud-adapter discussion)
 
 ### Suggested “what next?” order
 
-1. **S10.6** — fleet user manage (`IMPLEMENTATION_PLAN.md` § Phase S10).  
-2. **Fleet UX polish (final)** — login **chooser** (Manage instance vs Fleet console) preferred over instance-first Enter Fleet; plus Instances/FleetTokenGate kinship, demote Link setid, optional DID row Edit. Live with nested Enter Fleet until then.  
-3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+1. **S10.8** — Fleet entry polish: login **chooser** (Manage instance vs Fleet console); TokenGate kinship; demote Link setid.  
+2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+3. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+4. **S10.7 / S8.9 orchestrated onboard/rebuild (parked)** — wait for AWS vs S3-compatible / adapter stance (Rule 9). Mode 4 + Mac scripts remain.  
 5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
 6. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
 7. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
@@ -41,7 +41,11 @@
 
 - [x] **S10.5 residue — edge register (2026-07-15):** Tenant **Register on SBC**; Instances **Provision edge** (new setid + Asterisk Peer, catalog `sbc_backend_uri` default `sip:{fqdn}:5060`). **Link setid** remains catch-up (confusing — demote in polish). Rule 13 dual contract. Live on control + SBC.
 
-- [ ] **Phase S10 — remaining (panel-first):** **S10.6** fleet user manage; **S10.7**/S10.2b orchestrated IAM onboard; **S10.8** entry polish (login chooser). Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10. Mac registrar scripts = break-glass.
+- [x] **S10.6 — Fleet user manage (2026-07-15):** Create/disable/enable; abilities; revoke sessions; SPA **Users**. Live on control. Tips **pbx3** **`470a788`**, **pbx3spa** **`57efff0`**. Branch **`s105`→`main`** (branch deleted).
+
+- [ ] **Phase S10 — remaining:** **S10.8** entry polish (login chooser). **S10.7**/S10.2b orchestrated IAM onboard/rebuild — **parked** (2026-07-15) pending cloud-adapter / portability discussion; Mode 4 + Mac scripts stay. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10.
+
+- [ ] **S10.7 — Orchestrated onboard / rebuild (parked 2026-07-15):** Greenfield IAM join + S8.9 rebuild wizard behind cloud adapter (Rule 9). Explicitly not next. **Interim:** agent-assisted Mode 4 — planned MkDocs page in **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** row **28b**; source **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4. Design: **`SELF_SERVICE_REBUILD_DESIGN.md`**.
 
 - [ ] **Fleet entry — login chooser (final polish, settled preference 2026-07-15):** Today: instance Sanctum login → **Enter Fleet** → gatekeeper Sign in. Product preference: **login chooser** — “Manage instance” vs “Fleet console” as first decision (fleet-only ops never need a node password). Live with nested Enter Fleet until Fleet is functionally complete (after S10.6). Keep Rule 10: two token planes. Ties **`FLEET_AUTH_COOKIE_SSO.md`** § Entry path · **`IMPLEMENTATION_PLAN.md`** § S10.8.
 

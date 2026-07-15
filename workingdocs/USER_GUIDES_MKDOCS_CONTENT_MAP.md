@@ -64,6 +64,8 @@ Home
 ├── Fleet operations (Installer)
 │   ├── Fleet overview (catalog + S3)
 │   ├── Onboard a second instance
+│   ├── Rebuild a fleet node from S3
+│   ├── Agent-assisted onboard / rebuild (interim)
 │   ├── Backups in the org bucket
 │   └── Tenant move (high level)
 └── Troubleshooting (Both)
@@ -107,10 +109,12 @@ Status: **planned** until copied into `pbx3-docs` and edited for operators.
 | 24 | Certificates panel | Admin | `CERTIFICATES_PANEL_AND_API.md` (UI only) | P1 | |
 | 25 | Logs | Admin | `SINGLE_PANEL_SCREENS.md` § Logs | P3 | View / download |
 | 26 | Help messages | Admin | Demo script § Help | P3 | Editing `tt_help_core` hints |
-| 27 | Fleet overview | Installer | `pbx3-directory/docs/DESIGN_RULES.md` § topology; `PLANNING_HANDOFF.md` (distill) | P2 | Catalog + bucket; not developer phases |
-| 28 | Onboard a second instance | Installer | `INSTANCE_ONBOARDING.md`; `NEW_INSTANCE_CHECKLIST.md` | P2 | Script-first; IAM preflight summary |
+| 27 | Fleet overview | Installer | `pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md`; `DESIGN_RULES.md` § topology | P2 | Catalog + bucket; not developer phases |
+| 28 | Onboard a second instance | Installer | `INSTANCE_ONBOARDING.md`; `NEW_INSTANCE_CHECKLIST.md`; `onboard-fleet-instance.sh` | P2 | Script-first; IAM preflight summary |
+| 28a | Rebuild a fleet node from S3 | Installer | `REBUILD_INSTANCE_RUNBOOK.md` (operator steps only) | P2 | Same KSUID/FQDN; S3 restore; no agent prose |
+| 28b | **Agent-assisted onboard / rebuild (interim)** | Installer | Distill **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 + kickoff in **`REBUILD_INSTANCE_RUNBOOK.md`**; greenfield: checklist + onboard script | **P2** | **Interim equivalent of parked S10.7 / S8.9 orchestrator** — human + AI agent (Cursor/etc.) on Mac with AWS CLI + SSH; approval gates for terminate/DNS/IAM. **Not** `AGENT_HANDOFF` session blocks. Frame: until control-plane cloud adapter ships. |
 | 29 | Backups in org bucket | Installer | `OPS_S3_RUNBOOK.md` § backups (operator) | P3 | |
-| 30 | Tenant move | Installer | `TENANT_MIGRATION_RUNBOOK.md` (high level) | P3 | When S8 tooling exists |
+| 30 | Tenant move | Installer | `TENANT_MIGRATION_RUNBOOK.md` (high level); Fleet Jobs when promoting | P3 | Panel path after S8/S10 |
 | 31 | Cannot log in | Both | New (symptoms → checks) | P2 | API URL, TLS, Sanctum, clock |
 | 32 | Certificate errors | Both | `TLS_AND_CERTIFICATES.md` troubleshooting slice | P2 | |
 | 33 | Commit stays dirty | Admin | New | P3 | Generator / pending changes |
@@ -144,7 +148,7 @@ Status: **planned** until copied into `pbx3-docs` and edited for operators.
 | **1 — Shell** | `pbx3-docs` repo: `mkdocs.yml` (top-level **`nav:`**), theme, CI `gh-deploy`, Home + placeholder nav | New repo |
 | **2 — P1 pages** | Install + TLS + login + backup (rows 4–8, 9–11, 3, 20) — **rewrite** for operators, not raw copy | `pbx3-docs` |
 | **3 — Admin guide** | Demo-script-aligned chapters (rows 13–26) | `pbx3-docs` |
-| **4 — Fleet** | Onboard + overview (rows 27–30) after S8 stabilizes | `pbx3-docs` |
+| **4 — Fleet** | Overview + onboard + rebuild + **agent-assisted interim (28b)** (rows 27–30, 28a–28b) when promoting fleet chapter | `pbx3-docs` |
 | **5 — Maintenance** | When workingdoc operator steps change, update MkDocs in same release; no auto-sync until CI copy script is worth it |
 
 **MkDocs config fixes (when creating repo):** Move **`nav`** out of `extra:` (bug in current `pbx3/mkdocs.yml` / sail6 template). Set `repo_url`, `edit_uri`, `site_url`. Pin `mkdocs-material` version in CI like sail6-docs.
@@ -157,5 +161,7 @@ Status: **planned** until copied into `pbx3-docs` and edited for operators.
 |-----|------|
 | `pbx3spa/workingdocs/WORKINGDOCS_RATIONALIZATION_PLAN.md` | Agent workingdocs rules; MkDocs out of scope for agents |
 | `pbx3/workingdocs/TODO.md` | Open item: stand up `pbx3-docs` |
+| `pbx3-directory/docs/SELF_SERVICE_REBUILD_DESIGN.md` § Mode 4 | **Source of truth** for agent-assisted rebuild (interim S10.7); promote as MkDocs **28b** |
+| `pbx3-directory/docs/IMPLEMENTATION_PLAN.md` § S10.7 | Parked orchestrator; points at Mode 4 / this map |
 | `pbx3spa/workingdocs/PROJECT_PLAN.md` | Product plan pointer |
 | `~/Git/sail6-docs` | Layout and CI reference |
