@@ -1,6 +1,6 @@
 # Instance directory — design rules (non-negotiable)
 
-**Status:** Agreed before implementation on branch **`directory`** (2026-05). Restructured **2026-07-14** (Parts A–D; Rules **10–14** added). Numbers **1–9** unchanged for citations.
+**Status:** Agreed before implementation on branch **`directory`** (2026-05). Restructured **2026-07-14** (Parts A–D; Rules **10–14** added). Rule **13** dual-contract clarified **2026-07-15**. Numbers **1–9** unchanged for citations.
 
 **Applies to:** `pbx3-directory`, **pbx3spa** (picker UX), control plane / gatekeeper, any future central auth/gateway. **Does not** change runtime requirements on **pbx3** / **pbx3api** / Asterisk on each node.
 
@@ -339,16 +339,35 @@ The SPA must not hold SSH, cloud root, registrar Mac IAM, or long-lived break-gl
 
 ### Rule 13 — One home of record; edges are projections
 
-**Home of record (HoR)** for fleet ops facts lives in the **directory / org object store** (catalog, `tenants/*/meta.json`, DID inventory). Edge databases (SBC MySQL/SQLite, etc.) are **compiled projections**.
+**Home of record (HoR)** for **fleet** ops facts lives in the **directory / org object store** (catalog, `tenants/*/meta.json`, DID inventory). Edge databases (SBC MySQL/SQLite, etc.) are **compiled projections** of those facts.
 
 | Owner | Examples |
 |-------|----------|
-| **HoR (S3 / gatekeeper writes)** | Tenant → `instance_id`; DID → tenant; instance index row |
-| **Projection (edge)** | `domain.setid`, `dr_rules`, dispatcher membership |
+| **HoR (S3 / gatekeeper writes)** | Tenant → `instance_id`; DID → tenant; instance index row; catalog intent for node `sbc_dispatcher_setid` |
+| **Projection (edge)** | `domain.setid`, fleet DID `dr_rules`, dispatcher membership (and Asterisk Peer rows the fleet projector owns) |
 
-**Reconcile** flags drift and (when authorized) re-projects **from** catalog **to** edge — not the reverse as product path. Manual Filament edits on the SBC are **break-glass**; expect reconcile to notice.
+**Reconcile** flags drift and (when authorized) re-projects **from** catalog **to** edge — not the reverse as product path.
 
-**Implication:** Move cutover updates HoR and projection in one job (or fails/rolls back). Do not invent a second HoR in OpenSIPS tables. Ties Rules 7 + 8.
+#### Dual contract — standalone SBC vs PBX3 fleet (settled 2026-07-15)
+
+**pbx3sbc** is a generally useful edge: domain → dispatcher set → Asterisk URI(s), carrier Peers, DID delivery. It must remain usable **without** a directory (Filament / scripts = first-class authoring for that persona).
+
+**PBX3 fleet** optionally drives the **same** edge tables from the directory via **`SbcFleetAdapter`**. Fleet control UI is **Fleet mode in pbx3spa** — not a second “Fleet mode” shell inside `pbx3sbc-admin`.
+
+| Persona | Authors where | Edge Filament |
+|---------|---------------|---------------|
+| **Standalone SBC** (any Asterisk backends) | Filament / scripts on the SBC | Product path |
+| **PBX3 fleet admin** | Catalog / gatekeeper → adapter project | **Break-glass only** for **fleet-owned** projections |
+
+**One author of record per fact** (not “lock the whole SBC”):
+
+- If the directory owns it (tenant domain setid, fleet DID delivery, fleet-provisioned node dispatcher / linked Asterisk Peer, …), the product path is **catalog → project**. Editing those projections in Filament is break-glass; expect reconcile to notice (and Apply to overwrite).
+- Facts **not** yet in the directory (typical: carrier Peers, Fail2ban, LE, one-off edge tuning) stay **edge-authored** for everyone until product deliberately moves them into HoR.
+- Prefer tagging fleet-owned rows (e.g. `fleet=did` attrs) so projectors purge/upsert **their** namespace and do **not** clobber hand-authored peers or foreign `dr_rules`.
+
+**Anti-patterns:** Making Filament second-class or read-only for standalone users; co-hosting fleet console inside `pbx3sbc-admin` (Rule 7); inventing a second HoR in OpenSIPS tables; treating “fleet user opened Filament” as equal authorship for catalog-owned rows.
+
+**Implication:** Move cutover updates HoR and projection in one job (or fails/rolls back). Calls keep using last projection if control plane is down (Rule 11). Ties Rules 7 + 8.
 
 ---
 
@@ -554,7 +573,7 @@ Do **not** elevate these to numbered Rules. They are preferences, workspace fact
 10. **Fleet plane ≠ instance/tenant plane; `fleet_*` only for catalog/move/onboard.**  
 11. **Control plane down → calls continue; mutations may wait.**  
 12. **Browser never holds ops IAM/SSH; SPA drives jobs.**  
-13. **Directory is HoR; edge DBs are projections.**  
+13. **Directory is HoR for fleet facts; edge DBs are projections; standalone SBC authors at the edge; one author per fact.**  
 14. **Destructive fleet steps are gated, durable jobs with audit.**  
 
 ---
@@ -586,7 +605,7 @@ Before merging directory / fleet / control-plane work, confirm:
 - [ ] Catalog mutate / move / onboard / decommission require **fleet** identity + appropriate `fleet_*` — not instance Sanctum `admin` (Rule 10).
 - [ ] Control-plane outage does not block calls; jobs fail safe (Rule 11).
 - [ ] SPA does not hold ops cloud/SSH credentials; production builds do not bake gatekeeper tokens (Rule 12).
-- [ ] Edge config treated as **projection** of directory HoR; reconcile direction documented (Rule 13).
+- [ ] Edge config treated as **projection** of directory HoR; reconcile direction catalog→edge; fleet-owned rows not co-authored in Filament; standalone Filament path preserved (Rule 13).
 - [ ] Destructive fleet actions are **jobs** (preflight, gates, retry/rollback, audit) (Rule 14).
 
 **Product decisions**

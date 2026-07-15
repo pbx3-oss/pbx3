@@ -129,6 +129,8 @@ This one indirection is what makes the fleet flexible:
 - **Moving a tenant** = change one row in the SBC's table (tenant domain → new node). Seconds, reversible, no DNS wait.
 - **Security concentrates** at the edge — scanners and bad actors hit the SBC, not every node.
 
+**Standalone vs fleet authorship:** The same SBC product can front “any Asterisk” with its own admin UI (no directory required). A **PBX3 fleet** also drives that SBC from the **S3 directory** (who lives where, which numbers belong to whom) via the control plane — so fleet operators change intent in **Fleet mode** in the SPA, and the edge is updated as a projection. They should not also hand-edit those same fleet-owned rows on the SBC, or catalog and edge will drift. Facts not yet kept in the directory (for example many carrier trunk settings) can still be configured on the SBC. Full rule: **`DESIGN_RULES.md` Rule 13**.
+
 Production fleets run **two or more identical SBCs** for redundancy — typically **active–passive behind one VIP** (signaling only / RTP bypass). A shared live routing database is **not** required; each member keeps a local store (**SQLite preferred** for single-file portability, with optional Litestream to S3; lab may still use MySQL).
 
 ### 3.4 S3 — the fleet's memory
@@ -137,7 +139,7 @@ Production fleets run **two or more identical SBCs** for redundancy — typicall
 - **Directory / catalog** — the authoritative map of *which tenant lives on which node*.
 - **Backups** — per-node and per-tenant.
 - **Recordings** — call recordings, kept in one place across moves.
-- **Number inventory** (planned) — which phone numbers belong to which tenant.
+- **Number inventory** — which phone numbers belong to which tenant (fleet DID catalog; projected to the SBC).
 
 S3 is **fleet infrastructure**, not owned by any node or tenant — so it gets its own security arrangements. A vital rule: **S3 is never in the call path.** It's the filing cabinet, consulted for management and recovery, never to connect a call.
 
@@ -307,7 +309,7 @@ You can start solo and grow into a fleet; the node software is the same.
 | **Instance / Node** | One PBX server (Asterisk + local DB + firewall + certs). Hosts tenants. |
 | **SBC** | Session Border Controller — the fleet's single front door for phones and carriers. |
 | **S3 directory** | Shared store recording which tenant lives on which node, plus backups/recordings. |
-| **Control plane** | The fleet management brain (superadmin, tenant moves). Not in the call path. UI: **Fleet mode** in `pbx3spa` (separate API). |
+| **Control plane** | The fleet management brain (superadmin, tenant moves, DID assign, edge project). Not in the call path. UI: **Fleet mode** in `pbx3spa` (separate API). Authorship: **Rule 13**. |
 | **DID / DDI** | A phone number that reaches a tenant from the outside world. |
 | **Egress trunk** | The standard outbound pipe from a node to the SBC. |
 | **Cutover** | The moment a tenant's traffic switches to the new node. |

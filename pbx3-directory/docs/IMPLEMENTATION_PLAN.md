@@ -439,7 +439,7 @@ Mac CLI (`onboard-fleet-instance.sh`, `register-instance.sh`, `unregister-instan
 | **S10.2** | **Instance lifecycle (catalog)** | gatekeeper + pbx3spa | **Done (`s102`→`main` 2026-07-14):** Register (+ `verify_up`), soft decommission, PATCH metadata/status; SPA Instances panel; `updated_by`. S10.2b IAM/.env later. |
 | **S10.3** | **Move job control** | gatekeeper + pbx3spa | **Done (`s103`→`main` 2026-07-14):** abort / retry / rollback + `created_by` / `last_action_by`; SPA job actions. |
 | **S10.4** | **Catalog integrity** | gatekeeper + pbx3sbc-admin + pbx3spa | **Done (`s104`):** reconcile + apply catalog→SBC for `setid_mismatch`. SPA copy: Instances = catalog only; Project ≠ undo. See gatekeeper README § Reconcile vs project. DID → **S10.5**. |
-| **S10.5** | **Edge / DID actions** | gatekeeper + pbx3sbc-admin + pbx3spa | Via **`SbcFleetAdapter`** only (no raw Filament as product path): register tenant domain; register/update node dispatcher set; **DID → tenant** assign/reassign (`dids.json` + project). Ties **`DID_ASSIGNMENT_DESIGN.md`**. |
+| **S10.5** | **Edge / DID actions** | gatekeeper + pbx3sbc-admin + pbx3spa | Via **`SbcFleetAdapter`** only (no Filament as fleet product path — **Rule 13** dual contract): register tenant domain; register/update node dispatcher set; **DID → tenant** assign/reassign (`dids.json` + project). Residue = Fleet SPA actions that project; Filament remains standalone/break-glass. Ties **`DID_ASSIGNMENT_DESIGN.md`**, **`DESIGN_RULES.md` Rule 13**. |
 | **S10.6** | **Fleet user manage** | gatekeeper + pbx3spa | Create/disable fleet users; assign `fleet_*` abilities; revoke sessions. `fleet_admin` only. |
 | **S10.7** | **Orchestrated onboard / rebuild (optional)** | control-plane + SPA | Greenfield IAM join + `.env` smoke, and/or S8.9 rebuild wizard — durable jobs behind **cloud adapter** (Rule 9); node stays on `pbx3-node-*` role. Do not start until S10.1–S10.2 catalog path is trusted. |
 
@@ -459,7 +459,7 @@ Mac CLI (`onboard-fleet-instance.sh`, `register-instance.sh`, `unregister-instan
 
 **Dependencies:** S8.10 Fleet mode + gatekeeper login (done); control host catalog IAM (`CONTROL_HOST.md`). **S10.5** benefits from DID schema draft. **S10.7** shares engine with **S8.9**. Parallel-friendly with **S7** / egress availability once S10.1 lands.
 
-**Related:** **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5–2.6, §4, §13 · **`INSTANCE_ONBOARDING.md`** · **`FLEET_AUTH_COOKIE_SSO.md`** (abilities in-house) · **`SELF_SERVICE_REBUILD_DESIGN.md`** (S10.7 overlap).
+**Related:** **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5–2.6, §4, §13 · **`DESIGN_RULES.md` Rule 13** (standalone vs fleet authorship) · **`INSTANCE_ONBOARDING.md`** · **`FLEET_AUTH_COOKIE_SSO.md`** (abilities in-house) · **`SELF_SERVICE_REBUILD_DESIGN.md`** (S10.7 overlap).
 
 ---
 
