@@ -53,26 +53,36 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-14 — S10.1–S10.3 fleet panel path)
+## Next agent session notes (2026-07-14 — S10.4 catalog ↔ SBC reconcile)
 
-**Branch:** **`main`** — **pbx3** **`4498a4c`**, **pbx3spa** **`18f957d`** (S10.1–S10.3 FF-merged). Gatekeeper live on control with abilities + instance lifecycle + move abort/retry/rollback.
+**Branch:** **`main`** — **pbx3** **`96e432e`**, **pbx3sbc-admin** **`2d232f8`**, **pbx3spa** **`15c5090`** (S10.4 FF-merged). Gatekeeper + SBC adapter live; Fleet Reconcile in SPA.
 
 ### Shipped
-- **S10.1:** `fleet_*` abilities on gatekeeper users; `/me` + route enforcement; SPA `canFleet` / `fleet_read` gate; break-glass = `fleet_admin`.
-- **S10.2:** catalog register (`verify_up`), PATCH, soft decommission; Fleet Instances panel (layout polish later); maintenance excluded from move dest.
-- **S10.3:** job `abort` / `retry` / `rollback` + `created_by`/`last_action_by`; SPA job actions + Jobs “Started by”.
-- **Lab ops:** AWS SG `tcp/44300` from control public IP so gatekeeper `/up` probes work (EIP pending).
+- **Reconcile:** `GET /api/v1/reconcile` — S3 HoR vs SBC `domain.setid` drift (`fleet_edge`).
+- **Apply catalog→SBC:** `POST /api/v1/reconcile/project` for `setid_mismatch` only; SPA button shown only when applicable.
+- **Setid guard:** catalog `sbc_dispatcher_setid` must be a live SBC dispatcher set (`GET …/sbc/dispatcher-sets`); free-typed `99` rejected.
+- **SBC adapter:** `GET /api/fleet/domains`, `dispatcher-sets`.
+- **Docs:** gatekeeper README § Reconcile vs project (Instances = catalog; Apply ≠ undo).
 
 ### Golden / operator follow-up
-- Control public IP is dynamic — warn before cycling; refresh SG `/32` after new IP.
-- Optional: delete remote branches `s102` / `s103`.
+- Control public IP still dynamic — refresh SG `/32` after cycle (EIP pending).
 - Rotate SBC Filament admin password if still pending.
-- Fleet login UI kinship + Instances layout polish still open.
+- Fleet login / Instances layout polish still open.
+- Lab Vite `s104` work is now on `main` — use `main` + rebuild Pages if shipping SPA build.
 
 ### Resume
-1. **S10.4** — catalog ↔ SBC reconcile (read-only drift first).
+1. **S10.5** — edge / DID (`dids.json` + project; register missing domain rows).
 2. Or Fleet login / Instances UX polish.
 3. Do **not** start S7+ attestation or IdP/cookie without a customer ask.
+
+---
+
+## Next agent session notes (2026-07-14 — S10.1–S10.3 fleet panel path) — historical
+
+**Branch:** **`main`** — **pbx3** **`4498a4c`**, **pbx3spa** **`18f957d`**. Superseded by block above.
+
+### Resume (superseded)
+See block above.
 
 ---
 

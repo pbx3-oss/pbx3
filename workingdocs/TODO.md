@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — session end 2026-07-14 (late).  
-**Last updated:** 2026-07-14 (session end — S10.1–S10.3 fleet panel path)
+**Branch:** **`main`** — session end 2026-07-14 (S10.4).  
+**Last updated:** 2026-07-14 (session end — S10.4 catalog ↔ SBC reconcile)
 
 ### Suggested “what next?” order
 
-1. **Phase S10** — continue **S10.4** catalog ↔ SBC reconcile (`IMPLEMENTATION_PLAN.md` § Phase S10).  
+1. **Phase S10** — continue **S10.5** edge / DID actions (`IMPLEMENTATION_PLAN.md` § Phase S10).  
 2. **Fleet Instances / login UI polish** — layout kinship still rough (register form + FleetTokenGate).  
 3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
@@ -35,7 +35,9 @@
 
 - [x] **S10.3 — Move job control (2026-07-14):** Gatekeeper `abort` / `retry` / `rollback` + `created_by`/`last_action_by`; SPA job actions + Jobs “Started by”. Branches **`s103`→`main`**. Tips **pbx3** **`4498a4c`**, **pbx3spa** **`18f957d`**. Live on control.
 
-- [ ] **Phase S10 — remaining (panel-first):** **S10.4** catalog ↔ SBC reconcile; **S10.5** DID/edge; **S10.6** fleet user manage; **S10.7**/S10.2b orchestrated IAM onboard. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10. Mac registrar scripts = break-glass.
+- [x] **S10.4 — Catalog ↔ SBC reconcile (2026-07-14):** Gatekeeper `GET /api/v1/reconcile` + `POST /api/v1/reconcile/project` (apply catalog→SBC for `setid_mismatch` only); `SbcSetidGuard` rejects invented `sbc_dispatcher_setid` (must be live dispatcher set). **pbx3sbc-admin** `GET /api/fleet/domains` + `dispatcher-sets`. SPA Fleet **Reconcile** panel (Apply button only when mismatches); Instances **Link setid** from live sets only. Branches **`s104`→`main`**. Tips **pbx3** **`96e432e`**, **pbx3sbc-admin** **`2d232f8`**, **pbx3spa** **`15c5090`**. Live on control + SBC. DID / missing domain rows → **S10.5**.
+
+- [ ] **Phase S10 — remaining (panel-first):** **S10.5** DID/edge; **S10.6** fleet user manage; **S10.7**/S10.2b orchestrated IAM onboard. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10. Mac registrar scripts = break-glass.
 
 - [ ] **Fleet login UI kinship (UX):** `FleetTokenGate` still lab-form-like vs **`LoginView`**. Also polish Fleet Instances register/actions layout (functional but rough). Keep break-glass collapsed.
 
