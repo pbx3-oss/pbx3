@@ -53,27 +53,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-14 — S10.4 catalog ↔ SBC reconcile)
+## Next agent session notes (2026-07-15 — S10.5 DID catalog + project; edge residue paused)
 
-**Branch:** **`main`** — **pbx3** **`96e432e`**, **pbx3sbc-admin** **`2d232f8`**, **pbx3spa** **`15c5090`** (S10.4 FF-merged). Gatekeeper + SBC adapter live; Fleet Reconcile in SPA.
+**Branch:** **`s105`** — **pbx3** **`9b3c8fa`**, **pbx3spa** **`44fefff`**, **pbx3sbc-admin** **`97c9d05`** (not merged to `main`). Live on control + SBC. Gatekeeper + adapter + Fleet DIDs.
 
 ### Shipped
-- **Reconcile:** `GET /api/v1/reconcile` — S3 HoR vs SBC `domain.setid` drift (`fleet_edge`).
-- **Apply catalog→SBC:** `POST /api/v1/reconcile/project` for `setid_mismatch` only; SPA button shown only when applicable.
-- **Setid guard:** catalog `sbc_dispatcher_setid` must be a live SBC dispatcher set (`GET …/sbc/dispatcher-sets`); free-typed `99` rejected.
-- **SBC adapter:** `GET /api/fleet/domains`, `dispatcher-sets`.
-- **Docs:** gatekeeper README § Reconcile vs project (Instances = catalog; Apply ≠ undo).
+- **Catalog DID HoR:** `GET /api/v1/dids`, `POST /dids/assign`, `/release`, `/project`; `tenants/*/dids.json` + `catalog/did-index.json`; optional `sip_prefix`.
+- **SBC projection:** `POST /api/fleet/project-dids` (inbound `dr_rules` groupid 1, attrs `fleet=did`); setid → Asterisk gwid via destination match; `POST /api/fleet/domains` register.
+- **SPA:** Fleet **DIDs** (`/fleet/dids`) — allocate, release, Project all → SBC.
+- **Lab:** Magrathea `+441924918076` / `01924918076` → duns (`dhbm8x`) setid 2 / gwid 10 — inbound OK.
 
 ### Golden / operator follow-up
-- Control public IP still dynamic — refresh SG `/32` after cycle (EIP pending).
-- Rotate SBC Filament admin password if still pending.
-- Fleet login / Instances layout polish still open.
-- Lab Vite `s104` work is now on `main` — use `main` + rebuild Pages if shipping SPA build.
+- After sbc-admin rsync: fix `storage`/`bootstrap/cache` ownership for `www-data` (or views Permission denied).
+- Control public IP still dynamic — refresh SG `/32` if needed.
+- No DID row Edit yet — re-allocate same E.164 upserts.
 
 ### Resume
-1. **S10.5** — edge / DID (`dids.json` + project; register missing domain rows).
-2. Or Fleet login / Instances UX polish.
+1. **Talk first** — finish S10.5 residue decisions: domain register UI; dispatcher-set create/update (URI source, new vs share setid, Asterisk Peer scope). Do not code those until settled.
+2. Or **S10.6** fleet user manage / Fleet UX polish / merge `s105` → `main`.
 3. Do **not** start S7+ attestation or IdP/cookie without a customer ask.
+
+---
+
+## Next agent session notes (2026-07-14 — S10.4 catalog ↔ SBC reconcile) — historical
+
+**Branch:** **`main`** — **pbx3** **`96e432e`**, **pbx3sbc-admin** **`2d232f8`**, **pbx3spa** **`15c5090`**. Superseded by block above.
+
+### Resume (superseded)
+See block above.
 
 ---
 

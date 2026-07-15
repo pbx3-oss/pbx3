@@ -1,17 +1,18 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — session end 2026-07-14 (S10.4).  
-**Last updated:** 2026-07-14 (session end — S10.4 catalog ↔ SBC reconcile)
+**Branch:** **`s105`** (pbx3 / pbx3spa / pbx3sbc-admin) — session end 2026-07-15 (S10.5 DID path).  
+**Last updated:** 2026-07-15 (session end — S10.5 catalog DID + SBC project; edge residue paused for decisions)
 
 ### Suggested “what next?” order
 
-1. **Phase S10** — continue **S10.5** edge / DID actions (`IMPLEMENTATION_PLAN.md` § Phase S10).  
-2. **Fleet Instances / login UI polish** — layout kinship still rough (register form + FleetTokenGate).  
-3. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-4. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-6. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`**.  
-7. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
+1. **Decide + finish S10.5 residue** — tenant domain register UI; node dispatcher-set register/update (URI source, new vs share setid, Asterisk Peer in same action?). Pause until settled.  
+2. **S10.6** — fleet user manage (`IMPLEMENTATION_PLAN.md` § Phase S10).  
+3. **Fleet Instances / login UI polish** — layout kinship still rough (register form + FleetTokenGate); optional DID row Edit.  
+4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+5. **Failover + shadowing** (parked) — plan as its own mini-project later.  
+6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+7. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`**.  
+8. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
 
 ---
 
@@ -35,9 +36,13 @@
 
 - [x] **S10.3 — Move job control (2026-07-14):** Gatekeeper `abort` / `retry` / `rollback` + `created_by`/`last_action_by`; SPA job actions + Jobs “Started by”. Branches **`s103`→`main`**. Tips **pbx3** **`4498a4c`**, **pbx3spa** **`18f957d`**. Live on control.
 
-- [x] **S10.4 — Catalog ↔ SBC reconcile (2026-07-14):** Gatekeeper `GET /api/v1/reconcile` + `POST /api/v1/reconcile/project` (apply catalog→SBC for `setid_mismatch` only); `SbcSetidGuard` rejects invented `sbc_dispatcher_setid` (must be live dispatcher set). **pbx3sbc-admin** `GET /api/fleet/domains` + `dispatcher-sets`. SPA Fleet **Reconcile** panel (Apply button only when mismatches); Instances **Link setid** from live sets only. Branches **`s104`→`main`**. Tips **pbx3** **`96e432e`**, **pbx3sbc-admin** **`2d232f8`**, **pbx3spa** **`15c5090`**. Live on control + SBC. DID / missing domain rows → **S10.5**.
+- [x] **S10.4 — Catalog ↔ SBC reconcile (2026-07-14):** Gatekeeper `GET /api/v1/reconcile` + `POST /api/v1/reconcile/project` (apply catalog→SBC for `setid_mismatch` only); `SbcSetidGuard` rejects invented `sbc_dispatcher_setid` (must be live dispatcher set). **pbx3sbc-admin** `GET /api/fleet/domains` + `dispatcher-sets`. SPA Fleet **Reconcile** panel (Apply button only when mismatches); Instances **Link setid** from live sets only. Branches **`s104`→`main`**. Tips **pbx3** **`96e432e`**, **pbx3sbc-admin** **`2d232f8`**, **pbx3spa** **`15c5090`**. Live on control + SBC.
 
-- [ ] **Phase S10 — remaining (panel-first):** **S10.5** DID/edge; **S10.6** fleet user manage; **S10.7**/S10.2b orchestrated IAM onboard. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10. Mac registrar scripts = break-glass.
+- [x] **S10.5 — DID path (2026-07-15):** Catalog DID ownership (`dids.json` + `did-index`) — list/assign/release/project; optional `sip_prefix`; SPA Fleet **DIDs**; SBC `POST /fleet/project-dids` + `POST /fleet/domains`. Assign/release auto-project. Lab Magrathea **`+441924918076`** / prefix **`01924918076`** → **duns** (`dhbm8x`) → setid 2 / gwid 10 — inbound call OK. Branches **`s105`**. Tips **pbx3** **`9b3c8fa`**, **pbx3spa** **`44fefff`**, **pbx3sbc-admin** **`97c9d05`**. Live on control + SBC. No row Edit yet (re-allocate upserts).
+
+- [ ] **S10.5 residue — edge register (paused for decisions 2026-07-15):** (1) **Tenant domain register UI** — API `POST /tenants/{shortuid}/register-domain` exists; no Fleet button / auto on allocate. (2) **Node dispatcher-set create/update** — not built; Instances only Link existing setid. Settle before code: node SIP URI source; new setid vs share; whether Asterisk Peer upsert is in the same action; destructive update UX. Design: **`IMPLEMENTATION_PLAN.md`** § S10.5 · **`DID_ASSIGNMENT_DESIGN.md`**.
+
+- [ ] **Phase S10 — remaining (panel-first):** **S10.5 residue** (above); **S10.6** fleet user manage; **S10.7**/S10.2b orchestrated IAM onboard. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10. Mac registrar scripts = break-glass.
 
 - [ ] **Fleet login UI kinship (UX):** `FleetTokenGate` still lab-form-like vs **`LoginView`**. Also polish Fleet Instances register/actions layout (functional but rough). Keep break-glass collapsed.
 
