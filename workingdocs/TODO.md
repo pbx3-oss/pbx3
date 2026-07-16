@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked; **pbx3-docs** live on aelintra Pages.  
-**Last updated:** 2026-07-16 (pbx3-docs polish marked ongoing)
+**Last updated:** 2026-07-16 (session end — What is PBX3 + ops notify plan)
 
 ### Suggested “what next?” order
 

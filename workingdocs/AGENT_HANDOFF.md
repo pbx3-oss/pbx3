@@ -45,6 +45,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Failover + shadowing** (parked) | TODO open item — plan later; scraps in peering polish + **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** |
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **Fleet Egress availability / SBC failover** (future) | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — OPTIONS qualify, EgressFailover, health UI |
+| **Ops failure notification** (planned) | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — Gatekeeper probe + email; velocity / Fail2ban ban→email later; Prometheus optional metrics |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
@@ -53,22 +54,33 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-15 — pbx3-docs MkDocs live)
+## Next agent session notes (2026-07-16 — docs: What is PBX3 + ops notify plan)
 
-**Branch:** **`main`** — **pbx3** **`1d8316a`**, **pbx3spa** **`d4d3e71`**, **pbx3-docs** **`2a37a00`** on **`aelintra/pbx3-docs`**. No golden/API code change this session.
+**Branch:** **`main`** — **pbx3** **`5a133ff`**, **pbx3spa** **`4131fcc`** (SPA code unchanged this session), **pbx3-docs** **`a020422`**, **pbx3sbc** **`32b20e6`**. No golden/API product code.
 
 ### Shipped
-- **`pbx3-docs`** MkDocs Material site: approved nav (intro schematic, Cloud/S3); operator drafts for lab runbook; CI → GitHub Pages.
-- Live: **https://aelintra.github.io/pbx3-docs/** (interim under **aelintra**; moves with OSS org later).
-- Content map refreshed (Cloud/S3 rows, Phase 1/4b, seeded status).
+- **pbx3-docs:** Replaced **What is PBX3?** with fleet system overview (Mermaid); wording polish pushed (`a020422`). Live Pages.
+- **Ops notify requirements:** **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — v1 Gatekeeper probe + email; industry patterns; velocity (later); Prometheus/Grafana = optional metrics not notify HoR; Fail2ban ban→email later.
+- **Fail2ban stance:** auto-whitelist **inbound carrier Peers** (defer implement until next carrier onboard); **customer site IPs manual** only (no site CRM). **`PEERING-PLAN.md`** §0.1 + TODO open item.
+- **TODO:** pbx3-docs polish marked **ongoing** (human edits; agent sections on request).
 
 ### Golden / operator follow-up
-- Use Pages site as lab guide; edit in **`pbx3-docs/docs/`** then push `main`.
-- SPA/golden unchanged: `npm run dev` vs **08jzwn** + **control.pbx3.com**.
+- Continue human review of **https://aelintra.github.io/pbx3-docs/**; ask agent for new sections as needed.
+- Check **pbx3-docs** working tree if local What is PBX3 edits remain uncommitted.
 
 ### Resume
-1. Product pick still: egress availability / failover shadowing, or small Fleet UX — **or** human edit pass on pbx3-docs.
-2. Do **not** start S10.7 orchestrator or S7+ / IdP without a customer ask.
+1. Product: egress availability / failover shadowing, **or** ops-notify implement when prioritized, **or** docs sections on request.
+2. Fail2ban Peer→whitelist automation: wait for next carrier onboard to test.
+3. Do **not** start S10.7 / S7+ / IdP / site CRM without ask.
+
+---
+
+## Next agent session notes (2026-07-15 — pbx3-docs MkDocs live) — historical
+
+**Branch:** **`main`** — superseded by block above. Tips were **pbx3** **`1d8316a`**, **pbx3spa** **`d4d3e71`**, **pbx3-docs** **`2a37a00`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 
