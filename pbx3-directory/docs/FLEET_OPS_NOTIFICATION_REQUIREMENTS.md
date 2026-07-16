@@ -1,8 +1,8 @@
 # Fleet ops — failure notification (requirements)
 
-**Status:** **Not implemented** — requirements opened 2026-07-16.  
+**Status:** **v1 implemented** (2026-07-16) — catalog `/up` probe + SMTP email on instance down/cleared. Move-job / egress / Fail2ban / velocity / misconfig-REGISTER = later.  
 **MVP:** Notify interested operators of **failure conditions**.  
-**Later (same notify plane, different detection):** **call-pattern velocity / toll-fraud style checks** — see § Velocity checking. Threat / intrusion (fail2ban, SIP scan) remains separate.  
+**Later (same notify plane, different detection):** **call-pattern velocity / toll-fraud style checks** — see § Velocity checking; **whitelist-gated misconfig REGISTER** — see § Misconfigured phones; Fail2ban ban→email.  
 **Related:** **`IMPLEMENTATION_PLAN.md`** § Fleet & monitoring (`last_seen_at` probe); **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (trunk health → alerts); **`DESIGN_RULES.md`** Rule 5 (directory outage ≠ instance SLA); Fleet users / abilities (Gatekeeper); instance **CoS** / dial policy (prevention layer, not a substitute for velocity alerts).
 
 ---
@@ -23,6 +23,7 @@ We need a durable way for **interested users** to learn about failure conditions
 | **Home of record** | **Gatekeeper** — subscriptions + delivery (Fleet control plane) |
 | **v1 channel** | **Email** to subscribed Fleet users (+ optional static ops address) |
 | **Detection** | Reuse / extend the planned **catalog probe** (`api_base_url` → `last_seen_at`); do not invent a second health system |
+| **Mail transport** | **SMTP** for v1 (`Mailer` + `SmtpMailer`). No SES as HoR — portable; other providers = new `Mailer` class later |
 | **Call path** | Notify plane is **not** in the call path (**Rule 5**). Calls keep working if Gatekeeper or mail is down; operators simply go dark on alerts |
 | **Prometheus / Grafana** | **Out of this leg.** Optional later for fleet/instance **pretty metrics** (dashboards, quality time series) — not the v1 notify HoR. DIY farms often bolt these on; we may document exporters later without making Alertmanager the product subscription model. |
 | **Velocity / call-pattern checks** | **Out of v1.** Important product need (toll fraud / odd dial behaviour) — reuse notify **delivery** later; detection is CDR/dial analysis, not `/up` probes. Carriers often offer similar services but can be **slow to inform**; in-fleet detection aims for faster operator signal. |
@@ -147,7 +148,7 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 | Source | Requirement |
 |--------|-------------|
 | **Carrier inbound Peer IPs** | **Automate:** on Peer create/update/delete for inbound signaling rows (`role=inbound` / literal source IPs), add/remove Fail2ban whitelist + sync. |
-| **Customer site IPs** | **Manual only** (existing Fail2Ban whitelist UI is enough). Operator adds office/NAT egress IP/CIDR so one bad phone does not ban the whole site. Comment/label free-form. **Out of scope:** customer/site directory, CRM, auto-discovery of site IPs, catalog HoR for sites. |
+| **Customer site IPs** | **Manual only** (existing Fail2Ban whitelist UI is enough). **Operator discipline:** whitelist known site/office NAT CIDRs **before phones go live** — no site CRM, no auto-discovery. Without this, one misconfigured phone can ban the whole site. |
 
 Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PEERING-PLAN.md`** §0.1.
 
@@ -155,12 +156,29 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 
 | Item | Direction |
 |------|-----------|
-| **Signal** | New Fail2ban ban (and optionally unban / recidive) on SBC SIP jails |
-| **Why notify** | Operators need to know a site or unknown IP was blocked — especially if a customer site was **not** whitelisted yet |
-| **v1 of this slice** | Emit into Gatekeeper (or SBC→ops) **email** when notify track exists; do not wait for full threat analytics |
-| **Not v1 failure-probe** | Separate from instance `/up` down; can ship after or alongside subscriptions |
+| **Signal** | New Fail2ban ban (and optionally unban / recidive) on SBC SIP jails — for **unknown / non-whitelisted** scanners |
+| **Why notify** | Ops need to know an unknown IP was blocked |
+| **Not for misconfig phones on known sites** | See § Misconfigured phones — ban is the wrong tool there |
+| **Not v1 failure-probe** | Separate from instance `/up` down |
 
-**Open questions:** throttle ban mail (scan storms); optional operator hint “add this IP to whitelist” after a ban (still manual — no site CRM).
+**Open questions:** throttle ban mail (scan storms).
+
+---
+
+## Misconfigured phones — REGISTER loops on whitelisted sites (planned)
+
+**Problem:** Handsets often fire repeated failed REGISTER (right extension, wrong password). **Fail2ban must not be the primary response** for known sites — one bad phone behind shared NAT can take down the whole office.
+
+| Stance | Detail |
+|--------|--------|
+| **Recognised sites** | Always on Fail2ban **whitelist** — **operator makes sure it is done** (checklist / go-live), not a product CRM |
+| **Notify** | When a source IP **∈ whitelist** is in a REGISTER failure loop → **email ops only** (fix the phone). Do **not** ban that IP for this class of event |
+| **Ban** | Remains for **non-whitelisted** scanners only |
+| **Detection** | On-node (Asterisk auth / security logs), gated on whitelist membership; throttle per extension+IP; emit into Gatekeeper notify delivery |
+| **Mail** | Extension (when known), source IP, instance/tenant, count/window — hint to fix credentials, not “unban” |
+| **Depends on** | Operator having whitelisted the site first; otherwise F2B may ban and the inform-only path never applies |
+
+**Out of v1 probe pass** — document only; implement after instance-down mail is proven.
 
 ---
 
@@ -186,37 +204,34 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 
 ---
 
-## Suggested implementation order (future)
+## Suggested implementation order
 
-1. **Catalog probe job** on Gatekeeper → persist `last_seen_at` / health (shared with SPA badges).  
-2. **Subscription store** + minimal admin (CLI or Fleet Users panel).  
-3. **Email adapter** + transition-based notify for instance down/up.  
+1. **Catalog probe job** on Gatekeeper → persist `last_seen_at` / health (shared with SPA badges). **Done (v1).**  
+2. **Subscription store** + Fleet Users checkbox. **Done (v1).**  
+3. **Email adapter (SMTP)** + transition-based notify for instance down/up. **Done (v1).**  
 4. **Move-job terminal failure** notify.  
 5. **Egress Unavail** (after egress R1–R2).  
-6. Later (notify plane): webhooks / Slack; threat-oriented signals.  
-7. **Separate track (not this leg):** optional Prometheus + Grafana for fleet/instance metrics dashboards; document exporters; do not replace Gatekeeper email subscriptions.  
-8. **Velocity checking track:** on-node (or near-CDR) pattern rules → emit into notify delivery; notify-only first; carrier fraud as backstop.  
-9. **Fail2ban track:** auto-whitelist **inbound Peers** only; customer site IPs stay **manual** whitelist; ban events → email via notify delivery.
+6. **Misconfigured phones** (whitelist-gated REGISTER loops) — § above.  
+7. Later (notify plane): webhooks / Slack; Fail2ban ban→email for unknown IPs.  
+8. **Separate track:** optional Prometheus + Grafana for metrics dashboards.  
+9. **Velocity checking track:** on-node pattern rules → notify delivery.  
+10. **Fail2ban Peer auto-whitelist** (next carrier onboard).
 
 ---
 
-## Open questions (later design pass)
+## Open questions (settled for v1 / remaining)
 
-### Failure notify (v1)
+### Failure notify (v1) — settled 2026-07-16
 
-- Hysteresis: how many missed probes before “down”?  
-- Cleared / recovery emails vs down-only?  
-- Per-instance vs fleet-wide subscription UX.  
-- Solo / no-Gatekeeper installs: out of scope for this fleet track (operators use node Logs / local tooling).  
-- Rate limits and quiet hours.
+- Hysteresis: **2** missed probes before “down”.  
+- Cleared / recovery emails: **yes** (one mail).  
+- Subscription: fleet-wide `notify_failures` flag (not per-instance yet).  
+- Solo / no-Gatekeeper installs: out of scope.  
+- Rate limits / quiet hours: later.
 
-### Velocity (later)
+### Velocity / Fail2ban / misconfig REGISTER
 
-- See § Velocity checking open questions.
-
-### Fail2ban (later)
-
-- See § Fail2ban open questions.
+- See sections above.
 
 ---
 
@@ -233,4 +248,4 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 
 ---
 
-*Last updated: 2026-07-16 — Fail2ban auto-whitelist + ban notify captured; no code.*
+*Last updated: 2026-07-16 — v1 probe+SMTP shipped; misconfig REGISTER (whitelist-gated notify, no ban) documented.*

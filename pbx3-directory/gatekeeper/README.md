@@ -24,6 +24,27 @@ composer test      # UserStore create / login / revoke / bad password
 
 See **`pbx3/workingdocs/CRITICAL_PATH_TEST_PACK.md`**.
 
+## Fleet ops notify (instance /up probe)
+
+| Piece | Detail |
+|-------|--------|
+| Job | `bin/probe-fleet-instances.php` — probe each active catalog `api_base_url` → `/up` |
+| State | SQLite `instance_health` (same `GATEKEEPER_AUTH_DB`); catalog `last_seen_at` on success |
+| Hysteresis | Down after **2** consecutive misses; cleared on first success |
+| Mail | SMTP via `GATEKEEPER_SMTP_*` (`Mailer` + `SmtpMailer`). Unset SMTP → log only |
+| Subscribers | Fleet users with `notify_failures` + optional `GATEKEEPER_OPS_NOTIFY_EMAIL` |
+| Timer | `deploy/pbx3-fleet-probe.service` + `.timer` (60s). Install on control: |
+
+```bash
+sudo cp deploy/pbx3-fleet-probe.service deploy/pbx3-fleet-probe.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now pbx3-fleet-probe.timer
+# Optional: set GATEKEEPER_SMTP_* in /etc/pbx3-gatekeeper/.env
+# Enable notify for a user: Fleet → Users → "Email on instance down"
+```
+
+See **`docs/FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** · **`docs/CONTROL_HOST.md`**.
+
 ## Auth
 
 | Mode | How |
@@ -62,7 +83,7 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `GET` | `/api/v1/catalog` | Read instance index |
 | `GET` | `/api/v1/fleet-users` | S10.6 list fleet users + ability vocab (`fleet_admin`) |
 | `POST` | `/api/v1/fleet-users` | Create user `{email,password,name?,abilities?}` |
-| `PATCH` | `/api/v1/fleet-users/{id}` | Update name / password / abilities |
+| `PATCH` | `/api/v1/fleet-users/{id}` | Update name / password / abilities / `notify_failures` |
 | `POST` | `/api/v1/fleet-users/{id}/disable` | Soft-disable + revoke sessions (cannot self / last admin) |
 | `POST` | `/api/v1/fleet-users/{id}/enable` | Re-enable |
 | `POST` | `/api/v1/fleet-users/{id}/revoke-sessions` | Kill all Bearers for user |

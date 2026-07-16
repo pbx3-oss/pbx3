@@ -64,6 +64,18 @@ final class InstanceUpProbe
         }
     }
 
+    /** Non-throwing probe for scheduled health jobs. */
+    public static function check(string $apiBaseUrl, int $timeoutSeconds = 8): bool
+    {
+        try {
+            self::verify($apiBaseUrl, $timeoutSeconds);
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     private static function verifyWithCurl(string $url, int $timeoutSeconds, bool $verifyTls): void
     {
         $ch = curl_init($url);

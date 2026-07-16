@@ -1,0 +1,12 @@
+[Unit]
+Description=PBX3 Gatekeeper fleet instance probe every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=60s
+AccuracySec=5s
+Persistent=true
+Unit=pbx3-fleet-probe.service
+
+[Install]
+WantedBy=timers.target

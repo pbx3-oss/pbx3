@@ -51,6 +51,18 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 - Redeploy code: rsync gatekeeper tree (exclude `.env`), `composer install` with **php8.4**, `sudo systemctl reload php8.4-fpm`.  
 - Policy JSON in repo: `pbx3-directory/schema/pbx3-control-gatekeeper-s3.policy.json` (org) + `…-recordings.policy.json` (S7).
 
+## Fleet ops notify (probe + SMTP)
+
+| Piece | Detail |
+|-------|--------|
+| Probe | `php8.4 bin/probe-fleet-instances.php` — active catalog instances → `/up`; skip `maintenance` / `decommissioned` |
+| Timer | Copy `gatekeeper/deploy/pbx3-fleet-probe.{service,timer}` → `/etc/systemd/system/`; `enable --now pbx3-fleet-probe.timer` (~60s) |
+| Health | SQLite `instance_health` in `GATEKEEPER_AUTH_DB`; down after 2 misses; S3 `last_seen_at` on success |
+| SMTP | `GATEKEEPER_SMTP_HOST`, `PORT`, `USER`, `PASS`, `FROM`, `TLS` in `/etc/pbx3-gatekeeper/.env`. Unset → log-only. Optional `GATEKEEPER_OPS_NOTIFY_EMAIL`, `GATEKEEPER_FLEET_UI_URL` |
+| Subscribe | Fleet → Users → **Email on instance down** (`notify_failures`) |
+
+**Lab check:** enable notify for `fleet@pbx3.com`; stop node API or block `/up` from control → within ~2 min one down mail (or log); restore → cleared.
+
 ## Verify
 
 ```bash

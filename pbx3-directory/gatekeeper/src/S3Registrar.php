@@ -190,6 +190,45 @@ final class S3Registrar
     }
 
     /**
+     * Stamp last_seen_at after a successful scheduled /up probe (does not change updated_by).
+     *
+     * @return array{catalog: array<string, mixed>, instance: array<string, mixed>, instance_meta: array<string, mixed>}
+     */
+    public function touchLastSeenAt(string $id): array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            throw new \InvalidArgumentException('Instance id required', 422);
+        }
+
+        $catalog = $this->getCatalog();
+        $instances = $catalog['instances'] ?? [];
+        $index = null;
+        foreach ($instances as $i => $row) {
+            if (($row['id'] ?? '') === $id) {
+                $index = $i;
+                break;
+            }
+        }
+        if ($index === null) {
+            throw new \RuntimeException("Instance not found: {$id}", 404);
+        }
+
+        $now = $this->nowIso();
+        $merged = $instances[$index];
+        $merged['last_seen_at'] = $now;
+        $instances[$index] = $merged;
+        $catalog['version'] = 1;
+        $catalog['updated_at'] = $now;
+        $catalog['instances'] = array_values($instances);
+        $this->writeJson(self::CATALOG_KEY, $catalog);
+
+        $meta = $this->syncMetaFromRecord($merged, $now);
+
+        return ['catalog' => $catalog, 'instance' => $merged, 'instance_meta' => $meta];
+    }
+
+    /**
      * Soft decommission — status=decommissioned (SPA confirm required).
      *
      * @param  array<string, mixed>  $body

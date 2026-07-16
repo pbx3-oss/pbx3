@@ -99,7 +99,11 @@ try {
         $password = is_string($body['password'] ?? null) ? $body['password'] : '';
         $name = is_string($body['name'] ?? null) ? $body['name'] : '';
         $abilities = isset($body['abilities']) && is_array($body['abilities']) ? $body['abilities'] : null;
-        JsonResponse::send(201, UserStore::createUser($email, $password, $name, $abilities));
+        $created = UserStore::createUser($email, $password, $name, $abilities);
+        if (array_key_exists('notify_failures', $body) && (bool) $body['notify_failures']) {
+            $created = UserStore::updateUser((int) $created['id'], ['notify_failures' => true]);
+        }
+        JsonResponse::send(201, $created);
     }
 
     if ($method === 'PATCH' && preg_match('#^/api/v1/fleet-users/(\d+)$#', $path, $m)) {
@@ -114,6 +118,9 @@ try {
         }
         if (array_key_exists('abilities', $body)) {
             $patch['abilities'] = is_array($body['abilities']) ? $body['abilities'] : [];
+        }
+        if (array_key_exists('notify_failures', $body)) {
+            $patch['notify_failures'] = (bool) $body['notify_failures'];
         }
         JsonResponse::send(200, UserStore::updateUser((int) $m[1], $patch));
     }

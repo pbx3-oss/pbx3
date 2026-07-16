@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL DEFAULT '',
     password_hash TEXT NOT NULL,
     abilities TEXT NOT NULL DEFAULT '["fleet_admin"]',
+    notify_failures INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     disabled_at TEXT
 );
@@ -76,6 +77,10 @@ SQL);
         if (! in_array('disabled_at', $names, true)) {
             $pdo->exec('ALTER TABLE users ADD COLUMN disabled_at TEXT');
         }
+        if (! in_array('notify_failures', $names, true)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN notify_failures INTEGER NOT NULL DEFAULT 0');
+        }
+        InstanceHealthStore::migrate($pdo);
     }
 
     /**
@@ -96,12 +101,12 @@ SQL);
     }
 
     /**
-     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}|null
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,notify_failures:bool,session_count:int}|null
      */
     public static function findById(int $id): ?array
     {
         $st = self::pdo()->prepare(<<<'SQL'
-SELECT u.id, u.email, u.name, u.abilities, u.created_at, u.disabled_at,
+SELECT u.id, u.email, u.name, u.abilities, u.created_at, u.disabled_at, u.notify_failures,
        (SELECT COUNT(*) FROM api_tokens t WHERE t.user_id = u.id) AS session_count
 FROM users u
 WHERE u.id = ?
@@ -122,12 +127,12 @@ SQL);
     }
 
     /**
-     * @return list<array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}>
+     * @return list<array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,notify_failures:bool,session_count:int}>
      */
     public static function listUsers(): array
     {
         $rows = self::pdo()->query(<<<'SQL'
-SELECT u.id, u.email, u.name, u.abilities, u.created_at, u.disabled_at,
+SELECT u.id, u.email, u.name, u.abilities, u.created_at, u.disabled_at, u.notify_failures,
        (SELECT COUNT(*) FROM api_tokens t WHERE t.user_id = u.id) AS session_count
 FROM users u
 ORDER BY u.email COLLATE NOCASE ASC
@@ -136,6 +141,28 @@ SQL)->fetchAll();
         foreach ($rows as $row) {
             if (is_array($row)) {
                 $out[] = self::mapPublicUserRow($row);
+            }
+        }
+
+        return $out;
+    }
+
+    /** Emails of active users subscribed to failure notify. */
+    public static function notifyFailureEmails(): array
+    {
+        $rows = self::pdo()->query(<<<'SQL'
+SELECT email FROM users
+WHERE disabled_at IS NULL AND notify_failures = 1
+ORDER BY email COLLATE NOCASE ASC
+SQL)->fetchAll();
+        $out = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $email = trim((string) ($row['email'] ?? ''));
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $out[] = $email;
             }
         }
 
@@ -199,8 +226,8 @@ SQL)->fetchAll();
     }
 
     /**
-     * @param  array{name?:string,password?:string,abilities?:list<string>}  $patch
-     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}
+     * @param  array{name?:string,password?:string,abilities?:list<string>,notify_failures?:bool}  $patch
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,notify_failures:bool,session_count:int}
      */
     public static function updateUser(int $userId, array $patch): array
     {
@@ -226,8 +253,13 @@ SQL)->fetchAll();
             self::assertMayDropAdminAbility($userId, $existing['abilities'], $abilities);
         }
 
-        $sets = ['name = ?', 'abilities = ?'];
-        $params = [$name, FleetAbilities::toJson($abilities)];
+        $notifyFailures = $existing['notify_failures'];
+        if (array_key_exists('notify_failures', $patch)) {
+            $notifyFailures = (bool) $patch['notify_failures'];
+        }
+
+        $sets = ['name = ?', 'abilities = ?', 'notify_failures = ?'];
+        $params = [$name, FleetAbilities::toJson($abilities), $notifyFailures ? 1 : 0];
 
         if (array_key_exists('password', $patch) && is_string($patch['password']) && $patch['password'] !== '') {
             if (strlen($patch['password']) < 10) {
@@ -448,7 +480,7 @@ SQL;
 
     /**
      * @param  array<string,mixed>  $row
-     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,session_count:int}
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,notify_failures:bool,session_count:int}
      */
     private static function mapPublicUserRow(array $row): array
     {
@@ -465,6 +497,7 @@ SQL;
             'abilities' => $abilities,
             'created_at' => (string) ($row['created_at'] ?? ''),
             'disabled_at' => $disabled !== null && $disabled !== '' ? (string) $disabled : null,
+            'notify_failures' => (bool) (int) ($row['notify_failures'] ?? 0),
             'session_count' => (int) ($row['session_count'] ?? 0),
         ];
     }
