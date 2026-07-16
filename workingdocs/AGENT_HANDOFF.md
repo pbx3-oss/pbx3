@@ -56,7 +56,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-16 — docs: What is PBX3 + ops notify plan)
 
-**Branch:** **`main`** — **pbx3** **`6f0efb9`**, **pbx3spa** **`ef2ab88`** (SPA code unchanged this session), **pbx3-docs** **`e76c451`**, **pbx3sbc** **`32b20e6`**. No golden/API product code.
+**Branch:** **`main`** — **pbx3** **`0aac37b`**, **pbx3spa** **`cf64ea7`** (SPA code unchanged this session), **pbx3-docs** **`e76c451`**, **pbx3sbc** **`32b20e6`**. No golden/API product code.
 
 ### Shipped
 - **pbx3-docs:** Replaced **What is PBX3?** with fleet system overview (Mermaid); wording polish (`a020422`, `e76c451`). Live Pages.
