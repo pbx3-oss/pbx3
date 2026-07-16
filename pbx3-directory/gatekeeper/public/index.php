@@ -16,6 +16,8 @@ use Pbx3\Gatekeeper\Env;
 use Pbx3\Gatekeeper\FleetAbilities;
 use Pbx3\Gatekeeper\Http\JsonResponse;
 use Pbx3\Gatekeeper\InstanceEdgeProvision;
+use Pbx3\Gatekeeper\NotifyDispatcher;
+use Pbx3\Gatekeeper\OpsEventThrottle;
 use Pbx3\Gatekeeper\S3Presign;
 use Pbx3\Gatekeeper\S3RecordingsPresign;
 use Pbx3\Gatekeeper\S3Registrar;
@@ -292,6 +294,42 @@ try {
         Auth::requireAbility(FleetAbilities::MOVES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         JsonResponse::send(200, $presign->create($body));
+    }
+
+    // Node → Gatekeeper ops events (misconfig REGISTER loops, etc.). Break-glass / fleet_admin.
+    if ($method === 'POST' && $path === '/api/v1/ops-events') {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $type = is_string($body['type'] ?? null) ? $body['type'] : '';
+        if ($type !== 'misconfig_register') {
+            throw new \InvalidArgumentException('Unsupported ops-event type (expected misconfig_register)', 422);
+        }
+        $instanceId = trim((string) ($body['instance_id'] ?? ''));
+        $extension = trim((string) ($body['extension'] ?? ''));
+        $sourceIp = trim((string) ($body['source_ip'] ?? ''));
+        if ($instanceId === '' || $sourceIp === '') {
+            throw new \InvalidArgumentException('instance_id and source_ip required', 422);
+        }
+        $count = (int) ($body['count'] ?? 0);
+        if ($count < 1) {
+            throw new \InvalidArgumentException('count must be >= 1', 422);
+        }
+        $key = 'misconfig_register:'.$instanceId.':'.$extension.':'.$sourceIp;
+        $cooldown = (int) (getenv('GATEKEEPER_OPS_EVENT_COOLDOWN') ?: OpsEventThrottle::DEFAULT_COOLDOWN_SECONDS);
+        if (! OpsEventThrottle::allow($key, $cooldown > 0 ? $cooldown : OpsEventThrottle::DEFAULT_COOLDOWN_SECONDS)) {
+            JsonResponse::send(200, ['accepted' => true, 'notified' => false, 'reason' => 'throttled']);
+        }
+        NotifyDispatcher::fromEnv()->notifyMisconfigRegister([
+            'instance_id' => $instanceId,
+            'instance_label' => is_string($body['instance_label'] ?? null) ? $body['instance_label'] : '',
+            'fqdn' => is_string($body['fqdn'] ?? null) ? $body['fqdn'] : '',
+            'extension' => $extension !== '' ? $extension : '(unknown)',
+            'source_ip' => $sourceIp,
+            'count' => $count,
+            'window_seconds' => (int) ($body['window_seconds'] ?? 600),
+            'sample' => is_string($body['sample'] ?? null) ? $body['sample'] : '',
+        ]);
+        JsonResponse::send(200, ['accepted' => true, 'notified' => true]);
     }
 
     // S7 — dedicated recordings bucket (never org/catalog). Scoped tenants/{shortuid}/recordings/*

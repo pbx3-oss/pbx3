@@ -81,6 +81,7 @@ SQL);
             $pdo->exec('ALTER TABLE users ADD COLUMN notify_failures INTEGER NOT NULL DEFAULT 0');
         }
         InstanceHealthStore::migrate($pdo);
+        OpsEventThrottle::migrate($pdo);
     }
 
     /**

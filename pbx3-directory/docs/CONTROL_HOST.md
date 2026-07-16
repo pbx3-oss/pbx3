@@ -61,7 +61,9 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 | SMTP | `GATEKEEPER_SMTP_HOST`, `PORT`, `USER`, `PASS`, `FROM`, `TLS` in `/etc/pbx3-gatekeeper/.env`. Unset → log-only. Optional `GATEKEEPER_OPS_NOTIFY_EMAIL`, `GATEKEEPER_FLEET_UI_URL` |
 | Subscribe | Fleet → Users → **Email on instance down** (`notify_failures`) |
 
-**Lab check:** enable notify for `fleet@pbx3.com`; stop node API or block `/up` from control → within ~2 min one down mail (or log); restore → cleared.
+**Lab check:** enable notify for ops mailbox; stop node API or block `/up` from control → within ~2 min one down mail (or log); restore → cleared.
+
+**Misconfig REGISTER loops (node):** On each fleet node set `PBX3_OPS_REGISTER_LOOP_ENABLED=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Ensure site/SBC CIDRs are on Fail2ban `ignoreip`. Scheduler runs `pbx3:ops-register-loops` every minute → Gatekeeper `POST /api/v1/ops-events`.
 
 ## Verify
 

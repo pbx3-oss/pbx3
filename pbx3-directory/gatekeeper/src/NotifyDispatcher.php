@@ -124,6 +124,54 @@ final class NotifyDispatcher
         $this->send($recipients, $subject, $this->withUiLink($body));
     }
 
+    /**
+     * Whitelist-gated misconfigured phone REGISTER loop (node-detected).
+     *
+     * @param  array{
+     *   instance_id?:string,
+     *   instance_label?:string,
+     *   fqdn?:string,
+     *   extension?:string,
+     *   source_ip?:string,
+     *   count?:int,
+     *   window_seconds?:int,
+     *   sample?:string
+     * }  $event
+     */
+    public function notifyMisconfigRegister(array $event): void
+    {
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            error_log('[gatekeeper-notify] no subscribers for misconfig_register — skip');
+
+            return;
+        }
+
+        $label = (string) ($event['instance_label'] ?? $event['instance_id'] ?? 'instance');
+        $id = (string) ($event['instance_id'] ?? '');
+        $fqdn = (string) ($event['fqdn'] ?? '');
+        $ext = (string) ($event['extension'] ?? '(unknown)');
+        $ip = (string) ($event['source_ip'] ?? '(unknown)');
+        $count = (int) ($event['count'] ?? 0);
+        $window = (int) ($event['window_seconds'] ?? 600);
+        $sample = trim((string) ($event['sample'] ?? ''));
+
+        $subject = "[PBX3 fleet] REGISTER auth loop: ext {$ext} on {$label}";
+        $body = "Repeated failed REGISTER from a Fail2ban-whitelisted address (misconfigured phone likely).\n"
+            ."Do not ban this IP — fix the handset credentials.\n\n"
+            ."Label: {$label}\n"
+            ."Id: {$id}\n"
+            ."FQDN: {$fqdn}\n"
+            ."Extension: {$ext}\n"
+            ."Source IP: {$ip}\n"
+            ."Failures: {$count} in {$window}s\n";
+        if ($sample !== '') {
+            $body .= 'Sample: '.$sample."\n";
+        }
+
+        $this->send($recipients, $subject, $this->withUiLink($body));
+    }
+
     /** @return list<string> */
     private function recipients(): array
     {
