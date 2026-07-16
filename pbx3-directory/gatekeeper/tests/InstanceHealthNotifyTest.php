@@ -91,4 +91,38 @@ final class InstanceHealthNotifyTest extends TestCase
         $this->assertTrue($updated['notify_failures']);
         $this->assertSame(['a@example.com'], UserStore::notifyFailureEmails());
     }
+
+    public function test_lifecycle_maintenance_notify(): void
+    {
+        putenv('GATEKEEPER_OPS_NOTIFY_EMAIL=ops@example.com');
+        $_ENV['GATEKEEPER_OPS_NOTIFY_EMAIL'] = 'ops@example.com';
+
+        $sent = [];
+        $mailer = new class($sent) implements Mailer {
+            /** @param list<array{to:list<string>,subject:string,body:string}> $sent */
+            public function __construct(private array &$sent)
+            {
+            }
+
+            public function send(array $to, string $subject, string $bodyText): void
+            {
+                $this->sent[] = ['to' => $to, 'subject' => $subject, 'body' => $bodyText];
+            }
+        };
+
+        $dispatcher = new NotifyDispatcher($mailer);
+        $dispatcher->notifyInstanceLifecycle(
+            ['id' => 'abc', 'label' => 'bzy54n', 'fqdn' => 'bzy54n.pbx3.com', 'updated_by' => 'fleet@pbx3.com'],
+            'active',
+            'maintenance'
+        );
+
+        $this->assertCount(1, $sent);
+        $this->assertSame(['ops@example.com'], $sent[0]['to']);
+        $this->assertStringContainsString('maintenance', $sent[0]['subject']);
+        $this->assertStringContainsString('active → maintenance', $sent[0]['body']);
+
+        putenv('GATEKEEPER_OPS_NOTIFY_EMAIL');
+        unset($_ENV['GATEKEEPER_OPS_NOTIFY_EMAIL']);
+    }
 }

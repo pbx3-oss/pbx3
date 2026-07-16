@@ -153,6 +153,8 @@ final class S3Registrar
             throw new \RuntimeException("Instance not found: {$id}", 404);
         }
 
+        $previousStatus = (string) ($instances[$index]['status'] ?? 'active');
+
         $apply = [];
         foreach (self::PATCHABLE as $key) {
             if (! array_key_exists($key, $patch)) {
@@ -185,6 +187,15 @@ final class S3Registrar
         $this->writeJson(self::CATALOG_KEY, $catalog);
 
         $meta = $this->syncMetaFromRecord($merged, $now);
+
+        $newStatus = (string) ($merged['status'] ?? 'active');
+        if ($previousStatus !== $newStatus) {
+            try {
+                NotifyDispatcher::fromEnv()->notifyInstanceLifecycle($merged, $previousStatus, $newStatus);
+            } catch (\Throwable $e) {
+                error_log('[gatekeeper-notify] lifecycle notify failed: '.$e->getMessage());
+            }
+        }
 
         return ['catalog' => $catalog, 'instance' => $merged, 'instance_meta' => $meta];
     }

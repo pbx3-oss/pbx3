@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Pbx3\Gatekeeper;
 
-/** Transition-based fleet failure mail (instance down / cleared). */
+/** Transition-based fleet ops mail (reachability + catalog lifecycle). */
 final class NotifyDispatcher
 {
     public function __construct(
@@ -29,12 +29,7 @@ final class NotifyDispatcher
             return;
         }
 
-        $recipients = UserStore::notifyFailureEmails();
-        $ops = trim((string) (getenv('GATEKEEPER_OPS_NOTIFY_EMAIL') ?: ''));
-        if ($ops !== '' && filter_var($ops, FILTER_VALIDATE_EMAIL)) {
-            $recipients[] = $ops;
-        }
-        $recipients = array_values(array_unique($recipients));
+        $recipients = $this->recipients();
         if ($recipients === []) {
             error_log('[gatekeeper-notify] no subscribers for instance '.$transition.' — skip');
 
@@ -47,8 +42,6 @@ final class NotifyDispatcher
         $health = InstanceHealthStore::get($id);
         $lastOk = $health['last_ok_at'] ?? null;
         $lastProbe = $health['last_probe_at'] ?? null;
-        $uiBase = rtrim((string) (getenv('GATEKEEPER_FLEET_UI_URL') ?: ''), '/');
-        $link = $uiBase !== '' ? $uiBase.'/fleet/instances' : '';
 
         if ($transition === 'down') {
             $subject = "[PBX3 fleet] Instance down: {$label}";
@@ -68,10 +61,94 @@ final class NotifyDispatcher
                 .'Last OK: '.($lastOk ?? '(unknown)')."\n"
                 .'Last probe: '.($lastProbe ?? '(unknown)')."\n";
         }
-        if ($link !== '') {
-            $body .= "\nFleet UI: {$link}\n";
+
+        $this->send($recipients, $subject, $this->withUiLink($body));
+    }
+
+    /**
+     * Catalog status change (SPA Maintenance / Active / soft decommission).
+     *
+     * @param  array<string, mixed>  $instance
+     */
+    public function notifyInstanceLifecycle(array $instance, string $fromStatus, string $toStatus): void
+    {
+        $from = strtolower(trim($fromStatus));
+        $to = strtolower(trim($toStatus));
+        if ($from === $to || $to === '') {
+            return;
         }
 
+        $interesting = ['maintenance', 'decommissioned', 'active'];
+        if (! in_array($to, $interesting, true)) {
+            return;
+        }
+        // Only mail when entering/leaving maintenance or decommissioned (not active→active noise).
+        if ($to === 'active' && ! in_array($from, ['maintenance', 'decommissioned'], true)) {
+            return;
+        }
+        if ($to !== 'active' && ! in_array($to, ['maintenance', 'decommissioned'], true)) {
+            return;
+        }
+
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            error_log('[gatekeeper-notify] no subscribers for lifecycle '.$from.'→'.$to.' — skip');
+
+            return;
+        }
+
+        $id = (string) ($instance['id'] ?? '');
+        $label = (string) ($instance['label'] ?? $id);
+        $fqdn = (string) ($instance['fqdn'] ?? '');
+        $by = (string) ($instance['updated_by'] ?? '');
+
+        if ($to === 'maintenance') {
+            $subject = "[PBX3 fleet] Instance maintenance: {$label}";
+            $body = "Instance marked maintenance in the fleet catalog (probe skipped while in this state).\n\n";
+        } elseif ($to === 'decommissioned') {
+            $subject = "[PBX3 fleet] Instance decommissioned: {$label}";
+            $body = "Instance soft-decommissioned in the fleet catalog (hidden from picker; node not stopped).\n\n";
+        } else {
+            $subject = "[PBX3 fleet] Instance active again: {$label}";
+            $body = "Instance returned to active in the fleet catalog (was {$from}).\n\n";
+        }
+
+        $body .= "Label: {$label}\n"
+            ."Id: {$id}\n"
+            ."FQDN: {$fqdn}\n"
+            ."Status: {$from} → {$to}\n";
+        if ($by !== '') {
+            $body .= "Updated by: {$by}\n";
+        }
+
+        $this->send($recipients, $subject, $this->withUiLink($body));
+    }
+
+    /** @return list<string> */
+    private function recipients(): array
+    {
+        $recipients = UserStore::notifyFailureEmails();
+        $ops = trim((string) (getenv('GATEKEEPER_OPS_NOTIFY_EMAIL') ?: ''));
+        if ($ops !== '' && filter_var($ops, FILTER_VALIDATE_EMAIL)) {
+            $recipients[] = $ops;
+        }
+
+        return array_values(array_unique($recipients));
+    }
+
+    private function withUiLink(string $body): string
+    {
+        $uiBase = rtrim((string) (getenv('GATEKEEPER_FLEET_UI_URL') ?: ''), '/');
+        if ($uiBase !== '') {
+            $body .= "\nFleet UI: {$uiBase}/fleet/instances\n";
+        }
+
+        return $body;
+    }
+
+    /** @param  list<string>  $recipients */
+    private function send(array $recipients, string $subject, string $body): void
+    {
         try {
             $this->mailer->send($recipients, $subject, $body);
         } catch (\Throwable $e) {

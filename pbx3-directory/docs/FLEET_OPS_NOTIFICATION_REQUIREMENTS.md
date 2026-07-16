@@ -84,10 +84,10 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 
 | Signal | Source | Notes |
 |--------|--------|-------|
-| **Instance unreachable** | Gatekeeper probe of instance `api_base_url` (e.g. `/up`) | Updates catalog `last_seen_at` / health; fire on transition to down (and optionally after N consecutive misses) |
-| **Catalog maintenance / decommissioned** | Catalog lifecycle | Optional notify when an instance enters maintenance or is soft-decommissioned |
+| **Instance unreachable** | Gatekeeper probe of instance `api_base_url` (e.g. `/up`) | **v1 done** — down after 2 misses + cleared |
+| **Catalog maintenance / decommissioned** | Catalog lifecycle (`PATCH` status) | **Done** — mail on → maintenance / → decommissioned / back → active |
 | **Move job failed / aborted** | Gatekeeper tenant-move jobs | Notify on terminal failure (and optionally long stuck `running`) |
-| **Egress Unavail** | Instance trunk / AMI state (depends on **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** R1–R2) | Wire in only after qualify/health signals exist; do not fake this in v1 |
+| **Egress Unavail** | Instance trunk / AMI state (depends on **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** R1–R2) | Wire in only after qualify/health signals exist |
 
 **Acceptance:** A controlled lab outage (stop API on one node) produces a durable “instance down” event on the control plane within the probe interval.
 
