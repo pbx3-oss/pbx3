@@ -56,7 +56,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-16 — ops notify live + REGISTER loops)
 
-**Branch:** **`main`** — **pbx3** **`34965f4`**, **pbx3api** **`4b2aa99`**, **pbx3spa** **`568d9cb`**. Control Gatekeeper deployed; golden + bzy54n scanners enabled.
+**Branch:** **`main`** — **pbx3** **`0838886`**, **pbx3api** **`4b2aa99`**, **pbx3spa** **`e705584`**. Control Gatekeeper deployed; golden + bzy54n scanners enabled.
 
 ### Shipped
 - **Gatekeeper probe + SMTP:** `bin/probe-fleet-instances.php` + systemd timer; `instance_health` (down after 2 misses); `Mailer`/`SmtpMailer` (SMTP2GO on control → `jeff@aelintra.com`); lifecycle mail on maintenance/decommission/active.
