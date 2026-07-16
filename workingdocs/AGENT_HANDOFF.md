@@ -56,17 +56,16 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-16 — docs: What is PBX3 + ops notify plan)
 
-**Branch:** **`main`** — **pbx3** **`5a133ff`**, **pbx3spa** **`4131fcc`** (SPA code unchanged this session), **pbx3-docs** **`a020422`**, **pbx3sbc** **`32b20e6`**. No golden/API product code.
+**Branch:** **`main`** — **pbx3** **`6f0efb9`**, **pbx3spa** **`ef2ab88`** (SPA code unchanged this session), **pbx3-docs** **`e76c451`**, **pbx3sbc** **`32b20e6`**. No golden/API product code.
 
 ### Shipped
-- **pbx3-docs:** Replaced **What is PBX3?** with fleet system overview (Mermaid); wording polish pushed (`a020422`). Live Pages.
+- **pbx3-docs:** Replaced **What is PBX3?** with fleet system overview (Mermaid); wording polish (`a020422`, `e76c451`). Live Pages.
 - **Ops notify requirements:** **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — v1 Gatekeeper probe + email; industry patterns; velocity (later); Prometheus/Grafana = optional metrics not notify HoR; Fail2ban ban→email later.
 - **Fail2ban stance:** auto-whitelist **inbound carrier Peers** (defer implement until next carrier onboard); **customer site IPs manual** only (no site CRM). **`PEERING-PLAN.md`** §0.1 + TODO open item.
 - **TODO:** pbx3-docs polish marked **ongoing** (human edits; agent sections on request).
 
 ### Golden / operator follow-up
 - Continue human review of **https://aelintra.github.io/pbx3-docs/**; ask agent for new sections as needed.
-- Check **pbx3-docs** working tree if local What is PBX3 edits remain uncommitted.
 
 ### Resume
 1. Product: egress availability / failover shadowing, **or** ops-notify implement when prioritized, **or** docs sections on request.
