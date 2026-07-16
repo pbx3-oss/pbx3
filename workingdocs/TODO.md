@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked; **pbx3-docs** live on aelintra Pages.  
-**Last updated:** 2026-07-16 (opened fleet ops failure-notify requirements)
+**Last updated:** 2026-07-16 (pbx3-docs polish marked ongoing)
 
 ### Suggested “what next?” order
 
@@ -9,7 +9,7 @@
 2. **Failover + shadowing** (parked) — plan as its own mini-project later.  
 3. **Ops failure notification (planned)** — Gatekeeper probe + email to subscribed Fleet users; after egress health signals where useful. **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.  
 4. **S10.7 / S8.9 orchestrated onboard/rebuild (parked)** — wait for AWS vs S3-compatible / adapter stance (Rule 9). Mode 4 + Mac scripts remain.  
-5. **pbx3-docs polish** (optional) — human edit pass; SBC chapter / recordings page when useful. Live: **https://aelintra.github.io/pbx3-docs/**.  
+5. **pbx3-docs polish (ongoing)** — human edit pass in progress; agent adds/updates sections on request. Live: **https://aelintra.github.io/pbx3-docs/**. Optional later: SBC chapter / recordings page when useful.  
 6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
 7. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
 8. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
@@ -68,13 +68,15 @@
 
 - [x] **Ops — Asterisk after Egress / genAst (2026-07-13):** **`workingdocs/OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — `systemctl restart asterisk` required after egress template changes; `pjsip reload` alone is not enough (Phase A lab).
 
-- [x] **Peering — logical carrier Peers UX (attrs):** **`PEERING-PLAN.md` §0.1** + pbx3sbc-admin Peers form/table group by `carrier=` / `role=` in **`attrs`** (no OpenSIPS/schema change). Lab seed + Magrathea/Brindley backfill. Remaining: Fail2ban whitelist inbound IPs.
+- [x] **Peering — logical carrier Peers UX (attrs):** **`PEERING-PLAN.md` §0.1** + pbx3sbc-admin Peers form/table group by `carrier=` / `role=` in **`attrs`** (no OpenSIPS/schema change). Lab seed + Magrathea/Brindley backfill. Fail2ban auto-whitelist split out below.
+
+- [ ] **SBC Fail2ban — inbound Peer auto-whitelist + ban notify (deferred until next carrier onboard):** (1) Auto-sync **carrier inbound Peer IPs** into Fail2ban whitelist on Peer save/delete — implement when onboarding the next carrier so it can be lab-tested live. (2) **Customer site** IPs remain **manual** whitelist (existing UI) — no site CRM. (3) **Ban events → email** via ops notify delivery when that track ships. Edge-authored (Rule 13). Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.
 
 - [x] **Fleet mode in pbx3spa (2026-07-13 → `main`):** **Enter Fleet / Exit Fleet** shell swap, `/fleet/*` guards, Instances / Tenants / **Jobs**, `FleetTokenGate`. **pbx3spa** **`ba31dd4`**, gatekeeper list API **pbx3** **`c047743`**. Branch **`fleetadmin` deleted**.
 
 - [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
 
-- [ ] **Ops failure notification (planned 2026-07-16 — not started):** Notify interested Fleet users of **failure conditions** (instance unreachable, move-job failure; egress Unavail later). Gatekeeper owns probe + subscriptions + **email** v1; not in call path (Rule 5). Threat/fail2ban analytics out of MVP. **Later (same doc):** call-pattern **velocity** checks (toll-fraud style); Prometheus/Grafana optional metrics — neither is v1. Requirements: **`pbx3-directory/docs/FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**. Shares detection with catalog `last_seen_at` probe (`IMPLEMENTATION_PLAN.md` § Fleet & monitoring).
+- [ ] **Ops failure notification (planned 2026-07-16 — not started):** Notify interested Fleet users of **failure conditions** (instance unreachable, move-job failure; egress Unavail later). Gatekeeper owns probe + subscriptions + **email** v1; not in call path (Rule 5). **Later (same doc):** call-pattern **velocity**; **Fail2ban ban → email**; Prometheus/Grafana optional metrics — not v1 probe. Requirements: **`pbx3-directory/docs/FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**. Shares detection with catalog `last_seen_at` probe (`IMPLEMENTATION_PLAN.md` § Fleet & monitoring).
 
 - [x] **S8.10 — interim gatekeeper auth harden (2026-07-10):** Production SPA must not bake `VITE_FLEET_GATEKEEPER_TOKEN`. Token from **sessionStorage** (Fleet tenants paste) or **DEV-only** Vite env. Gatekeeper README documents lab vs prod vs future control-plane login. Catalog reconcile: nodes/SBC aligned; added missing SBC domain **sandycroft** `vqcwd4.pbx3.com` setid 2.
 
@@ -95,7 +97,7 @@
 
 - [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**, **`pbx3-docs`**. Maintain **`REPOS_AND_RELEASES.md`**. Interim docs repo already on **`aelintra/pbx3-docs`**. Update local clone remotes; keep **`pbx3-master/`** holding-folder layout.
 
-- [x] **User guides — MkDocs site (`pbx3-docs`) seed (2026-07-15):** Holding-folder **`pbx3-docs/`** + GitHub **`aelintra/pbx3-docs`** → Pages **https://aelintra.github.io/pbx3-docs/**. Approved nav (Cloud/S3 + intro schematic); operator drafts for install/TLS/admin/fleet/cloud/troubleshoot (lab URLs). Content map updated. **Remaining:** human edit pass; optional SBC / recordings chapters; move to OSS org later. **`workingdocs/`** stay unpublished.
+- [x] **User guides — MkDocs site (`pbx3-docs`) seed (2026-07-15):** Holding-folder **`pbx3-docs/`** + GitHub **`aelintra/pbx3-docs`** → Pages **https://aelintra.github.io/pbx3-docs/**. Approved nav (Cloud/S3 + intro schematic); operator drafts for install/TLS/admin/fleet/cloud/troubleshoot (lab URLs). Content map updated. **Ongoing:** human review/edits; agent adds sections on request. Optional later: SBC / recordings chapters; move to OSS org. **`workingdocs/`** stay unpublished.
 
 - [ ] **pbx3cagi refactor (deferred — after S8 + R1 underway):** Phase 0 harness **golden-signed-off** on **08jzwn** (synthetic seed + `/opt/pbx3/db/sqlite.rdonly.db`; all CFIM scenarios PASS). **Do not start Phase 1.1+ struct refactor** until fleet/recordings momentum established; run **`make test`** after each refactor step when resumed. Gate: **`REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**, **`TEST_RECIPE.md`**.
 

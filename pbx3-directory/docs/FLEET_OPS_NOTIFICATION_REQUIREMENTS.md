@@ -116,7 +116,7 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 
 - SPA in-app inbox, Slack, Teams, webhooks, PagerDuty  
 - **Prometheus / Grafana / Alertmanager** as the failure-notify plane (optional **metrics** track later — see design stance)  
-- Threat / intrusion analytics (fail2ban → notify, SIP scan correlation, Security Hub)  
+- Threat / intrusion **analytics** (SIP scan correlation, Security Hub) — **except** Fail2ban **ban → email** and whitelist automation called out in § Fail2ban (planned, not v1 probe)  
 - **Call-pattern velocity / toll-fraud detection** (see § Velocity checking — planned later, not v1)  
 - Node-local mail (each Asterisk emailing operators) as the fleet path  
 - Putting notification or directory availability into the **call path**  
@@ -134,6 +134,33 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 | **S7+ Security Hub** | Compliance / attested audit — not ops failure mail |
 | **Prometheus / Grafana (optional later)** | Pretty metrics / quality time series — **not** this notify leg |
 | **Velocity checking (planned later)** | Odd outbound call patterns → same notify delivery; separate detection — § below |
+| **Fail2ban (SBC)** | Auto-whitelist **inbound Peers**; **manual** site IPs; **ban → email** — § below |
+
+---
+
+## Fail2ban — whitelist automation + ban notify (planned)
+
+**Context:** SBC Fail2Ban UI (status / manual whitelist / sync) already exists. Manual coverage is not enough for production peering.
+
+### Whitelist (edge — pbx3sbc-admin)
+
+| Source | Requirement |
+|--------|-------------|
+| **Carrier inbound Peer IPs** | **Automate:** on Peer create/update/delete for inbound signaling rows (`role=inbound` / literal source IPs), add/remove Fail2ban whitelist + sync. |
+| **Customer site IPs** | **Manual only** (existing Fail2Ban whitelist UI is enough). Operator adds office/NAT egress IP/CIDR so one bad phone does not ban the whole site. Comment/label free-form. **Out of scope:** customer/site directory, CRM, auto-discovery of site IPs, catalog HoR for sites. |
+
+Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PEERING-PLAN.md`** §0.1.
+
+### Ban → email (same notify delivery plane)
+
+| Item | Direction |
+|------|-----------|
+| **Signal** | New Fail2ban ban (and optionally unban / recidive) on SBC SIP jails |
+| **Why notify** | Operators need to know a site or unknown IP was blocked — especially if a customer site was **not** whitelisted yet |
+| **v1 of this slice** | Emit into Gatekeeper (or SBC→ops) **email** when notify track exists; do not wait for full threat analytics |
+| **Not v1 failure-probe** | Separate from instance `/up` down; can ship after or alongside subscriptions |
+
+**Open questions:** throttle ban mail (scan storms); optional operator hint “add this IP to whitelist” after a ban (still manual — no site CRM).
 
 ---
 
@@ -168,7 +195,8 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 5. **Egress Unavail** (after egress R1–R2).  
 6. Later (notify plane): webhooks / Slack; threat-oriented signals.  
 7. **Separate track (not this leg):** optional Prometheus + Grafana for fleet/instance metrics dashboards; document exporters; do not replace Gatekeeper email subscriptions.  
-8. **Velocity checking track:** on-node (or near-CDR) pattern rules → emit into notify delivery; notify-only first; carrier fraud as backstop.
+8. **Velocity checking track:** on-node (or near-CDR) pattern rules → emit into notify delivery; notify-only first; carrier fraud as backstop.  
+9. **Fail2ban track:** auto-whitelist **inbound Peers** only; customer site IPs stay **manual** whitelist; ban events → email via notify delivery.
 
 ---
 
@@ -186,6 +214,10 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 
 - See § Velocity checking open questions.
 
+### Fail2ban (later)
+
+- See § Fail2ban open questions.
+
 ---
 
 ## References
@@ -196,8 +228,9 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 | **`IMPLEMENTATION_PLAN.md`** | § Fleet & monitoring |
 | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** | R2 preflight / alerts |
 | **`ARCHITECTURE_PEER_REVIEW.md`** | Competitive fleet shape (not notify-specific) |
+| **`pbx3sbc/workingdocs/PEERING-PLAN.md`** | §0.1 Fail2ban — auto carrier inbound; manual site IPs |
 | **`CENTRAL_ADMIN_DIRECTION.md`** | Central monitoring (direction) |
 
 ---
 
-*Last updated: 2026-07-16 — velocity checking captured as later track; v1 remains failure notify; no code.*
+*Last updated: 2026-07-16 — Fail2ban auto-whitelist + ban notify captured; no code.*
