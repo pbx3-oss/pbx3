@@ -542,6 +542,7 @@ Use this as the **long-tail** queue. **Active S3 work** is tracked in **§ S3 pr
 - [ ] Scheduled job: probe each `api_base_url` → update `last_seen_at` in catalog
 - [ ] SPA fleet badges (warning/degraded) from `last_seen_at`
 - [ ] Optional `instances/{ksuid}/tls/{backup_stamp}.json` snapshot (cert SAN history)
+- [ ] **Ops failure notification (email v1)** — subscriptions + transition alerts on Gatekeeper; see **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (shares probe/`last_seen_at`; not call-path)
 
 ### Product & auth
 

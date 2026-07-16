@@ -36,7 +36,7 @@ This is **not cosmetic**. It blocks trunk health UI, alerting, and informed fail
 |---------|-----------|
 | **Asterisk** | Egress endpoint state reflects SBC reachability (qualify or equivalent) |
 | **SPA** | Trunk / fleet health shows Egress up/down (today fleet routes **hide** path pickers — status still needed) |
-| **Preflight / alerts** | **`FleetPreflightService`** (or successor) can fail or warn when Egress Unavail **before** move/cutover |
+| **Preflight / alerts** | **`FleetPreflightService`** (or successor) can fail or warn when Egress Unavail **before** move/cutover; push notify to subscribed operators when prioritized — **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** |
 
 ### R3 — SBC failure handling (signalling path)
 

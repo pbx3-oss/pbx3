@@ -1,17 +1,18 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked; **pbx3-docs** live on aelintra Pages.  
-**Last updated:** 2026-07-15 (session end — MkDocs `pbx3-docs` seed + Pages)
+**Last updated:** 2026-07-16 (opened fleet ops failure-notify requirements)
 
 ### Suggested “what next?” order
 
 1. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 2. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-3. **S10.7 / S8.9 orchestrated onboard/rebuild (parked)** — wait for AWS vs S3-compatible / adapter stance (Rule 9). Mode 4 + Mac scripts remain.  
-4. **pbx3-docs polish** (optional) — human edit pass; SBC chapter / recordings page when useful. Live: **https://aelintra.github.io/pbx3-docs/**.  
-5. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-6. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
-7. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
+3. **Ops failure notification (planned)** — Gatekeeper probe + email to subscribed Fleet users; after egress health signals where useful. **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.  
+4. **S10.7 / S8.9 orchestrated onboard/rebuild (parked)** — wait for AWS vs S3-compatible / adapter stance (Rule 9). Mode 4 + Mac scripts remain.  
+5. **pbx3-docs polish** (optional) — human edit pass; SBC chapter / recordings page when useful. Live: **https://aelintra.github.io/pbx3-docs/**.  
+6. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
+7. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
+8. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
 
 ---
 
@@ -72,6 +73,8 @@
 - [x] **Fleet mode in pbx3spa (2026-07-13 → `main`):** **Enter Fleet / Exit Fleet** shell swap, `/fleet/*` guards, Instances / Tenants / **Jobs**, `FleetTokenGate`. **pbx3spa** **`ba31dd4`**, gatekeeper list API **pbx3** **`c047743`**. Branch **`fleetadmin` deleted**.
 
 - [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
+
+- [ ] **Ops failure notification (planned 2026-07-16 — not started):** Notify interested Fleet users of **failure conditions** (instance unreachable, move-job failure; egress Unavail later). Gatekeeper owns probe + subscriptions + **email** v1; not in call path (Rule 5). Threat/fail2ban analytics out of MVP. Requirements: **`pbx3-directory/docs/FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**. Shares detection with catalog `last_seen_at` probe (`IMPLEMENTATION_PLAN.md` § Fleet & monitoring).
 
 - [x] **S8.10 — interim gatekeeper auth harden (2026-07-10):** Production SPA must not bake `VITE_FLEET_GATEKEEPER_TOKEN`. Token from **sessionStorage** (Fleet tenants paste) or **DEV-only** Vite env. Gatekeeper README documents lab vs prod vs future control-plane login. Catalog reconcile: nodes/SBC aligned; added missing SBC domain **sandycroft** `vqcwd4.pbx3.com` setid 2.
 
