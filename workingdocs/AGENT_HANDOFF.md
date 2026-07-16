@@ -45,7 +45,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Failover + shadowing** (parked) | TODO open item — plan later; scraps in peering polish + **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** |
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **Fleet Egress availability / SBC failover** (future) | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — OPTIONS qualify, EgressFailover, health UI |
-| **Ops failure notification** (planned) | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — Gatekeeper probe + email; velocity / Fail2ban ban→email later; Prometheus optional metrics |
+| **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig REGISTER shipped; move-job / Fail2ban ban→email / velocity later |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
@@ -54,23 +54,32 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-16 — docs: What is PBX3 + ops notify plan)
+## Next agent session notes (2026-07-16 — ops notify live + REGISTER loops)
 
-**Branch:** **`main`** — **pbx3** **`0aac37b`**, **pbx3spa** **`cf64ea7`** (SPA code unchanged this session), **pbx3-docs** **`e76c451`**, **pbx3sbc** **`32b20e6`**. No golden/API product code.
+**Branch:** **`main`** — **pbx3** **`34965f4`**, **pbx3api** **`4b2aa99`**, **pbx3spa** **`568d9cb`**. Control Gatekeeper deployed; golden + bzy54n scanners enabled.
 
 ### Shipped
-- **pbx3-docs:** Replaced **What is PBX3?** with fleet system overview (Mermaid); wording polish (`a020422`, `e76c451`). Live Pages.
-- **Ops notify requirements:** **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — v1 Gatekeeper probe + email; industry patterns; velocity (later); Prometheus/Grafana = optional metrics not notify HoR; Fail2ban ban→email later.
-- **Fail2ban stance:** auto-whitelist **inbound carrier Peers** (defer implement until next carrier onboard); **customer site IPs manual** only (no site CRM). **`PEERING-PLAN.md`** §0.1 + TODO open item.
-- **TODO:** pbx3-docs polish marked **ongoing** (human edits; agent sections on request).
+- **Gatekeeper probe + SMTP:** `bin/probe-fleet-instances.php` + systemd timer; `instance_health` (down after 2 misses); `Mailer`/`SmtpMailer` (SMTP2GO on control → `jeff@aelintra.com`); lifecycle mail on maintenance/decommission/active.
+- **Lab proven:** nginx stop on bzy54n → down mail; restore → cleared; Fleet Instances → Maintenance → mail.
+- **Misconfig REGISTER:** `POST /api/v1/ops-events`; node `pbx3:ops-register-loops` (ignoreip-gated only — road warriors still Fail2ban-bannable). Enabled on **08jzwn** + **bzy54n** (`PBX3_OPS_REGISTER_LOOP_ENABLED=true`, cron).
+- **SPA:** Fleet Users **Email on instance down** checkbox.
 
 ### Golden / operator follow-up
-- Continue human review of **https://aelintra.github.io/pbx3-docs/**; ask agent for new sections as needed.
+- Site/SBC CIDRs must stay on node Fail2ban `ignoreip` for REGISTER-loop notify (else ban path).
+- Optional: SPA badges from `last_seen_at`; move-job failure mail; Fail2ban ban→email.
 
 ### Resume
-1. Product: egress availability / failover shadowing, **or** ops-notify implement when prioritized, **or** docs sections on request.
-2. Fail2ban Peer→whitelist automation: wait for next carrier onboard to test.
-3. Do **not** start S10.7 / S7+ / IdP / site CRM without ask.
+1. Egress availability / failover shadowing, **or** move-job notify, **or** docs polish on request.
+2. Do **not** start S10.7 / S7+ / IdP / site CRM without ask.
+
+---
+
+## Next agent session notes (2026-07-16 — docs: What is PBX3 + ops notify plan) — historical
+
+**Branch:** **`main`** — superseded by block above. Tips were **pbx3** **`0aac37b`**, **pbx3spa** **`cf64ea7`**, **pbx3-docs** **`e76c451`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 

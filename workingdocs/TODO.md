@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked; ops notify v1 (probe+SMTP) shipped; **pbx3-docs** live on aelintra Pages.  
-**Last updated:** 2026-07-16 (ops notify v1 implement)
+**Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked; ops notify (probe+SMTP, lifecycle, misconfig REGISTER) lab-proven; **pbx3-docs** live.  
+**Last updated:** 2026-07-16 (session end — ops notify implement + lab)
 
 ### Suggested “what next?” order
 
