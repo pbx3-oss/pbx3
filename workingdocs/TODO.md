@@ -7,7 +7,7 @@
 
 1. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 2. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-3. **Ops failure notification — follow-ons** — move-job mail; whitelist-gated misconfig REGISTER notify; Fail2ban Peer auto-whitelist / ban→email. v1 probe+SMTP **shipped**. **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.  
+3. **Ops failure notification — follow-ons** — move-job mail; Fail2ban Peer auto-whitelist / ban→email. v1 probe+SMTP + lifecycle + **misconfig REGISTER** **shipped**. **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.  
 4. **S10.7 / S8.9 orchestrated onboard/rebuild (parked)** — wait for AWS vs S3-compatible / adapter stance (Rule 9). Mode 4 + Mac scripts remain.  
 5. **pbx3-docs polish (ongoing)** — human edit pass in progress; agent adds/updates sections on request. Live: **https://aelintra.github.io/pbx3-docs/**. Optional later: SBC chapter / recordings page when useful.  
 6. **SPA fleet badges** from `last_seen_at` (probe now writes it).  
@@ -77,7 +77,7 @@
 
 - [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
 
-- [x] **Ops failure notification — v1 probe + SMTP (2026-07-16):** Gatekeeper `bin/probe-fleet-instances.php` + systemd timer; SQLite `instance_health` (down after 2 misses); S3 `last_seen_at`; `Mailer`/`SmtpMailer` (log if SMTP unset); `users.notify_failures` + SPA Fleet Users checkbox; optional `GATEKEEPER_OPS_NOTIFY_EMAIL`. **Follow-ons:** move-job mail; whitelist-gated misconfig REGISTER notify (no ban on known sites); Fail2ban Peer auto-whitelist / ban→email; SPA badges. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** · **`CONTROL_HOST.md`**.
+- [x] **Ops failure notification — v1 probe + SMTP (2026-07-16):** Gatekeeper `bin/probe-fleet-instances.php` + systemd timer; SQLite `instance_health` (down after 2 misses); S3 `last_seen_at`; `Mailer`/`SmtpMailer`; `users.notify_failures` + SPA checkbox; `GATEKEEPER_OPS_NOTIFY_EMAIL`. Lifecycle maintenance/decommission mail. **Misconfig REGISTER:** `pbx3api` `pbx3:ops-register-loops` → Gatekeeper `POST /api/v1/ops-events`. **Follow-ons:** move-job mail; Fail2ban Peer auto-whitelist / ban→email; SPA badges. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
 
 - [x] **S8.10 — interim gatekeeper auth harden (2026-07-10):** Production SPA must not bake `VITE_FLEET_GATEKEEPER_TOKEN`. Token from **sessionStorage** (Fleet tenants paste) or **DEV-only** Vite env. Gatekeeper README documents lab vs prod vs future control-plane login. Catalog reconcile: nodes/SBC aligned; added missing SBC domain **sandycroft** `vqcwd4.pbx3.com` setid 2.
 
