@@ -74,7 +74,7 @@
 
 - [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
 
-- [ ] **Ops failure notification (planned 2026-07-16 — not started):** Notify interested Fleet users of **failure conditions** (instance unreachable, move-job failure; egress Unavail later). Gatekeeper owns probe + subscriptions + **email** v1; not in call path (Rule 5). Threat/fail2ban analytics out of MVP. Requirements: **`pbx3-directory/docs/FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**. Shares detection with catalog `last_seen_at` probe (`IMPLEMENTATION_PLAN.md` § Fleet & monitoring).
+- [ ] **Ops failure notification (planned 2026-07-16 — not started):** Notify interested Fleet users of **failure conditions** (instance unreachable, move-job failure; egress Unavail later). Gatekeeper owns probe + subscriptions + **email** v1; not in call path (Rule 5). Threat/fail2ban analytics out of MVP. **Later (same doc):** call-pattern **velocity** checks (toll-fraud style); Prometheus/Grafana optional metrics — neither is v1. Requirements: **`pbx3-directory/docs/FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**. Shares detection with catalog `last_seen_at` probe (`IMPLEMENTATION_PLAN.md` § Fleet & monitoring).
 
 - [x] **S8.10 — interim gatekeeper auth harden (2026-07-10):** Production SPA must not bake `VITE_FLEET_GATEKEEPER_TOKEN`. Token from **sessionStorage** (Fleet tenants paste) or **DEV-only** Vite env. Gatekeeper README documents lab vs prod vs future control-plane login. Catalog reconcile: nodes/SBC aligned; added missing SBC domain **sandycroft** `vqcwd4.pbx3.com` setid 2.
 

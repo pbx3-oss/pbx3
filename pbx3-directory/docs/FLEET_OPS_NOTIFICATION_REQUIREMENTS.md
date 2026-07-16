@@ -1,8 +1,9 @@
 # Fleet ops — failure notification (requirements)
 
 **Status:** **Not implemented** — requirements opened 2026-07-16.  
-**MVP:** Notify interested operators of **failure conditions**. Threat / intrusion analytics are a later phase.  
-**Related:** **`IMPLEMENTATION_PLAN.md`** § Fleet & monitoring (`last_seen_at` probe); **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (trunk health → alerts); **`DESIGN_RULES.md`** Rule 5 (directory outage ≠ instance SLA); Fleet users / abilities (Gatekeeper).
+**MVP:** Notify interested operators of **failure conditions**.  
+**Later (same notify plane, different detection):** **call-pattern velocity / toll-fraud style checks** — see § Velocity checking. Threat / intrusion (fail2ban, SIP scan) remains separate.  
+**Related:** **`IMPLEMENTATION_PLAN.md`** § Fleet & monitoring (`last_seen_at` probe); **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (trunk health → alerts); **`DESIGN_RULES.md`** Rule 5 (directory outage ≠ instance SLA); Fleet users / abilities (Gatekeeper); instance **CoS** / dial policy (prevention layer, not a substitute for velocity alerts).
 
 ---
 
@@ -23,6 +24,8 @@ We need a durable way for **interested users** to learn about failure conditions
 | **v1 channel** | **Email** to subscribed Fleet users (+ optional static ops address) |
 | **Detection** | Reuse / extend the planned **catalog probe** (`api_base_url` → `last_seen_at`); do not invent a second health system |
 | **Call path** | Notify plane is **not** in the call path (**Rule 5**). Calls keep working if Gatekeeper or mail is down; operators simply go dark on alerts |
+| **Prometheus / Grafana** | **Out of this leg.** Optional later for fleet/instance **pretty metrics** (dashboards, quality time series) — not the v1 notify HoR. DIY farms often bolt these on; we may document exporters later without making Alertmanager the product subscription model. |
+| **Velocity / call-pattern checks** | **Out of v1.** Important product need (toll fraud / odd dial behaviour) — reuse notify **delivery** later; detection is CDR/dial analysis, not `/up` probes. Carriers often offer similar services but can be **slow to inform**; in-fleet detection aims for faster operator signal. |
 
 ```mermaid
 flowchart LR
@@ -32,6 +35,45 @@ flowchart LR
   rules --> subs["Subscriber list"]
   subs --> email["Email delivery"]
 ```
+
+---
+
+## Industry patterns (grounding — not a product teardown)
+
+Patterns common across PBX / MSP / CPaaS ops. **Not** verified UIs of current 3CX/Twilio/FreePBX releases — useful shape only. Competitive fleet shape lives in **`ARCHITECTURE_PEER_REVIEW.md`**; this section is about **detect → notify**.
+
+### Detection
+
+| Pattern | Who uses it (roughly) | Idea |
+|---------|------------------------|------|
+| **Active probe / heartbeat** | CloudWatch instance status, MSP RMM, many PBX “system health” crons | Control plane polls `/health` or SIP OPTIONS; mark down after N misses |
+| **Passive metrics + thresholds** | Prometheus/Grafana, Kamailio exporters, Twilio Monitor–class | Agents push CPU, call-fail %, ASR, trunk RTT; alert on rules |
+| **SIP qualify / OPTIONS** | Asterisk PJSIP, OpenSIPS gateway monitoring | Endpoint Unavail → ops signal (our egress track) |
+| **CDR / quality analytics** | CPaaS (Twilio, Telnyx), contact-center suites | Error-code spikes, short calls, regional outages — service health more than box-down |
+| **Velocity / toll-fraud rules** | Carrier fraud desks, MSP “international surge” alerts, some hosted PBX add-ons | Rate/destination anomalies on outbound (premium, unusual country, burst dials) — often hours behind if carrier-only |
+
+### Notification
+
+| Pattern | Typical shape |
+|---------|----------------|
+| **Email on state change** | Classic PBX / small MSP — still the default MVP |
+| **Webhook → Slack / Teams / PagerDuty** | Modern SaaS ops; product emits event, customer routes |
+| **Cloud alarms (SNS / EventBridge / CloudWatch)** | AWS-shaped fleets — close to our EC2 mental model (`DESIGN_RULES.md`) |
+| **In-product dashboard + badge** | Commercial cloud PBX “system status”; email secondary |
+| **Tiered severity** | info → warn → page (page only on call-path or multi-node impact) |
+
+### Telecom-specific nuances
+
+- **Control plane vs call path** — serious designs keep alerting off the media path (**Rule 5**).
+- **Flap control** — SIP trunks flap; use **hysteresis** + optional “cleared” messages (or digests).
+- **Two audiences** — fleet/ops (node down, SBC Unavail) vs tenant admin (their trunks/extensions) — often different subscriptions. Velocity alerts may need **tenant-scoped** recipients as well as fleet ops.
+- **CPaaS** leans on API status + webhooks + Monitor alerts, not “SSH the box”; **hosted PBX / MSP** lean on panel health + email/SMS.
+- **DIY OpenSIPS/Asterisk farms** often bolt on Nagios/Zabbix/Prometheus rather than rich notify inside the PBX UI.
+- **Carrier fraud services** are valuable as a backstop; product velocity checks aim to **spot odd dial patterns earlier** (minutes, not next-business-day invoices).
+
+### How that maps to our MVP
+
+Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudWatch-style status check + email** lane — normal for an MSP fleet console, deliberately simpler than CPaaS Monitor or full Prometheus. **Settled (2026-07-16):** this leg is **failure notification only**; do not pull Prometheus/Alertmanager into v1. Natural evolutions after email (still notify-plane): **webhooks**, then PagerDuty-class routing. **Pretty metrics** (Prometheus + Grafana for fleet/instance dashboards, SIP/CDR time series) are a **separate optional track** — bolt-on or documented exporters, not a substitute for Gatekeeper subscriptions.
 
 ---
 
@@ -73,7 +115,9 @@ flowchart LR
 ### R4 — Non-goals (v1)
 
 - SPA in-app inbox, Slack, Teams, webhooks, PagerDuty  
+- **Prometheus / Grafana / Alertmanager** as the failure-notify plane (optional **metrics** track later — see design stance)  
 - Threat / intrusion analytics (fail2ban → notify, SIP scan correlation, Security Hub)  
+- **Call-pattern velocity / toll-fraud detection** (see § Velocity checking — planned later, not v1)  
 - Node-local mail (each Asterisk emailing operators) as the fleet path  
 - Putting notification or directory availability into the **call path**  
 - Requiring S3 or SPA to be up for probes to run (Gatekeeper owns the job)
@@ -88,6 +132,30 @@ flowchart LR
 | **Egress availability** | Once Egress qualify works, Unavail becomes a first-class failure signal (R1) |
 | **Failover + shadowing** | Separate mini-project; notify may later cover failover events |
 | **S7+ Security Hub** | Compliance / attested audit — not ops failure mail |
+| **Prometheus / Grafana (optional later)** | Pretty metrics / quality time series — **not** this notify leg |
+| **Velocity checking (planned later)** | Odd outbound call patterns → same notify delivery; separate detection — § below |
+
+---
+
+## Velocity checking (planned later — not v1)
+
+**Intent:** Spot and **report** odd outbound **call patterns** so operators hear before (or faster than) the carrier fraud desk — e.g. burst dials to a high-value / premium number, sudden volume to an unusual country, or similar velocity anomalies.
+
+**Why not v1:** Detection needs **call/dial data** (CDR, channel events, or dialplan hooks), rule definitions (destinations, rates, windows), and careful false-positive policy. That is a different system from Gatekeeper `/up` probes. **Prevention** already has a partial cousin in instance **CoS / dial policy**; velocity is **detection + notify**, not a replacement for CoS.
+
+**Reuse from this leg:** Subscriptions + email (and later webhooks) as the **delivery** plane. Prefer emitting a structured “velocity alert” event into the same notify path rather than a second mail stack.
+
+**Sketch (when prioritized):**
+
+| Piece | Direction |
+|-------|-----------|
+| **Signals (examples)** | N outbound attempts to same high-cost prefix in T minutes; first-seen country for a tenant in window; concurrent outbound spike vs baseline |
+| **Where to analyze** | Prefer **on-node** near CDR/Asterisk (low latency, tenant-local); optionally summarize to Gatekeeper for fleet-wide ops mail |
+| **Action v1 of this track** | **Notify only** (email) — do not auto-block calls until rules and false-positive story are proven |
+| **Carrier services** | Keep as backstop; document that in-fleet velocity is complementary, not a substitute for ITSP fraud tooling |
+| **Audience** | Fleet ops ± tenant admins (product decision); may differ from instance-down subscribers |
+
+**Open questions (velocity track):** rule authorship (fleet template vs per-tenant); block vs warn; near-real-time vs batch CDR; interaction with CoS; privacy of dialled digits in alert bodies.
 
 ---
 
@@ -98,17 +166,25 @@ flowchart LR
 3. **Email adapter** + transition-based notify for instance down/up.  
 4. **Move-job terminal failure** notify.  
 5. **Egress Unavail** (after egress R1–R2).  
-6. Later: webhooks / Slack; threat-oriented signals.
+6. Later (notify plane): webhooks / Slack; threat-oriented signals.  
+7. **Separate track (not this leg):** optional Prometheus + Grafana for fleet/instance metrics dashboards; document exporters; do not replace Gatekeeper email subscriptions.  
+8. **Velocity checking track:** on-node (or near-CDR) pattern rules → emit into notify delivery; notify-only first; carrier fraud as backstop.
 
 ---
 
 ## Open questions (later design pass)
+
+### Failure notify (v1)
 
 - Hysteresis: how many missed probes before “down”?  
 - Cleared / recovery emails vs down-only?  
 - Per-instance vs fleet-wide subscription UX.  
 - Solo / no-Gatekeeper installs: out of scope for this fleet track (operators use node Logs / local tooling).  
 - Rate limits and quiet hours.
+
+### Velocity (later)
+
+- See § Velocity checking open questions.
 
 ---
 
@@ -119,8 +195,9 @@ flowchart LR
 | **`DESIGN_RULES.md`** | Rule 5 — directory outage ≠ instance SLA; EC2 mental model (monitor the fleet) |
 | **`IMPLEMENTATION_PLAN.md`** | § Fleet & monitoring |
 | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** | R2 preflight / alerts |
+| **`ARCHITECTURE_PEER_REVIEW.md`** | Competitive fleet shape (not notify-specific) |
 | **`CENTRAL_ADMIN_DIRECTION.md`** | Central monitoring (direction) |
 
 ---
 
-*Last updated: 2026-07-16 — requirements capture; no code.*
+*Last updated: 2026-07-16 — velocity checking captured as later track; v1 remains failure notify; no code.*
