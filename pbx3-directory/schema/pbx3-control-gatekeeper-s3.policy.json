@@ -8,7 +8,7 @@
       "Resource": "arn:aws:s3:::08jzwn-pbx3",
       "Condition": {
         "StringLike": {
-          "s3:prefix": ["catalog/*", "tenants/*", "instances/*"]
+          "s3:prefix": ["catalog/*", "tenants/*", "instances/*", "control/*"]
         }
       }
     },
@@ -25,7 +25,8 @@
       "Resource": [
         "arn:aws:s3:::08jzwn-pbx3/catalog/*",
         "arn:aws:s3:::08jzwn-pbx3/tenants/*",
-        "arn:aws:s3:::08jzwn-pbx3/instances/*"
+        "arn:aws:s3:::08jzwn-pbx3/instances/*",
+        "arn:aws:s3:::08jzwn-pbx3/control/*"
       ]
     }
   ]

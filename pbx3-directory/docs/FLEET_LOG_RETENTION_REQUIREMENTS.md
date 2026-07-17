@@ -1,6 +1,6 @@
 # Fleet / node — log retention & SIP capture (requirements)
 
-**Status:** **Phases 1–3 on branch `logs` (2026-07-17)** — instance rotate + S3 ship (lab smoke OK); fleet siplog off; SBC OpenSIPS/syslog/SIP-pcap ship (install on SBC). Phases 4–7 not started.  
+**Status:** **Phases 1–4 on branch `logs` (2026-07-17)** — instance + fleet siplog-off + SBC ship + control ship (host installs still ops). Phases 5–7 not started.  
 **MVP (when prioritized):** Local hot store (~7 days) + async offload of **rotated** files to S3 cold store by class; SIP-only pcap ring on the **SBC**; instance `sys-ua-siplog` **solo only** (disabled in fleet).  
 **Related:** **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity (instance detection; Gatekeeper delivery); pbx3api **`LogController`** (local log read); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
 
@@ -226,8 +226,9 @@ OpenSIPS text: 7d / 1mo. SIP pcap: dumpcap ring (SIP-only, no RTP), ~7d complete
 
 ### R5 — Control host log offload
 
-Same 7d / 1mo for control syslog/nginx/gatekeeper under `control/{id}/logs/…`.
+Same 7d / 1mo for control syslog/nginx under `control/{id}/logs/…`.
 
+**Status (2026-07-17):** **Code on `logs`** — `gatekeeper/deploy/install-control-log-retention.sh`; IAM JSON includes `control/*`. Apply live IAM + run install on control host.
 ---
 
 ## Implementer map (later — no code in the requirements pass)
@@ -237,7 +238,7 @@ Same 7d / 1mo for control syslog/nginx/gatekeeper under `control/{id}/logs/…`.
 | **1** | Instance rotate + local retain + S3 upload (syslog, messages, CDR) | **pbx3** / **pbx3api**; logrotate; IAM; `OPS_S3_RUNBOOK` — **code on `logs` (2026-07-17)**; lab smoke OK |
 | **2** | Fleet default: disable `sys-ua-siplog`; document solo vs fleet | **pbx3** installer / fleet onboard — **done on `logs` (2026-07-17)** |
 | **3** | SBC OpenSIPS text rotate + S3; SIP dumpcap unit + upload | **pbx3sbc** — **done on `logs` (2026-07-17)**; host install via `scripts/install-log-retention.sh` |
-| **4** | Control host rotate + S3 | **pbx3-directory** / control runbook |
+| **4** | Control host rotate + S3 | **pbx3-directory** / control runbook — **done on `logs` (2026-07-17)**; `gatekeeper/deploy/install-control-log-retention.sh` |
 | **5** | SPA / instance config for retention knobs; optional S3 retrieve | **pbx3spa**, **pbx3api** |
 | **6** (optional track) | Instance SQLite CDR + search API/panel; dual-write with CSV archive | **pbx3** / **pbx3api** / **pbx3spa** |
 | **7** (optional) | SBC `acc` purge / cold export | **pbx3sbc** / **pbx3sbc-admin** |

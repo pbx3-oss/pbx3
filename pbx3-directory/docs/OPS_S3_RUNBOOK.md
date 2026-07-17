@@ -1132,10 +1132,23 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 
 ---
 
+## 17. Control host logs → org bucket (Phase 4)
+
+**Spec:** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** R5 · **`CONTROL_HOST.md`** § Log retention.
+
+| Piece | Detail |
+|-------|--------|
+| **Install** | `sudo gatekeeper/deploy/install-control-log-retention.sh` |
+| **Keys** | `control/{PBX3_CONTROL_ID}/logs/{syslog\|nginx}/…` |
+| **IAM** | **`schema/pbx3-control-gatekeeper-s3.policy.json`** includes `control/*` — re-apply to live role |
+
+---
+
 ## Changelog
 
 | Date | Note |
 |------|------|
+| 2026-07-17 | **§17 Control logs** Phase 4; IAM `control/*`; lifecycle `control/` tags |
 | 2026-07-17 | **§16 SBC logs** Phase 3; lifecycle script also covers `sbc/` tags |
 | 2026-07-17 | **§15 Instance logs** — Phase 1 ship; `apply-logs-lifecycle-rules.sh`; fleet-slug design note |
 | 2026-07-14 | **§13.6 Recordings lifecycle** — `apply-recordings-lifecycle-rule.sh`; `policy.json` / `class=recording` |

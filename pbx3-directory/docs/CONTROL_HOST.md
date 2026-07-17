@@ -27,7 +27,7 @@ SPA Fleet mode uses control-plane **email/password login** (Bearer in sessionSto
 | PHP | **8.4** (ondrej PPA) + php-fpm — lockfile needs ≥8.4 |
 | nginx | HTTPS + HTTP→HTTPS; ACME webroot under `public/.well-known` |
 | LE | `control.pbx3.com` — `certbot.timer` + deploy hook reloads nginx |
-| IAM | Instance profile **`pbx3-control-gatekeeper`** + **`pbx3-control-gatekeeper-s3`** on org bucket `08jzwn-pbx3` (`catalog/*`, `tenants/*`, `instances/*`) + **`pbx3-control-gatekeeper-recordings`** on `08jzwn-pbx3-recordings` (`tenants/*/recordings/*`) |
+| IAM | Instance profile **`pbx3-control-gatekeeper`** + **`pbx3-control-gatekeeper-s3`** on org bucket `08jzwn-pbx3` (`catalog/*`, `tenants/*`, `instances/*`, **`control/*`**) + **`pbx3-control-gatekeeper-recordings`** on `08jzwn-pbx3-recordings` (`tenants/*/recordings/*`) |
 
 **Endpoints:**
 
@@ -64,6 +64,22 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 **Lab check:** enable notify for ops mailbox; stop node API or block `/up` from control → within ~2 min one down mail (or log); restore → cleared.
 
 **Misconfig REGISTER loops (node):** On each fleet node set `PBX3_OPS_REGISTER_LOOP_ENABLED=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Put **SBC signaling IPs** in node `ignoreip` (peer allowlist for the scanner — instance Asterisk Fail2ban jail is **disabled**). Scheduler runs `pbx3:ops-register-loops` every minute → Gatekeeper `POST /api/v1/ops-events`. SIP ban/whitelist for real client IPs is on the **SBC** only.
+
+## Log retention (Phase 4)
+
+Ship rotated **syslog** + **nginx** to org bucket `control/{PBX3_CONTROL_ID}/logs/…`.
+
+| Piece | Detail |
+|-------|--------|
+| Install | From repo: `sudo gatekeeper/deploy/install-control-log-retention.sh` |
+| Env | `/etc/pbx3-gatekeeper/log-ship.env` (`PBX3_ORG_BUCKET`, `PBX3_CONTROL_ID=control`) |
+| Cron | `/etc/cron.d/pbx3-control-logs` → `pbx3-control-ship-logs` at 06:45 |
+| IAM | Update live role with **`schema/pbx3-control-gatekeeper-s3.policy.json`** (includes `control/*`) |
+
+```bash
+sudo /usr/local/bin/pbx3-control-ship-logs --dry-run
+sudo /usr/local/bin/pbx3-control-ship-logs --limit=5
+```
 
 ## Verify
 

@@ -1,0 +1,15 @@
+# Control host — nginx + syslog rotation (Phase 4)
+# Install: /etc/logrotate.d/pbx3-control-logs
+
+/var/log/nginx/*.log {
+	daily
+	rotate 7
+	missingok
+	notifempty
+	compress
+	delaycompress
+	sharedscripts
+	postrotate
+		[ -s /run/nginx.pid ] && kill -USR1 "$(cat /run/nginx.pid)" || true
+	endscript
+}

@@ -84,11 +84,23 @@ jq --argjson syslog_days "$SYSLOG_DAYS" --argjson msg_days "$MSG_DAYS" --argjson
         "Status": "Enabled",
         "Filter": { "And": { "Prefix": "sbc/", "Tags": [{ "Key": "class", "Value": "sip-pcap" }] } },
         "Expiration": { "Days": $syslog_days }
+      },
+      {
+        "ID": ("pbx3-expire-log-control-syslog-" + ($syslog_days|tostring) + "d"),
+        "Status": "Enabled",
+        "Filter": { "And": { "Prefix": "control/", "Tags": [{ "Key": "class", "Value": "syslog" }] } },
+        "Expiration": { "Days": $syslog_days }
+      },
+      {
+        "ID": ("pbx3-expire-log-control-nginx-" + ($syslog_days|tostring) + "d"),
+        "Status": "Enabled",
+        "Filter": { "And": { "Prefix": "control/", "Tags": [{ "Key": "class", "Value": "nginx" }] } },
+        "Expiration": { "Days": $syslog_days }
       }
     ]
 ' "$TMP_EXISTING" >"$TMP_OUT"
 
-echo "Applying merged lifecycle to s3://${BUCKET} (instances + sbc log tags; syslog/messages/opensips/pcap ${SYSLOG_DAYS}d, cdr ${CDR_DAYS}d)..."
+echo "Applying merged lifecycle to s3://${BUCKET} (instances + sbc + control log tags; syslog-family ${SYSLOG_DAYS}d, cdr ${CDR_DAYS}d)..."
 aws s3api put-bucket-lifecycle-configuration \
   --bucket "$BUCKET" \
   --lifecycle-configuration "file://${TMP_OUT}"
