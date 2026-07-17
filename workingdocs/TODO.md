@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked; ops notify (probe+SMTP, lifecycle, misconfig REGISTER) lab-proven; **pbx3-docs** live.  
-**Last updated:** 2026-07-16 (session end — ops notify implement + lab)
+**Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked; ops notify + REGISTER-loop lab-proven; instance Asterisk F2B off; **pbx3-docs** live.  
+**Last updated:** 2026-07-16 (session end — REGISTER-loop lab + F2B stance)
 
 ### Suggested “what next?” order
 
@@ -10,7 +10,7 @@
 3. **Ops failure notification — follow-ons** — move-job mail; Fail2ban Peer auto-whitelist / ban→email. v1 probe+SMTP + lifecycle + **misconfig REGISTER** **shipped**. **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.  
 4. **S10.7 / S8.9 orchestrated onboard/rebuild (parked)** — wait for AWS vs S3-compatible / adapter stance (Rule 9). Mode 4 + Mac scripts remain.  
 5. **pbx3-docs polish (ongoing)** — human edit pass in progress; agent adds/updates sections on request. Live: **https://aelintra.github.io/pbx3-docs/**. Optional later: SBC chapter / recordings page when useful.  
-6. **SPA fleet badges** from `last_seen_at` (probe now writes it).  
+6. **SPA fleet Instances polish** — badges from `last_seen_at`; show **full instance KSUID** (currently truncated); show probe **RTT next to Active** status.  
 7. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
 8. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
 9. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
@@ -77,7 +77,9 @@
 
 - [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
 
-- [x] **Ops failure notification — v1 probe + SMTP (2026-07-16):** Gatekeeper `bin/probe-fleet-instances.php` + systemd timer; SQLite `instance_health` (down after 2 misses); S3 `last_seen_at`; `Mailer`/`SmtpMailer`; `users.notify_failures` + SPA checkbox; `GATEKEEPER_OPS_NOTIFY_EMAIL`. Lifecycle maintenance/decommission mail. **Misconfig REGISTER:** `pbx3api` `pbx3:ops-register-loops` → Gatekeeper `POST /api/v1/ops-events`. **Follow-ons:** move-job mail; Fail2ban Peer auto-whitelist / ban→email; SPA badges. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
+- [x] **Ops failure notification — v1 probe + SMTP (2026-07-16):** Gatekeeper `bin/probe-fleet-instances.php` + systemd timer; SQLite `instance_health` (down after 2 misses); S3 `last_seen_at`; `Mailer`/`SmtpMailer`; `users.notify_failures` + SPA checkbox; `GATEKEEPER_OPS_NOTIFY_EMAIL`. Lifecycle maintenance/decommission mail. **Misconfig REGISTER:** `pbx3api` `pbx3:ops-register-loops` → Gatekeeper `POST /api/v1/ops-events`. Instance Asterisk F2B jail **off** (SIP ban on SBC); mail resolves shortuid→dialable. **Follow-ons:** move-job mail; Fail2ban Peer auto-whitelist / ban→email; SPA badges. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
+
+- [ ] **SPA Fleet Instances polish (2026-07-16):** (1) Instance **KSUID truncated** in the panel — show full id (copyable). (2) Next to **Active** status, show probe **round-trip time** (Gatekeeper `/up` already timed; expose in catalog/health API + SPA). Ties badges/`last_seen_at` work.
 
 - [x] **S8.10 — interim gatekeeper auth harden (2026-07-10):** Production SPA must not bake `VITE_FLEET_GATEKEEPER_TOKEN`. Token from **sessionStorage** (Fleet tenants paste) or **DEV-only** Vite env. Gatekeeper README documents lab vs prod vs future control-plane login. Catalog reconcile: nodes/SBC aligned; added missing SBC domain **sandycroft** `vqcwd4.pbx3.com` setid 2.
 

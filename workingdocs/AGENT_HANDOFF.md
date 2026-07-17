@@ -54,23 +54,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-16 — ops notify live + REGISTER loops)
+## Next agent session notes (2026-07-16 — REGISTER-loop lab + Asterisk F2B off)
 
-**Branch:** **`main`** — **pbx3** **`8622fd8`**, **pbx3api** **`4b2aa99`**, **pbx3spa** **`aa8b22a`**. Control Gatekeeper deployed; golden + bzy54n scanners enabled.
+**Branch:** **`main`** — **pbx3** **`1a5229c`**, **pbx3api** **`16fba66`**, **pbx3spa** **`947aa83`**. Lab: golden + control Gatekeeper live for notify.
 
 ### Shipped
-- **Gatekeeper probe + SMTP:** `bin/probe-fleet-instances.php` + systemd timer; `instance_health` (down after 2 misses); `Mailer`/`SmtpMailer` (SMTP2GO on control → `jeff@aelintra.com`); lifecycle mail on maintenance/decommission/active.
-- **Lab proven:** nginx stop on bzy54n → down mail; restore → cleared; Fleet Instances → Maintenance → mail.
-- **Misconfig REGISTER:** `POST /api/v1/ops-events`; node `pbx3:ops-register-loops` (ignoreip-gated only — road warriors still Fail2ban-bannable). Enabled on **08jzwn** + **bzy54n** (`PBX3_OPS_REGISTER_LOOP_ENABLED=true`, cron).
-- **SPA:** Fleet Users **Email on instance down** checkbox.
+- **REGISTER-loop lab:** Zoiper → SBC → golden; Fail2ban on SBC banned cellphone IP (expected for non-whitelisted); door-knock silent drop on typo domain `dhbm9x`; auth fail then success.
+- **Notify proven:** after SBC `3.93.26.82` on golden `ignoreip`, scanner emitted; mail OK (SBC as source IP).
+- **Enrichment:** node resolves `ipphone` shortuid → dialable + name; Gatekeeper mail `1003 (8pmfxd) — JohnKnox`.
+- **Stance:** phones always via SBC; instance `:5060` SBC-only → **Asterisk F2B jail disabled** (package + golden); SIP ban/whitelist on **SBC** only; node scanner = notify. Cellular/road-warrior IPs: do **not** whitelist.
+- **bzy54n:** Fail2ban was dead since May/Jun (`%(auth_log)s` jail.local); restarted — sshd/recidive/api jails; no asterisk.
 
 ### Golden / operator follow-up
-- Site/SBC CIDRs must stay on node Fail2ban `ignoreip` for REGISTER-loop notify (else ban path).
-- Optional: SPA badges from `last_seen_at`; move-job failure mail; Fail2ban ban→email.
+- Keep **SBC IPs** on node `ignoreip` (scanner peer allowlist), not site/cellphone CIDRs.
+- SPA Instances polish: full KSUID; RTT next to Active (TODO).
+- Optional: move-job mail; SBC Fail2ban ban→email; badges from `last_seen_at`.
 
 ### Resume
-1. Egress availability / failover shadowing, **or** move-job notify, **or** docs polish on request.
+1. SPA Instances polish (KSUID + RTT) **or** egress/failover **or** move-job notify **or** docs on request.
 2. Do **not** start S10.7 / S7+ / IdP / site CRM without ask.
+
+---
+
+## Next agent session notes (2026-07-16 — ops notify live + REGISTER loops) — historical
+
+**Branch:** **`main`** — superseded by block above. Tips were **pbx3** **`8622fd8`**, **pbx3api** **`4b2aa99`**, **pbx3spa** **`aa8b22a`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 
