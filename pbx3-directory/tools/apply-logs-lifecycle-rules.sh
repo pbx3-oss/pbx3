@@ -50,42 +50,45 @@ jq --argjson syslog_days "$SYSLOG_DAYS" --argjson msg_days "$MSG_DAYS" --argjson
   | .Rules |= map(select(.ID | tostring | test("^pbx3-expire-log-") | not))
   | .Rules += [
       {
-        "ID": ("pbx3-expire-log-syslog-" + ($syslog_days|tostring) + "d"),
+        "ID": ("pbx3-expire-log-inst-syslog-" + ($syslog_days|tostring) + "d"),
         "Status": "Enabled",
-        "Filter": {
-          "And": {
-            "Prefix": "instances/",
-            "Tags": [{ "Key": "class", "Value": "syslog" }]
-          }
-        },
+        "Filter": { "And": { "Prefix": "instances/", "Tags": [{ "Key": "class", "Value": "syslog" }] } },
         "Expiration": { "Days": $syslog_days }
       },
       {
-        "ID": ("pbx3-expire-log-asterisk-messages-" + ($msg_days|tostring) + "d"),
+        "ID": ("pbx3-expire-log-inst-asterisk-messages-" + ($msg_days|tostring) + "d"),
         "Status": "Enabled",
-        "Filter": {
-          "And": {
-            "Prefix": "instances/",
-            "Tags": [{ "Key": "class", "Value": "asterisk-messages" }]
-          }
-        },
+        "Filter": { "And": { "Prefix": "instances/", "Tags": [{ "Key": "class", "Value": "asterisk-messages" }] } },
         "Expiration": { "Days": $msg_days }
       },
       {
-        "ID": ("pbx3-expire-log-cdr-" + ($cdr_days|tostring) + "d"),
+        "ID": ("pbx3-expire-log-inst-cdr-" + ($cdr_days|tostring) + "d"),
         "Status": "Enabled",
-        "Filter": {
-          "And": {
-            "Prefix": "instances/",
-            "Tags": [{ "Key": "class", "Value": "cdr" }]
-          }
-        },
+        "Filter": { "And": { "Prefix": "instances/", "Tags": [{ "Key": "class", "Value": "cdr" }] } },
         "Expiration": { "Days": $cdr_days }
+      },
+      {
+        "ID": ("pbx3-expire-log-sbc-syslog-" + ($syslog_days|tostring) + "d"),
+        "Status": "Enabled",
+        "Filter": { "And": { "Prefix": "sbc/", "Tags": [{ "Key": "class", "Value": "syslog" }] } },
+        "Expiration": { "Days": $syslog_days }
+      },
+      {
+        "ID": ("pbx3-expire-log-sbc-opensips-" + ($syslog_days|tostring) + "d"),
+        "Status": "Enabled",
+        "Filter": { "And": { "Prefix": "sbc/", "Tags": [{ "Key": "class", "Value": "opensips" }] } },
+        "Expiration": { "Days": $syslog_days }
+      },
+      {
+        "ID": ("pbx3-expire-log-sbc-sip-pcap-" + ($syslog_days|tostring) + "d"),
+        "Status": "Enabled",
+        "Filter": { "And": { "Prefix": "sbc/", "Tags": [{ "Key": "class", "Value": "sip-pcap" }] } },
+        "Expiration": { "Days": $syslog_days }
       }
     ]
 ' "$TMP_EXISTING" >"$TMP_OUT"
 
-echo "Applying merged lifecycle to s3://${BUCKET} (syslog/messages ${SYSLOG_DAYS}d, cdr ${CDR_DAYS}d)..."
+echo "Applying merged lifecycle to s3://${BUCKET} (instances + sbc log tags; syslog/messages/opensips/pcap ${SYSLOG_DAYS}d, cdr ${CDR_DAYS}d)..."
 aws s3api put-bucket-lifecycle-configuration \
   --bucket "$BUCKET" \
   --lifecycle-configuration "file://${TMP_OUT}"

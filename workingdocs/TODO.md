@@ -82,7 +82,7 @@
 
 - [ ] **SPA Fleet Instances polish (2026-07-16):** (1) Instance **KSUID truncated** in the panel — show full id (copyable). (2) Next to **Active** status, show probe **round-trip time** (Gatekeeper `/up` already timed; expose in catalog/health API + SPA). Ties badges/`last_seen_at` work.
 
-- [ ] **Log retention / SIP capture (Phases 1–2 on `logs` — 2026-07-17):** Instance rotate + S3 ship (golden smoke OK); **siplog fleet-off** (`siplog-set-mode.sh`, postinst, onboard, preflight). Lifecycle apply + cron still ops. Later: SBC/control, SQLite CDR. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
+- [ ] **Log retention / SIP capture (Phases 1–3 on `logs` — 2026-07-17):** Instance S3 ship + siplog fleet-off (golden OK). **SBC** Phase 3 coded (`install-log-retention.sh`); host install + IAM still ops. Later: control, SPA knobs, SQLite CDR. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
 
 - [ ] **Fleet slug / org bucket naming (cosmetic — fix later):** Lab buckets `08jzwn-pbx3` (+ recordings) use first-node shortuid as stem; product should choose a **neutral fleet slug** at provision (`acme-pbx3`). No runtime impact. Design note: **`OPS_S3_RUNBOOK.md`** § Design note — fleet slug vs lab bucket name. Fold into onboard / S10.7 / create-fleet when that ships.
 

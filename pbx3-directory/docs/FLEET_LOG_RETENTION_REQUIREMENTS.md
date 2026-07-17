@@ -1,6 +1,6 @@
 # Fleet / node — log retention & SIP capture (requirements)
 
-**Status:** **Phase 1+2 on branch `logs` (2026-07-17)** — instance rotate + `pbx3:logs-s3-upload` (lab smoke OK); fleet siplog off by default. Phases 3–7 not started.  
+**Status:** **Phases 1–3 on branch `logs` (2026-07-17)** — instance rotate + S3 ship (lab smoke OK); fleet siplog off; SBC OpenSIPS/syslog/SIP-pcap ship (install on SBC). Phases 4–7 not started.  
 **MVP (when prioritized):** Local hot store (~7 days) + async offload of **rotated** files to S3 cold store by class; SIP-only pcap ring on the **SBC**; instance `sys-ua-siplog` **solo only** (disabled in fleet).  
 **Related:** **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity (instance detection; Gatekeeper delivery); pbx3api **`LogController`** (local log read); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
 
@@ -218,9 +218,11 @@ Fleet onboarding / package default: `sys-ua-siplog` **down**. Solo install: caro
 
 ### R4 — SBC OpenSIPS text + SIP pcap ring + S3
 
-OpenSIPS text: 7d / 1mo. SIP pcap: dumpcap ring (SIP-only, no RTP), ~7d completed local, ~1mo S3; systemd (or host-native) unit.
+OpenSIPS text: 7d / 1mo. SIP pcap: dumpcap ring (SIP-only, no RTP), ~7d completed local, ~1mo S3; systemd unit **`pbx3sbc-sip-pcap`**.
 
 **Acceptance:** Lab REGISTER/INVITE visible in SBC pcap segment; RTP absent; ring drops oldest under flood.
+
+**Status (2026-07-17):** **Code on `pbx3sbc` `logs`** — `install-log-retention.sh`, `ship-logs-to-s3.sh`, IAM tmpl `pbx3-sbc-s3-writer.policy.json.tmpl`. Lab host install still ops (SBC SSH key differs from golden).
 
 ### R5 — Control host log offload
 
@@ -234,7 +236,7 @@ Same 7d / 1mo for control syslog/nginx/gatekeeper under `control/{id}/logs/…`.
 |-------|------|------------------|
 | **1** | Instance rotate + local retain + S3 upload (syslog, messages, CDR) | **pbx3** / **pbx3api**; logrotate; IAM; `OPS_S3_RUNBOOK` — **code on `logs` (2026-07-17)**; lab smoke OK |
 | **2** | Fleet default: disable `sys-ua-siplog`; document solo vs fleet | **pbx3** installer / fleet onboard — **done on `logs` (2026-07-17)** |
-| **3** | SBC OpenSIPS text rotate + S3; SIP dumpcap unit + upload | **pbx3sbc** (+ admin if config UI) |
+| **3** | SBC OpenSIPS text rotate + S3; SIP dumpcap unit + upload | **pbx3sbc** — **done on `logs` (2026-07-17)**; host install via `scripts/install-log-retention.sh` |
 | **4** | Control host rotate + S3 | **pbx3-directory** / control runbook |
 | **5** | SPA / instance config for retention knobs; optional S3 retrieve | **pbx3spa**, **pbx3api** |
 | **6** (optional track) | Instance SQLite CDR + search API/panel; dual-write with CSV archive | **pbx3** / **pbx3api** / **pbx3spa** |

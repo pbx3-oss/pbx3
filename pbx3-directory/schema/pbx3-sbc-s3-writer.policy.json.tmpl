@@ -1,0 +1,32 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListSbcLogPrefix",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::__BUCKET__",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "sbc/__SBC_ID__/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "WriteSbcLogObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:PutObjectTagging",
+        "s3:GetObject",
+        "s3:GetObjectTagging",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::__BUCKET__/sbc/__SBC_ID__/*"
+      ]
+    }
+  ]
+}

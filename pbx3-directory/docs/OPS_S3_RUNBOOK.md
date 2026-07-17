@@ -1110,7 +1110,7 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 | **Upload** | `php artisan pbx3:logs-s3-upload` — cron example **`pbx3api/scripts/cron.d/pbx3-logs.example`** (prefer **root** for `/var/log` read) |
 | **Keys** | `instances/{ksuid}/logs/{class}/{stamp}/…` + `policy.json` |
 | **IAM** | Existing node writer `instances/{ksuid}/*` is enough (includes `logs/`) |
-| **Lifecycle (ops laptop)** | `./pbx3-directory/tools/apply-logs-lifecycle-rules.sh 08jzwn-pbx3` — **merges** rules for tags `syslog` / `asterisk-messages` (30d) and `cdr` (60d). Prefer this over re-running `apply-backup-lifecycle-rule.sh` alone (that script **replaces** the whole config) |
+| **Lifecycle (ops laptop)** | `./pbx3-directory/tools/apply-logs-lifecycle-rules.sh 08jzwn-pbx3` — **merges** instance + **sbc/** tag rules. Prefer this over re-running `apply-backup-lifecycle-rule.sh` alone (that script **replaces** the whole config) |
 
 **Solo:** omit `PBX3_ORG_BUCKET` or set `PBX3_LOG_UPLOAD_ENABLED=false` — local rotate still applies when the logrotate file is installed.
 
@@ -1118,10 +1118,25 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 
 ---
 
+## 16. SBC logs + SIP pcap → org bucket (Phase 3)
+
+**Spec:** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** R4 · **`pbx3sbc/docs/FLEET_LOG_RETENTION.md`**.
+
+| Piece | Detail |
+|-------|--------|
+| **Install on SBC** | `sudo ./scripts/install-log-retention.sh` from **pbx3sbc** checkout |
+| **Keys** | `sbc/{PBX3_SBC_ID}/logs/{opensips\|syslog\|sip-pcap}/{stamp}/…` |
+| **IAM** | **`schema/pbx3-sbc-s3-writer.policy.json.tmpl`** (`__BUCKET__`, `__SBC_ID__`) |
+| **Capture** | systemd **`pbx3sbc-sip-pcap`** — dumpcap SIP ports only (no RTP) |
+| **Ship** | `/usr/local/bin/pbx3sbc-ship-logs-to-s3` daily via `/etc/cron.d/pbx3sbc-logs` |
+
+---
+
 ## Changelog
 
 | Date | Note |
 |------|------|
+| 2026-07-17 | **§16 SBC logs** Phase 3; lifecycle script also covers `sbc/` tags |
 | 2026-07-17 | **§15 Instance logs** — Phase 1 ship; `apply-logs-lifecycle-rules.sh`; fleet-slug design note |
 | 2026-07-14 | **§13.6 Recordings lifecycle** — `apply-recordings-lifecycle-rule.sh`; `policy.json` / `class=recording` |
 | 2026-07-14 | **§13 Recordings bucket (S7)** — dedicated `-recordings` bucket; script `create-recordings-bucket.sh`; gatekeeper IAM template; non-attested wording |
