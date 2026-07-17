@@ -132,6 +132,8 @@ final class NotifyDispatcher
      *   instance_label?:string,
      *   fqdn?:string,
      *   extension?:string,
+     *   endpoint_uid?:string,
+     *   endpoint_name?:string,
      *   source_ip?:string,
      *   count?:int,
      *   window_seconds?:int,
@@ -151,10 +153,20 @@ final class NotifyDispatcher
         $id = (string) ($event['instance_id'] ?? '');
         $fqdn = (string) ($event['fqdn'] ?? '');
         $ext = (string) ($event['extension'] ?? '(unknown)');
+        $uid = trim((string) ($event['endpoint_uid'] ?? ''));
+        $name = trim((string) ($event['endpoint_name'] ?? ''));
         $ip = (string) ($event['source_ip'] ?? '(unknown)');
         $count = (int) ($event['count'] ?? 0);
         $window = (int) ($event['window_seconds'] ?? 600);
         $sample = trim((string) ($event['sample'] ?? ''));
+
+        $extDisplay = $ext;
+        if ($uid !== '' && strcasecmp($uid, $ext) !== 0) {
+            $extDisplay = "{$ext} ({$uid})";
+        }
+        if ($name !== '') {
+            $extDisplay .= " — {$name}";
+        }
 
         $subject = "[PBX3 fleet] REGISTER auth loop: ext {$ext} on {$label}";
         $body = "Repeated failed REGISTER from a Fail2ban-whitelisted address (misconfigured phone likely).\n"
@@ -162,7 +174,7 @@ final class NotifyDispatcher
             ."Label: {$label}\n"
             ."Id: {$id}\n"
             ."FQDN: {$fqdn}\n"
-            ."Extension: {$ext}\n"
+            ."Extension: {$extDisplay}\n"
             ."Source IP: {$ip}\n"
             ."Failures: {$count} in {$window}s\n";
         if ($sample !== '') {

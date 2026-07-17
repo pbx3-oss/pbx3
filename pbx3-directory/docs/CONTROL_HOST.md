@@ -63,7 +63,7 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 
 **Lab check:** enable notify for ops mailbox; stop node API or block `/up` from control → within ~2 min one down mail (or log); restore → cleared.
 
-**Misconfig REGISTER loops (node):** On each fleet node set `PBX3_OPS_REGISTER_LOOP_ENABLED=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Ensure site/SBC CIDRs are on Fail2ban `ignoreip`. Scheduler runs `pbx3:ops-register-loops` every minute → Gatekeeper `POST /api/v1/ops-events`.
+**Misconfig REGISTER loops (node):** On each fleet node set `PBX3_OPS_REGISTER_LOOP_ENABLED=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Put **SBC signaling IPs** in node `ignoreip` (peer allowlist for the scanner — instance Asterisk Fail2ban jail is **disabled**). Scheduler runs `pbx3:ops-register-loops` every minute → Gatekeeper `POST /api/v1/ops-events`. SIP ban/whitelist for real client IPs is on the **SBC** only.
 
 ## Verify
 

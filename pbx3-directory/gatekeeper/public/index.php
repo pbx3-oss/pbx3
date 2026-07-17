@@ -306,6 +306,7 @@ try {
         }
         $instanceId = trim((string) ($body['instance_id'] ?? ''));
         $extension = trim((string) ($body['extension'] ?? ''));
+        $endpointUid = is_string($body['endpoint_uid'] ?? null) ? trim($body['endpoint_uid']) : '';
         $sourceIp = trim((string) ($body['source_ip'] ?? ''));
         if ($instanceId === '' || $sourceIp === '') {
             throw new \InvalidArgumentException('instance_id and source_ip required', 422);
@@ -314,7 +315,8 @@ try {
         if ($count < 1) {
             throw new \InvalidArgumentException('count must be >= 1', 422);
         }
-        $key = 'misconfig_register:'.$instanceId.':'.$extension.':'.$sourceIp;
+        $throttleId = $endpointUid !== '' ? $endpointUid : ($extension !== '' ? $extension : 'unknown');
+        $key = 'misconfig_register:'.$instanceId.':'.$throttleId.':'.$sourceIp;
         $cooldown = (int) (getenv('GATEKEEPER_OPS_EVENT_COOLDOWN') ?: OpsEventThrottle::DEFAULT_COOLDOWN_SECONDS);
         if (! OpsEventThrottle::allow($key, $cooldown > 0 ? $cooldown : OpsEventThrottle::DEFAULT_COOLDOWN_SECONDS)) {
             JsonResponse::send(200, ['accepted' => true, 'notified' => false, 'reason' => 'throttled']);
@@ -324,6 +326,8 @@ try {
             'instance_label' => is_string($body['instance_label'] ?? null) ? $body['instance_label'] : '',
             'fqdn' => is_string($body['fqdn'] ?? null) ? $body['fqdn'] : '',
             'extension' => $extension !== '' ? $extension : '(unknown)',
+            'endpoint_uid' => $endpointUid,
+            'endpoint_name' => is_string($body['endpoint_name'] ?? null) ? trim($body['endpoint_name']) : '',
             'source_ip' => $sourceIp,
             'count' => $count,
             'window_seconds' => (int) ($body['window_seconds'] ?? 600),

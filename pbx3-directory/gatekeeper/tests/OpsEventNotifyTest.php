@@ -55,7 +55,9 @@ final class OpsEventNotifyTest extends TestCase
             'instance_id' => 'abc',
             'instance_label' => 'bzy54n',
             'fqdn' => 'bzy54n.pbx3.com',
-            'extension' => '1102',
+            'extension' => '1003',
+            'endpoint_uid' => '8pmfxd',
+            'endpoint_name' => 'JohnKnox',
             'source_ip' => '203.0.113.50',
             'count' => 5,
             'window_seconds' => 600,
@@ -63,7 +65,8 @@ final class OpsEventNotifyTest extends TestCase
         ]);
 
         $this->assertCount(1, $sent);
-        $this->assertStringContainsString('1102', $sent[0]['subject']);
+        $this->assertStringContainsString('1003', $sent[0]['subject']);
+        $this->assertStringContainsString('1003 (8pmfxd) — JohnKnox', $sent[0]['body']);
         $this->assertStringContainsString('203.0.113.50', $sent[0]['body']);
         $this->assertStringContainsString('Do not ban', $sent[0]['body']);
     }

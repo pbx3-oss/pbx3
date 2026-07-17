@@ -1,8 +1,8 @@
 # Fleet ops — failure notification (requirements)
 
-**Status:** **v1 + lifecycle + misconfig REGISTER** (2026-07-16) — catalog `/up` probe + SMTP; maintenance/decommission mail; node REGISTER-loop → Gatekeeper. Move-job / egress / Fail2ban ban→email / velocity = later.  
+**Status:** **v1 + lifecycle + misconfig REGISTER** (2026-07-16) — catalog `/up` probe + SMTP; maintenance/decommission mail; node REGISTER-loop → Gatekeeper (**notify only**; instance Asterisk F2B jail **off** — SIP ban on SBC). Move-job / egress / Fail2ban ban→email / velocity = later.  
 **MVP:** Notify interested operators of **failure conditions**.  
-**Later (same notify plane, different detection):** **call-pattern velocity / toll-fraud style checks** — see § Velocity checking; **whitelist-gated misconfig REGISTER** — see § Misconfigured phones; Fail2ban ban→email.  
+**Later (same notify plane, different detection):** **call-pattern velocity / toll-fraud style checks** — see § Velocity checking; **misconfig REGISTER** — see § Misconfigured phones; SBC Fail2ban ban→email.  
 **Related:** **`IMPLEMENTATION_PLAN.md`** § Fleet & monitoring (`last_seen_at` probe); **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (trunk health → alerts); **`DESIGN_RULES.md`** Rule 5 (directory outage ≠ instance SLA); Fleet users / abilities (Gatekeeper); instance **CoS** / dial policy (prevention layer, not a substitute for velocity alerts).
 
 ---
@@ -165,18 +165,18 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 
 ---
 
-## Misconfigured phones — REGISTER loops on whitelisted sites
+## Misconfigured phones — REGISTER loops (notify on node; ban on SBC)
 
-**Problem:** Handsets often fire repeated failed REGISTER (right extension, wrong password). **Fail2ban must not be the primary response** for known sites — one bad phone behind shared NAT can take down the whole office.
+**Problem:** Handsets often fire repeated failed REGISTER (right extension, wrong password). On known office NATs, **Fail2ban must not be the primary response** — one bad phone behind shared NAT can take down the whole site.
 
 | Stance | Detail |
 |--------|--------|
-| **Recognised sites** | Always on Fail2ban **whitelist** (`ignoreip` on the node; SBC Fail2Ban UI for edge) — operator checklist, no site CRM |
-| **Notify** | Whitelisted source in a REGISTER failure loop → **email only** (fix the handset). **Do not ban** |
-| **Ban** | Remains for **non-whitelisted** scanners only |
-| **Detection (shipped)** | `pbx3api` `pbx3:ops-register-loops` (every minute) scans `/var/log/asterisk/messages`; gate on `ignoreip` in `pbx3-jails.conf`; threshold **5 / 600s**; `POST /api/v1/ops-events` `{type:misconfig_register}` → Gatekeeper SMTP. Enable: `PBX3_OPS_REGISTER_LOOP_ENABLED=true` + `PBX3_GATEKEEPER_URL`/`TOKEN` |
-| **Mail** | Extension, source IP, instance, count/window — fix credentials, not “unban” |
-| **Fleet note** | Phones via SBC often appear as the **SBC IP** on Asterisk — keep SBC in node `ignoreip` so loops notify instead of banning the trunk |
+| **Where SIP is seen** | Phones always transit the **SBC**; instance `:5060` is **SBC-only**. Asterisk source IP is the SBC, never the handset/site. |
+| **Instance Fail2ban (Asterisk jail)** | **Off** — banning would only hit SBC peers and break trunks. Keep **sshd** / API jails. |
+| **SBC Fail2ban** | Ban/whitelist on **real** client IPs. **Known office NAT** → manual whitelist (no site CRM). **Cellular / road warrior** → do **not** whitelist (dynamic); temporary ban on abuse is OK. Scanners → ban. |
+| **Notify (shipped)** | Node `pbx3api` `pbx3:ops-register-loops` scans Asterisk messages; peer gate = SBC IPs in node `ignoreip`; threshold **5 / 600s**; resolves shortuid → dialable ext + name; `POST /api/v1/ops-events` `{type:misconfig_register}` → Gatekeeper SMTP. Enable: `PBX3_OPS_REGISTER_LOOP_ENABLED=true` + Gatekeeper URL/token. |
+| **Mail** | Dialable extension (+ shortuid + name), source IP (SBC), instance, count/window — fix credentials. |
+| **Later** | Ban→email from SBC Fail2ban for unknown IPs (same notify plane). |
 
 ---
 
@@ -209,7 +209,7 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 3. **Email adapter (SMTP)** + transition-based notify for instance down/up. **Done (v1).**  
 4. **Move-job terminal failure** notify.  
 5. **Egress Unavail** (after egress R1–R2).  
-6. **Misconfigured phones** (whitelist-gated REGISTER loops) — **Done** (node scanner + Gatekeeper ops-events).  
+6. **Misconfigured phones** (REGISTER-loop notify on node; SIP ban on SBC) — **Done** (node scanner + Gatekeeper ops-events; instance Asterisk jail off).  
 7. Later (notify plane): webhooks / Slack; Fail2ban ban→email for unknown IPs.  
 8. **Separate track:** optional Prometheus + Grafana for metrics dashboards.  
 9. **Velocity checking track:** on-node pattern rules → notify delivery.  
@@ -246,4 +246,4 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 
 ---
 
-*Last updated: 2026-07-16 — v1 probe+SMTP shipped; misconfig REGISTER (whitelist-gated notify, no ban) documented.*
+*Last updated: 2026-07-16 — v1 probe+SMTP; misconfig REGISTER notify on node; instance Asterisk F2B jail disabled (SIP defense on SBC).*
