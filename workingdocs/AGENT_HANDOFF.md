@@ -46,6 +46,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **Fleet Egress availability / SBC failover** (future) | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — OPTIONS qualify, EgressFailover, health UI |
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig REGISTER shipped; move-job / Fail2ban ban→email / velocity later |
+| **Log retention / SIP capture** (future) | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — 7d local / S3 by class; SBC SIP pcap ring; instance siplog solo-only; CDR CSV+SQLite; velocity on instance |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |

@@ -6,6 +6,21 @@
 
 ---
 
+## Design note — fleet slug vs lab bucket name (fix later)
+
+**Irrelevant to runtime** (keys, IAM prefixes, and `PBX3_ORG_BUCKET` work either way). **Cosmetic / ops clarity** for real deployments.
+
+| Today (lab) | Intent |
+|-------------|--------|
+| Org bucket **`08jzwn-pbx3`** (+ **`08jzwn-pbx3-recordings`**) | Stem **`08jzwn`** was taken from the **first instance shortuid** (golden), not because that node owns the fleet |
+| Config | Ops sets **`PBX3_ORG_BUCKET`** (and optional **`PBX3_ORG_ID`** / catalog `org_id`) by hand |
+
+**Product gap:** There is no first-class **fleet identity** (display name + **slug**) chosen at fleet provision time that drives bucket naming. Greenfield should use a **neutral fleet slug** (e.g. `acme` → `acme-pbx3` / `acme-pbx3-recordings`), not the first node’s shortuid.
+
+**When to fix:** Fold into onboard / S10.7 / control-plane “create fleet” (or a short ops checklist): choose slug → create buckets → wire env. Do **not** rename the lab `08jzwn-*` buckets without a deliberate migration. See also **`RECORDINGS_STORAGE_DESIGN.md`** §6.3 naming paragraph.
+
+---
+
 ## Quick recipe (console — start here)
 
 Repeatable checklist for a **fleet catalog** bucket. Example names: bucket **`08jzwn-pbx3`**, region **`us-east-1`**.
@@ -13,7 +28,7 @@ Repeatable checklist for a **fleet catalog** bucket. Example names: bucket **`08
 ### A. Create bucket
 
 1. **S3** → **Create bucket**.
-2. **Bucket name:** `{shortid}-pbx3` (e.g. `08jzwn-pbx3`). **No dots** in the name (avoid `08jzwn.pbx3.com`).
+2. **Bucket name:** `{fleet-slug}-pbx3` (e.g. lab **`08jzwn-pbx3`**, greenfield prefer **`acme-pbx3`**). **No dots** in the name. Stem is the **fleet slug**, not an instance shortuid — see § Design note above.
 3. **Region:** note it (e.g. `us-east-1`) — URLs depend on it.
 4. Leave defaults (encryption SSE-S3 is fine). **Create bucket**.
 
@@ -605,6 +620,15 @@ export INSTANCE_KSUID=3DmAsxePTWQZgynBYXE8obIRqEE
 aws s3 cp instance-meta.json "s3://${BUCKET}/instances/${INSTANCE_KSUID}/meta.json"
 ```
 
+**Logs (Phase 1):** after `pbx3:logs-s3-upload` on a node with `PBX3_ORG_BUCKET` set:
+
+```
+instances/{ksuid}/logs/{class}/{stamp}/{filename}
+instances/{ksuid}/logs/policy.json
+```
+
+`class` ∈ `syslog` | `asterisk-messages` | `cdr`. Objects tagged `class={same}` for lifecycle. Node IAM already covers `instances/{ksuid}/*` (same as backups). See **§15**.
+
 ---
 
 ## 5. Public read — catalog prefix only
@@ -1071,7 +1095,26 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 | **`IMPLEMENTATION_PLAN.md`** | Phases 2–5 / S7 |
 | **`RECORDINGS_STORAGE_DESIGN.md`** | S7 storage, PCI-shaped baseline |
 | **`CONTROL_HOST.md`** | Gatekeeper host + `PBX3_RECORDINGS_BUCKET` |
+| **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** | Log / SIP / CDR retention (Phase 1 instance ship) |
 | **`../schema/instance-index.json`** | Example catalog (same name in S3) |
+
+---
+
+## 15. Instance logs → org bucket (Phase 1)
+
+**Spec:** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**. Local hot ~7d; S3 cold by class (syslog/messages 30d, CDR 60d).
+
+| Piece | Detail |
+|-------|--------|
+| **Local rotate** | Package file **`/etc/logrotate.d/pbx3-asterisk-logs`** (messages + `Master.csv`, rotate 7, copytruncate). Syslog: system **rsyslog** rotation |
+| **Upload** | `php artisan pbx3:logs-s3-upload` — cron example **`pbx3api/scripts/cron.d/pbx3-logs.example`** (prefer **root** for `/var/log` read) |
+| **Keys** | `instances/{ksuid}/logs/{class}/{stamp}/…` + `policy.json` |
+| **IAM** | Existing node writer `instances/{ksuid}/*` is enough (includes `logs/`) |
+| **Lifecycle (ops laptop)** | `./pbx3-directory/tools/apply-logs-lifecycle-rules.sh 08jzwn-pbx3` — **merges** rules for tags `syslog` / `asterisk-messages` (30d) and `cdr` (60d). Prefer this over re-running `apply-backup-lifecycle-rule.sh` alone (that script **replaces** the whole config) |
+
+**Solo:** omit `PBX3_ORG_BUCKET` or set `PBX3_LOG_UPLOAD_ENABLED=false` — local rotate still applies when the logrotate file is installed.
+
+**Env (pbx3api):** `PBX3_LOG_UPLOAD_ENABLED`, `PBX3_LOG_LOCAL_DAYS_*`, `PBX3_LOG_S3_MAXAGE_*` — see `.env.example`.
 
 ---
 
@@ -1079,6 +1122,7 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 
 | Date | Note |
 |------|------|
+| 2026-07-17 | **§15 Instance logs** — Phase 1 ship; `apply-logs-lifecycle-rules.sh`; fleet-slug design note |
 | 2026-07-14 | **§13.6 Recordings lifecycle** — `apply-recordings-lifecycle-rule.sh`; `policy.json` / `class=recording` |
 | 2026-07-14 | **§13 Recordings bucket (S7)** — dedicated `-recordings` bucket; script `create-recordings-bucket.sh`; gatekeeper IAM template; non-attested wording |
 | 2026-05 | Initial ops runbook (bucket, catalog policy, CORS, IAM, Laravel note) |

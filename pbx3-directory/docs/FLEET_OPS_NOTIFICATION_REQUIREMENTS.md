@@ -26,7 +26,7 @@ We need a durable way for **interested users** to learn about failure conditions
 | **Mail transport** | **SMTP** for v1 (`Mailer` + `SmtpMailer`). No SES as HoR — portable; other providers = new `Mailer` class later |
 | **Call path** | Notify plane is **not** in the call path (**Rule 5**). Calls keep working if Gatekeeper or mail is down; operators simply go dark on alerts |
 | **Prometheus / Grafana** | **Out of this leg.** Optional later for fleet/instance **pretty metrics** (dashboards, quality time series) — not the v1 notify HoR. DIY farms often bolt these on; we may document exporters later without making Alertmanager the product subscription model. |
-| **Velocity / call-pattern checks** | **Out of v1.** Important product need (toll fraud / odd dial behaviour) — reuse notify **delivery** later; detection is CDR/dial analysis, not `/up` probes. Carriers often offer similar services but can be **slow to inform**; in-fleet detection aims for faster operator signal. |
+| **Velocity / call-pattern checks** | **Out of v1.** Detection on the **instance** (SQLite/CDR + CoS); Gatekeeper = notify delivery; SBC = SIP abuse only. See § Velocity checking. |
 
 ```mermaid
 flowchart LR
@@ -188,17 +188,27 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 
 **Reuse from this leg:** Subscriptions + email (and later webhooks) as the **delivery** plane. Prefer emitting a structured “velocity alert” event into the same notify path rather than a second mail stack.
 
+**Placement (settled 2026-07-17):**
+
+| Plane | Role for velocity / abuse |
+|-------|---------------------------|
+| **Instance** | **Detection** (+ optional later local warn/block) — next to Asterisk CDR / **SQLite searchable CDR** and CoS; knows tenant, extension, dialplan dest, billsec |
+| **SBC** | **SIP abuse** (Fail2ban, pike, door-knock) — volumetric REGISTER/INVITE; **not** dial-pattern / toll-fraud velocity |
+| **Gatekeeper** | **Notify delivery** (+ optional fleet rollup of events nodes already detected) — **not** the place that scores every call (**Rule 1**) |
+
+Searchable instance CDR without a big DB: **SQLite on-node** + CSV→S3 archive — **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR. SBC MySQL `acc` stays edge CDR only.
+
 **Sketch (when prioritized):**
 
 | Piece | Direction |
 |-------|-----------|
 | **Signals (examples)** | N outbound attempts to same high-cost prefix in T minutes; first-seen country for a tenant in window; concurrent outbound spike vs baseline |
-| **Where to analyze** | Prefer **on-node** near CDR/Asterisk (low latency, tenant-local); optionally summarize to Gatekeeper for fleet-wide ops mail |
+| **Where to analyze** | **On the instance** near CDR/Asterisk (settled); emit event to Gatekeeper for fleet ops mail |
 | **Action v1 of this track** | **Notify only** (email) — do not auto-block calls until rules and false-positive story are proven |
 | **Carrier services** | Keep as backstop; document that in-fleet velocity is complementary, not a substitute for ITSP fraud tooling |
 | **Audience** | Fleet ops ± tenant admins (product decision); may differ from instance-down subscribers |
 
-**Open questions (velocity track):** rule authorship (fleet template vs per-tenant); block vs warn; near-real-time vs batch CDR; interaction with CoS; privacy of dialled digits in alert bodies.
+**Still open (velocity track):** rule authorship (fleet template vs per-tenant); block vs warn after notify-only proven; near-real-time vs batch CDR; interaction with CoS; privacy of dialled digits in alert bodies.
 
 ---
 
@@ -212,7 +222,7 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 6. **Misconfigured phones** (REGISTER-loop notify on node; SIP ban on SBC) — **Done** (node scanner + Gatekeeper ops-events; instance Asterisk jail off).  
 7. Later (notify plane): webhooks / Slack; Fail2ban ban→email for unknown IPs.  
 8. **Separate track:** optional Prometheus + Grafana for metrics dashboards.  
-9. **Velocity checking track:** on-node pattern rules → notify delivery.  
+9. **Velocity checking track:** **instance** pattern rules → Gatekeeper notify delivery (SBC = SIP abuse only).  
 10. **Fail2ban Peer auto-whitelist** (next carrier onboard).
 
 ---

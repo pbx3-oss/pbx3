@@ -1,0 +1,25 @@
+# PBX3 — Asterisk messages + CDR CSV local rotation (Phase 1 log retention)
+# See pbx3-directory/docs/FLEET_LOG_RETENTION_REQUIREMENTS.md
+# S3 upload: php artisan pbx3:logs-s3-upload (after rotate; does not replace this)
+
+/var/log/asterisk/messages {
+	daily
+	rotate 7
+	missingok
+	notifempty
+	compress
+	delaycompress
+	copytruncate
+	create 640 asterisk asterisk
+}
+
+/var/log/asterisk/cdr-csv/Master.csv {
+	daily
+	rotate 7
+	missingok
+	notifempty
+	compress
+	delaycompress
+	copytruncate
+	create 640 asterisk asterisk
+}
