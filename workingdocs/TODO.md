@@ -1,21 +1,20 @@
 # PBX3 ToDo list
 
-**Branch:** **`logs`** — log retention Phases 1–4; S10.6–S10.8 still on **`main`**. Ops notify + REGISTER-loop lab-proven; instance Asterisk F2B off; **pbx3-docs** live.  
-**Last updated:** 2026-07-17 (session end — log retention Phases 1–4)
+**Branch:** **`main`** — log retention Phases 1–6 shipped; Phase 7 proposal only (later review). S10.6–S10.8 on **`main`**. Ops notify + REGISTER-loop lab-proven; instance Asterisk F2B off; **pbx3-docs** live.  
+**Last updated:** 2026-07-17 (session end — log retention Phases 5–6 + Phase 7 proposal)
 
 ### Suggested “what next?” order
 
-1. **Log retention ops finish** — control ship retry after IAM cache; SBC `install-log-retention.sh` + IAM; `apply-logs-lifecycle-rules.sh`; merge **`logs`→`main`** when ready. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.  
-2. **SPA fleet Instances polish** — full KSUID; RTT next to Active; badges from `last_seen_at`.  
-3. **Log retention Phase 5+** (optional) — SPA retention knobs; SQLite searchable CDR.  
-4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-5. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
-6. **Failover + shadowing** (parked).  
-7. **S10.7 / S8.9** (parked) — cloud adapter.  
-8. **pbx3-docs polish (ongoing)**.  
-9. **pbx3cagi** struct refactor (deferred).  
-10. **Fleet auth cookie/SSO (blocked)**.  
-11. **S7+** attested PCI — only on customer ask.  
+1. **SPA fleet Instances polish** — full KSUID; RTT next to Active; badges from `last_seen_at`.  
+2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+3. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
+4. **Log retention Phase 7** (later review; not a blocker) — SBC `acc` purge/cold export after CDR HoR decision. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.  
+5. **Failover + shadowing** (parked).  
+6. **S10.7 / S8.9** (parked) — cloud adapter.  
+7. **pbx3-docs polish (ongoing)**.  
+8. **pbx3cagi** struct refactor (deferred).  
+9. **Fleet auth cookie/SSO (blocked)**.  
+10. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -83,7 +82,9 @@
 
 - [ ] **SPA Fleet Instances polish (2026-07-16):** (1) Instance **KSUID truncated** in the panel — show full id (copyable). (2) Next to **Active** status, show probe **round-trip time** (Gatekeeper `/up` already timed; expose in catalog/health API + SPA). Ties badges/`last_seen_at` work.
 
-- [ ] **Log retention (Phases 1–4 on `logs` — 2026-07-17):** Instance rotate + `pbx3:logs-s3-upload` **golden smoke OK**; siplog fleet-off + preflight; SBC ship scripts; control PHP shipper + IAM policy **v2** (`control/*`). **Ops still:** control ship retry (role cred cache); SBC host install (SSH key ≠ golden); lifecycle script apply; merge `logs`→`main`. Phase 5+ SPA/SQLite later. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
+- [x] **Log retention Phases 1–6 (2026-07-17):** Rotate/ship/lifecycle/siplog/SBC/control (1–4) on **`main`**; Phase 5 retention knobs + S3 archive list/download; Phase 6 Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr`. Lab: golden + bzy54n @ **pbx3api** **`6c28486`**. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
+
+- [ ] **Log retention Phase 7 (for later review; not a blocker):** SBC MySQL `acc` purge / cold export — proposal only in **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**. Decide SBC vs Asterisk CDR product HoR before implement.
 
 - [ ] **Fleet slug / org bucket naming (cosmetic — fix later):** Lab buckets `08jzwn-pbx3` (+ recordings) use first-node shortuid as stem; product should choose a **neutral fleet slug** at provision (`acme-pbx3`). No runtime impact. Design note: **`OPS_S3_RUNBOOK.md`** § Design note — fleet slug vs lab bucket name. Fold into onboard / S10.7 / create-fleet when that ships.
 

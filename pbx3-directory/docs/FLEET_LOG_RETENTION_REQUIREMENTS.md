@@ -1,6 +1,6 @@
 # Fleet / node — log retention & SIP capture (requirements)
 
-**Status:** **Phases 1–6 complete (2026-07-17)** — ship/lifecycle/siplog/SBC/control (1–4); SPA retention knobs + S3 archive list/download (5); Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr` (6). Phase 7 (SBC `acc` purge) not started.  
+**Status:** **Phases 1–6 complete (2026-07-17)** — ship/lifecycle/siplog/SBC/control (1–4); SPA retention knobs + S3 archive list/download (5); Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr` (6). Phase 7 (SBC `acc` retention / cold export) is **for later review** and is not a blocker.  
 **MVP (when prioritized):** Local hot store (~7 days) + async offload of **rotated** files to S3 cold store by class; SIP-only pcap ring on the **SBC**; instance `sys-ua-siplog` **solo only** (disabled in fleet).  
 **Related:** **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity (instance detection; Gatekeeper delivery); pbx3api **`LogController`** (local log read) + **`CdrController`** (SQLite search); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
 
@@ -111,6 +111,42 @@ Do **not** treat SBC `acc` as a substitute for instance Asterisk CDR (or the rev
 ### SBC `acc` retention
 
 Text-log / pcap S3 offload does **not** replace `acc`. When prioritized: purge or archive old `acc` rows (local retention + optional export) under the same privacy rules as instance CDR. Product log-retention v1 can ship instance CSV→S3 before `acc` archive is designed.
+
+## Phase 7 — SBC `acc` retention / cold export (**for later review; not a blocker**)
+
+**Status:** Proposal only. Do not implement or enable destructive retention until the product CDR source of record is reviewed. We have not yet decided whether operator history will primarily use SBC OpenSIPS `acc`, instance Asterisk CDR, or both for different purposes.
+
+### Why this may be needed
+
+OpenSIPS writes edge CDR rows to MySQL `acc`, and the SBC Admin CDR panel reads them. Those rows currently persist indefinitely. This is distinct from instance Asterisk CDR: SBC `acc` describes SIP edge legs, while Asterisk records dialplan/billing truth. Phase 7 would bound SBC database and PII growth without treating either plane as a replacement for the other.
+
+### Suggested scope
+
+1. Define SBC CDR retention independently from instance CDR retention; do not reuse `local_days.cdr` until the product HoR decision is settled.
+2. Export eligible `acc` rows to a versioned, compressed CSV before purge. Include the source SBC ID, export window, schema version, row count, and an integrity checksum in a sidecar manifest.
+3. Upload exports to the org bucket under `sbc/{sbc-id}/logs/cdr/{stamp}/…`, using the existing SBC IAM boundary and asynchronous log-ship pattern.
+4. Verify the object and manifest are durable before deleting any source rows. If S3 is unavailable or verification fails, retain rows and retry later; never put export/purge in the SIP call path.
+5. Purge in small, indexed batches during a low-traffic window, using a stable cutoff and primary-key range so OpenSIPS writes and the Admin CDR panel are not held behind a long transaction.
+6. Provide an idempotent command with `--dry-run`, explicit cutoff/retention reporting, batch limits, structured logs, and non-zero exit on export or verification failure. Schedule it daily only after lab soak.
+7. Keep the live SBC Admin CDR panel on locally retained `acc` rows. Optional S3 list/download may be added later; in-browser cold-archive search is not required.
+8. Add unit/integration tests for export boundaries, manifest/checksum, retry idempotency, “no delete before verified upload,” and batched purge.
+
+### Decisions required before implementation
+
+- Whether SBC `acc`, Asterisk CDR, or both are exposed as product call history, and how duplicate edge/dialplan legs are explained.
+- Local SBC retention period and S3 retention period; no defaults are settled yet.
+- Whether cold export is mandatory before purge or whether a policy may explicitly choose purge-only.
+- Final export schema and whether URI fields require redaction, hashing, or tighter access controls.
+- Whether the existing SBC log shipper uploads completed exports or a dedicated archival command owns export + upload + verification.
+- Whether the SBC Admin panel needs cold-archive list/download.
+
+### Proposed acceptance gate
+
+- A lab export has a deterministic row count and checksum, is downloadable from the SBC prefix, and can be inspected independently.
+- Re-running the same window does not duplicate or lose rows.
+- No rows are deleted when upload or verification fails.
+- Batched purge runs while OpenSIPS continues writing CDRs and the Admin panel remains responsive.
+- Retention and privacy choices are explicitly approved before production enablement.
 
 ### Velocity (pointer)
 
@@ -242,6 +278,6 @@ Same 7d / 1mo for control syslog/nginx under `control/{id}/logs/…`.
 | **4** | Control host rotate + S3 | **pbx3-directory** ops: `gatekeeper/deploy/install-control-log-retention.sh` — **done on `logs`** |
 | **5** | SPA / instance config for retention knobs; S3 archive list+download | **pbx3spa**, **pbx3api** — **done on `logs56`**: `GET/PUT logs/retention`, override file, `logs/archive`; Sysglobals Logging + Logs S3 section. Lifecycle script still ops-owned (knobs update `policy.json` intent). |
 | **6** (optional track) | Instance SQLite CDR + search API/panel; dual-write with CSV archive | **pbx3** `cdr_sqlite3_custom.conf` (Asterisk 20: legacy `columns`/`values`) + module load; **pbx3api** `GET cdr` + `pbx3:cdr-prune`; **pbx3spa** `/cdr` — **done on `logs56`**. Lab golden: module Running, `master.db` rows, retention override + archive list/download smoke OK. |
-| **7** (optional) | SBC `acc` purge / cold export | **pbx3sbc** / **pbx3sbc-admin** |
+| **7** (optional; for later review) | SBC `acc` purge / cold export; product CDR HoR decision first | **pbx3sbc** / **pbx3sbc-admin** — proposal only; not a blocker |
 
-Phases **1–6** implemented on branch **`logs56`**. Phase 7 waits for an explicit ask.
+Phases **1–6** are implemented. Phase 7 is documented for later review and is not a blocker.

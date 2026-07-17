@@ -46,7 +46,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **Fleet Egress availability / SBC failover** (future) | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — OPTIONS qualify, EgressFailover, health UI |
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig REGISTER shipped; move-job / Fail2ban ban→email / velocity later |
-| **Log retention / SIP capture** (future) | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — 7d local / S3 by class; SBC SIP pcap ring; instance siplog solo-only; CDR CSV+SQLite; velocity on instance |
+| **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; Phase 7 SBC `acc` proposal later; 7d local / S3 by class; SBC SIP pcap; instance siplog solo-only |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
@@ -55,26 +55,36 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-17 — log retention Phases 1–4)
+## Next agent session notes (2026-07-17 — log retention Phases 5–6)
 
-**Branch:** **`logs`** — **pbx3** **`e0d31d6`**, **pbx3api** **`19f3f9c`**, **pbx3sbc** **`5071fa2`**. SPA unchanged on **`main`**.
+**Branch:** **`main`** — **pbx3** **`28cac1a`** (+ Phase 7 docs commit this session), **pbx3api** **`6c28486`**, **pbx3spa** **`45594bf`**. Feature branch **`logs56`** merged. Prior Phases 1–4 already on **`main`**.
 
 ### Shipped
-- **Requirements:** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — 7d local / S3 by class; CDR CSV+SQLite stance; velocity on instance; fleet slug naming note in **`OPS_S3_RUNBOOK`**.
-- **Phase 1:** instance logrotate + `pbx3:logs-s3-upload` → `instances/{ksuid}/logs/{class}/…` — **golden smoke OK** (CDR/messages/syslog; skip idempotent).
-- **Phase 2:** `siplog-set-mode.sh fleet|solo`; postinst/onboard/preflight — **golden siplog down**.
-- **Phase 3:** **pbx3sbc** dumpcap systemd + ship script + IAM tmpl (`sbc/{id}/logs/…`) — code only (no SBC SSH with golden key).
-- **Phase 4:** control PHP shipper + install script; IAM **`pbx3-control-gatekeeper-s3` v2** includes `control/*` — first ship hit role-cred cache AccessDenied (retry later).
+- **Phase 5:** `GET/PUT logs/retention` (override `/opt/pbx3/var/log-retention.json` + S3 `policy.json`); `GET logs/archive` + download-url; SPA Sysglobals Logging knobs + System Logs S3 archive section.
+- **Phase 6:** Asterisk `cdr_sqlite3_custom` → `/var/log/asterisk/master.db` (CSV still archive/S3); `GET cdr` + `pbx3:cdr-prune`; SPA `/cdr` under ACD.
+- **Lab:** golden + bzy54n pulled **pbx3api** **`6c28486`**; module Running; cron `/etc/cron.d/pbx3-cdr`; nginx `open_basedir` includes `/var/log/asterisk`.
+- **Phase 7:** proposal only in **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** (SBC `acc` purge/cold export) — **for later review; not a blocker**. Product CDR HoR (SBC vs Asterisk) unsettled.
 
 ### Golden / operator follow-up
-- Retry control: `sudo /usr/local/bin/pbx3-control-ship-logs --limit=2` after IAM cred refresh.
-- SBC: install with host SSH key — `pbx3sbc/scripts/install-log-retention.sh` + IAM from **`pbx3-sbc-s3-writer.policy.json.tmpl`**.
-- Ops Mac: `./pbx3-directory/tools/apply-logs-lifecycle-rules.sh 08jzwn-pbx3`.
-- Merge **`logs`→`main`** when ops smoke done.
+- Local SPA: pull **`main`** (`45594bf`) for retention UI + `/cdr`.
+- Optional: exercise SPA Sysglobals Logging save + Logs S3 download + `/cdr` against golden.
+- Do **not** implement Phase 7 without explicit ask + HoR decision.
 
 ### Resume
-1. Finish log-retention ops (control/SBC/lifecycle) **or** merge `logs` **or** SPA Instances polish (KSUID + RTT).
-2. Do **not** start S10.7 / S7+ / IdP / Phase 5 SPA log UI without ask.
+1. **SPA fleet Instances polish** (KSUID + RTT) **or** ops-notify follow-ons **or** egress availability.
+2. Log retention Phases 1–6 complete as defined; Phase 7 later.
+
+---
+
+## Next agent session notes (2026-07-17 — log retention Phases 1–4) — historical
+
+**Branch was `logs`:** merged to **`main`** earlier same day. Superseded by Phases 5–6 block above.
+
+### Shipped (summary)
+- Phases 1–4: instance ship, siplog fleet-off, SBC + control ship, lifecycle — ops smoke done; merged **`logs`→`main`**.
+
+### Resume
+- See block above.
 
 ---
 
