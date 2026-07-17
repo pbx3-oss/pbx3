@@ -1,6 +1,6 @@
 # Fleet / node — log retention & SIP capture (requirements)
 
-**Status:** **Phases 1–4 on branch `logs` (2026-07-17)** — instance + fleet siplog-off + SBC ship + control ship (host installs still ops). Phases 5–7 not started.  
+**Status:** **Phases 1–4 complete (2026-07-17)** — instance + fleet siplog-off + SBC ship + control ship; lab ops smoke OK (golden/control/SBC → `08jzwn-pbx3`; lifecycle applied). Merged to **`main`** locally — push when ready. Phases 5–7 not started.  
 **MVP (when prioritized):** Local hot store (~7 days) + async offload of **rotated** files to S3 cold store by class; SIP-only pcap ring on the **SBC**; instance `sys-ua-siplog` **solo only** (disabled in fleet).  
 **Related:** **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity (instance detection; Gatekeeper delivery); pbx3api **`LogController`** (local log read); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
 
