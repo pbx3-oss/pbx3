@@ -23,6 +23,8 @@ Run it after `apt install pbx3` (required before production use). On **first** r
 | **Full DB reload from SQL** (disaster / schema bake-off) | Run **`/opt/pbx3/scripts/reloader.sh`** deliberately (backs up current DB under `db_database_dumps/`). Not part of routine install. Legacy migration may use **`migrateLegacyDb.sh`**, which also invokes the reloader. |
 | **Backup restore** (`restoredb` on SPA/API) | Replaces **`sqlite.db`** — patch **`globals`** to target node (KSUID, fqdn, shortuid, domain); set **`default`** tenant `fqdn` to node FQDN; DNS for tenant FQDNs; **Certificates → Sync** (not **Renew**); merge help seeds: **`sudo sqlite3 /opt/pbx3/db/sqlite.db < /opt/pbx3/db/db_sql/sqlite_message.sql`** (`INSERT OR IGNORE` — safe on live DB). Do **not** run **`reloader.sh`**. |
 | **First Let's Encrypt cert** (after DNS for **`globals.fqdn`**) | **`sudo /opt/pbx3/scripts/le-instance-bootstrap.sh your@email.com`** (HTTP-01 **webroot**; nginx stays up). Or use SPA Certificates panel. Renewal: **`/etc/cron.d/pbx3`** at **03:17**. Staging test: **`PBX3_LE_STAGING=1`** … |
+| **Log retention (local)** | pbx3 `.deb` ships **`/etc/logrotate.d/pbx3-asterisk-logs`**. Instance SIP pcap (**`sys-ua-siplog`**) stays **down** by default; fleet: leave off; solo: **`siplog-set-mode.sh solo`**. |
+| **Log ship to S3 (fleet)** | **`pbx3api` installer** and fleet **onboard** install **`/etc/cron.d/pbx3-logs`** (no-op without `PBX3_ORG_BUCKET`). Spec: **`pbx3-directory/docs/FLEET_LOG_RETENTION_REQUIREMENTS.md`**. |
 
 **Instance Globals in the SPA:** UID = subdomain (`shortuid`), KSUID = `id`. Both are set on **first provision** by **`installer.sh`**; upgrades fix legacy DBs via **postinst** or **`normalize-globals-identity.sh`**.
 

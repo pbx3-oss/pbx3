@@ -44,12 +44,14 @@
   ```
 
   No empty `AWS_ACCESS_KEY_ID=` / `AWS_SECRET_ACCESS_KEY=` — use **instance role**.
-  Onboard sets fleet env and runs **`siplog-set-mode.sh fleet`** (instance SIP pcap off — phones via SBC).
+  Onboard sets fleet env, runs **`siplog-set-mode.sh fleet`**, and installs **`/etc/cron.d/pbx3-logs`** if missing (no-op until bucket set).
 
 - [ ] **A.10** `cd /opt/pbx3api && sudo composer install --no-dev && sudo php artisan config:clear`
-- [ ] **A.11** `sudo php artisan pbx3:fleet-preflight` → all green (includes **sys-ua-siplog** down when fleet)
-- [ ] **A.12** **Mac:** `register-instance.sh` — catalog `id` = node **`globals.id`**
-- [ ] **A.13** Create backup → panel shows **local+S3** (or run `pbx3:upload-backup`)
+- [ ] **A.11** Confirm **`/etc/logrotate.d/pbx3-asterisk-logs`** present (from pbx3 `.deb`); fleet: **`/etc/cron.d/pbx3-logs`** present
+- [ ] **A.12** `sudo php artisan pbx3:fleet-preflight` → all green (includes **sys-ua-siplog** down when fleet)
+- [ ] **A.13** **Mac:** `register-instance.sh` — catalog `id` = node **`globals.id`**
+- [ ] **A.14** Create backup → panel shows **local+S3** (or run `pbx3:upload-backup`)
+- [ ] **A.15** (optional) smoke log ship: `sudo php artisan pbx3:logs-s3-upload --limit=2`
 
 **Fast path:** **`onboard-fleet-instance.sh`** after A.1–A.5 (must still verify IAM attach).
 

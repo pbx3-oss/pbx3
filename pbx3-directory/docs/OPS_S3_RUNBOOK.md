@@ -1107,10 +1107,10 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 | Piece | Detail |
 |-------|--------|
 | **Local rotate** | Package file **`/etc/logrotate.d/pbx3-asterisk-logs`** (messages + `Master.csv`, rotate 7, copytruncate). Syslog: system **rsyslog** rotation |
-| **Upload** | `php artisan pbx3:logs-s3-upload` — cron example **`pbx3api/scripts/cron.d/pbx3-logs.example`** (prefer **root** for `/var/log` read) |
+| **Upload** | `php artisan pbx3:logs-s3-upload` — cron **`/etc/cron.d/pbx3-logs`** installed by **`pbx3api/scripts/installer.sh`** and fleet **onboard** (from `scripts/cron.d/pbx3-logs.example`; prefer **root** for `/var/log` read). No-op without `PBX3_ORG_BUCKET` |
 | **Keys** | `instances/{ksuid}/logs/{class}/{stamp}/…` + `policy.json` |
 | **IAM** | Existing node writer `instances/{ksuid}/*` is enough (includes `logs/`) |
-| **Lifecycle (ops laptop)** | `./pbx3-directory/tools/apply-logs-lifecycle-rules.sh 08jzwn-pbx3` — **merges** instance + **sbc/** tag rules. Prefer this over re-running `apply-backup-lifecycle-rule.sh` alone (that script **replaces** the whole config) |
+| **Lifecycle (ops laptop)** | `./pbx3-directory/tools/apply-logs-lifecycle-rules.sh 08jzwn-pbx3` — **merges** instance + **sbc/** + **control/** tag rules. Prefer this over re-running `apply-backup-lifecycle-rule.sh` alone (that script **replaces** the whole config) |
 
 **Solo:** omit `PBX3_ORG_BUCKET` or set `PBX3_LOG_UPLOAD_ENABLED=false` — local rotate still applies when the logrotate file is installed.
 
@@ -1124,7 +1124,9 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 
 | Piece | Detail |
 |-------|--------|
-| **Install on SBC** | `sudo ./scripts/install-log-retention.sh` from **pbx3sbc** checkout |
+| **Install (fresh)** | `install.sh` — **CORE:** OpenSIPS rsyslog split + **`pbx3sbc-sip-pcap`**. **S3-OPT:** `sudo ./scripts/install-log-retention.sh` |
+| **Install (existing / S3)** | `sudo ./scripts/install-log-retention.sh` from **pbx3sbc** checkout |
+| **OpenSIPS text** | rsyslog **`30-pbx3sbc-opensips.conf`** → `/var/log/opensips/opensips.log` (`stop` — not shared syslog) |
 | **Keys** | `sbc/{PBX3_SBC_ID}/logs/{opensips\|syslog\|sip-pcap}/{stamp}/…` |
 | **IAM** | **`schema/pbx3-sbc-s3-writer.policy.json.tmpl`** (`__BUCKET__`, `__SBC_ID__`) |
 | **Capture** | systemd **`pbx3sbc-sip-pcap`** — dumpcap SIP ports only (no RTP) |

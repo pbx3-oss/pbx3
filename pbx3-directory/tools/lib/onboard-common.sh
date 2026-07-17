@@ -291,6 +291,13 @@ else
   touch /opt/pbx3/service/sys-ua-siplog/down 2>/dev/null || true
   sv d sys-ua-siplog 2>/dev/null || true
 fi
+# Daily log ship cron (no-op without PBX3_ORG_BUCKET). Same as pbx3api installer.
+if [[ ! -f /etc/cron.d/pbx3-logs ]]; then
+  if [[ -f /opt/pbx3api/scripts/cron.d/pbx3-logs.example ]]; then
+    sudo install -m 644 -o root -g root /opt/pbx3api/scripts/cron.d/pbx3-logs.example /etc/cron.d/pbx3-logs
+    echo 'installed /etc/cron.d/pbx3-logs'
+  fi
+fi
 sudo -u www-data env HOME=/tmp php artisan tinker --execute="
 use Illuminate\\\\Support\\\\Facades\\\\Storage;
 \\\$disk = Storage::disk('pbx3_org');

@@ -28,6 +28,7 @@ SPA Fleet mode uses control-plane **email/password login** (Bearer in sessionSto
 | nginx | HTTPS + HTTP→HTTPS; ACME webroot under `public/.well-known` |
 | LE | `control.pbx3.com` — `certbot.timer` + deploy hook reloads nginx |
 | IAM | Instance profile **`pbx3-control-gatekeeper`** + **`pbx3-control-gatekeeper-s3`** on org bucket `08jzwn-pbx3` (`catalog/*`, `tenants/*`, `instances/*`, **`control/*`**) + **`pbx3-control-gatekeeper-recordings`** on `08jzwn-pbx3-recordings` (`tenants/*/recordings/*`) |
+| Log retention | After IAM `control/*`: **`sudo gatekeeper/deploy/install-control-log-retention.sh`** (nginx rotate + daily ship). See § Log retention |
 
 **Endpoints:**
 

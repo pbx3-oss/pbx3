@@ -58,7 +58,7 @@ flowchart LR
 
 | Stream | Path / source | Notes |
 |--------|---------------|--------|
-| **OpenSIPS text** | `/var/log/opensips` (xlog, failed-reg, door-knock) | Cheap always-on; Fail2ban input |
+| **OpenSIPS text** | `/var/log/opensips/opensips.log` via **rsyslog split** (`programname == opensips`, `stop` — not shared syslog) | Cheap always-on; ship `class=opensips`. Lab Fail2ban uses journal, not this file |
 | **OpenSIPS CDR (`acc`)** | MySQL `acc` via `acc` module CDR mode | Already live; Filament CDR panel. Retention/purge separate from text-log S3 |
 | **syslog family** | Host syslog / auth / fail2ban | Same 7d / 1mo defaults |
 | **SIP pcap** | dumpcap ring, SIP ports only (e.g. 5060/5061), **no RTP** | Product SIP archive; ring by filesize × files |
@@ -218,11 +218,11 @@ Fleet onboarding / package default: `sys-ua-siplog` **down**. Solo install: caro
 
 ### R4 — SBC OpenSIPS text + SIP pcap ring + S3
 
-OpenSIPS text: 7d / 1mo. SIP pcap: dumpcap ring (SIP-only, no RTP), ~7d completed local, ~1mo S3; systemd unit **`pbx3sbc-sip-pcap`**.
+OpenSIPS text: rsyslog split to `/var/log/opensips/opensips.log` (not shared syslog); 7d / 1mo. SIP pcap: dumpcap ring (SIP-only, no RTP), ~7d completed local, ~1mo S3; systemd unit **`pbx3sbc-sip-pcap`**.
 
 **Acceptance:** Lab REGISTER/INVITE visible in SBC pcap segment; RTP absent; ring drops oldest under flood.
 
-**Status (2026-07-17):** **Code on `pbx3sbc` `logs`** — `install-log-retention.sh`, `ship-logs-to-s3.sh`, IAM tmpl `pbx3-sbc-s3-writer.policy.json.tmpl`. Lab host install still ops (SBC SSH key differs from golden).
+**Status (2026-07-17):** **pbx3sbc `install.sh`** installs OpenSIPS rsyslog split + **`pbx3sbc-sip-pcap`**. S3 ship via **`scripts/install-log-retention.sh`** + IAM tmpl `pbx3-sbc-s3-writer.policy.json.tmpl`. Lab smoke OK.
 
 ### R5 — Control host log offload
 
@@ -235,10 +235,10 @@ Same 7d / 1mo for control syslog/nginx under `control/{id}/logs/…`.
 
 | Phase | Work | Repos / surfaces |
 |-------|------|------------------|
-| **1** | Instance rotate + local retain + S3 upload (syslog, messages, CDR) | **pbx3** / **pbx3api**; logrotate; IAM; `OPS_S3_RUNBOOK` — **code on `logs` (2026-07-17)**; lab smoke OK |
-| **2** | Fleet default: disable `sys-ua-siplog`; document solo vs fleet | **pbx3** installer / fleet onboard — **done on `logs` (2026-07-17)** |
-| **3** | SBC OpenSIPS text rotate + S3; SIP dumpcap unit + upload | **pbx3sbc** — **done on `logs` (2026-07-17)**; host install via `scripts/install-log-retention.sh` |
-| **4** | Control host rotate + S3 | **pbx3-directory** / control runbook — **done on `logs` (2026-07-17)**; `gatekeeper/deploy/install-control-log-retention.sh` |
+| **1** | Instance rotate + local retain + S3 upload (syslog, messages, CDR) | **pbx3** `.deb` logrotate; **pbx3api** installer + onboard install **`/etc/cron.d/pbx3-logs`** — **done on `logs`** |
+| **2** | Fleet default: disable `sys-ua-siplog`; document solo vs fleet | **pbx3** installer / fleet onboard — **done on `logs`** |
+| **3** | SBC OpenSIPS text + SIP dumpcap + S3 ship | **pbx3sbc `install.sh`** CORE (rsyslog split + sip-pcap); **S3-OPT** via `install-log-retention.sh` — **done on `logs`** |
+| **4** | Control host rotate + S3 | **pbx3-directory** ops: `gatekeeper/deploy/install-control-log-retention.sh` — **done on `logs`** |
 | **5** | SPA / instance config for retention knobs; optional S3 retrieve | **pbx3spa**, **pbx3api** |
 | **6** (optional track) | Instance SQLite CDR + search API/panel; dual-write with CSV archive | **pbx3** / **pbx3api** / **pbx3spa** |
 | **7** (optional) | SBC `acc` purge / cold export | **pbx3sbc** / **pbx3sbc-admin** |
