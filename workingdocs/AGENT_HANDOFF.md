@@ -57,7 +57,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-17 — log retention Phases 1–4)
 
-**Branch:** **`logs`** — **pbx3** **`4df64c9`**, **pbx3api** **`19f3f9c`**, **pbx3sbc** **`5071fa2`**. SPA unchanged on **`main`**.
+**Branch:** **`logs`** — **pbx3** **`e0d31d6`**, **pbx3api** **`19f3f9c`**, **pbx3sbc** **`5071fa2`**. SPA unchanged on **`main`**.
 
 ### Shipped
 - **Requirements:** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — 7d local / S3 by class; CDR CSV+SQLite stance; velocity on instance; fleet slug naming note in **`OPS_S3_RUNBOOK`**.
