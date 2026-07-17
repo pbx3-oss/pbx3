@@ -1,20 +1,21 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — S10.6–S10.8 complete; S10.7 parked; ops notify + REGISTER-loop lab-proven; instance Asterisk F2B off; **pbx3-docs** live.  
-**Last updated:** 2026-07-17 (log retention + fleet-slug naming note)
+**Branch:** **`logs`** — log retention Phases 1–4; S10.6–S10.8 still on **`main`**. Ops notify + REGISTER-loop lab-proven; instance Asterisk F2B off; **pbx3-docs** live.  
+**Last updated:** 2026-07-17 (session end — log retention Phases 1–4)
 
 ### Suggested “what next?” order
 
-1. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-2. **Failover + shadowing** (parked) — plan as its own mini-project later.  
-3. **Ops failure notification — follow-ons** — move-job mail; Fail2ban Peer auto-whitelist / ban→email. v1 probe+SMTP + lifecycle + **misconfig REGISTER** **shipped**. **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.  
-4. **S10.7 / S8.9 orchestrated onboard/rebuild (parked)** — wait for AWS vs S3-compatible / adapter stance (Rule 9). Mode 4 + Mac scripts remain.  
-5. **pbx3-docs polish (ongoing)** — human edit pass in progress; agent adds/updates sections on request. Live: **https://aelintra.github.io/pbx3-docs/**. Optional later: SBC chapter / recordings page when useful.  
-6. **SPA fleet Instances polish** — badges from `last_seen_at`; show **full instance KSUID** (currently truncated); show probe **RTT next to Active** status.  
-7. **Log retention / SIP capture** — Phases 1–2 on branch **`logs`**; **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.  
-8. **pbx3cagi** struct refactor (deferred) — **`REFACTOR_PLAN.md`**  
-9. **Fleet auth cookie/SSO (blocked)** — **`FLEET_AUTH_COOKIE_SSO.md`** (orthogonal to login chooser).  
-10. **S7+** attested PCI (KMS/CloudTrail/QSA/PSP) — only on customer ask.  
+1. **Log retention ops finish** — control ship retry after IAM cache; SBC `install-log-retention.sh` + IAM; `apply-logs-lifecycle-rules.sh`; merge **`logs`→`main`** when ready. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.  
+2. **SPA fleet Instances polish** — full KSUID; RTT next to Active; badges from `last_seen_at`.  
+3. **Log retention Phase 5+** (optional) — SPA retention knobs; SQLite searchable CDR.  
+4. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+5. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
+6. **Failover + shadowing** (parked).  
+7. **S10.7 / S8.9** (parked) — cloud adapter.  
+8. **pbx3-docs polish (ongoing)**.  
+9. **pbx3cagi** struct refactor (deferred).  
+10. **Fleet auth cookie/SSO (blocked)**.  
+11. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -82,7 +83,7 @@
 
 - [ ] **SPA Fleet Instances polish (2026-07-16):** (1) Instance **KSUID truncated** in the panel — show full id (copyable). (2) Next to **Active** status, show probe **round-trip time** (Gatekeeper `/up` already timed; expose in catalog/health API + SPA). Ties badges/`last_seen_at` work.
 
-- [ ] **Log retention (Phases 1–4 on `logs` — 2026-07-17):** Instance + siplog-off (golden OK); SBC + control ship **coded** (host install + IAM apply still ops). Phase 5+ SPA/SQLite later. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
+- [ ] **Log retention (Phases 1–4 on `logs` — 2026-07-17):** Instance rotate + `pbx3:logs-s3-upload` **golden smoke OK**; siplog fleet-off + preflight; SBC ship scripts; control PHP shipper + IAM policy **v2** (`control/*`). **Ops still:** control ship retry (role cred cache); SBC host install (SSH key ≠ golden); lifecycle script apply; merge `logs`→`main`. Phase 5+ SPA/SQLite later. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
 
 - [ ] **Fleet slug / org bucket naming (cosmetic — fix later):** Lab buckets `08jzwn-pbx3` (+ recordings) use first-node shortuid as stem; product should choose a **neutral fleet slug** at provision (`acme-pbx3`). No runtime impact. Design note: **`OPS_S3_RUNBOOK.md`** § Design note — fleet slug vs lab bucket name. Fold into onboard / S10.7 / create-fleet when that ships.
 

@@ -55,25 +55,35 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-16 — REGISTER-loop lab + Asterisk F2B off)
+## Next agent session notes (2026-07-17 — log retention Phases 1–4)
 
-**Branch:** **`main`** — **pbx3** **`59b5dc5`**, **pbx3api** **`16fba66`**, **pbx3spa** **`305faec`**. Lab: golden + control Gatekeeper live for notify.
+**Branch:** **`logs`** — **pbx3** **`4df64c9`**, **pbx3api** **`19f3f9c`**, **pbx3sbc** **`5071fa2`**. SPA unchanged on **`main`**.
 
 ### Shipped
-- **REGISTER-loop lab:** Zoiper → SBC → golden; Fail2ban on SBC banned cellphone IP (expected for non-whitelisted); door-knock silent drop on typo domain `dhbm9x`; auth fail then success.
-- **Notify proven:** after SBC `3.93.26.82` on golden `ignoreip`, scanner emitted; mail OK (SBC as source IP).
-- **Enrichment:** node resolves `ipphone` shortuid → dialable + name; Gatekeeper mail `1003 (8pmfxd) — JohnKnox`.
-- **Stance:** phones always via SBC; instance `:5060` SBC-only → **Asterisk F2B jail disabled** (package + golden); SIP ban/whitelist on **SBC** only; node scanner = notify. Cellular/road-warrior IPs: do **not** whitelist.
-- **bzy54n:** Fail2ban was dead since May/Jun (`%(auth_log)s` jail.local); restarted — sshd/recidive/api jails; no asterisk.
+- **Requirements:** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — 7d local / S3 by class; CDR CSV+SQLite stance; velocity on instance; fleet slug naming note in **`OPS_S3_RUNBOOK`**.
+- **Phase 1:** instance logrotate + `pbx3:logs-s3-upload` → `instances/{ksuid}/logs/{class}/…` — **golden smoke OK** (CDR/messages/syslog; skip idempotent).
+- **Phase 2:** `siplog-set-mode.sh fleet|solo`; postinst/onboard/preflight — **golden siplog down**.
+- **Phase 3:** **pbx3sbc** dumpcap systemd + ship script + IAM tmpl (`sbc/{id}/logs/…`) — code only (no SBC SSH with golden key).
+- **Phase 4:** control PHP shipper + install script; IAM **`pbx3-control-gatekeeper-s3` v2** includes `control/*` — first ship hit role-cred cache AccessDenied (retry later).
 
 ### Golden / operator follow-up
-- Keep **SBC IPs** on node `ignoreip` (scanner peer allowlist), not site/cellphone CIDRs.
-- SPA Instances polish: full KSUID; RTT next to Active (TODO).
-- Optional: move-job mail; SBC Fail2ban ban→email; badges from `last_seen_at`.
+- Retry control: `sudo /usr/local/bin/pbx3-control-ship-logs --limit=2` after IAM cred refresh.
+- SBC: install with host SSH key — `pbx3sbc/scripts/install-log-retention.sh` + IAM from **`pbx3-sbc-s3-writer.policy.json.tmpl`**.
+- Ops Mac: `./pbx3-directory/tools/apply-logs-lifecycle-rules.sh 08jzwn-pbx3`.
+- Merge **`logs`→`main`** when ops smoke done.
 
 ### Resume
-1. SPA Instances polish (KSUID + RTT) **or** egress/failover **or** move-job notify **or** docs on request.
-2. Do **not** start S10.7 / S7+ / IdP / site CRM without ask.
+1. Finish log-retention ops (control/SBC/lifecycle) **or** merge `logs` **or** SPA Instances polish (KSUID + RTT).
+2. Do **not** start S10.7 / S7+ / IdP / Phase 5 SPA log UI without ask.
+
+---
+
+## Next agent session notes (2026-07-16 — REGISTER-loop lab + Asterisk F2B off) — historical
+
+**Branch:** **`main`** — superseded by block above. Tips were **pbx3** **`59b5dc5`**, **pbx3api** **`16fba66`**, **pbx3spa** **`305faec`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 
