@@ -1,8 +1,8 @@
 # Fleet / node — log retention & SIP capture (requirements)
 
-**Status:** **Phases 1–4 complete (2026-07-17)** — instance + fleet siplog-off + SBC ship + control ship; lab ops smoke OK (golden/control/SBC → `08jzwn-pbx3`; lifecycle applied). Merged to **`main`** locally — push when ready. Phases 5–7 not started.  
+**Status:** **Phases 1–6 complete (2026-07-17)** — ship/lifecycle/siplog/SBC/control (1–4); SPA retention knobs + S3 archive list/download (5); Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr` (6). Phase 7 (SBC `acc` purge) not started.  
 **MVP (when prioritized):** Local hot store (~7 days) + async offload of **rotated** files to S3 cold store by class; SIP-only pcap ring on the **SBC**; instance `sys-ua-siplog` **solo only** (disabled in fleet).  
-**Related:** **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity (instance detection; Gatekeeper delivery); pbx3api **`LogController`** (local log read); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
+**Related:** **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity (instance detection; Gatekeeper delivery); pbx3api **`LogController`** (local log read) + **`CdrController`** (SQLite search); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
 
 ---
 
@@ -29,7 +29,7 @@ Fleet stance: **all phones terminate on the SBC** — no direct SIP to instances
 | **SIP product capture** | **SBC** — SIP-only pcap (no RTP), dumpcap ring like instance siplog |
 | **Instance `sys-ua-siplog`** | Keep for **singleton**; **disabled by default in fleet** |
 | **Supervisor on SBC** | Same **dumpcap** mechanics as `sys-ua-siplog`; **not** required to use runit — prefer systemd / host-native |
-| **SPA over S3** | Out of v1 — local **`LogController`** stays; S3 = retrieve/download later |
+| **SPA over S3** | Phase 5: **list + download** on System Logs (presigned/`temporaryUrl`); not in-browser grep. Hot local = existing `LogController` tail (or SSH for `tail -f`) |
 
 ```mermaid
 flowchart LR
@@ -50,7 +50,7 @@ flowchart LR
 | **syslog family** | `/var/log/syslog`, and typically `auth.log`, `mail.log`, `fail2ban.log` unless split out | Per-instance local/S3 days configurable |
 | **Asterisk messages** | `/var/log/asterisk/messages` | Ops notify REGISTER scanner reads this; keep local readable |
 | **Asterisk CDR CSV** | `/var/log/asterisk/cdr-csv/Master.csv` | Archive / S3; must **rotate by day/size** before “7 days” is meaningful |
-| **Asterisk CDR SQLite** (when prioritized) | Instance-local DB (Asterisk `cdr_sqlite` or app-owned) | Searchable panels; not a central warehouse — see § CDR |
+| **Asterisk CDR SQLite** | `/var/log/asterisk/master.db` via **`cdr_sqlite3_custom`** | Searchable HoR (`GET /cdr`, SPA `/cdr`); CSV still archive/S3 |
 | **queue_log** (optional sibling) | `/var/log/asterisk/queue_log` | Call-center tenants; same local/S3 pattern when prioritized |
 | **`sys-ua-siplog`** | `dumpcap` → `SIPLOG` carousel (`logsipnumfiles` / `logsipfilesize`) | **Solo on**; **fleet off** by default |
 
@@ -186,9 +186,10 @@ Pattern cousins: instance backup upload; recordings async PUT after local file e
 ## Out of v1
 
 - HEP / Homer, RTP capture, Prometheus/Loki as home of record for logs.
-- Instance SQLite CDR + SPA search UI (settled design above; implement when asked — not required to ship CSV rotate→S3 first).
+- App CSV→SQLite ingest (Phase 6 uses Asterisk native `cdr_sqlite3_custom` dual-write instead).
+- Live log follow over the API (SSE/`tail -f`) — use local paginated tail or SSH.
 - Velocity / toll-fraud analysis (settled **where**; implement later — **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**).
-- Full SPA log browser over S3 objects (local panel remains).
+- In-browser grep/search of S3 log objects (list+download only).
 - Auto-enabling instance trunk-side pcap override in fleet.
 - Central/fleet MySQL (or other) CDR warehouse.
 
@@ -239,8 +240,8 @@ Same 7d / 1mo for control syslog/nginx under `control/{id}/logs/…`.
 | **2** | Fleet default: disable `sys-ua-siplog`; document solo vs fleet | **pbx3** installer / fleet onboard — **done on `logs`** |
 | **3** | SBC OpenSIPS text + SIP dumpcap + S3 ship | **pbx3sbc `install.sh`** CORE (rsyslog split + sip-pcap); **S3-OPT** via `install-log-retention.sh` — **done on `logs`** |
 | **4** | Control host rotate + S3 | **pbx3-directory** ops: `gatekeeper/deploy/install-control-log-retention.sh` — **done on `logs`** |
-| **5** | SPA / instance config for retention knobs; optional S3 retrieve | **pbx3spa**, **pbx3api** |
-| **6** (optional track) | Instance SQLite CDR + search API/panel; dual-write with CSV archive | **pbx3** / **pbx3api** / **pbx3spa** |
+| **5** | SPA / instance config for retention knobs; S3 archive list+download | **pbx3spa**, **pbx3api** — **done on `logs56`**: `GET/PUT logs/retention`, override file, `logs/archive`; Sysglobals Logging + Logs S3 section. Lifecycle script still ops-owned (knobs update `policy.json` intent). |
+| **6** (optional track) | Instance SQLite CDR + search API/panel; dual-write with CSV archive | **pbx3** `cdr_sqlite3_custom.conf` (Asterisk 20: legacy `columns`/`values`) + module load; **pbx3api** `GET cdr` + `pbx3:cdr-prune`; **pbx3spa** `/cdr` — **done on `logs56`**. Lab golden: module Running, `master.db` rows, retention override + archive list/download smoke OK. |
 | **7** (optional) | SBC `acc` purge / cold export | **pbx3sbc** / **pbx3sbc-admin** |
 
-Do not start **Phases 2+** without an explicit ask. Phase 1: deploy logrotate + cron on lab, run `apply-logs-lifecycle-rules.sh`, smoke `pbx3:logs-s3-upload`.
+Phases **1–6** implemented on branch **`logs56`**. Phase 7 waits for an explicit ask.
