@@ -28,7 +28,11 @@ fi
 if [ -d "$SYSPATH/service/sys-ua-siplog" ]; then
 	chmod +x "$SYSPATH/service/sys-ua-siplog/run" 2>/dev/null || true
 	[ ! -L /etc/service/sys-ua-siplog ] && ln -sf "$SYSPATH/service/sys-ua-siplog" /etc/service/sys-ua-siplog
-	sv u sys-ua-siplog 2>/dev/null || true
+	# Fleet: siplog stays down (service/sys-ua-siplog/down). Solo: sv u sys-ua-siplog
+	# Do not sv u here — phones go via SBC in fleet; dumpcap on :5060 is wasteful.
+	if [ -f "$SYSPATH/service/sys-ua-siplog/down" ]; then
+		sv d sys-ua-siplog 2>/dev/null || true
+	fi
 fi
 
 NORM=/opt/pbx3/scripts/normalize-globals-identity.sh

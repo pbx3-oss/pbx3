@@ -57,6 +57,11 @@ chmod +x $SYSPATH/service/sys-ua-siplog/run
 # link the helpers if they don't exist 
 [ ! -L /etc/service/sys-ua-helper ] && ln -s $SYSPATH/service/sys-ua-helper /etc/service
 [ ! -L /etc/service/sys-ua-siplog ] && ln -s $SYSPATH/service/sys-ua-siplog /etc/service
+# Leave sys-ua-siplog down by default (service/…/down). Solo: siplog-set-mode.sh solo
+# Fleet onboard also forces fleet mode. See FLEET_LOG_RETENTION_REQUIREMENTS.md R3.
+if [ -f "$SYSPATH/service/sys-ua-siplog/down" ]; then
+	sv d sys-ua-siplog 2>/dev/null || true
+fi
 
 # HTTP server (nginx) and API site are installed by pbx3api; see pbx3api docs.
 # Ensure Asterisk (and later www-data for pbx3api) can read TLS certs (e.g. Let's Encrypt).

@@ -1,6 +1,6 @@
 # Fleet / node — log retention & SIP capture (requirements)
 
-**Status:** **Phase 1 code on branch `logs` (2026-07-17)** — instance rotate + `pbx3:logs-s3-upload`; Phases 2–7 not started.  
+**Status:** **Phase 1+2 on branch `logs` (2026-07-17)** — instance rotate + `pbx3:logs-s3-upload` (lab smoke OK); fleet siplog off by default. Phases 3–7 not started.  
 **MVP (when prioritized):** Local hot store (~7 days) + async offload of **rotated** files to S3 cold store by class; SIP-only pcap ring on the **SBC**; instance `sys-ua-siplog` **solo only** (disabled in fleet).  
 **Related:** **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity (instance detection; Gatekeeper delivery); pbx3api **`LogController`** (local log read); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
 
@@ -126,8 +126,8 @@ Toll-fraud / call-pattern **detection** runs **on the instance** next to SQLite 
 
 ### Instance `sys-ua-siplog`
 
-- **Singleton / solo:** useful — instance is the edge; keep existing dumpcap carousel (`port 5060`, `-b filesize` / `-b files`).
-- **Fleet:** **disabled by default** — pcaps will not show phone REGISTER/INVITE and waste disk. Optional trunk-side override later (not v1).
+- **Singleton / solo:** useful — instance is the edge; keep existing dumpcap carousel (`port 5060`, `-b filesize` / `-b files`). Enable: **`/opt/pbx3/scripts/siplog-set-mode.sh solo`**.
+- **Fleet:** **disabled by default** — pcaps will not show phone REGISTER/INVITE and waste disk. Package ships with service **`down`**; postinst/onboard do **not** `sv u`. Disable on existing nodes: **`siplog-set-mode.sh fleet`**. Optional trunk-side override later (not v1).
 
 Reference: `pbx3-1/opt/pbx3/service/sys-ua-siplog/run` (runit today); globals `logsipnumfiles`, `logsipfilesize`.
 
@@ -210,9 +210,11 @@ Upload rotated files to `instances/{ksuid}/logs/{class}/…`; lifecycle CDR **2 
 
 ### R3 — Disable instance siplog in fleet; keep for solo
 
-Fleet onboarding / package default: `sys-ua-siplog` **down**. Solo install: carousel available as today.
+Fleet onboarding / package default: `sys-ua-siplog` **down**. Solo install: carousel available via **`siplog-set-mode.sh solo`**.
 
-**Acceptance:** Fleet golden/bzy54n: no dumpcap on `:5060` unless ops override; solo lab box: carousel works.
+**Acceptance:** Fleet golden/bzy54n: no dumpcap on `:5060` unless ops override; solo lab box: carousel works after `solo`.
+
+**Status (2026-07-17):** **Done on `logs`** — `down` file + postinst no longer `sv u`; onboard calls `siplog-set-mode.sh fleet`; fleet-preflight warns if running.
 
 ### R4 — SBC OpenSIPS text + SIP pcap ring + S3
 
@@ -230,8 +232,8 @@ Same 7d / 1mo for control syslog/nginx/gatekeeper under `control/{id}/logs/…`.
 
 | Phase | Work | Repos / surfaces |
 |-------|------|------------------|
-| **1** | Instance rotate + local retain + S3 upload (syslog, messages, CDR) | **pbx3** / **pbx3api**; logrotate; IAM; `OPS_S3_RUNBOOK` — **code on `logs` (2026-07-17)**; lab deploy + lifecycle script apply still ops |
-| **2** | Fleet default: disable `sys-ua-siplog`; document solo vs fleet | **pbx3** installer / fleet onboard |
+| **1** | Instance rotate + local retain + S3 upload (syslog, messages, CDR) | **pbx3** / **pbx3api**; logrotate; IAM; `OPS_S3_RUNBOOK` — **code on `logs` (2026-07-17)**; lab smoke OK |
+| **2** | Fleet default: disable `sys-ua-siplog`; document solo vs fleet | **pbx3** installer / fleet onboard — **done on `logs` (2026-07-17)** |
 | **3** | SBC OpenSIPS text rotate + S3; SIP dumpcap unit + upload | **pbx3sbc** (+ admin if config UI) |
 | **4** | Control host rotate + S3 | **pbx3-directory** / control runbook |
 | **5** | SPA / instance config for retention knobs; optional S3 retrieve | **pbx3spa**, **pbx3api** |

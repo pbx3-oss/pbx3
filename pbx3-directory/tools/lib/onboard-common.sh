@@ -284,6 +284,13 @@ if [[ "${ONBOARD_GIT_PULL:-0}" == "1" ]]; then
   sudo git fetch origin directory && sudo git pull origin directory
 fi
 sudo php artisan config:clear
+# Instance SIP pcap off in fleet (SBC is the edge). See FLEET_LOG_RETENTION_REQUIREMENTS.md R3.
+if [[ -x /opt/pbx3/scripts/siplog-set-mode.sh ]]; then
+  /opt/pbx3/scripts/siplog-set-mode.sh fleet || true
+else
+  touch /opt/pbx3/service/sys-ua-siplog/down 2>/dev/null || true
+  sv d sys-ua-siplog 2>/dev/null || true
+fi
 sudo -u www-data env HOME=/tmp php artisan tinker --execute="
 use Illuminate\\\\Support\\\\Facades\\\\Storage;
 \\\$disk = Storage::disk('pbx3_org');

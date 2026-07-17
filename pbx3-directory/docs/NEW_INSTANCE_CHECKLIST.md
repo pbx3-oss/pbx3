@@ -39,12 +39,15 @@
   AWS_DEFAULT_REGION=us-east-1
   PBX3_ORG_BUCKET={org}-pbx3
   PBX3_DIRECTORY_BACKUP_UPLOAD=true
+  PBX3_FLEET_MODE=true
+  PBX3_SBC_EGRESS_HOST=sbc.pbx3.com
   ```
 
   No empty `AWS_ACCESS_KEY_ID=` / `AWS_SECRET_ACCESS_KEY=` — use **instance role**.
+  Onboard sets fleet env and runs **`siplog-set-mode.sh fleet`** (instance SIP pcap off — phones via SBC).
 
 - [ ] **A.10** `cd /opt/pbx3api && sudo composer install --no-dev && sudo php artisan config:clear`
-- [ ] **A.11** `sudo php artisan pbx3:fleet-preflight` → all green
+- [ ] **A.11** `sudo php artisan pbx3:fleet-preflight` → all green (includes **sys-ua-siplog** down when fleet)
 - [ ] **A.12** **Mac:** `register-instance.sh` — catalog `id` = node **`globals.id`**
 - [ ] **A.13** Create backup → panel shows **local+S3** (or run `pbx3:upload-backup`)
 
