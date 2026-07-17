@@ -56,7 +56,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-16 — REGISTER-loop lab + Asterisk F2B off)
 
-**Branch:** **`main`** — **pbx3** **`e05484b`**, **pbx3api** **`16fba66`**, **pbx3spa** **`ff1caeb`**. Lab: golden + control Gatekeeper live for notify.
+**Branch:** **`main`** — **pbx3** **`59b5dc5`**, **pbx3api** **`16fba66`**, **pbx3spa** **`305faec`**. Lab: golden + control Gatekeeper live for notify.
 
 ### Shipped
 - **REGISTER-loop lab:** Zoiper → SBC → golden; Fail2ban on SBC banned cellphone IP (expected for non-whitelisted); door-knock silent drop on typo domain `dhbm9x`; auth fail then success.
