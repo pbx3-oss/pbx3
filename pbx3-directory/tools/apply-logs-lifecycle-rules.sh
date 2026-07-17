@@ -44,9 +44,10 @@ else
   echo '{"Rules":[]}' >"$TMP_EXISTING"
 fi
 
-# Drop prior pbx3 log expire rules, keep everything else
+# Drop prior pbx3 log expire rules, keep everything else.
+# get-bucket-lifecycle may return TransitionDefaultMinimumObjectSize; put accepts Rules only.
 jq --argjson syslog_days "$SYSLOG_DAYS" --argjson msg_days "$MSG_DAYS" --argjson cdr_days "$CDR_DAYS" '
-  .Rules //= []
+  {Rules: (.Rules // [])}
   | .Rules |= map(select(.ID | tostring | test("^pbx3-expire-log-") | not))
   | .Rules += [
       {
