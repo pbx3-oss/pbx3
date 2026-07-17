@@ -57,7 +57,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-17 — log retention Phases 5–6)
 
-**Branch:** **`main`** — **pbx3** **`28cac1a`** (+ Phase 7 docs commit this session), **pbx3api** **`6c28486`**, **pbx3spa** **`45594bf`**. Feature branch **`logs56`** merged. Prior Phases 1–4 already on **`main`**.
+**Branch:** **`main`** — **pbx3** **`7c9f8d4`**, **pbx3api** **`6c28486`**, **pbx3spa** **`a9ce18c`**. Feature branch **`logs56`** merged. Prior Phases 1–4 already on **`main`**.
 
 ### Shipped
 - **Phase 5:** `GET/PUT logs/retention` (override `/opt/pbx3/var/log-retention.json` + S3 `policy.json`); `GET logs/archive` + download-url; SPA Sysglobals Logging knobs + System Logs S3 archive section.
