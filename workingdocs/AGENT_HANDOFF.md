@@ -56,7 +56,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-16 — REGISTER-loop lab + Asterisk F2B off)
 
-**Branch:** **`main`** — **pbx3** **`00a049c`**, **pbx3api** **`16fba66`**, **pbx3spa** **`ff1caeb`**. Lab: golden + control Gatekeeper live for notify.
+**Branch:** **`main`** — **pbx3** **`e05484b`**, **pbx3api** **`16fba66`**, **pbx3spa** **`ff1caeb`**. Lab: golden + control Gatekeeper live for notify.
 
 ### Shipped
 - **REGISTER-loop lab:** Zoiper → SBC → golden; Fail2ban on SBC banned cellphone IP (expected for non-whitelisted); door-knock silent drop on typo domain `dhbm9x`; auth fail then success.
@@ -78,7 +78,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-16 — ops notify live + REGISTER loops) — historical
 
-**Branch:** **`main`** — superseded by block above. Tips were **pbx3** **`00a049c`**, **pbx3api** **`16fba66`**, **pbx3spa** **`ff1caeb`**.
+**Branch:** **`main`** — superseded by block above. Tips were **pbx3** **`8622fd8`**, **pbx3api** **`4b2aa99`**, **pbx3spa** **`aa8b22a`**.
 
 ### Resume (superseded)
 See block above.
@@ -87,7 +87,7 @@ See block above.
 
 ## Next agent session notes (2026-07-16 — docs: What is PBX3 + ops notify plan) — historical
 
-**Branch:** **`main`** — superseded by block above. Tips were **pbx3** **`00a049c`**, **pbx3spa** **`ff1caeb`**, **pbx3-docs** **`e76c451`**.
+**Branch:** **`main`** — superseded by block above. Tips were **pbx3** **`0aac37b`**, **pbx3spa** **`cf64ea7`**, **pbx3-docs** **`e76c451`**.
 
 ### Resume (superseded)
 See block above.
@@ -96,7 +96,7 @@ See block above.
 
 ## Next agent session notes (2026-07-15 — pbx3-docs MkDocs live) — historical
 
-**Branch:** **`main`** — superseded by block above. Tips were **pbx3** **`00a049c`**, **pbx3spa** **`ff1caeb`**, **pbx3-docs** **`2a37a00`**.
+**Branch:** **`main`** — superseded by block above. Tips were **pbx3** **`1d8316a`**, **pbx3spa** **`d4d3e71`**, **pbx3-docs** **`2a37a00`**.
 
 ### Resume (superseded)
 See block above.
@@ -105,7 +105,7 @@ See block above.
 
 ## Next agent session notes (2026-07-15 — S10.8 login chooser complete) — historical
 
-**Branch:** **`main`** — superseded by block above (docs session). Tips were **pbx3** **`00a049c`**, **pbx3spa** **`ff1caeb`** / **`59225b9`**.
+**Branch:** **`main`** — superseded by block above (docs session). Tips were **pbx3** **`6f4facd`**, **pbx3spa** **`54cced4`** / **`59225b9`**.
 
 ### Resume (superseded)
 See block above.
@@ -123,7 +123,7 @@ See block above.
 
 ## Next agent session notes (2026-07-14 — S10.4 catalog ↔ SBC reconcile) — historical
 
-**Branch:** **`main`** — **pbx3** **`00a049c`**, **pbx3sbc-admin** **`2d232f8`**, **pbx3spa** **`ff1caeb`**. Superseded by block above.
+**Branch:** **`main`** — **pbx3** **`96e432e`**, **pbx3sbc-admin** **`2d232f8`**, **pbx3spa** **`15c5090`**. Superseded by block above.
 
 ### Resume (superseded)
 See block above.
@@ -132,7 +132,7 @@ See block above.
 
 ## Next agent session notes (2026-07-14 — S10.1–S10.3 fleet panel path) — historical
 
-**Branch:** **`main`** — **pbx3** **`00a049c`**, **pbx3spa** **`ff1caeb`**. Superseded by block above.
+**Branch:** **`main`** — **pbx3** **`4498a4c`**, **pbx3spa** **`18f957d`**. Superseded by block above.
 
 ### Resume (superseded)
 See block above.
@@ -141,7 +141,7 @@ See block above.
 
 ## Next agent session notes (2026-07-14 — S7 recordings S3 + S7.10 sweeper) — historical
 
-**Branch:** **`main`** — **pbx3** **`00a049c`**, **pbx3api** **`16fba66`**, **pbx3spa** **`ff1caeb`**. Superseded by block above.
+**Branch:** **`main`** — **pbx3** **`ed484f3`**, **pbx3api** **`6f46712`**, **pbx3spa** **`6e23fa3`**. Superseded by block above.
 
 ### Resume (superseded)
 See block above.
@@ -191,7 +191,7 @@ See block above.
 
 ## Next agent session notes (2026-07-11 — S9 snapshots + peering Phase 5) — historical
 
-**Branch:** **`main`** — **pbx3** **`00a049c`**, **pbx3api** **`16fba66`**, **pbx3spa** **`ff1caeb`**, **pbx3sbc** **`05ea925`**, **pbx3sbc-admin** **`2df6a60`**. Golden API on **`d8c560c`**. SBC config applied + Phase 5 call validated.
+**Branch:** **`main`** — **pbx3** **`3705b8b`**, **pbx3api** **`d8c560c`**, **pbx3spa** **`103ab34`**, **pbx3sbc** **`05ea925`**, **pbx3sbc-admin** **`2df6a60`**. Golden API on **`d8c560c`**. SBC config applied + Phase 5 call validated.
 
 ### Shipped
 
@@ -223,7 +223,7 @@ See **2026-07-11 — S9 snapshots + peering Phase 5** block above.
 
 ## Next agent session notes (2026-07-10 — S8.10 day complete) — historical
 
-**Branch:** **`main`** — **pbx3** **`00a049c`**, **pbx3api** **`16fba66`**, **pbx3spa** **`ff1caeb`**, **pbx3sbc-admin** **`6036bcb`**. Superseded by **2026-07-11** block above (sbc-admin now **`624b0f3`**).
+**Branch:** **`main`** — **pbx3** **`9e00e30`**, **pbx3api** **`0fb0019`**, **pbx3spa** **`089477b`**, **pbx3sbc-admin** **`6036bcb`**. Superseded by **2026-07-11** block above (sbc-admin now **`624b0f3`**).
 
 ### Resume — historical
 
@@ -263,7 +263,7 @@ See **S8.10 live moves** block above.
 
 ## Next agent session notes (2026-07-10 — pbx3 0.0.3-25 on fleet) — historical
 
-**Branch:** **`main`** — **pbx3** **`00a049c`** (**0.0.3-25**), **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** **`138d65d`**. Superseded same day by **`movewizard`** S8.10 scaffold.
+**Branch:** **`main`** — **pbx3** **`1bed066`** (**0.0.3-25**), **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** **`138d65d`**. Superseded same day by **`movewizard`** S8.10 scaffold.
 
 ### Shipped
 
@@ -285,7 +285,7 @@ See **S8.10 movewizard** block above.
 
 ## Next agent session notes (2026-07-10 — SBC peering Phases 3–4 lab green) — historical
 
-**Branch:** **`main`** — **pbx3** **`00a049c`**, **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** **`138d65d`**. Superseded later same day by **0.0.3-25** install (**`1bed066`**).
+**Branch:** **`main`** — **pbx3** **`3af4519`**, **pbx3sbc** **`b914e1c`**, **pbx3sbc-admin** **`138d65d`**. Superseded later same day by **0.0.3-25** install (**`1bed066`**).
 
 ### Shipped (live lab)
 
