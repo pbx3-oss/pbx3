@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`instances-polish`** (not yet merged) — Fleet Instances polish (KSUID/RTT/health badges). Log retention Phases 1–6 on **`main`**; Phase 7 proposal only. S10.6–S10.8 on **`main`**. Ops notify + REGISTER-loop lab-proven; instance Asterisk F2B off; **pbx3-docs** live.  
-**Last updated:** 2026-07-18 (Instances polish — Gatekeeper health overlay + SPA)
+**Branch:** **`main`** — Fleet Instances polish (KSUID/RTT/health badges) shipped. Log retention Phases 1–6 done; Phase 7 proposal only. S10.6–S10.8 on **`main`**. Ops notify + REGISTER-loop lab-proven; instance Asterisk F2B off; **pbx3-docs** live.  
+**Last updated:** 2026-07-18 (Instances polish merged + gatekeeper on control)
 
 ### Suggested “what next?” order
 
@@ -79,7 +79,7 @@
 
 - [x] **Ops failure notification — v1 probe + SMTP (2026-07-16):** Gatekeeper `bin/probe-fleet-instances.php` + systemd timer; SQLite `instance_health` (down after 2 misses); S3 `last_seen_at`; `Mailer`/`SmtpMailer`; `users.notify_failures` + SPA checkbox; `GATEKEEPER_OPS_NOTIFY_EMAIL`. Lifecycle maintenance/decommission mail. **Misconfig REGISTER:** `pbx3api` `pbx3:ops-register-loops` → Gatekeeper `POST /api/v1/ops-events`. Instance Asterisk F2B jail **off** (SIP ban on SBC); mail resolves shortuid→dialable. **Follow-ons:** move-job mail; Fail2ban Peer auto-whitelist / ban→email; SPA badges. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
 
-- [x] **SPA Fleet Instances polish (2026-07-18):** Full copyable KSUID; probe RTT next to Active; health badges (Healthy ≤2m / Warning ≤5m / Degraded / Down / Probe paused for maintenance); manual Refresh. Gatekeeper measures RTT → SQLite `last_rtt_ms`; `GET /api/v1/catalog` overlays `health` (not S3). Branch **`instances-polish`**.
+- [x] **SPA Fleet Instances polish (2026-07-18):** Full copyable KSUID; probe RTT next to Active; health badges (Healthy ≤2m / Warning ≤5m / Degraded / Down / Probe paused for maintenance); manual Refresh. Gatekeeper measures RTT → SQLite `last_rtt_ms`; `GET /api/v1/catalog` overlays `health` (not S3). Branch **`instances-polish` → `main`**. Live on control (probe RTT ~60ms).
 
 - [x] **Log retention Phases 1–6 (2026-07-17):** Rotate/ship/lifecycle/siplog/SBC/control (1–4) on **`main`**; Phase 5 retention knobs + S3 archive list/download; Phase 6 Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr`. Lab: golden + bzy54n @ **pbx3api** **`6c28486`**. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
 
