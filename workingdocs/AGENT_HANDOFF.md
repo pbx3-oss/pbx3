@@ -55,24 +55,31 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-17 — log retention Phases 5–6)
+## Next agent session notes (2026-07-18 — Instances polish + SPA panel polish)
 
-**Branch:** **`main`** — **pbx3** **`7c9f8d4`**, **pbx3api** **`6c28486`**, **pbx3spa** **`a9ce18c`**. Feature branch **`logs56`** merged. Prior Phases 1–4 already on **`main`**.
+**Branches:** **pbx3** **`main`** tip **`f0473c4`** (Instances health/RTT). **pbx3spa** feature **`changes`** tip **`a14af54`** (panel polish — **not merged to `main`**). **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
-- **Phase 5:** `GET/PUT logs/retention` (override `/opt/pbx3/var/log-retention.json` + S3 `policy.json`); `GET logs/archive` + download-url; SPA Sysglobals Logging knobs + System Logs S3 archive section.
-- **Phase 6:** Asterisk `cdr_sqlite3_custom` → `/var/log/asterisk/master.db` (CSV still archive/S3); `GET cdr` + `pbx3:cdr-prune`; SPA `/cdr` under ACD.
-- **Lab:** golden + bzy54n pulled **pbx3api** **`6c28486`**; module Running; cron `/etc/cron.d/pbx3-cdr`; nginx `open_basedir` includes `/var/log/asterisk`.
-- **Phase 7:** proposal only in **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** (SBC `acc` purge/cold export) — **for later review; not a blocker**. Product CDR HoR (SBC vs Asterisk) unsettled.
+- **Fleet Instances polish (gatekeeper + SPA on `main`):** Probe RTT → SQLite `last_rtt_ms`; `GET /api/v1/catalog` overlays `health`; SPA full copyable KSUID, health badges (Healthy/Warning/Degraded/Down / Probe paused), RTT, manual Refresh. Live on control.
+- **SPA panel polish (`changes`):** DID routes list — drop UID column. Extensions edit — SIP Registrar (tenant FQDN); remove Common name; Behaviour section (CFIM/CFBS/ring delay inline, no Runtime edit mode). Extensions/Trunks list — latency chip colors (green &lt;100 / yellow 100–200 / orange 201–300 / red &gt;300). Network — searchable timezone picker with friendly US labels. Record: **`pbx3spa/workingdocs/PANEL_POLISH_2026-07-18.md`**.
 
 ### Golden / operator follow-up
-- Local SPA: pull **`main`** (`45594bf`) for retention UI + `/cdr`.
-- Optional: exercise SPA Sysglobals Logging save + Logs S3 download + `/cdr` against golden.
-- Do **not** implement Phase 7 without explicit ask + HoR decision.
+- SPA: `npm run dev` on branch **`changes`** (or merge to **`main`** when ready).
+- Fleet Instances: already on control; exercise badges/RTT after probe tick.
+- Do **not** start log retention Phase 7 without ask + CDR HoR decision.
 
 ### Resume
-1. **SPA fleet Instances polish** (KSUID + RTT) **or** ops-notify follow-ons **or** egress availability.
-2. Log retention Phases 1–6 complete as defined; Phase 7 later.
+1. Continue SPA panel polish on **`changes`** **or** merge **`changes`→`main`**.
+2. Else TODO tip: egress availability / ops-notify follow-ons.
+
+---
+
+## Next agent session notes (2026-07-17 — log retention Phases 5–6) — historical
+
+**Branch was `main`:** superseded by block above. Tips were **pbx3** **`7c9f8d4`**, **pbx3api** **`6c28486`**, **pbx3spa** **`a9ce18c`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 
