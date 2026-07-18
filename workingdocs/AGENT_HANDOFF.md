@@ -57,7 +57,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-18 — Instances polish + SPA panel polish)
 
-**Branches:** **pbx3** **`main`** tip **`f0473c4`** (Instances health/RTT). **pbx3spa** feature **`changes`** tip **`a14af54`** (panel polish — **not merged to `main`**). **pbx3api** unchanged (**`6c28486`**).
+**Branches:** **pbx3** **`main`** tip **`b5fee3e`** (Instances health/RTT + this handoff). **pbx3spa** feature **`changes`** tip **`6b15302`** (panel polish — **not merged to `main`**). **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
 - **Fleet Instances polish (gatekeeper + SPA on `main`):** Probe RTT → SQLite `last_rtt_ms`; `GET /api/v1/catalog` overlays `health`; SPA full copyable KSUID, health badges (Healthy/Warning/Degraded/Down / Probe paused), RTT, manual Refresh. Live on control.

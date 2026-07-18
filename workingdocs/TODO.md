@@ -82,7 +82,7 @@
 
 - [x] **SPA Fleet Instances polish (2026-07-18):** Full copyable KSUID; probe RTT next to Active; health badges (Healthy ≤2m / Warning ≤5m / Degraded / Down / Probe paused for maintenance); manual Refresh. Gatekeeper measures RTT → SQLite `last_rtt_ms`; `GET /api/v1/catalog` overlays `health` (not S3). Branch **`instances-polish` → `main`**. Live on control (probe RTT ~60ms).
 
-- [ ] **SPA panel polish (`changes` — 2026-07-18 in progress):** DID list UID removed; extension SIP Registrar + Behaviour (CFIM/CFBS/ringdelay) + drop Common name; latency chip bands; Network searchable timezone. Log: **`pbx3spa/workingdocs/PANEL_POLISH_2026-07-18.md`**. Tip **`a14af54`**. Merge **`changes`→`main`** when polish session done.
+- [ ] **SPA panel polish (`changes` — 2026-07-18 in progress):** DID list UID removed; extension SIP Registrar + Behaviour (CFIM/CFBS/ringdelay) + drop Common name; latency chip bands; Network searchable timezone. Log: **`pbx3spa/workingdocs/PANEL_POLISH_2026-07-18.md`**. Tip **`6b15302`**. Merge **`changes`→`main`** when polish session done.
 
 - [x] **Log retention Phases 1–6 (2026-07-17):** Rotate/ship/lifecycle/siplog/SBC/control (1–4) on **`main`**; Phase 5 retention knobs + S3 archive list/download; Phase 6 Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr`. Lab: golden + bzy54n @ **pbx3api** **`6c28486`**. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
 
