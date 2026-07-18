@@ -51,17 +51,21 @@ final class FleetInstanceProbe
             }
 
             $ok = false;
+            $rttMs = null;
             try {
-                $ok = InstanceUpProbe::check($api, $this->timeoutSeconds);
+                $result = InstanceUpProbe::probe($api, $this->timeoutSeconds);
+                $ok = $result['ok'];
+                $rttMs = $result['rtt_ms'];
             } catch (\Throwable $e) {
                 $errors[] = "{$id}: probe exception: ".$e->getMessage();
                 $ok = false;
+                $rttMs = null;
             }
 
             $probed++;
             $transition = null;
             try {
-                $transition = InstanceHealthStore::recordProbe($id, $ok);
+                $transition = InstanceHealthStore::recordProbe($id, $ok, $rttMs);
             } catch (\Throwable $e) {
                 $errors[] = "{$id}: health store: ".$e->getMessage();
                 continue;

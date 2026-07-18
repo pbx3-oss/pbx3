@@ -1,20 +1,19 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — log retention Phases 1–6 shipped; Phase 7 proposal only (later review). S10.6–S10.8 on **`main`**. Ops notify + REGISTER-loop lab-proven; instance Asterisk F2B off; **pbx3-docs** live.  
-**Last updated:** 2026-07-17 (session end — log retention Phases 5–6 + Phase 7 proposal)
+**Branch:** **`instances-polish`** (not yet merged) — Fleet Instances polish (KSUID/RTT/health badges). Log retention Phases 1–6 on **`main`**; Phase 7 proposal only. S10.6–S10.8 on **`main`**. Ops notify + REGISTER-loop lab-proven; instance Asterisk F2B off; **pbx3-docs** live.  
+**Last updated:** 2026-07-18 (Instances polish — Gatekeeper health overlay + SPA)
 
 ### Suggested “what next?” order
 
-1. **SPA fleet Instances polish** — full KSUID; RTT next to Active; badges from `last_seen_at`.  
-2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-3. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
-4. **Log retention Phase 7** (later review; not a blocker) — SBC `acc` purge/cold export after CDR HoR decision. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.  
-5. **Failover + shadowing** (parked).  
-6. **S10.7 / S8.9** (parked) — cloud adapter.  
-7. **pbx3-docs polish (ongoing)**.  
-8. **pbx3cagi** struct refactor (deferred).  
-9. **Fleet auth cookie/SSO (blocked)**.  
-10. **S7+** attested PCI — only on customer ask.  
+1. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+2. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
+3. **Log retention Phase 7** (later review; not a blocker) — SBC `acc` purge/cold export after CDR HoR decision. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.  
+4. **Failover + shadowing** (parked).  
+5. **S10.7 / S8.9** (parked) — cloud adapter.  
+6. **pbx3-docs polish (ongoing)**.  
+7. **pbx3cagi** struct refactor (deferred).  
+8. **Fleet auth cookie/SSO (blocked)**.  
+9. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -80,7 +79,7 @@
 
 - [x] **Ops failure notification — v1 probe + SMTP (2026-07-16):** Gatekeeper `bin/probe-fleet-instances.php` + systemd timer; SQLite `instance_health` (down after 2 misses); S3 `last_seen_at`; `Mailer`/`SmtpMailer`; `users.notify_failures` + SPA checkbox; `GATEKEEPER_OPS_NOTIFY_EMAIL`. Lifecycle maintenance/decommission mail. **Misconfig REGISTER:** `pbx3api` `pbx3:ops-register-loops` → Gatekeeper `POST /api/v1/ops-events`. Instance Asterisk F2B jail **off** (SIP ban on SBC); mail resolves shortuid→dialable. **Follow-ons:** move-job mail; Fail2ban Peer auto-whitelist / ban→email; SPA badges. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
 
-- [ ] **SPA Fleet Instances polish (2026-07-16):** (1) Instance **KSUID truncated** in the panel — show full id (copyable). (2) Next to **Active** status, show probe **round-trip time** (Gatekeeper `/up` already timed; expose in catalog/health API + SPA). Ties badges/`last_seen_at` work.
+- [x] **SPA Fleet Instances polish (2026-07-18):** Full copyable KSUID; probe RTT next to Active; health badges (Healthy ≤2m / Warning ≤5m / Degraded / Down / Probe paused for maintenance); manual Refresh. Gatekeeper measures RTT → SQLite `last_rtt_ms`; `GET /api/v1/catalog` overlays `health` (not S3). Branch **`instances-polish`**.
 
 - [x] **Log retention Phases 1–6 (2026-07-17):** Rotate/ship/lifecycle/siplog/SBC/control (1–4) on **`main`**; Phase 5 retention knobs + S3 archive list/download; Phase 6 Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr`. Lab: golden + bzy54n @ **pbx3api** **`6c28486`**. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
 

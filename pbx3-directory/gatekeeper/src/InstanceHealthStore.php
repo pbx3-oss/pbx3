@@ -7,8 +7,8 @@ namespace Pbx3\Gatekeeper;
 use PDO;
 
 /**
- * Local probe state (SQLite) — consecutive misses, reachability, notify dedup.
- * Catalog S3 keeps last_seen_at only; flap counters stay off the public catalog.
+ * Local probe state (SQLite) — consecutive misses, reachability, RTT, notify dedup.
+ * Catalog S3 keeps last_seen_at only; flap counters / RTT stay off the public catalog.
  */
 final class InstanceHealthStore
 {
@@ -23,9 +23,16 @@ CREATE TABLE IF NOT EXISTS instance_health (
     consecutive_misses INTEGER NOT NULL DEFAULT 0,
     last_ok_at TEXT,
     last_probe_at TEXT,
-    last_notified_reachable INTEGER
+    last_notified_reachable INTEGER,
+    last_rtt_ms INTEGER
 );
 SQL);
+
+        $cols = $pdo->query('PRAGMA table_info(instance_health)')->fetchAll();
+        $names = array_map(static fn (array $c): string => (string) $c['name'], $cols);
+        if (! in_array('last_rtt_ms', $names, true)) {
+            $pdo->exec('ALTER TABLE instance_health ADD COLUMN last_rtt_ms INTEGER');
+        }
     }
 
     /**
@@ -33,8 +40,12 @@ SQL);
      *
      * @return null|'down'|'cleared'
      */
-    public static function recordProbe(string $instanceId, bool $ok, ?string $nowIso = null): ?string
-    {
+    public static function recordProbe(
+        string $instanceId,
+        bool $ok,
+        ?int $rttMs = null,
+        ?string $nowIso = null,
+    ): ?string {
         $instanceId = trim($instanceId);
         if ($instanceId === '') {
             throw new \InvalidArgumentException('instance_id required');
@@ -47,6 +58,7 @@ SQL);
         $misses = $row !== null ? (int) $row['consecutive_misses'] : 0;
         $reachable = $row !== null ? (bool) $row['reachable'] : true;
         $lastOk = $row['last_ok_at'] ?? null;
+        $lastRtt = $row['last_rtt_ms'] ?? null;
         $lastNotified = $row !== null && $row['last_notified_reachable'] !== null
             ? (bool) $row['last_notified_reachable']
             : null;
@@ -55,6 +67,9 @@ SQL);
             $misses = 0;
             $reachable = true;
             $lastOk = $now;
+            if ($rttMs !== null && $rttMs >= 0) {
+                $lastRtt = $rttMs;
+            }
         } else {
             $misses++;
             if ($misses >= self::DOWN_AFTER_MISSES) {
@@ -73,14 +88,15 @@ SQL);
 
         $st = $pdo->prepare(<<<'SQL'
 INSERT INTO instance_health (
-  instance_id, reachable, consecutive_misses, last_ok_at, last_probe_at, last_notified_reachable
-) VALUES (?, ?, ?, ?, ?, ?)
+  instance_id, reachable, consecutive_misses, last_ok_at, last_probe_at, last_notified_reachable, last_rtt_ms
+) VALUES (?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(instance_id) DO UPDATE SET
   reachable = excluded.reachable,
   consecutive_misses = excluded.consecutive_misses,
   last_ok_at = excluded.last_ok_at,
   last_probe_at = excluded.last_probe_at,
-  last_notified_reachable = excluded.last_notified_reachable
+  last_notified_reachable = excluded.last_notified_reachable,
+  last_rtt_ms = excluded.last_rtt_ms
 SQL);
         $st->execute([
             $instanceId,
@@ -89,6 +105,7 @@ SQL);
             $lastOk,
             $now,
             $lastNotified === null ? null : ($lastNotified ? 1 : 0),
+            $lastRtt,
         ]);
 
         return $transition;
@@ -101,7 +118,8 @@ SQL);
      *   consecutive_misses:int,
      *   last_ok_at:?string,
      *   last_probe_at:?string,
-     *   last_notified_reachable:?bool
+     *   last_notified_reachable:?bool,
+     *   last_rtt_ms:?int
      * }|null
      */
     public static function get(string $instanceId): ?array
@@ -109,7 +127,8 @@ SQL);
         $pdo = UserStore::pdo();
         self::migrate($pdo);
         $st = $pdo->prepare(
-            'SELECT instance_id, reachable, consecutive_misses, last_ok_at, last_probe_at, last_notified_reachable
+            'SELECT instance_id, reachable, consecutive_misses, last_ok_at, last_probe_at,
+                    last_notified_reachable, last_rtt_ms
              FROM instance_health WHERE instance_id = ? LIMIT 1'
         );
         $st->execute([trim($instanceId)]);
@@ -118,6 +137,7 @@ SQL);
             return null;
         }
         $notified = $row['last_notified_reachable'];
+        $rtt = $row['last_rtt_ms'] ?? null;
 
         return [
             'instance_id' => (string) $row['instance_id'],
@@ -126,6 +146,7 @@ SQL);
             'last_ok_at' => $row['last_ok_at'] !== null && $row['last_ok_at'] !== '' ? (string) $row['last_ok_at'] : null,
             'last_probe_at' => $row['last_probe_at'] !== null && $row['last_probe_at'] !== '' ? (string) $row['last_probe_at'] : null,
             'last_notified_reachable' => $notified === null ? null : (bool) (int) $notified,
+            'last_rtt_ms' => $rtt !== null && $rtt !== '' ? (int) $rtt : null,
         ];
     }
 }

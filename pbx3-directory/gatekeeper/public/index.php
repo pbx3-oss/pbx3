@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__).'/vendor/autoload.php';
 
 use Pbx3\Gatekeeper\Auth;
+use Pbx3\Gatekeeper\CatalogHealthOverlay;
 use Pbx3\Gatekeeper\CatalogReconcile;
 use Pbx3\Gatekeeper\DidInventory;
 use Pbx3\Gatekeeper\Env;
@@ -158,7 +159,7 @@ try {
 
     if ($method === 'GET' && $path === '/api/v1/catalog') {
         Auth::requireAbility(FleetAbilities::READ);
-        JsonResponse::send(200, $registrar->getCatalog());
+        JsonResponse::send(200, CatalogHealthOverlay::enrich($registrar->getCatalog()));
     }
 
     if ($method === 'GET' && $path === '/api/v1/tenants') {

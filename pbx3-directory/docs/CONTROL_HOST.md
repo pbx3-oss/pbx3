@@ -58,7 +58,7 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 |-------|--------|
 | Probe | `php8.4 bin/probe-fleet-instances.php` — active catalog instances → `/up`; skip `maintenance` / `decommissioned` |
 | Timer | Copy `gatekeeper/deploy/pbx3-fleet-probe.{service,timer}` → `/etc/systemd/system/`; `enable --now pbx3-fleet-probe.timer` (~60s) |
-| Health | SQLite `instance_health` in `GATEKEEPER_AUTH_DB`; down after 2 misses; S3 `last_seen_at` on success |
+| Health | SQLite `instance_health` in `GATEKEEPER_AUTH_DB`; down after 2 misses; `last_rtt_ms` on success; S3 `last_seen_at` on success; `GET /api/v1/catalog` overlays `health` for SPA |
 | SMTP | `GATEKEEPER_SMTP_HOST`, `PORT`, `USER`, `PASS`, `FROM`, `TLS` in `/etc/pbx3-gatekeeper/.env`. Unset → log-only. Optional `GATEKEEPER_OPS_NOTIFY_EMAIL`, `GATEKEEPER_FLEET_UI_URL` |
 | Subscribe | Fleet → Users → **Email on instance down** (`notify_failures`) |
 

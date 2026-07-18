@@ -30,15 +30,36 @@ final class InstanceUpProbe
      */
     public static function verify(string $apiBaseUrl, int $timeoutSeconds = 8): void
     {
+        $result = self::probe($apiBaseUrl, $timeoutSeconds);
+        if (! $result['ok']) {
+            throw new \RuntimeException(
+                $result['error'] ?? 'Instance /up probe failed',
+                422
+            );
+        }
+    }
+
+    /** Non-throwing probe for scheduled health jobs. */
+    public static function check(string $apiBaseUrl, int $timeoutSeconds = 8): bool
+    {
+        return self::probe($apiBaseUrl, $timeoutSeconds)['ok'];
+    }
+
+    /**
+     * Non-throwing probe with round-trip time (ms) on success.
+     *
+     * @return array{ok:bool, rtt_ms:?int, error:?string}
+     */
+    public static function probe(string $apiBaseUrl, int $timeoutSeconds = 8): array
+    {
         $url = self::upUrl($apiBaseUrl);
         $verifyTls = filter_var(getenv('PBX3_FLEET_HTTP_VERIFY') ?: 'true', FILTER_VALIDATE_BOOL);
 
         if (function_exists('curl_init')) {
-            self::verifyWithCurl($url, $timeoutSeconds, $verifyTls);
-
-            return;
+            return self::probeWithCurl($url, $timeoutSeconds, $verifyTls);
         }
 
+        $started = hrtime(true);
         $ctx = stream_context_create([
             'http' => [
                 'method' => 'GET',
@@ -52,35 +73,30 @@ final class InstanceUpProbe
             ],
         ]);
         $body = @file_get_contents($url, false, $ctx);
+        $elapsedMs = (int) max(0, (int) round((hrtime(true) - $started) / 1_000_000));
         $status = 0;
         if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $m)) {
             $status = (int) $m[1];
         }
         if ($body === false || $status < 200 || $status >= 300) {
-            throw new \RuntimeException(
-                "Instance /up probe failed for {$url}".($status > 0 ? " (HTTP {$status})" : ' (unreachable)'),
-                422
-            );
+            return [
+                'ok' => false,
+                'rtt_ms' => null,
+                'error' => "Instance /up probe failed for {$url}".($status > 0 ? " (HTTP {$status})" : ' (unreachable)'),
+            ];
         }
+
+        return ['ok' => true, 'rtt_ms' => $elapsedMs, 'error' => null];
     }
 
-    /** Non-throwing probe for scheduled health jobs. */
-    public static function check(string $apiBaseUrl, int $timeoutSeconds = 8): bool
-    {
-        try {
-            self::verify($apiBaseUrl, $timeoutSeconds);
-
-            return true;
-        } catch (\Throwable) {
-            return false;
-        }
-    }
-
-    private static function verifyWithCurl(string $url, int $timeoutSeconds, bool $verifyTls): void
+    /**
+     * @return array{ok:bool, rtt_ms:?int, error:?string}
+     */
+    private static function probeWithCurl(string $url, int $timeoutSeconds, bool $verifyTls): array
     {
         $ch = curl_init($url);
         if ($ch === false) {
-            throw new \RuntimeException('curl_init failed for /up probe', 500);
+            return ['ok' => false, 'rtt_ms' => null, 'error' => 'curl_init failed for /up probe'];
         }
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -95,13 +111,26 @@ final class InstanceUpProbe
         $errno = curl_errno($ch);
         $err = curl_error($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $total = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
         curl_close($ch);
 
         if ($errno !== 0 || $body === false) {
-            throw new \RuntimeException("Instance /up probe failed for {$url}: {$err}", 422);
+            return [
+                'ok' => false,
+                'rtt_ms' => null,
+                'error' => "Instance /up probe failed for {$url}: {$err}",
+            ];
         }
         if ($status < 200 || $status >= 300) {
-            throw new \RuntimeException("Instance /up probe failed for {$url} (HTTP {$status})", 422);
+            return [
+                'ok' => false,
+                'rtt_ms' => null,
+                'error' => "Instance /up probe failed for {$url} (HTTP {$status})",
+            ];
         }
+
+        $rttMs = is_numeric($total) ? (int) max(0, (int) round(((float) $total) * 1000)) : null;
+
+        return ['ok' => true, 'rtt_ms' => $rttMs, 'error' => null];
     }
 }
