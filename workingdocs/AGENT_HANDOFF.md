@@ -55,22 +55,31 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-18 — Instances polish + SPA panel polish)
+## Next agent session notes (2026-07-18 — SBC admin SPA kinship polish)
 
-**Branches:** **pbx3** **`main`** tip **`b5fee3e`** (Instances health/RTT + this handoff). **pbx3spa** feature **`changes`** tip **`6b15302`** (panel polish — **not merged to `main`**). **pbx3api** unchanged (**`6c28486`**).
+**Branches:** **pbx3sbc-admin** **`main`** tip **`463431b`** (SPA kinship polish — live on **`sbc.pbx3.com/admin`**). **pbx3spa** **`main`** tip **`7dda918`** (panel polish merged earlier same day). **pbx3** / **pbx3api** unchanged this session (**`ef1e0e5`** / **`6c28486`** before handoff tip-up).
 
 ### Shipped
-- **Fleet Instances polish (gatekeeper + SPA on `main`):** Probe RTT → SQLite `last_rtt_ms`; `GET /api/v1/catalog` overlays `health`; SPA full copyable KSUID, health badges (Healthy/Warning/Degraded/Down / Probe paused), RTT, manual Refresh. Live on control.
-- **SPA panel polish (`changes`):** DID routes list — drop UID column. Extensions edit — SIP Registrar (tenant FQDN); remove Common name; Behaviour section (CFIM/CFBS/ring delay inline, no Runtime edit mode). Extensions/Trunks list — latency chip colors (green &lt;100 / yellow 100–200 / orange 201–300 / red &gt;300). Network — searchable timezone picker with friendly US labels. Record: **`pbx3spa/workingdocs/PANEL_POLISH_2026-07-18.md`**.
+- **pbx3sbc-admin SPA kinship (`SBCpolish` → `main`):** Shallower topbar; brand size; Instance chip (`sbc.pbx3.com`); Logged in as + Logout (avatar blanked); Lucide nav icons; pill badges; icon-only table Edit/Delete/View + Call Routes Edit domain / Manage destinations tooltips; Home nav + **Home — FQDN** title; remove AccountWidget; **← list** back links on edit/view/create (Destinations → ← Call Routes); sidebar **© Aelintra Telecom**. Theme cache-bust `?v=filemtime`.
+- **Earlier same day (prior handoff):** SPA **`changes`→`main`**; Fleet Instances health/RTT already on control.
 
 ### Golden / operator follow-up
-- SPA: `npm run dev` on branch **`changes`** (or merge to **`main`** when ready).
-- Fleet Instances: already on control; exercise badges/RTT after probe tick.
+- SBC: hard-refresh **https://sbc.pbx3.com/admin** (theme `?v=`). Live tree remains dirty beyond polish files — do not wholesale `git reset` without ops intent.
+- Optional: delete remote **`SBCpolish`** branch (local still present).
 - Do **not** start log retention Phase 7 without ask + CDR HoR decision.
 
 ### Resume
-1. Continue SPA panel polish on **`changes`** **or** merge **`changes`→`main`**.
-2. Else TODO tip: egress availability / ops-notify follow-ons.
+1. TODO tip: egress availability / SBC failover **or** ops-notify follow-ons.
+2. Else pbx3-docs polish / parked S10.7.
+
+---
+
+## Next agent session notes (2026-07-18 — Instances polish + SPA panel polish) — historical
+
+**Branch was:** superseded by block above. Tips were **pbx3** **`b5fee3e`**, **pbx3spa** **`changes`/`6b15302`** (later merged to **`7dda918`**).
+
+### Resume (superseded)
+See block above.
 
 ---
 

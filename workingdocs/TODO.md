@@ -1,20 +1,19 @@
 # PBX3 ToDo list
 
-**Branch:** **`pbx3spa` `changes`** (panel polish; not merged to **`main`** yet). **pbx3** / gatekeeper Instances polish on **`main`**. Log retention Phases 1–6 done; Phase 7 proposal only.  
-**Last updated:** 2026-07-18 (session end — Instances polish + SPA panel polish on `changes`)
+**Branch:** all **`main`**. SPA panel polish merged; **pbx3sbc-admin** SPA-kinship polish live. Log retention Phases 1–6 done; Phase 7 proposal only.  
+**Last updated:** 2026-07-18 (session end — SBC admin SPA kinship polish)
 
 ### Suggested “what next?” order
 
-1. **Merge SPA `changes` → `main`** (after any final panel polish review) **or** continue panel polish on **`changes`**.  
-2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-3. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
-4. **Log retention Phase 7** (later review; not a blocker) — SBC `acc` purge/cold export after CDR HoR decision. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.  
-5. **Failover + shadowing** (parked).  
-6. **S10.7 / S8.9** (parked) — cloud adapter.  
-7. **pbx3-docs polish (ongoing)**.  
-8. **pbx3cagi** struct refactor (deferred).  
-9. **Fleet auth cookie/SSO (blocked)**.  
-10. **S7+** attested PCI — only on customer ask.  
+1. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+2. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
+3. **Log retention Phase 7** (later review; not a blocker) — SBC `acc` purge/cold export after CDR HoR decision. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.  
+4. **Failover + shadowing** (parked).  
+5. **S10.7 / S8.9** (parked) — cloud adapter.  
+6. **pbx3-docs polish (ongoing)**.  
+7. **pbx3cagi** struct refactor (deferred).  
+8. **Fleet auth cookie/SSO (blocked)**.  
+9. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -82,7 +81,9 @@
 
 - [x] **SPA Fleet Instances polish (2026-07-18):** Full copyable KSUID; probe RTT next to Active; health badges (Healthy ≤2m / Warning ≤5m / Degraded / Down / Probe paused for maintenance); manual Refresh. Gatekeeper measures RTT → SQLite `last_rtt_ms`; `GET /api/v1/catalog` overlays `health` (not S3). Branch **`instances-polish` → `main`**. Live on control (probe RTT ~60ms).
 
-- [ ] **SPA panel polish (`changes` — 2026-07-18 in progress):** DID list UID removed; extension SIP Registrar + Behaviour (CFIM/CFBS/ringdelay) + drop Common name; latency chip bands; Network searchable timezone. Log: **`pbx3spa/workingdocs/PANEL_POLISH_2026-07-18.md`**. Tip **`6b15302`**. Merge **`changes`→`main`** when polish session done.
+- [x] **SPA panel polish (2026-07-18):** DID list UID removed; extension SIP Registrar + Behaviour (CFIM/CFBS/ringdelay) + drop Common name; latency chip bands; Network searchable timezone. Log: **`pbx3spa/workingdocs/PANEL_POLISH_2026-07-18.md`**. Branch **`changes` → `main`** **`7dda918`**.
+
+- [x] **pbx3sbc-admin SPA kinship polish (2026-07-18):** Topbar height/brand + Instance chip + Logged in as / Logout; Lucide sidebar icons; pill badges; icon-only Edit/Delete/View (+ Call Routes tooltips); Home / Home — FQDN; AccountWidget removed; ← list back links on edit/view/create; © Aelintra Telecom sidebar footer. Branch **`SBCpolish` → `main`** tip **`463431b`**. Live on **`sbc.pbx3.com/admin`**.
 
 - [x] **Log retention Phases 1–6 (2026-07-17):** Rotate/ship/lifecycle/siplog/SBC/control (1–4) on **`main`**; Phase 5 retention knobs + S3 archive list/download; Phase 6 Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr`. Lab: golden + bzy54n @ **pbx3api** **`6c28486`**. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
 
