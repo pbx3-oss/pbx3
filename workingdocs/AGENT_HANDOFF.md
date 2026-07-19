@@ -58,7 +58,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-19 — auto-logout + downstream peer REGISTER reqs)
 
-**Branches:** **pbx3spa** **`main`** tip **`b6f5deb`** (handoff; auto-logout feature **`5c36ce2`**). **pbx3sbc-admin** **`main`** tip **`2e56ae3`** (idle auto-logout — live on **`sbc.pbx3.com/admin`** via surgical deploy). **pbx3** tip **`de659a1`** (handoff; peer REGISTER reqs were **`5fc8540`**). **pbx3api** unchanged (**`6c28486`**).
+**Branches:** **pbx3spa** **`main`** tip **`1868242`** (handoff; auto-logout feature **`5c36ce2`**). **pbx3sbc-admin** **`main`** tip **`2e56ae3`** (idle auto-logout — live on **`sbc.pbx3.com/admin`** via surgical deploy). **pbx3** tip **`af70342`** (handoff; peer REGISTER reqs were **`5fc8540`**). **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
 - **Admin auto-logout:** SPA instance + Fleet shells; SBC Filament topbar. Default **10 min** inactivity. SPA `VITE_AUTO_LOGOUT_MINUTES` (build-time; unset → hardcoded 10). SBC `PBX3_ADMIN_INACTIVITY_MINUTES` (runtime). Cross-tab activity via `localStorage`. Docs: **`pbx3spa/workingdocs/DEV_ENVIRONMENT.md`** §7b.
