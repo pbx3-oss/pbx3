@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** all **`main`**. SPA panel polish merged; **pbx3sbc-admin** SPA-kinship polish live. Log retention Phases 1–6 done; Phase 7 proposal only.  
-**Last updated:** 2026-07-18 (session end — SBC admin SPA kinship polish)
+**Branch:** all **`main`**. Auto-logout (SPA + SBC admin) shipped; SBC live via surgical deploy. Downstream peer registration = future reqs only. Log retention Phases 1–6 done; Phase 7 proposal only.  
+**Last updated:** 2026-07-19 (session end — auto-logout + downstream peer registration requirements)
 
 ### Suggested “what next?” order
 
@@ -84,6 +84,10 @@
 - [x] **SPA panel polish (2026-07-18):** DID list UID removed; extension SIP Registrar + Behaviour (CFIM/CFBS/ringdelay) + drop Common name; latency chip bands; Network searchable timezone. Log: **`pbx3spa/workingdocs/PANEL_POLISH_2026-07-18.md`**. Branch **`changes` → `main`** **`7dda918`**.
 
 - [x] **pbx3sbc-admin SPA kinship polish (2026-07-18):** Topbar height/brand + Instance chip + Logged in as / Logout; Lucide sidebar icons; pill badges; icon-only Edit/Delete/View (+ Call Routes tooltips); Home / Home — FQDN; AccountWidget removed; ← list back links on edit/view/create; © Aelintra Telecom sidebar footer. Branch **`SBCpolish` → `main`** tip **`463431b`**. Live on **`sbc.pbx3.com/admin`**.
+
+- [x] **Admin auto-logout (2026-07-19):** SPA + SBC admin idle logout, default **10 minutes**, configurable. SPA: `VITE_AUTO_LOGOUT_MINUTES` (build-time; absent → hardcoded 10 — see **`pbx3spa/workingdocs/DEV_ENVIRONMENT.md`** §7b). SBC: `PBX3_ADMIN_INACTIVITY_MINUTES` (runtime). Tips **pbx3spa** **`5c36ce2`**, **pbx3sbc-admin** **`2e56ae3`**. Live SBC: surgical copy of `config/panel.php` + `topbar-user.blade.php` (dirty tree — no wholesale `git pull`/reset); SSH key **`~/Documents/pemfiles/opensips.pem`**.
+
+- [ ] **Downstream peer registration edge (future — not next):** Separate **registration-edge** SBC instance class + own OpenSIPS image; auth HoR on that edge; trusted SIP link into main **pbx3sbc**. Not bolted onto current SBC. Interim lab workaround (extension-like REGISTER via Asterisk) documented — not product path. Spec: **`pbx3-directory/docs/DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**.
 
 - [x] **Log retention Phases 1–6 (2026-07-17):** Rotate/ship/lifecycle/siplog/SBC/control (1–4) on **`main`**; Phase 5 retention knobs + S3 archive list/download; Phase 6 Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr`. Lab: golden + bzy54n @ **pbx3api** **`6c28486`**. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
 

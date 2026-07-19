@@ -47,6 +47,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Fleet Egress availability / SBC failover** (future) | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — OPTIONS qualify, EgressFailover, health UI |
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig REGISTER shipped; move-job / Fail2ban ban→email / velocity later |
 | **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; Phase 7 SBC `acc` proposal later; 7d local / S3 by class; SBC SIP pcap; instance siplog solo-only |
+| **Downstream peer REGISTER (future)** | **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class; no shared OpenSIPS image; interim Asterisk-proxied workaround only |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
@@ -55,18 +56,20 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-18 — SBC admin SPA kinship polish)
+## Next agent session notes (2026-07-19 — auto-logout + downstream peer REGISTER reqs)
 
-**Branches:** **pbx3sbc-admin** **`main`** tip **`463431b`** (SPA kinship polish — live on **`sbc.pbx3.com/admin`**). **pbx3spa** **`main`** tip **`0f9fd65`**. **pbx3** tip **`1acfec4`**; **pbx3api** unchanged (**`6c28486`**).
+**Branches:** **pbx3spa** **`main`** tip **`5c36ce2`** (idle auto-logout). **pbx3sbc-admin** **`main`** tip **`2e56ae3`** (idle auto-logout — live on **`sbc.pbx3.com/admin`** via surgical deploy). **pbx3** tip **`5fc8540`** (downstream peer registration requirements + Asterisk interim workaround note). **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
-- **pbx3sbc-admin SPA kinship (`SBCpolish` → `main`):** Shallower topbar; brand size; Instance chip (`sbc.pbx3.com`); Logged in as + Logout (avatar blanked); Lucide nav icons; pill badges; icon-only table Edit/Delete/View + Call Routes Edit domain / Manage destinations tooltips; Home nav + **Home — FQDN** title; remove AccountWidget; **← list** back links on edit/view/create (Destinations → ← Call Routes); sidebar **© Aelintra Telecom**. Theme cache-bust `?v=filemtime`.
-- **Earlier same day (prior handoff):** SPA **`changes`→`main`**; Fleet Instances health/RTT already on control.
+- **Admin auto-logout:** SPA instance + Fleet shells; SBC Filament topbar. Default **10 min** inactivity. SPA `VITE_AUTO_LOGOUT_MINUTES` (build-time; unset → hardcoded 10). SBC `PBX3_ADMIN_INACTIVITY_MINUTES` (runtime). Cross-tab activity via `localStorage`. Docs: **`pbx3spa/workingdocs/DEV_ENVIRONMENT.md`** §7b.
+- **Downstream peer registration (future reqs):** **`pbx3-directory/docs/DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class + own OpenSIPS image; trusted SIP into main SBC; no shared image. Interim: proxy REGISTER like an extension to Asterisk (not product path).
+- **Live SBC deploy:** SSH **`ubuntu@sbc.pbx3.com`** key **`~/Documents/pemfiles/opensips.pem`**. Copied `config/panel.php` + `topbar-user.blade.php`; `config:cache` / `view:cache`. Did **not** `git pull` (live tree dirty; HEAD still **`2df6a60`** under long-standing hand-synced overlay).
 
 ### Golden / operator follow-up
-- SBC: hard-refresh **https://sbc.pbx3.com/admin** (theme `?v=`). Live tree remains dirty beyond polish files — do not wholesale `git reset` without ops intent.
-- Optional: delete remote **`SBCpolish`** branch (local still present).
-- Do **not** start log retention Phase 7 without ask + CDR HoR decision.
+- Hard-refresh **https://sbc.pbx3.com/admin** after login to exercise idle timer.
+- SPA Pages: next production **`npm run build`** picks up auto-logout (default 10 without env).
+- Live SBC git reconcile to **`2e56ae3`** still deferred — do not wholesale reset without ops intent.
+- Do **not** start registration-edge build or log retention Phase 7 without ask.
 
 ### Resume
 1. TODO tip: egress availability / SBC failover **or** ops-notify follow-ons.
@@ -74,9 +77,18 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
+## Next agent session notes (2026-07-18 — SBC admin SPA kinship polish) — historical
+
+**Branch was:** superseded by block above. Tips were **pbx3sbc-admin** **`463431b`**, **pbx3spa** **`0f9fd65`**, **pbx3** **`1acfec4`**.
+
+### Resume (superseded)
+See block above.
+
+---
+
 ## Next agent session notes (2026-07-18 — Instances polish + SPA panel polish) — historical
 
-**Branch was:** superseded by block above. Tips were **pbx3** **`b5fee3e`**, **pbx3spa** **`changes`/`6b15302`** (later merged to **`7dda918`**).
+**Branch was:** superseded by blocks above. Tips were **pbx3** **`b5fee3e`**, **pbx3spa** **`changes`/`6b15302`** (later merged to **`7dda918`**).
 
 ### Resume (superseded)
 See block above.
