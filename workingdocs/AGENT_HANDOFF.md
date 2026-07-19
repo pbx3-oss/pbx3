@@ -57,7 +57,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-18 — SBC admin SPA kinship polish)
 
-**Branches:** **pbx3sbc-admin** **`main`** tip **`463431b`** (SPA kinship polish — live on **`sbc.pbx3.com/admin`**). **pbx3spa** **`main`** tip **`7dda918`** (panel polish merged earlier same day). **pbx3** / **pbx3api** unchanged this session (**`ef1e0e5`** / **`6c28486`** before handoff tip-up).
+**Branches:** **pbx3sbc-admin** **`main`** tip **`463431b`** (SPA kinship polish — live on **`sbc.pbx3.com/admin`**). **pbx3spa** **`main`** tip **`1e024ed`** (panel polish merged earlier same day). **pbx3** tip **`2b30c26`**; **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
 - **pbx3sbc-admin SPA kinship (`SBCpolish` → `main`):** Shallower topbar; brand size; Instance chip (`sbc.pbx3.com`); Logged in as + Logout (avatar blanked); Lucide nav icons; pill badges; icon-only table Edit/Delete/View + Call Routes Edit domain / Manage destinations tooltips; Home nav + **Home — FQDN** title; remove AccountWidget; **← list** back links on edit/view/create (Destinations → ← Call Routes); sidebar **© Aelintra Telecom**. Theme cache-bust `?v=filemtime`.
