@@ -80,6 +80,31 @@ Any future control-plane provisioning is management-plane work only. Runtime bin
 
 ---
 
+## Interim workaround (not the product path)
+
+**Just in case** a lab or short-term need appears before the registration-edge instance class exists: treat the downstream trunk like an **extension**.
+
+| Step | Behaviour |
+|------|-----------|
+| 1 | Downstream PBX REGISTERs into the **current** main SBC |
+| 2 | SBC proxies REGISTER to a chosen tenant Asterisk (same path as phones) |
+| 3 | Asterisk authenticates the identity (PJSIP endpoint / digest) |
+| 4 | On 2xx, OpenSIPS stores the Contact in `location` |
+| 5 | Calls **to** that AOR can follow `lookup(location)` to the registered Contact |
+
+**What this buys:** dynamic reachability and Asterisk as auth authority, without building an SBC-owned trunk registrar.
+
+**Why it is only a workaround:**
+
+- The identity is an **endpoint/AOR**, not a Peer in `dr_gateways` (no Peer role, carrier grouping, or drouting gwlist semantics).
+- **INVITEs from** that PBX are still not automatically trusted as a Peer via `is_from_gw` unless IP trust (or another identify path) is also configured.
+- Dialplan/context must keep the identity from behaving like a normal extension (privileges, CID, concurrent calls).
+- The AOR lives under a **tenant domain → dispatcher set**, so one Asterisk owns that fake “trunk extension.”
+
+**Do not** elevate this into D1–D6. Product destination remains the separate registration-edge instance class with its own OpenSIPS image.
+
+---
+
 ## Future functional requirements
 
 When this work is prioritized, the registration edge must:
@@ -139,4 +164,4 @@ A future lab proof is complete when:
 
 ---
 
-*Last updated: 2026-07-18 — initial future requirement and instance-class decision.*
+*Last updated: 2026-07-18 — initial future requirement, instance-class decision, and Asterisk-proxied REGISTER interim workaround.*
