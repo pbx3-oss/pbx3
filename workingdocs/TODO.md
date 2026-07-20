@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. **SBC data aging complete** (WS0–WS4 lab-live + Filament knobs + MkDocs). Next: **SBC backup/restore**. Litestream parked.  
-**Last updated:** 2026-07-20 (aging WS3/WS4)
+**Last updated:** 2026-07-20 (session end — aging complete; backup/restore next)
 
 ### Suggested “what next?” order
 

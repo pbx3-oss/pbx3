@@ -46,7 +46,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **Fleet Egress availability / SBC failover** (future) | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — OPTIONS qualify, EgressFailover, health UI |
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig REGISTER shipped; move-job / Fail2ban ban→email / velocity later |
-| **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging/purge (decisions locked; WS1 next); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR stub (after aging; production gate) |
+| **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging WS0–WS4 **done** (lab); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR stub (**next**; production gate) |
 | **Downstream peer REGISTER (future)** | **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class; no shared OpenSIPS image; interim Asterisk-proxied workaround only |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
@@ -56,26 +56,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-20 — SPA/SBC brand + Fail2ban log + SBC aging review)
+## Next agent session notes (2026-07-20 — SBC data aging complete + backup/restore stub)
 
-**Branches:** **pbx3spa** **`main`** tip **`858c084`** (handoff; BrandMark feature **`847ddb8`**). **pbx3sbc-admin** **`main`** tip **`0210d10`**. **pbx3sbc** **`main`** tip **`7311b2e`** (docs stub; tail helper **`2989166`**). **pbx3** tip **`b511d59`**. **pbx3api** unchanged (**`6c28486`**).
+**Branches:** **pbx3sbc-admin** **`main`** tip **`82641ad`**. **pbx3** tip **`9be6599`** (docs; handoff tips below after this commit). **pbx3sbc** tip **`a5d62c4`**. **pbx3-docs** tip **`553c8e7`**. **pbx3spa** tip **`0ec1588`** (unchanged this session). **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
-- **SPA BrandMark:** `PBX` + blue superscript `3` in sidebar (Admin + Fleet); topbar labels **Admin** / **Fleet**; no glow; `2rem`; superscript `top: -0.52em`.
-- **SBC kinship:** same mark in Filament sidebar header; topbar **SBC**; padding/superscript tuned; **dark mode disabled** (theme switcher removed).
-- **Call Routes view:** row click shows domain + destinations (was empty); Edit removed from View (Manage destinations kept).
-- **Fail2ban log viewer:** Logs → Fail2ban log; `tail-fail2ban-log.sh` + sudoers; live on **`sbc.pbx3.com/admin`**.
-- **SBC data aging review (docs):** **`pbx3-directory/docs/SBC_DATA_RETENTION_REQUIREMENTS.md`** — inventory + decision checklist; folds Phase 7. No purge code yet.
+- **SBC MySQL aging (WS0–WS4):** Decisions locked (edge ops `acc` 90d; security events 30d; purge-only; root cron). Artisan `pbx3sbc:purge-security-events` / `pbx3sbc:purge-acc`; Filament **Logs → Data retention** (override JSON + last purge; no UI delete); MkDocs **`fleet/sbc-data-retention.md`**.
+- **Lab live on `sbc.pbx3.com`:** first purge (door-knock 1546 / failed-reg 700 / acc 8); cron `/etc/cron.d/pbx3sbc-retention`; surgical overlay (dirty tree).
+- **Litestream / SQLite edge:** **parked** — MariaDB current (`FLEET_TRUNK_PEERING_DECISION.md` §6.0).
+- **SBC backup/restore:** stub **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — production gate; start after aging (now ready).
 
 ### Golden / operator follow-up
-- Live SBC still surgical overlay (dirty tree) — do not wholesale `git pull`/reset.
+- Hard-refresh SBC admin for **Data retention** nav. Live SBC still surgical overlay — do not wholesale `git pull`/reset.
 - SSH **`ubuntu@sbc.pbx3.com`** key **`~/Documents/pemfiles/opensips.pem`**.
-- Next for aging: run § Lab measurement on SBC; fill decision checklist; then WS1 security purge and/or WS2 `acc`.
+- MkDocs Pages: next docs publish for fleet retention page.
 
 ### Resume
-1. **SBC data aging** — measure + decisions in **`SBC_DATA_RETENTION_REQUIREMENTS.md`**.
+1. **SBC backup & restore** — **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (MariaDB dump + S3; production gate).
 2. Else egress availability / ops-notify follow-ons.
-3. Do **not** implement destructive MySQL purge without recorded decisions.
+3. Do not reopen Litestream unless explicit ask.
+
+---
+
+## Next agent session notes (2026-07-20 — SPA/SBC brand + Fail2ban log + SBC aging review) — historical
+
+**Branch was:** superseded by block above. Tips were spa **`858c084`**, sbc-admin **`0210d10`**, sbc **`7311b2e`**, pbx3 **`b511d59`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 
