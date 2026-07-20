@@ -46,7 +46,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **Fleet Egress availability / SBC failover** (future) | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — OPTIONS qualify, EgressFailover, health UI |
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig REGISTER shipped; move-job / Fail2ban ban→email / velocity later |
-| **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; Phase 7 SBC `acc` proposal later; 7d local / S3 by class; SBC SIP pcap; instance siplog solo-only |
+| **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — SBC MySQL aging review (acc + door-knock + failed-reg); 7d local / S3 by class; SBC SIP pcap; instance siplog solo-only |
 | **Downstream peer REGISTER (future)** | **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class; no shared OpenSIPS image; interim Asterisk-proxied workaround only |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
@@ -56,30 +56,41 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-19 — auto-logout + downstream peer REGISTER reqs)
+## Next agent session notes (2026-07-20 — SPA/SBC brand + Fail2ban log + SBC aging review)
 
-**Branches:** **pbx3spa** **`main`** tip **`1868242`** (handoff; auto-logout feature **`5c36ce2`**). **pbx3sbc-admin** **`main`** tip **`2e56ae3`** (idle auto-logout — live on **`sbc.pbx3.com/admin`** via surgical deploy). **pbx3** tip **`af70342`** (handoff; peer REGISTER reqs were **`5fc8540`**). **pbx3api** unchanged (**`6c28486`**).
+**Branches:** **pbx3spa** **`main`** tip **`847ddb8`** (PBX³ sidebar BrandMark). **pbx3sbc-admin** **`main`** tip **`0210d10`** (brand + light-only + Call Route view + Fail2ban log — live via surgical deploy). **pbx3sbc** **`main`** tip **`2989166`** (+ handoff stub commit if pushed). **pbx3** tip after this handoff commit (SBC aging reqs). **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
-- **Admin auto-logout:** SPA instance + Fleet shells; SBC Filament topbar. Default **10 min** inactivity. SPA `VITE_AUTO_LOGOUT_MINUTES` (build-time; unset → hardcoded 10). SBC `PBX3_ADMIN_INACTIVITY_MINUTES` (runtime). Cross-tab activity via `localStorage`. Docs: **`pbx3spa/workingdocs/DEV_ENVIRONMENT.md`** §7b.
-- **Downstream peer registration (future reqs):** **`pbx3-directory/docs/DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class + own OpenSIPS image; trusted SIP into main SBC; no shared image. Interim: proxy REGISTER like an extension to Asterisk (not product path).
-- **Live SBC deploy:** SSH **`ubuntu@sbc.pbx3.com`** key **`~/Documents/pemfiles/opensips.pem`**. Copied `config/panel.php` + `topbar-user.blade.php`; `config:cache` / `view:cache`. Did **not** `git pull` (live tree dirty; HEAD still **`2df6a60`** under long-standing hand-synced overlay).
+- **SPA BrandMark:** `PBX` + blue superscript `3` in sidebar (Admin + Fleet); topbar labels **Admin** / **Fleet**; no glow; `2rem`; superscript `top: -0.52em`.
+- **SBC kinship:** same mark in Filament sidebar header; topbar **SBC**; padding/superscript tuned; **dark mode disabled** (theme switcher removed).
+- **Call Routes view:** row click shows domain + destinations (was empty); Edit removed from View (Manage destinations kept).
+- **Fail2ban log viewer:** Logs → Fail2ban log; `tail-fail2ban-log.sh` + sudoers; live on **`sbc.pbx3.com/admin`**.
+- **SBC data aging review (docs):** **`pbx3-directory/docs/SBC_DATA_RETENTION_REQUIREMENTS.md`** — inventory + decision checklist; folds Phase 7. No purge code yet.
 
 ### Golden / operator follow-up
-- Hard-refresh **https://sbc.pbx3.com/admin** after login to exercise idle timer.
-- SPA Pages: next production **`npm run build`** picks up auto-logout (default 10 without env).
-- Live SBC git reconcile to **`2e56ae3`** still deferred — do not wholesale reset without ops intent.
-- Do **not** start registration-edge build or log retention Phase 7 without ask.
+- Live SBC still surgical overlay (dirty tree) — do not wholesale `git pull`/reset.
+- SSH **`ubuntu@sbc.pbx3.com`** key **`~/Documents/pemfiles/opensips.pem`**.
+- Next for aging: run § Lab measurement on SBC; fill decision checklist; then WS1 security purge and/or WS2 `acc`.
 
 ### Resume
-1. TODO tip: egress availability / SBC failover **or** ops-notify follow-ons.
-2. Else pbx3-docs polish / parked S10.7.
+1. **SBC data aging** — measure + decisions in **`SBC_DATA_RETENTION_REQUIREMENTS.md`**.
+2. Else egress availability / ops-notify follow-ons.
+3. Do **not** implement destructive MySQL purge without recorded decisions.
+
+---
+
+## Next agent session notes (2026-07-19 — auto-logout + downstream peer REGISTER reqs) — historical
+
+**Branch was:** superseded by block above. Tips were **pbx3spa** **`1868242`**, **pbx3sbc-admin** **`2e56ae3`**, **pbx3** **`af70342`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 
 ## Next agent session notes (2026-07-18 — SBC admin SPA kinship polish) — historical
 
-**Branch was:** superseded by block above. Tips were **pbx3sbc-admin** **`463431b`**, **pbx3spa** **`0f9fd65`**, **pbx3** **`1acfec4`**.
+**Branch was:** superseded by blocks above. Tips were **pbx3sbc-admin** **`463431b`**, **pbx3spa** **`0f9fd65`**, **pbx3** **`1acfec4`**.
 
 ### Resume (superseded)
 See block above.

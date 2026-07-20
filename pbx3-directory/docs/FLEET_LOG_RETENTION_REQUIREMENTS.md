@@ -1,8 +1,8 @@
 # Fleet / node — log retention & SIP capture (requirements)
 
-**Status:** **Phases 1–6 complete (2026-07-17)** — ship/lifecycle/siplog/SBC/control (1–4); SPA retention knobs + S3 archive list/download (5); Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr` (6). Phase 7 (SBC `acc` retention / cold export) is **for later review** and is not a blocker.  
+**Status:** **Phases 1–6 complete (2026-07-17)** — ship/lifecycle/siplog/SBC/control (1–4); SPA retention knobs + S3 archive list/download (5); Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr` (6). Phase 7 / SBC MySQL aging planning lives in **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (kickoff 2026-07-20).  
 **MVP (when prioritized):** Local hot store (~7 days) + async offload of **rotated** files to S3 cold store by class; SIP-only pcap ring on the **SBC**; instance `sys-ua-siplog` **solo only** (disabled in fleet).  
-**Related:** **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity (instance detection; Gatekeeper delivery); pbx3api **`LogController`** (local log read) + **`CdrController`** (SQLite search); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
+**Related:** **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (SBC MySQL + logs aging review); **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity (instance detection; Gatekeeper delivery); pbx3api **`LogController`** (local log read) + **`CdrController`** (SQLite search); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
 
 ---
 
@@ -112,9 +112,9 @@ Do **not** treat SBC `acc` as a substitute for instance Asterisk CDR (or the rev
 
 Text-log / pcap S3 offload does **not** replace `acc`. When prioritized: purge or archive old `acc` rows (local retention + optional export) under the same privacy rules as instance CDR. Product log-retention v1 can ship instance CSV→S3 before `acc` archive is designed.
 
-## Phase 7 — SBC `acc` retention / cold export (**for later review; not a blocker**)
+## Phase 7 — SBC `acc` retention / cold export (**part of SBC data aging review**)
 
-**Status:** Proposal only. Do not implement or enable destructive retention until the product CDR source of record is reviewed. We have not yet decided whether operator history will primarily use SBC OpenSIPS `acc`, instance Asterisk CDR, or both for different purposes.
+**Status:** Proposal only — planning home is now **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (includes `acc` plus `door_knock_attempts` / `failed_registrations` and lab measurement). Do not implement or enable destructive retention until decisions are recorded there.
 
 ### Why this may be needed
 
@@ -278,6 +278,6 @@ Same 7d / 1mo for control syslog/nginx under `control/{id}/logs/…`.
 | **4** | Control host rotate + S3 | **pbx3-directory** ops: `gatekeeper/deploy/install-control-log-retention.sh` — **done on `logs`** |
 | **5** | SPA / instance config for retention knobs; S3 archive list+download | **pbx3spa**, **pbx3api** — **done on `logs56`**: `GET/PUT logs/retention`, override file, `logs/archive`; Sysglobals Logging + Logs S3 section. Lifecycle script still ops-owned (knobs update `policy.json` intent). |
 | **6** (optional track) | Instance SQLite CDR + search API/panel; dual-write with CSV archive | **pbx3** `cdr_sqlite3_custom.conf` (Asterisk 20: legacy `columns`/`values`) + module load; **pbx3api** `GET cdr` + `pbx3:cdr-prune`; **pbx3spa** `/cdr` — **done on `logs56`**. Lab golden: module Running, `master.db` rows, retention override + archive list/download smoke OK. |
-| **7** (optional; for later review) | SBC `acc` purge / cold export; product CDR HoR decision first | **pbx3sbc** / **pbx3sbc-admin** — proposal only; not a blocker |
+| **7** (optional; under SBC aging review) | SBC `acc` (+ security tables) purge / cold export — planning: **`SBC_DATA_RETENTION_REQUIREMENTS.md`** | **pbx3sbc** / **pbx3sbc-admin** — decisions first; not a blocker |
 
-Phases **1–6** are implemented. Phase 7 is documented for later review and is not a blocker.
+Phases **1–6** are implemented. Phase 7 / broader SBC aging: decisions in **`SBC_DATA_RETENTION_REQUIREMENTS.md`** before any purge code.

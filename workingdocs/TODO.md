@@ -1,13 +1,13 @@
 # PBX3 ToDo list
 
-**Branch:** all **`main`**. Auto-logout (SPA + SBC admin) shipped; SBC live via surgical deploy. Downstream peer registration = future reqs only. Log retention Phases 1–6 done; Phase 7 proposal only.  
-**Last updated:** 2026-07-19 (session end — auto-logout + downstream peer registration requirements)
+**Branch:** all **`main`**. SBC brand mark + light-only + Call Route view + Fail2ban log viewer shipped. Downstream peer registration = future reqs only. Log retention Phases 1–6 done; SBC data aging **review project** started (**`SBC_DATA_RETENTION_REQUIREMENTS.md`**).  
+**Last updated:** 2026-07-20 (session end — brand/Fail2ban log + SBC aging review kickoff)
 
 ### Suggested “what next?” order
 
-1. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-2. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
-3. **Log retention Phase 7** (later review; not a blocker) — SBC `acc` purge/cold export after CDR HoR decision. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.  
+1. **SBC data & log aging review (active)** — inventory + lab measurement + decisions; then purge/export. Spec: **`pbx3-directory/docs/SBC_DATA_RETENTION_REQUIREMENTS.md`**.  
+2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+3. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
 4. **Failover + shadowing** (parked).  
 5. **S10.7 / S8.9** (parked) — cloud adapter.  
 6. **pbx3-docs polish (ongoing)**.  
@@ -18,6 +18,8 @@
 ---
 
 ## Open items
+
+- [ ] **SBC data & log aging review (2026-07-20 kickoff):** Inventory MySQL append-only tables (`acc`, `door_knock_attempts`, `failed_registrations`) + confirm text/pcap already aged. Lab measure row counts/sizes; fill decision checklist; then WS1 security purge and/or WS2 `acc` export. **No destructive jobs until decisions recorded.** Spec: **`pbx3-directory/docs/SBC_DATA_RETENTION_REQUIREMENTS.md`**. Folds former log-retention Phase 7.
 
 - [x] **TLS / Let’s Encrypt — SBC admin HTTPS (2026-07-14):** **`https://sbc.pbx3.com/admin`** — certbot webroot, nginx 443 + HTTP→HTTPS, `APP_URL=https://sbc.pbx3.com`. SG needed world **80/443** (was office-IP-only). Runbook **`pbx3sbc/workingdocs/LE_HTTPS_SBC_ADMIN.md`**; nginx template **`pbx3sbc-admin/deploy/nginx-pbx3sbc-admin.conf`**. Branch **`lehttps`**. **Ops:** rotate Filament admin password. SIP TLS out of scope.
 
@@ -87,11 +89,11 @@
 
 - [x] **Admin auto-logout (2026-07-19):** SPA + SBC admin idle logout, default **10 minutes**, configurable. SPA: `VITE_AUTO_LOGOUT_MINUTES` (build-time; absent → hardcoded 10 — see **`pbx3spa/workingdocs/DEV_ENVIRONMENT.md`** §7b). SBC: `PBX3_ADMIN_INACTIVITY_MINUTES` (runtime). Tips **pbx3spa** **`5c36ce2`**, **pbx3sbc-admin** **`2e56ae3`**. Live SBC: surgical copy of `config/panel.php` + `topbar-user.blade.php` (dirty tree — no wholesale `git pull`/reset); SSH key **`~/Documents/pemfiles/opensips.pem`**.
 
+- [ ] **Log retention Phase 7 / SBC `acc` (superseded by broader review):** Planning moved to **`SBC_DATA_RETENTION_REQUIREMENTS.md`**. See open item **SBC data & log aging review**.
+
 - [ ] **Downstream peer registration edge (future — not next):** Separate **registration-edge** SBC instance class + own OpenSIPS image; auth HoR on that edge; trusted SIP link into main **pbx3sbc**. Not bolted onto current SBC. Interim lab workaround (extension-like REGISTER via Asterisk) documented — not product path. Spec: **`pbx3-directory/docs/DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**.
 
 - [x] **Log retention Phases 1–6 (2026-07-17):** Rotate/ship/lifecycle/siplog/SBC/control (1–4) on **`main`**; Phase 5 retention knobs + S3 archive list/download; Phase 6 Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr`. Lab: golden + bzy54n @ **pbx3api** **`6c28486`**. Spec: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**.
-
-- [ ] **Log retention Phase 7 (for later review; not a blocker):** SBC MySQL `acc` purge / cold export — proposal only in **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**. Decide SBC vs Asterisk CDR product HoR before implement.
 
 - [ ] **Fleet slug / org bucket naming (cosmetic — fix later):** Lab buckets `08jzwn-pbx3` (+ recordings) use first-node shortuid as stem; product should choose a **neutral fleet slug** at provision (`acme-pbx3`). No runtime impact. Design note: **`OPS_S3_RUNBOOK.md`** § Design note — fleet slug vs lab bucket name. Fold into onboard / S10.7 / create-fleet when that ships.
 
