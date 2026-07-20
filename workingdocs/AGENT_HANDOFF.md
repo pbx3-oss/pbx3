@@ -58,7 +58,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-20 — SBC data aging complete + backup/restore stub)
 
-**Branches:** **pbx3sbc-admin** **`main`** tip **`82641ad`**. **pbx3** tip **`9be6599`** (docs; handoff tips below after this commit). **pbx3sbc** tip **`a5d62c4`**. **pbx3-docs** tip **`553c8e7`**. **pbx3spa** tip **`0ec1588`** (unchanged this session). **pbx3api** unchanged (**`6c28486`**).
+**Branches:** **pbx3sbc-admin** **`main`** tip **`82641ad`**. **pbx3** tip **`5471d9c`**. **pbx3sbc** tip **`a5d62c4`**. **pbx3-docs** tip **`553c8e7`**. **pbx3spa** tip **`f97d8af`**. **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
 - **SBC MySQL aging (WS0–WS4):** Decisions locked (edge ops `acc` 90d; security events 30d; purge-only; root cron). Artisan `pbx3sbc:purge-security-events` / `pbx3sbc:purge-acc`; Filament **Logs → Data retention** (override JSON + last purge; no UI delete); MkDocs **`fleet/sbc-data-retention.md`**.
