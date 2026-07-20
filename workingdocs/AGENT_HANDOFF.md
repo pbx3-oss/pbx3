@@ -58,7 +58,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-20 — SPA/SBC brand + Fail2ban log + SBC aging review)
 
-**Branches:** **pbx3spa** **`main`** tip **`847ddb8`** (PBX³ sidebar BrandMark). **pbx3sbc-admin** **`main`** tip **`0210d10`** (brand + light-only + Call Route view + Fail2ban log — live via surgical deploy). **pbx3sbc** **`main`** tip **`2989166`** (+ handoff stub commit if pushed). **pbx3** tip after this handoff commit (SBC aging reqs). **pbx3api** unchanged (**`6c28486`**).
+**Branches:** **pbx3spa** **`main`** tip **`f231a51`** (handoff; BrandMark feature **`847ddb8`**). **pbx3sbc-admin** **`main`** tip **`0210d10`**. **pbx3sbc** **`main`** tip **`7311b2e`** (docs stub; tail helper **`2989166`**). **pbx3** tip **`336789a`**. **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
 - **SPA BrandMark:** `PBX` + blue superscript `3` in sidebar (Admin + Fleet); topbar labels **Admin** / **Fleet**; no glow; `2rem`; superscript `top: -0.52em`.
