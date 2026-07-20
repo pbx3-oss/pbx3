@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Apply S3 lifecycle: expire objects tagged class=backup after N days (option C S3 leg).
+# Apply / merge S3 lifecycle: expire objects tagged class=backup after N days (option C S3 leg).
+# Covers instance backups (prefix instances/) and SBC backups (prefix sbc/).
 # Does not delete objects when a node prunes local zips — only age-based expiry.
+# Merges with existing bucket lifecycle (keeps log/recording rules).
 #
 # Usage:
 #   ./apply-backup-lifecycle-rule.sh BUCKET_NAME [DAYS]
@@ -10,10 +12,13 @@
 #   ./apply-backup-lifecycle-rule.sh 08jzwn-pbx3 3DmAsxePTWQZgynBYXE8obIRqEE
 #     (reads maxage_days from s3://BUCKET/instances/KSUID/backups/policy.json, fallback 30)
 #
-# Requires: aws CLI with s3:PutLifecycleConfiguration on the bucket.
+# Requires: aws CLI + jq with s3:PutLifecycleConfiguration on the bucket.
 # Run from your laptop / ops workstation (IAM admin or bucket owner) — NOT from a PBX
 # EC2 node: instance roles (e.g. pbx3-node-08jzwn) must not get lifecycle permissions.
-# Uploads must tag backup.zip and manifest.json with class=backup (pbx3api 119b1f7+).
+# Uploads must tag backup.zip and manifest.json with class=backup
+# (pbx3api for instances; pbx3sbc scripts/upload-sbc-backup.sh for SBC).
+#
+# Spec: DESIGN_RULES.md § backup retention · SBC_BACKUP_RESTORE_REQUIREMENTS.md
 
 set -euo pipefail
 
@@ -38,10 +43,12 @@ else
   echo "Using maxage_days=${DAYS} from policy.json"
 fi
 
-RULE_ID="pbx3-expire-tagged-backups-${DAYS}d"
-
 if ! command -v aws >/dev/null 2>&1; then
   echo "aws CLI not found" >&2
+  exit 1
+fi
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq required" >&2
   exit 1
 fi
 
@@ -53,34 +60,53 @@ if [[ "$ARN" == *":assumed-role/pbx3-node-"* ]]; then
   exit 1
 fi
 
-TMP="$(mktemp)"
-trap 'rm -f "$TMP"' EXIT
+TMP_EXISTING="$(mktemp)"
+TMP_OUT="$(mktemp)"
+trap 'rm -f "$TMP_EXISTING" "$TMP_OUT"' EXIT
 
-cat >"$TMP" <<EOF
-{
-  "Rules": [
-    {
-      "ID": "${RULE_ID}",
-      "Status": "Enabled",
-      "Filter": {
-        "And": {
-          "Prefix": "instances/",
-          "Tags": [
-            { "Key": "class", "Value": "backup" }
-          ]
-        }
+if aws s3api get-bucket-lifecycle-configuration --bucket "$BUCKET" >"$TMP_EXISTING" 2>/dev/null; then
+  :
+else
+  echo '{"Rules":[]}' >"$TMP_EXISTING"
+fi
+
+# Drop prior pbx3 backup expire rules (legacy single-rule id + new prefixed ids), keep everything else.
+jq --argjson days "$DAYS" '
+  {Rules: (.Rules // [])}
+  | .Rules |= map(select(
+      (.ID | tostring | test("^pbx3-expire-tagged-backups") | not)
+      and (.ID | tostring | test("^pbx3-expire-backup-") | not)
+    ))
+  | .Rules += [
+      {
+        "ID": ("pbx3-expire-backup-instances-" + ($days|tostring) + "d"),
+        "Status": "Enabled",
+        "Filter": {
+          "And": {
+            "Prefix": "instances/",
+            "Tags": [{ "Key": "class", "Value": "backup" }]
+          }
+        },
+        "Expiration": { "Days": $days }
       },
-      "Expiration": {
-        "Days": ${DAYS}
+      {
+        "ID": ("pbx3-expire-backup-sbc-" + ($days|tostring) + "d"),
+        "Status": "Enabled",
+        "Filter": {
+          "And": {
+            "Prefix": "sbc/",
+            "Tags": [{ "Key": "class", "Value": "backup" }]
+          }
+        },
+        "Expiration": { "Days": $days }
       }
-    }
-  ]
-}
-EOF
+    ]
+' "$TMP_EXISTING" >"$TMP_OUT"
 
-echo "Applying lifecycle to s3://${BUCKET} (tag class=backup, expire after ${DAYS} days)..."
+echo "Applying merged lifecycle to s3://${BUCKET} (instances/ + sbc/ tag class=backup, expire after ${DAYS} days)..."
 aws s3api put-bucket-lifecycle-configuration \
   --bucket "$BUCKET" \
-  --lifecycle-configuration "file://${TMP}"
+  --lifecycle-configuration "file://${TMP_OUT}"
 
 echo "Done. Verify: aws s3api get-bucket-lifecycle-configuration --bucket ${BUCKET}"
+echo "One-time ops (lab): re-run this after enabling SBC backup uploads so sbc/ archives age out."

@@ -240,7 +240,7 @@ A single SBC is acceptable for **lab / golden validation**. **Production fleet**
 
 ### 6.0 Local DB engine — MariaDB now; SQLite + Litestream **parked** (2026-07-20)
 
-**Current (do this):** Each SBC member runs a **local MariaDB** store (OpenSIPS `db_mysql` + `pbx3sbc-admin`). Call path = local DB only. Directory/S3 remains HoR; rebuild / promote = **re-project from catalog** plus a real **MariaDB backup/restore** when that project ships — see **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (after aging; production gate). Not Litestream.
+**Current (do this):** Each SBC member runs a **local MariaDB** store (OpenSIPS `db_mysql` + `pbx3sbc-admin`). Call path = local DB only. Directory/S3 remains HoR; rebuild / promote = **re-project from catalog** plus **MariaDB backup/restore** — v1 backup path shipped (**`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**); restore drill still the production gate. Not Litestream.
 
 **Parked (do not chase):** Earlier direction (**2026-07-14**) preferred **SQLite** (`db_sqlite`) + optional **Litestream** WAL→S3 for single-file portability. **Parked 2026-07-20** — no spike, no cutover, no Litestream work while the edge is MariaDB. Litestream is SQLite-only and **irrelevant** to the current engine. Revisit only on an explicit product ask.
 

@@ -2,7 +2,7 @@
 
 **Status:** **WS0–WS4 done** (2026-07-20). Lab purge + cron live; Filament **Logs → Data retention**; MkDocs fleet page.  
 **Owner:** ops + agent sessions against live lab SBC (`sbc.pbx3.com`).  
-**Related:** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** (Phases 1–6 shipped; Phase 7 = `acc` — now purge-only under this file); **`pbx3sbc/docs/FLEET_LOG_RETENTION.md`** (what already rotates/ships); **`DESIGN_RULES.md`** Rule 1 (telephony independent of S3), Rule 13 (edge-authored); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (DR — separate; after this project).  
+**Related:** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** (Phases 1–6 shipped; Phase 7 = `acc` — now purge-only under this file); **`pbx3sbc/docs/FLEET_LOG_RETENTION.md`** (what already rotates/ships); **`DESIGN_RULES.md`** Rule 1 (telephony independent of S3), Rule 13 (edge-authored); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (DR — v1 backup path shipped; restore drill next).  
 **MySQL access:** lab host uses `sudo mysql` (unix_socket); plain `ubuntu` MySQL login fails.
 
 ## Goal
@@ -54,7 +54,7 @@ Do not redesign these unless lab evidence says the ring/days are wrong.
 |---------------|--------|
 | `/var/log/fail2ban.log*` | Confirm logrotate present; optional S3 later |
 | Prometheus TSDB (if enabled) | Installer mentioned ~30d — verify on host |
-| MySQL binary logs / full DB backups | **Out of this project** — see **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (future DR; production gate) |
+| MySQL binary logs / full DB backups | **Out of this project** — see **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (v1 dump→S3; restore drill = production gate) |
 | nginx / php-fpm / Laravel `storage/logs` | Standard rotate; low SIP value |
 
 ## Design principles (non-negotiable unless override)

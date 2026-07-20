@@ -46,7 +46,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **Fleet Egress availability / SBC failover** (future) | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — OPTIONS qualify, EgressFailover, health UI |
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig REGISTER shipped; move-job / Fail2ban ban→email / velocity later |
-| **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging WS0–WS4 **done** (lab); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR stub (**next**; production gate) |
+| **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging WS0–WS4 **done** (lab); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR **v1 done** (scripts + scratch drill + MkDocs) |
 | **Downstream peer REGISTER (future)** | **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class; no shared OpenSIPS image; interim Asterisk-proxied workaround only |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
@@ -56,31 +56,42 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-20 — SBC data aging complete + backup/restore stub)
+## Next agent session notes (2026-07-20 — SBC backup/restore v1 + scratch drill)
 
-**Branches:** **pbx3sbc-admin** **`main`** tip **`82641ad`**. **pbx3** tip **`5471d9c`**. **pbx3sbc** tip **`a5d62c4`**. **pbx3-docs** tip **`553c8e7`**. **pbx3spa** tip **`f97d8af`**. **pbx3api** unchanged (**`6c28486`**).
+**Branches:** **pbx3** / **pbx3sbc** / **pbx3sbc-admin** / **pbx3-docs** / **pbx3spa** all **`main`** (tips after this session’s push). **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
-- **SBC MySQL aging (WS0–WS4):** Decisions locked (edge ops `acc` 90d; security events 30d; purge-only; root cron). Artisan `pbx3sbc:purge-security-events` / `pbx3sbc:purge-acc`; Filament **Logs → Data retention** (override JSON + last purge; no UI delete); MkDocs **`fleet/sbc-data-retention.md`**.
-- **Lab live on `sbc.pbx3.com`:** first purge (door-knock 1546 / failed-reg 700 / acc 8); cron `/etc/cron.d/pbx3sbc-retention`; surgical overlay (dirty tree).
-- **Litestream / SQLite edge:** **parked** — MariaDB current (`FLEET_TRUNK_PEERING_DECISION.md` §6.0).
-- **SBC backup/restore:** stub **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — production gate; start after aging (now ready).
+- **SBC backup/restore v1:** Requirements locked (**`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**); manifest schema; `backup-sbc.sh` / `upload-sbc-backup.sh` / `restore-sbc-backup.sh` + cron example; `fetch-latest-sbc-backup.sh`; lifecycle script merges `instances/` + `sbc/` `class=backup` rules.
+- **Lab:** backup on live `sbc.pbx3.com` → `s3://08jzwn-pbx3/sbc/sbc/backups/20260720T172044Z/`; side-DB integrity OK.
+- **Scratch restore drill:** amd64 host **`192.168.1.55`** — install both repos → restore zip → counts matched (users/domain/gateways); OpenSIPS active; Filament Login HTTP 200. Post-restore: DB password align, `advertised_address`, `www-data` perms, `setup-admin-panel-sudoers.sh` (not in zip). **arm64** OpenSIPS apt = no noble packages — use amd64.
+- **MkDocs:** **`fleet/sbc-backup-restore.md`** — full scratch runbook (publish on next Pages deploy).
+- **pbx3sbc-admin:** Fail2banService home-path detection for non-`ubuntu` installs.
 
 ### Golden / operator follow-up
-- Hard-refresh SBC admin for **Data retention** nav. Live SBC still surgical overlay — do not wholesale `git pull`/reset.
+- Live SBC still surgical overlay for aging/backup scripts until clean pull is safe — do not wholesale `git pull`/reset.
 - SSH **`ubuntu@sbc.pbx3.com`** key **`~/Documents/pemfiles/opensips.pem`**.
-- MkDocs Pages: next docs publish for fleet retention page.
+- Publish **pbx3-docs** Pages for backup/restore + retention pages.
+- Optional later: Filament backup UI; bake sudoers into admin install; HA promote automation.
 
 ### Resume
-1. **SBC backup & restore** — **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (MariaDB dump + S3; production gate).
-2. Else egress availability / ops-notify follow-ons.
-3. Do not reopen Litestream unless explicit ask.
+1. **Egress availability / SBC failover** or **ops-notify follow-ons** — see TODO.
+2. Or docs polish / Pages publish.
+3. Do not reopen Litestream unless explicit ask. Filament backup UI deferred.
+
+---
+
+## Next agent session notes (2026-07-20 — SBC data aging complete + backup/restore stub) — historical
+
+**Branch was:** superseded by block above. Tips were sbc-admin **`82641ad`**, pbx3 **`5471d9c`**, sbc **`a5d62c4`**, docs **`553c8e7`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 
 ## Next agent session notes (2026-07-20 — SPA/SBC brand + Fail2ban log + SBC aging review) — historical
 
-**Branch was:** superseded by block above. Tips were spa **`858c084`**, sbc-admin **`0210d10`**, sbc **`7311b2e`**, pbx3 **`b511d59`**.
+**Branch was:** superseded by blocks above. Tips were spa **`858c084`**, sbc-admin **`0210d10`**, sbc **`7311b2e`**, pbx3 **`b511d59`**.
 
 ### Resume (superseded)
 See block above.

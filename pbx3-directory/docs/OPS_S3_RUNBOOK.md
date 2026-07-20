@@ -470,7 +470,7 @@ date -u -d "@$EPOCH" +%Y%m%dT%H%M%SZ         # Archive ID / S3 folder
 |-------|-----------|
 | **Local (9 FIFO)** | After SPA/cron create: `LocalBackupRetention` keeps newest `PBX3_BACKUP_LOCAL_MAX_COUNT` (default **9**) under `/opt/pbx3/bkup/`. Manual delete still does **not** touch S3. |
 | **Daily backup** | `php artisan pbx3:backup-run --trigger=scheduled` — see `pbx3api/scripts/cron.d/pbx3-backup.example` or Laravel `schedule:run` (02:00 in `bootstrap/app.php`). |
-| **S3 (30 days)** | Lifecycle on objects tagged **`class=backup`** (set on `backup.zip` + `manifest.json` upload). **One-time ops on laptop** (see § below) — aligns with `policy.json` `maxage_days`. |
+| **S3 (30 days)** | Lifecycle on objects tagged **`class=backup`** (set on `backup.zip` + `manifest.json` upload). **One-time ops on laptop** (see § below) — aligns with `policy.json` `maxage_days`. Script covers **`instances/`** and **`sbc/`** prefixes (SBC DR — **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**). |
 
 Local eviction does **not** delete S3 archives — see **`DESIGN_RULES.md`** § backup retention (option C).
 
@@ -500,9 +500,9 @@ aws s3api get-bucket-lifecycle-configuration --bucket 08jzwn-pbx3
 
 **Do not paste** placeholder lines like `export AWS_PROFILE=...` or shell comments on the same line as commands — zsh will treat words after `#` as comments, but a bad paste can pass `/` and extra words to `export` and fail with `not valid in this context: /`.
 
-**Console alternative:** S3 → bucket **`08jzwn-pbx3`** → **Management** → **Lifecycle rules** → **Create rule** → scope **Limit to prefix** `instances/` + **Tags** `class` = `backup` → **Expire current versions** after **30** days.
+**Console alternative:** S3 → bucket **`08jzwn-pbx3`** → **Management** → **Lifecycle rules** → **Create rule** → scope **Limit to prefix** `instances/` (and separately `sbc/` for SBC DR) + **Tags** `class` = `backup` → **Expire current versions** after **30** days. Prefer the script (merges both prefixes without wiping log rules).
 
-**Note:** Backups uploaded **before** pbx3api `119b1f7` (S3 object tags) are not tagged `class=backup` and will **not** match this rule until re-uploaded or tagged manually.
+**Note:** Backups uploaded **before** pbx3api `119b1f7` (S3 object tags) are not tagged `class=backup` and will **not** match this rule until re-uploaded or tagged manually. Re-run the script after enabling SBC backup uploads so the **`sbc/`** rule is present.
 
 ---
 
@@ -1110,7 +1110,7 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 | **Upload** | `php artisan pbx3:logs-s3-upload` — cron **`/etc/cron.d/pbx3-logs`** installed by **`pbx3api/scripts/installer.sh`** and fleet **onboard** (from `scripts/cron.d/pbx3-logs.example`; prefer **root** for `/var/log` read). No-op without `PBX3_ORG_BUCKET` |
 | **Keys** | `instances/{ksuid}/logs/{class}/{stamp}/…` + `policy.json` |
 | **IAM** | Existing node writer `instances/{ksuid}/*` is enough (includes `logs/`) |
-| **Lifecycle (ops laptop)** | `./pbx3-directory/tools/apply-logs-lifecycle-rules.sh 08jzwn-pbx3` — **merges** instance + **sbc/** + **control/** tag rules. Prefer this over re-running `apply-backup-lifecycle-rule.sh` alone (that script **replaces** the whole config) |
+| **Lifecycle (ops laptop)** | `./pbx3-directory/tools/apply-logs-lifecycle-rules.sh 08jzwn-pbx3` — **merges** instance + **sbc/** + **control/** log tag rules. Backup expire: `./apply-backup-lifecycle-rule.sh 08jzwn-pbx3 30` — **merges** `instances/` + `sbc/` `class=backup` rules (does not wipe log rules). |
 
 **Solo:** omit `PBX3_ORG_BUCKET` or set `PBX3_LOG_UPLOAD_ENABLED=false` — local rotate still applies when the logrotate file is installed.
 

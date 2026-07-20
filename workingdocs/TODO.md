@@ -1,26 +1,28 @@
 # PBX3 ToDo list
 
-**Branch:** all **`main`**. **SBC data aging complete** (WS0–WS4 lab-live + Filament knobs + MkDocs). Next: **SBC backup/restore**. Litestream parked.  
-**Last updated:** 2026-07-20 (session end — aging complete; backup/restore next)
+**Branch:** all **`main`**. **SBC backup/restore v1 + scratch drill + MkDocs runbook** done. Litestream parked.  
+**Last updated:** 2026-07-20 (session end — backup/restore committed)
 
 ### Suggested “what next?” order
 
-1. **SBC backup & restore (next)** — production gate; MariaDB dump + S3. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
+1. **pbx3-docs polish (ongoing)** — publish Pages so **`fleet/sbc-backup-restore.md`** is live.  
 2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 3. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
 4. **Failover + shadowing** (parked).  
 5. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
 6. **S10.7 / S8.9** (parked) — cloud adapter.  
-7. **pbx3-docs polish (ongoing)**.  
-8. **pbx3cagi** struct refactor (deferred).  
-9. **Fleet auth cookie/SSO (blocked)**.  
-10. **S7+** attested PCI — only on customer ask.  
+7. **pbx3cagi** struct refactor (deferred).  
+8. **Fleet auth cookie/SSO (blocked)**.  
+9. **S7+** attested PCI — only on customer ask.  
+10. **SBC backup Filament UI / HA promote** (deferred) — CLI + MkDocs runbook are enough for v1.  
 
 ---
 
 ## Open items
 
-- [ ] **SBC backup & restore (next — production gate):** MariaDB dump + selective config → local zip → S3 `sbc/{id}/backups/{stamp}/` + manifest; tested restore runbook. Catalog re-project alone is not enough. Spec: **`pbx3-directory/docs/SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
+- [x] **SBC scratch-box restore drill (2026-07-20):** amd64 `192.168.1.55` — install both repos → restore `20260720T172044Z` → OpenSIPS active + Filament Login 200; counts matched lab. Post-restore: align DB password + `advertised_address` + `www-data` home perms. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
+
+- [x] **SBC backup + restore scripts v1 (2026-07-20):** backup/upload/cron; `restore-sbc-backup.sh`; `fetch-latest-sbc-backup.sh`; S3 + scratch restore drill done.
 
 - [ ] **SBC SQLite + Litestream (parked 2026-07-20):** Earlier portability direction. **Current engine = MariaDB.** Litestream is irrelevant while on MariaDB. Do not spike. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.
 
