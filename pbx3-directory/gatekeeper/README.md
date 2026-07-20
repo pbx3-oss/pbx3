@@ -33,6 +33,7 @@ See **`pbx3/workingdocs/CRITICAL_PATH_TEST_PACK.md`**.
 | Hysteresis | Down after **2** consecutive misses; cleared on first success |
 | Mail | SMTP via `GATEKEEPER_SMTP_*` (`Mailer` + `SmtpMailer`). Unset SMTP → log only |
 | Subscribers | Fleet users with `notify_failures` + optional `GATEKEEPER_OPS_NOTIFY_EMAIL` |
+| Signals | Instance down/cleared; catalog lifecycle; misconfig REGISTER; **move job failed/aborted**; **Fail2ban ban** (`fail2ban_ban` ops-event) |
 | Timer | `deploy/pbx3-fleet-probe.service` + `.timer` (60s). Install on control: |
 
 ```bash

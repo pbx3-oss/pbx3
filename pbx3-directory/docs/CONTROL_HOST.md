@@ -64,7 +64,11 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 
 **Lab check:** enable notify for ops mailbox; stop node API or block `/up` from control → within ~2 min one down mail (or log); restore → cleared.
 
+**Move jobs:** Gatekeeper mails on job `failed` or `aborted` (same subscribers). No extra enable flag.
+
 **Misconfig REGISTER loops (node):** On each fleet node set `PBX3_OPS_REGISTER_LOOP_ENABLED=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Put **SBC signaling IPs** in node `ignoreip` (peer allowlist for the scanner — instance Asterisk Fail2ban jail is **disabled**). Scheduler runs `pbx3:ops-register-loops` every minute → Gatekeeper `POST /api/v1/ops-events`. SIP ban/whitelist for real client IPs is on the **SBC** only.
+
+**SBC Fail2ban ban → email:** On SBC admin set `PBX3_OPS_FAIL2BAN_BAN_NOTIFY=true` + Gatekeeper URL/token; install cron from `pbx3sbc-admin/deploy/cron.d/pbx3sbc-fail2ban-notify.example`. First run seeds current bans (no mail); new bans → `fail2ban_ban` ops-event.
 
 ## Log retention (Phase 4)
 

@@ -184,6 +184,104 @@ final class NotifyDispatcher
         $this->send($recipients, $subject, $this->withUiLink($body));
     }
 
+    /**
+     * Tenant-move job reached a terminal failure or abort.
+     *
+     * @param  array<string, mixed>  $job
+     * @param  'failed'|'aborted'  $outcome
+     */
+    public function notifyMoveJobTerminal(array $job, string $outcome): void
+    {
+        if ($outcome !== 'failed' && $outcome !== 'aborted') {
+            return;
+        }
+
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            error_log('[gatekeeper-notify] no subscribers for move job '.$outcome.' — skip');
+
+            return;
+        }
+
+        $jobId = (string) ($job['id'] ?? '(unknown)');
+        $tenant = (string) ($job['tenant_shortuid'] ?? '');
+        $fqdn = (string) ($job['tenant_fqdn'] ?? '');
+        $source = (string) ($job['source_instance_id'] ?? '');
+        $dest = (string) ($job['dest_instance_id'] ?? '');
+        $error = trim((string) ($job['error'] ?? ''));
+        $hint = trim((string) (($job['rollback']['hint'] ?? '') ?: ''));
+        $actor = trim((string) ($job['last_action_by'] ?? $job['created_by'] ?? ''));
+        $failedPhase = TenantMoveRunner::failedPhaseName($job);
+
+        if ($outcome === 'failed') {
+            $subject = "[PBX3 fleet] Move job failed: {$tenant}";
+            $body = "A tenant-move job failed.\n\n";
+        } else {
+            $subject = "[PBX3 fleet] Move job aborted: {$tenant}";
+            $body = "A tenant-move job was aborted (operator abort or post-cutover rollback).\n\n";
+        }
+
+        $body .= "Job: {$jobId}\n"
+            ."Tenant: {$tenant}\n"
+            ."FQDN: {$fqdn}\n"
+            ."Source instance: {$source}\n"
+            ."Dest instance: {$dest}\n"
+            ."State: {$outcome}\n";
+        if ($failedPhase !== null) {
+            $body .= "Failed phase: {$failedPhase}\n";
+        }
+        if ($error !== '') {
+            $body .= "Error: {$error}\n";
+        }
+        if ($hint !== '') {
+            $body .= "Hint: {$hint}\n";
+        }
+        if ($actor !== '') {
+            $body .= "Actor: {$actor}\n";
+        }
+
+        $this->send($recipients, $subject, $this->withUiLink($body, '/fleet/jobs'));
+    }
+
+    /**
+     * SBC Fail2ban ban of an unknown / non-whitelisted IP (edge-detected).
+     *
+     * @param  array{
+     *   source_ip?:string,
+     *   jail?:string,
+     *   sbc_fqdn?:string,
+     *   currently_banned?:int
+     * }  $event
+     */
+    public function notifyFail2banBan(array $event): void
+    {
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            error_log('[gatekeeper-notify] no subscribers for fail2ban_ban — skip');
+
+            return;
+        }
+
+        $ip = (string) ($event['source_ip'] ?? '(unknown)');
+        $jail = (string) ($event['jail'] ?? 'opensips-brute-force');
+        $fqdn = (string) ($event['sbc_fqdn'] ?? '');
+        $banned = (int) ($event['currently_banned'] ?? 0);
+
+        $subject = "[PBX3 fleet] SBC Fail2ban ban: {$ip}";
+        $body = "Fail2ban banned an IP on the SBC (unknown / non-whitelisted scanner).\n\n"
+            ."Banned IP: {$ip}\n"
+            ."Jail: {$jail}\n";
+        if ($fqdn !== '') {
+            $body .= "SBC: {$fqdn}\n";
+        }
+        if ($banned > 0) {
+            $body .= "Currently banned (jail): {$banned}\n";
+        }
+        $body .= "\nReview Fail2ban status on the SBC admin panel if this looks wrong.\n";
+
+        $this->send($recipients, $subject, $this->withUiLink($body));
+    }
+
     /** @return list<string> */
     private function recipients(): array
     {
@@ -196,11 +294,12 @@ final class NotifyDispatcher
         return array_values(array_unique($recipients));
     }
 
-    private function withUiLink(string $body): string
+    private function withUiLink(string $body, string $path = '/fleet/instances'): string
     {
         $uiBase = rtrim((string) (getenv('GATEKEEPER_FLEET_UI_URL') ?: ''), '/');
         if ($uiBase !== '') {
-            $body .= "\nFleet UI: {$uiBase}/fleet/instances\n";
+            $path = '/'.ltrim($path, '/');
+            $body .= "\nFleet UI: {$uiBase}{$path}\n";
         }
 
         return $body;

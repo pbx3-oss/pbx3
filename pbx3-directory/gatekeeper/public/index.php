@@ -297,44 +297,72 @@ try {
         JsonResponse::send(200, $presign->create($body));
     }
 
-    // Node → Gatekeeper ops events (misconfig REGISTER loops, etc.). Break-glass / fleet_admin.
+    // Node/SBC → Gatekeeper ops events (misconfig REGISTER, Fail2ban ban). Break-glass / fleet_admin.
     if ($method === 'POST' && $path === '/api/v1/ops-events') {
         Auth::requireAbility(FleetAbilities::ADMIN);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         $type = is_string($body['type'] ?? null) ? $body['type'] : '';
-        if ($type !== 'misconfig_register') {
-            throw new \InvalidArgumentException('Unsupported ops-event type (expected misconfig_register)', 422);
-        }
-        $instanceId = trim((string) ($body['instance_id'] ?? ''));
-        $extension = trim((string) ($body['extension'] ?? ''));
-        $endpointUid = is_string($body['endpoint_uid'] ?? null) ? trim($body['endpoint_uid']) : '';
-        $sourceIp = trim((string) ($body['source_ip'] ?? ''));
-        if ($instanceId === '' || $sourceIp === '') {
-            throw new \InvalidArgumentException('instance_id and source_ip required', 422);
-        }
-        $count = (int) ($body['count'] ?? 0);
-        if ($count < 1) {
-            throw new \InvalidArgumentException('count must be >= 1', 422);
-        }
-        $throttleId = $endpointUid !== '' ? $endpointUid : ($extension !== '' ? $extension : 'unknown');
-        $key = 'misconfig_register:'.$instanceId.':'.$throttleId.':'.$sourceIp;
         $cooldown = (int) (getenv('GATEKEEPER_OPS_EVENT_COOLDOWN') ?: OpsEventThrottle::DEFAULT_COOLDOWN_SECONDS);
-        if (! OpsEventThrottle::allow($key, $cooldown > 0 ? $cooldown : OpsEventThrottle::DEFAULT_COOLDOWN_SECONDS)) {
-            JsonResponse::send(200, ['accepted' => true, 'notified' => false, 'reason' => 'throttled']);
+        $cooldown = $cooldown > 0 ? $cooldown : OpsEventThrottle::DEFAULT_COOLDOWN_SECONDS;
+
+        if ($type === 'misconfig_register') {
+            $instanceId = trim((string) ($body['instance_id'] ?? ''));
+            $extension = trim((string) ($body['extension'] ?? ''));
+            $endpointUid = is_string($body['endpoint_uid'] ?? null) ? trim($body['endpoint_uid']) : '';
+            $sourceIp = trim((string) ($body['source_ip'] ?? ''));
+            if ($instanceId === '' || $sourceIp === '') {
+                throw new \InvalidArgumentException('instance_id and source_ip required', 422);
+            }
+            $count = (int) ($body['count'] ?? 0);
+            if ($count < 1) {
+                throw new \InvalidArgumentException('count must be >= 1', 422);
+            }
+            $throttleId = $endpointUid !== '' ? $endpointUid : ($extension !== '' ? $extension : 'unknown');
+            $key = 'misconfig_register:'.$instanceId.':'.$throttleId.':'.$sourceIp;
+            if (! OpsEventThrottle::allow($key, $cooldown)) {
+                JsonResponse::send(200, ['accepted' => true, 'notified' => false, 'reason' => 'throttled']);
+            }
+            NotifyDispatcher::fromEnv()->notifyMisconfigRegister([
+                'instance_id' => $instanceId,
+                'instance_label' => is_string($body['instance_label'] ?? null) ? $body['instance_label'] : '',
+                'fqdn' => is_string($body['fqdn'] ?? null) ? $body['fqdn'] : '',
+                'extension' => $extension !== '' ? $extension : '(unknown)',
+                'endpoint_uid' => $endpointUid,
+                'endpoint_name' => is_string($body['endpoint_name'] ?? null) ? trim($body['endpoint_name']) : '',
+                'source_ip' => $sourceIp,
+                'count' => $count,
+                'window_seconds' => (int) ($body['window_seconds'] ?? 600),
+                'sample' => is_string($body['sample'] ?? null) ? $body['sample'] : '',
+            ]);
+            JsonResponse::send(200, ['accepted' => true, 'notified' => true]);
         }
-        NotifyDispatcher::fromEnv()->notifyMisconfigRegister([
-            'instance_id' => $instanceId,
-            'instance_label' => is_string($body['instance_label'] ?? null) ? $body['instance_label'] : '',
-            'fqdn' => is_string($body['fqdn'] ?? null) ? $body['fqdn'] : '',
-            'extension' => $extension !== '' ? $extension : '(unknown)',
-            'endpoint_uid' => $endpointUid,
-            'endpoint_name' => is_string($body['endpoint_name'] ?? null) ? trim($body['endpoint_name']) : '',
-            'source_ip' => $sourceIp,
-            'count' => $count,
-            'window_seconds' => (int) ($body['window_seconds'] ?? 600),
-            'sample' => is_string($body['sample'] ?? null) ? $body['sample'] : '',
-        ]);
-        JsonResponse::send(200, ['accepted' => true, 'notified' => true]);
+
+        if ($type === 'fail2ban_ban') {
+            $sourceIp = trim((string) ($body['source_ip'] ?? ''));
+            if ($sourceIp === '' || filter_var($sourceIp, FILTER_VALIDATE_IP) === false) {
+                throw new \InvalidArgumentException('source_ip must be a valid IP', 422);
+            }
+            $jail = trim((string) ($body['jail'] ?? 'opensips-brute-force'));
+            if ($jail === '') {
+                $jail = 'opensips-brute-force';
+            }
+            $key = 'fail2ban_ban:'.$jail.':'.$sourceIp;
+            if (! OpsEventThrottle::allow($key, $cooldown)) {
+                JsonResponse::send(200, ['accepted' => true, 'notified' => false, 'reason' => 'throttled']);
+            }
+            NotifyDispatcher::fromEnv()->notifyFail2banBan([
+                'source_ip' => $sourceIp,
+                'jail' => $jail,
+                'sbc_fqdn' => is_string($body['sbc_fqdn'] ?? null) ? trim($body['sbc_fqdn']) : '',
+                'currently_banned' => (int) ($body['currently_banned'] ?? 0),
+            ]);
+            JsonResponse::send(200, ['accepted' => true, 'notified' => true]);
+        }
+
+        throw new \InvalidArgumentException(
+            'Unsupported ops-event type (expected misconfig_register or fail2ban_ban)',
+            422
+        );
     }
 
     // S7 — dedicated recordings bucket (never org/catalog). Scoped tenants/{shortuid}/recordings/*

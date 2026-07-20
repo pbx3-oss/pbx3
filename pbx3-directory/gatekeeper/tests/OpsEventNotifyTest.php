@@ -71,6 +71,75 @@ final class OpsEventNotifyTest extends TestCase
         $this->assertStringContainsString('Do not ban', $sent[0]['body']);
     }
 
+    public function test_move_job_failed_mail(): void
+    {
+        $sent = [];
+        $mailer = new class($sent) implements Mailer {
+            /** @param list<array{to:list<string>,subject:string,body:string}> $sent */
+            public function __construct(private array &$sent)
+            {
+            }
+
+            public function send(array $to, string $subject, string $bodyText): void
+            {
+                $this->sent[] = ['to' => $to, 'subject' => $subject, 'body' => $bodyText];
+            }
+        };
+
+        putenv('GATEKEEPER_FLEET_UI_URL=https://spa.example');
+        $_ENV['GATEKEEPER_FLEET_UI_URL'] = 'https://spa.example';
+
+        (new NotifyDispatcher($mailer))->notifyMoveJobTerminal([
+            'id' => 'tmj_abc',
+            'tenant_shortuid' => 'affcot',
+            'tenant_fqdn' => 'affcot.pbx3.com',
+            'source_instance_id' => '08jzwn',
+            'dest_instance_id' => 'bzy54n',
+            'error' => 'export boom',
+            'phases' => [
+                'preflight' => ['status' => 'ok'],
+                'exporting' => ['status' => 'failed', 'message' => 'export boom'],
+            ],
+        ], 'failed');
+
+        $this->assertCount(1, $sent);
+        $this->assertStringContainsString('Move job failed', $sent[0]['subject']);
+        $this->assertStringContainsString('affcot', $sent[0]['body']);
+        $this->assertStringContainsString('Failed phase: exporting', $sent[0]['body']);
+        $this->assertStringContainsString('/fleet/jobs', $sent[0]['body']);
+
+        putenv('GATEKEEPER_FLEET_UI_URL');
+        unset($_ENV['GATEKEEPER_FLEET_UI_URL']);
+    }
+
+    public function test_fail2ban_ban_mail(): void
+    {
+        $sent = [];
+        $mailer = new class($sent) implements Mailer {
+            /** @param list<array{to:list<string>,subject:string,body:string}> $sent */
+            public function __construct(private array &$sent)
+            {
+            }
+
+            public function send(array $to, string $subject, string $bodyText): void
+            {
+                $this->sent[] = ['to' => $to, 'subject' => $subject, 'body' => $bodyText];
+            }
+        };
+
+        (new NotifyDispatcher($mailer))->notifyFail2banBan([
+            'source_ip' => '198.51.100.9',
+            'jail' => 'opensips-brute-force',
+            'sbc_fqdn' => 'sbc.pbx3.com',
+            'currently_banned' => 3,
+        ]);
+
+        $this->assertCount(1, $sent);
+        $this->assertStringContainsString('198.51.100.9', $sent[0]['subject']);
+        $this->assertStringContainsString('sbc.pbx3.com', $sent[0]['body']);
+        $this->assertStringContainsString('opensips-brute-force', $sent[0]['body']);
+    }
+
     public function test_ops_event_throttle(): void
     {
         $this->assertTrue(OpsEventThrottle::allow('k1', 60));

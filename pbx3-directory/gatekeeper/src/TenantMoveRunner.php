@@ -127,6 +127,7 @@ final class TenantMoveRunner
         $job = $this->stampActor($job, $actor);
         $job['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
         $this->jobs->writePublic($job);
+        $this->notifyTerminal($job, 'aborted');
 
         return $job;
     }
@@ -216,6 +217,7 @@ final class TenantMoveRunner
         $job = $this->stampActor($job, $actor);
         $job['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
         $this->jobs->writePublic($job);
+        $this->notifyTerminal($job, 'aborted');
 
         return $job;
     }
@@ -282,8 +284,22 @@ final class TenantMoveRunner
             $phase = $state === 'pending' ? 'preflight' : $state;
             $job = $this->markPhase($job, $phase, 'failed', $e->getMessage());
             $this->jobs->writePublic($job);
+            $this->notifyTerminal($job, 'failed');
 
             return $job;
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $job
+     * @param  'failed'|'aborted'  $outcome
+     */
+    private function notifyTerminal(array $job, string $outcome): void
+    {
+        try {
+            NotifyDispatcher::fromEnv()->notifyMoveJobTerminal($job, $outcome);
+        } catch (\Throwable $e) {
+            error_log('[gatekeeper-notify] move job '.$outcome.' mail failed: '.$e->getMessage());
         }
     }
 
