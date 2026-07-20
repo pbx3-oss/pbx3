@@ -58,7 +58,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-20 — SBC backup/restore v1 + scratch drill)
 
-**Branches:** **pbx3** / **pbx3sbc** / **pbx3sbc-admin** / **pbx3-docs** / **pbx3spa** all **`main`** (tips after this session’s push). **pbx3api** unchanged (**`6c28486`**).
+**Branches:** **pbx3** tip **`3c1b26f`**. **pbx3sbc** tip **`0a326d0`**. **pbx3sbc-admin** tip **`70071db`**. **pbx3-docs** tip **`7873efe`**. **pbx3spa** tip **`9a6e5c4`**. **pbx3api** unchanged (**`6c28486`**).
 
 ### Shipped
 - **SBC backup/restore v1:** Requirements locked (**`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**); manifest schema; `backup-sbc.sh` / `upload-sbc-backup.sh` / `restore-sbc-backup.sh` + cron example; `fetch-latest-sbc-backup.sh`; lifecycle script merges `instances/` + `sbc/` `class=backup` rules.
