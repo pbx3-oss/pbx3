@@ -114,39 +114,23 @@ Text-log / pcap S3 offload does **not** replace `acc`. When prioritized: purge o
 
 ## Phase 7 — SBC `acc` retention / cold export (**part of SBC data aging review**)
 
-**Status:** Proposal only — planning home is now **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (includes `acc` plus `door_knock_attempts` / `failed_registrations` and lab measurement). Do not implement or enable destructive retention until decisions are recorded there.
+**Status:** **Purge-only v1 shipped** in **pbx3sbc-admin** (`pbx3sbc:purge-acc`, 90d, edge ops only) — planning home **`SBC_DATA_RETENTION_REQUIREMENTS.md`**. Cold CSV/S3 export from the list below is **deferred** (not required for v1).
 
 ### Why this may be needed
 
 OpenSIPS writes edge CDR rows to MySQL `acc`, and the SBC Admin CDR panel reads them. Those rows currently persist indefinitely. This is distinct from instance Asterisk CDR: SBC `acc` describes SIP edge legs, while Asterisk records dialplan/billing truth. Phase 7 would bound SBC database and PII growth without treating either plane as a replacement for the other.
 
-### Suggested scope
+### Shipped (purge-only)
 
-1. Define SBC CDR retention independently from instance CDR retention; do not reuse `local_days.cdr` until the product HoR decision is settled.
-2. Export eligible `acc` rows to a versioned, compressed CSV before purge. Include the source SBC ID, export window, schema version, row count, and an integrity checksum in a sidecar manifest.
-3. Upload exports to the org bucket under `sbc/{sbc-id}/logs/cdr/{stamp}/…`, using the existing SBC IAM boundary and asynchronous log-ship pattern.
-4. Verify the object and manifest are durable before deleting any source rows. If S3 is unavailable or verification fails, retain rows and retry later; never put export/purge in the SIP call path.
-5. Purge in small, indexed batches during a low-traffic window, using a stable cutoff and primary-key range so OpenSIPS writes and the Admin CDR panel are not held behind a long transaction.
-6. Provide an idempotent command with `--dry-run`, explicit cutoff/retention reporting, batch limits, structured logs, and non-zero exit on export or verification failure. Schedule it daily only after lab soak.
-7. Keep the live SBC Admin CDR panel on locally retained `acc` rows. Optional S3 list/download may be added later; in-browser cold-archive search is not required.
-8. Add unit/integration tests for export boundaries, manifest/checksum, retry idempotency, “no delete before verified upload,” and batched purge.
+- Decisions: edge ops only; local **90d**; no S3 export v1; batched DELETE; root cron 06:20.
+- Command: `php artisan pbx3sbc:purge-acc [--dry-run] [--days=] [--batch=]`.
 
-### Decisions required before implementation
+### Deferred (cold export — optional later)
 
-- Whether SBC `acc`, Asterisk CDR, or both are exposed as product call history, and how duplicate edge/dialplan legs are explained.
-- Local SBC retention period and S3 retention period; no defaults are settled yet.
-- Whether cold export is mandatory before purge or whether a policy may explicitly choose purge-only.
-- Final export schema and whether URI fields require redaction, hashing, or tighter access controls.
-- Whether the existing SBC log shipper uploads completed exports or a dedicated archival command owns export + upload + verification.
-- Whether the SBC Admin panel needs cold-archive list/download.
-
-### Proposed acceptance gate
-
-- A lab export has a deterministic row count and checksum, is downloadable from the SBC prefix, and can be inspected independently.
-- Re-running the same window does not duplicate or lose rows.
-- No rows are deleted when upload or verification fails.
-- Batched purge runs while OpenSIPS continues writing CDRs and the Admin panel remains responsive.
-- Retention and privacy choices are explicitly approved before production enablement.
+1. Export eligible `acc` rows to a versioned, compressed CSV before purge (manifest + checksum).
+2. Upload under `sbc/{sbc-id}/logs/cdr/{stamp}/…`.
+3. Never delete before durable export when export-mandatory policy is chosen.
+4. Optional Admin cold-archive list/download.
 
 ### Velocity (pointer)
 

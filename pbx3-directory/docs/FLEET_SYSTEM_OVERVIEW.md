@@ -131,7 +131,7 @@ This one indirection is what makes the fleet flexible:
 
 **Standalone vs fleet authorship:** The same SBC product can front “any Asterisk” with its own admin UI (no directory required). A **PBX3 fleet** also drives that SBC from the **S3 directory** (who lives where, which numbers belong to whom) via the control plane — so fleet operators change intent in **Fleet mode** in the SPA, and the edge is updated as a projection. They should not also hand-edit those same fleet-owned rows on the SBC, or catalog and edge will drift. Facts not yet kept in the directory (for example many carrier trunk settings) can still be configured on the SBC. Full rule: **`DESIGN_RULES.md` Rule 13**.
 
-Production fleets run **two or more identical SBCs** for redundancy — typically **active–passive behind one VIP** (signaling only / RTP bypass). A shared live routing database is **not** required; each member keeps a local store (**SQLite preferred** for single-file portability, with optional Litestream to S3; lab may still use MySQL).
+Production fleets run **two or more identical SBCs** for redundancy — typically **active–passive behind one VIP** (signaling only / RTP bypass). A shared live routing database is **not** required; each member keeps a **local MariaDB** store. (SQLite + Litestream was an earlier portability idea — **parked**; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.)
 
 ### 3.4 S3 — the fleet's memory
 

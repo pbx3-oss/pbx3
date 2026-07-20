@@ -227,8 +227,8 @@ A single SBC is acceptable for **lab / golden validation**. **Production fleet**
 | Requirement | Notes |
 |-------------|--------|
 | **Active–passive pair (preferred)** | Two identical `pbx3sbc` images; **one VIP** (or equivalent single phone-facing address) on the active member; warm standby for box failure. Idle capacity is insurance, not waste to monetize via active–active. |
-| **No shared live routing DB** | Shared MySQL/RDS only relocates the SPOF and forces owning a resilient DB. **Product rule:** call path must not depend on a live shared DB. Each member has a **local** DB; directory/S3 remains home-of-record; standby stays warm via projection, file copy, or **Litestream** restore (see §6.0). |
-| **Local DB portability (preferred direction)** | Prefer **SQLite** (OpenSIPS `db_sqlite`) for the on-box store — **single-file** portability matches projected/rebuildable edge. Lab today remains **MySQL**; migrate when packaged and soak-tested. See §6.0. |
+| **No shared live routing DB** | Shared MySQL/RDS only relocates the SPOF and forces owning a resilient DB. **Product rule:** call path must not depend on a live shared DB. Each member has a **local** DB; directory/S3 remains home-of-record; standby stays warm via projection / rebuild from catalog (see §6.0). |
+| **Local DB (current)** | Lab and product path today: **MariaDB** per SBC member (OpenSIPS `db_mysql`). **SQLite + Litestream** is **parked** — see §6.0. |
 | **Directory record** | `sbc-fleet` with `sip_proxy_fqdn` (**VIP / stable edge name**), `admin_api_url`, `member_hosts` — see **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §4.1 |
 | **Node `Egress` / `EgressFailover`** | Point at the stable SBC address (VIP). Optional second URI for break-glass. **Availability:** fleet nodes must **qualify** Egress via OPTIONS; SBC must respond — see **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. |
 
@@ -238,25 +238,17 @@ A single SBC is acceptable for **lab / golden validation**. **Production fleet**
 
 **Is a blocker for:** “production fleet” SLA claims before active–passive + failover rehearsal are documented and tested.
 
-### 6.0 Local DB engine — SQLite + Litestream (direction 2026-07-14)
+### 6.0 Local DB engine — MariaDB now; SQLite + Litestream **parked** (2026-07-20)
 
-**Motivation:** Raw **single-file portability** of SQLite is advantageous for this project — copy/replace/re-project an edge DB, keep standby in sync, and avoid operating a second database product on the SBC just to hold a projection of S3.
+**Current (do this):** Each SBC member runs a **local MariaDB** store (OpenSIPS `db_mysql` + `pbx3sbc-admin`). Call path = local DB only. Directory/S3 remains HoR; rebuild / promote = **re-project from catalog** plus a real **MariaDB backup/restore** when that project ships — see **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (after aging; production gate). Not Litestream.
 
-| Piece | Role |
-|-------|------|
-| **OpenSIPS `db_sqlite`** | Local routing (+ optional soft-state) on each SBC member. Optional in many packages — must be in the SBC image. |
-| **Litestream** | Continuous WAL → object storage (S3); restore onto standby or replacement host. Complements active–passive; **does not** create multi-writer or shared-live-DB semantics. Call path still reads **local** SQLite only. |
-| **Directory / S3 HoR** | Still authoritative for fleet facts (`tenant→node`, DID delivery compile). Litestream protects **on-box** state (and speeds standby catch-up); full logical rebuild remains **re-project from catalog**. |
+**Parked (do not chase):** Earlier direction (**2026-07-14**) preferred **SQLite** (`db_sqlite`) + optional **Litestream** WAL→S3 for single-file portability. **Parked 2026-07-20** — no spike, no cutover, no Litestream work while the edge is MariaDB. Litestream is SQLite-only and **irrelevant** to the current engine. Revisit only on an explicit product ask.
 
-**Pros (why we lean this way):** one file per member; dispose/rebuild edge easily; cultural fit with PBX3 node SQLite; Litestream = boring standby/S3 copies without Galera.
-
-**Cons / gates before flipping lab off MySQL:**
-
-- OpenSIPS multiprocess write churn (`usrloc`, `dialog` db flush, `acc`) vs SQLite single-writer — soak under REGISTER load; tune WAL / `db_mode` or keep hot tables carefully.
-- `pbx3sbc-admin` (Laravel) is MySQL-oriented today — plan admin → projection → SQLite (or dual path) before cutover.
-- Confirm `db_sqlite.so` in installed OpenSIPS packages on the SBC image.
-
-**Status:** Direction of travel for **portability**, not a lab cutover today. Current `sbc.pbx3.com` stays MySQL until an explicit SQLite+Litestream spike passes soak.
+| Piece | Status |
+|-------|--------|
+| **MariaDB (local)** | **Active** — lab `sbc.pbx3.com` and product path |
+| **SQLite + Litestream** | **Parked** — historical portability idea only |
+| **Directory / S3 HoR** | Unchanged — catalog authoritative; edge is projection |
 ### 6.1 WebRTC / WSS endpoints (fleet edge)
 
 **Settled 2026-07-14** (product framing). Implementation of WSS-on-SBC remains a later track.
@@ -365,7 +357,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 | Item | Owner | Note |
 |------|--------|------|
 | SBC active–passive runbook | pbx3sbc fleet docs | **Direction locked (2026-07-14):** VIP + warm standby; local DB; S3 re-project; failover drill |
-| **SBC local DB — SQLite + Litestream** | pbx3sbc | §6.0 — preferred for **single-file portability**; lab MySQL until spike/soak; gate: write churn + Filament |
+| **SBC local DB — SQLite + Litestream** | pbx3sbc | §6.0 — **parked (2026-07-20)**; current engine **MariaDB**; do not spike unless reopened |
 | `GET_DOMAIN_FROM_SOURCE_IP` hostname gap | pbx3sbc | **Noted** — store Asterisk source IP in dispatcher `attrs`; optional polish |
 | **WebRTC / WSS on SBC** | pbx3sbc | §6.1 — `proto_wss` + TLS on VIP; RTP bypass; **interim/beta:** node `:8089` |
 | Older non-WSS SARK webphone | Product | Needs media gateway — optional / maybe never; not implied by WSS-on-SBC |
@@ -395,6 +387,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 
 | Date | Change |
 |------|--------|
+| 2026-07-20 | §6.0 — **park** SQLite + Litestream; current local engine **MariaDB**; Litestream irrelevant while on MariaDB |
 | 2026-07-14 | §6.0 — prefer **SQLite** on-box for portability + **Litestream** for S3/standby WAL; lab stays MySQL until soak. §6 HA/WebRTC settlements earlier same day. |
 | 2026-07-14 | §6 HA settled: **active–passive + VIP**; **no shared live DB**. §6.1: webphone SIP≠media; beta = node WSS; PBX3 + last-gen SARK OK; SBC WSS for endpoint simplicity; RTP bypass; older SARK needs media GW (maybe never) |
 | 2026-07-13 | §4.3.1 — solo vs fleet trunk panel; reject ITSP profiles; DNS outbound / IP inbound → **PEERING-PLAN** §0.1 |

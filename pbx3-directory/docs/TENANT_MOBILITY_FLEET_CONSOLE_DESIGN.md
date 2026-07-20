@@ -105,7 +105,7 @@ The wizard should **detect posture from the directory** and present the right cu
 
 Before tenant mobility is shippable as a fleet product, operators provision:
 
-1. **≥1 SBC** (≥2 for production) from identical pbx3sbc images. **HA (settled 2026-07-14):** active–passive behind a **VIP**; each member has a **local** DB (projection of directory/S3 — **not** a shared live DB on the call path). **Preferred local engine:** SQLite (+ optional **Litestream** to S3) for single-file portability — lab MySQL until spike. See **`FLEET_TRUNK_PEERING_DECISION.md`** §6 / §6.0.
+1. **≥1 SBC** (≥2 for production) from identical pbx3sbc images. **HA (settled 2026-07-14):** active–passive behind a **VIP**; each member has a **local** DB (projection of directory/S3 — **not** a shared live DB on the call path). **Local engine (current):** **MariaDB**. SQLite + Litestream = **parked** (2026-07-20). See **`FLEET_TRUNK_PEERING_DECISION.md`** §6 / §6.0.
 2. **Per fleet node:** one dispatcher `setid` → `sip:{node-private-or-public-ip}:5060` (health-checked).
 3. **Per tenant domain:** `domain` row → current host node's `setid`.
 4. **Per fleet node:** instance trunks `Egress` (+ optional `EgressFailover`) → SBC **VIP**; **UFW** (or successor): SIP **5060/tcp+udp from SBC IP(s) only** — no `fqdninspect` / Shorewall STRING match on fleet nodes.
@@ -140,7 +140,7 @@ Active–passive runbook + failover drill still required for "production fleet" 
 - Registration proxy; endpoint location for Asterisk→phone signaling
 - NAT traversal; basic scanner / door-knock protection
 - RTP bypass (signaling only at edge)
-- **≥2 SBC instances** — active–passive + VIP; local DB per member (**SQLite preferred**, lab MySQL) — settled 2026-07-14 §6 / §6.0
+- **≥2 SBC instances** — active–passive + VIP; local **MariaDB** per member — settled 2026-07-14 §6; SQLite+Litestream parked (§6.0)
 - `pbx3sbc-admin` domain + dispatcher CRUD (seed of edge admin)
 - **Peering Phase 0–1** per `PEERING-PLAN.md` when egress is needed (Asterisk → SBC → carrier; inbound carrier → DID → backend)
 
@@ -692,7 +692,7 @@ Likely trip points when implementing SBC-fronted fleet + tenant mobility. Severi
 
 | # | Gotcha | Sev | Mitigation |
 |---|--------|-----|------------|
-| 16 | **SBC routing DB availability** — shared live MySQL **rejected**. Prefer local **SQLite** (+ Litestream) for portability; lab still MySQL. Active–passive needs correct file/projection on promote. | **M** | §6 / §6.0. Call path = local file only. Catalog remains HoR; Litestream assists standby/S3 copies; full rebuild = re-project. |
+| 16 | **SBC routing DB availability** — shared live MySQL/RDS **rejected**. Local **MariaDB** per member (current). SQLite + Litestream **parked**. Active–passive needs correct projection on promote. | **M** | §6 / §6.0. Call path = local DB only. Catalog remains HoR; full rebuild = re-project. |
 | 17 | **`pbx3sbc-admin` vs Fleet Console** — two UIs until adapter ships; manual `domain`/`dispatcher` edits can drift from catalog. | **M** | **Decided §2.5:** `pbx3sbc-admin` = thin local/break-glass edge admin **behind** the adapter; control plane is **sole writer** for moves via `SbcFleetAdapter`. Manual edits = break-glass only; reconcile job (S3 ≡ SBC, §11.10) flags drift. |
 | 18 | **Dispatcher health marks node down** — during move, if dest node fails health check, SBC won't send traffic even after repoint. | **M** | Preflight (`SbcFleetAdapter.preflight`, §2.4): dest dispatcher **UP**; move only when `pbx3:fleet-preflight` green. |
 

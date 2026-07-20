@@ -1,8 +1,9 @@
 # SBC data & log aging — review project
 
-**Status:** Review kickoff (2026-07-20). **No purge/export implementation until decisions are recorded here.**  
+**Status:** **WS0–WS4 done** (2026-07-20). Lab purge + cron live; Filament **Logs → Data retention**; MkDocs fleet page.  
 **Owner:** ops + agent sessions against live lab SBC (`sbc.pbx3.com`).  
-**Related:** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** (Phases 1–6 shipped; Phase 7 = `acc` proposal only); **`pbx3sbc/docs/FLEET_LOG_RETENTION.md`** (what already rotates/ships); **`DESIGN_RULES.md`** Rule 1 (telephony independent of S3), Rule 13 (edge-authored).
+**Related:** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** (Phases 1–6 shipped; Phase 7 = `acc` — now purge-only under this file); **`pbx3sbc/docs/FLEET_LOG_RETENTION.md`** (what already rotates/ships); **`DESIGN_RULES.md`** Rule 1 (telephony independent of S3), Rule 13 (edge-authored); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (DR — separate; after this project).  
+**MySQL access:** lab host uses `sudo mysql` (unix_socket); plain `ubuntu` MySQL login fails.
 
 ## Goal
 
@@ -21,15 +22,15 @@ This project **supersedes “Phase 7 alone”** as the planning frame: `acc` is 
 
 Do not redesign these unless lab evidence says the ring/days are wrong.
 
-## Inventory — needs a decision
+## Inventory — decisions applied
 
-### A. Append-only MySQL (grows forever today)
+### A. Append-only MySQL (v1 retention)
 
-| Table | Writer | Admin UI | PII / sensitivity | Suggested review questions |
-|-------|--------|----------|-------------------|----------------------------|
-| **`acc`** | OpenSIPS CDR | Logs → CDR | Call-ID, From/To URI, timing | Product HoR vs Asterisk CDR? Local days? Export before purge? (**former Phase 7**) |
-| **`door_knock_attempts`** | OpenSIPS security xlog/SQL | Logs → Door Knock | source IP, UA, RURI, domain | Hot window for Fail2ban forensics? Purge-only vs export? |
-| **`failed_registrations`** | OpenSIPS | Logs → Failed Registrations | username, source IP, UA | Align with door-knock? Same job? |
+| Table | Writer | Admin UI | v1 retention |
+|-------|--------|----------|--------------|
+| **`acc`** | OpenSIPS CDR | Logs → CDR | **Edge ops only**; local **90d**; **purge-only** (no S3/export v1) |
+| **`door_knock_attempts`** | OpenSIPS security | Logs → Door Knock | Local **30d**; **purge-only** |
+| **`failed_registrations`** | OpenSIPS | Logs → Failed Registrations | Local **30d**; **same security job** as door-knock; purge-only |
 
 ### B. Runtime / state MySQL (usually self-limiting — confirm, don’t blindly purge)
 
@@ -53,7 +54,7 @@ Do not redesign these unless lab evidence says the ring/days are wrong.
 |---------------|--------|
 | `/var/log/fail2ban.log*` | Confirm logrotate present; optional S3 later |
 | Prometheus TSDB (if enabled) | Installer mentioned ~30d — verify on host |
-| MySQL binary logs / backups | Ops concern; separate from app-table purge |
+| MySQL binary logs / full DB backups | **Out of this project** — see **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (future DR; production gate) |
 | nginx / php-fpm / Laravel `storage/logs` | Standard rotate; low SIP value |
 
 ## Design principles (non-negotiable unless override)
@@ -98,28 +99,44 @@ sudo du -sh /var/log/opensips /var/log/pbx3sbc /var/log/fail2ban.log* 2>/dev/nul
 
 Record results in § Lab notes below (append dated blocks).
 
-## Decisions to record (checklist)
+## Decisions recorded (locked 2026-07-20)
 
-Fill in before any implement session:
+- [x] **`acc` product role:** **edge ops only** — not product call history; Asterisk CDR remains HoR for calls. Filament Logs → CDR stays for edge troubleshooting.
+- [x] **`acc` local days** / S3 / export: local **90 days**; **no S3**; **purge-only** (no cold CSV v1).
+- [x] **`door_knock_attempts`:** local **30 days**; **purge-only**.
+- [x] **`failed_registrations`:** local **30 days**; **same job** as door-knock; purge-only.
+- [x] **Job shape:** one **security-events** purge job (`door_knock` + `failed_reg`); **separate** `acc` purge job.
+- [x] **Cron / batch:** daily **06:15** (host local); batch size **1000** rows per delete.
+- [x] **Who runs destructive jobs:** **root cron** → artisan/CLI; **no** Filament-triggered delete in v1.
+- [x] **Privacy / CSV:** **N/A v1** (no cold export). If export is added later → **redact** URIs/usernames.
 
-- [ ] **`acc` product role:** edge ops only vs product call history vs both (with Asterisk)
-- [ ] **`acc` local days** / S3 days / export-mandatory?
-- [ ] **`door_knock_attempts` local days** (e.g. 7 / 30 / 90) / export?
-- [ ] **`failed_registrations` local days** / same job as door-knock?
-- [ ] Shared **security-events** purge job vs separate from CDR?
-- [ ] Cron window (e.g. daily 06:xx) and batch size defaults
-- [ ] Who may run destructive jobs (root cron vs Filament-triggered — prefer root cron)
-- [ ] Privacy: redact URIs/usernames in any cold CSV?
+## Workstreams
 
-## Proposed workstreams (after decisions)
+| WS | Scope | Status |
+|----|--------|--------|
+| **WS0** | Lab measurement + decision checklist | **Done** 2026-07-20 |
+| **WS1** | Security tables purge (`door_knock` + `failed_reg`), 30d, cron 06:15, batch 1000, `--dry-run` | **Lab live** 2026-07-20 |
+| **WS2** | `acc` purge-only, 90d (no export v1) | **Lab live** 2026-07-20 (cron 06:20) |
+| **WS3** | Admin UI knobs / “last purge” status | **Done** — Logs → Data retention (override JSON; no Filament delete) |
+| **WS4** | Docs: MkDocs ops + Phase 7 pointer | **Done** — `pbx3-docs` fleet/sbc-data-retention.md |
 
-| WS | Scope | Depends on |
-|----|--------|------------|
-| **WS0** | Lab measurement + fill decision checklist | — |
-| **WS1** | Security tables purge (`door_knock` + `failed_reg`) — likely simplest, high growth under scanners | WS0 |
-| **WS2** | `acc` export + purge (ex–Phase 7) | WS0 + CDR HoR decision |
-| **WS3** | Admin UI knobs / “last purge” status (optional) | WS1/WS2 |
-| **WS4** | Docs: MkDocs ops + update Phase 7 pointer to this file | WS1/WS2 |
+### Operator commands (pbx3sbc-admin)
+
+```bash
+cd /home/ubuntu/pbx3sbc-admin   # lab path
+php artisan pbx3sbc:purge-security-events --dry-run
+php artisan pbx3sbc:purge-security-events          # real delete
+php artisan pbx3sbc:purge-acc --dry-run
+php artisan pbx3sbc:purge-acc
+
+# Enable daily cron (after dry-run OK):
+sudo cp deploy/cron.d/pbx3sbc-retention.example /etc/cron.d/pbx3sbc-retention
+sudo chmod 644 /etc/cron.d/pbx3sbc-retention
+```
+
+Env knobs: `PBX3_SBC_SECURITY_EVENTS_LOCAL_DAYS` (30), `PBX3_SBC_ACC_LOCAL_DAYS` (90), `PBX3_SBC_PURGE_BATCH_SIZE` (1000).  
+UI override: Filament **Logs → Data retention** → `storage/app/pbx3-retention-override.json`.  
+MkDocs: **`pbx3-docs/docs/fleet/sbc-data-retention.md`**.
 
 ## Out of scope (this project)
 
@@ -132,10 +149,39 @@ Fill in before any implement session:
 
 <!-- Append dated measurement dumps here -->
 
-_(none yet — run § Lab measurement on next session)_
+### 2026-07-20 — `sbc.pbx3.com` (read-only)
+
+**Host:** root **6.8G**, **5.3G used (79%)**, **1.5G free**. Hot filesystem consumers: `/var/log` **1.3G** (journal **639M**, `syslog.1` **389M**, `pbx3sbc` **124M**, `opensips` **106M**), `/var/lib` **938M** (MySQL **138M** total / `opensips` datadir **13M**, Prometheus **101M**). Fail2ban logrotate present; live + 4 rotated files (~tiny).
+
+**Append-only MySQL** (`sudo mysql`):
+
+| Table | Rows | Oldest | Newest | data_mb | index_mb |
+|-------|------|--------|--------|---------|----------|
+| `door_knock_attempts` | **4703** | 2026-01-28 22:32 | 2026-07-20 12:49 | 1.52 | 0.59 |
+| `failed_registrations` | **737** | 2026-01-28 23:45 | 2026-07-09 21:41 | 0.11 | 0.13 |
+| `acc` | **105** | 2026-01-29 00:09 | 2026-07-20 00:51 | 0.08 | 0.02 |
+
+**Windows:** door-knock **339 / 7d**, **3157 / 30d**; failed-reg **0 / 7d**, **37 / 30d**; `acc` **17 / 7d**, **97 / 30d**.
+
+**Runtime:** `dialog` **0** rows; `location` **12** (expires present — looks self-limiting).
+
+**Takeaways (lab):** MySQL tables are **not** the disk crisis yet — journal/syslog + product log trees dominate. Under scanners, **`door_knock_attempts` is the clear MySQL growth leader** (~10× `failed_registrations`, ~45× `acc`). `acc` stays tiny at lab traffic; production fleet volume will change the absolute numbers but not the “edge CDR ≠ Asterisk CDR” product split. Security purge (WS1) is the highest-value first implement after decisions; `acc` (WS2) can wait on HoR/export choices without blocking disk relief from security tables.
+
+### 2026-07-20 — first purge + cron (lab)
+
+Surgical deploy of Retention services + `routes/console.php` + cron example (dirty tree; no wholesale pull).
+
+| Table | Deleted | Remaining | Oldest after |
+|-------|---------|-----------|--------------|
+| `door_knock_attempts` | 1546 | 3158 | 2026-07-08 |
+| `failed_registrations` | 700 | 37 | 2026-07-09 |
+| `acc` | 8 | 99 | 2026-07-09 |
+
+Cron: `/etc/cron.d/pbx3sbc-retention` (06:15 security, 06:20 acc).
 
 ## Pointers for implementers
 
 - Schema create: **`pbx3sbc/scripts/init-database.sh`** (`failed_registrations`, `door_knock_attempts`).
 - Filament models: **`pbx3sbc-admin/app/Models/{Cdr,DoorKnockAttempt,FailedRegistration}.php`**.
+- Purge: **`pbx3sbc-admin/app/Services/Retention/*`**, artisan `pbx3sbc:purge-security-events` / `pbx3sbc:purge-acc`, cron **`deploy/cron.d/pbx3sbc-retention.example`**.
 - Existing Phase 7 sketch: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § Phase 7 — keep in sync; this file is the broader project home.

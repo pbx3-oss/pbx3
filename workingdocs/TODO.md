@@ -1,25 +1,30 @@
 # PBX3 ToDo list
 
-**Branch:** all **`main`**. SBC brand mark + light-only + Call Route view + Fail2ban log viewer shipped. Downstream peer registration = future reqs only. Log retention Phases 1–6 done; SBC data aging **review project** started (**`SBC_DATA_RETENTION_REQUIREMENTS.md`**).  
-**Last updated:** 2026-07-20 (session end — brand/Fail2ban log + SBC aging review kickoff)
+**Branch:** all **`main`**. **SBC data aging complete** (WS0–WS4 lab-live + Filament knobs + MkDocs). Next: **SBC backup/restore**. Litestream parked.  
+**Last updated:** 2026-07-20 (aging WS3/WS4)
 
 ### Suggested “what next?” order
 
-1. **SBC data & log aging review (active)** — inventory + lab measurement + decisions; then purge/export. Spec: **`pbx3-directory/docs/SBC_DATA_RETENTION_REQUIREMENTS.md`**.  
+1. **SBC backup & restore (next)** — production gate; MariaDB dump + S3. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
 2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 3. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
 4. **Failover + shadowing** (parked).  
-5. **S10.7 / S8.9** (parked) — cloud adapter.  
-6. **pbx3-docs polish (ongoing)**.  
-7. **pbx3cagi** struct refactor (deferred).  
-8. **Fleet auth cookie/SSO (blocked)**.  
-9. **S7+** attested PCI — only on customer ask.  
+5. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
+6. **S10.7 / S8.9** (parked) — cloud adapter.  
+7. **pbx3-docs polish (ongoing)**.  
+8. **pbx3cagi** struct refactor (deferred).  
+9. **Fleet auth cookie/SSO (blocked)**.  
+10. **S7+** attested PCI — only on customer ask.  
 
 ---
 
 ## Open items
 
-- [ ] **SBC data & log aging review (2026-07-20 kickoff):** Inventory MySQL append-only tables (`acc`, `door_knock_attempts`, `failed_registrations`) + confirm text/pcap already aged. Lab measure row counts/sizes; fill decision checklist; then WS1 security purge and/or WS2 `acc` export. **No destructive jobs until decisions recorded.** Spec: **`pbx3-directory/docs/SBC_DATA_RETENTION_REQUIREMENTS.md`**. Folds former log-retention Phase 7.
+- [ ] **SBC backup & restore (next — production gate):** MariaDB dump + selective config → local zip → S3 `sbc/{id}/backups/{stamp}/` + manifest; tested restore runbook. Catalog re-project alone is not enough. Spec: **`pbx3-directory/docs/SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
+
+- [ ] **SBC SQLite + Litestream (parked 2026-07-20):** Earlier portability direction. **Current engine = MariaDB.** Litestream is irrelevant while on MariaDB. Do not spike. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.
+
+- [x] **SBC data & log aging WS0–WS4 (2026-07-20):** Lab live — purge + cron; Filament **Logs → Data retention**; MkDocs `fleet/sbc-data-retention.md`. Spec: **`pbx3-directory/docs/SBC_DATA_RETENTION_REQUIREMENTS.md`**.
 
 - [x] **TLS / Let’s Encrypt — SBC admin HTTPS (2026-07-14):** **`https://sbc.pbx3.com/admin`** — certbot webroot, nginx 443 + HTTP→HTTPS, `APP_URL=https://sbc.pbx3.com`. SG needed world **80/443** (was office-IP-only). Runbook **`pbx3sbc/workingdocs/LE_HTTPS_SBC_ADMIN.md`**; nginx template **`pbx3sbc-admin/deploy/nginx-pbx3sbc-admin.conf`**. Branch **`lehttps`**. **Ops:** rotate Filament admin password. SIP TLS out of scope.
 
