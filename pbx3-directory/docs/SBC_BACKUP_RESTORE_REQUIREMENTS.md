@@ -2,7 +2,7 @@
 
 **Status:** **Active (2026-07-20).** Dump scope locked; **v1 backup + restore scripts** shipped. **Scratch-box restore drill** is the remaining production-gate exercise (host not yet spun).  
 **Production gate:** A tested SBC backup/**restore** path is **required before any production fleet** — catalog re-project alone is not enough.  
-**Related:** PBX instance pattern (`OPS_S3_RUNBOOK.md`, `backup-manifest.v0.json`, `REBUILD_INSTANCE_RUNBOOK.md`); schema **`sbc-backup-manifest.v0.json`**; tools **`fetch-latest-sbc-backup.sh`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0 (MariaDB current; Litestream **parked**); **`DESIGN_RULES.md`** Rule 1, Rule 13; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (aging ≠ DR); ops note **`pbx3sbc/docs/SBC_BACKUP_RESTORE.md`**.
+**Related:** PBX instance pattern (`OPS_S3_RUNBOOK.md`, `backup-manifest.v0.json`, `REBUILD_INSTANCE_RUNBOOK.md`); schema **`sbc-backup-manifest.v0.json`**; tools **`fetch-latest-sbc-backup.sh`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0 (MariaDB current; Litestream **parked**); **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (VIP/EIP promote ≠ this zip); **`DESIGN_RULES.md`** Rule 1, Rule 13; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (aging ≠ DR); ops note **`pbx3sbc/docs/SBC_BACKUP_RESTORE.md`**.
 
 ## Problem
 
@@ -19,7 +19,7 @@ Without a dump + restore runbook, losing an SBC box means re-keying and drift ri
 | Litestream / SQLite edge | **Parked** — irrelevant while on MariaDB |
 | Instance (PBX) zip → S3 | Already shipped |
 | Filament “Create backup” UI / SPA archive browser | Later |
-| HA promote automation | Separate from cold restore (see below) |
+| HA promote (VIP/EIP + warm standby) | **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — not this zip |
 
 ## Locked decisions (v1)
 
@@ -34,7 +34,7 @@ Without a dump + restore runbook, losing an SBC box means re-keying and drift ri
 | **Tag** | `class=backup` on zip + manifest → lifecycle (ops laptop; see `apply-backup-lifecycle-rule.sh`) |
 | **IAM** | Existing `pbx3-sbc-s3-writer.policy.json.tmpl` (`sbc/{id}/*`) — no new shape |
 | **Secrets** | Admin `.env` (APP_KEY + DB) rides in the zip (operator artifact). LE certs = **certbot on new host**, not in zip. |
-| **HA vs cold** | Cold restore = this DR path. HA promote = warm standby + catalog re-project — **separate drill**, not this zip. |
+| **HA vs cold** | Cold restore = this DR path. HA promote = warm standby + VIP/EIP — **`SBC_HA_FAILOVER_REQUIREMENTS.md`**; **separate drill**, not this zip. |
 
 ### MariaDB — include vs exclude
 
@@ -92,7 +92,7 @@ Lab archive for first drill: `s3://08jzwn-pbx3/sbc/sbc/backups/20260720T172044Z/
 
 ### HA promote (not this zip)
 
-Active–passive VIP promote uses the standby’s **local** DB (kept warm via projection/rebuild policy) — see **`FLEET_TRUNK_PEERING_DECISION.md`** §6. That is a **failover drill**, not “restore `sbcbak.*.zip` onto the standby.” Cold zip DR is for box loss / rebuild when local DB is gone.
+Active–passive VIP/EIP promote uses the standby’s **local** DB (kept warm via projection + edge-authored sync) — see **`SBC_HA_FAILOVER_REQUIREMENTS.md`** and **`FLEET_TRUNK_PEERING_DECISION.md`** §6. That is a **failover drill**, not “restore `sbcbak.*.zip` onto the standby.” Cold zip DR is for box loss / rebuild when local DB is gone.
 
 ## Product shape (v1 scripts)
 

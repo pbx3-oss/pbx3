@@ -105,11 +105,11 @@ Phase A ships **before** SBC peering Phases 1–4. Goal: every fleet node dials 
 | **`Egress`** | Primary signalling peer to SBC pool | **1 per instance** (required on fleet nodes) |
 | **`EgressFailover`** | Secondary SBC pool member | **0–1** (optional) — **seed only today**; cagi failover **not implemented** |
 
-**Future — trunk availability & SBC failover:** **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Lab uses **`qualify_frequency=0`** because SBC does not answer OPTIONS for Egress qualify; production needs OPTIONS handling, visible trunk health, and **EgressFailover** (or SRV) when SBC pool members fail.
+**Future — trunk availability & SBC failover:** Edge box HA — **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Node qualify / optional EgressFailover — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Lab uses **`qualify_frequency=0`** because SBC does not answer OPTIONS for Egress qualify; production needs OPTIONS handling and visible trunk health.
 
 **Properties (conceptual — align with existing trunk schema / generator):**
 
-- **Peer URI:** SBC pool — **`_sip._udp.<pool-fqdn>`** SRV name (preferred) or explicit member URI for lab. From directory `sbc-fleet.sip_proxy_fqdn`.
+- **Peer URI:** SBC stable edge FQDN (VIP/EIP) from directory `sbc-fleet.sip_proxy_fqdn` — **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Lab may use explicit member URI.
 - **Scope:** Instance-level, **not** tenant-scoped. Identical on every node in the fleet (template / onboarding seed).
 - **Auth:** Typically IP-trust / no registration (node ↔ SBC is fleet-internal). Carrier registration is SBC-side only.
 - **UFW / firewall:** Node accepts SIP **from SBC source IP(s) only** on fleet nodes (replaces `fqdninspect` STRING match for fleet posture).
@@ -220,23 +220,24 @@ without a separate “singleton vs block” data model on Asterisk. That flexibi
 
 ## 6. SBC high availability — fleet prerequisite
 
-**Settled 2026-07-14.**
+**Settled 2026-07-14;** SLA / promote detail locked **2026-07-20** in **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
 
 A single SBC is acceptable for **lab / golden validation**. **Production fleet** label requires **≥2 SBC hosts** for redundancy — not for signaling capacity. A signaling-only OpenSIPS box handles far more call setup than we expect unless media is anchored at the edge (see §6.1 — **do not** put RTP on the SBC by default).
 
 | Requirement | Notes |
 |-------------|--------|
-| **Active–passive pair (preferred)** | Two identical `pbx3sbc` images; **one VIP** (or equivalent single phone-facing address) on the active member; warm standby for box failure. Idle capacity is insurance, not waste to monetize via active–active. |
+| **Active–passive pair (preferred)** | Two identical `pbx3sbc` images; **one VIP / EIP** (or equivalent single phone-facing address) on the active member; warm standby for box failure. Idle capacity is insurance, not waste to monetize via active–active. **Detail:** **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. |
 | **No shared live routing DB** | Shared MySQL/RDS only relocates the SPOF and forces owning a resilient DB. **Product rule:** call path must not depend on a live shared DB. Each member has a **local** DB; directory/S3 remains home-of-record; standby stays warm via projection / rebuild from catalog (see §6.0). |
 | **Local DB (current)** | Lab and product path today: **MariaDB** per SBC member (OpenSIPS `db_mysql`). **SQLite + Litestream** is **parked** — see §6.0. |
 | **Directory record** | `sbc-fleet` with `sip_proxy_fqdn` (**VIP / stable edge name**), `admin_api_url`, `member_hosts` — see **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §4.1 |
 | **Node `Egress` / `EgressFailover`** | Point at the stable SBC address (VIP). Optional second URI for break-glass. **Availability:** fleet nodes must **qualify** Egress via OPTIONS; SBC must respond — see **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. |
+| **RTO / nines** | Promote + re-register **~15–20 min**; ~4 nines aspirational and **surface-dependent**. Prefer simple resilient promote over shaving seconds — **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. |
 
-**Rejected as default:** shared live MySQL behind an SRV “identical pool,” and horizontal scale-out of signaling for volume. SRV / active–active remains a later ops option if drills prove we need it — not the product direction.
+**Rejected as default:** shared live MySQL behind an SRV “identical pool,” DNS **SRV as primary phone HA**, and horizontal scale-out of signaling for volume. SRV / active–active remains a later ops option if drills prove we need it — not the product direction.
 
 **Not a blocker for:** Peering on single `sbc.pbx3.com`, Phase A Egress on golden/bzy54n, lab mobility.
 
-**Is a blocker for:** “production fleet” SLA claims before active–passive + failover rehearsal are documented and tested.
+**Is a blocker for:** “production fleet” SLA claims before active–passive + failover rehearsal are documented and tested (promote drill gate in **`SBC_HA_FAILOVER_REQUIREMENTS.md`**).
 
 ### 6.0 Local DB engine — MariaDB now; SQLite + Litestream **parked** (2026-07-20)
 
@@ -356,7 +357,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 
 | Item | Owner | Note |
 |------|--------|------|
-| SBC active–passive runbook | pbx3sbc fleet docs | **Direction locked (2026-07-14):** VIP + warm standby; local DB; S3 re-project; failover drill |
+| SBC active–passive runbook | pbx3sbc fleet docs | **Requirements locked (2026-07-20):** **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — VIP/EIP + warm standby; local DB; sync + promote drill; implement later |
 | **SBC local DB — SQLite + Litestream** | pbx3sbc | §6.0 — **parked (2026-07-20)**; current engine **MariaDB**; do not spike unless reopened |
 | `GET_DOMAIN_FROM_SOURCE_IP` hostname gap | pbx3sbc | **Noted** — store Asterisk source IP in dispatcher `attrs`; optional polish |
 | **WebRTC / WSS on SBC** | pbx3sbc | §6.1 — `proto_wss` + TLS on VIP; RTP bypass; **interim/beta:** node `:8089` |
@@ -380,6 +381,8 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 | **`DESIGN_RULES.md`** Rules 7–8 | Replaceable edge; catalog → SPA one-way |
 | **`ARCHITECTURE_REVIEW_SCORECARD.md`** | Honest positioning, drills, red-team checklist |
 | **`ARCHITECTURE_PEER_REVIEW.md`** | Full external challenge narrative (grounding) |
+| **`SBC_HA_FAILOVER_REQUIREMENTS.md`** | VIP/EIP + warm standby; RTO / promote drill (2026-07-20) |
+| **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** | Cold DR (≠ HA promote) |
 
 ---
 
@@ -387,6 +390,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 
 | Date | Change |
 |------|--------|
+| 2026-07-20 | §6 — HA detail → **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (VIP/EIP promote, 15–20 min RTO, reject SRV primary, Occam over seconds) |
 | 2026-07-20 | §6.0 — **park** SQLite + Litestream; current local engine **MariaDB**; Litestream irrelevant while on MariaDB |
 | 2026-07-14 | §6.0 — prefer **SQLite** on-box for portability + **Litestream** for S3/standby WAL; lab stays MySQL until soak. §6 HA/WebRTC settlements earlier same day. |
 | 2026-07-14 | §6 HA settled: **active–passive + VIP**; **no shared live DB**. §6.1: webphone SIP≠media; beta = node WSS; PBX3 + last-gen SARK OK; SBC WSS for endpoint simplicity; RTP bypass; older SARK needs media GW (maybe never) |

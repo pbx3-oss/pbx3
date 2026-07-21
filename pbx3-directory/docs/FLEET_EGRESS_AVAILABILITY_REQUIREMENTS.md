@@ -46,10 +46,12 @@ When primary SBC is unreachable, outbound PSTN must not silently black-hole. Can
 |----------|--------|
 | **`EgressFailover` trunk** | Second row in instance DB (`pjsip_trunk_egress.tmpl` clone), **`contact=sip:<sbc2>`**; seed script already supports **`PBX3_SBC_EGRESS_FAILOVER_HOST`** |
 | **pbx3cagi failover** | Today fleet mode **forces single Egress** — **no** path rotation. Failover requires **explicit Phase A+** work: try Egress, then EgressFailover |
-| **Stable SBC VIP (preferred)** | Single trunk contact = SBC VIP — aligns with **`FLEET_TRUNK_PEERING_DECISION.md`** §6 (**active–passive**, not shared-DB SRV pool) |
+| **Stable SBC VIP (preferred)** | Single trunk contact = SBC VIP/EIP — aligns with **`FLEET_TRUNK_PEERING_DECISION.md`** §6 and **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (**active–passive**, not shared-DB SRV pool) |
 | **SBC-side only** | Node always sends to the VIP; pair health is **SBC/VIP** concern — node qualify still needed for “can I reach the edge entry point?” |
 
-**Explicitly out of scope for v1 lab:** Multi-SBC failover without documented active–passive + VIP (§6 prerequisite for production fleet SLA).
+**Edge box HA (promote):** **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — VIP/EIP + warm standby; ~15–20 min RTO; this file stays OPTIONS / trunk health / optional node `EgressFailover`.
+
+**Explicitly out of scope for v1 lab:** Multi-SBC failover without documented active–passive + VIP (§6 / HA requirements prerequisite for production fleet SLA).
 
 ### R4 — Do not break outbound dial for qualify failure (behaviour policy)
 

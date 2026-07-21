@@ -246,6 +246,8 @@ The fleet **edge** (SBC / session border) is a **discrete, swappable component**
 
 **Implication:** Swapping edge = new adapter + projector from catalog → edge config. **Nodes and move orchestration stay unchanged.**
 
+**Scorecard (2026-07-20):** **`EDGE_PORTABILITY_SCORECARD.md`** — where the seam is clean vs where OpenSIPS vocabulary still leaks (`setid` / dispatcher in catalog and SPA).
+
 **Same pattern:** Rule **9** applies the adapter idea to **cloud / object store** backends.
 
 ---

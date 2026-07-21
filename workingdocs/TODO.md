@@ -1,20 +1,20 @@
 # PBX3 ToDo list
 
-**Branch:** all **`main`**. **SBC backup/restore v1 + scratch drill + MkDocs runbook** done. Litestream parked.  
-**Last updated:** 2026-07-20 (session end — backup/restore committed)
+**Branch:** all **`main`**. **SBC HA requirements** + schematic + **edge portability scorecard** (peer-first) locked. Pages live. Litestream parked.  
+**Last updated:** 2026-07-20 (session end — HA design)
 
 ### Suggested “what next?” order
 
-1. **pbx3-docs polish (ongoing)** — publish Pages so **`fleet/sbc-backup-restore.md`** is live.  
-2. **Egress availability & SBC failover (future)** — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-3. **Ops failure notification — follow-ons** — move-job mail; Fail2ban ban→email.  
-4. **Failover + shadowing** (parked).  
+1. **SBC HA promote lab (decide env)** — user leaning **minimal EC2 pair** (real EIP path); optional LAN for sync practice only. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.  
+2. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+3. **Ops failure notification — follow-ons** — check tip for move-job / Fail2ban ban mail (may already be on `main`); else velocity / SPA badges.  
+4. **Failover + shadowing** (parked — shadowing only).  
 5. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
 6. **S10.7 / S8.9** (parked) — cloud adapter.  
 7. **pbx3cagi** struct refactor (deferred).  
 8. **Fleet auth cookie/SSO (blocked)**.  
 9. **S7+** attested PCI — only on customer ask.  
-10. **SBC backup Filament UI / HA promote** (deferred) — CLI + MkDocs runbook are enough for v1.  
+10. **SBC backup Filament UI / HA promote automation** (deferred) — CLI + MkDocs / manual promote first.  
 
 ---
 
@@ -84,7 +84,7 @@
 
 - [x] **Fleet mode in pbx3spa (2026-07-13 → `main`):** **Enter Fleet / Exit Fleet** shell swap, `/fleet/*` guards, Instances / Tenants / **Jobs**, `FleetTokenGate`. **pbx3spa** **`ba31dd4`**, gatekeeper list API **pbx3** **`c047743`**. Branch **`fleetadmin` deleted**.
 
-- [ ] **Failover + shadowing (parked — plan later):** Future mini-project; do not expand here. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. Shadowing undefined until that planning session.
+- [ ] **Failover + shadowing (parked — plan later):** Edge **box** HA requirements locked — **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Shadowing still undefined. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.
 
 - [x] **Ops failure notification — v1 probe + SMTP (2026-07-16):** Gatekeeper `bin/probe-fleet-instances.php` + systemd timer; SQLite `instance_health` (down after 2 misses); S3 `last_seen_at`; `Mailer`/`SmtpMailer`; `users.notify_failures` + SPA checkbox; `GATEKEEPER_OPS_NOTIFY_EMAIL`. Lifecycle maintenance/decommission mail. **Misconfig REGISTER:** `pbx3api` `pbx3:ops-register-loops` → Gatekeeper `POST /api/v1/ops-events`. Instance Asterisk F2B jail **off** (SIP ban on SBC); mail resolves shortuid→dialable. **Follow-ons:** move-job mail; Fail2ban Peer auto-whitelist / ban→email; SPA badges. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
 
@@ -107,7 +107,13 @@
 - [x] **S8.10 — interim gatekeeper auth harden (2026-07-10):** Production SPA must not bake `VITE_FLEET_GATEKEEPER_TOKEN`. Token from **sessionStorage** (Fleet tenants paste) or **DEV-only** Vite env. Gatekeeper README documents lab vs prod vs future control-plane login. Catalog reconcile: nodes/SBC aligned; added missing SBC domain **sandycroft** `vqcwd4.pbx3.com` setid 2.
 
 - [x] **S8.10 — live panel moves + phone POC (2026-07-10):** **willand** (`0ggybk`) 08jzwn→bzy54n job `tmj_bf41c7b45dfc97d72135faf1`. **affcot** (`9wvvnb`) bzy54n→08jzwn job `tmj_7efdc9646309ff3641d21839` — Snom followed SBC remount (setid 3→2); dest commit/`genAst` ran. Preflight gap: willand needed SBC `domain` row before move (added setid 2 then cutover). Linphone 1102 flaky — parked. **Merged to `main`** same day.
-- [ ] **Fleet Egress availability & SBC failover (future — not Phase A lab):** Documented **`pbx3-directory/docs/FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. SBC must respond **OPTIONS** from fleet nodes so Egress qualify works; re-enable **`qualify_frequency`** on egress template; implement **EgressFailover** (or SRV) + **pbx3cagi** sequential dial; SPA/preflight trunk health. Lab workaround **`qualify_frequency=0`** (**`117340f`**) — do not treat as final. (May fold into **failover + shadowing** mini-project when that is planned.)
+- [x] **SBC HA requirements — VIP/EIP + warm standby (2026-07-20):** Locked **`pbx3-directory/docs/SBC_HA_FAILOVER_REQUIREMENTS.md`** (+ mermaid schematic). Option 3; ~15–20 min RTO; ~4 nines surface-dependent; SRV rejected as primary; usrloc sync deferred; Occam over seconds. **Implement later** (second member + promote drill — env TBD tomorrow; lean EC2). Cross-links §6 / backup / PEERING-PLAN.
+
+- [x] **Edge portability scorecard (2026-07-20):** **`EDGE_PORTABILITY_SCORECARD.md`**. Adapter seam green; OpenSIPS vocab amber/red — **do not rename** for purity. Escape hatch: **peer/cascade** commercial SBC like Magrathea (not BYO-edge rewrite). Rule 7 link in **`DESIGN_RULES.md`**.
+
+- [ ] **SBC HA promote lab (open — decide 2026-07-21):** Standby member + warm sync + VIP/EIP runbook + timed drill ≤20 min. Prefer **minimal EC2 pair** (real EIP); LAN optional for sync practice only. Do not promote against live Magrathea VIP until throwaway pair rehearsed. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
+
+- [ ] **Fleet Egress availability (future — not Phase A lab):** Documented **`pbx3-directory/docs/FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. SBC must respond **OPTIONS** from fleet nodes so Egress qualify works; re-enable **`qualify_frequency`** on egress template; optional **EgressFailover** + **pbx3cagi** (break-glass — edge HA is VIP promote, not SRV). SPA/preflight trunk health. Lab workaround **`qualify_frequency=0`** (**`117340f`**) — do not treat as final.
 
 - [x] **Phase S8.10 — Fleet mobility scaffold (2026-07-10):** On **`movewizard`** then **`main`**: `tenant-move-job.v0.json`; gatekeeper presign + tenant-moves + phase runner; pbx3api `/api/fleet/*`; pbx3sbc-admin `/api/fleet` repoint; SPA Fleet tenants Move wizard + job view (**lab** — peer nav; product = Fleet **mode** in same SPA).
 

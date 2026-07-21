@@ -47,6 +47,7 @@ Agreed product order — **pbx3cagi struct refactor deferred** until fleet + rec
 | **1** | **S7** *or* **S10** | Recordings S3 offload **or** fleet admin panel actions (product pick) |
 | **2** | **S10** (if not #1) | Abilities → catalog onboard/decommission → job/edge/reconcile — see § Phase S10 |
 | **3** | **Egress availability** | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (future) |
+| **3b** | **SBC HA promote** | **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (reqs locked 2026-07-20; implement later) |
 | **—** | **pbx3cagi Phase 0** | **Built** on `main`; golden `make test` sign-off; Phase 1.3+ refactor when resumed |
 
 See **`pbx3/workingdocs/TODO.md`** § suggested order.
