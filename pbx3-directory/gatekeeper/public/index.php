@@ -86,6 +86,77 @@ try {
         JsonResponse::send(200, ['ok' => true]);
     }
 
+    // SBC HA edge pairs (FO lab + future fleet edges)
+    if ($method === 'GET' && $path === '/api/v1/edge-pairs') {
+        Auth::requireAbility(FleetAbilities::READ);
+        $pairs = \Pbx3\Gatekeeper\EdgePairStore::list();
+        $out = [];
+        foreach ($pairs as $pair) {
+            $health = \Pbx3\Gatekeeper\EdgePairHealthStore::get((string) $pair['id']);
+            $pair['health'] = $health === null ? null : [
+                'reachable' => $health['reachable'],
+                'consecutive_misses' => $health['consecutive_misses'],
+                'last_ok_at' => $health['last_ok_at'],
+                'last_probe_at' => $health['last_probe_at'],
+                'last_rtt_ms' => $health['last_rtt_ms'],
+            ];
+            $out[] = $pair;
+        }
+        JsonResponse::send(200, ['edge_pairs' => $out]);
+    }
+
+    if ($method === 'GET' && preg_match('#^/api/v1/edge-pairs/([^/]+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::READ);
+        $pair = \Pbx3\Gatekeeper\EdgePairStore::get(rawurldecode($m[1]));
+        if ($pair === null) {
+            JsonResponse::send(404, ['error' => 'edge pair not found']);
+        }
+        $health = \Pbx3\Gatekeeper\EdgePairHealthStore::get((string) $pair['id']);
+        $pair['health'] = $health === null ? null : [
+            'reachable' => $health['reachable'],
+            'consecutive_misses' => $health['consecutive_misses'],
+            'last_ok_at' => $health['last_ok_at'],
+            'last_probe_at' => $health['last_probe_at'],
+            'last_rtt_ms' => $health['last_rtt_ms'],
+        ];
+        JsonResponse::send(200, $pair);
+    }
+
+    if ($method === 'PATCH' && preg_match('#^/api/v1/edge-pairs/([^/]+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        if (! is_array($body)) {
+            JsonResponse::send(400, ['error' => 'JSON body required']);
+        }
+        try {
+            $pair = \Pbx3\Gatekeeper\EdgePairStore::patch(rawurldecode($m[1]), $body);
+        } catch (\InvalidArgumentException $e) {
+            JsonResponse::send(422, ['error' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            $code = (int) $e->getCode();
+            JsonResponse::send($code >= 400 && $code < 600 ? $code : 500, ['error' => $e->getMessage()]);
+        }
+        JsonResponse::send(200, $pair);
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/edge-pairs/([^/]+)/promote$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $pair = \Pbx3\Gatekeeper\EdgePairStore::get(rawurldecode($m[1]));
+        if ($pair === null) {
+            JsonResponse::send(404, ['error' => 'edge pair not found']);
+        }
+        $promoter = \Pbx3\Gatekeeper\EdgePairPromoter::fromEnv();
+        $result = $promoter->promote($pair, true);
+        $notify = NotifyDispatcher::fromEnv();
+        if ($result['ok']) {
+            $fresh = \Pbx3\Gatekeeper\EdgePairStore::get((string) $pair['id']) ?? $pair;
+            $notify->notifyEdgePromoted($fresh, $result);
+            JsonResponse::send(200, ['ok' => true, 'pair' => $fresh, 'result' => $result]);
+        }
+        $notify->notifyEdgePromoteFailed($pair, (string) ($result['error'] ?? 'unknown'));
+        JsonResponse::send(502, ['ok' => false, 'error' => $result['error'] ?? 'promote failed', 'result' => $result]);
+    }
+
     // S10.6 — fleet user manage (fleet_admin only)
     if ($method === 'GET' && $path === '/api/v1/fleet-users') {
         Auth::requireAbility(FleetAbilities::ADMIN);

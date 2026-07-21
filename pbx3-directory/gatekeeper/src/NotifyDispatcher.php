@@ -282,6 +282,109 @@ final class NotifyDispatcher
         $this->send($recipients, $subject, $this->withUiLink($body));
     }
 
+    /**
+     * Edge VIP SIP probe transition.
+     *
+     * @param  array<string, mixed>  $pair
+     * @param  'down'|'cleared'  $transition
+     */
+    public function notifyEdgeReachability(array $pair, string $transition): void
+    {
+        if ($transition !== 'down' && $transition !== 'cleared') {
+            return;
+        }
+
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            error_log('[gatekeeper-notify] no subscribers for edge '.$transition.' — skip');
+
+            return;
+        }
+
+        $id = (string) ($pair['id'] ?? '');
+        $label = (string) ($pair['label'] ?? $id);
+        $fqdn = (string) ($pair['fqdn'] ?? '');
+        $eip = (string) ($pair['eip'] ?? '');
+        $mode = (string) ($pair['mode'] ?? '');
+        $health = EdgePairHealthStore::get($id);
+        $lastOk = $health['last_ok_at'] ?? null;
+        $lastProbe = $health['last_probe_at'] ?? null;
+
+        if ($transition === 'down') {
+            $subject = "[PBX3 fleet] Edge down: {$label}";
+            $body = "SBC edge VIP unreachable from the control plane (SIP OPTIONS).\n\n"
+                ."Label: {$label}\n"
+                ."Id: {$id}\n"
+                ."FQDN: {$fqdn}\n"
+                ."EIP: {$eip}\n"
+                ."Mode: {$mode}\n"
+                .'Failure: SIP OPTIONS failed (after '.EdgePairHealthStore::DOWN_AFTER_MISSES." consecutive misses)\n"
+                .'Last OK: '.($lastOk ?? '(never)')."\n"
+                .'Last probe: '.($lastProbe ?? '(unknown)')."\n"
+                ."If mode=managed: follow cast-iron promote checklist (CLI or AWS Console EIP).\n"
+                ."If control is also dark: Console → Elastic IPs → Associate → standby.\n";
+        } else {
+            $subject = "[PBX3 fleet] Edge cleared: {$label}";
+            $body = "SBC edge VIP is answering SIP OPTIONS again.\n\n"
+                ."Label: {$label}\n"
+                ."Id: {$id}\n"
+                ."FQDN: {$fqdn}\n"
+                ."EIP: {$eip}\n"
+                .'Last OK: '.($lastOk ?? '(unknown)')."\n"
+                .'Last probe: '.($lastProbe ?? '(unknown)')."\n";
+        }
+
+        $this->send($recipients, $subject, $this->withUiLink($body, '/fleet/edge'));
+    }
+
+    /**
+     * @param  array<string, mixed>  $pair
+     * @param  array<string, mixed>  $result
+     */
+    public function notifyEdgePromoted(array $pair, array $result): void
+    {
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            error_log('[gatekeeper-notify] no subscribers for edge_promoted — skip');
+
+            return;
+        }
+
+        $label = (string) ($pair['label'] ?? $pair['id'] ?? 'edge');
+        $fqdn = (string) ($pair['fqdn'] ?? '');
+        $member = (string) ($result['active_member'] ?? $pair['active_member'] ?? '');
+        $inst = (string) ($result['standby_instance_id'] ?? '');
+        $subject = "[PBX3 fleet] Edge promoted: {$label}";
+        $body = "Auto (or Promote now) moved the EIP onto the standby.\n\n"
+            ."Label: {$label}\n"
+            ."FQDN: {$fqdn}\n"
+            ."New active member: {$member}\n"
+            ."Instance: {$inst}\n"
+            ."Next: Phase D — Let's Encrypt on the new active (cast-iron runbook).\n";
+
+        $this->send($recipients, $subject, $this->withUiLink($body, '/fleet/edge'));
+    }
+
+    /** @param  array<string, mixed>  $pair */
+    public function notifyEdgePromoteFailed(array $pair, string $error): void
+    {
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            error_log('[gatekeeper-notify] no subscribers for edge_promote_failed — skip');
+
+            return;
+        }
+
+        $label = (string) ($pair['label'] ?? $pair['id'] ?? 'edge');
+        $subject = "[PBX3 fleet] Edge promote FAILED: {$label}";
+        $body = "EIP promote failed — use cast-iron checklist / AWS Console.\n\n"
+            ."Label: {$label}\n"
+            .'FQDN: '.((string) ($pair['fqdn'] ?? ''))."\n"
+            ."Error: {$error}\n";
+
+        $this->send($recipients, $subject, $this->withUiLink($body, '/fleet/edge'));
+    }
+
     /** @return list<string> */
     private function recipients(): array
     {

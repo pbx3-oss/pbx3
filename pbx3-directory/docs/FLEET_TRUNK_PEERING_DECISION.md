@@ -231,7 +231,7 @@ A single SBC is acceptable for **lab / golden validation**. **Production fleet**
 | **Local DB (current)** | Lab and product path today: **MariaDB** per SBC member (OpenSIPS `db_mysql`). **SQLite + Litestream** is **parked** — see §6.0. |
 | **Directory record** | `sbc-fleet` with `sip_proxy_fqdn` (**VIP / stable edge name**), `admin_api_url`, `member_hosts` — see **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §4.1 |
 | **Node `Egress` / `EgressFailover`** | Point at the stable SBC address (VIP). Optional second URI for break-glass. **Availability:** fleet nodes must **qualify** Egress via OPTIONS; SBC must respond — see **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. |
-| **RTO / nines** | Promote + re-register **~15–20 min**; ~4 nines aspirational and **surface-dependent**. Prefer simple resilient promote over shaving seconds — **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. |
+| **RTO / nines** | Promote + re-register **~15–20 min**; ~4 nines aspirational and **surface-dependent**. Control plane: **managed \| auto** promote modes — **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (reopened 2026-07-21). |
 
 **Rejected as default:** shared live MySQL behind an SRV “identical pool,” DNS **SRV as primary phone HA**, and horizontal scale-out of signaling for volume. SRV / active–active remains a later ops option if drills prove we need it — not the product direction.
 

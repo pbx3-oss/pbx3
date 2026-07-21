@@ -1,0 +1,13 @@
+[Unit]
+Description=PBX3 Gatekeeper SBC edge VIP SIP probe
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/home/ubuntu/gatekeeper
+EnvironmentFile=-/etc/pbx3-gatekeeper/.env
+ExecStart=/usr/bin/php8.4 /home/ubuntu/gatekeeper/bin/probe-edge-pairs.php
+Nice=10

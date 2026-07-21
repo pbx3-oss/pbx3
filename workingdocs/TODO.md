@@ -1,20 +1,20 @@
 # PBX3 ToDo list
 
-**Branch:** all **`main`**. HA FO **greenfield pair** live (`sbcfo.pbx3.com`); LE + Certificates panel shipped. Warm sync + promote drill next. Litestream parked.  
-**Last updated:** 2026-07-21 (session end — FO HA lab greenfield)
+**Branch:** all **`main`**. HA FO pair live; managed promote + LE gate done. **Control-plane auto vs managed** requirements reopened. Litestream parked.  
+**Last updated:** 2026-07-21 (HA promote modes reopen)
 
 ### Suggested “what next?” order
 
-1. **SBC HA — warm sync + promote drill** — FO1/FO2 installed; define edge-authored sync cadence; fence FO1 → EIP → FO2 ≤20 min. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Do not point Magrathea VIP until drill passes.  
+1. **SBC HA — control-plane probe + alert** — **shipped lab 2026-07-21** (edge_pairs + SIP probe + notify + auto EIP on FO; SPA Edge HA). Tune cooldown / LE-in-worker later. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.  
 2. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-3. **Ops failure notification — follow-ons** — move-job / Fail2ban ban mail / velocity / SPA badges.  
+3. **Ops failure notification — follow-ons** — velocity / SPA badges.  
 4. **Failover + shadowing** (parked — shadowing only).  
 5. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
-6. **S10.7 / S8.9** (parked) — cloud adapter.  
+6. **S10.7 / S8.9** (parked) — cloud adapter (also for clean EIP promote).  
 7. **pbx3cagi** struct refactor (deferred).  
 8. **Fleet auth cookie/SSO (blocked)**.  
 9. **S7+** attested PCI — only on customer ask.  
-10. **SBC backup Filament UI / HA promote automation** (deferred) — CLI + MkDocs / manual promote first.  
+10. **SBC backup Filament UI** (deferred) — CLI + MkDocs first.  
 
 ---
 
@@ -24,7 +24,9 @@
 
 - [x] **SBC admin greenfield installer hardening (2026-07-21):** Require `--server-name`; `APP_URL` from FQDN; optional `--letsencrypt --email`; Fail2ban+LE sudoers; idempotent Laravel migrations vs OpenSIPS pre-created sessions/cache; non-interactive composer root + DB port 3306 default; Filament **Certificates** (SPA layout kinship) + `le-admin-cert.sh` + progress spinner. Tips **pbx3sbc-admin** **`a0ded23`**, **pbx3sbc** **`c085b50`**, **pbx3-docs** **`25b3917`**.
 
-- [ ] **SBC HA — warm sync + promote drill (open):** Catalog re-project + edge-authored sync cadence FO1→FO2; promote runbook (fence → EIP reassociate → first register ≤20 min). LE on FO2 after promote (or issue when FO2 owns EIP). Do **not** point live Magrathea / `sbc.pbx3.com` VIP at this pair until drill passes. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
+- [x] **SBC HA — warm sync + promote drill (2026-07-21):** FO1→FO2 `--db-only` warm; fence + EIP → FO2; OPTIONS ~**6 s**; Phase D LE + `https://sbcfo.pbx3.com/admin/login`. MkDocs **`fleet/sbc-ha-promote.md`**. Live Magrathea / `sbc.pbx3.com` untouched.
+
+- [x] **SBC HA — control-plane promote modes (2026-07-21):** Gatekeeper `edge_pairs` / SIP OPTIONS probe + timer; `edge_down`/`cleared` notify; `managed`\|`auto`; auto EIP promote on FO (~18 s wall); `POST /promote`; SPA **Edge HA**. IAM `pbx3-control-gatekeeper-fo-eip`. Default back to **managed** + `GATEKEEPER_EDGE_AUTO_PROMOTE=false`. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
 
 - [x] **SBC scratch-box restore drill (2026-07-20):** amd64 `192.168.1.55` — install both repos → restore `20260720T172044Z` → OpenSIPS active + Filament Login 200; counts matched lab. Post-restore: align DB password + `advertised_address` + `www-data` home perms. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
 

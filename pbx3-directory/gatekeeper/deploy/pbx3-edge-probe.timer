@@ -1,0 +1,11 @@
+[Unit]
+Description=Run PBX3 edge VIP probe every minute
+
+[Timer]
+OnBootSec=45
+OnUnitActiveSec=60
+AccuracySec=5
+Unit=pbx3-edge-probe.service
+
+[Install]
+WantedBy=timers.target
