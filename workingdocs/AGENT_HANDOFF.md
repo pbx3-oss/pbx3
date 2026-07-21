@@ -60,7 +60,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-20 — SBC HA requirements + portability)
 
-**Branches:** **pbx3** **`5743569`**. **pbx3sbc** **`994eb68`**. **pbx3spa** **`7a17e7a`**. **pbx3-docs** **`7873efe`** (Pages live). **pbx3sbc-admin** **`467ac63`**. **pbx3api** **`6c28486`**.
+**Branches:** **pbx3** **`a7bd2b4`**. **pbx3sbc** **`994eb68`**. **pbx3spa** **`1614f7e`**. **pbx3-docs** **`7873efe`** (Pages live). **pbx3sbc-admin** **`467ac63`**. **pbx3api** **`6c28486`**.
 
 ### Shipped
 - **SBC HA requirements:** **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — option 3 VIP/EIP + warm standby; ~15–20 min RTO; surface-dependent nines; SRV rejected as primary; soft-state honesty; promote drill gate; mermaid schematic. Cross-links §6, backup/restore, egress R3, IMPLEMENTATION_PLAN, TODO, AGENT_HANDOFF.
