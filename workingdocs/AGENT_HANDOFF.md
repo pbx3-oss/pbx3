@@ -58,25 +58,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-20 — SBC HA requirements + portability)
+## Next agent session notes (2026-07-21 — HA FO greenfield + SBC Certificates/LE)
 
-**Branches:** **pbx3** **`a5e19d4`**. **pbx3sbc** **`994eb68`**. **pbx3spa** **`a3dc665`**. **pbx3-docs** **`7873efe`** (Pages live). **pbx3sbc-admin** **`467ac63`**. **pbx3api** **`6c28486`**.
+**Branches:** **pbx3sbc-admin** **`a0ded23`**. **pbx3sbc** **`c085b50`**. **pbx3-docs** **`25b3917`**. **pbx3** **`1630137`** (handoff). **pbx3spa** **`a21a439`**. **pbx3api** **`6c28486`**.
 
 ### Shipped
-- **SBC HA requirements:** **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — option 3 VIP/EIP + warm standby; ~15–20 min RTO; surface-dependent nines; SRV rejected as primary; soft-state honesty; promote drill gate; mermaid schematic. Cross-links §6, backup/restore, egress R3, IMPLEMENTATION_PLAN, TODO, AGENT_HANDOFF.
-- **pbx3-docs Pages:** verified live (`fleet/sbc-backup-restore/`, `fleet/sbc-data-retention/`) — no redeploy needed.
-- **Edge portability scorecard:** **`EDGE_PORTABILITY_SCORECARD.md`** — Rule 7 debt inventory; **peer-first** escape hatch (Magrathea-style); do not rename OpenSIPS vocab for purity. **`DESIGN_RULES.md`** Rule 7 pointer.
-- **PEERING-PLAN:** HA one-liner SRV → VIP/EIP active–passive.
+- **HA FO lab (greenfield):** EC2 pair — **FO1** `sbcfo.pbx3.com` / EIP **`98.82.58.59`** (HTTPS LE); **FO2** **`35.175.113.204`** (HTTP; `advertised_address` = same EIP). Both OpenSIPS + Filament from `main`. First dirty install cycle trashed; second pass clean. SSH **`~/Documents/pemfiles/opensips.pem`** `ubuntu@…`.
+- **Admin installer:** require `--server-name`; `APP_URL` from FQDN; `--letsencrypt --email`; sudoers (Fail2ban + LE `script *`); idempotent migrations; non-interactive composer/`DB_PORT`; Filament **Certificates** (SPA kinship) + `scripts/le-admin-cert.sh` + progress spinner. MkDocs **`fleet/install-sbc.md`**.
+- **FO1 LE:** live cert through ~2026-10-19; `APP_URL=https://sbcfo.pbx3.com`.
 
 ### Golden / operator follow-up
-- User sleeping on HA lab env; leaning **minimal EC2 pair** (real EIP) over LAN-only. Decide tomorrow before spinning boxes.
-- Live SBC still surgical overlay — no wholesale `git pull`/reset. SSH **`ubuntu@sbc.pbx3.com`** key **`~/Documents/pemfiles/opensips.pem`**.
-- Do not promote against live Magrathea VIP until throwaway pair rehearsed.
+- Live **`sbc.pbx3.com`** still production lab edge — surgical overlay only; **do not** Magrathea-promote onto FO EIP until throwaway drill passes.
+- FO admin user **`admin@pbx3.com`** — password was reset mid-session (installer hash escape); ask operator if needed.
+- FO2: no LE yet (issue after EIP owns FO2, or leave HTTP until promote).
+- `opensips-brute-force` jail may still be missing on FO boxes (service up; jail not seeded).
 
 ### Resume
-1. User decides HA lab: **EC2 pair** (preferred) vs LAN sync-only — then standby + warm sync + EIP runbook + ≤20 min drill.
+1. **Warm sync** FO1→FO2 (catalog project + edge-authored cadence) + **promote runbook** (fence → EIP reassociate → ≤20 min drill).
 2. Or egress OPTIONS / ops-notify leftovers.
 3. No Litestream; no vocab rename; no Filament backup UI unless asked.
+
+---
+
+## Next agent session notes (2026-07-20 — SBC HA requirements + portability) — historical
+
+**Branch was:** superseded by block above. Tips were pbx3 **`a5e19d4`**, sbc **`994eb68`**, spa **`a3dc665`**, docs **`7873efe`**, sbc-admin **`467ac63`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 

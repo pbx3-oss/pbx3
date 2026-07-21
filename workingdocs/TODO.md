@@ -1,13 +1,13 @@
 # PBX3 ToDo list
 
-**Branch:** all **`main`**. **SBC HA requirements** + schematic + **edge portability scorecard** (peer-first) locked. Pages live. Litestream parked.  
-**Last updated:** 2026-07-20 (session end — HA design)
+**Branch:** all **`main`**. HA FO **greenfield pair** live (`sbcfo.pbx3.com`); LE + Certificates panel shipped. Warm sync + promote drill next. Litestream parked.  
+**Last updated:** 2026-07-21 (session end — FO HA lab greenfield)
 
 ### Suggested “what next?” order
 
-1. **SBC HA promote lab (decide env)** — user leaning **minimal EC2 pair** (real EIP path); optional LAN for sync practice only. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.  
+1. **SBC HA — warm sync + promote drill** — FO1/FO2 installed; define edge-authored sync cadence; fence FO1 → EIP → FO2 ≤20 min. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Do not point Magrathea VIP until drill passes.  
 2. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-3. **Ops failure notification — follow-ons** — check tip for move-job / Fail2ban ban mail (may already be on `main`); else velocity / SPA badges.  
+3. **Ops failure notification — follow-ons** — move-job / Fail2ban ban mail / velocity / SPA badges.  
 4. **Failover + shadowing** (parked — shadowing only).  
 5. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
 6. **S10.7 / S8.9** (parked) — cloud adapter.  
@@ -19,6 +19,12 @@
 ---
 
 ## Open items
+
+- [x] **SBC HA FO greenfield pair (2026-07-21):** Throwaway EC2 `t3.micro` amd64 — **sbcFO1** EIP `98.82.58.59` / `sbcfo.pbx3.com` (HTTPS LE); **sbcFO2** `35.175.113.204` (HTTP; same `advertised_address` EIP). Both: OpenSIPS + admin from `main`. SSH `opensips.pem` as `ubuntu`. Admin `admin@pbx3.com` (password reset during session — ask operator). First FO install cycle trashed; second greenfield pass clean. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`** · MkDocs **`fleet/install-sbc.md`**.
+
+- [x] **SBC admin greenfield installer hardening (2026-07-21):** Require `--server-name`; `APP_URL` from FQDN; optional `--letsencrypt --email`; Fail2ban+LE sudoers; idempotent Laravel migrations vs OpenSIPS pre-created sessions/cache; non-interactive composer root + DB port 3306 default; Filament **Certificates** (SPA layout kinship) + `le-admin-cert.sh` + progress spinner. Tips **pbx3sbc-admin** **`a0ded23`**, **pbx3sbc** **`c085b50`**, **pbx3-docs** **`25b3917`**.
+
+- [ ] **SBC HA — warm sync + promote drill (open):** Catalog re-project + edge-authored sync cadence FO1→FO2; promote runbook (fence → EIP reassociate → first register ≤20 min). LE on FO2 after promote (or issue when FO2 owns EIP). Do **not** point live Magrathea / `sbc.pbx3.com` VIP at this pair until drill passes. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
 
 - [x] **SBC scratch-box restore drill (2026-07-20):** amd64 `192.168.1.55` — install both repos → restore `20260720T172044Z` → OpenSIPS active + Filament Login 200; counts matched lab. Post-restore: align DB password + `advertised_address` + `www-data` home perms. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
 
@@ -111,7 +117,7 @@
 
 - [x] **Edge portability scorecard (2026-07-20):** **`EDGE_PORTABILITY_SCORECARD.md`**. Adapter seam green; OpenSIPS vocab amber/red — **do not rename** for purity. Escape hatch: **peer/cascade** commercial SBC like Magrathea (not BYO-edge rewrite). Rule 7 link in **`DESIGN_RULES.md`**.
 
-- [ ] **SBC HA promote lab (open — decide 2026-07-21):** Standby member + warm sync + VIP/EIP runbook + timed drill ≤20 min. Prefer **minimal EC2 pair** (real EIP); LAN optional for sync practice only. Do not promote against live Magrathea VIP until throwaway pair rehearsed. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
+- [x] **SBC HA promote lab env decided (2026-07-21):** Minimal EC2 pair (real EIP). Greenfield FO1/FO2 installed — see open item **SBC HA — warm sync + promote drill**.
 
 - [ ] **Fleet Egress availability (future — not Phase A lab):** Documented **`pbx3-directory/docs/FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. SBC must respond **OPTIONS** from fleet nodes so Egress qualify works; re-enable **`qualify_frequency`** on egress template; optional **EgressFailover** + **pbx3cagi** (break-glass — edge HA is VIP promote, not SRV). SPA/preflight trunk health. Lab workaround **`qualify_frequency=0`** (**`117340f`**) — do not treat as final.
 
