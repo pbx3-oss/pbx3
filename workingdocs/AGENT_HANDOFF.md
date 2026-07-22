@@ -74,9 +74,10 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - TLS / Phase D LE after promote + WebRTC = later. No Litestream; shadowing still parked.
 
 ### Resume
-1. Harden **SSH fence** on promote (or document mandatory ops fence).
-2. Or egress OPTIONS / ops-notify leftovers.
-3. Optional: Phase D LE drill on standby-after-promote.
+1. **SBC backup/restore UI** — replace manual-only CLI; Filament (and/or Fleet) backup/list/restore + confirm Magrathea cron/S3. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
+2. Harden **SSH fence** on promote (or document mandatory ops fence).
+3. Or egress OPTIONS / ops-notify leftovers.
+4. Optional: Phase D LE drill on standby-after-promote.
 
 ---
 
