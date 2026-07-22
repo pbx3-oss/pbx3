@@ -66,12 +66,15 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 
 | Piece | Detail |
 |-------|--------|
-| Registry | SQLite `edge_pairs` + `edge_pair_health` (seed `fo-lab`) |
-| API | `GET/PATCH /api/v1/edge-settings` (SBC URL); `GET/POST/PATCH /api/v1/edge-pairs`, `POST …/promote` (`fleet_admin`) |
+| Registry | SQLite `edge_pairs` + `edge_pair_health` |
+| API | `GET/PATCH /api/v1/edge-settings` (SBC URL); `GET/POST/PATCH /api/v1/edge-pairs`, `POST …/promote`, `POST …/warm-sync` (`fleet_admin`) |
 | Probe | `php8.4 bin/probe-edge-pairs.php` — SIP OPTIONS on VIP; timer `pbx3-edge-probe.timer` |
+| Warm sync | `php8.4 bin/sync-edge-warm.php` — active backup+upload → standby `--db-only`; timer `pbx3-edge-warm-sync.timer` (daily 05:30 UTC) |
 | Modes | `managed` (alert only) \| `auto` (EIP promote when `GATEKEEPER_EDGE_AUTO_PROMOTE=true`) |
-| IAM | Lab policy **`pbx3-control-gatekeeper-fo-eip`** (`AssociateAddress` / describe) |
-| SPA | Fleet → **Edge HA** (`/fleet/edge`) |
+| IAM | Lab policy **`pbx3-control-gatekeeper-fo-eip`** (`AssociateAddress` / describe — also used for standby public IP) |
+| SPA | Fleet → **Edge HA** (`/fleet/edge`) — Sync now + last warm sync |
+
+**Install warm-sync timer:** copy `gatekeeper/deploy/pbx3-edge-warm-sync.{service,timer}` → `/etc/systemd/system/`; `sudo systemctl enable --now pbx3-edge-warm-sync.timer`.
 
 **Lab check:** enable notify for ops mailbox; stop node API or block `/up` from control → within ~2 min one down mail (or log); restore → cleared.
 

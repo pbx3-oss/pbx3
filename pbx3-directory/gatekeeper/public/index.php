@@ -207,6 +207,26 @@ try {
         JsonResponse::send(502, ['ok' => false, 'error' => $result['error'] ?? 'promote failed', 'result' => $result]);
     }
 
+    if ($method === 'POST' && preg_match('#^/api/v1/edge-pairs/([^/]+)/warm-sync$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $pair = \Pbx3\Gatekeeper\EdgePairStore::get(rawurldecode($m[1]));
+        if ($pair === null) {
+            JsonResponse::send(404, ['error' => 'edge pair not found']);
+        }
+        $sync = \Pbx3\Gatekeeper\EdgeWarmSync::fromEnv();
+        $result = $sync->sync($pair);
+        $fresh = \Pbx3\Gatekeeper\EdgePairStore::get((string) $pair['id']) ?? $pair;
+        if ($result['ok']) {
+            JsonResponse::send(200, ['ok' => true, 'pair' => $fresh, 'result' => $result]);
+        }
+        JsonResponse::send(502, [
+            'ok' => false,
+            'error' => $result['error'] ?? 'warm sync failed',
+            'pair' => $fresh,
+            'result' => $result,
+        ]);
+    }
+
     // S10.6 — fleet user manage (fleet_admin only)
     if ($method === 'GET' && $path === '/api/v1/fleet-users') {
         Auth::requireAbility(FleetAbilities::ADMIN);

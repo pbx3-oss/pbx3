@@ -1,0 +1,15 @@
+[Unit]
+Description=PBX3 Gatekeeper edge HA warm sync (S3 dump → standby --db-only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/home/ubuntu/gatekeeper
+EnvironmentFile=-/etc/pbx3-gatekeeper/.env
+ExecStart=/usr/bin/php8.4 /home/ubuntu/gatekeeper/bin/sync-edge-warm.php
+Nice=10
+# Backup + restore can take a few minutes
+TimeoutStartSec=900

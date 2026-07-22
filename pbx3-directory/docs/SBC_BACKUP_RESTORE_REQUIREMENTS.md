@@ -1,8 +1,8 @@
 # SBC backup & restore — requirements
 
-**Status:** **Active (2026-07-20).** Dump scope locked; **v1 backup + restore scripts** shipped. **Scratch-box restore drill** is the remaining production-gate exercise (host not yet spun).  
+**Status:** **Active (2026-07-21).** Dump scope locked; **v1 backup + restore scripts** shipped; scratch restore drill done; **Filament Backup** (create/list) + **Fleet warm sync** (S3-mediated) in this slice.  
 **Production gate:** A tested SBC backup/**restore** path is **required before any production fleet** — catalog re-project alone is not enough.  
-**Related:** PBX instance pattern (`OPS_S3_RUNBOOK.md`, `backup-manifest.v0.json`, `REBUILD_INSTANCE_RUNBOOK.md`); schema **`sbc-backup-manifest.v0.json`**; tools **`fetch-latest-sbc-backup.sh`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0 (MariaDB current; Litestream **parked**); **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (VIP/EIP promote ≠ this zip); **`DESIGN_RULES.md`** Rule 1, Rule 13; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (aging ≠ DR); ops note **`pbx3sbc/docs/SBC_BACKUP_RESTORE.md`**.
+**Related:** PBX instance pattern (`OPS_S3_RUNBOOK.md`, `backup-manifest.v0.json`, `REBUILD_INSTANCE_RUNBOOK.md`); schema **`sbc-backup-manifest.v0.json`**; tools **`fetch-latest-sbc-backup.sh`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0 (MariaDB current; Litestream **parked**); **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (VIP/EIP promote ≠ this zip; warm sync via Fleet Sync now); **`DESIGN_RULES.md`** Rule 1, Rule 13; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (aging ≠ DR); ops note **`pbx3sbc/docs/SBC_BACKUP_RESTORE.md`**.
 
 ## Problem
 
@@ -18,7 +18,7 @@ Without a dump + restore runbook, losing an SBC box means re-keying and drift ri
 | Text log / pcap rotate + S3 ship | Log retention Phases 1–4 |
 | Litestream / SQLite edge | **Parked** — irrelevant while on MariaDB |
 | Instance (PBX) zip → S3 | Already shipped |
-| Filament “Create backup” UI / SPA archive browser | Later |
+| Filament restore / SPA archive browser | Deferred — restore stays CLI |
 | HA promote (VIP/EIP + warm standby) | **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — not this zip |
 
 ## Locked decisions (v1)
@@ -26,7 +26,7 @@ Without a dump + restore runbook, losing an SBC box means re-keying and drift ri
 | Decision | Choice |
 |----------|--------|
 | **Engine** | **MariaDB** only — single DB **`opensips`** (OpenSIPS + Filament). No Litestream. |
-| **Call path** | Cron/CLI only (Rule 1 kinship; Rule 13 edge-owned). |
+| **Call path** | Scripts only on the SIP path (Rule 1); Filament/Fleet wrap the same scripts (Rule 13 edge-owned). |
 | **Dump scope** | HoR/config + edge-authored + Filament users + append-only ops; **exclude** hot soft-state (below). |
 | **Local artifact** | `/var/lib/pbx3sbc/bkup/sbcbak.{epoch}.zip` |
 | **Local retention** | FIFO keep **9** (option C kinship with instance backups). |
@@ -104,7 +104,16 @@ Scripts live in **`pbx3sbc/scripts/`** (edge-owned):
 | `upload-sbc-backup.sh` | PUT zip + manifest under `sbc/{id}/backups/{stamp}/`; tag `class=backup`; ensure `policy.json` |
 | `restore-sbc-backup.sh` | Extract zip → import SQL (+ FS on `--full`); `--dry-run` / `--target-db` / `--yes` / `--restart` |
 | `cron.d/pbx3sbc-backup.example` | Daily scheduled create + upload |
+| `sbc-backup-panel.sh` | Filament/fleet helper: `list` / `create` / `warm-pull` / `vip-role` |
 | `pbx3-directory/tools/fetch-latest-sbc-backup.sh` | Ops: S3 → `sbcbak.{epoch}.zip` |
+
+**UI (2026-07-21):**
+
+| Surface | Role |
+|---------|------|
+| Filament **Backup** | Create + list local zips (+ optional S3 upload) on **VIP holder only** |
+| Fleet → **Edge HA → Sync now** | Active backup+upload → standby `warm-pull` (`--db-only`); daily timer on control |
+| Restore `--full` | CLI only (cold host) |
 
 Env: reuse `/etc/pbx3sbc/log-ship.env` (`PBX3_ORG_BUCKET`, `PBX3_SBC_ID`, region) — same IAM prefix as log ship.
 
@@ -119,6 +128,7 @@ Optional later: touch `sbc/{id}/meta.json` → `backup_latest_stamp` (not requir
 - [x] **Scratch restore drill (2026-07-20):** amd64 host `192.168.1.55` — install → restore `20260720T172044Z` → OpenSIPS up + Filament Login HTTP 200; counts matched lab (users/domain/gateways). SIP carrier path optional / not required for this gate slice.
 - [ ] Catalog reconcile after restore does not blindly destroy restored edge-authored rows (when scratch is fleet-joined — N/A for offline LAN scratch).
 - [x] Operator MkDocs page — **`pbx3-docs/docs/fleet/sbc-backup-restore.md`** (Fleet nav; publish with next Pages deploy). Litestream docs stay marked historical.
+- [x] **Filament Backup + Fleet warm sync (2026-07-21):** create/list on VIP holder; Fleet Sync now + daily `pbx3-edge-warm-sync.timer`; restore UI still deferred.
 
 ## Implement order
 
@@ -126,4 +136,5 @@ Optional later: touch `sbc/{id}/meta.json` → `backup_latest_stamp` (not requir
 2. ~~Lock dump contents + requirements~~ — **this file**.
 3. ~~Scripts + cron + S3 upload~~ — backup/upload/cron + lifecycle `sbc/`.
 4. ~~Restore scripts + side-DB integrity~~ — `restore-sbc-backup.sh`, fetch tool.
-5. **Scratch-box restore drill** + MkDocs page + TODO closeout (next — operator spins host).
+5. ~~Scratch-box restore drill~~ + MkDocs.
+6. ~~Filament create/list + Fleet warm sync~~ — this slice.

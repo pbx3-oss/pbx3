@@ -1,0 +1,10 @@
+[Unit]
+Description=PBX3 Gatekeeper edge HA warm sync daily backstop
+
+[Timer]
+OnCalendar=*-*-* 05:30:00
+Persistent=true
+Unit=pbx3-edge-warm-sync.service
+
+[Install]
+WantedBy=timers.target

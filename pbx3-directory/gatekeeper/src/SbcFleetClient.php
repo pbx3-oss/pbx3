@@ -149,40 +149,69 @@ final class SbcFleetClient
         return $this->post('/fleet/provision-node', $body);
     }
 
-    /** @return array<string, mixed> */
-    private function get(string $path): array
+    /**
+     * Active VIP: create backup zip + upload to S3.
+     *
+     * @return array{ok:bool, zip?:string, backup_stamp?:string, epoch?:int, uploaded?:bool, message?:string}
+     */
+    public function createBackup(bool $upload = true, ?string $baseUrl = null): array
     {
-        return $this->requestJson('GET', $path);
+        return $this->post('/fleet/backup', ['upload' => $upload], $baseUrl);
+    }
+
+    /**
+     * Standby: pull S3 stamp and restore --db-only.
+     *
+     * @return array{ok:bool, backup_stamp?:string, zip?:string, epoch?:int, restarted?:bool, message?:string}
+     */
+    public function warmPull(?string $stamp = null, bool $restart = true, ?string $baseUrl = null): array
+    {
+        $body = ['restart' => $restart];
+        if ($stamp !== null && $stamp !== '') {
+            $body['stamp'] = $stamp;
+        }
+
+        return $this->post('/fleet/warm-pull', $body, $baseUrl);
+    }
+
+    /** @return array<string, mixed> */
+    private function get(string $path, ?string $baseUrl = null): array
+    {
+        return $this->requestJson('GET', $path, null, $baseUrl);
     }
 
     /**
      * @param  array<string, mixed>  $body
      * @return array<string, mixed>
      */
-    private function post(string $path, array $body): array
+    private function post(string $path, array $body, ?string $baseUrl = null): array
     {
-        return $this->requestJson('POST', $path, $body);
+        return $this->requestJson('POST', $path, $body, $baseUrl);
     }
 
     /**
      * @param  array<string, mixed>|null  $body
      * @return array<string, mixed>
      */
-    private function requestJson(string $method, string $path, ?array $body = null): array
+    private function requestJson(string $method, string $path, ?array $body = null, ?string $baseUrl = null): array
     {
-        if ($this->sbcApiBase === '') {
+        $base = $baseUrl !== null && $baseUrl !== ''
+            ? rtrim($baseUrl, '/')
+            : $this->sbcApiBase;
+        if ($base === '') {
             throw new \RuntimeException('SBC admin API URL not set (Fleet → Edge HA or PBX3_SBC_ADMIN_API_URL) — cannot reach SBC adapter', 503);
         }
         if ($this->fleetToken === '') {
             throw new \RuntimeException('PBX3_FLEET_SERVICE_TOKEN not configured on gatekeeper', 503);
         }
 
-        $url = $this->sbcApiBase.$path;
+        $url = $base.$path;
         $opts = [
             'headers' => [
                 'Authorization' => 'Bearer '.$this->fleetToken,
                 'Accept' => 'application/json',
             ],
+            'timeout' => 600,
         ];
         if ($body !== null) {
             $opts['headers']['Content-Type'] = 'application/json';

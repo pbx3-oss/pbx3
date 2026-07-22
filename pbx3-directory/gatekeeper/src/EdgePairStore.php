@@ -38,6 +38,20 @@ CREATE TABLE IF NOT EXISTS edge_pairs (
     updated_at TEXT
 );
 SQL);
+        $cols = $pdo->query('PRAGMA table_info(edge_pairs)')->fetchAll(PDO::FETCH_ASSOC);
+        $names = [];
+        foreach ($cols as $c) {
+            $names[(string) ($c['name'] ?? '')] = true;
+        }
+        if (! isset($names['last_warm_sync_at'])) {
+            $pdo->exec('ALTER TABLE edge_pairs ADD COLUMN last_warm_sync_at TEXT');
+        }
+        if (! isset($names['last_warm_sync_stamp'])) {
+            $pdo->exec('ALTER TABLE edge_pairs ADD COLUMN last_warm_sync_stamp TEXT');
+        }
+        if (! isset($names['last_warm_sync_error'])) {
+            $pdo->exec('ALTER TABLE edge_pairs ADD COLUMN last_warm_sync_error TEXT');
+        }
     }
 
     /** @return list<array<string, mixed>> */
@@ -246,6 +260,23 @@ SQL);
         $st->execute([$untilIso, gmdate('c'), trim($id)]);
     }
 
+    public static function setWarmSync(string $id, ?string $stamp, ?string $error): void
+    {
+        $pdo = UserStore::pdo();
+        self::migrate($pdo);
+        $now = gmdate('c');
+        $st = $pdo->prepare(
+            'UPDATE edge_pairs SET last_warm_sync_at = ?, last_warm_sync_stamp = ?, last_warm_sync_error = ?, updated_at = ? WHERE id = ?'
+        );
+        $st->execute([
+            $now,
+            $stamp,
+            $error,
+            $now,
+            trim($id),
+        ]);
+    }
+
     /** @param  array<string, mixed>  $row */
     private static function normalize(array $row): array
     {
@@ -263,6 +294,9 @@ SQL);
             'enabled' => (bool) (int) $row['enabled'],
             'promote_cooldown_until' => self::nullStr($row['promote_cooldown_until'] ?? null),
             'last_promote_at' => self::nullStr($row['last_promote_at'] ?? null),
+            'last_warm_sync_at' => self::nullStr($row['last_warm_sync_at'] ?? null),
+            'last_warm_sync_stamp' => self::nullStr($row['last_warm_sync_stamp'] ?? null),
+            'last_warm_sync_error' => self::nullStr($row['last_warm_sync_error'] ?? null),
             'updated_at' => self::nullStr($row['updated_at'] ?? null),
         ];
     }

@@ -122,4 +122,54 @@ final class EdgePairPromoter
             return false;
         }
     }
+
+    /**
+     * Resolve current public IPv4 for an instance (standby admin API reachability).
+     */
+    public function publicIpForInstance(string $instanceId, string $region = 'us-east-1'): ?string
+    {
+        $instanceId = trim($instanceId);
+        if ($instanceId === '') {
+            return null;
+        }
+        try {
+            $client = $this->ec2 ?? new Ec2Client([
+                'version' => 'latest',
+                'region' => $region !== '' ? $region : 'us-east-1',
+            ]);
+            $res = $client->describeInstances(['InstanceIds' => [$instanceId]]);
+            $ip = $res['Reservations'][0]['Instances'][0]['PublicIpAddress'] ?? null;
+
+            return is_string($ip) && $ip !== '' ? $ip : null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Standby Filament/API base (HTTP on public IP — LE lives on VIP FQDN).
+     * Env GATEKEEPER_EDGE_STANDBY_API_SCHEME=https to override (default http).
+     */
+    public function standbyAdminApiBase(array $pair): string
+    {
+        $active = (string) ($pair['active_member'] ?? 'a');
+        $standbyMember = $active === 'a' ? 'b' : 'a';
+        $standbyId = $standbyMember === 'a'
+            ? (string) $pair['member_a_instance_id']
+            : (string) $pair['member_b_instance_id'];
+        $region = (string) ($pair['region'] ?? 'us-east-1');
+        $ip = $this->publicIpForInstance($standbyId, $region);
+        if ($ip === null) {
+            throw new \RuntimeException(
+                "cannot resolve public IP for standby instance {$standbyId}",
+                502
+            );
+        }
+        $scheme = strtolower(trim((string) (getenv('GATEKEEPER_EDGE_STANDBY_API_SCHEME') ?: 'http')));
+        if ($scheme !== 'http' && $scheme !== 'https') {
+            $scheme = 'http';
+        }
+
+        return $scheme.'://'.$ip.'/api';
+    }
 }
