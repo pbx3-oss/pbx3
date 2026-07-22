@@ -176,6 +176,21 @@ final class SbcFleetClient
         return $this->post('/fleet/warm-pull', $body, $baseUrl);
     }
 
+    /**
+     * Phase D: Let's Encrypt on VIP holder (after promote).
+     *
+     * @return array{ok:bool, configured?:bool, domain?:string, expires_at?:string, message?:string}
+     */
+    public function leSetup(string $email, ?string $fqdn = null, ?string $baseUrl = null): array
+    {
+        $body = ['email' => $email];
+        if ($fqdn !== null && $fqdn !== '') {
+            $body['fqdn'] = $fqdn;
+        }
+
+        return $this->post('/fleet/le-setup', $body, $baseUrl);
+    }
+
     /** @return array<string, mixed> */
     private function get(string $path, ?string $baseUrl = null): array
     {

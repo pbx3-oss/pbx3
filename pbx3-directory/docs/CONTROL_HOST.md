@@ -72,6 +72,7 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 | Warm sync | `php8.4 bin/sync-edge-warm.php` — active backup+upload → standby `--db-only`; timer `pbx3-edge-warm-sync.timer` (daily 05:30 UTC) |
 | Modes | `managed` (alert only) \| `auto` (EIP promote when `GATEKEEPER_EDGE_AUTO_PROMOTE=true`) |
 | Fence SSH | `GATEKEEPER_EDGE_SSH_KEY=/etc/pbx3-gatekeeper/edge-ssh.pem` — private key **mode 600**, owner **www-data** (php-fpm). Promote SSHs to old active public IP and runs `sudo -n systemctl stop opensips`. Result includes `fenced` + `fence_detail`. |
+| Phase D LE | After EIP move, control SSHs to the **new** active (same `GATEKEEPER_EDGE_SSH_KEY` as fence) and runs `le-admin-cert.sh setup` when `GATEKEEPER_EDGE_LE_EMAIL` is set (`GATEKEEPER_EDGE_LE_AFTER_PROMOTE` default true). Optional fleet API `POST /api/fleet/le-setup` remains for Filament/ops. Result includes `le`. |
 | IAM | Lab policy **`pbx3-control-gatekeeper-fo-eip`** (`AssociateAddress` / describe — also used for standby public IP) |
 | SPA | Fleet → **Edge HA** (`/fleet/edge`) — Sync now + last warm sync |
 

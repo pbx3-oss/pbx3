@@ -1,24 +1,25 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-22 (promoter SSH fence + standby SIP warn)
+**Last updated:** 2026-07-22 (Phase D LE after promote)
 
 ### Suggested “what next?” order
 
-1. **SBC HA — Phase D LE after promote** / TLS drills (admin HTTPS + future WebRTC) — park until needed.  
-2. **Optional polish:** Filament Backup list “On S3?” column; confirm Magrathea `/etc/cron.d/pbx3sbc-backup` installed.  
-3. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-4. **Ops failure notification — follow-ons** — velocity / SPA badges.  
-5. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
-6. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
-7. **S10.7 / S8.9** (parked) — cloud adapter.  
-8. **pbx3cagi** struct refactor (deferred).  
-9. **Fleet auth cookie/SSO (blocked)**.  
-10. **S7+** attested PCI — only on customer ask.  
+1. **Optional polish:** Filament Backup list “On S3?” column; confirm Magrathea `/etc/cron.d/pbx3sbc-backup` installed.  
+2. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+3. **Ops failure notification — follow-ons** — velocity / SPA badges.  
+4. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
+5. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
+6. **S10.7 / S8.9** (parked) — cloud adapter.  
+7. **pbx3cagi** struct refactor (deferred).  
+8. **Fleet auth cookie/SSO (blocked)**.  
+9. **S7+** attested PCI — only on customer ask.  
 
 ---
 
 ## Open items
+
+- [x] **SBC HA — Phase D LE after promote (2026-07-22):** Promote runs `le-admin-cert.sh setup` on new active via SSH (`GATEKEEPER_EDGE_LE_EMAIL`, default on). `le-admin-cert` nginx keeps `/api/` on HTTP for warm-sync. Lab: companion LE live — `https://sbc.pbx3.com/admin/login` **200**. Fleet `POST /api/fleet/le-setup` also added (FPM/certbot flaky — promote uses SSH). Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`** · **`CONTROL_HOST.md`**.
 
 - [x] **SBC Filament Backup + Fleet warm sync (2026-07-21):** Filament **System → Backup** (VIP holder only; list local; optional S3 upload; no restore UI). Fleet **Edge HA → Sync now** (S3-mediated active backup → standby `--db-only`) + daily `pbx3-edge-warm-sync.timer`; Sync progress spinner. Companion warm-ready: fleet token, `log-ship.env`, AWS CLI, IAM `pbx3-sbc`; scripts `check-ha-standby-ready.sh` / `bootstrap-ha-standby-warm.sh`. Lab: Backup now + Sync now OK. Tips **pbx3** **`129ef40`**, **pbx3spa** **`d021f60`**, **pbx3sbc** **`9373d30`**, **pbx3sbc-admin** **`7dda7fb`**, **pbx3-docs** **`b9fb77f`**. Restore stays CLI (scratch runbook). Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
 

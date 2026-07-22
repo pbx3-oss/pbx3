@@ -8,9 +8,8 @@ use Aws\Ec2\Ec2Client;
 use Aws\Exception\AwsException;
 
 /**
- * Fence (best-effort) + EIP reassociate onto standby.
+ * Fence (best-effort) + EIP reassociate onto standby + Phase D LE on new active.
  * Managed Promote now: SIP-OPTIONS standby public IP; warn (confirm) if unseen.
- * LE stays cast-iron Phase D for first auto drills.
  */
 final class EdgePairPromoter
 {
@@ -105,6 +104,7 @@ final class EdgePairPromoter
      *   error:?string,
      *   fenced:bool,
      *   fence_detail:?string,
+     *   le:?array{ok:bool, skipped?:bool, detail:string, domain?:string},
      *   standby_sip?:array<string, mixed>
      * }
      */
@@ -150,6 +150,7 @@ final class EdgePairPromoter
                 'error' => $e->getAwsErrorMessage() ?: $e->getMessage(),
                 'fenced' => $fenced,
                 'fence_detail' => $fenceDetail,
+                'le' => null,
                 'standby_sip' => $standbySip,
             ];
         } catch (\Throwable $e) {
@@ -160,6 +161,7 @@ final class EdgePairPromoter
                 'error' => $e->getMessage(),
                 'fenced' => $fenced,
                 'fence_detail' => $fenceDetail,
+                'le' => null,
                 'standby_sip' => $standbySip,
             ];
         }
@@ -173,6 +175,14 @@ final class EdgePairPromoter
             );
         }
 
+        $fresh = EdgePairStore::get((string) $pair['id']) ?? array_merge($pair, [
+            'active_member' => $standbyMember,
+        ]);
+        $le = $this->runPhaseDLe($fresh);
+        if (! ($le['ok'] ?? false) && empty($le['skipped'])) {
+            error_log('[gatekeeper-edge] Phase D LE failed for '.(string) $pair['id'].': '.($le['detail'] ?? ''));
+        }
+
         return [
             'ok' => true,
             'active_member' => $standbyMember,
@@ -180,8 +190,116 @@ final class EdgePairPromoter
             'error' => null,
             'fenced' => $fenced,
             'fence_detail' => $fenceDetail,
+            'le' => $le,
             'standby_sip' => $standbySip,
         ];
+    }
+
+    /**
+     * Issue Let's Encrypt on the (new) active VIP holder via SSH (same key as fence).
+     * Avoids php-fpm sandbox issues with certbot writing /etc/letsencrypt.
+     * Skips when GATEKEEPER_EDGE_LE_AFTER_PROMOTE=false or email/key unset.
+     *
+     * @param  array<string, mixed>  $pair  pair after active_member flip
+     * @return array{ok:bool, skipped?:bool, detail:string, domain?:string, host?:string}
+     */
+    public function runPhaseDLe(array $pair): array
+    {
+        $flag = strtolower(trim((string) (getenv('GATEKEEPER_EDGE_LE_AFTER_PROMOTE') ?: 'true')));
+        if (in_array($flag, ['0', 'false', 'no', 'off'], true)) {
+            return [
+                'ok' => false,
+                'skipped' => true,
+                'detail' => 'GATEKEEPER_EDGE_LE_AFTER_PROMOTE disabled',
+            ];
+        }
+        $email = trim((string) (getenv('GATEKEEPER_EDGE_LE_EMAIL') ?: ''));
+        if ($email === '' || ! str_contains($email, '@')) {
+            return [
+                'ok' => false,
+                'skipped' => true,
+                'detail' => 'GATEKEEPER_EDGE_LE_EMAIL unset — run Phase D manually',
+            ];
+        }
+        $fqdn = trim((string) ($pair['fqdn'] ?? ''));
+        if ($fqdn === '') {
+            return [
+                'ok' => false,
+                'detail' => 'edge pair fqdn missing',
+            ];
+        }
+        $key = trim((string) (getenv('GATEKEEPER_EDGE_SSH_KEY') ?: ''));
+        if ($key === '' || ! is_file($key) || ! is_readable($key)) {
+            return [
+                'ok' => false,
+                'skipped' => true,
+                'detail' => 'GATEKEEPER_EDGE_SSH_KEY missing/unreadable — cannot SSH Phase D',
+            ];
+        }
+
+        $active = (string) ($pair['active_member'] ?? 'a');
+        $activeId = $active === 'a'
+            ? (string) $pair['member_a_instance_id']
+            : (string) $pair['member_b_instance_id'];
+        $region = (string) ($pair['region'] ?? 'us-east-1');
+
+        try {
+            usleep(1_500_000);
+            $ip = $this->publicIpForInstance($activeId, $region);
+            if ($ip === null) {
+                return [
+                    'ok' => false,
+                    'detail' => 'no public IP for new active '.$activeId,
+                    'domain' => $fqdn,
+                ];
+            }
+            $webroot = '/home/ubuntu/pbx3sbc-admin/public';
+            $script = '/home/ubuntu/pbx3sbc-admin/scripts/le-admin-cert.sh';
+            $remote = sprintf(
+                'sudo -n %s setup %s %s %s',
+                escapeshellarg($script),
+                escapeshellarg($fqdn),
+                escapeshellarg($email),
+                escapeshellarg($webroot)
+            );
+            $cmd = sprintf(
+                'ssh -i %s -o BatchMode=yes -o IdentitiesOnly=yes -o ConnectTimeout=15'
+                .' -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+                .' ubuntu@%s %s',
+                escapeshellarg($key),
+                escapeshellarg($ip),
+                escapeshellarg($remote)
+            );
+            $out = [];
+            $code = 1;
+            exec($cmd.' 2>&1', $out, $code);
+            $tail = trim(implode("\n", array_slice($out, -8)));
+            if ($code !== 0) {
+                return [
+                    'ok' => false,
+                    'detail' => 'ssh/le exit '.$code.($tail !== '' ? ': '.$tail : ''),
+                    'domain' => $fqdn,
+                    'host' => $ip,
+                ];
+            }
+            $configured = str_contains($tail, '"configured":true')
+                || str_contains(implode("\n", $out), '"configured":true');
+
+            return [
+                'ok' => $configured || $code === 0,
+                'detail' => $configured
+                    ? 'LE configured for '.$fqdn.' @ '.$ip
+                    : 'LE setup finished for '.$fqdn.' @ '.$ip,
+                'domain' => $fqdn,
+                'host' => $ip,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'ok' => false,
+                'detail' => $e->getMessage(),
+                'domain' => $fqdn,
+            ];
+        }
     }
 
     /**
