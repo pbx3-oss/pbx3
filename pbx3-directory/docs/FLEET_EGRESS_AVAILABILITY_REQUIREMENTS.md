@@ -1,7 +1,7 @@
-# Fleet Egress — trunk availability & SBC failover (future requirement)
+# Fleet Egress — trunk availability & SBC failover
 
-**Status:** **Not implemented** — documented 2026-07-09 after lab egress validation.  
-**Related:** **`FLEET_TRUNK_PEERING_DECISION.md`** §4 (Egress / EgressFailover), §6 (SBC HA); **`FLEET_EGRESS_LAB_ROLLBACK.md`**; Phase A template **`pjsip_trunk_egress.tmpl`**.
+**Status:** **R1+R2 shipped (2026-07-22)** — SBC OPTIONS 200 for dispatcher; egress `qualify_frequency=30`; SPA Trunks latency + route note show Egress Avail/Unavail; preflight **Egress qualify**. EgressFailover/cagi (R3) still future.  
+**Related:** **`FLEET_TRUNK_PEERING_DECISION.md`** §4 (Egress / EgressFailover), §6 (SBC HA); **`FLEET_EGRESS_LAB_ROLLBACK.md`**; Phase A template **`pjsip_trunk_egress.tmpl`**; **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (VIP preferred over node `EgressFailover`).
 
 ---
 
@@ -16,7 +16,7 @@ This is **not cosmetic**. It blocks trunk health UI, alerting, and informed fail
 
 ---
 
-## Requirements (when prioritized)
+## Requirements
 
 ### R1 — SBC must answer OPTIONS for fleet Egress qualify
 
@@ -28,7 +28,7 @@ This is **not cosmetic**. It blocks trunk health UI, alerting, and informed fail
 | **Scope** | Requests from **dispatcher-known Asterisk source IP(s)** with Request-URI / To matching SBC service name or a dedicated **fleet-qualify** URI |
 | **Acceptance** | `pjsip show endpoint Egress` → **Avail** (or equivalent) with RTT; qualify can stay **> 0** without breaking dial |
 
-**Open design:** Dedicated OPTIONS handler branch in **`opensips.cfg.template`** (before door-knock reject) vs always-200 for known fleet node IPs to `sbc.pbx3.com` RURI.
+**Design (locked 2026-07-22):** Always-**200** for **`CHECK_IS_FROM_ASTERISK`** (dispatcher) on OPTIONS that miss endpoint lookup — not a separate fleet-qualify URI. Inserted after carrier `is_from_gw` OPTIONS 200 in **`opensips.cfg.template`**.
 
 ### R2 — Instance trunk availability visible to operators
 
@@ -49,13 +49,11 @@ When primary SBC is unreachable, outbound PSTN must not silently black-hole. Can
 | **Stable SBC VIP (preferred)** | Single trunk contact = SBC VIP/EIP — aligns with **`FLEET_TRUNK_PEERING_DECISION.md`** §6 and **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (**active–passive**, not shared-DB SRV pool) |
 | **SBC-side only** | Node always sends to the VIP; pair health is **SBC/VIP** concern — node qualify still needed for “can I reach the edge entry point?” |
 
-**Edge box HA (promote):** **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — VIP/EIP + warm standby; ~15–20 min RTO; this file stays OPTIONS / trunk health / optional node `EgressFailover`.
+**Edge box HA (promote):** **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — VIP/EIP + warm standby; this file stays OPTIONS / trunk health / optional node `EgressFailover`.
 
 **Explicitly out of scope for v1 lab:** Multi-SBC failover without documented active–passive + VIP (§6 / HA requirements prerequisite for production fleet SLA).
 
 ### R4 — Do not break outbound dial for qualify failure (behaviour policy)
-
-Product must decide:
 
 | Policy | Tradeoff |
 |--------|----------|
@@ -63,26 +61,27 @@ Product must decide:
 | **B — Permissive dial** | Unavail still allows dial (qualify off) — good for lab; bad for ops visibility |
 | **C — Qualified but failover** | Unavail on Egress → auto-seize **EgressFailover** before dial (requires R3 + cagi) |
 
-**Recommendation to decide later:** **C** for production fleet with **R1** qualify on both trunks; keep **B** only for dev/lab flags.
+**Locked 2026-07-22 (this slice):** **A** once R1 qualify is on (VIP promote covers edge HA). Keep **B** only if a lab flag is needed. **C** parked with R3.
 
 ---
 
-## Current state (Phase A lab, 2026-07-09)
+## Current state (2026-07-22)
 
 | Component | State |
 |-----------|--------|
-| **`pjsip_trunk_egress.tmpl`** | **`qualify_frequency=0`** (shipped **`117340f`**) |
+| **`opensips.cfg.template`** | **R1:** OPTIONS from dispatcher → **200 OK** (after carrier `is_from_gw` qualify) |
+| **`pjsip_trunk_egress.tmpl`** | **`qualify_frequency=30`** (was `0` lab workaround) |
+| **SPA / API (R2)** | `trunks/live` + `fleet-posture.egress_qualify`; Trunks Latency chip; route fleet note badge; preflight **Egress qualify** |
 | **`EgressFailover`** | Seed script only; **not** used by **pbx3cagi** fleet dial |
-| **SBC OPTIONS** | Not handled for fleet node → `sbc.pbx3.com` qualify |
 | **pbx3cagi** | Fleet mode → **Egress only**, no trunk failover loop |
 
 ---
 
-## Suggested implementation order (future)
+## Suggested implementation order
 
-1. **SBC OPTIONS handler** for fleet Asterisk sources (R1) — unblocks re-enabling qualify on Egress template.
-2. **Re-enable `qualify_frequency`** (e.g. 30) on egress template after R1 verified on golden + second node.
-3. **SPA / API** trunk health from Asterisk endpoint state or AMI (R2).
+1. ~~**SBC OPTIONS handler** for fleet Asterisk sources (R1)~~ — done in template (deploy + verify on Magrathea).
+2. ~~**Re-enable `qualify_frequency`** (e.g. 30) on egress template~~ — done; golden + bzy54n **Avail**.
+3. ~~**SPA / API** trunk health from Asterisk endpoint state or AMI (R2)~~ — done.
 4. **`EgressFailover` + cagi** sequential dial (R3) — after SBC active–passive VIP (§6) or second lab SBC exists.
 5. **Peering `DR_FAILOVER`** on SBC for carrier leg — separate from node→SBC leg; already partially in template.
 
@@ -100,4 +99,4 @@ Product must decide:
 
 ---
 
-*Last updated: 2026-07-09 — requirement capture; no code change beyond Phase A qualify workaround.*
+*Last updated: 2026-07-22 — R1 design locked (dispatcher always-200); qualify template re-enabled; R2/R3 still open.*

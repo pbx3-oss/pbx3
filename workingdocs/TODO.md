@@ -1,22 +1,23 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-22 (Backup “On S3?” column)
+**Last updated:** 2026-07-22 (Egress R1+R2)
 
 ### Suggested “what next?” order
 
-1. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-2. **Ops failure notification — follow-ons** — velocity / SPA badges.  
-3. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
-4. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
-5. **S10.7 / S8.9** (parked) — cloud adapter.  
-6. **pbx3cagi** struct refactor (deferred).  
-7. **Fleet auth cookie/SSO (blocked)**.  
-8. **S7+** attested PCI — only on customer ask.  
+1. **Ops failure notification — follow-ons** — velocity / SPA badges.  
+2. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
+3. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
+4. **S10.7 / S8.9** (parked) — cloud adapter.  
+5. **pbx3cagi** struct refactor (deferred).  
+6. **Fleet auth cookie/SSO (blocked)**.  
+7. **S7+** attested PCI — only on customer ask.  
 
 ---
 
 ## Open items
+
+- [x] **Fleet Egress R1+R2 (2026-07-22):** OpenSIPS OPTIONS from dispatcher → **200**; `qualify_frequency=30`; golden/bzy **Avail**. SPA: Trunks Latency + route **Egress Avail** badge via `fleet-posture.egress_qualify`; preflight **Egress qualify**. R3 EgressFailover/cagi still open. Spec: **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.
 
 - [x] **Filament Backup “On S3?” + Magrathea cron (2026-07-22):** `sbc-backup-panel.sh list` joins local stamps to S3 prefixes; Filament **System → Backup** shows Yes/No. Live on VIP Magrathea. Cron `/etc/cron.d/pbx3sbc-backup` confirmed (`0 2 * * *` scheduled `--upload`).
 
@@ -131,7 +132,7 @@
 
 - [x] **SBC HA promote lab env decided (2026-07-21):** Minimal EC2 pair (real EIP). Greenfield FO1/FO2 installed — see open item **SBC HA — warm sync + promote drill**.
 
-- [ ] **Fleet Egress availability (future — not Phase A lab):** Documented **`pbx3-directory/docs/FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**. SBC must respond **OPTIONS** from fleet nodes so Egress qualify works; re-enable **`qualify_frequency`** on egress template; optional **EgressFailover** + **pbx3cagi** (break-glass — edge HA is VIP promote, not SRV). SPA/preflight trunk health. Lab workaround **`qualify_frequency=0`** (**`117340f`**) — do not treat as final.
+- [x] **Fleet Egress R1+R2 (2026-07-22):** see Open items above — R3 EgressFailover/cagi still open.
 
 - [x] **Phase S8.10 — Fleet mobility scaffold (2026-07-10):** On **`movewizard`** then **`main`**: `tenant-move-job.v0.json`; gatekeeper presign + tenant-moves + phase runner; pbx3api `/api/fleet/*`; pbx3sbc-admin `/api/fleet` repoint; SPA Fleet tenants Move wizard + job view (**lab** — peer nav; product = Fleet **mode** in same SPA).
 
