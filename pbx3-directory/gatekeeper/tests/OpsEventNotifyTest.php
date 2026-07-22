@@ -140,6 +140,44 @@ final class OpsEventNotifyTest extends TestCase
         $this->assertStringContainsString('opensips-brute-force', $sent[0]['body']);
     }
 
+    public function test_egress_unavail_mail(): void
+    {
+        $sent = [];
+        $mailer = new class($sent) implements Mailer {
+            /** @param list<array{to:list<string>,subject:string,body:string}> $sent */
+            public function __construct(private array &$sent)
+            {
+            }
+
+            public function send(array $to, string $subject, string $bodyText): void
+            {
+                $this->sent[] = ['to' => $to, 'subject' => $subject, 'body' => $bodyText];
+            }
+        };
+
+        $notify = new NotifyDispatcher($mailer);
+        $notify->notifyEgressQualify([
+            'instance_id' => 'abc',
+            'instance_label' => '08jzwn',
+            'fqdn' => '08jzwn.pbx3.com',
+            'egress_trunk' => 'Egress',
+            'consecutive_unavail' => 2,
+        ], 'down');
+        $notify->notifyEgressQualify([
+            'instance_id' => 'abc',
+            'instance_label' => '08jzwn',
+            'fqdn' => '08jzwn.pbx3.com',
+            'egress_trunk' => 'Egress',
+            'rtt_ms' => 7,
+        ], 'cleared');
+
+        $this->assertCount(2, $sent);
+        $this->assertStringContainsString('Egress Unavail', $sent[0]['subject']);
+        $this->assertStringContainsString('08jzwn', $sent[0]['body']);
+        $this->assertStringContainsString('Egress cleared', $sent[1]['subject']);
+        $this->assertStringContainsString('7 ms', $sent[1]['body']);
+    }
+
     public function test_ops_event_throttle(): void
     {
         $this->assertTrue(OpsEventThrottle::allow('k1', 60));

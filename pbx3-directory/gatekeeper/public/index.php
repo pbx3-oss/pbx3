@@ -511,8 +511,37 @@ try {
             JsonResponse::send(200, ['accepted' => true, 'notified' => true]);
         }
 
+        if ($type === 'egress_unavail') {
+            $instanceId = trim((string) ($body['instance_id'] ?? ''));
+            if ($instanceId === '') {
+                throw new \InvalidArgumentException('instance_id required', 422);
+            }
+            $transition = trim((string) ($body['transition'] ?? ''));
+            if ($transition !== 'down' && $transition !== 'cleared') {
+                throw new \InvalidArgumentException('transition must be down or cleared', 422);
+            }
+            // Throttle down only (cleared always allowed so recovery mail is not swallowed).
+            if ($transition === 'down') {
+                $key = 'egress_unavail:'.$instanceId.':down';
+                if (! OpsEventThrottle::allow($key, $cooldown)) {
+                    JsonResponse::send(200, ['accepted' => true, 'notified' => false, 'reason' => 'throttled']);
+                }
+            }
+            NotifyDispatcher::fromEnv()->notifyEgressQualify([
+                'instance_id' => $instanceId,
+                'instance_label' => is_string($body['instance_label'] ?? null) ? $body['instance_label'] : '',
+                'fqdn' => is_string($body['fqdn'] ?? null) ? $body['fqdn'] : '',
+                'state' => is_string($body['state'] ?? null) ? $body['state'] : '',
+                'rtt_ms' => $body['rtt_ms'] ?? null,
+                'consecutive_unavail' => (int) ($body['consecutive_unavail'] ?? 0),
+                'egress_trunk' => is_string($body['egress_trunk'] ?? null) ? $body['egress_trunk'] : 'Egress',
+                'latency' => is_string($body['latency'] ?? null) ? $body['latency'] : '',
+            ], $transition);
+            JsonResponse::send(200, ['accepted' => true, 'notified' => true]);
+        }
+
         throw new \InvalidArgumentException(
-            'Unsupported ops-event type (expected misconfig_register or fail2ban_ban)',
+            'Unsupported ops-event type (expected misconfig_register, fail2ban_ban, or egress_unavail)',
             422
         );
     }

@@ -1,21 +1,24 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-22 (Egress R1+R2)
+**Last updated:** 2026-07-22 (Egress Unavail notify)
 
 ### Suggested “what next?” order
 
-1. **Ops failure notification — follow-ons** — velocity / SPA badges.  
-2. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
-3. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
-4. **S10.7 / S8.9** (parked) — cloud adapter.  
-5. **pbx3cagi** struct refactor (deferred).  
-6. **Fleet auth cookie/SSO (blocked)**.  
-7. **S7+** attested PCI — only on customer ask.  
+1. **Ops notify — SPA badges** — in-UI instance health from catalog probe.  
+2. **Ops notify — velocity** (later) — dial-pattern rules on instance → Gatekeeper mail.  
+3. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
+4. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
+5. **S10.7 / S8.9** (parked) — cloud adapter.  
+6. **pbx3cagi** struct refactor (deferred).  
+7. **Fleet auth cookie/SSO (blocked)**.  
+8. **S7+** attested PCI — only on customer ask.  
 
 ---
 
 ## Open items
+
+- [x] **Ops notify — Egress Unavail (2026-07-22):** Instance `pbx3:ops-egress-qualify` (hysteresis 2) → Gatekeeper `egress_unavail` down/cleared mail. Enable `PBX3_OPS_EGRESS_UNAVAIL_NOTIFY=true`. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** · **`CONTROL_HOST.md`**.
 
 - [x] **Fleet Egress R1+R2 (2026-07-22):** OpenSIPS OPTIONS from dispatcher → **200**; `qualify_frequency=30`; golden/bzy **Avail**. SPA: Trunks Latency + route **Egress Avail** badge via `fleet-posture.egress_qualify`; preflight **Egress qualify**. R3 EgressFailover/cagi still open. Spec: **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.
 

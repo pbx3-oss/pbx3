@@ -86,6 +86,8 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 
 **SBC Fail2ban ban → email:** On SBC admin set `PBX3_OPS_FAIL2BAN_BAN_NOTIFY=true` + Gatekeeper URL/token; install cron from `pbx3sbc-admin/deploy/cron.d/pbx3sbc-fail2ban-notify.example`. First run seeds current bans (no mail); new bans → `fail2ban_ban` ops-event.
 
+**Egress Unavail (node):** On each fleet node set `PBX3_OPS_EGRESS_UNAVAIL_NOTIFY=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Scheduler runs `pbx3:ops-egress-qualify` every minute — AMI qualify via posture; after 2 consecutive Unavail → `egress_unavail` ops-event (`transition=down`); Avail again → `cleared`. First run seeds without mail. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
+
 ## Log retention (Phase 4)
 
 Ship rotated **syslog** + **nginx** to org bucket `control/{PBX3_CONTROL_ID}/logs/…`.

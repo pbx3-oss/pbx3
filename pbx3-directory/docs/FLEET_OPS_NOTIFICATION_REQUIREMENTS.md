@@ -1,6 +1,6 @@
 # Fleet ops — failure notification (requirements)
 
-**Status:** **v1 + lifecycle + misconfig REGISTER + move-job + Fail2ban ban→email** (2026-07-20) — catalog `/up` probe + SMTP; maintenance/decommission mail; node REGISTER-loop → Gatekeeper; **move job failed/aborted** mail; **SBC Fail2ban ban → Gatekeeper** (notify only; Peer auto-whitelist still deferred). Egress / velocity = later.  
+**Status:** **v1 + lifecycle + misconfig REGISTER + move-job + Fail2ban ban→email + Egress Unavail** (2026-07-22) — catalog `/up` probe + SMTP; maintenance/decommission mail; node REGISTER-loop → Gatekeeper; **move job failed/aborted** mail; **SBC Fail2ban ban → Gatekeeper**; **Egress Unavail/cleared** from instance qualify. Velocity / SPA badges = later.  
 **MVP:** Notify interested operators of **failure conditions**.  
 **Later (same notify plane, different detection):** **call-pattern velocity / toll-fraud style checks** — see § Velocity checking; Peer Fail2ban auto-whitelist on next carrier onboard.  
 **Related:** **`IMPLEMENTATION_PLAN.md`** § Fleet & monitoring (`last_seen_at` probe); **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (trunk health → alerts); **`DESIGN_RULES.md`** Rule 5 (directory outage ≠ instance SLA); Fleet users / abilities (Gatekeeper); instance **CoS** / dial policy (prevention layer, not a substitute for velocity alerts).
@@ -87,7 +87,7 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 | **Instance unreachable** | Gatekeeper probe of instance `api_base_url` (e.g. `/up`) | **v1 done** — down after 2 misses + cleared |
 | **Catalog maintenance / decommissioned** | Catalog lifecycle (`PATCH` status) | **Done** — mail on → maintenance / → decommissioned / back → active |
 | **Move job failed / aborted** | Gatekeeper tenant-move jobs | **Done** — notify on `failed` and `aborted` (abort + rollback) |
-| **Egress Unavail** | Instance trunk / AMI state (depends on **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** R1–R2) | Wire in only after qualify/health signals exist |
+| **Egress Unavail** | Instance trunk / AMI state (depends on **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** R1–R2) | **Done (2026-07-22)** — `pbx3:ops-egress-qualify` → `egress_unavail` ops-event → SMTP |
 
 **Acceptance:** A controlled lab outage (stop API on one node) produces a durable “instance down” event on the control plane within the probe interval.
 
@@ -217,7 +217,7 @@ Searchable instance CDR without a big DB: **SQLite on-node** + CSV→S3 archive 
 2. **Subscription store** + Fleet Users checkbox. **Done (v1).**  
 3. **Email adapter (SMTP)** + transition-based notify for instance down/up. **Done (v1).**  
 4. **Move-job terminal failure** notify. **Done** (`failed` / `aborted`).  
-5. **Egress Unavail** (after egress R1–R2).  
+5. **Egress Unavail** (after egress R1–R2). **Done** — instance `pbx3:ops-egress-qualify` → Gatekeeper `egress_unavail`.  
 6. **Misconfigured phones** (REGISTER-loop notify on node; SIP ban on SBC) — **Done** (node scanner + Gatekeeper ops-events; instance Asterisk jail off).  
 7. Later (notify plane): webhooks / Slack. **Fail2ban ban→email — Done.**  
 8. **Separate track:** optional Prometheus + Grafana for metrics dashboards.  
@@ -255,4 +255,4 @@ Searchable instance CDR without a big DB: **SQLite on-node** + CSV→S3 archive 
 
 ---
 
-*Last updated: 2026-07-20 — move-job terminal mail; SBC Fail2ban ban→email via ops-events.*
+*Last updated: 2026-07-22 — Egress Unavail ops-event notify (after egress R1–R2).*

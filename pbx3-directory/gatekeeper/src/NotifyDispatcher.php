@@ -338,6 +338,60 @@ final class NotifyDispatcher
     }
 
     /**
+     * Instance Egress PJSIP qualify transition (node AMI → ops-events).
+     *
+     * @param  array<string, mixed>  $event
+     * @param  'down'|'cleared'  $transition
+     */
+    public function notifyEgressQualify(array $event, string $transition): void
+    {
+        if ($transition !== 'down' && $transition !== 'cleared') {
+            return;
+        }
+
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            error_log('[gatekeeper-notify] no subscribers for egress '.$transition.' — skip');
+
+            return;
+        }
+
+        $label = (string) ($event['instance_label'] ?? $event['instance_id'] ?? 'instance');
+        $id = (string) ($event['instance_id'] ?? '');
+        $fqdn = (string) ($event['fqdn'] ?? '');
+        $trunk = (string) ($event['egress_trunk'] ?? 'Egress');
+        $rtt = $event['rtt_ms'] ?? null;
+        $consecutive = (int) ($event['consecutive_unavail'] ?? 0);
+
+        if ($transition === 'down') {
+            $subject = "[PBX3 fleet] Egress Unavail: {$label}";
+            $body = "Fleet Egress trunk is Unavail (PJSIP OPTIONS qualify failed).\n"
+                ."Outbound Dial via Egress may refuse until the SBC path recovers.\n\n"
+                ."Label: {$label}\n"
+                ."Id: {$id}\n"
+                ."FQDN: {$fqdn}\n"
+                ."Trunk: {$trunk}\n"
+                ."State: Unavail\n";
+            if ($consecutive > 0) {
+                $body .= "Consecutive Unavail checks: {$consecutive}\n";
+            }
+        } else {
+            $subject = "[PBX3 fleet] Egress cleared: {$label}";
+            $body = "Fleet Egress trunk is Avail again.\n\n"
+                ."Label: {$label}\n"
+                ."Id: {$id}\n"
+                ."FQDN: {$fqdn}\n"
+                ."Trunk: {$trunk}\n"
+                ."State: Avail\n";
+            if ($rtt !== null && $rtt !== '') {
+                $body .= "RTT: {$rtt} ms\n";
+            }
+        }
+
+        $this->send($recipients, $subject, $this->withUiLink($body));
+    }
+
+    /**
      * @param  array<string, mixed>  $pair
      * @param  array<string, mixed>  $result
      */
