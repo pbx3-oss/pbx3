@@ -195,8 +195,19 @@ try {
         if ($pair === null) {
             JsonResponse::send(404, ['error' => 'edge pair not found']);
         }
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $confirmStandbySip = ! empty($body['confirm_standby_sip_warning']);
         $promoter = \Pbx3\Gatekeeper\EdgePairPromoter::fromEnv();
-        $result = $promoter->promote($pair, true);
+        $standbySip = $promoter->probeStandbySip($pair);
+        if (! $standbySip['ok'] && ! $confirmStandbySip) {
+            JsonResponse::send(409, [
+                'ok' => false,
+                'needs_confirm' => true,
+                'warning' => $standbySip['warning'] ?? 'Standby SIP not confirmed',
+                'standby_sip' => $standbySip,
+            ]);
+        }
+        $result = $promoter->promote($pair, true, $standbySip);
         $notify = NotifyDispatcher::fromEnv();
         if ($result['ok']) {
             $fresh = \Pbx3\Gatekeeper\EdgePairStore::get((string) $pair['id']) ?? $pair;

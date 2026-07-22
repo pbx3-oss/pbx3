@@ -146,10 +146,11 @@ Promote moves the address. Standby **local** MariaDB does **not** inherit live `
 | **Failure threshold** | Configurable **N** misses + interval; default conservative (favour avoiding flaps over shaving minutes) |
 | **Cooldown / anti-flap** | No second auto-promote within cooldown; record promote job / audit trail |
 | **Fence** | Stop OpenSIPS on old active if SSH/API reachable; if unreachable, still move EIP (accept split until old box dies or is fenced later) |
+| **Standby SIP preflight (managed)** | Before Fleet **Promote now**, control SIP-OPTIONS the **standby instance public IP** (not the VIP). If no usable response: **warn** and require explicit confirm; do not hard-block. AWS Console/CLI break-glass stays ungated. Probe may false-fail when `advertised_address` is the EIP — warning is advisory. |
 | **Alerts** | Always on failure detection; on auto promote success/failure; reuse ops-notify delivery where practical |
 | **Mode storage** | Fleet/catalog fact for the edge pair (`managed` \| `auto`) — HoR outside either SBC DB |
-| **Managed confirm** | Human (or future Fleet “Promote now”) required before EIP move |
-| **Auto confirm** | None beyond thresholds; human gets post-facto alert |
+| **Managed confirm** | Human (Fleet “Promote now”) required before EIP move; plus standby-SIP warning confirm when preflight fails |
+| **Auto confirm** | None beyond thresholds; human gets post-facto alert. Standby SIP preflight for auto is a later hardening choice (not required by this row). |
 
 ---
 
