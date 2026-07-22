@@ -1,21 +1,20 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-21 (Filament Backup + Fleet warm sync)
+**Last updated:** 2026-07-22 (promoter SSH fence + standby SIP warn)
 
 ### Suggested “what next?” order
 
-1. **SBC HA — promoter fence reliability** — manual promote often `fenced: false`; stop OpenSIPS on old active by instance-id public IP. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.  
-2. **SBC HA — Phase D LE after promote** / TLS drills (admin HTTPS + future WebRTC) — park until needed.  
-3. **Optional polish:** Filament Backup list “On S3?” column; confirm Magrathea `/etc/cron.d/pbx3sbc-backup` installed.  
-4. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-5. **Ops failure notification — follow-ons** — velocity / SPA badges.  
-6. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
-7. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
-8. **S10.7 / S8.9** (parked) — cloud adapter.  
-9. **pbx3cagi** struct refactor (deferred).  
-10. **Fleet auth cookie/SSO (blocked)**.  
-11. **S7+** attested PCI — only on customer ask.  
+1. **SBC HA — Phase D LE after promote** / TLS drills (admin HTTPS + future WebRTC) — park until needed.  
+2. **Optional polish:** Filament Backup list “On S3?” column; confirm Magrathea `/etc/cron.d/pbx3sbc-backup` installed.  
+3. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+4. **Ops failure notification — follow-ons** — velocity / SPA badges.  
+5. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
+6. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
+7. **S10.7 / S8.9** (parked) — cloud adapter.  
+8. **pbx3cagi** struct refactor (deferred).  
+9. **Fleet auth cookie/SSO (blocked)**.  
+10. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -35,7 +34,7 @@
 
 - [x] **SBC HA — control-plane promote modes (2026-07-21):** Gatekeeper `edge_pairs` / SIP OPTIONS probe + timer; `edge_down`/`cleared` notify; `managed`\|`auto`; auto EIP promote on FO (~18 s wall); `POST /promote`; SPA **Edge HA**. IAM `pbx3-control-gatekeeper-fo-eip`. Default **Manual** + `GATEKEEPER_EDGE_AUTO_PROMOTE=false`. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
 
-- [ ] **SBC HA — promoter SSH fence (open / next):** `EdgePairPromoter` often returns `fenced: false`; ops stopped OpenSIPS on old active via instance-id → current public IP. Harden before relying on Auto.
+- [x] **SBC HA — promoter SSH fence (2026-07-22):** Root cause was **`GATEKEEPER_EDGE_SSH_KEY` unset** on control. Installed `/etc/pbx3-gatekeeper/edge-ssh.pem` (www-data mode 600) + env. `EdgePairPromoter::fenceInstance` returns `fenced`/`fence_detail` (sudo -n stop opensips); SPA shows fence note. Lab: PHP fence companion OK. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`** · **`CONTROL_HOST.md`**.
 
 - [x] **SBC scratch-box restore drill (2026-07-20):** amd64 `192.168.1.55` — install both repos → restore `20260720T172044Z` → OpenSIPS active + Filament Login 200; counts matched lab. Post-restore: align DB password + `advertised_address` + `www-data` home perms. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
 
