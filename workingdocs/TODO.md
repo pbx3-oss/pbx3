@@ -1,21 +1,26 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-22 (session end — Egress + ops notify)
+**Last updated:** 2026-07-22 (session end — number dialects)
 
 ### Suggested “what next?” order
 
 1. **Ops notify — velocity** (later) — dial-pattern rules on instance → Gatekeeper mail.  
-2. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
-3. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
-4. **S10.7 / S8.9** (parked) — cloud adapter.  
-5. **pbx3cagi** struct refactor (deferred).  
-6. **Fleet auth cookie/SSO (blocked)**.  
-7. **S7+** attested PCI — only on customer ask.  
+2. **Number dialect lab** (when ready) — Twilio US (+ optional EU) trunk to exercise Peer dialects / strip; US Egress `011:+` seed later. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`**.  
+3. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
+4. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
+5. **S10.7 / S8.9** (parked) — cloud adapter.  
+6. **pbx3cagi** struct refactor (deferred).  
+7. **Fleet auth cookie/SSO (blocked)**.  
+8. **S7+** attested PCI — only on customer ask.  
 
 ---
 
 ## Open items
+
+- [x] **PSTN number dialects v1 (2026-07-22):** Spec **`NUMBER_DIALECT_REQUIREMENTS.md`**; Peer Filament **Number dialect** presets (`uk-magrathea` / `uk-gamma` / `strict-plus-e164`); OpenSIPS inbound normalize + outbound render/PAID live Magrathea+companion; UK Egress seed `0:+44 00:+` (DNID only — CLID as-is). MkDocs **`fleet/number-dialect`**. Lab exercise (Twilio US/EU) + US node seed + custom-dialect UI deferred. Tips **pbx3** **`0e764c1`**, **pbx3sbc** **`3404608`**, **pbx3sbc-admin** **`c623d0c`**, **pbx3-docs** **`12f32e3`**.
+
+- [ ] **Number dialect — multi-region lab (parked until Twilio trunks):** Operator will add US (+ optional EU) trunk; then exercise dialect/strip matrices. Follow-ons: US Egress transform seed (`011:+`); node CLID mask (still as-is); custom dialect UI. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · MkDocs **`fleet/number-dialect`**.
 
 - [x] **Fleet Instances Egress badge (2026-07-22):** Gatekeeper probe → `GET /api/fleet/egress-qualify` (fleet.token); catalog `health.egress_*`; SPA Fleet Instances shows **Egress Avail/Unavail**. Ops-notify follow-ons (Egress mail + SPA badges) closed for now.
 
