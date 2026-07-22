@@ -77,6 +77,26 @@ final class FleetInstanceProbe
                 } catch (\Throwable $e) {
                     $errors[] = "{$id}: last_seen_at: ".$e->getMessage();
                 }
+                try {
+                    $egress = InstanceEgressQualifyProbe::probe($api, $this->timeoutSeconds);
+                    InstanceHealthStore::recordEgress($id, $egress['state'], $egress['rtt_ms']);
+                    if ($egress['error'] !== null) {
+                        $errors[] = "{$id}: egress: ".$egress['error'];
+                    }
+                } catch (\Throwable $e) {
+                    $errors[] = "{$id}: egress: ".$e->getMessage();
+                    try {
+                        InstanceHealthStore::recordEgress($id, 'Unknown', null);
+                    } catch (\Throwable) {
+                        // ignore
+                    }
+                }
+            } else {
+                try {
+                    InstanceHealthStore::recordEgress($id, 'Unknown', null);
+                } catch (\Throwable $e) {
+                    $errors[] = "{$id}: egress clear: ".$e->getMessage();
+                }
             }
 
             if ($transition === 'down' || $transition === 'cleared') {

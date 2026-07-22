@@ -33,6 +33,15 @@ SQL);
         if (! in_array('last_rtt_ms', $names, true)) {
             $pdo->exec('ALTER TABLE instance_health ADD COLUMN last_rtt_ms INTEGER');
         }
+        if (! in_array('egress_state', $names, true)) {
+            $pdo->exec('ALTER TABLE instance_health ADD COLUMN egress_state TEXT');
+        }
+        if (! in_array('egress_rtt_ms', $names, true)) {
+            $pdo->exec('ALTER TABLE instance_health ADD COLUMN egress_rtt_ms INTEGER');
+        }
+        if (! in_array('egress_probed_at', $names, true)) {
+            $pdo->exec('ALTER TABLE instance_health ADD COLUMN egress_probed_at TEXT');
+        }
     }
 
     /**
@@ -112,6 +121,44 @@ SQL);
     }
 
     /**
+     * Store latest Egress qualify snapshot from fleet.token probe (no notify).
+     */
+    public static function recordEgress(
+        string $instanceId,
+        string $state,
+        ?int $rttMs = null,
+        ?string $nowIso = null,
+    ): void {
+        $instanceId = trim($instanceId);
+        if ($instanceId === '') {
+            throw new \InvalidArgumentException('instance_id required');
+        }
+        if (! in_array($state, ['Avail', 'Unavail', 'Unknown'], true)) {
+            $state = 'Unknown';
+        }
+        $now = $nowIso ?? gmdate('c');
+        $pdo = UserStore::pdo();
+        self::migrate($pdo);
+
+        $st = $pdo->prepare(<<<'SQL'
+INSERT INTO instance_health (
+  instance_id, reachable, consecutive_misses, last_ok_at, last_probe_at,
+  last_notified_reachable, last_rtt_ms, egress_state, egress_rtt_ms, egress_probed_at
+) VALUES (?, 1, 0, NULL, NULL, NULL, NULL, ?, ?, ?)
+ON CONFLICT(instance_id) DO UPDATE SET
+  egress_state = excluded.egress_state,
+  egress_rtt_ms = excluded.egress_rtt_ms,
+  egress_probed_at = excluded.egress_probed_at
+SQL);
+        $st->execute([
+            $instanceId,
+            $state,
+            $rttMs,
+            $now,
+        ]);
+    }
+
+    /**
      * @return array{
      *   instance_id:string,
      *   reachable:bool,
@@ -119,7 +166,10 @@ SQL);
      *   last_ok_at:?string,
      *   last_probe_at:?string,
      *   last_notified_reachable:?bool,
-     *   last_rtt_ms:?int
+     *   last_rtt_ms:?int,
+     *   egress_state:?string,
+     *   egress_rtt_ms:?int,
+     *   egress_probed_at:?string
      * }|null
      */
     public static function get(string $instanceId): ?array
@@ -128,7 +178,8 @@ SQL);
         self::migrate($pdo);
         $st = $pdo->prepare(
             'SELECT instance_id, reachable, consecutive_misses, last_ok_at, last_probe_at,
-                    last_notified_reachable, last_rtt_ms
+                    last_notified_reachable, last_rtt_ms,
+                    egress_state, egress_rtt_ms, egress_probed_at
              FROM instance_health WHERE instance_id = ? LIMIT 1'
         );
         $st->execute([trim($instanceId)]);
@@ -138,6 +189,8 @@ SQL);
         }
         $notified = $row['last_notified_reachable'];
         $rtt = $row['last_rtt_ms'] ?? null;
+        $egressRtt = $row['egress_rtt_ms'] ?? null;
+        $egressState = $row['egress_state'] ?? null;
 
         return [
             'instance_id' => (string) $row['instance_id'],
@@ -147,6 +200,11 @@ SQL);
             'last_probe_at' => $row['last_probe_at'] !== null && $row['last_probe_at'] !== '' ? (string) $row['last_probe_at'] : null,
             'last_notified_reachable' => $notified === null ? null : (bool) (int) $notified,
             'last_rtt_ms' => $rtt !== null && $rtt !== '' ? (int) $rtt : null,
+            'egress_state' => is_string($egressState) && $egressState !== '' ? $egressState : null,
+            'egress_rtt_ms' => $egressRtt !== null && $egressRtt !== '' ? (int) $egressRtt : null,
+            'egress_probed_at' => isset($row['egress_probed_at']) && $row['egress_probed_at'] !== null && $row['egress_probed_at'] !== ''
+                ? (string) $row['egress_probed_at']
+                : null,
         ];
     }
 }

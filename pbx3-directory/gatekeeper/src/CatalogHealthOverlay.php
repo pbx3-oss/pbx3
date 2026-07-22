@@ -37,6 +37,9 @@ final class CatalogHealthOverlay
                 'last_ok_at' => null,
                 'last_probe_at' => null,
                 'last_rtt_ms' => null,
+                'egress_state' => null,
+                'egress_rtt_ms' => null,
+                'egress_probed_at' => null,
             ];
 
             if (! $paused && $id !== '') {
@@ -47,6 +50,9 @@ final class CatalogHealthOverlay
                     $health['last_ok_at'] = $stored['last_ok_at'];
                     $health['last_probe_at'] = $stored['last_probe_at'];
                     $health['last_rtt_ms'] = $stored['last_rtt_ms'];
+                    $health['egress_state'] = $stored['egress_state'];
+                    $health['egress_rtt_ms'] = $stored['egress_rtt_ms'];
+                    $health['egress_probed_at'] = $stored['egress_probed_at'];
                 }
             }
 

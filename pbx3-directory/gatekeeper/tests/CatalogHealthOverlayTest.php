@@ -50,6 +50,7 @@ final class CatalogHealthOverlayTest extends TestCase
     public function test_enrich_overlays_health_and_pauses_maintenance(): void
     {
         InstanceHealthStore::recordProbe('active1', true, 33);
+        InstanceHealthStore::recordEgress('active1', 'Avail', 12);
 
         $catalog = [
             'version' => 1,
@@ -76,9 +77,12 @@ final class CatalogHealthOverlayTest extends TestCase
         $this->assertSame(33, $out['instances'][0]['health']['last_rtt_ms']);
         $this->assertTrue($out['instances'][0]['health']['reachable']);
         $this->assertFalse($out['instances'][0]['health']['probe_paused']);
+        $this->assertSame('Avail', $out['instances'][0]['health']['egress_state']);
+        $this->assertSame(12, $out['instances'][0]['health']['egress_rtt_ms']);
         $this->assertTrue($out['instances'][1]['health']['probe_paused']);
         $this->assertNull($out['instances'][1]['health']['reachable']);
         $this->assertNull($out['instances'][1]['health']['last_rtt_ms']);
+        $this->assertNull($out['instances'][1]['health']['egress_state']);
         $this->assertSame('2026-07-18T12:00:00Z', $out['instances'][0]['last_seen_at']);
     }
 }
