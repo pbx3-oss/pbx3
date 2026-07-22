@@ -26,7 +26,7 @@ final class TenantMoveRunner
         private readonly S3Registrar $registrar,
     ) {
         $this->fleetToken = getenv('PBX3_FLEET_SERVICE_TOKEN') ?: '';
-        $this->sbcApiBase = rtrim(getenv('PBX3_SBC_ADMIN_API_URL') ?: '', '/');
+        $this->sbcApiBase = ControlSettingsStore::sbcAdminApiUrl();
         $this->http = new Client([
             'timeout' => 300,
             'http_errors' => false,
@@ -191,7 +191,7 @@ final class TenantMoveRunner
 
         $this->requireFleetToken();
         if ($this->sbcApiBase === '') {
-            throw new \RuntimeException('PBX3_SBC_ADMIN_API_URL not set — cannot rollback', 503);
+            throw new \RuntimeException('SBC admin API URL not set — cannot rollback', 503);
         }
         $this->sbcPost('/fleet/rollback-repoint', [
             'tenant_domain' => $domain,
@@ -422,7 +422,7 @@ final class TenantMoveRunner
     private function phaseCutover(array $job): array
     {
         if ($this->sbcApiBase === '') {
-            throw new \RuntimeException('PBX3_SBC_ADMIN_API_URL not set — cannot cutover');
+            throw new \RuntimeException('SBC admin API URL not set — cannot cutover');
         }
         $domain = (string) ($job['tenant_fqdn'] ?? '');
         $destSet = (int) ($job['dest_sbc_dispatcher_setid'] ?? 0);

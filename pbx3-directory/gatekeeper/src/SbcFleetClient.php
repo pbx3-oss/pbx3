@@ -21,7 +21,7 @@ final class SbcFleetClient
     public function __construct(?Client $http = null)
     {
         $this->fleetToken = getenv('PBX3_FLEET_SERVICE_TOKEN') ?: '';
-        $this->sbcApiBase = rtrim(getenv('PBX3_SBC_ADMIN_API_URL') ?: '', '/');
+        $this->sbcApiBase = ControlSettingsStore::sbcAdminApiUrl();
         $this->http = $http ?? new Client([
             'timeout' => 60,
             'http_errors' => false,
@@ -171,7 +171,7 @@ final class SbcFleetClient
     private function requestJson(string $method, string $path, ?array $body = null): array
     {
         if ($this->sbcApiBase === '') {
-            throw new \RuntimeException('PBX3_SBC_ADMIN_API_URL not set — cannot reach SBC adapter', 503);
+            throw new \RuntimeException('SBC admin API URL not set (Fleet → Edge HA or PBX3_SBC_ADMIN_API_URL) — cannot reach SBC adapter', 503);
         }
         if ($this->fleetToken === '') {
             throw new \RuntimeException('PBX3_FLEET_SERVICE_TOKEN not configured on gatekeeper', 503);

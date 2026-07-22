@@ -203,6 +203,7 @@ Worst case: **active edge dead** and **control plane dark** (or unreachable). Au
 | **Carrier / ITSP path** | SBC drouting `DR_FAILOVER` / multi-gateway | `PEERING-PLAN.md` Phase 2 |
 | **Node → edge visibility** | OPTIONS qualify on `Egress`; optional `EgressFailover` | `FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md` |
 | **Ops notify** | Probe/SMTP / lifecycle — extend for edge-down + promote events | `FLEET_OPS_NOTIFICATION_REQUIREMENTS.md` |
+| **Instance shadowing (SKU)** | Same promote mechanics on a paid PBX twin — framing only | `INSTANCE_SHADOWING_REQUIREMENTS.md` |
 
 ---
 
@@ -242,6 +243,7 @@ Until that passes, single-SBC lab remains valid; do not market multi-SBC HA.
 | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** | Qualify / trunk health / optional EgressFailover |
 | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** | Alert delivery |
 | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** | Phone registrar = stable SBC VIP |
+| **`INSTANCE_SHADOWING_REQUIREMENTS.md`** | Paid PBX twin — same mechanics, later |
 | **`pbx3-docs` `fleet/sbc-ha-promote.md`** | Cast-iron **managed** installer checklist |
 
 ---

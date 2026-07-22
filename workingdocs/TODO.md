@@ -8,7 +8,7 @@
 1. **SBC HA — control-plane probe + alert** — **shipped lab 2026-07-21** (edge_pairs + SIP probe + notify + auto EIP on FO; SPA Edge HA). Tune cooldown / LE-in-worker later. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.  
 2. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 3. **Ops failure notification — follow-ons** — velocity / SPA badges.  
-4. **Failover + shadowing** (parked — shadowing only).  
+4. **Instance shadowing** (parked — framing locked) — paid min-downtime PBX twin; same VIP/promote mechanics as SBC HA. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
 5. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
 6. **S10.7 / S8.9** (parked) — cloud adapter (also for clean EIP promote).  
 7. **pbx3cagi** struct refactor (deferred).  
@@ -92,7 +92,7 @@
 
 - [x] **Fleet mode in pbx3spa (2026-07-13 → `main`):** **Enter Fleet / Exit Fleet** shell swap, `/fleet/*` guards, Instances / Tenants / **Jobs**, `FleetTokenGate`. **pbx3spa** **`ba31dd4`**, gatekeeper list API **pbx3** **`c047743`**. Branch **`fleetadmin` deleted**.
 
-- [ ] **Failover + shadowing (parked — plan later):** Edge **box** HA requirements locked — **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Shadowing still undefined. Related scraps: peering Phase 2 outbound failover; **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.
+- [ ] **Instance shadowing (parked — framing locked 2026-07-21):** Paid SKU for customers who want min downtime: warm PBX twin + same promote mechanics as SBC edge HA (Manual/Auto, VIP/EIP, soft-state loss OK). Not default for every node. Implement after SBC HA is operational on real lab edge. Spec: **`pbx3-directory/docs/INSTANCE_SHADOWING_REQUIREMENTS.md`**. Related: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**, egress availability.
 
 - [x] **Ops failure notification — v1 probe + SMTP (2026-07-16):** Gatekeeper `bin/probe-fleet-instances.php` + systemd timer; SQLite `instance_health` (down after 2 misses); S3 `last_seen_at`; `Mailer`/`SmtpMailer`; `users.notify_failures` + SPA checkbox; `GATEKEEPER_OPS_NOTIFY_EMAIL`. Lifecycle maintenance/decommission mail. **Misconfig REGISTER:** `pbx3api` `pbx3:ops-register-loops` → Gatekeeper `POST /api/v1/ops-events`. Instance Asterisk F2B jail **off** (SIP ban on SBC); mail resolves shortuid→dialable. **Follow-ons:** move-job mail; Fail2ban Peer auto-whitelist / ban→email; SPA badges. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
 

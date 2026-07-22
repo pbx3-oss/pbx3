@@ -8,7 +8,7 @@ use PDO;
 
 /**
  * Active–passive SBC edge pair registry (SQLite on control).
- * Lab FO pair is seeded once; not Magrathea / live sbc.pbx3.com.
+ * v0: at most one pair — create via API / Fleet UI; delete then recreate to replace.
  */
 final class EdgePairStore
 {
@@ -38,38 +38,6 @@ CREATE TABLE IF NOT EXISTS edge_pairs (
     updated_at TEXT
 );
 SQL);
-        self::seedFoLabIfMissing($pdo);
-    }
-
-    private static function seedFoLabIfMissing(PDO $pdo): void
-    {
-        $st = $pdo->prepare('SELECT id FROM edge_pairs WHERE id = ? LIMIT 1');
-        $st->execute([self::FO_LAB_ID]);
-        if ($st->fetch()) {
-            return;
-        }
-        $now = gmdate('c');
-        $ins = $pdo->prepare(<<<'SQL'
-INSERT INTO edge_pairs (
-  id, label, fqdn, eip, allocation_id,
-  member_a_instance_id, member_b_instance_id,
-  active_member, mode, region, enabled, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-SQL);
-        // FO1 owns EIP after 2026-07-21 auto-promote drill (was FO2 after manual drill)
-        $ins->execute([
-            self::FO_LAB_ID,
-            'FO lab pair',
-            'sbcfo.pbx3.com',
-            '98.82.58.59',
-            'eipalloc-020e72437124c600e',
-            'i-05b30224300cc8812',
-            'i-00f85b1c3f18c434e',
-            'a',
-            self::MODE_MANAGED,
-            'us-east-1',
-            $now,
-        ]);
     }
 
     /** @return list<array<string, mixed>> */
@@ -97,6 +65,93 @@ SQL);
         }
 
         return self::normalize($row);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public static function create(array $input): array
+    {
+        $id = trim((string) ($input['id'] ?? ''));
+        $label = trim((string) ($input['label'] ?? ''));
+        $fqdn = trim((string) ($input['fqdn'] ?? ''));
+        $eip = trim((string) ($input['eip'] ?? ''));
+        $alloc = trim((string) ($input['allocation_id'] ?? ''));
+        $a = trim((string) ($input['member_a_instance_id'] ?? ''));
+        $b = trim((string) ($input['member_b_instance_id'] ?? ''));
+        $active = strtolower(trim((string) ($input['active_member'] ?? 'a')));
+        $mode = strtolower(trim((string) ($input['mode'] ?? self::MODE_MANAGED)));
+        $region = trim((string) ($input['region'] ?? 'us-east-1'));
+        if ($region === '') {
+            $region = 'us-east-1';
+        }
+
+        if ($label === '') {
+            throw new \InvalidArgumentException('label required');
+        }
+        if ($id === '') {
+            $id = self::slugId($label);
+        }
+        if (! preg_match('/^[a-z0-9][a-z0-9_-]{1,63}$/', $id)) {
+            throw new \InvalidArgumentException('id must be 2–64 chars: lowercase letters, digits, _-');
+        }
+        if ($fqdn === '' || ! str_contains($fqdn, '.')) {
+            throw new \InvalidArgumentException('fqdn required (hostname)');
+        }
+        if ($eip === '') {
+            throw new \InvalidArgumentException('eip required');
+        }
+        if ($alloc === '' || ! str_starts_with($alloc, 'eipalloc-')) {
+            throw new \InvalidArgumentException('allocation_id required (eipalloc-…)');
+        }
+        if ($a === '' || $b === '' || $a === $b) {
+            throw new \InvalidArgumentException('member_a_instance_id and member_b_instance_id required and distinct');
+        }
+        if ($active !== 'a' && $active !== 'b') {
+            throw new \InvalidArgumentException('active_member must be a or b');
+        }
+        if ($mode !== self::MODE_MANAGED && $mode !== self::MODE_AUTO) {
+            throw new \InvalidArgumentException('mode must be managed or auto');
+        }
+        // v0: one HA pair at a time (delete then recreate to replace)
+        if (self::list() !== []) {
+            throw new \RuntimeException('an edge pair already exists — delete it before adding another', 409);
+        }
+        if (self::get($id) !== null) {
+            throw new \RuntimeException('edge pair id already exists', 409);
+        }
+
+        $now = gmdate('c');
+        $pdo = UserStore::pdo();
+        self::migrate($pdo);
+        $ins = $pdo->prepare(<<<'SQL'
+INSERT INTO edge_pairs (
+  id, label, fqdn, eip, allocation_id,
+  member_a_instance_id, member_b_instance_id,
+  active_member, mode, region, enabled, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+SQL);
+        $ins->execute([$id, $label, $fqdn, $eip, $alloc, $a, $b, $active, $mode, $region, $now]);
+
+        $row = self::get($id);
+        if ($row === null) {
+            throw new \RuntimeException('edge pair missing after create', 500);
+        }
+
+        return $row;
+    }
+
+    private static function slugId(string $label): string
+    {
+        $s = strtolower($label);
+        $s = preg_replace('/[^a-z0-9]+/', '-', $s) ?? '';
+        $s = trim($s, '-');
+        if ($s === '') {
+            $s = 'edge-'.bin2hex(random_bytes(3));
+        }
+
+        return substr($s, 0, 64);
     }
 
     /**
@@ -147,6 +202,23 @@ SQL);
         }
 
         return $row;
+    }
+
+    /** Remove pair + health row. Does not touch AWS EIP or instances. */
+    public static function delete(string $id): void
+    {
+        $id = trim($id);
+        if ($id === '') {
+            throw new \InvalidArgumentException('id required');
+        }
+        if (self::get($id) === null) {
+            throw new \RuntimeException('edge pair not found', 404);
+        }
+        $pdo = UserStore::pdo();
+        self::migrate($pdo);
+        EdgePairHealthStore::migrate($pdo);
+        $pdo->prepare('DELETE FROM edge_pair_health WHERE edge_pair_id = ?')->execute([$id]);
+        $pdo->prepare('DELETE FROM edge_pairs WHERE id = ?')->execute([$id]);
     }
 
     public static function setActiveMember(string $id, string $member, ?string $nowIso = null): void

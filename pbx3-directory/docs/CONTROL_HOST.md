@@ -67,7 +67,7 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 | Piece | Detail |
 |-------|--------|
 | Registry | SQLite `edge_pairs` + `edge_pair_health` (seed `fo-lab`) |
-| API | `GET/PATCH /api/v1/edge-pairs`, `POST …/promote` (`fleet_admin`) |
+| API | `GET/PATCH /api/v1/edge-settings` (SBC URL); `GET/POST/PATCH /api/v1/edge-pairs`, `POST …/promote` (`fleet_admin`) |
 | Probe | `php8.4 bin/probe-edge-pairs.php` — SIP OPTIONS on VIP; timer `pbx3-edge-probe.timer` |
 | Modes | `managed` (alert only) \| `auto` (EIP promote when `GATEKEEPER_EDGE_AUTO_PROMOTE=true`) |
 | IAM | Lab policy **`pbx3-control-gatekeeper-fo-eip`** (`AssociateAddress` / describe) |

@@ -86,6 +86,26 @@ try {
         JsonResponse::send(200, ['ok' => true]);
     }
 
+    // Edge settings (SBC admin API URL — SQLite overrides env)
+    if ($method === 'GET' && $path === '/api/v1/edge-settings') {
+        Auth::requireAbility(FleetAbilities::READ);
+        JsonResponse::send(200, \Pbx3\Gatekeeper\ControlSettingsStore::edgeSettingsPublic());
+    }
+
+    if ($method === 'PATCH' && $path === '/api/v1/edge-settings') {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        if (! is_array($body)) {
+            JsonResponse::send(400, ['error' => 'JSON body required']);
+        }
+        try {
+            $settings = \Pbx3\Gatekeeper\ControlSettingsStore::patchEdgeSettings($body);
+        } catch (\InvalidArgumentException $e) {
+            JsonResponse::send(422, ['error' => $e->getMessage()]);
+        }
+        JsonResponse::send(200, $settings);
+    }
+
     // SBC HA edge pairs (FO lab + future fleet edges)
     if ($method === 'GET' && $path === '/api/v1/edge-pairs') {
         Auth::requireAbility(FleetAbilities::READ);
@@ -103,6 +123,23 @@ try {
             $out[] = $pair;
         }
         JsonResponse::send(200, ['edge_pairs' => $out]);
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/edge-pairs') {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        if (! is_array($body)) {
+            JsonResponse::send(400, ['error' => 'JSON body required']);
+        }
+        try {
+            $pair = \Pbx3\Gatekeeper\EdgePairStore::create($body);
+        } catch (\InvalidArgumentException $e) {
+            JsonResponse::send(422, ['error' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            $code = (int) $e->getCode();
+            JsonResponse::send($code >= 400 && $code < 600 ? $code : 500, ['error' => $e->getMessage()]);
+        }
+        JsonResponse::send(201, $pair);
     }
 
     if ($method === 'GET' && preg_match('#^/api/v1/edge-pairs/([^/]+)$#', $path, $m)) {
@@ -137,6 +174,19 @@ try {
             JsonResponse::send($code >= 400 && $code < 600 ? $code : 500, ['error' => $e->getMessage()]);
         }
         JsonResponse::send(200, $pair);
+    }
+
+    if ($method === 'DELETE' && preg_match('#^/api/v1/edge-pairs/([^/]+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        try {
+            \Pbx3\Gatekeeper\EdgePairStore::delete(rawurldecode($m[1]));
+        } catch (\InvalidArgumentException $e) {
+            JsonResponse::send(422, ['error' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            $code = (int) $e->getCode();
+            JsonResponse::send($code >= 400 && $code < 600 ? $code : 500, ['error' => $e->getMessage()]);
+        }
+        JsonResponse::send(200, ['ok' => true]);
     }
 
     if ($method === 'POST' && preg_match('#^/api/v1/edge-pairs/([^/]+)/promote$#', $path, $m)) {

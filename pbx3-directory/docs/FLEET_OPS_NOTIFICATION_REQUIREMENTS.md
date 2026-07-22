@@ -131,7 +131,7 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 |-------|---------------------|
 | **`last_seen_at` probe + SPA badges** (`IMPLEMENTATION_PLAN.md` § Fleet & monitoring) | **Primary detection** for instance reachability; badges = in-UI; this doc = push |
 | **Egress availability** | Once Egress qualify works, Unavail becomes a first-class failure signal (R1) |
-| **Failover + shadowing** | Separate mini-project; notify may later cover failover events |
+| **Failover + shadowing** | Instance shadow SKU framing locked — **`INSTANCE_SHADOWING_REQUIREMENTS.md`**; notify may cover promote events |
 | **S7+ Security Hub** | Compliance / attested audit — not ops failure mail |
 | **Prometheus / Grafana (optional later)** | Pretty metrics / quality time series — **not** this notify leg |
 | **Velocity checking (planned later)** | Odd outbound call patterns → same notify delivery; separate detection — § below |

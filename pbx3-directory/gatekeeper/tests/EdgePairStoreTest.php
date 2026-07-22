@@ -21,6 +21,7 @@ final class EdgePairStoreTest extends TestCase
         putenv('GATEKEEPER_AUTH_DB='.$this->dbPath);
         $_ENV['GATEKEEPER_AUTH_DB'] = $this->dbPath;
         UserStore::resetForTests();
+        $this->seedFoLab();
     }
 
     protected function tearDown(): void
@@ -31,6 +32,21 @@ final class EdgePairStoreTest extends TestCase
         }
         putenv('GATEKEEPER_AUTH_DB');
         unset($_ENV['GATEKEEPER_AUTH_DB']);
+    }
+
+    private function seedFoLab(): void
+    {
+        EdgePairStore::create([
+            'id' => EdgePairStore::FO_LAB_ID,
+            'label' => 'FO lab pair',
+            'fqdn' => 'sbcfo.pbx3.com',
+            'eip' => '98.82.58.59',
+            'allocation_id' => 'eipalloc-020e72437124c600e',
+            'member_a_instance_id' => 'i-05b30224300cc8812',
+            'member_b_instance_id' => 'i-00f85b1c3f18c434e',
+            'active_member' => 'a',
+            'mode' => 'managed',
+        ]);
     }
 
     public function test_seed_fo_lab_and_patch_mode(): void
@@ -83,5 +99,48 @@ final class EdgePairStoreTest extends TestCase
         $this->assertCount(1, $sent);
         $this->assertStringContainsString('Edge down', $sent[0]['subject']);
         $this->assertStringContainsString('sbcfo.pbx3.com', $sent[0]['body']);
+    }
+
+    public function test_create_pair(): void
+    {
+        EdgePairStore::delete(EdgePairStore::FO_LAB_ID);
+
+        $created = EdgePairStore::create([
+            'id' => 'live-lab',
+            'label' => 'Live lab',
+            'fqdn' => 'sbc.pbx3.com',
+            'eip' => '1.2.3.4',
+            'allocation_id' => 'eipalloc-abc123',
+            'member_a_instance_id' => 'i-aaa',
+            'member_b_instance_id' => 'i-bbb',
+            'active_member' => 'a',
+            'mode' => 'managed',
+        ]);
+        $this->assertSame('live-lab', $created['id']);
+        $this->assertSame('sbc.pbx3.com', $created['fqdn']);
+        $this->assertSame('managed', $created['mode']);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('an edge pair already exists');
+        EdgePairStore::create([
+            'id' => 'second',
+            'label' => 'Second',
+            'fqdn' => 'sbc2.pbx3.com',
+            'eip' => '5.6.7.8',
+            'allocation_id' => 'eipalloc-def456',
+            'member_a_instance_id' => 'i-ccc',
+            'member_b_instance_id' => 'i-ddd',
+        ]);
+    }
+
+    public function test_delete_pair_removes_health_and_stays_gone(): void
+    {
+        EdgePairHealthStore::recordProbe(EdgePairStore::FO_LAB_ID, true, 12);
+        $this->assertNotNull(EdgePairHealthStore::get(EdgePairStore::FO_LAB_ID));
+
+        EdgePairStore::delete(EdgePairStore::FO_LAB_ID);
+        $this->assertNull(EdgePairStore::get(EdgePairStore::FO_LAB_ID));
+        $this->assertNull(EdgePairHealthStore::get(EdgePairStore::FO_LAB_ID));
+        $this->assertSame([], EdgePairStore::list());
     }
 }
