@@ -58,26 +58,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-21 — Magrathea live HA promote)
+## Next agent session notes (2026-07-21 — Filament Backup + Fleet warm sync)
 
-**Branches:** **pbx3** **`3a9dbb2`**. **pbx3spa** **`acfb13b`**. Gatekeeper live on **`control.pbx3.com`**.
+**Branches:** **pbx3** **`129ef40`**, **pbx3spa** **`d021f60`**, **pbx3sbc** **`9373d30`**, **pbx3sbc-admin** **`7dda7fb`**, **pbx3-docs** **`b9fb77f`**. Live on Magrathea / companion / control.
 
 ### Shipped
-- **Live Magrathea HA:** companion **`i-00964a57ac65383d1`** (warm `--db-only`); Fleet pair **`magrathea-lab`** — FQDN `sbc.pbx3.com`, EIP `3.93.26.82` / `eipalloc-0814f5e931414fd2a`, A Magrathea `i-078cca73d4a4106bb`, B companion. **Manual** promote both ways (~3–5 s EIP); Edge probe **Healthy**. `fo-lab` removed.
-- **Fleet Edge HA UX/API:** one pair at a time; Add/Delete; SBC admin API URL via SQLite (`ControlSettingsStore`, settings→env); SPA forms. AWS promote = control **instance profile** only (Rule 12).
-- **Lab lessons:** promoter often **`fenced: false`** — stop OpenSIPS on old active via instance-id → current public IP. Soft-state: Magrathea PSTN / Asterisk-local media can survive EIP move; Asterisk gets no promote event. Find post-EIP host by **instance id**, not old public IP.
-- Hygiene at session end: companion OpenSIPS **active** + warm sync (5 domains / 13 gateways).
+- **Filament Backup** (VIP holder only via IMDS public IPv4): create + list local zips; optional S3 upload; **no restore UI**. Helper `sbc-backup-panel.sh` + sudoers.
+- **Fleet warm sync:** `POST …/edge-pairs/{id}/warm-sync` — active `/api/fleet/backup` → S3 → standby `/api/fleet/warm-pull` (`--db-only`); `last_warm_sync_*` on pair; daily `pbx3-edge-warm-sync.timer`. SPA Sync now + comfort spinner/elapsed.
+- **Standby bootstrap:** companion needed fleet token, `log-ship.env`, AWS CLI, IAM `pbx3-sbc`. Scripts `check-ha-standby-ready.sh` / `bootstrap-ha-standby-warm.sh`; Phase A checklist in MkDocs.
+- Lab: Backup now + Sync now OK; cold restore remains CLI scratch runbook (`fleet/sbc-backup-restore.md`).
 
 ### Golden / operator follow-up
-- Pair **Manual**; Magrathea **active (a)**; companion warm standby. SSH companion: `aws ec2 describe-instances --instance-ids i-00964a57ac65383d1` for current public IP (`opensips.pem`).
-- Greenfield-as-`sudo` cloned under `/root` once — relocated to `/home/ubuntu`; fix install wrapper later.
-- TLS / Phase D LE after promote + WebRTC = later. No Litestream; shadowing still parked.
+- Pair **`magrathea-lab`**: Magrathea active (`i-078cca73d4a4106bb`); companion (`i-00964a57ac65383d1`) — public IP via `aws ec2 describe-instances` (`opensips.pem`).
+- Optional: Filament “On S3?” column; confirm Magrathea backup cron installed.
+- Restore UI deferred; Litestream/shadowing parked.
 
 ### Resume
-1. **SBC backup/restore UI** — replace manual-only CLI; Filament (and/or Fleet) backup/list/restore + confirm Magrathea cron/S3. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
-2. Harden **SSH fence** on promote (or document mandatory ops fence).
-3. Or egress OPTIONS / ops-notify leftovers.
-4. Optional: Phase D LE drill on standby-after-promote.
+1. **Promoter SSH fence** reliability (`fenced: false` often) before Auto promote.
+2. Or Phase D LE / egress OPTIONS / ops-notify polish.
+3. Optional Backup list S3 badge + Magrathea cron check.
+
+---
+
+## Next agent session notes (2026-07-21 — Magrathea live HA promote) — historical
+
+**Branch was:** superseded by Filament Backup + Fleet warm sync block above. Tips were pbx3 **`3a9dbb2`**, spa **`acfb13b`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 

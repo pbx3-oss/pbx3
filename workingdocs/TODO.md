@@ -1,13 +1,13 @@
 # PBX3 ToDo list
 
-**Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote drilled both ways). Litestream parked.  
-**Last updated:** 2026-07-21 (Magrathea HA live promote)
+**Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
+**Last updated:** 2026-07-21 (Filament Backup + Fleet warm sync)
 
 ### Suggested “what next?” order
 
-1. **SBC backup/restore UI** — replace manual-only CLI: Filament (and/or Fleet) backup / list / restore; confirm cron + S3 upload on Magrathea. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** · MkDocs **`fleet/sbc-backup-restore.md`**.  
-2. **SBC HA — promoter fence reliability** — manual promote often `fenced: false`; stop OpenSIPS on old active by instance-id public IP. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.  
-3. **SBC HA — Phase D LE after promote** / TLS drills (admin HTTPS + future WebRTC) — park until needed.  
+1. **SBC HA — promoter fence reliability** — manual promote often `fenced: false`; stop OpenSIPS on old active by instance-id public IP. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.  
+2. **SBC HA — Phase D LE after promote** / TLS drills (admin HTTPS + future WebRTC) — park until needed.  
+3. **Optional polish:** Filament Backup list “On S3?” column; confirm Magrathea `/etc/cron.d/pbx3sbc-backup` installed.  
 4. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
 5. **Ops failure notification — follow-ons** — velocity / SPA badges.  
 6. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
@@ -21,7 +21,9 @@
 
 ## Open items
 
-- [x] **SBC HA — Magrathea live pair + promote (2026-07-21):** Companion `i-00964a57ac65383d1` greenfield (VIP `advertised_address` = Magrathea EIP); warm `--db-only`; Fleet pair **`magrathea-lab`** (one pair at a time). Promote Magrathea→companion (~3 s EIP) and flip-back (~5 s); new calls OK. Soft-state: in-progress Magrathea PSTN / Asterisk-bridged calls can survive EIP move. Probe Healthy on VIP. Tips **pbx3** **`3a9dbb2`**, **pbx3spa** **`acfb13b`**. Pair card: EIP `3.93.26.82` / `eipalloc-0814f5e931414fd2a`; A `i-078cca73d4a4106bb`; B `i-00964a57ac65383d1`.
+- [x] **SBC Filament Backup + Fleet warm sync (2026-07-21):** Filament **System → Backup** (VIP holder only; list local; optional S3 upload; no restore UI). Fleet **Edge HA → Sync now** (S3-mediated active backup → standby `--db-only`) + daily `pbx3-edge-warm-sync.timer`; Sync progress spinner. Companion warm-ready: fleet token, `log-ship.env`, AWS CLI, IAM `pbx3-sbc`; scripts `check-ha-standby-ready.sh` / `bootstrap-ha-standby-warm.sh`. Lab: Backup now + Sync now OK. Tips **pbx3** **`129ef40`**, **pbx3spa** **`d021f60`**, **pbx3sbc** **`9373d30`**, **pbx3sbc-admin** **`7dda7fb`**, **pbx3-docs** **`b9fb77f`**. Restore stays CLI (scratch runbook). Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
+
+- [x] **SBC HA — Magrathea live pair + promote (2026-07-21):** Companion `i-00964a57ac65383d1` greenfield (VIP `advertised_address` = Magrathea EIP); warm `--db-only`; Fleet pair **`magrathea-lab`** (one pair at a time). Promote Magrathea→companion (~3 s EIP) and flip-back (~5 s); new calls OK. Soft-state: in-progress Magrathea PSTN / Asterisk-bridged calls can survive EIP move. Probe Healthy on VIP. Pair card: EIP `3.93.26.82` / `eipalloc-0814f5e931414fd2a`; A `i-078cca73d4a4106bb`; B `i-00964a57ac65383d1`.
 
 - [x] **Fleet Edge HA panel — settings + one-pair CRUD (2026-07-21):** `ControlSettingsStore` SBC admin API URL (DB→env); `POST/DELETE /api/v1/edge-pairs`; SPA Add/Delete (hide Add when pair exists); no FO auto-seed. Live on control.
 
@@ -33,9 +35,7 @@
 
 - [x] **SBC HA — control-plane promote modes (2026-07-21):** Gatekeeper `edge_pairs` / SIP OPTIONS probe + timer; `edge_down`/`cleared` notify; `managed`\|`auto`; auto EIP promote on FO (~18 s wall); `POST /promote`; SPA **Edge HA**. IAM `pbx3-control-gatekeeper-fo-eip`. Default **Manual** + `GATEKEEPER_EDGE_AUTO_PROMOTE=false`. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
 
-- [ ] **SBC backup/restore UI (next session):** Scripts + MkDocs exist; **no Filament panel**. Add admin UI (backup now / list local+S3 / restore with confirm) and verify Magrathea cron + S3 upload. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**. Not HA warm-sync (that stays promote path).
-
-- [ ] **SBC HA — promoter SSH fence (open):** `EdgePairPromoter` often returns `fenced: false`; ops stopped OpenSIPS on old active via instance-id → current public IP. Harden before relying on Auto.
+- [ ] **SBC HA — promoter SSH fence (open / next):** `EdgePairPromoter` often returns `fenced: false`; ops stopped OpenSIPS on old active via instance-id → current public IP. Harden before relying on Auto.
 
 - [x] **SBC scratch-box restore drill (2026-07-20):** amd64 `192.168.1.55` — install both repos → restore `20260720T172044Z` → OpenSIPS active + Filament Login 200; counts matched lab. Post-restore: align DB password + `advertised_address` + `www-data` home perms. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
 
