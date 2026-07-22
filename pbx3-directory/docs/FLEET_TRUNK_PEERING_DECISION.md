@@ -58,7 +58,7 @@ Moving trunks to the SBC **does** concentrate PSTN failure domain on the edge ti
 
 | Layer | Owns | Does not own |
 |-------|------|----------------|
-| **SBC** (`pbx3sbc`) | Carrier gateways (trusted-peer IP ACL), **inbound DID delivery** (compiled → node/setid), outbound prefix → carrier, inbound `is_from_gw`, tenant `domain` → dispatcher `setid`; `uac_registrant` only when a carrier requires it | Tenant extensions, IVR, queues, per-tenant egress *policy*, **inroute regex behaviour** |
+| **SBC** (`pbx3sbc`) | Carrier gateways (trusted-peer IP ACL), **inbound DID delivery** (compiled → node/setid), outbound prefix → carrier, inbound `is_from_gw`, tenant `domain` → dispatcher `setid`; `uac_registrant` only when a carrier requires it; **number dialect** normalize/render per Peer | Tenant extensions, IVR, queues, per-tenant egress *policy*, **inroute regex behaviour** |
 | **Node** (fleet instance) | Extensions, dialplan, CoS, route auth/CLID, **`Egress`** trunk to SBC | Carrier trunks, LCR, `path2`–`path4` failover to carriers |
 | **Tenant miniDB** | Route `dialplan` patterns, **`inroutes.pkey`** (Asterisk regex/mask), auth PIN, CLID, active flags; `path1` = `Egress` | Carrier names, registration credentials, SBC delivery rows |
 | **Fleet Console / control plane** | Orchestrates move, S3 catalog, `SbcFleetAdapter.repointTenant` | Per-call routing (never in hot path) |

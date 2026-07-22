@@ -2,7 +2,7 @@
 
 **Status:** Design (2026-07-09)  
 **Audience:** Product, fleet implementers (control-plane, pbx3-directory, pbx3sbc, pbx3api)  
-**Related:** **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §11.9–§11.10, **`FLEET_TRUNK_PEERING_DECISION.md`** §5.1, **`schema/did-record.v0.json`**
+**Related:** **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §11.9–§11.10, **`FLEET_TRUNK_PEERING_DECISION.md`** §5.1, **`NUMBER_DIALECT_REQUIREMENTS.md`** (wire +E.164 / carrier dialects), **`schema/did-record.v0.json`**
 
 ---
 
