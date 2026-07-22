@@ -653,6 +653,7 @@ Likely trip points when implementing SBC-fronted fleet + tenant mobility. Severi
 | # | Gotcha | Sev | Mitigation |
 |---|--------|-----|------------|
 | 1 | **SBC `domain.setid` repoint is instant; registrations are not.** | **H** | **Decided §11.1:** fact; 5 min reg interval; wizard drain + delayed source delete. |
+| 1b | **Skipped / partial source delete leaves orphan rows** (`ipphone` etc. with `cluster` = shortuid, no `cluster` row). SPA Tenant column shows raw shortuid. Seen after early willand/affcot moves; sandycroft wipe was clean. | **H** | Move job **must** destroy source tenant data + portable users after validate — not a forgettable manual step. Runbook Phase 8. |
 | 2 | **Dual write: SBC DB + catalog `meta.json`.** If orchestrator updates one and fails the other → split brain (console says node B, SBC still sends to A). | **H** | Single job transaction: SBC repoint + catalog only commit together; rollback on partial failure (§4.1). |
 | 3 | **Every tenant `cluster.fqdn` needs an SBC `domain` row** before phones work — not just instance/node records. Moving tenant updates `setid`; **creating** tenant on a node must also register domain on SBC. | **M** | Fleet onboarding checklist: tenant create → SBC `add-domain.sh` (or admin API). Automate from Fleet Console later. |
 
@@ -685,7 +686,7 @@ Likely trip points when implementing SBC-fronted fleet + tenant mobility. Severi
 
 | # | Gotcha | Sev | Mitigation |
 |---|--------|-----|------------|
-| 14 | **Laravel `users` (admin login) not in tenant export** — instance-scoped. Tenant move does not migrate SPA operators for that tenant. | **M** | Document; instance admins unchanged; tenant-scoped users (future) need export row. |
+| 14 | **Laravel portable customer users** travel in tenant export as `portable_users.json` (`PortableUserMobility`). Instance `admin` users stay on the box. | **Done (P4)** | See `INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md` |
 | 15 | **Route filter policy moves; instance `Egress` trunk does not** — correct by design, but **preflight must verify dest has `Egress`**, not that routes reference valid trunks. | **M** | Already in §3 Phase A; enforce in wizard. |
 
 ### SBC platform

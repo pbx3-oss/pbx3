@@ -1,18 +1,21 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-22 (session end — Twilio dialect lab)
+**Last updated:** 2026-07-22 (instance user privileges P1–P4 + sandycroft move lab)
 
 ### Suggested “what next?” order
 
-1. **Ops notify — velocity** (later) — dial-pattern rules on instance → Gatekeeper mail.  
-2. **Number dialect — paid Twilio + named recipe** (when ready) — full Twilio account; optional named Peer preset; US Egress `011:+` seed; Magrathea Peer `dialect=uk-magrathea` if still missing. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`**.  
-3. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
-4. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
-5. **S10.7 / S8.9** (parked) — cloud adapter.  
-6. **pbx3cagi** struct refactor (deferred).  
-7. **Fleet auth cookie/SSO (blocked)**.  
-8. **S7+** attested PCI — only on customer ask.  
+1. **Demo / lab soak** — retest tenant login + sandycroft on bzy; optional Commit/catalog/SBC for sandycroft.  
+2. **Tenant move — source wipe in job** (open) — bake Phase 8 into orchestrator after drain/validate.  
+3. **Login homing / tenant URL** (challenger) — prefer broker over per-move DNS; **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.  
+4. **Toll fraud / velocity** (V0 done — V1+ when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
+5. **Number dialect — paid Twilio + named recipe** (when ready).  
+6. **Instance shadowing** (parked).  
+7. **SBC SQLite + Litestream** (parked).  
+8. **S10.7 / S8.9** (parked).  
+9. **pbx3cagi** struct refactor (deferred).  
+10. **Fleet auth cookie/SSO (blocked)**.  
+11. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -21,6 +24,10 @@
 - [x] **PSTN number dialects v1 (2026-07-22):** Spec **`NUMBER_DIALECT_REQUIREMENTS.md`**; Peer Filament **Number dialect** presets (`uk-magrathea` / `uk-gamma` / `strict-plus-e164`); OpenSIPS inbound normalize + outbound render/PAID live Magrathea+companion; UK Egress seed `0:+44 00:+` (DNID only — CLID as-is). MkDocs **`fleet/number-dialect`**. Tips **pbx3** **`f36db55`**, **pbx3sbc** **`3404608`**, **pbx3sbc-admin** **`c623d0c`**, **pbx3-docs** **`12f32e3`**, spa handoff **`07c0969`**.
 
 - [x] **Twilio trial dialect lab (2026-07-22):** Elastic SIP Trunk DID **`+15139279738`** → golden **1000** (inbound Peers gwid **40–47**, `dialect=strict-plus-e164`); outbound Peer **50** `sip:aelsbc.pstn.twilio.com:5060`. Inbound + direct Twilio egress audio OK. Outbound gwlist lab end-state **`1,20,50`** (Brindley first — Magrathea may not take intl on this account). UK habit `001…` → cell via Brindley OK; trombone DID via Brindley→Magrathea → **no answer** (trial/Twilio-side). Golden **`extensions.conf`** symlink to GenAst path fixed earlier same arc. **Live DB only** — no new git tips this slice.
+
+- [x] **Toll fraud / velocity — V0 framing (2026-07-22):** Own track **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — direction of flow (CoS prevent → instance detect → Gatekeeper notify → later act); phases **V0–V5** with lab acceptance; IRSF-first; ops-notify § shrunk to pointer. **Next when prioritized:** V1 CDR data plane → V2 IRSF detect+notify.
+
+- [ ] **Toll fraud / velocity — V1+ (when prioritized):** Searchable instance CDR for windows (V1); IRSF-shaped scanner → `ops-events` → mail, notify-only (V2); rule authorship (V3); audience + digit hygiene (V4); optional act (V5). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Delivery: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
 
 - [ ] **Number dialect — paid Twilio + follow-ons:** Operator will sign up full Twilio; named Twilio Peer “recipe” (optional — today `strict-plus-e164`); US Egress `011:+` seed; Magrathea gwid **20** may still lack `dialect=uk-magrathea`; custom-dialect UI. Future product thread: global DID → EU CC on SBC (RTP bypass vs Asterisk/rtpengine stage). Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · MkDocs **`fleet/number-dialect`**.
 
@@ -151,6 +158,8 @@
 
 - [ ] **Phase S8 — Fleet (optional polish):** **S8.1–S8.6 shipped and drill-validated** (affcot **08jzwn → bzy54n**). Remaining optional: LE Sync post-cutover; **`move-tenant.sh`** if catalog workflow preferred over **`register-tenant.sh`** for first-time tenants. See **`TENANT_MIGRATION_RUNBOOK.md`**.
 
+- [ ] **Tenant move — source wipe must be in the job (2026-07-22):** Incomplete Phase 8 left orphans (`0ggybk` on golden, `9wvvnb` on bzy) — SPA shows shortuid as Tenant. Manual cleanup done. **Bake into move orchestrator:** after successful import + validate, always destroy source cluster-scoped rows **and** portable users (same as sandycroft drill). Runbook Phase 8 updated. See **`TENANT_MIGRATION_RUNBOOK.md`** Phase 8.
+
 - [x] **Phase S7 — PCI staging settled (docs 2026-07-14):** S7 = PCI-**shaped** baseline (dedicated private bucket, BPA, TLS, SSE-S3, gatekeeper presigns, non-attested wording); attested KMS/CloudTrail/Security Hub/QSA/PSP = **S7+**. Search stays SQLite on node; S3 = blobs only. **`d0801c5`**.
 
 - [x] **Phase S7 — Recordings S3 offload (2026-07-14 evening):** Dedicated bucket **`08jzwn-pbx3-recordings`** (BPA/TLS/SSE-S3); gatekeeper **`POST /api/v1/s3/presign-recordings`**; pbx3api **`pbx3:recordings-s3-upload`** + `s3_key` + S3-only play proxy; SPA **Storage** column; `policy.json` + lifecycle `class=recording` 60d; retention keeps **`s3_only`** searchable; **S7.10** **`pbx3:recordings-reconcile`** sweeper (nightly 03:15). Live on control + golden. Tips: **pbx3** **`ed484f3`**, **pbx3api** **`6f46712`**, **pbx3spa** **`6e23fa3`**. Ops: **`OPS_S3_RUNBOOK.md`** §13. **Not** PCI-attested.
@@ -189,7 +198,9 @@
 
 - [ ] **SPA session timeout (Instance Globals `sessiontimout`):** **`globals.sessiontimout`** is editable on **`SysglobalsEditView.vue`** (default **600** s) but the SPA does **not** auto-logout after that interval. Implement client-side idle/session expiry: read timeout from **`GET sysglobals`** (or auth bootstrap), reset on user activity, clear token and redirect to login when exceeded. Align with API token lifetime / revoke if needed. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`**.
 
-- [ ] **User access privileges (SPA + API — Phase 1+):** Today the app is **admin-or-nothing** (`can('admin')` route guard; all API panel routes behind **`abilities:admin`**). **Phase 0 done** (minimal gate). **Deferred coordinated upgrade:** granular abilities (`view_*` / `edit_*`), tenant row-level scope (“allowed clusters”), per-route nav gating, API middleware alignment, and **admin user management panel** (create/edit users, assign privileges — API needs stronger user/privilege endpoints first). **Do not implement SPA Phase F in isolation** — ship **pbx3api** and **pbx3spa** together. See **`pbx3spa/workingdocs/ADMIN_PANELS_AND_PERMISSIONS.md`**, **`PERMISSIONS_MINIMAL_DEPLOY_PLAN.md`**, **`AUTH_PATTERNS.md`**, **`PROJECT_PLAN.md`** § admin user management; **`PBX3SPA_CODEBASE_ANALYSIS.md`** § Phase F.
+- [x] **Instance user privileges — P0–P4 (2026-07-22):** **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Lab: sandycroft→bzy + joe; FormField create-user fix; orphan cleanup. **Open:** login-homing challenger; source wipe in move job.
+
+- [ ] **User access privileges (SPA + API — P1–P3):** Phase 0 done (admin-or-nothing gate). Implement per **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Do **not** implement SPA Phase F in isolation — ship **pbx3api** + **pbx3spa** together. Pattern: **`ADMIN_PANELS_AND_PERMISSIONS.md`**; **`AUTH_PATTERNS.md`**.
 
 - [ ] **tt_help_core cleanup — unreferenced rows (final pass):** Reverse audit found **230** `tt_help_core` rows with no SPA field help wiring (**`pbx3spa/scripts/audit-unreferenced-help.mjs`** → **`pbx3spa/workingdocs/HELP_UNREFERENCED_IN_SPA.md`**). Review each: retire legacy-only keys (e.g. DHCP server, factory-reset wizards, BLF bulk editor) vs keep for future panels. Re-run script after SPA changes; prune or rewire as needed. Pair with forward audit **`audit-field-help.mjs`** for missing help on live fields.
 

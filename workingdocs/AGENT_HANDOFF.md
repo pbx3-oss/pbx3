@@ -39,6 +39,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (index) → **TLS_IMPLEMENTATION_STEPS.md** (linear checklist) → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**Option A** spec + §11–§12). **pbx3spa**/workingdocs has stubs pointing here. |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
+| **Instance user privileges** | **pbx3spa**/workingdocs/**INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md** (P1–P4 done; login-homing challenger) → **ADMIN_PANELS_AND_PERMISSIONS.md** → **AUTH_PATTERNS.md** |
 | Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`fetch-latest-instance-backup.sh`** |
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
@@ -47,7 +48,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **SBC HA (VIP/EIP promote)** | **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — requirements locked; implement later |
 | **Edge portability (Rule 7 debt)** | **`EDGE_PORTABILITY_SCORECARD.md`** — adapter vs OpenSIPS vocabulary leaks |
 | **Fleet Egress availability** | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — R1+R2 shipped; R3 EgressFailover/cagi parked |
-| **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig + move-job + Fail2ban ban + **Egress Unavail** shipped; velocity later |
+| **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig + move-job + Fail2ban ban + **Egress Unavail** shipped; SPA badges later |
+| **Toll fraud / velocity** | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — V0 framing (direction + V0–V5); detect on instance → Gatekeeper mail; CoS = prevention |
 | **PSTN number dialects** | **`NUMBER_DIALECT_REQUIREMENTS.md`** → MkDocs **`fleet/number-dialect`** → Peer dialect + OpenSIPS `DIALECT_*`; node Egress transform = DNID/`+CC` by serving country |
 
 | **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging WS0–WS4 **done** (lab); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR **v1 done** (scripts + scratch drill + MkDocs) |
@@ -60,7 +62,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-22 — Twilio dialect lab)
+## Next agent session notes (2026-07-22 — instance user privileges P1–P4)
+
+**Branches:** all **`main`**. New tips after this session’s commits (pbx3api + pbx3spa + pbx3 docs). Live Magrathea VIP **`3.93.26.82`** / companion **`3.80.2.11`**.
+
+### Shipped
+- **Instance user privileges P1–P4:** `admin` / `tenant` / `recordings` + `allowed_clusters` + `portable`; API route groups + cluster scope + CDR/recordings clamp; SPA nav/guards, switcher, Commit for tenant, change-own-password, Users create, `loadTenantOptions` (no admin-only `GET tenants` in list `Promise.all`).
+- **P4 portable auth:** `PortableUserMobility` → `portable_users.json` in tenant zip; export `--detach-users`; import create/merge; tenant delete strips users. Unit tests.
+- **Lab:** sandycroft (`vqcwd4`) golden→bzy with `joe@gmail.com`; scoped lists OK on bzy after syncing privilege controllers. FormField `v-model` fix on User create / Account password.
+- **Orphans cleaned:** golden leftover `0ggybk` (willand); bzy leftover `9wvvnb` (affcot). Runbook Phase 8 + TODO: source wipe must be in move job after drain/validate.
+- **Login homing / tenant URL:** challenger in privileges doc (prefer no per-move DNS).
+- **Velocity V0** framing earlier same day (parked implementation).
+
+### Golden / operator follow-up
+- Deploy: **`git pull`** `/opt/pbx3api` on **08jzwn** + **bzy54n**; ensure migration/columns `allowed_clusters` + `portable`; `php artisan optimize:clear`. SPA: `npm run dev` or Pages build.
+- Sandycroft live on **bzy**; joe portable user there. Optional: Commit, catalog `move-tenant.sh`, SBC domain/setid for sandycroft.
+- Demo users: `tenant.demo@pbx3.test` on golden (**duns** / `dhbm8x`); `joe@gmail.com` on bzy (**sandycroft** / `vqcwd4`).
+
+### Resume
+- Operator soak/demo tomorrow; else bake **source wipe into move job**, or login-homing challenger, or velocity V1.
+
+---
+
+## Next agent session notes (2026-07-22 — Twilio dialect lab) — historical
 
 **Branches:** all **`main`**. Code tips unchanged this slice: **pbx3sbc** **`3404608`**, **pbx3sbc-admin** **`c623d0c`**, **pbx3-docs** **`12f32e3`**, spa **`07c0969`**, api **`5426f58`**. Handoff commit on **pbx3** after this block. Live Magrathea VIP **`3.93.26.82`** / companion **`3.80.2.11`**.
 
@@ -77,7 +101,10 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Untracked: `pbx3sbc-admin/scripts/sbcfo-greenfield-remote.sh`. Surgical deploy only on live SBC admin trees.
 
 ### Resume
-1. **Ops notify — velocity** (later) or parked shadowing/Litestream.
+- Superseded by privileges block above.
+
+### Resume
+1. **Toll fraud / velocity** — V0 framing done; next **V1** CDR / **V2** detect+notify when prioritized (`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`), or parked shadowing/Litestream.
 2. Or **paid Twilio** + named dialect recipe / US Egress `011:+`.
 3. Fail2ban Peer auto-whitelist on next carrier onboard.
 

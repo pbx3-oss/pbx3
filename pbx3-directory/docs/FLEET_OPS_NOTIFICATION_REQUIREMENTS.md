@@ -1,9 +1,9 @@
 # Fleet ops — failure notification (requirements)
 
-**Status:** **v1 + lifecycle + misconfig REGISTER + move-job + Fail2ban ban→email + Egress Unavail** (2026-07-22) — catalog `/up` probe + SMTP; maintenance/decommission mail; node REGISTER-loop → Gatekeeper; **move job failed/aborted** mail; **SBC Fail2ban ban → Gatekeeper**; **Egress Unavail/cleared** from instance qualify. Velocity / SPA badges = later.  
+**Status:** **v1 + lifecycle + misconfig REGISTER + move-job + Fail2ban ban→email + Egress Unavail** (2026-07-22) — catalog `/up` probe + SMTP; maintenance/decommission mail; node REGISTER-loop → Gatekeeper; **move job failed/aborted** mail; **SBC Fail2ban ban → Gatekeeper**; **Egress Unavail/cleared** from instance qualify. SPA badges = later.  
 **MVP:** Notify interested operators of **failure conditions**.  
-**Later (same notify plane, different detection):** **call-pattern velocity / toll-fraud style checks** — see § Velocity checking; Peer Fail2ban auto-whitelist on next carrier onboard.  
-**Related:** **`IMPLEMENTATION_PLAN.md`** § Fleet & monitoring (`last_seen_at` probe); **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (trunk health → alerts); **`DESIGN_RULES.md`** Rule 5 (directory outage ≠ instance SLA); Fleet users / abilities (Gatekeeper); instance **CoS** / dial policy (prevention layer, not a substitute for velocity alerts).
+**Later (same notify plane, different detection):** **toll fraud / call-pattern velocity** — own track **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (V0 framing); Peer Fail2ban auto-whitelist on next carrier onboard.  
+**Related:** **`IMPLEMENTATION_PLAN.md`** § Fleet & monitoring (`last_seen_at` probe); **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (trunk health → alerts); **`DESIGN_RULES.md`** Rule 5 (directory outage ≠ instance SLA); Fleet users / abilities (Gatekeeper); instance **CoS** / dial policy (prevention cousin of velocity).
 
 ---
 
@@ -26,7 +26,7 @@ We need a durable way for **interested users** to learn about failure conditions
 | **Mail transport** | **SMTP** for v1 (`Mailer` + `SmtpMailer`). No SES as HoR — portable; other providers = new `Mailer` class later |
 | **Call path** | Notify plane is **not** in the call path (**Rule 5**). Calls keep working if Gatekeeper or mail is down; operators simply go dark on alerts |
 | **Prometheus / Grafana** | **Out of this leg.** Optional later for fleet/instance **pretty metrics** (dashboards, quality time series) — not the v1 notify HoR. DIY farms often bolt these on; we may document exporters later without making Alertmanager the product subscription model. |
-| **Velocity / call-pattern checks** | **Out of v1.** Detection on the **instance** (SQLite/CDR + CoS); Gatekeeper = notify delivery; SBC = SIP abuse only. See § Velocity checking. |
+| **Velocity / call-pattern checks** | **Out of failure-notify v1.** Own track — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. This doc = delivery only. |
 
 ```mermaid
 flowchart LR
@@ -118,7 +118,7 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 - SPA in-app inbox, Slack, Teams, webhooks, PagerDuty  
 - **Prometheus / Grafana / Alertmanager** as the failure-notify plane (optional **metrics** track later — see design stance)  
 - Threat / intrusion **analytics** (SIP scan correlation, Security Hub) — **except** Fail2ban **ban → email** and whitelist automation called out in § Fail2ban (planned, not v1 probe)  
-- **Call-pattern velocity / toll-fraud detection** (see § Velocity checking — planned later, not v1)  
+- **Call-pattern velocity / toll-fraud detection** — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (not failure-notify v1)  
 - Node-local mail (each Asterisk emailing operators) as the fleet path  
 - Putting notification or directory availability into the **call path**  
 - Requiring S3 or SPA to be up for probes to run (Gatekeeper owns the job)
@@ -134,7 +134,7 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 | **Failover + shadowing** | Instance shadow SKU framing locked — **`INSTANCE_SHADOWING_REQUIREMENTS.md`**; notify may cover promote events |
 | **S7+ Security Hub** | Compliance / attested audit — not ops failure mail |
 | **Prometheus / Grafana (optional later)** | Pretty metrics / quality time series — **not** this notify leg |
-| **Velocity checking (planned later)** | Odd outbound call patterns → same notify delivery; separate detection — § below |
+| **Toll fraud / velocity** | Odd outbound call patterns → same notify delivery; detection on instance — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** |
 | **Fail2ban (SBC)** | Auto-whitelist **inbound Peers**; **manual** site IPs; **ban → email** — § below |
 
 ---
@@ -179,35 +179,9 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 
 ---
 
-## Velocity checking (planned later — not v1)
+## Velocity / toll fraud (own track)
 
-**Intent:** Spot and **report** odd outbound **call patterns** so operators hear before (or faster than) the carrier fraud desk — e.g. burst dials to a high-value / premium number, sudden volume to an unusual country, or similar velocity anomalies.
-
-**Why not v1:** Detection needs **call/dial data** (CDR, channel events, or dialplan hooks), rule definitions (destinations, rates, windows), and careful false-positive policy. That is a different system from Gatekeeper `/up` probes. **Prevention** already has a partial cousin in instance **CoS / dial policy**; velocity is **detection + notify**, not a replacement for CoS.
-
-**Reuse from this leg:** Subscriptions + email (and later webhooks) as the **delivery** plane. Prefer emitting a structured “velocity alert” event into the same notify path rather than a second mail stack.
-
-**Placement (settled 2026-07-17):**
-
-| Plane | Role for velocity / abuse |
-|-------|---------------------------|
-| **Instance** | **Detection** (+ optional later local warn/block) — next to Asterisk CDR / **SQLite searchable CDR** and CoS; knows tenant, extension, dialplan dest, billsec |
-| **SBC** | **SIP abuse** (Fail2ban, pike, door-knock) — volumetric REGISTER/INVITE; **not** dial-pattern / toll-fraud velocity |
-| **Gatekeeper** | **Notify delivery** (+ optional fleet rollup of events nodes already detected) — **not** the place that scores every call (**Rule 1**) |
-
-Searchable instance CDR without a big DB: **SQLite on-node** + CSV→S3 archive — **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR. SBC MySQL `acc` stays edge CDR only.
-
-**Sketch (when prioritized):**
-
-| Piece | Direction |
-|-------|-----------|
-| **Signals (examples)** | N outbound attempts to same high-cost prefix in T minutes; first-seen country for a tenant in window; concurrent outbound spike vs baseline |
-| **Where to analyze** | **On the instance** near CDR/Asterisk (settled); emit event to Gatekeeper for fleet ops mail |
-| **Action v1 of this track** | **Notify only** (email) — do not auto-block calls until rules and false-positive story are proven |
-| **Carrier services** | Keep as backstop; document that in-fleet velocity is complementary, not a substitute for ITSP fraud tooling |
-| **Audience** | Fleet ops ± tenant admins (product decision); may differ from instance-down subscribers |
-
-**Still open (velocity track):** rule authorship (fleet template vs per-tenant); block vs warn after notify-only proven; near-real-time vs batch CDR; interaction with CoS; privacy of dialled digits in alert bodies.
+**Moved:** Call-pattern velocity / IRSF-style detection is a **separate phase track** — see **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (V0–V5). This document remains the **delivery** plane (subscriptions + SMTP + `ops-events`).
 
 ---
 
@@ -221,7 +195,7 @@ Searchable instance CDR without a big DB: **SQLite on-node** + CSV→S3 archive 
 6. **Misconfigured phones** (REGISTER-loop notify on node; SIP ban on SBC) — **Done** (node scanner + Gatekeeper ops-events; instance Asterisk jail off).  
 7. Later (notify plane): webhooks / Slack. **Fail2ban ban→email — Done.**  
 8. **Separate track:** optional Prometheus + Grafana for metrics dashboards.  
-9. **Velocity checking track:** **instance** pattern rules → Gatekeeper notify delivery (SBC = SIP abuse only).  
+9. **Toll fraud / velocity track:** **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (instance detect → Gatekeeper deliver).  
 10. **Fail2ban Peer auto-whitelist** (next carrier onboard).
 
 ---
@@ -238,7 +212,8 @@ Searchable instance CDR without a big DB: **SQLite on-node** + CSV→S3 archive 
 
 ### Velocity / Fail2ban / misconfig REGISTER
 
-- See sections above.
+- **Velocity:** open product forks live in **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
+- Fail2ban / REGISTER: see sections above.
 
 ---
 
@@ -249,10 +224,11 @@ Searchable instance CDR without a big DB: **SQLite on-node** + CSV→S3 archive 
 | **`DESIGN_RULES.md`** | Rule 5 — directory outage ≠ instance SLA; EC2 mental model (monitor the fleet) |
 | **`IMPLEMENTATION_PLAN.md`** | § Fleet & monitoring |
 | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** | R2 preflight / alerts |
+| **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** | Toll fraud / call-pattern velocity (own track) |
 | **`ARCHITECTURE_PEER_REVIEW.md`** | Competitive fleet shape (not notify-specific) |
 | **`pbx3sbc/workingdocs/PEERING-PLAN.md`** | §0.1 Fail2ban — auto carrier inbound; manual site IPs |
 | **`CENTRAL_ADMIN_DIRECTION.md`** | Central monitoring (direction) |
 
 ---
 
-*Last updated: 2026-07-22 — Egress Unavail ops-event notify (after egress R1–R2).*
+*Last updated: 2026-07-22 — velocity moved to **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (V0 framing).*

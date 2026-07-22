@@ -544,6 +544,7 @@ Use this as the **long-tail** queue. **Active S3 work** is tracked in **§ S3 pr
 - [x] SPA fleet badges (warning/degraded) from `last_seen_at` (+ Gatekeeper `health` overlay / RTT)
 - [ ] Optional `instances/{ksuid}/tls/{backup_stamp}.json` snapshot (cert SAN history)
 - [x] **Ops failure notification (email v1)** — subscriptions + transition alerts on Gatekeeper; see **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (SMTP `Mailer`; move-job / misconfig-REGISTER later)
+- [ ] **Toll fraud / call-pattern velocity** — own track **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (V0 framing done; V1 CDR → V2 detect+notify when prioritized)
 
 ### Product & auth
 

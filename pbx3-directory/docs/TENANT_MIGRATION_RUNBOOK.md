@@ -255,21 +255,25 @@ Does **not** copy `tenants/{shortuid}/recordings/` on S3 (prefix unchanged; `ins
 
 ---
 
-## Phase 8 — Remove tenant on source (A)
+## Phase 8 — Remove tenant on source (A) — **required, not optional**
 
 On **08jzwn** after **bzy54n** is validated:
 
-1. SPA → delete tenant (not **`default`**)
+1. SPA → delete tenant (not **`default`**) — or equivalent that removes **all** cluster-scoped rows **and** portable users for that shortuid
 2. Certificates → **Sync**
 3. **Commit**
 4. Mac: `move-tenant.sh` already points catalog at **bzy54n**
+
+**Lesson (2026-07-22):** Incomplete source cleanup after willand/affcot moves left **orphan** `ipphone` / `inroutes` / … rows whose `cluster` shortuid no longer exists in `cluster`. SPA Tenant column then shows the raw shortuid (e.g. `0ggybk`, `9wvvnb`) instead of a pkey. **Sandycroft** move wiped source properly — no orphans.  
+
+**Product rule for the move job:** after successful import + validation, **always** destroy source tenant rows (and detach/remove portable users) in the same job path — do not rely on a forgotten manual Phase 8.
 
 ---
 
 ## Validation
 
 - [ ] `tenants/{shortuid}/meta.json` → `"instance_id": "3E3gAOVGBhvc6vEPTBIYCBPycIk"`
-- [ ] Login to **bzy54n** API; tenant data complete
+- [ ] Login to **bzy54n** API; tenant data complete; **source** has **zero** rows for that shortuid (no orphan extensions showing shortuid as Tenant)
 - [ ] Inbound/outbound test call after DNS + LE
 - [ ] LE on **bzy54n** includes tenant FQDN; **08jzwn** cert no longer includes it
 - [ ] `pbx3:fleet-preflight` green on both nodes

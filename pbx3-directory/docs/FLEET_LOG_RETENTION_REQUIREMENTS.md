@@ -2,7 +2,7 @@
 
 **Status:** **Phases 1–6 complete (2026-07-17)** — ship/lifecycle/siplog/SBC/control (1–4); SPA retention knobs + S3 archive list/download (5); Asterisk `cdr_sqlite3_custom` + `GET /cdr` + SPA `/cdr` (6). Phase 7 / SBC MySQL aging planning lives in **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (kickoff 2026-07-20).  
 **MVP (when prioritized):** Local hot store (~7 days) + async offload of **rotated** files to S3 cold store by class; SIP-only pcap ring on the **SBC**; instance `sys-ua-siplog` **solo only** (disabled in fleet).  
-**Related:** **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (SBC MySQL + logs aging review); **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity (instance detection; Gatekeeper delivery); pbx3api **`LogController`** (local log read) + **`CdrController`** (SQLite search); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
+**Related:** **`SBC_DATA_RETENTION_REQUIREMENTS.md`** (SBC MySQL + logs aging review); **`DESIGN_RULES.md`** Rule 1 (telephony independent of directory/S3), Rule 6 (solo without S3); **`OPS_S3_RUNBOOK.md`** §15 / backups + **`RECORDINGS_STORAGE_DESIGN.md`** (async upload cousins); **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (instance detection; Gatekeeper delivery); **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (ops-events SMTP); pbx3api **`LogController`** (local log read) + **`CdrController`** (SQLite search); instance **`sys-ua-siplog`** (`dumpcap` carousel); SBC OpenSIPS **`acc`** (MySQL CDR).
 
 ---
 
@@ -134,7 +134,7 @@ OpenSIPS writes edge CDR rows to MySQL `acc`, and the SBC Admin CDR panel reads 
 
 ### Velocity (pointer)
 
-Toll-fraud / call-pattern **detection** runs **on the instance** next to SQLite CDR + CoS. Gatekeeper = **notify delivery** only. SBC = SIP abuse (Fail2ban/pike), not dial-pattern velocity. Detail: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Velocity checking.
+Toll-fraud / call-pattern **detection** runs **on the instance** next to SQLite CDR + CoS. Gatekeeper = **notify delivery** only. SBC = SIP abuse (Fail2ban/pike), not dial-pattern velocity. Detail: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.
 
 ---
 
@@ -208,7 +208,7 @@ Pattern cousins: instance backup upload; recordings async PUT after local file e
 - HEP / Homer, RTP capture, Prometheus/Loki as home of record for logs.
 - App CSV→SQLite ingest (Phase 6 uses Asterisk native `cdr_sqlite3_custom` dual-write instead).
 - Live log follow over the API (SSE/`tail -f`) — use local paginated tail or SSH.
-- Velocity / toll-fraud analysis (settled **where**; implement later — **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**).
+- Velocity / toll-fraud analysis (own track — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**; V1 uses SQLite CDR here).
 - In-browser grep/search of S3 log objects (list+download only).
 - Auto-enabling instance trunk-side pcap override in fleet.
 - Central/fleet MySQL (or other) CDR warehouse.
