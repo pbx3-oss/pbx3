@@ -1,32 +1,38 @@
 # PBX3 ToDo list
 
-**Branch:** all **`main`**. HA FO pair live; managed promote + LE gate done. **Control-plane auto vs managed** requirements reopened. Litestream parked.  
-**Last updated:** 2026-07-21 (HA promote modes reopen)
+**Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote drilled both ways). Litestream parked.  
+**Last updated:** 2026-07-21 (Magrathea HA live promote)
 
 ### Suggested “what next?” order
 
-1. **SBC HA — control-plane probe + alert** — **shipped lab 2026-07-21** (edge_pairs + SIP probe + notify + auto EIP on FO; SPA Edge HA). Tune cooldown / LE-in-worker later. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.  
-2. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-3. **Ops failure notification — follow-ons** — velocity / SPA badges.  
-4. **Instance shadowing** (parked — framing locked) — paid min-downtime PBX twin; same VIP/promote mechanics as SBC HA. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
-5. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
-6. **S10.7 / S8.9** (parked) — cloud adapter (also for clean EIP promote).  
-7. **pbx3cagi** struct refactor (deferred).  
-8. **Fleet auth cookie/SSO (blocked)**.  
-9. **S7+** attested PCI — only on customer ask.  
-10. **SBC backup Filament UI** (deferred) — CLI + MkDocs first.  
+1. **SBC HA — promoter fence reliability** — manual promote often `fenced: false`; stop OpenSIPS on old active by instance-id public IP. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.  
+2. **SBC HA — Phase D LE after promote** / TLS drills (admin HTTPS + future WebRTC) — park until needed.  
+3. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+4. **Ops failure notification — follow-ons** — velocity / SPA badges.  
+5. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
+6. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
+7. **S10.7 / S8.9** (parked) — cloud adapter.  
+8. **pbx3cagi** struct refactor (deferred).  
+9. **Fleet auth cookie/SSO (blocked)**.  
+10. **S7+** attested PCI — only on customer ask.  
 
 ---
 
 ## Open items
 
-- [x] **SBC HA FO greenfield pair (2026-07-21):** Throwaway EC2 `t3.micro` amd64 — **sbcFO1** EIP `98.82.58.59` / `sbcfo.pbx3.com` (HTTPS LE); **sbcFO2** `35.175.113.204` (HTTP; same `advertised_address` EIP). Both: OpenSIPS + admin from `main`. SSH `opensips.pem` as `ubuntu`. Admin `admin@pbx3.com` (password reset during session — ask operator). First FO install cycle trashed; second greenfield pass clean. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`** · MkDocs **`fleet/install-sbc.md`**.
+- [x] **SBC HA — Magrathea live pair + promote (2026-07-21):** Companion `i-00964a57ac65383d1` greenfield (VIP `advertised_address` = Magrathea EIP); warm `--db-only`; Fleet pair **`magrathea-lab`** (one pair at a time). Promote Magrathea→companion (~3 s EIP) and flip-back (~5 s); new calls OK. Soft-state: in-progress Magrathea PSTN / Asterisk-bridged calls can survive EIP move. Probe Healthy on VIP. Tips **pbx3** **`3a9dbb2`**, **pbx3spa** **`acfb13b`**. Pair card: EIP `3.93.26.82` / `eipalloc-0814f5e931414fd2a`; A `i-078cca73d4a4106bb`; B `i-00964a57ac65383d1`.
+
+- [x] **Fleet Edge HA panel — settings + one-pair CRUD (2026-07-21):** `ControlSettingsStore` SBC admin API URL (DB→env); `POST/DELETE /api/v1/edge-pairs`; SPA Add/Delete (hide Add when pair exists); no FO auto-seed. Live on control.
+
+- [x] **SBC HA FO greenfield pair (2026-07-21):** Throwaway EC2 — FO1/FO2; drills done. **`fo-lab`** deleted from control after Magrathea pair. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
 
 - [x] **SBC admin greenfield installer hardening (2026-07-21):** Require `--server-name`; `APP_URL` from FQDN; optional `--letsencrypt --email`; Fail2ban+LE sudoers; idempotent Laravel migrations vs OpenSIPS pre-created sessions/cache; non-interactive composer root + DB port 3306 default; Filament **Certificates** (SPA layout kinship) + `le-admin-cert.sh` + progress spinner. Tips **pbx3sbc-admin** **`a0ded23`**, **pbx3sbc** **`c085b50`**, **pbx3-docs** **`25b3917`**.
 
-- [x] **SBC HA — warm sync + promote drill (2026-07-21):** FO1→FO2 `--db-only` warm; fence + EIP → FO2; OPTIONS ~**6 s**; Phase D LE + `https://sbcfo.pbx3.com/admin/login`. MkDocs **`fleet/sbc-ha-promote.md`**. Live Magrathea / `sbc.pbx3.com` untouched.
+- [x] **SBC HA — warm sync + promote drill (2026-07-21):** FO1→FO2 `--db-only` warm; fence + EIP → FO2; OPTIONS ~**6 s**; Phase D LE + `https://sbcfo.pbx3.com/admin/login`. MkDocs **`fleet/sbc-ha-promote.md`**.
 
-- [x] **SBC HA — control-plane promote modes (2026-07-21):** Gatekeeper `edge_pairs` / SIP OPTIONS probe + timer; `edge_down`/`cleared` notify; `managed`\|`auto`; auto EIP promote on FO (~18 s wall); `POST /promote`; SPA **Edge HA**. IAM `pbx3-control-gatekeeper-fo-eip`. Default back to **managed** + `GATEKEEPER_EDGE_AUTO_PROMOTE=false`. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
+- [x] **SBC HA — control-plane promote modes (2026-07-21):** Gatekeeper `edge_pairs` / SIP OPTIONS probe + timer; `edge_down`/`cleared` notify; `managed`\|`auto`; auto EIP promote on FO (~18 s wall); `POST /promote`; SPA **Edge HA**. IAM `pbx3-control-gatekeeper-fo-eip`. Default **Manual** + `GATEKEEPER_EDGE_AUTO_PROMOTE=false`. Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**.
+
+- [ ] **SBC HA — promoter SSH fence (open):** `EdgePairPromoter` often returns `fenced: false`; ops stopped OpenSIPS on old active via instance-id → current public IP. Harden before relying on Auto.
 
 - [x] **SBC scratch-box restore drill (2026-07-20):** amd64 `192.168.1.55` — install both repos → restore `20260720T172044Z` → OpenSIPS active + Filament Login 200; counts matched lab. Post-restore: align DB password + `advertised_address` + `www-data` home perms. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
 

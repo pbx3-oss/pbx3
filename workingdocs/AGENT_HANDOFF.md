@@ -58,25 +58,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-21 — HA FO greenfield + SBC Certificates/LE)
+## Next agent session notes (2026-07-21 — Magrathea live HA promote)
 
-**Branches:** **pbx3sbc-admin** **`a0ded23`**. **pbx3sbc** **`c085b50`**. **pbx3-docs** **`25b3917`**. **pbx3** **`1630137`** (handoff). **pbx3spa** **`a21a439`**. **pbx3api** **`6c28486`**.
+**Branches:** **pbx3** **`3a9dbb2`**. **pbx3spa** **`acfb13b`**. Gatekeeper live on **`control.pbx3.com`**.
 
 ### Shipped
-- **HA FO lab (greenfield):** EC2 pair — **FO1** `sbcfo.pbx3.com` / EIP **`98.82.58.59`** (HTTPS LE); **FO2** **`35.175.113.204`** (HTTP; `advertised_address` = same EIP). Both OpenSIPS + Filament from `main`. First dirty install cycle trashed; second pass clean. SSH **`~/Documents/pemfiles/opensips.pem`** `ubuntu@…`.
-- **Admin installer:** require `--server-name`; `APP_URL` from FQDN; `--letsencrypt --email`; sudoers (Fail2ban + LE `script *`); idempotent migrations; non-interactive composer/`DB_PORT`; Filament **Certificates** (SPA kinship) + `scripts/le-admin-cert.sh` + progress spinner. MkDocs **`fleet/install-sbc.md`**.
-- **FO1 LE:** live cert through ~2026-10-19; `APP_URL=https://sbcfo.pbx3.com`.
+- **Live Magrathea HA:** companion **`i-00964a57ac65383d1`** (warm `--db-only`); Fleet pair **`magrathea-lab`** — FQDN `sbc.pbx3.com`, EIP `3.93.26.82` / `eipalloc-0814f5e931414fd2a`, A Magrathea `i-078cca73d4a4106bb`, B companion. **Manual** promote both ways (~3–5 s EIP); Edge probe **Healthy**. `fo-lab` removed.
+- **Fleet Edge HA UX/API:** one pair at a time; Add/Delete; SBC admin API URL via SQLite (`ControlSettingsStore`, settings→env); SPA forms. AWS promote = control **instance profile** only (Rule 12).
+- **Lab lessons:** promoter often **`fenced: false`** — stop OpenSIPS on old active via instance-id → current public IP. Soft-state: Magrathea PSTN / Asterisk-local media can survive EIP move; Asterisk gets no promote event. Find post-EIP host by **instance id**, not old public IP.
+- Hygiene at session end: companion OpenSIPS **active** + warm sync (5 domains / 13 gateways).
 
 ### Golden / operator follow-up
-- Live **`sbc.pbx3.com`** still production lab edge — surgical overlay only; **do not** Magrathea-promote onto FO EIP until throwaway drill passes.
-- FO admin user **`admin@pbx3.com`** — password was reset mid-session (installer hash escape); ask operator if needed.
-- FO2: no LE yet (issue after EIP owns FO2, or leave HTTP until promote).
-- `opensips-brute-force` jail may still be missing on FO boxes (service up; jail not seeded).
+- Pair **Manual**; Magrathea **active (a)**; companion warm standby. SSH companion: `aws ec2 describe-instances --instance-ids i-00964a57ac65383d1` for current public IP (`opensips.pem`).
+- Greenfield-as-`sudo` cloned under `/root` once — relocated to `/home/ubuntu`; fix install wrapper later.
+- TLS / Phase D LE after promote + WebRTC = later. No Litestream; shadowing still parked.
 
 ### Resume
-1. **Warm sync** FO1→FO2 (catalog project + edge-authored cadence) + **promote runbook** (fence → EIP reassociate → ≤20 min drill).
+1. Harden **SSH fence** on promote (or document mandatory ops fence).
 2. Or egress OPTIONS / ops-notify leftovers.
-3. No Litestream; no vocab rename; no Filament backup UI unless asked.
+3. Optional: Phase D LE drill on standby-after-promote.
+
+---
+
+## Next agent session notes (2026-07-21 — HA FO greenfield + SBC Certificates/LE) — historical
+
+**Branch was:** superseded by Magrathea live HA block above. Tips were sbc-admin **`a0ded23`**, sbc **`c085b50`**, docs **`25b3917`**, pbx3 **`1630137`**, spa **`a21a439`**.
+
+### Resume (superseded)
+See block above.
 
 ---
 
