@@ -60,31 +60,41 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-22 — PSTN number dialects)
+## Next agent session notes (2026-07-22 — Twilio dialect lab)
 
-**Branches:** all **`main`**. Tips: **pbx3** **`0e764c1`**, **pbx3sbc** **`3404608`**, **pbx3sbc-admin** **`c623d0c`**, **pbx3-docs** **`12f32e3`** (spa/api unchanged this slice: **`6ece4b3`** / **`5426f58`**). Live Magrathea + companion (dialect OpenSIPS + Filament UI surgical deploy).
+**Branches:** all **`main`**. Code tips unchanged this slice: **pbx3sbc** **`3404608`**, **pbx3sbc-admin** **`c623d0c`**, **pbx3-docs** **`12f32e3`**, spa **`07c0969`**, api **`5426f58`**. Handoff commit on **pbx3** after this block. Live Magrathea VIP **`3.93.26.82`** / companion **`3.80.2.11`**.
 
-### Shipped
-- **Number dialects v1:** Spec **`NUMBER_DIALECT_REQUIREMENTS.md`**; Peer presets Magrathea/Gamma/strict-+E.164; OpenSIPS inbound normalize + outbound dial/CLI (PAID/RPID); UK Egress seed `0:+44 00:+` (DNID only).
-- **Docs:** MkDocs **`fleet/number-dialect`** — node access codes / `+CC` by serving country vs SBC carrier dialect; CLID as-is on node.
-- Earlier same day (still current): Egress R1+R2 qualify, ops Egress Unavail, Fleet Instances Egress badge, Backup On S3?, Phase D LE / fence.
+### Shipped (lab / ops — not new package tips)
+- **Twilio trial trunk:** DID **`+15139279738`** → golden **1000** (`dhbm8x`); inbound Peers **40–47** `dialect=strict-plus-e164`; outbound Peer **50** `aelsbc.pstn.twilio.com`; Magrathea rule prefix digit form for UK DID; golden inroutes `+E.164`.
+- **Audio OK:** Twilio inbound; Twilio direct egress (when Peer 50 was first). Cell via Brindley with UK `001…` OK.
+- **Outbound gwlist end-state:** **`1,20,50`** (Brindley → Magrathea → Twilio). Magrathea first rejected for intl on this account; Brindley exits to Magrathea upstream.
+- **Trombone DID** (out Brindley → Magrathea → Twilio DID): Brindley shows progress, **no answer** — treat as trial/Twilio-side; abandoned.
+- **Architecture (discussed, not built):** global local DIDs → EU contact centre can be SBC-only for signaling/dialects; **RTP bypass** may still need Asterisk or rtpengine stage — test later. Dialects/DID management is the reusable foundation.
 
 ### Golden / operator follow-up
-- Pair **`magrathea-lab`**: VIP Magrathea `i-078cca73d4a4106bb` / `3.93.26.82`; companion `i-00964a57ac65383d1`. SSH SBC `opensips.pem`.
-- Set Peer dialects on Magrathea/Gamma when exercising; operator plans Twilio US (+ optional EU) trunks later for multi-region lab.
-- Untracked (not committed): `pbx3sbc-admin/scripts/sbcfo-greenfield-remote.sh`.
-- SBC admin git trees on hosts remain dirty — surgical deploy only (no wholesale `git pull`).
+- Pair **`magrathea-lab`**: VIP Magrathea `i-078cca73d4a4106bb` / `3.93.26.82`; companion `i-00964a57ac65383d1` (`3.80.2.11`). SSH SBC `opensips.pem`; golden `pbx3test.pem` @ `08jzwn.pbx3.com`.
+- Magrathea gwid **20** attrs may still lack `dialect=uk-magrathea` (Twilio 50 has dialect).
+- Untracked: `pbx3sbc-admin/scripts/sbcfo-greenfield-remote.sh`. Surgical deploy only on live SBC admin trees.
 
 ### Resume
 1. **Ops notify — velocity** (later) or parked shadowing/Litestream.
-2. Or number-dialect lab when Twilio trunks exist (US Egress `011:+` seed).
+2. Or **paid Twilio** + named dialect recipe / US Egress `011:+`.
 3. Fail2ban Peer auto-whitelist on next carrier onboard.
+
+---
+
+## Next agent session notes (2026-07-22 — PSTN number dialects) — historical
+
+**Tips were:** pbx3 dialects **`0e764c1`** / handoff **`f36db55`**, sbc **`3404608`**, sbc-admin **`c623d0c`**, docs **`12f32e3`**. Superseded by Twilio lab block above.
+
+### Resume (superseded)
+See block above.
 
 ---
 
 ## Next agent session notes (2026-07-22 — Egress qualify + ops notify) — historical
 
-**Tips were:** pbx3 **`d377631`**, spa **`8b9fc83`**, api **`5426f58`**, sbc **`b6135b2`**, sbc-admin **`69e1893`**. Superseded by number-dialects block above.
+**Tips were:** pbx3 **`d377631`**, spa **`8b9fc83`**, api **`5426f58`**, sbc **`b6135b2`**, sbc-admin **`69e1893`**. Superseded.
 
 ### Resume (superseded)
 See block above.

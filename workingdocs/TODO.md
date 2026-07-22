@@ -1,12 +1,12 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-22 (session end — number dialects)
+**Last updated:** 2026-07-22 (session end — Twilio dialect lab)
 
 ### Suggested “what next?” order
 
 1. **Ops notify — velocity** (later) — dial-pattern rules on instance → Gatekeeper mail.  
-2. **Number dialect lab** (when ready) — Twilio US (+ optional EU) trunk to exercise Peer dialects / strip; US Egress `011:+` seed later. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`**.  
+2. **Number dialect — paid Twilio + named recipe** (when ready) — full Twilio account; optional named Peer preset; US Egress `011:+` seed; Magrathea Peer `dialect=uk-magrathea` if still missing. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`**.  
 3. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
 4. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
 5. **S10.7 / S8.9** (parked) — cloud adapter.  
@@ -18,9 +18,11 @@
 
 ## Open items
 
-- [x] **PSTN number dialects v1 (2026-07-22):** Spec **`NUMBER_DIALECT_REQUIREMENTS.md`**; Peer Filament **Number dialect** presets (`uk-magrathea` / `uk-gamma` / `strict-plus-e164`); OpenSIPS inbound normalize + outbound render/PAID live Magrathea+companion; UK Egress seed `0:+44 00:+` (DNID only — CLID as-is). MkDocs **`fleet/number-dialect`**. Lab exercise (Twilio US/EU) + US node seed + custom-dialect UI deferred. Tips **pbx3** **`0e764c1`**, **pbx3sbc** **`3404608`**, **pbx3sbc-admin** **`c623d0c`**, **pbx3-docs** **`12f32e3`**.
+- [x] **PSTN number dialects v1 (2026-07-22):** Spec **`NUMBER_DIALECT_REQUIREMENTS.md`**; Peer Filament **Number dialect** presets (`uk-magrathea` / `uk-gamma` / `strict-plus-e164`); OpenSIPS inbound normalize + outbound render/PAID live Magrathea+companion; UK Egress seed `0:+44 00:+` (DNID only — CLID as-is). MkDocs **`fleet/number-dialect`**. Tips **pbx3** **`f36db55`**, **pbx3sbc** **`3404608`**, **pbx3sbc-admin** **`c623d0c`**, **pbx3-docs** **`12f32e3`**, spa handoff **`07c0969`**.
 
-- [ ] **Number dialect — multi-region lab (parked until Twilio trunks):** Operator will add US (+ optional EU) trunk; then exercise dialect/strip matrices. Follow-ons: US Egress transform seed (`011:+`); node CLID mask (still as-is); custom dialect UI. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · MkDocs **`fleet/number-dialect`**.
+- [x] **Twilio trial dialect lab (2026-07-22):** Elastic SIP Trunk DID **`+15139279738`** → golden **1000** (inbound Peers gwid **40–47**, `dialect=strict-plus-e164`); outbound Peer **50** `sip:aelsbc.pstn.twilio.com:5060`. Inbound + direct Twilio egress audio OK. Outbound gwlist lab end-state **`1,20,50`** (Brindley first — Magrathea may not take intl on this account). UK habit `001…` → cell via Brindley OK; trombone DID via Brindley→Magrathea → **no answer** (trial/Twilio-side). Golden **`extensions.conf`** symlink to GenAst path fixed earlier same arc. **Live DB only** — no new git tips this slice.
+
+- [ ] **Number dialect — paid Twilio + follow-ons:** Operator will sign up full Twilio; named Twilio Peer “recipe” (optional — today `strict-plus-e164`); US Egress `011:+` seed; Magrathea gwid **20** may still lack `dialect=uk-magrathea`; custom-dialect UI. Future product thread: global DID → EU CC on SBC (RTP bypass vs Asterisk/rtpengine stage). Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · MkDocs **`fleet/number-dialect`**.
 
 - [x] **Fleet Instances Egress badge (2026-07-22):** Gatekeeper probe → `GET /api/fleet/egress-qualify` (fleet.token); catalog `health.egress_*`; SPA Fleet Instances shows **Egress Avail/Unavail**. Ops-notify follow-ons (Egress mail + SPA badges) closed for now.
 
