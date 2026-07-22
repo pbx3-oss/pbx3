@@ -360,7 +360,7 @@ final class NotifyDispatcher
             ."FQDN: {$fqdn}\n"
             ."New active member: {$member}\n"
             ."Instance: {$inst}\n"
-            ."Next: Phase D — Let's Encrypt on the new active (cast-iron runbook).\n";
+            ."Check Fleet Edge HA for fence + Phase D LE result; if LE failed run cast-iron Phase D.\n";
 
         $this->send($recipients, $subject, $this->withUiLink($body, '/fleet/edge'));
     }
