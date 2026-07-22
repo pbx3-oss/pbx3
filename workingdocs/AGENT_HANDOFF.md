@@ -46,8 +46,9 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **SBC HA (VIP/EIP promote)** | **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — requirements locked; implement later |
 | **Edge portability (Rule 7 debt)** | **`EDGE_PORTABILITY_SCORECARD.md`** — adapter vs OpenSIPS vocabulary leaks |
-| **Fleet Egress availability** (future) | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — OPTIONS qualify, optional EgressFailover, health UI |
-| **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig REGISTER shipped; move-job / Fail2ban ban→email / velocity later |
+| **Fleet Egress availability** | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — R1+R2 shipped; R3 EgressFailover/cagi parked |
+| **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig + move-job + Fail2ban ban + **Egress Unavail** shipped; velocity later |
+
 | **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging WS0–WS4 **done** (lab); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR **v1 done** (scripts + scratch drill + MkDocs) |
 | **Downstream peer REGISTER (future)** | **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class; no shared OpenSIPS image; interim Asterisk-proxied workaround only |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
@@ -58,7 +59,31 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-21 — Filament Backup + Fleet warm sync)
+## Next agent session notes (2026-07-22 — Egress qualify + ops notify)
+
+**Branches:** all **`main`**. Tips: **pbx3** **`d377631`**, **pbx3spa** **`8b9fc83`**, **pbx3api** **`5426f58`**, **pbx3sbc** **`b6135b2`**, **pbx3sbc-admin** **`69e1893`**. Live Magrathea HA + golden/bzy + control.
+
+### Shipped
+- **Egress R1:** OpenSIPS OPTIONS 200 from dispatcher (after `is_from_gw`); Magrathea + companion. Lab nodes often hit carrier path when also in `dr_gateways`.
+- **Qualify:** egress template `qualify_frequency=30`; golden + bzy **Avail**.
+- **R2 SPA:** Trunks Latency; Routes list/edit **Egress Avail** badge; preflight **Egress qualify**.
+- **Ops Egress Unavail mail:** `pbx3:ops-egress-qualify` → Gatekeeper `egress_unavail` down/cleared; lab-proven (stop/start OpenSIPS on VIP).
+- **Fleet Instances Egress badge:** probe `GET /api/fleet/egress-qualify` (fleet.token) → catalog `health.egress_*`.
+- Earlier same day: Filament Backup **On S3?**; `le-admin-cert` PHP-FPM socket fix (8.3 vs 8.4); Phase D LE / promoter fence already on `main` from prior work.
+
+### Golden / operator follow-up
+- Pair **`magrathea-lab`**: VIP Magrathea `i-078cca73d4a4106bb` / `3.93.26.82`; companion `i-00964a57ac65383d1`. SSH SBC `opensips.pem`; control/nodes `pbx3test.pem`.
+- Nodes: `PBX3_OPS_EGRESS_UNAVAIL_NOTIFY=true` on golden + bzy.
+- Untracked (not committed): `pbx3sbc-admin/scripts/sbcfo-greenfield-remote.sh`.
+
+### Resume
+1. **Ops notify — velocity** (later) or parked tracks (shadowing / Litestream).
+2. Or **R3** EgressFailover + cagi if product wants node-side failover beyond VIP HA.
+3. Fail2ban Peer auto-whitelist on next carrier onboard.
+
+---
+
+## Next agent session notes (2026-07-21 — Filament Backup + Fleet warm sync) — historical
 
 **Branches:** **pbx3** **`129ef40`**, **pbx3spa** **`d021f60`**, **pbx3sbc** **`9373d30`**, **pbx3sbc-admin** **`7dda7fb`**, **pbx3-docs** **`b9fb77f`**. Live on Magrathea / companion / control.
 

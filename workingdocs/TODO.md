@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-22 (Fleet Instances Egress badge)
+**Last updated:** 2026-07-22 (session end — Egress + ops notify)
 
 ### Suggested “what next?” order
 
