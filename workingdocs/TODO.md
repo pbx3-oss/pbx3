@@ -1,23 +1,24 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-22 (Phase D LE after promote)
+**Last updated:** 2026-07-22 (Backup “On S3?” column)
 
 ### Suggested “what next?” order
 
-1. **Optional polish:** Filament Backup list “On S3?” column; confirm Magrathea `/etc/cron.d/pbx3sbc-backup` installed.  
-2. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
-3. **Ops failure notification — follow-ons** — velocity / SPA badges.  
-4. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
-5. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
-6. **S10.7 / S8.9** (parked) — cloud adapter.  
-7. **pbx3cagi** struct refactor (deferred).  
-8. **Fleet auth cookie/SSO (blocked)**.  
-9. **S7+** attested PCI — only on customer ask.  
+1. **Egress availability (future)** — OPTIONS qualify / trunk health — **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**.  
+2. **Ops failure notification — follow-ons** — velocity / SPA badges.  
+3. **Instance shadowing** (parked — framing locked) — paid PBX twin; same VIP/promote mechanics. Spec: **`INSTANCE_SHADOWING_REQUIREMENTS.md`**.  
+4. **SBC SQLite + Litestream** (parked) — MariaDB is current; see **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.  
+5. **S10.7 / S8.9** (parked) — cloud adapter.  
+6. **pbx3cagi** struct refactor (deferred).  
+7. **Fleet auth cookie/SSO (blocked)**.  
+8. **S7+** attested PCI — only on customer ask.  
 
 ---
 
 ## Open items
+
+- [x] **Filament Backup “On S3?” + Magrathea cron (2026-07-22):** `sbc-backup-panel.sh list` joins local stamps to S3 prefixes; Filament **System → Backup** shows Yes/No. Live on VIP Magrathea. Cron `/etc/cron.d/pbx3sbc-backup` confirmed (`0 2 * * *` scheduled `--upload`).
 
 - [x] **SBC HA — Phase D LE after promote (2026-07-22):** Promote runs `le-admin-cert.sh setup` on new active via SSH (`GATEKEEPER_EDGE_LE_EMAIL`, default on). `le-admin-cert` nginx keeps `/api/` on HTTP for warm-sync. Lab: companion LE live — `https://sbc.pbx3.com/admin/login` **200**. Fleet `POST /api/fleet/le-setup` also added (FPM/certbot flaky — promote uses SSH). Spec: **`SBC_HA_FAILOVER_REQUIREMENTS.md`** · **`CONTROL_HOST.md`**.
 
