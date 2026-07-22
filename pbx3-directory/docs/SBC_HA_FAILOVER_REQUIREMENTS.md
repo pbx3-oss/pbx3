@@ -145,7 +145,7 @@ Promote moves the address. Standby **local** MariaDB does **not** inherit live `
 | **Probe source** | Control host (or equivalent) — independent of either SBC member |
 | **Failure threshold** | Configurable **N** misses + interval; default conservative (favour avoiding flaps over shaving minutes) |
 | **Cooldown / anti-flap** | No second auto-promote within cooldown; record promote job / audit trail |
-| **Fence** | Stop OpenSIPS on old active if SSH/API reachable; if unreachable, still move EIP (accept split until old box dies or is fenced later) |
+| **Fence** | Stop OpenSIPS on old active if SSH reachable (`GATEKEEPER_EDGE_SSH_KEY` on control → instance public IP → `sudo -n systemctl stop opensips`). Return `fenced` + `fence_detail`. If unreachable / key unset, still move EIP (accept split until old box dies or is fenced later). |
 | **Standby SIP preflight (managed)** | Before Fleet **Promote now**, control SIP-OPTIONS the **standby instance public IP** (not the VIP). If no usable response: **warn** and require explicit confirm; do not hard-block. AWS Console/CLI break-glass stays ungated. Probe may false-fail when `advertised_address` is the EIP — warning is advisory. |
 | **Alerts** | Always on failure detection; on auto promote success/failure; reuse ops-notify delivery where practical |
 | **Mode storage** | Fleet/catalog fact for the edge pair (`managed` \| `auto`) — HoR outside either SBC DB |

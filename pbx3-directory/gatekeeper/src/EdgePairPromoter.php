@@ -104,6 +104,7 @@ final class EdgePairPromoter
      *   standby_instance_id:string,
      *   error:?string,
      *   fenced:bool,
+     *   fence_detail:?string,
      *   standby_sip?:array<string, mixed>
      * }
      */
@@ -121,8 +122,14 @@ final class EdgePairPromoter
         $region = (string) ($pair['region'] ?? 'us-east-1');
 
         $fenced = false;
+        $fenceDetail = null;
         if ($fence) {
-            $fenced = $this->tryFence($activeId);
+            $fenceResult = $this->fenceInstance($activeId, $region);
+            $fenced = $fenceResult['ok'];
+            $fenceDetail = $fenceResult['detail'];
+            if (! $fenced) {
+                error_log('[gatekeeper-edge] fence failed for '.$activeId.': '.$fenceDetail);
+            }
         }
 
         try {
@@ -142,6 +149,7 @@ final class EdgePairPromoter
                 'standby_instance_id' => $standbyId,
                 'error' => $e->getAwsErrorMessage() ?: $e->getMessage(),
                 'fenced' => $fenced,
+                'fence_detail' => $fenceDetail,
                 'standby_sip' => $standbySip,
             ];
         } catch (\Throwable $e) {
@@ -151,6 +159,7 @@ final class EdgePairPromoter
                 'standby_instance_id' => $standbyId,
                 'error' => $e->getMessage(),
                 'fenced' => $fenced,
+                'fence_detail' => $fenceDetail,
                 'standby_sip' => $standbySip,
             ];
         }
@@ -170,39 +179,85 @@ final class EdgePairPromoter
             'standby_instance_id' => $standbyId,
             'error' => null,
             'fenced' => $fenced,
+            'fence_detail' => $fenceDetail,
             'standby_sip' => $standbySip,
         ];
     }
 
-    private function tryFence(string $instanceId): bool
+    /**
+     * Best-effort: SSH to instance public IP and stop OpenSIPS.
+     * Non-fatal for promote — EIP still moves if this fails.
+     *
+     * @return array{ok:bool, detail:string, host:?string}
+     */
+    public function fenceInstance(string $instanceId, string $region = 'us-east-1'): array
     {
+        $instanceId = trim($instanceId);
         $key = trim((string) (getenv('GATEKEEPER_EDGE_SSH_KEY') ?: ''));
-        if ($key === '' || ! is_file($key)) {
-            return false;
+        if ($key === '') {
+            return [
+                'ok' => false,
+                'detail' => 'GATEKEEPER_EDGE_SSH_KEY unset',
+                'host' => null,
+            ];
         }
-        // Best-effort: resolve public IP and stop opensips. Failures are non-fatal.
+        if (! is_file($key)) {
+            return [
+                'ok' => false,
+                'detail' => 'SSH key file missing: '.$key,
+                'host' => null,
+            ];
+        }
+        if (! is_readable($key)) {
+            return [
+                'ok' => false,
+                'detail' => 'SSH key not readable by process user: '.$key,
+                'host' => null,
+            ];
+        }
+
         try {
-            $region = (string) (getenv('AWS_DEFAULT_REGION') ?: 'us-east-1');
-            $client = $this->ec2 ?? new Ec2Client([
-                'version' => 'latest',
-                'region' => $region,
-            ]);
-            $res = $client->describeInstances(['InstanceIds' => [$instanceId]]);
-            $ip = $res['Reservations'][0]['Instances'][0]['PublicIpAddress'] ?? null;
-            if (! is_string($ip) || $ip === '') {
-                return false;
+            $region = $region !== '' ? $region : (string) (getenv('AWS_DEFAULT_REGION') ?: 'us-east-1');
+            $ip = $this->publicIpForInstance($instanceId, $region);
+            if ($ip === null) {
+                return [
+                    'ok' => false,
+                    'detail' => 'no public IP for '.$instanceId,
+                    'host' => null,
+                ];
             }
+            $remote = 'sudo -n systemctl stop opensips';
             $cmd = sprintf(
-                'ssh -i %s -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=no ubuntu@%s %s',
+                'ssh -i %s -o BatchMode=yes -o IdentitiesOnly=yes -o ConnectTimeout=8'
+                .' -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+                .' ubuntu@%s %s',
                 escapeshellarg($key),
                 escapeshellarg($ip),
-                escapeshellarg('sudo systemctl stop opensips')
+                escapeshellarg($remote)
             );
-            exec($cmd.' 2>/dev/null', $out, $code);
+            $out = [];
+            $code = 1;
+            exec($cmd.' 2>&1', $out, $code);
+            $tail = trim(implode(' ', array_slice($out, -3)));
+            if ($code === 0) {
+                return [
+                    'ok' => true,
+                    'detail' => 'stopped opensips on '.$instanceId.' @ '.$ip,
+                    'host' => $ip,
+                ];
+            }
 
-            return $code === 0;
-        } catch (\Throwable) {
-            return false;
+            return [
+                'ok' => false,
+                'detail' => 'ssh exit '.$code.' to '.$ip.($tail !== '' ? ': '.$tail : ''),
+                'host' => $ip,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'ok' => false,
+                'detail' => 'exception: '.$e->getMessage(),
+                'host' => null,
+            ];
         }
     }
 
