@@ -7,7 +7,7 @@
 
 1. **Demo / lab soak** — retest tenant login + sandycroft on bzy; optional Commit/catalog/SBC for sandycroft.  
 2. **Tenant move — source wipe in job** (open) — bake Phase 8 into orchestrator after drain/validate.  
-3. **Login homing / tenant URL** (challenger) — prefer broker over per-move DNS; **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.  
+3. **Login homing B′** (challenger, leaning) — shortuid **or** tenant URL → directory home → instance login; **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.  
 4. **Toll fraud / velocity** (V0 done — V1+ when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
 5. **Number dialect — paid Twilio + named recipe** (when ready).  
 6. **Instance shadowing** (parked).  

@@ -71,7 +71,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **P4 portable auth:** `PortableUserMobility` → `portable_users.json` in tenant zip; export `--detach-users`; import create/merge; tenant delete strips users. Unit tests.
 - **Lab:** sandycroft (`vqcwd4`) golden→bzy with `joe@gmail.com`; scoped lists OK on bzy after syncing privilege controllers. FormField `v-model` fix on User create / Account password.
 - **Orphans cleaned:** golden leftover `0ggybk` (willand); bzy leftover `9wvvnb` (affcot). Runbook Phase 8 + TODO: source wipe must be in move job after drain/validate.
-- **Login homing / tenant URL:** challenger in privileges doc (prefer no per-move DNS).
+- **Login homing:** challenger **B′ leaning** — login with **tenant shortuid or tenant URL/FQDN** → directory home lookup → instance Sanctum (no per-move DNS). See **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.
 - **Velocity V0** framing earlier same day (parked implementation).
 
 ### Golden / operator follow-up
@@ -80,7 +80,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Demo users: `tenant.demo@pbx3.test` on golden (**duns** / `dhbm8x`); `joe@gmail.com` on bzy (**sandycroft** / `vqcwd4`).
 
 ### Resume
-- Operator soak/demo tomorrow; else bake **source wipe into move job**, or login-homing challenger, or velocity V1.
+- Operator soak/demo; else bake **source wipe into move job**, or implement login-homing **B′**, or velocity V1.
 
 ---
 
