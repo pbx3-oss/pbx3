@@ -41,9 +41,9 @@ final class EdgeWarmSync
             return $this->fail(null, null, null, 'edge pair disabled');
         }
 
-        $activeBase = ControlSettingsStore::sbcAdminApiUrl();
+        $activeBase = $this->promoter->activeAdminApiBase($pair);
         if ($activeBase === '') {
-            return $this->fail(null, null, null, 'SBC admin API URL not set');
+            return $this->fail(null, null, null, 'cannot resolve active SBC admin API base');
         }
 
         try {

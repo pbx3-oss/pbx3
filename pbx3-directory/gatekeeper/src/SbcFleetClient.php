@@ -25,6 +25,8 @@ final class SbcFleetClient
         $this->http = $http ?? new Client([
             'timeout' => 60,
             'http_errors' => false,
+            // Warm-sync uses http://<member-ip>/api — do not follow 301→https://IP (LE cert is FQDN-only).
+            'allow_redirects' => false,
             'verify' => filter_var(getenv('PBX3_FLEET_HTTP_VERIFY') ?: 'true', FILTER_VALIDATE_BOOL),
         ]);
     }

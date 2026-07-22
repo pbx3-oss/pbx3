@@ -285,8 +285,38 @@ final class EdgePairPromoter
     }
 
     /**
+     * Active Filament/API base (HTTP on current public IP — LE lives on VIP FQDN).
+     * Env GATEKEEPER_EDGE_STANDBY_API_SCHEME also applies (default http).
+     *
+     * @param  array<string, mixed>  $pair
+     */
+    public function activeAdminApiBase(array $pair): string
+    {
+        $active = (string) ($pair['active_member'] ?? 'a');
+        $activeId = $active === 'a'
+            ? (string) $pair['member_a_instance_id']
+            : (string) $pair['member_b_instance_id'];
+        $region = (string) ($pair['region'] ?? 'us-east-1');
+        $ip = $this->publicIpForInstance($activeId, $region);
+        if ($ip === null) {
+            throw new \RuntimeException(
+                "cannot resolve public IP for active instance {$activeId}",
+                502
+            );
+        }
+        $scheme = strtolower(trim((string) (getenv('GATEKEEPER_EDGE_STANDBY_API_SCHEME') ?: 'http')));
+        if ($scheme !== 'http' && $scheme !== 'https') {
+            $scheme = 'http';
+        }
+
+        return $scheme.'://'.$ip.'/api';
+    }
+
+    /**
      * Standby Filament/API base (HTTP on public IP — LE lives on VIP FQDN).
      * Env GATEKEEPER_EDGE_STANDBY_API_SCHEME=https to override (default http).
+     *
+     * @param  array<string, mixed>  $pair
      */
     public function standbyAdminApiBase(array $pair): string
     {
