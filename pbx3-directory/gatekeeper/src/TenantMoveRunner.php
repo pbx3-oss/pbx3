@@ -475,7 +475,7 @@ final class TenantMoveRunner
                 $job,
                 'awaiting_certs',
                 'ok',
-                'cert sync failed (non-blocking): '.$e->getMessage()
+                'LE sync skipped — sync from SPA later ('.$e->getMessage().')'
             );
         }
 
@@ -530,7 +530,7 @@ final class TenantMoveRunner
                 ]);
                 $certNote = 'cert sync ok';
             } catch (\Throwable $e) {
-                $certNote = 'cert sync failed (non-blocking): '.$e->getMessage();
+                $certNote = 'LE sync skipped — sync from SPA later ('.$e->getMessage().')';
                 error_log('[tenant-move] source cert sync after wipe: '.$e->getMessage());
             }
         }
