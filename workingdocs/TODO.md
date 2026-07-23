@@ -8,7 +8,7 @@
 1. **Login homing B′** (challenger, leaning) — shortuid **or** tenant URL → directory home → instance login; **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.  
 2. **Toll fraud / velocity** (V0 done — V1+ when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
-4. **Drain affordance — tenant-scoped channel count** (nice-to-have, parked) — see open item below.  
+4. **Drain affordance — tenant-scoped channel count → wipe-when-drained** (nice-to-have, parked) — see open item below.  
 5. **Instance shadowing** (parked).  
 6. **SBC SQLite + Litestream** (parked).  
 7. **S10.7 / S8.9** (parked).  
@@ -20,7 +20,7 @@
 
 ## Open items
 
-- [ ] **Drain affordance — tenant-scoped “up calls” (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. Best-effort for drain-before-wipe — do not block wipe on zero. Not built.
+- [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 
 - [x] **PSTN number dialects v1 (2026-07-22):** Spec **`NUMBER_DIALECT_REQUIREMENTS.md`**; Peer Filament **Number dialect** presets (`uk-magrathea` / `uk-gamma` / `strict-plus-e164`); OpenSIPS inbound normalize + outbound render/PAID live Magrathea+companion; UK Egress seed `0:+44 00:+` (DNID only — CLID as-is). MkDocs **`fleet/number-dialect`**. Tips **pbx3** **`f36db55`**, **pbx3sbc** **`3404608`**, **pbx3sbc-admin** **`c623d0c`**, **pbx3-docs** **`12f32e3`**, spa handoff **`07c0969`**.
 
