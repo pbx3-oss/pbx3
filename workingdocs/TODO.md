@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-23 (fleet multi-tenant phone dial / SBC AoR; login-homing B′ next)
+**Last updated:** 2026-07-23 (B′ login-homing design notes; implement when prioritized)
 
 ### Suggested “what next?” order
 
-1. **Login homing B′** (challenger, leaning) — shortuid **or** tenant URL → directory home → instance login; **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.  
+1. **Login homing B′** (thin slice on branch **`login-homing-bp`**) — rollup + SPA tenant door; **lab:** publish `catalog/tenant-home.json` then try Sign in to tenant. Spec: **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.  
 2. **Toll fraud / velocity** (V0 done — V1+ when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
 4. **Drain affordance — tenant-scoped channel count → wipe-when-drained** (nice-to-have, parked) — see open item below.  
@@ -204,7 +204,9 @@
 
 - [ ] **SPA session timeout (Instance Globals `sessiontimout`):** **`globals.sessiontimout`** is editable on **`SysglobalsEditView.vue`** (default **600** s) but the SPA does **not** auto-logout after that interval. Implement client-side idle/session expiry: read timeout from **`GET sysglobals`** (or auth bootstrap), reset on user activity, clear token and redirect to login when exceeded. Align with API token lifetime / revoke if needed. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`**.
 
-- [x] **Instance user privileges — P0–P4 (2026-07-22):** **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Lab: sandycroft→bzy + joe; FormField create-user fix; orphan cleanup. **Open:** login-homing challenger **B′** (source wipe in move job done 2026-07-23).
+- [x] **Instance user privileges — P0–P4 (2026-07-22):** **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Lab: sandycroft→bzy + joe; FormField create-user fix; orphan cleanup. Source wipe in move job done 2026-07-23.
+
+- [ ] **Login homing B′ (thin slice on `login-homing-bp`):** `catalog/tenant-home.json` writer (Gatekeeper register/move + Mac `rebuild-tenant-home.sh` + `POST …/tenant-home/rebuild`); SPA three-door + tenant resolve. **Ops:** run rebuild once on lab bucket before customer-path QA. Spec: **`pbx3spa/workingdocs/INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`** § Login homing.
 
 - [ ] **User access privileges (SPA + API — P1–P3):** Phase 0 done (admin-or-nothing gate). Implement per **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Do **not** implement SPA Phase F in isolation — ship **pbx3api** + **pbx3spa** together. Pattern: **`ADMIN_PANELS_AND_PERMISSIONS.md`**; **`AUTH_PATTERNS.md`**.
 

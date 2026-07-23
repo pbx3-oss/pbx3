@@ -1,6 +1,6 @@
 # PBX3 fleet gatekeeper (Phase B′ — slice 1)
 
-Minimal **registrar-as-a-service** — sole writer for `catalog/instance-index.json` and `tenants/*/meta.json`.
+Minimal **registrar-as-a-service** — sole writer for `catalog/instance-index.json`, `catalog/tenant-home.json` (B′ login rollup), and `tenants/*/meta.json`.
 
 Replaces direct `aws s3 cp` from Mac scripts for catalog mutations (calls still fail-safe if gatekeeper is down).
 
@@ -82,6 +82,7 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 |--------|------|---------|
 | `GET` | `/health` | Liveness (no auth) |
 | `GET` | `/api/v1/catalog` | Read instance index |
+| `POST` | `/api/v1/catalog/tenant-home/rebuild` | Rebuild `catalog/tenant-home.json` from tenant metas (`fleet_instances`) — also runs automatically on tenant register/move |
 | `GET` | `/api/v1/fleet-users` | S10.6 list fleet users + ability vocab (`fleet_admin`) |
 | `POST` | `/api/v1/fleet-users` | Create user `{email,password,name?,abilities?}` |
 | `PATCH` | `/api/v1/fleet-users/{id}` | Update name / password / abilities / `notify_failures` |

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/tenant-home.v0.json",
+  "title": "PBX3 tenant home index (v0)",
+  "description": "catalog/tenant-home.json — compiled rollup for SPA B′ login (shortuid/cname → instance_id). Join to instance-index for api_base_url. Source of truth remains tenants/*/meta.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "updated_at", "tenants"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "tenants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["shortuid", "cname", "instance_id"],
+        "properties": {
+          "shortuid": { "type": "string", "minLength": 1 },
+          "cname": {
+            "type": "string",
+            "minLength": 1,
+            "description": "cluster.fqdn / dialable tenant host; may equal shortuid if unknown"
+          },
+          "instance_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Hosting node globals.id (KSUID)"
+          }
+        }
+      }
+    }
+  }
+}

@@ -17,6 +17,8 @@ final class S3Registrar
 
     private const CATALOG_KEY = 'catalog/instance-index.json';
 
+    private const TENANT_HOME_KEY = 'catalog/tenant-home.json';
+
     /** @var list<string> */
     public const STATUSES = ['active', 'maintenance', 'decommissioned'];
 
@@ -280,6 +282,7 @@ final class S3Registrar
             'updated_at' => $now,
         ]);
         $this->writeJson($metaKey, $meta);
+        $this->rebuildTenantHomeIndex();
 
         return $meta;
     }
@@ -305,8 +308,64 @@ final class S3Registrar
         $meta['moved_at'] = $now;
         $meta['updated_at'] = $now;
         $this->writeJson($metaKey, $meta);
+        $this->rebuildTenantHomeIndex();
 
         return $meta;
+    }
+
+    /**
+     * B′ login homing — compiled public rollup for SPA tenant-id resolve.
+     * Source of truth remains tenants/{shortuid}/meta.json.
+     *
+     * @return array{version: int, updated_at: string, tenants: list<array{shortuid: string, cname: string, instance_id: string}>}
+     */
+    public function rebuildTenantHomeIndex(): array
+    {
+        $index = self::buildTenantHomeIndex($this->listTenants(), $this->nowIso());
+        $this->writeJson(self::TENANT_HOME_KEY, $index);
+
+        return $index;
+    }
+
+    /**
+     * Pure helper for tests — omit decommissioned; require shortuid + instance_id.
+     *
+     * @param  list<array<string, mixed>>  $tenantMetas
+     * @return array{version: int, updated_at: string, tenants: list<array{shortuid: string, cname: string, instance_id: string}>}
+     */
+    public static function buildTenantHomeIndex(array $tenantMetas, ?string $updatedAt = null): array
+    {
+        $rows = [];
+        foreach ($tenantMetas as $meta) {
+            if (! is_array($meta)) {
+                continue;
+            }
+            $status = strtolower((string) ($meta['status'] ?? 'active'));
+            if ($status === 'decommissioned') {
+                continue;
+            }
+            $shortuid = strtolower(trim((string) ($meta['shortuid'] ?? $meta['tenant_shortuid'] ?? '')));
+            $instanceId = trim((string) ($meta['instance_id'] ?? ''));
+            if ($shortuid === '' || $instanceId === '') {
+                continue;
+            }
+            $cname = trim((string) ($meta['cname'] ?? $meta['fqdn'] ?? ''));
+            if ($cname === '') {
+                $cname = $shortuid;
+            }
+            $rows[] = [
+                'shortuid' => $shortuid,
+                'cname' => $cname,
+                'instance_id' => $instanceId,
+            ];
+        }
+        usort($rows, static fn (array $a, array $b): int => strcmp($a['shortuid'], $b['shortuid']));
+
+        return [
+            'version' => 1,
+            'updated_at' => $updatedAt ?? gmdate('Y-m-d\TH:i:s\Z'),
+            'tenants' => $rows,
+        ];
     }
 
     /** @return array<string, mixed> */

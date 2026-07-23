@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "updated_at": "2026-07-23T22:00:00Z",
+  "tenants": [
+    {
+      "shortuid": "dhbm8x",
+      "cname": "dhbm8x.pbx3.com",
+      "instance_id": "3DmAsxePTWQZgynBYXE8obIRqEE"
+    },
+    {
+      "shortuid": "vqcwd4",
+      "cname": "vqcwd4.pbx3.com",
+      "instance_id": "3E3gAOVGBhvc6vEPTBIYCBPycIk"
+    }
+  ]
+}

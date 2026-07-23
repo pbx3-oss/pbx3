@@ -84,3 +84,8 @@ jq \
 
 registrar_s3_cp "$OUT" "$META_KEY" --content-type application/json
 echo "OK: tenant $TENANT_SHORTUID moved $prev -> $INSTANCE_ID (recordings prefix unchanged)"
+
+# B′ login rollup (best-effort — do not fail the move if rebuild flakes)
+if [[ -x "$SCRIPT_DIR/rebuild-tenant-home.sh" ]]; then
+  "$SCRIPT_DIR/rebuild-tenant-home.sh" || echo "WARN: rebuild-tenant-home.sh failed — run it manually" >&2
+fi

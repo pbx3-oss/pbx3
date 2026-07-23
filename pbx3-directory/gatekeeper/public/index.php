@@ -314,6 +314,11 @@ try {
         JsonResponse::send(200, CatalogHealthOverlay::enrich($registrar->getCatalog()));
     }
 
+    if ($method === 'POST' && $path === '/api/v1/catalog/tenant-home/rebuild') {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        JsonResponse::send(200, $registrar->rebuildTenantHomeIndex());
+    }
+
     if ($method === 'GET' && $path === '/api/v1/tenants') {
         Auth::requireAbility(FleetAbilities::READ);
         JsonResponse::send(200, ['tenants' => $registrar->listTenants()]);
