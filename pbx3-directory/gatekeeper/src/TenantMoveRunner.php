@@ -505,15 +505,24 @@ final class TenantMoveRunner
             }
         }
 
+        // Cert sync is best-effort on source: wipe + commit clear orphans/dialplan.
+        // LE/certbot flakiness must not leave the move stuck after a successful wipe.
+        $certNote = 'cert sync skipped';
         $email = getenv('PBX3_LE_EMAIL') ?: '';
         if ($email !== '') {
-            $this->nodePost($source, '/fleet/certificates/sync', [
-                'email' => $email,
-            ]);
+            try {
+                $this->nodePost($source, '/fleet/certificates/sync', [
+                    'email' => $email,
+                ]);
+                $certNote = 'cert sync ok';
+            } catch (\Throwable $e) {
+                $certNote = 'cert sync failed (non-blocking): '.$e->getMessage();
+                error_log('[tenant-move] source cert sync after wipe: '.$e->getMessage());
+            }
         }
         $this->nodePost($source, '/fleet/commit', []);
 
-        $job = $this->markPhase($job, 'awaiting_cleanup', 'ok', 'source tenant wiped; cert sync + commit');
+        $job = $this->markPhase($job, 'awaiting_cleanup', 'ok', 'source tenant wiped; commit ok; '.$certNote);
 
         return $job;
     }
