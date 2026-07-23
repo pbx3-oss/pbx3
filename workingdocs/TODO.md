@@ -1,25 +1,26 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-22 (instance user privileges P1–P4 + sandycroft move lab)
+**Last updated:** 2026-07-23 (source wipe in move job lab-validated; login-homing B′ next)
 
 ### Suggested “what next?” order
 
-1. **Demo / lab soak** — retest tenant login + sandycroft on bzy; optional Commit/catalog/SBC for sandycroft.  
-2. **Tenant move — source wipe in job** (open) — bake Phase 8 into orchestrator after drain/validate.  
-3. **Login homing B′** (challenger, leaning) — shortuid **or** tenant URL → directory home → instance login; **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.  
-4. **Toll fraud / velocity** (V0 done — V1+ when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
-5. **Number dialect — paid Twilio + named recipe** (when ready).  
-6. **Instance shadowing** (parked).  
-7. **SBC SQLite + Litestream** (parked).  
-8. **S10.7 / S8.9** (parked).  
-9. **pbx3cagi** struct refactor (deferred).  
-10. **Fleet auth cookie/SSO (blocked)**.  
-11. **S7+** attested PCI — only on customer ask.  
+1. **Login homing B′** (challenger, leaning) — shortuid **or** tenant URL → directory home → instance login; **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.  
+2. **Toll fraud / velocity** (V0 done — V1+ when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
+3. **Number dialect — paid Twilio + named recipe** (when ready).  
+4. **Drain affordance — tenant-scoped channel count** (nice-to-have, parked) — see open item below.  
+5. **Instance shadowing** (parked).  
+6. **SBC SQLite + Litestream** (parked).  
+7. **S10.7 / S8.9** (parked).  
+8. **pbx3cagi** struct refactor (deferred).  
+9. **Fleet auth cookie/SSO (blocked)**.  
+10. **S7+** attested PCI — only on customer ask.  
 
 ---
 
 ## Open items
+
+- [ ] **Drain affordance — tenant-scoped “up calls” (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. Best-effort for drain-before-wipe — do not block wipe on zero. Not built.
 
 - [x] **PSTN number dialects v1 (2026-07-22):** Spec **`NUMBER_DIALECT_REQUIREMENTS.md`**; Peer Filament **Number dialect** presets (`uk-magrathea` / `uk-gamma` / `strict-plus-e164`); OpenSIPS inbound normalize + outbound render/PAID live Magrathea+companion; UK Egress seed `0:+44 00:+` (DNID only — CLID as-is). MkDocs **`fleet/number-dialect`**. Tips **pbx3** **`f36db55`**, **pbx3sbc** **`3404608`**, **pbx3sbc-admin** **`c623d0c`**, **pbx3-docs** **`12f32e3`**, spa handoff **`07c0969`**.
 
@@ -158,7 +159,7 @@
 
 - [ ] **Phase S8 — Fleet (optional polish):** **S8.1–S8.6 shipped and drill-validated** (affcot **08jzwn → bzy54n**). Remaining optional: LE Sync post-cutover; **`move-tenant.sh`** if catalog workflow preferred over **`register-tenant.sh`** for first-time tenants. See **`TENANT_MIGRATION_RUNBOOK.md`**.
 
-- [ ] **Tenant move — source wipe must be in the job (2026-07-22):** Incomplete Phase 8 left orphans (`0ggybk` on golden, `9wvvnb` on bzy) — SPA shows shortuid as Tenant. Manual cleanup done. **Bake into move orchestrator:** after successful import + validate, always destroy source cluster-scoped rows **and** portable users (same as sandycroft drill). Runbook Phase 8 updated. See **`TENANT_MIGRATION_RUNBOOK.md`** Phase 8.
+- [x] **Tenant move — source wipe in the job (2026-07-23):** Full cascade via `TenantMobilityService::destroyTenantData` on fleet + SPA delete; Gatekeeper `awaiting_cleanup` → wipe + Commit (LE sync best-effort on dest + source). Drain: leave job page, reopen Fleet → **Jobs**. Lab: sandycroft round-trip OK. Tips **pbx3api** **`4930e2b`**, **pbx3** **`baf9040`**, **pbx3spa** **`edd270b`**. Runbook Phase 8 + MkDocs **`fleet/tenant-move`**.
 
 - [x] **Phase S7 — PCI staging settled (docs 2026-07-14):** S7 = PCI-**shaped** baseline (dedicated private bucket, BPA, TLS, SSE-S3, gatekeeper presigns, non-attested wording); attested KMS/CloudTrail/Security Hub/QSA/PSP = **S7+**. Search stays SQLite on node; S3 = blobs only. **`d0801c5`**.
 
