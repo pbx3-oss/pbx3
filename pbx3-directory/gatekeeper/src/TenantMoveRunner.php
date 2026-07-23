@@ -10,7 +10,7 @@ use GuzzleHttp\Exception\GuzzleException;
 /**
  * Advance a tenant-move job through automated phases until a human gate or failure.
  *
- * Human gates: verifying (operator confirms test call), awaiting_cleanup (source delete).
+ * Human gates: verifying (operator confirms test call), awaiting_cleanup (full source wipe + cert sync + commit).
  */
 final class TenantMoveRunner
 {
@@ -72,7 +72,7 @@ final class TenantMoveRunner
             $job = $this->markPhase($job, 'verifying', 'ok', 'operator confirmed');
             $job = $this->setState($job, 'catalog');
             $job = $this->phaseCatalog($job);
-            $job = $this->setState($job, 'awaiting_cleanup', 'Confirm delete of tenant on source (irreversible).');
+            $job = $this->setState($job, 'awaiting_cleanup', 'Confirm full wipe of tenant on source (all cluster data + portable users; then cert sync + commit). Irreversible.');
 
             return $job;
         }
@@ -81,7 +81,17 @@ final class TenantMoveRunner
             if ($state !== 'awaiting_cleanup') {
                 throw new \InvalidArgumentException("Job not in awaiting_cleanup (state={$state})", 409);
             }
-            $job = $this->phaseCleanup($job);
+            try {
+                $job = $this->phaseCleanup($job);
+            } catch (\Throwable $e) {
+                $job['state'] = 'awaiting_cleanup';
+                $job['error'] = $e->getMessage();
+                $job['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
+                $job['next_human_action'] = 'Retry source wipe (full delete + cert sync + commit).';
+                $job = $this->markPhase($job, 'awaiting_cleanup', 'failed', $e->getMessage());
+                $this->jobs->writePublic($job);
+                throw $e;
+            }
             $job = $this->setState($job, 'completed');
             $job['completed_at'] = gmdate('Y-m-d\TH:i:s\Z');
             $job['next_human_action'] = null;
@@ -474,14 +484,36 @@ final class TenantMoveRunner
     }
 
     /**
+     * Source Phase 8: full tenant wipe via fleet DELETE, then cert sync + commit on source.
+     *
      * @param  array<string, mixed>  $job
      * @return array<string, mixed>
      */
     private function phaseCleanup(array $job): array
     {
         $shortuid = (string) $job['tenant_shortuid'];
-        $this->nodeDelete((string) $job['source_api_base_url'], '/fleet/tenants/'.rawurlencode($shortuid));
-        $job = $this->markPhase($job, 'awaiting_cleanup', 'ok', 'source tenant deleted');
+        $source = (string) $job['source_api_base_url'];
+        $job = $this->markPhase($job, 'awaiting_cleanup', 'running', 'wiping source tenant');
+        $this->jobs->writePublic($job);
+
+        try {
+            $this->nodeDelete($source, '/fleet/tenants/'.rawurlencode($shortuid));
+        } catch (\RuntimeException $e) {
+            // Idempotent retry: already wiped.
+            if ($e->getCode() !== 404) {
+                throw $e;
+            }
+        }
+
+        $email = getenv('PBX3_LE_EMAIL') ?: '';
+        if ($email !== '') {
+            $this->nodePost($source, '/fleet/certificates/sync', [
+                'email' => $email,
+            ]);
+        }
+        $this->nodePost($source, '/fleet/commit', []);
+
+        $job = $this->markPhase($job, 'awaiting_cleanup', 'ok', 'source tenant wiped; cert sync + commit');
 
         return $job;
     }

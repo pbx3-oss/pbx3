@@ -257,12 +257,14 @@ Does **not** copy `tenants/{shortuid}/recordings/` on S3 (prefix unchanged; `ins
 
 ## Phase 8 — Remove tenant on source (A) — **required, not optional**
 
-On **08jzwn** after **bzy54n** is validated:
+**Preferred path (orchestrated):** after verifying, the move job reaches `awaiting_cleanup`. Operator confirms **Wipe tenant on source** — Gatekeeper calls source `DELETE /fleet/tenants/{shortuid}` (full cascade: all cluster-scoped rows + portable users), then source certificates sync + Commit. Do not mark the move complete without this gate.
 
-1. SPA → delete tenant (not **`default`**) — or equivalent that removes **all** cluster-scoped rows **and** portable users for that shortuid
+**Manual / break-glass** (same outcome, if not using the job UI) on the **source** node after destination is validated:
+
+1. SPA → delete tenant (not **`default`**) — must remove **all** cluster-scoped rows **and** portable users for that shortuid (API wipe path; Eloquent-only cluster delete is insufficient)
 2. Certificates → **Sync**
 3. **Commit**
-4. Mac: `move-tenant.sh` already points catalog at **bzy54n**
+4. Catalog already points at dest when the job ran `moveTenant` (or Mac: `move-tenant.sh`)
 
 **Lesson (2026-07-22):** Incomplete source cleanup after willand/affcot moves left **orphan** `ipphone` / `inroutes` / … rows whose `cluster` shortuid no longer exists in `cluster`. SPA Tenant column then shows the raw shortuid (e.g. `0ggybk`, `9wvvnb`) instead of a pkey. **Sandycroft** move wiped source properly — no orphans.  
 
