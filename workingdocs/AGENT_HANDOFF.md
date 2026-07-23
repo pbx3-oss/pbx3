@@ -62,25 +62,31 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-22 — instance user privileges P1–P4)
+## Next agent session notes (2026-07-23 — fleet phone dial / SBC AoR)
 
-**Branches:** all **`main`**. New tips after this session’s commits (pbx3api + pbx3spa + pbx3 docs). Live Magrathea VIP **`3.93.26.82`** / companion **`3.80.2.11`**.
+**Branches:** all **`main`**. Tips **pbx3cagi** **`fd9b146`** (1.0.0-6), **pbx3** **`1ea1210`**, **pbx3sbc** **`4509b5d`**. Live Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
-- **Instance user privileges P1–P4:** `admin` / `tenant` / `recordings` + `allowed_clusters` + `portable`; API route groups + cluster scope + CDR/recordings clamp; SPA nav/guards, switcher, Commit for tenant, change-own-password, Users create, `loadTenantOptions` (no admin-only `GET tenants` in list `Promise.all`).
-- **P4 portable auth:** `PortableUserMobility` → `portable_users.json` in tenant zip; export `--detach-users`; import create/merge; tenant delete strips users. Unit tests.
-- **Lab:** sandycroft (`vqcwd4`) golden→bzy with `joe@gmail.com`; scoped lists OK on bzy after syncing privilege controllers. FormField `v-model` fix on User create / Account password.
-- **Orphans cleaned:** golden leftover `0ggybk` (willand); bzy leftover `9wvvnb` (affcot). Runbook Phase 8 + TODO: source wipe must be in move job after drain/validate.
-- **Login homing:** challenger **B′ leaning** — login with **tenant shortuid or tenant URL/FQDN** → directory home lookup → instance Sanctum (no per-move DNS). See **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.
-- **Velocity V0** framing earlier same day (parked implementation).
+- **Multi-tenant-on-one-node SIP dial:** Asterisk→SBC must keep tenant domain in RURI (`sip:shortuid@tenant.fqdn`) + phone `outbound_proxy` → SBC; OpenSIPS from-Asterisk FQDN RURI → usrloc (not dispatcher hairpin).
+- **Fleet-gated** so singleton stays `Dial(PJSIP/shortuid)` / no SBC proxy (`PBX3_FLEET_MODE` / Egress).
+- **Lab:** golden 4 regs / two tenants both ways + ring groups (Q dial); recording still Queue no-args AGI. Rolled **08jzwn** + **bzy54n** (refresh staged `endpoints/*_phone.conf` before Commit when tmpl changes).
+- Earlier same day (prior session arc): **source wipe in move job** done — see TODO.
 
 ### Golden / operator follow-up
-- Deploy: **`git pull`** `/opt/pbx3api` on **08jzwn** + **bzy54n**; ensure migration/columns `allowed_clusters` + `portable`; `php artisan optimize:clear`. SPA: `npm run dev` or Pages build.
-- Sandycroft live on **bzy**; joe portable user there. Optional: Commit, catalog `move-tenant.sh`, SBC domain/setid for sandycroft.
-- Demo users: `tenant.demo@pbx3.test` on golden (**duns** / `dhbm8x`); `joe@gmail.com` on bzy (**sandycroft** / `vqcwd4`).
+- Nodes already patched this session; future tmpl rolls: **delete/refresh staged phone instances** then Commit.
+- SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
 
 ### Resume
-- Operator soak/demo; else bake **source wipe into move job**, or implement login-homing **B′**, or velocity V1.
+- **Login homing B′** (next suggested); or velocity V1; or parked phone staging/overlay.
+
+---
+
+## Next agent session notes (2026-07-22 — instance user privileges P1–P4) — historical
+
+**Branches:** all **`main`**. Privileges P1–P4 + portable users; sandycroft→bzy lab. **Superseded** for “what next” by **2026-07-23 AoR** block (wipe + dial). Login-homing **B′** still open.
+
+### Resume
+- See **2026-07-23** block above.
 
 ---
 

@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-23 (source wipe in move job lab-validated; login-homing B′ next)
+**Last updated:** 2026-07-23 (fleet multi-tenant phone dial / SBC AoR; login-homing B′ next)
 
 ### Suggested “what next?” order
 
@@ -9,16 +9,21 @@
 2. **Toll fraud / velocity** (V0 done — V1+ when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
 4. **Drain affordance — tenant-scoped channel count → wipe-when-drained** (nice-to-have, parked) — see open item below.  
-5. **Instance shadowing** (parked).  
-6. **SBC SQLite + Litestream** (parked).  
-7. **S10.7 / S8.9** (parked).  
-8. **pbx3cagi** struct refactor (deferred).  
-9. **Fleet auth cookie/SSO (blocked)**.  
-10. **S7+** attested PCI — only on customer ask.  
+5. **Phone PJSIP staging / overlay** (parked) — tmpl vs per-phone staged copy dilemma.  
+6. **Instance shadowing** (parked).  
+7. **SBC SQLite + Litestream** (parked).  
+8. **S10.7 / S8.9** (parked).  
+9. **pbx3cagi** struct refactor (deferred).  
+10. **Fleet auth cookie/SSO (blocked)**.  
+11. **S7+** attested PCI — only on customer ask.  
 
 ---
 
 ## Open items
+
+- [x] **Fleet multi-tenant phone dial / SBC AoR (2026-07-23):** Root cause was Asterisk→SBC `INVITE shortuid@VIP` → OpenSIPS domain guess (`LIMIT 1`) → 404 / hairpin. Fix: PrepDial + GenAst Q dials use `sip:shortuid@tenant.fqdn`; phone `$outbound_proxy` → `sbc.pbx3.com`; OpenSIPS usrloc for from-Asterisk FQDN RURIs. **Fleet-gated** (`PBX3_FLEET_MODE` / Egress) so singleton stays direct-to-contact. Lab: golden multi-tenant both ways + ring groups; rolled **08jzwn** + **bzy54n** (`pbx3cagi` **1.0.0-6**). Tips **pbx3cagi** **`fd9b146`**, **pbx3** **`1ea1210`**, **pbx3sbc** **`4509b5d`**. **Parked:** tmpl→staged phone copy (delete staged to pick up tmpl); hardcoded SBC FQDN; Page/`***` presets; tighter OpenSIPS gate; tenant DNS ≠ VIP.
+
+- [ ] **Phone PJSIP template staging (parked 2026-07-23):** `endpoints/{shortuid}_phone.conf` copied once at create — tmpl changes need delete/refresh staged files before Commit. Always-from-tmpl kills per-phone overrides. Later: tmpl + thin overlay. Related to AoR/`outbound_proxy` rollouts.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 
@@ -199,7 +204,7 @@
 
 - [ ] **SPA session timeout (Instance Globals `sessiontimout`):** **`globals.sessiontimout`** is editable on **`SysglobalsEditView.vue`** (default **600** s) but the SPA does **not** auto-logout after that interval. Implement client-side idle/session expiry: read timeout from **`GET sysglobals`** (or auth bootstrap), reset on user activity, clear token and redirect to login when exceeded. Align with API token lifetime / revoke if needed. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`**.
 
-- [x] **Instance user privileges — P0–P4 (2026-07-22):** **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Lab: sandycroft→bzy + joe; FormField create-user fix; orphan cleanup. **Open:** login-homing challenger; source wipe in move job.
+- [x] **Instance user privileges — P0–P4 (2026-07-22):** **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Lab: sandycroft→bzy + joe; FormField create-user fix; orphan cleanup. **Open:** login-homing challenger **B′** (source wipe in move job done 2026-07-23).
 
 - [ ] **User access privileges (SPA + API — P1–P3):** Phase 0 done (admin-or-nothing gate). Implement per **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Do **not** implement SPA Phase F in isolation — ship **pbx3api** + **pbx3spa** together. Pattern: **`ADMIN_PANELS_AND_PERMISSIONS.md`**; **`AUTH_PATTERNS.md`**.
 
