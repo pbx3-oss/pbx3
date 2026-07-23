@@ -451,6 +451,9 @@ final class TenantMoveRunner
     }
 
     /**
+     * Dest LE sync after cutover. Best-effort: certbot flakiness must not block verifying.
+     * Operator can Certificates → Sync from the SPA afterward.
+     *
      * @param  array<string, mixed>  $job
      * @return array<string, mixed>
      */
@@ -461,9 +464,20 @@ final class TenantMoveRunner
             // Skip LE sync when no email configured — operator can sync from SPA.
             return $job;
         }
-        $this->nodePost((string) $job['dest_api_base_url'], '/fleet/certificates/sync', [
-            'email' => $email,
-        ]);
+        try {
+            $this->nodePost((string) $job['dest_api_base_url'], '/fleet/certificates/sync', [
+                'email' => $email,
+            ]);
+        } catch (\Throwable $e) {
+            error_log('[tenant-move] dest cert sync after cutover: '.$e->getMessage());
+            // Message is preserved when after() marks the phase ok without a new message.
+            $job = $this->markPhase(
+                $job,
+                'awaiting_certs',
+                'ok',
+                'cert sync failed (non-blocking): '.$e->getMessage()
+            );
+        }
 
         return $job;
     }
