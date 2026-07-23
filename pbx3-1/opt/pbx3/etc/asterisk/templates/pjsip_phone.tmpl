@@ -17,6 +17,9 @@ rewrite_contact=yes
 rtp_symmetric=yes
 send_pai=yes
 set_var=CHANNEL(parkinglot)=$clstkey
+; Explicit Dial(.../sip:user@tenant.fqdn) must still hop via SBC (tenant A
+; records are not always the VIP). Without this, Asterisk sends to DNS(fqdn).
+outbound_proxy=sip:sbc.pbx3.com\;lr
 transport=transport-$transport 
 
 [$id]

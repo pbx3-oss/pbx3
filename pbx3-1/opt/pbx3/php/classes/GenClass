@@ -1182,7 +1182,8 @@ HERE;
  * 	When the queue calls a target it calls the "Q" extension and we 
  *  send it directly to the endpoint
  */
-            $this->OUT .= "\texten => Q" . $phone['pkey'] . ",1,Dial(PJSIP/" . $phone['shortuid'] . ")\n";
+            $tenantFqdn = !empty($row['fqdn']) ? $row['fqdn'] : (!empty($row['cname']) ? $row['cname'] : ($row['shortuid'] . (!empty($row['domain']) ? ('.' . $row['domain']) : '.pbx3.com')));
+            $this->OUT .= "\texten => Q" . $phone['pkey'] . ",1,Dial(PJSIP/" . $phone['shortuid'] . "/sip:" . $phone['shortuid'] . "@" . $tenantFqdn . ")\n";
 
             if ($phone['dvrvmail'] != "None") {
                 if ($phone['dvrvmail'] == "") {
