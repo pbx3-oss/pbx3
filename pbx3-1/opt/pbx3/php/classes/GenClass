@@ -556,9 +556,40 @@ class genAsteriskObjects
  * @param  Array $row     The DB tuple for the object
  * @return Bool   
  */
+	/**
+	 * Fleet edge present (same idea as pbx3cagi pbx3_fleet_mode):
+	 * PBX3_FLEET_MODE env, else active trunks.pkey=Egress.
+	 * Gates tenant-AoR dials + phone outbound_proxy (singleton talks to phones directly).
+	 */
+	private function isFleetMode(): bool
+	{
+		$env = getenv('PBX3_FLEET_MODE');
+		if ($env !== false && $env !== '') {
+			$v = strtolower(trim($env));
+			if (in_array($v, ['1', 'true', 'yes'], true)) {
+				return true;
+			}
+			if (in_array($v, ['0', 'false', 'no'], true)) {
+				return false;
+			}
+		}
+		try {
+			$q = $this->dbh->query("SELECT active FROM trunks WHERE pkey='Egress' LIMIT 1");
+			$row = $q ? $q->fetch(PDO::FETCH_ASSOC) : false;
+			return $row && (($row['active'] ?? '') === 'YES');
+		} catch (PDOException $e) {
+			return false;
+		}
+	}
+
 	private function xlatePjsipBuff(&$buffer, $row)
 	{
 		$rep = function ($v) { return (string)($v ?? ''); };
+		// Fleet: force phone INVITEs via SBC. Singleton: leave empty (direct to contact).
+		$outbound = $this->isFleetMode()
+			? "outbound_proxy=sip:sbc.pbx3.com\\;lr\n"
+			: '';
+		$buffer = preg_replace('/\$outbound_proxy\n?/', $outbound, $buffer);
 //		$buffer = preg_replace('/\$id/', $row['id'], $buffer);
 		$buffer = preg_replace('/\$id/', $rep($row['shortuid'] ?? null), $buffer);
 		$buffer = preg_replace('/\$pkey/', $rep($row['pkey'] ?? null), $buffer);
@@ -1180,10 +1211,15 @@ HERE;
 /**
  *  Queues extensions are given entirely to Astqueues to handle
  * 	When the queue calls a target it calls the "Q" extension and we 
- *  send it directly to the endpoint
+ *  send it directly to the endpoint.
+ *  Fleet: Dial with tenant AoR for SBC usrloc. Singleton: Dial endpoint only.
  */
-            $tenantFqdn = !empty($row['fqdn']) ? $row['fqdn'] : (!empty($row['cname']) ? $row['cname'] : ($row['shortuid'] . (!empty($row['domain']) ? ('.' . $row['domain']) : '.pbx3.com')));
-            $this->OUT .= "\texten => Q" . $phone['pkey'] . ",1,Dial(PJSIP/" . $phone['shortuid'] . "/sip:" . $phone['shortuid'] . "@" . $tenantFqdn . ")\n";
+            if ($this->isFleetMode()) {
+                $tenantFqdn = !empty($row['fqdn']) ? $row['fqdn'] : (!empty($row['cname']) ? $row['cname'] : ($row['shortuid'] . (!empty($row['domain']) ? ('.' . $row['domain']) : '.pbx3.com')));
+                $this->OUT .= "\texten => Q" . $phone['pkey'] . ",1,Dial(PJSIP/" . $phone['shortuid'] . "/sip:" . $phone['shortuid'] . "@" . $tenantFqdn . ")\n";
+            } else {
+                $this->OUT .= "\texten => Q" . $phone['pkey'] . ",1,Dial(PJSIP/" . $phone['shortuid'] . ")\n";
+            }
 
             if ($phone['dvrvmail'] != "None") {
                 if ($phone['dvrvmail'] == "") {
