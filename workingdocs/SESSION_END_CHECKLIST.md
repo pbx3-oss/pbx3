@@ -25,6 +25,24 @@
 
 ---
 
+## Optional — code-review graph (non-trivial code only)
+
+**Skip** when the session was docs-only, handoff-only, or lab/ops with **no** meaningful repo diffs.
+
+**Do** when the session shipped **non-trivial code** (api / spa / sbc / scripts / multi-file behaviour):
+
+1. In each **touched git repo** (e.g. `pbx3api`, `pbx3spa`, `pbx3` — not the holding folder alone), ensure the graph is current:
+   ```bash
+   cd /path/to/repo
+   uvx code-review-graph build   # or status first; incremental is fine if already built
+   ```
+2. Ask for (or run via MCP) a **graph-backed review** of **branch changes** vs the default base (or **uncommitted** if not committing yet): blast radius, callers, risky hubs — surface anything that should block commit/push.
+3. Note in the handoff **Resume** / **Shipped** only if the review found follow-ups worth tracking.
+
+Requires Cursor MCP **`code-review-graph`** (green). No graph for a repo yet → build once before reviewing that repo.
+
+---
+
 ## `AGENT_HANDOFF.md` block template
 
 ```markdown
