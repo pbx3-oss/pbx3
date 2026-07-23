@@ -257,7 +257,7 @@ Does **not** copy `tenants/{shortuid}/recordings/` on S3 (prefix unchanged; `ins
 
 ## Phase 8 — Remove tenant on source (A) — **required, not optional**
 
-**Preferred path (orchestrated):** after verifying, the move job reaches `awaiting_cleanup`. Operator confirms **Wipe tenant on source** — Gatekeeper calls source `DELETE /fleet/tenants/{shortuid}` (full cascade: all cluster-scoped rows + portable users), then source certificates sync + Commit. Do not mark the move complete without this gate.
+**Preferred path (orchestrated):** after verifying, the move job reaches `awaiting_cleanup`. **Wait for drain** (phones re-register on dest) before wiping — you do **not** need to stay on the job page. Reopen anytime via Fleet → **Jobs** → **Open**. Operator confirms **Wipe tenant on source** — Gatekeeper calls source `DELETE /fleet/tenants/{shortuid}` (full cascade: all cluster-scoped rows + portable users), then source certificates sync + Commit. Do not mark the move complete without this gate.
 
 **Manual / break-glass** (same outcome, if not using the job UI) on the **source** node after destination is validated:
 

@@ -72,7 +72,7 @@ final class TenantMoveRunner
             $job = $this->markPhase($job, 'verifying', 'ok', 'operator confirmed');
             $job = $this->setState($job, 'catalog');
             $job = $this->phaseCatalog($job);
-            $job = $this->setState($job, 'awaiting_cleanup', 'Confirm full wipe of tenant on source (all cluster data + portable users; then cert sync + commit). Irreversible.');
+            $job = $this->setState($job, 'awaiting_cleanup', 'Confirm full wipe of tenant on source when drain is done (all cluster data + portable users; then cert sync + commit). Irreversible. Reopen from Fleet → Jobs if you leave.');
 
             return $job;
         }
