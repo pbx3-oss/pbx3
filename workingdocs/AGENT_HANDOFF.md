@@ -39,7 +39,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (index) → **TLS_IMPLEMENTATION_STEPS.md** (linear checklist) → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**Option A** spec + §11–§12). **pbx3spa**/workingdocs has stubs pointing here. |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
-| **Instance user privileges** | **pbx3spa**/workingdocs/**INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md** (P1–P4 done; login-homing challenger) → **ADMIN_PANELS_AND_PERMISSIONS.md** → **AUTH_PATTERNS.md** |
+| **Instance user privileges** | **pbx3spa**/workingdocs/**INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md** (P1–P4 + **B′ login homing** shipped) → **ADMIN_PANELS_AND_PERMISSIONS.md** → **AUTH_PATTERNS.md** |
 | Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`fetch-latest-instance-backup.sh`** |
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
@@ -62,7 +62,25 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-23 — fleet phone dial / SBC AoR)
+## Next agent session notes (2026-07-23 — login-homing B′)
+
+**Branches:** all **`main`** (pushed). Tips **pbx3** **`4d2f137`**, **pbx3spa** **`ffede89`**. Live Magrathea VIP **`3.93.26.82`**. Lab catalog `s3://08jzwn-pbx3/catalog/tenant-home.json` (5 tenants).
+
+### Shipped
+- **B′ customer login:** SPA **Sign in to tenant** (first on chooser) → `tenant-home.json` + `instance-index` → seed `api_base_url` → instance Sanctum. No Gatekeeper on customer path; no second password store.
+- **Catalog rollup:** Gatekeeper rebuilds on tenant register/move; `POST /api/v1/catalog/tenant-home/rebuild`; Mac `rebuild-tenant-home.sh` (+ hooks from register/move scripts). Schema `tenant-home.v0.json`.
+- **Lab QA:** `vqcwd4` / `joe@gmail.com` → bzy; tenant-scoped nav correct. Wrong-door UX (Manage instance / Fleet) accepted without SSO.
+
+### Golden / operator follow-up
+- Control Gatekeeper tree not redeployed this session — Mac rebuild (or POST rebuild) keeps rollup fresh until then.
+- SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
+
+### Resume
+- Velocity **V1+**, paid Twilio dialect, phone staging, or deploy Gatekeeper tenant-home writer to control.
+
+---
+
+## Next agent session notes (2026-07-23 — fleet phone dial / SBC AoR) — historical
 
 **Branches:** all **`main`**. Tips **pbx3cagi** **`fd9b146`** (1.0.0-6), **pbx3** **`1ea1210`**, **pbx3sbc** **`4509b5d`**. Live Magrathea VIP **`3.93.26.82`**.
 
@@ -77,16 +95,16 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
 
 ### Resume
-- **Login homing B′** (next suggested); or velocity V1; or parked phone staging/overlay.
+- Superseded by **login-homing B′** block above.
 
 ---
 
 ## Next agent session notes (2026-07-22 — instance user privileges P1–P4) — historical
 
-**Branches:** all **`main`**. Privileges P1–P4 + portable users; sandycroft→bzy lab. **Superseded** for “what next” by **2026-07-23 AoR** block (wipe + dial). Login-homing **B′** still open.
+**Branches:** all **`main`**. Privileges P1–P4 + portable users; sandycroft→bzy lab. **Superseded** by 2026-07-23 blocks.
 
 ### Resume
-- See **2026-07-23** block above.
+- See **2026-07-23 login-homing B′** block above.
 
 ---
 
