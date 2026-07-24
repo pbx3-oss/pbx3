@@ -590,6 +590,12 @@ try {
                 'first_calldate' => is_string($body['first_calldate'] ?? null) ? $body['first_calldate'] : '',
                 'last_calldate' => is_string($body['last_calldate'] ?? null) ? $body['last_calldate'] : '',
                 'rule' => is_string($body['rule'] ?? null) ? $body['rule'] : 'irsf',
+                'auto_block' => ! empty($body['auto_block']),
+                'forwards_cleared' => ! empty($body['forwards_cleared']),
+                'hung_up_count' => (int) ($body['hung_up_count'] ?? 0),
+                'act_skipped_reason' => is_string($body['act_skipped_reason'] ?? null) ? trim($body['act_skipped_reason']) : '',
+                'attribution_reason' => is_string($body['attribution_reason'] ?? null) ? trim($body['attribution_reason']) : '',
+                'extension_shortuid' => is_string($body['extension_shortuid'] ?? null) ? trim($body['extension_shortuid']) : '',
             ], $transition);
             JsonResponse::send(200, ['accepted' => true, 'notified' => true]);
         }

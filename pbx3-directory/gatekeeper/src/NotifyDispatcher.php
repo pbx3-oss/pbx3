@@ -405,7 +405,13 @@ final class NotifyDispatcher
      *   masked_prefixes?:list<string>,
      *   first_calldate?:string,
      *   last_calldate?:string,
-     *   rule?:string
+     *   rule?:string,
+     *   auto_block?:bool,
+     *   forwards_cleared?:bool,
+     *   hung_up_count?:int,
+     *   act_skipped_reason?:string,
+     *   attribution_reason?:string,
+     *   extension_shortuid?:string
      * }  $event
      * @param  'down'|'cleared'  $transition
      */
@@ -426,6 +432,7 @@ final class NotifyDispatcher
         $id = (string) ($event['instance_id'] ?? '');
         $fqdn = (string) ($event['fqdn'] ?? '');
         $ext = (string) ($event['extension'] ?? '(unknown)');
+        $uid = trim((string) ($event['extension_shortuid'] ?? ''));
         $account = trim((string) ($event['accountcode'] ?? ''));
         $count = (int) ($event['count'] ?? 0);
         $window = (int) ($event['window_minutes'] ?? 5);
@@ -436,20 +443,40 @@ final class NotifyDispatcher
         $masked = array_values(array_filter(array_map('strval', $masked)));
         $first = trim((string) ($event['first_calldate'] ?? ''));
         $last = trim((string) ($event['last_calldate'] ?? ''));
+        $autoBlock = ! empty($event['auto_block']);
+        $forwardsCleared = ! empty($event['forwards_cleared']);
+        $hungUp = (int) ($event['hung_up_count'] ?? 0);
+        $actSkip = trim((string) ($event['act_skipped_reason'] ?? ''));
+        $attrReason = trim((string) ($event['attribution_reason'] ?? ''));
+
+        $extDisplay = $ext;
+        if ($uid !== '' && strcasecmp($uid, $ext) !== 0) {
+            $extDisplay = "{$ext} ({$uid})";
+        }
 
         if ($transition === 'down') {
             $subject = "[PBX3 fleet] Velocity IRSF: ext {$ext} on {$label}";
-            $body = "High-cost outbound surge detected from CDR (IRSF-shaped).\n"
-                ."Review the phone / credentials; auto-block (active=NO) ships in a later phase.\n\n";
+            $body = "High-cost outbound surge detected from CDR (IRSF-shaped).\n";
+            if ($autoBlock) {
+                $body .= "Auto-block applied: phone set active=NO (Fail2ban inside→out).\n";
+            } else {
+                $body .= "Notify-only (auto-block not applied";
+                if ($actSkip !== '') {
+                    $body .= ": {$actSkip}";
+                }
+                $body .= ").\n";
+            }
+            $body .= "\n";
         } else {
             $subject = "[PBX3 fleet] Velocity IRSF cleared: ext {$ext} on {$label}";
-            $body = "High-cost outbound surge has been quiet under threshold.\n\n";
+            $body = "High-cost outbound surge has been quiet under threshold.\n"
+                ."Re-enable the phone (active=YES + Commit) if it was auto-blocked.\n\n";
         }
 
         $body .= "Label: {$label}\n"
             ."Id: {$id}\n"
             ."FQDN: {$fqdn}\n"
-            ."Extension (src): {$ext}\n";
+            ."Extension: {$extDisplay}\n";
         if ($account !== '') {
             $body .= "Accountcode: {$account}\n";
         }
@@ -459,6 +486,15 @@ final class NotifyDispatcher
         }
         if ($first !== '' || $last !== '') {
             $body .= 'Burst window: '.($first !== '' ? $first : '?').' → '.($last !== '' ? $last : '?')."\n";
+        }
+        if ($transition === 'down') {
+            if ($autoBlock) {
+                $body .= 'Forwards cleared (CFIM/CFBS/Follow-me): '.($forwardsCleared ? 'yes' : 'attempted')."\n";
+                $body .= "Live channels hung up: {$hungUp}\n";
+            }
+            if ($attrReason !== '') {
+                $body .= "Attribution: {$attrReason}\n";
+            }
         }
 
         $this->send($recipients, $subject, $this->withUiLink($body));

@@ -199,12 +199,17 @@ final class OpsEventNotifyTest extends TestCase
             'instance_label' => '08jzwn',
             'fqdn' => '08jzwn.pbx3.com',
             'extension' => '1001',
+            'extension_shortuid' => 'cccc3333',
             'accountcode' => 'labtenant',
             'count' => 12,
             'window_minutes' => 5,
             'masked_prefixes' => ['00900***'],
             'first_calldate' => '2026-07-24 12:00:00',
             'last_calldate' => '2026-07-24 12:02:00',
+            'auto_block' => true,
+            'forwards_cleared' => true,
+            'hung_up_count' => 2,
+            'attribution_reason' => 'channel_shortuid',
         ], 'down');
         $notify->notifyVelocityIrsf([
             'instance_id' => 'abc',
@@ -221,6 +226,8 @@ final class OpsEventNotifyTest extends TestCase
         $this->assertStringContainsString('00900***', $sent[0]['body']);
         $this->assertStringNotContainsString('009001234567', $sent[0]['body']);
         $this->assertStringContainsString('labtenant', $sent[0]['body']);
+        $this->assertStringContainsString('active=NO', $sent[0]['body']);
+        $this->assertStringContainsString('Live channels hung up: 2', $sent[0]['body']);
         $this->assertStringContainsString('cleared', $sent[1]['subject']);
     }
 
