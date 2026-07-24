@@ -1,20 +1,22 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-23 (session end — velocity plan fleshed; Gatekeeper tenant-home live; generator+cagi one track)
+**Last updated:** 2026-07-24 (velocity V1–V2+V5 shipped + golden notify live; discrete product parked)
 
 ### Suggested “what next?” order
 
-1. **Toll fraud / velocity** (spec fleshed — **V1** fixture+query when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
+1. ~~**Toll fraud / velocity V1–V5**~~ — **done 2026-07-24** (golden notify on; act off until asked). Spec **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
 2. **Number dialect — paid Twilio + named recipe** (when ready).  
 3. **Drain affordance — tenant-scoped channel count → wipe-when-drained** (nice-to-have, parked) — see open item below.  
 4. **Ast config generator + pbx3cagi cleanup** (one track) — GenAst/staging overlay **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**; cagi Phase 1.3+ **`REFACTOR_PLAN.md`**.  
 5. ~~**Deploy Gatekeeper** with tenant-home rebuild (control)~~ — **done 2026-07-23**.  
-6. **Instance shadowing** (parked).  
-7. **SBC SQLite + Litestream** (parked).  
-8. **S10.7 / S8.9** (parked).  
-9. **Fleet auth cookie/SSO (blocked)** — stay off third-party IdP until forced.  
-10. **S7+** attested PCI — only on customer ask.  
+6. **Velocity V3** fleet N/T/prefix templates (optional).  
+7. **Velocity standalone product** (parked) — own repo + installer; detect/notify first — see velocity requirements § Future.  
+8. **Instance shadowing** (parked).  
+9. **SBC SQLite + Litestream** (parked).  
+10. **S10.7 / S8.9** (parked).  
+11. **Fleet auth cookie/SSO (blocked)** — stay off third-party IdP until forced.  
+12. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -34,7 +36,9 @@
 
 - [x] **Toll fraud / velocity — V0 framing (2026-07-22):** Own track **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — direction of flow; phases **V0–V5**. **2026-07-23:** V1/V2 build plan fleshed (batch CDR, IRSF-only, fixture-first, `velocity_irsf`). **Next when prioritized:** V1 fixture + query → V2 scanner+notify.
 
-- [ ] **Toll fraud / velocity — V1+ (when prioritized):** Spec fleshed **2026-07-23** — forks settled; **fixture-first**; existing Phase 6 `master.db`. **V1** fixture+query → **V2** `pbx3:ops-velocity` / `velocity_irsf` mail → **V5 auto-block** = existing **`ipphone.active=NO`** (+ genAst; Fail2ban inside→out). Then V3 fleet templates / V4 tenant audience. Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Delivery: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
+- [x] **Toll fraud / velocity — V1+V2+V5 (2026-07-24):** Fixture + CSV import + `VelocityCdrQuery`; `pbx3:ops-velocity` → Gatekeeper `velocity_irsf`; V5 act (`active=NO` + clear CF + hangup + genAst) behind `PBX3_OPS_VELOCITY_ACT`. **Live golden:** notify **on**, act **off**, prefixes `00900`. Tips **pbx3api** **`afd56d0`**, **pbx3** **`9f5a7bf`**. Follow-ons: V3 templates; SPA “disabled by velocity”; optional ACT enable.
+
+- [ ] **Toll fraud / velocity — standalone product (parked 2026-07-24):** Own **repo + installer** “just in case”; detect/notify portable to any Asterisk; **Go scanner** candidate (static binary); act via adapters (pbx3 reference). Do not fork this week. Spec § Future — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.
 
 - [ ] **Number dialect — paid Twilio + follow-ons:** Operator will sign up full Twilio; named Twilio Peer “recipe” (optional — today `strict-plus-e164`); US Egress `011:+` seed; Magrathea gwid **20** may still lack `dialect=uk-magrathea`; custom-dialect UI. Future product thread: global DID → EU CC on SBC (RTP bypass vs Asterisk/rtpengine stage). Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · MkDocs **`fleet/number-dialect`**.
 

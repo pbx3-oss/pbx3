@@ -350,6 +350,25 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 
 ---
 
+## Future — discrete product (parked 2026-07-24)
+
+**Observation:** detect + notify is mostly **generic Asterisk** (CDR SQLite / Master.csv + batch scan + mail/webhook). The pbx3-specific sticky bit is the **act** (`ipphone.active=NO`, AstDB CF clear, genAst).
+
+**Stance (just in case):** may later stand up as its **own repo + installer** — not a fork of pbx3api this week.
+
+**Runtime sketch:** standalone **scanner in Go** is an attractive extract (single static binary, cron/systemd-friendly, no PHP runtime on “any old Asterisk”). pbx3 keeps the PHP reference path in-tree; Go would be the portable SKU, not a rewrite of fleet Gatekeeper.
+
+| Layer | Standalone SKU | Stays in pbx3 |
+|-------|----------------|---------------|
+| HoR | Asterisk `cdr_sqlite3_custom` and/or classic `Master.csv` | Same |
+| Detect | N/T/Q + prefix list; fixture/CSV lab — **Go binary candidate** | PHP `pbx3:ops-velocity` reference |
+| Notify | SMTP / webhook (no Gatekeeper required) | Gatekeeper `velocity_irsf` remains fleet path |
+| Act | Optional **adapters** per distro (pbx3, FreePBX, …) | pbx3 adapter = current V5 |
+
+**Do not:** claim “every Asterisk” until act is pluggable. **Do:** keep pbx3 as the reference act and extract detect/notify when product timing forces a repo. Pretty ops graphs / dashboards = later (notify is HoR; charts are garnish).
+
+---
+
 ## References
 
 | Doc | Role |
@@ -367,4 +386,4 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 
 ---
 
-*Last updated: 2026-07-24 — V1+V2+V5 shipped (`PBX3_OPS_VELOCITY_ACT`); V3/V4 later.*
+*Last updated: 2026-07-24 — V1–V2+V5 live on golden; discrete-product repo/installer parked (detect/notify first).*
