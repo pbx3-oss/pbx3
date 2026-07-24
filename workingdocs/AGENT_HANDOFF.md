@@ -65,7 +65,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-23 — velocity plan + Gatekeeper deploy + generator track)
 
-**Branches:** all **`main`** (pushed). Tips **pbx3** **`d59e2f5`**, **pbx3spa** **`749c677`** (SPA unchanged this evening). Live Magrathea VIP **`3.93.26.82`**. Control Gatekeeper live for tenant-home.
+**Branches:** all **`main`** (pushed). Tips **pbx3** **`cbafc85`**, **pbx3spa** **`eb1d1a5`** (SPA handoff only this evening). Live Magrathea VIP **`3.93.26.82`**. Control Gatekeeper live for tenant-home.
 
 ### Shipped
 - **Toll-fraud velocity requirements fleshed:** V1 (Phase 6 `master.db` + CDR fixture), V2 (`pbx3:ops-velocity` / `velocity_irsf` mail), **V5 required** auto-block = **`ipphone.active=NO`** + clear CF + hangup-or-bleed; attribution fail-safe; threat map (CFIM, Saturday-night, failed-scan, dormant/concurrency/forward chains); competitive notes (FreePBX/3CX vs SecAst/PBXDom/carriers). Fixture-first lab; batch scan not log-tail. **No code yet.**
