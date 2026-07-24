@@ -1,6 +1,6 @@
 # Fleet toll fraud & call-pattern velocity (requirements)
 
-**Status:** **V0 framing done** (2026-07-22); **V1–V2 build plan fleshed** (2026-07-23); **auto-block required** (Fail2ban inside→out — 2026-07-23). Implementation not started.  
+**Status:** **V0 framing done** (2026-07-22); **V1–V2 build plan fleshed** (2026-07-23); **auto-block required** (Fail2ban inside→out — 2026-07-23). **V1 data plane shipped** (2026-07-24) — path-safe fixture + `VelocityCdrQuery` in **pbx3api**. V2+ not started.  
 **Lab testing:** CDR fixture first; SIPp optional E2E.  
 **Related:** **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite (Phase 6 `master.db` shipped); instance **CoS** / dial policy (prevention + **act**); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only** — outside→in; velocity is the **inside→out** cousin).
 
@@ -127,14 +127,17 @@ From packaged `cdr_sqlite3_custom.conf` table `cdr`:
 #### CDR fixture (lab)
 
 - **Purpose:** seed velocity-shaped rows without SIPp / live trunks.
-- **Shape:** artisan command or script in **pbx3api**, env-gated (e.g. `PBX3_CDR_FIXTURE=1` or explicit `--force` on non-prod).
-- **Path safety:** default write target = **`PBX3_CDR_SQLITE_PATH`** override pointing at a **lab copy** of `master.db` (or empty SQLite with `cdr` schema) — **do not** casually INSERT into live golden `master.db` without an explicit flag.
+- **Shape:** artisan **`pbx3:cdr-fixture`** in **pbx3api** (`CdrFixtureService`); env-gated (`PBX3_CDR_FIXTURE=1` / `--force`) and **refuses** live `/var/log/asterisk/master.db` unless `--allow-live`.
+- **Path safety:** default write target = **`PBX3_CDR_SQLITE_PATH`** override pointing at a **lab copy** of `master.db` (or empty SQLite with `cdr` schema via `--path=`) — **do not** casually INSERT into live golden `master.db` without an explicit flag.
+- **Decks:** `irsf` (default), `failed-scan`, `internal-noise`, `mixed`. Lab premium prefix **`00900`** (matches `PBX3_OPS_VELOCITY_PREFIXES` default).
+- **Query helper:** **`VelocityCdrQuery`** + artisan **`pbx3:cdr-velocity-query`** (also `--probe` on fixture). Window **T** + prefix list; excludes empty/`isInternalDst` shapes.
 - Insert N rows with recent `calldate`, lab `dst` prefixes, `src` / `accountcode` filled.
 - Done when: fixture + one query helper returns the burst rows V2 will count.
 
 | Item | Detail |
 |------|--------|
 | **Done when** | On a lab node (or fixture DB): query returns recent outbound CDR with dest, time, and extension/tenant context; prune retention does not empty the active window; fixture path documented |
+| **Status** | **Done** (2026-07-24) — unit tests `VelocityCdrFixtureTest`; smoke: `php artisan pbx3:cdr-fixture --path=/tmp/cdr-lab.db --probe --force` |
 
 ---
 
@@ -336,7 +339,7 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 ## Suggested build order
 
 1. **V0** — framing + forks. **Done.**  
-2. **V1** — confirm `master.db` query surface + **CDR fixture** (path-safe).  
+2. **V1** — confirm `master.db` query surface + **CDR fixture** (path-safe). **Done** (2026-07-24).  
 3. **V2** — `pbx3:ops-velocity` + Gatekeeper `velocity_irsf` + mail (fixture-first; SIPp optional).  
 4. **V5** — **auto-block** via existing **`ipphone.active=NO`** (+ genAst) — required next; do not defer.  
 5. **V3** — fleet-wide tunable rules (shrink N control surfaces).  
@@ -354,10 +357,11 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 | **`DESIGN_RULES.md`** | Rule 1, Rule 5 |
 | Instance CoS / dial policy (SPA + GenAst) | Prevention + act surface |
 | pbx3api `CdrIndexService` / `config/pbx3_cdr.php` | Existing CDR read path |
+| pbx3api `CdrFixtureService` / `VelocityCdrQuery` / `pbx3:cdr-fixture` | V1 fixture + scanner input |
 | `pbx3sbc/attackTests` SIPp notes | Optional E2E only |
 | SBC Fail2ban | Outside→in analogue — not the implementation |
 | Competitive scan (2026-07-23) | FreePBX/3CX prevention+F2b; SecAst add-on; PBXDom CDR alerts; carrier spend caps — see **Competitive notes** |
 
 ---
 
-*Last updated: 2026-07-23 — competitive notes + stolen published CDR patterns (dormant, concurrency, forward chains, short storms); V5 act gaps locked.*
+*Last updated: 2026-07-24 — V1 fixture + VelocityCdrQuery shipped (pbx3api branch `velocity-v1-cdr-fixture`).*
