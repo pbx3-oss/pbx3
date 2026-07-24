@@ -392,6 +392,79 @@ final class NotifyDispatcher
     }
 
     /**
+     * Instance IRSF / high-cost destination velocity (node CDR → ops-events).
+     *
+     * @param  array{
+     *   instance_id?:string,
+     *   instance_label?:string,
+     *   fqdn?:string,
+     *   extension?:string,
+     *   accountcode?:string,
+     *   count?:int,
+     *   window_minutes?:int,
+     *   masked_prefixes?:list<string>,
+     *   first_calldate?:string,
+     *   last_calldate?:string,
+     *   rule?:string
+     * }  $event
+     * @param  'down'|'cleared'  $transition
+     */
+    public function notifyVelocityIrsf(array $event, string $transition): void
+    {
+        if ($transition !== 'down' && $transition !== 'cleared') {
+            return;
+        }
+
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            error_log('[gatekeeper-notify] no subscribers for velocity_irsf '.$transition.' — skip');
+
+            return;
+        }
+
+        $label = (string) ($event['instance_label'] ?? $event['instance_id'] ?? 'instance');
+        $id = (string) ($event['instance_id'] ?? '');
+        $fqdn = (string) ($event['fqdn'] ?? '');
+        $ext = (string) ($event['extension'] ?? '(unknown)');
+        $account = trim((string) ($event['accountcode'] ?? ''));
+        $count = (int) ($event['count'] ?? 0);
+        $window = (int) ($event['window_minutes'] ?? 5);
+        $masked = $event['masked_prefixes'] ?? [];
+        if (! is_array($masked)) {
+            $masked = [];
+        }
+        $masked = array_values(array_filter(array_map('strval', $masked)));
+        $first = trim((string) ($event['first_calldate'] ?? ''));
+        $last = trim((string) ($event['last_calldate'] ?? ''));
+
+        if ($transition === 'down') {
+            $subject = "[PBX3 fleet] Velocity IRSF: ext {$ext} on {$label}";
+            $body = "High-cost outbound surge detected from CDR (IRSF-shaped).\n"
+                ."Review the phone / credentials; auto-block (active=NO) ships in a later phase.\n\n";
+        } else {
+            $subject = "[PBX3 fleet] Velocity IRSF cleared: ext {$ext} on {$label}";
+            $body = "High-cost outbound surge has been quiet under threshold.\n\n";
+        }
+
+        $body .= "Label: {$label}\n"
+            ."Id: {$id}\n"
+            ."FQDN: {$fqdn}\n"
+            ."Extension (src): {$ext}\n";
+        if ($account !== '') {
+            $body .= "Accountcode: {$account}\n";
+        }
+        $body .= "Count: {$count} in {$window}m\n";
+        if ($masked !== []) {
+            $body .= 'Masked dest prefixes: '.implode(', ', array_slice($masked, 0, 12))."\n";
+        }
+        if ($first !== '' || $last !== '') {
+            $body .= 'Burst window: '.($first !== '' ? $first : '?').' → '.($last !== '' ? $last : '?')."\n";
+        }
+
+        $this->send($recipients, $subject, $this->withUiLink($body));
+    }
+
+    /**
      * @param  array<string, mixed>  $pair
      * @param  array<string, mixed>  $result
      */

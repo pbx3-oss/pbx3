@@ -88,6 +88,8 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 
 **Egress Unavail (node):** On each fleet node set `PBX3_OPS_EGRESS_UNAVAIL_NOTIFY=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Scheduler runs `pbx3:ops-egress-qualify` every minute — AMI qualify via posture; after 2 consecutive Unavail → `egress_unavail` ops-event (`transition=down`); Avail again → `cleared`. First run seeds without mail. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
 
+**Velocity IRSF (node):** On each fleet node set `PBX3_OPS_VELOCITY_ENABLED=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Scheduler runs `pbx3:ops-velocity` every minute — batch CDR scan of Phase 6 `master.db` for high-cost prefix surge → `velocity_irsf` ops-event (`down` / `cleared`). Lab: fixture via `pbx3:cdr-fixture --path=… --probe --force`, then enable scanner. Knobs: `PBX3_OPS_VELOCITY_N` / `_T` / `_Q` / `_PREFIXES` (lab default prefix `00900`). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.
+
 ## Log retention (Phase 4)
 
 Ship rotated **syslog** + **nginx** to org bucket `control/{PBX3_CONTROL_ID}/logs/…`.

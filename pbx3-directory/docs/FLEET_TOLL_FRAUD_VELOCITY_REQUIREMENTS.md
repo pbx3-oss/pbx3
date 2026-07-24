@@ -1,6 +1,6 @@
 # Fleet toll fraud & call-pattern velocity (requirements)
 
-**Status:** **V0 framing done** (2026-07-22); **V1–V2 build plan fleshed** (2026-07-23); **auto-block required** (Fail2ban inside→out — 2026-07-23). **V1 data plane shipped** (2026-07-24) — path-safe fixture + `VelocityCdrQuery` in **pbx3api**. V2+ not started.  
+**Status:** **V0 framing done** (2026-07-22); **V1–V2 build plan fleshed** (2026-07-23); **auto-block required** (Fail2ban inside→out — 2026-07-23). **V1 data plane** + **V2 detect/notify** shipped (2026-07-24) in **pbx3api** + Gatekeeper. **V5** next.  
 **Lab testing:** CDR fixture first; SIPp optional E2E.  
 **Related:** **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite (Phase 6 `master.db` shipped); instance **CoS** / dial policy (prevention + **act**); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only** — outside→in; velocity is the **inside→out** cousin).
 
@@ -185,6 +185,7 @@ Gatekeeper: handle `velocity_irsf` like other ops-events → SMTP to `notify_fai
 | Item | Detail |
 |------|--------|
 | **Done when** | Fixture burst → **one** `velocity_irsf` mail; second scan within hysteresis → no spam; Gatekeeper down ≠ call-path impact (**Rule 5**); enable flag documented in **`CONTROL_HOST.md`** / node `.env` notes |
+| **Status** | **Done** (2026-07-24) — `pbx3:ops-velocity` + Gatekeeper `velocity_irsf` SMTP; unit tests scanner + notify |
 
 ---
 
@@ -340,7 +341,7 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 
 1. **V0** — framing + forks. **Done.**  
 2. **V1** — confirm `master.db` query surface + **CDR fixture** (path-safe). **Done** (2026-07-24).  
-3. **V2** — `pbx3:ops-velocity` + Gatekeeper `velocity_irsf` + mail (fixture-first; SIPp optional).  
+3. **V2** — `pbx3:ops-velocity` + Gatekeeper `velocity_irsf` + mail (fixture-first; SIPp optional). **Done** (2026-07-24).  
 4. **V5** — **auto-block** via existing **`ipphone.active=NO`** (+ genAst) — required next; do not defer.  
 5. **V3** — fleet-wide tunable rules (shrink N control surfaces).  
 6. **V4** — tenant audience if still wanted (digit hygiene already in V2).
@@ -364,4 +365,4 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 
 ---
 
-*Last updated: 2026-07-24 — V1 fixture + VelocityCdrQuery shipped (pbx3api branch `velocity-v1-cdr-fixture`).*
+*Last updated: 2026-07-24 — V1+V2 shipped (`pbx3:ops-velocity` / Gatekeeper `velocity_irsf`); V5 next.*

@@ -1,8 +1,8 @@
 # Fleet ops — failure notification (requirements)
 
-**Status:** **v1 + lifecycle + misconfig REGISTER + move-job + Fail2ban ban→email + Egress Unavail** (2026-07-22) — catalog `/up` probe + SMTP; maintenance/decommission mail; node REGISTER-loop → Gatekeeper; **move job failed/aborted** mail; **SBC Fail2ban ban → Gatekeeper**; **Egress Unavail/cleared** from instance qualify. SPA badges = later.  
+**Status:** **v1 + lifecycle + misconfig REGISTER + move-job + Fail2ban ban→email + Egress Unavail + velocity_irsf (V2)** (2026-07-24) — catalog `/up` probe + SMTP; maintenance/decommission mail; node REGISTER-loop → Gatekeeper; **move job failed/aborted** mail; **SBC Fail2ban ban → Gatekeeper**; **Egress Unavail/cleared**; **velocity IRSF** from instance CDR. SPA badges = later.  
 **MVP:** Notify interested operators of **failure conditions**.  
-**Later (same notify plane, different detection):** **toll fraud / call-pattern velocity** — own track **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (V0 framing); Peer Fail2ban auto-whitelist on next carrier onboard.  
+**Later (same notify plane, different detection):** Peer Fail2ban auto-whitelist on next carrier onboard; velocity **V5 auto-block** still on velocity track.  
 **Related:** **`IMPLEMENTATION_PLAN.md`** § Fleet & monitoring (`last_seen_at` probe); **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (trunk health → alerts); **`DESIGN_RULES.md`** Rule 5 (directory outage ≠ instance SLA); Fleet users / abilities (Gatekeeper); instance **CoS** / dial policy (prevention cousin of velocity).
 
 ---
@@ -88,6 +88,7 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 | **Catalog maintenance / decommissioned** | Catalog lifecycle (`PATCH` status) | **Done** — mail on → maintenance / → decommissioned / back → active |
 | **Move job failed / aborted** | Gatekeeper tenant-move jobs | **Done** — notify on `failed` and `aborted` (abort + rollback) |
 | **Egress Unavail** | Instance trunk / AMI state (depends on **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** R1–R2) | **Done (2026-07-22)** — `pbx3:ops-egress-qualify` → `egress_unavail` ops-event → SMTP |
+| **Velocity IRSF** | Instance CDR surge ( **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** V2) | **Done (2026-07-24)** — `pbx3:ops-velocity` → `velocity_irsf` ops-event → SMTP |
 
 **Acceptance:** A controlled lab outage (stop API on one node) produces a durable “instance down” event on the control plane within the probe interval.
 
@@ -231,4 +232,4 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 
 ---
 
-*Last updated: 2026-07-22 — velocity moved to **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (V0 framing).*
+*Last updated: 2026-07-24 — delivery plane includes `velocity_irsf` (V2).**`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (V0 framing).*
