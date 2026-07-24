@@ -63,21 +63,32 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-23 — velocity plan + Gatekeeper deploy + generator track)
+## Next agent session notes (2026-07-24 — GenAst challenger review parked)
 
-**Branches:** all **`main`** (pushed). Tips **pbx3** **`cbafc85`**, **pbx3spa** **`eb1d1a5`** (SPA handoff only this evening). Live Magrathea VIP **`3.93.26.82`**. Control Gatekeeper live for tenant-home.
+**Branches:** **pbx3** / **pbx3api** / **pbx3spa** on **`main`** (this commit = docs). Feature branch **`genast-phone-overlay`** exists with **WIP in `git stash`** (premature G2 HelperClass — not merged). Velocity code already on **`main`** earlier today. Live Magrathea VIP **`3.93.26.82`**.
 
-### Shipped
-- **Toll-fraud velocity requirements fleshed:** V1 (Phase 6 `master.db` + CDR fixture), V2 (`pbx3:ops-velocity` / `velocity_irsf` mail), **V5 required** auto-block = **`ipphone.active=NO`** + clear CF + hangup-or-bleed; attribution fail-safe; threat map (CFIM, Saturday-night, failed-scan, dormant/concurrency/forward chains); competitive notes (FreePBX/3CX vs SecAst/PBXDom/carriers). Fixture-first lab; batch scan not log-tail. **No code yet.**
-- **Control Gatekeeper redeployed** (rsync + FPM); `POST …/tenant-home/rebuild` → 200, 5 tenants — B′ rollup auto path live.
-- **Ast config generator + pbx3cagi** framed as **one** TODO track — **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (staging/overlay under GenAst).
+### Shipped (this session — docs only)
+- **GenAst challenger review** in **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0** + Cursor plan **`~/.cursor/plans/genast_challenger_review_0db5c469.plan.md`**.
+- **Locked phones (G2):** always `pjsip_phone.tmpl` + **required** thin hand `*_phone.overlay.conf` (append pre-xlate). Reject copy-once freeze.
+- **Locked dialplan:** GenAst = routing stubs; CAGI = Dial engine; one Dial authority (remove GenAst fleet `Q{ext}` Dial fork). **`$row` shadow bug** in `genExtensionsEndpoints` appl loop (~990).
+- Premature G2 code started then **stashed** — restore with care after plan review.
+
+### Earlier same day (already on main — context)
+- Velocity V1–V2+V5 on golden (notify on, **ACT off**). Standalone velocity product parked.
 
 ### Golden / operator follow-up
-- Tenant register/move should refresh `catalog/tenant-home.json` via Gatekeeper without Mac script.
+- No new operator deploy from this session.
 - SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
 
 ### Resume
-- **Velocity V1** (CDR fixture + query) when prioritized → V2 notify → V5 `active=NO`; or **Ast config generator** G1 inventory / phone staging; or paid Twilio dialect.
+1. Read **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0** (+ Cursor plan if useful).
+2. Unstash on **`genast-phone-overlay`**, align with locked contract, add **pbx3api** overlay delete, golden Commit smoke.
+3. Optional surgical: appl/`$row` shadow fix before larger dialplan thin.
+4. Not first: velocity ACT; Twilio dialect; cagi 1.3+.
+
+## Next agent session notes (2026-07-23 — velocity plan + Gatekeeper + generator framing) — historical
+
+**Branches:** all **`main`** (then). Velocity requirements fleshed; Gatekeeper tenant-home live; generator track framed. **Superseded** for generator by **2026-07-24** block above; velocity **code** shipped later (see TODO).
 
 ---
 

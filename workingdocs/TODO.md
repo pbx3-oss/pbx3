@@ -1,22 +1,21 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-24 (velocity V1–V2+V5 shipped + golden notify live; discrete product parked)
+**Last updated:** 2026-07-24 (GenAst challenger review parked; velocity still live on golden)
 
 ### Suggested “what next?” order
 
-1. ~~**Toll fraud / velocity V1–V5**~~ — **done 2026-07-24** (golden notify on; act off until asked). Spec **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
-2. **Number dialect — paid Twilio + named recipe** (when ready).  
-3. **Drain affordance — tenant-scoped channel count → wipe-when-drained** (nice-to-have, parked) — see open item below.  
-4. **Ast config generator + pbx3cagi cleanup** (one track) — GenAst/staging overlay **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**; cagi Phase 1.3+ **`REFACTOR_PLAN.md`**.  
-5. ~~**Deploy Gatekeeper** with tenant-home rebuild (control)~~ — **done 2026-07-23**.  
-6. **Velocity V3** fleet N/T/prefix templates (optional).  
-7. **Velocity standalone product** (parked) — own repo + installer; detect/notify first — see velocity requirements § Future.  
-8. **Instance shadowing** (parked).  
-9. **SBC SQLite + Litestream** (parked).  
-10. **S10.7 / S8.9** (parked).  
-11. **Fleet auth cookie/SSO (blocked)** — stay off third-party IdP until forced.  
-12. **S7+** attested PCI — only on customer ask.  
+1. **Ast config generator — G2 phone overlay** (decisions locked 2026-07-24) — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**; Cursor plan `genast_challenger_review_0db5c469`; WIP stash on `genast-phone-overlay`.  
+2. **Ast dialplan thin / `$row` shadow fix** (same track, after or surgical before G2) — see §0 dialplan.  
+3. **Number dialect — paid Twilio + named recipe** (when ready).  
+4. ~~**Toll fraud / velocity V1–V5**~~ — **done 2026-07-24** (golden notify on; act off until asked).  
+5. **Drain affordance** (nice-to-have, parked).  
+6. **pbx3cagi** Phase 1.3+ (keep GenAst↔CAGI contract).  
+7. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
+8. **Velocity standalone product** (parked).  
+9. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
+10. **Fleet auth cookie/SSO (blocked)**.  
+11. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -24,9 +23,9 @@
 
 - [x] **Fleet multi-tenant phone dial / SBC AoR (2026-07-23):** Root cause was Asterisk→SBC `INVITE shortuid@VIP` → OpenSIPS domain guess (`LIMIT 1`) → 404 / hairpin. Fix: PrepDial + GenAst Q dials use `sip:shortuid@tenant.fqdn`; phone `$outbound_proxy` → `sbc.pbx3.com`; OpenSIPS usrloc for from-Asterisk FQDN RURIs. **Fleet-gated** (`PBX3_FLEET_MODE` / Egress) so singleton stays direct-to-contact. Lab: golden multi-tenant both ways + ring groups; rolled **08jzwn** + **bzy54n** (`pbx3cagi` **1.0.0-6**). Tips **pbx3cagi** **`fd9b146`**, **pbx3** **`1ea1210`**, **pbx3sbc** **`4509b5d`**. **Residue** (tmpl→staged phone copy, hardcoded SBC FQDN, Page/`***` presets, tighter OpenSIPS gate, tenant DNS ≠ VIP) → **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
 
-- [ ] **Ast config generator + pbx3cagi cleanup (one track, framing 2026-07-23):** **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**. Owns GenAst / `GenClass` / endpoint staging; first coding target = phone tmpl + thin overlay (Commit picks up tmpl without deleting `endpoints/*_phone.conf`). **pbx3cagi** Phase 1.3+ (**`REFACTOR_PLAN.md`**) — keep GenAst↔CAGI dialplan/AGI contract stable; run **`make test`** after each cagi step. Follow-ons in generator doc (SBC FQDN input, webrtc parity, optional generator tests).
+- [ ] **Ast config generator + pbx3cagi (challenger 2026-07-24):** Decisions in **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0** + Cursor **`genast_challenger_review_0db5c469`**. **G2 phones:** always tmpl + required hand `*_phone.overlay.conf`; legacy freeze ignored; API must delete overlay on extension delete. **Dialplan:** thin stubs; one Dial authority in CAGI; fix `genExtensionsEndpoints` appl/`$row` shadow. **WIP:** `git stash` on branch **`genast-phone-overlay`** (premature HelperClass — review before merge). **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
 
-- [ ] **Phone PJSIP template staging (parked 2026-07-23 → under generator+cagi track):** `endpoints/{shortuid}_phone.conf` copied once at create — tmpl changes need delete/refresh staged files before Commit. Always-from-tmpl kills per-phone overrides. Target model: tmpl source of truth + thin overlay — see **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §4.
+- [ ] **Phone PJSIP template staging → G2 overlay (locked model, not shipped):** Replace copy-once `*_phone.conf` with tmpl + thin overlay — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0 / §4**.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 

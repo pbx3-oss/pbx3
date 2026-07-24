@@ -1,8 +1,44 @@
 # Ast config generator sub-project
 
-**Status:** Framing (2026-07-23). Docs + TODO rebucket only — no staging implementation yet.  
-**Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging), including **phone PJSIP staging/overlay**, **and** the paired **pbx3cagi** cleanup (same suggested-order item).  
-**CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.
+**Status:** Challenger review parked (2026-07-24) — decisions locked, **no merge yet**. Code WIP stashed on branch `genast-phone-overlay` (do not treat as shipped).  
+**Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging / dialplan emit), including **phone PJSIP staging/overlay**, **extensions.conf structure**, **and** the paired **pbx3cagi** cleanup.  
+**CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.  
+**Full study plan (Cursor):** `~/.cursor/plans/genast_challenger_review_0db5c469.plan.md`
+
+---
+
+## 0. Challenger findings (2026-07-24) — pick up next session
+
+### Locked — PJSIP phones (G2)
+
+- **Stock:** always read `pjsip_phone.tmpl` on Commit (`get`).
+- **Hand overlay required:** optional `ASTENDPOINTS/{shortuid}_phone.overlay.conf`, **append** pre-xlate (one-phone escapes that stay out of DB).
+- **Not:** full frozen `*_phone.conf` copy-once (causes tmpl-roll delete chore).
+- **`create*`:** ensure `endpoints/` only; **`set*`:** write overlay path only.
+- **Legacy cleanup:** one-time lab `rm endpoints/*_phone.conf` after deploy — do **not** auto-delete in genAst.
+- **API gap:** extension delete must also remove `*_phone.overlay.conf` (pbx3api Helper today only deletes `*_phone.conf` / webrtc).
+- **WIP:** premature HelperClass/config edits live in **stash** on `genast-phone-overlay` — review against this contract before commit.
+
+### Locked — dialplan north star (separate track from G2)
+
+- GenAst = **routing-table compiler** (match → AGI stub); CAGI = **call engine** (Dial, CF, fleet AoR).
+- Thin further; **one Dial authority** — kill GenAst fleet `Q{ext}` Dial fork (`GenClass` ~1217–1222); same PrepDial path as LepDial.
+- More `#include`s only for static patterns (presets already do this well).
+- **Surgical bug:** `genExtensionsEndpoints` inner `foreach ($this->appl as $row)` **shadows** tenant `$row` (~990) — can corrupt localarea / open-close / fleet FQDN / VM context after any appl rows; `$this->applrow` unset. Fix before large dialplan refactor.
+- CoS O(phones) contexts: do not grow; redesign later.
+- Orthogonal to phone overlay — do not block G2 on dialplan rewrite.
+
+### Rejected
+
+- Always-tmpl with **no** overlay (operator needs hand override).
+- DB JSON overrides (revisit only if SPA edits overlays).
+- ARI / realtime rewrite; less AGI / more dialplan; per-tenant context file sprawl as the main fix.
+
+### Resume order when coding
+
+1. Unstash / review G2 on `genast-phone-overlay` vs §0 phone contract; API overlay delete; golden smoke.
+2. Optional surgical: appl/`$row` shadow fix.
+3. Later: webrtc overlay parity; dialplan thin; G3 SBC FQDN; `$clstkey` xlate bug in `pjsip_phone.tmpl`.
 
 ---
 
@@ -11,7 +47,7 @@
 Treat config generation as its own work track — not a one-off “delete staged phones after tmpl change” chore. Fold the parked **phone PJSIP staging** item into this track. Keep cagi struct refactor as a parallel cleanup that must not break GenAst-emitted AGI argv / Dial forms.
 
 ```text
-templates/*.tmpl  --(copy-once today)-->  endpoints/{key}_*.conf
+pjsip_phone.tmpl  --(always on get)-->  + optional {shortuid}_phone.overlay.conf
                                               |
                                          xlate on Commit
                                               v
