@@ -1,7 +1,8 @@
 # Fleet toll fraud & call-pattern velocity (requirements)
 
-**Status:** **V0 framing** (2026-07-22) — direction of flow + phased testable steps locked; implementation not started.  
-**Related:** **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite; instance **CoS** / dial policy (prevention); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only**).
+**Status:** **V0 framing done** (2026-07-22); **V1–V2 build plan fleshed** (2026-07-23); **auto-block required** (Fail2ban inside→out — 2026-07-23). Implementation not started.  
+**Lab testing:** CDR fixture first; SIPp optional E2E.  
+**Related:** **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite (Phase 6 `master.db` shipped); instance **CoS** / dial policy (prevention + **act**); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only** — outside→in; velocity is the **inside→out** cousin).
 
 ---
 
@@ -9,15 +10,23 @@
 
 Fraudsters compromise a business PBX or SIP path and drive **high volumes of outbound** (often automated) calls to **premium-rate or high-cost international** destinations. Attackers take a cut from expensive destination carriers; the tenant or MSP gets a surprise bill.
 
-Common patterns (industry):
+**Core nightmare (always has been):** a **compromised phone** (stolen credentials / weak device). Attackers often either (a) dial high-value numbers directly (**IRSF burst**) or (b) **CFIM / Follow-me it to a bad number** so spend happens on every inbound or divert — same compromise, different shape. Money runs up in minutes. **CoS is a big help when used**; velocity (+ later CFIM checks) catch what CoS missed — then **auto-block like Fail2ban, but inside→out** (set the phone **`active=NO`**), with **minimum inconvenience to the rest of the tenant**.
 
-| Type | Shape | Product relevance |
-|------|--------|-------------------|
-| **IRSF** (International Revenue Share Fraud) | Rapid concurrent / burst outbound to high-rate countries or premium ranges | **Primary target** for velocity detect |
-| **Wangiri** | One-ring missed call → employee redials premium number | Later / noisy; needs inbound+outbound correlation |
-| **Traffic pumping** | Manufactured calls into toll-free to trigger access charges | Mostly **carrier / toll-free** side — not instance outbound velocity |
+### Patterns (threat map)
 
-Industry levers we already map elsewhere: **geo-restrict / CoS**, **harden credentials**, **disable DISA-class features**, **carrier fraud desk**. This track owns **monitor call patterns → alert** (and later optional act), complementary to prevention and carrier backstops.
+| Type | Shape | Product stance |
+|------|--------|----------------|
+| **IRSF burst** | Rapid outbound to high-rate / premium destinations | **V2/V5 primary** — CDR velocity + `active=NO` |
+| **CFIM / Follow-me abuse** | Compromised phone: set forward to a bad number; spend without a “hot dialer” | **High priority later** — often *what they do* after compromise; detect config change and/or forward legs; same act (`active=NO` and/or clear CF) |
+| **Saturday-night blitz** | Off-hours / weekend outbound surge (ops have seen this) | **Later rule** after IRSF burst — off-hours window signal (was deferred; now named) |
+| **Failed-attempt scanning** | Many short/failed tries across premium ranges (recon) | **Later rule** — disposition/failed-heavy window; ops have seen this |
+| **Wangiri** | One-ring missed call → employee redials premium | Later / noisy; inbound+outbound correlation |
+| **Traffic pumping** | Manufactured calls into toll-free | Carrier / toll-free side — not instance HoR |
+| **Low-and-slow premium** | Few calls, long billsec to expensive dest | **Hard without a strict high-value CoS policy** — lean on **prevention (CoS)**; velocity is a poor sole detector |
+| **DISA / remote outdial** | Classic PBX hack path | **We can support DISA technically but we don’t ship it** — keep it that way; not a detection target |
+| **Voicemail outdial** | VM compromised → external dial | **Ensure locked out** (prevention audit) — confirm product cannot outdial from VM; treat as hard requirement, not a velocity phase |
+
+Industry levers: **geo-restrict / CoS**, **harden credentials**, **no DISA**, **VM outdial locked**, **carrier fraud desk**. This track owns **monitor patterns → alert → `active=NO` on the offending phone**, complementary to prevention and carrier backstops.
 
 ---
 
@@ -27,20 +36,48 @@ Industry levers we already map elsewhere: **geo-restrict / CoS**, **harden crede
 Prevention (CoS / dial policy / kill DISA-class features)
     → Detection (instance CDR patterns — “velocity”)
         → Notify (Gatekeeper ops-events → email)
-            → Later: warn / block (only after notify proven)
+            → Auto-block on PBX (`ipphone.active=NO` + genAst — Fail2ban inside→out)
                 ↔ Carrier fraud desk / ITSP geo-block = backstop, not HoR
+```
+
+Analogy:
+
+| Edge (already) | Instance velocity (this track) |
+|----------------|--------------------------------|
+| SBC **Fail2ban** — abusive **inbound** SIP (REGISTER/INVITE flood) → ban source IP | Velocity auto-block — abusive **outbound** dial pattern → set phone **`active=NO`** (inside→out) |
+
+```text
+CDR fixture or live calls
+        → /var/log/asterisk/master.db (cdr table)
+            → pbx3:ops-velocity (batch scan)
+                → POST /api/v1/ops-events {type: velocity_irsf}  (notify)
+                → local act: ipphone.active = NO (+ genAst)   (auto-block)
 ```
 
 | Plane | Role |
 |-------|------|
-| **Instance** | **Detection** (+ optional later local warn/block) — next to Asterisk CDR / **SQLite searchable CDR** and CoS; knows tenant, extension, dialled dest, billsec |
-| **Gatekeeper** | **Notify delivery** (+ optional rollup of events nodes already detected) — **not** the place that scores every call (**Rule 1**) |
-| **SBC** | **SIP abuse** (Fail2ban, pike, door-knock) — volumetric REGISTER/INVITE; **not** dial-pattern / toll-fraud velocity |
-| **Carrier** | Fraud desks / geo-blocks — complementary backstop; document as such |
+| **Instance** | **Detection + auto-block** — CDR scan; set **`ipphone.active=NO`** for the offending phone; GenAst omits inactive endpoints |
+| **Gatekeeper** | **Notify delivery** only — **not** the place that scores or blocks calls |
+| **SBC** | **SIP abuse** Fail2ban/pike (outside→in) — **not** dial-pattern velocity |
+| **Carrier** | Fraud desks / geo-blocks — complementary backstop |
 
-**Reuse:** Same notify plane as instance-down / REGISTER-loop / Egress Unavail — structured `ops-events` → SMTP (`notify_failures` + optional ops mailbox). Do **not** invent a second mail stack.
+**Reuse:** Same notify plane as other ops-events → SMTP. Do **not** invent a second mail stack. Do **not** put block decisions on Gatekeeper or OpenSIPS for this threat.
 
-**Prevention vs detection:** CoS / dial policy **blocks** bad dials when configured. Velocity **reports** odd patterns when prevention was incomplete, bypassed, or credentials were abused. Velocity is **not** a substitute for CoS.
+**Prevention vs detection vs act:** CoS **blocks** bad dials when configured. Velocity **detects** odd patterns, **mails** ops, then sets **only** the offending phone **`active=NO`** so the scam stops with **minimum inconvenience to the rest of the tenant**. Velocity is not a substitute for CoS; it is the automatic brake when CoS was not enough.
+
+---
+
+## Settled forks (2026-07-23)
+
+| # | Fork | Decision |
+|---|------|----------|
+| 1 | MVP rule | **IRSF destination surge only** — off-hours volume deferred past V2 |
+| 2 | Rule authorship | **V2:** env defaults on the node; **V3:** fleet-wide template first (per-tenant later) |
+| 3 | Timing | **Batch CDR scan** (artisan/cron, same shape as `pbx3:ops-register-loops`) — not AMI near-real-time |
+| 4 | Audience | **Fleet ops only** (`notify_failures`) for V2; tenant admins later (V4) |
+| 5 | V1 prerequisite | **Use existing `master.db`** (Phase 6) — no Master.csv interim; lab fixture writes SQLite-shaped rows |
+
+**Residuals (tune in lab, not blockers):** exact **N / T / Q** after first golden run; production high-cost prefix list ownership (ops vs fleet template in V3). **Act gaps above are requirements, not residuals** (attribution, clear CF, hangup-or-bleed).
 
 ---
 
@@ -51,9 +88,9 @@ Prevention (CoS / dial policy / kill DISA-class features)
 | Item | Detail |
 |------|--------|
 | **Goal** | Spec + threat map + plane ownership settled enough to build |
-| **Done when** | This document exists; prevention vs detection vs notify vs edge roles explicit; open questions listed |
+| **Done when** | This document exists; prevention vs detection vs notify vs edge roles explicit |
 
-**Status:** **Done** (this doc, 2026-07-22).
+**Status:** **Done** (2026-07-22; forks settled 2026-07-23).
 
 ---
 
@@ -62,9 +99,42 @@ Prevention (CoS / dial policy / kill DISA-class features)
 | Item | Detail |
 |------|--------|
 | **Goal** | Reliable instance CDR input for time windows and queries |
-| **Direction** | **SQLite on-node** as search / velocity HoR; CSV (or dump) as cold archive — **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** |
-| **Done when** | Scanner (or precursor query) can read recent outbound CDR with dest, time, extension/tenant context on a lab node; retention/prune does not break the window |
-| **Non-goal** | Fleet-central CDR warehouse; scoring on Gatekeeper; treating SBC MySQL `acc` as fraud signal |
+| **HoR** | **`/var/log/asterisk/master.db`** via Asterisk `cdr_sqlite3_custom` — already shipped (log-retention Phase 6). CSV `Master.csv` = archive/S3 only |
+| **Code already there** | pbx3api `CdrIndexService` / `GET /cdr`; `PBX3_CDR_SQLITE_PATH`; prune `pbx3:cdr-prune` |
+| **Non-goal** | Fleet-central CDR warehouse; scoring on Gatekeeper; treating SBC MySQL `acc` as fraud signal; rebuilding Phase 6 |
+
+#### Columns (velocity needs)
+
+From packaged `cdr_sqlite3_custom.conf` table `cdr`:
+
+| Column | Velocity use |
+|--------|----------------|
+| `calldate` | Window filter |
+| `src` | Extension / CLI context |
+| `dst` | Dialled dest → prefix match |
+| `disposition` | Prefer answered / attempted outbound (exclude pure internal noise where possible) |
+| `accountcode` | Tenant / billing context when populated |
+| `billsec` / `duration` | Optional severity / filters later |
+| `dcontext` / `channel` | Heuristics to exclude obvious internal dials |
+
+#### Query contract (scanner input)
+
+- Window: rows with `calldate` in the last **T** minutes.
+- Candidate set: outbound-ish rows whose `dst` matches a configured **high-cost prefix** list (see V2).
+- Exclude: empty `dst`; clearly internal patterns (e.g. shortuid-only / local extension shapes — document heuristics in implementation).
+- Tenant context: prefer `accountcode` when set; else best-effort from channel/context — do not block V1 on perfect tenant attribution.
+
+#### CDR fixture (lab)
+
+- **Purpose:** seed velocity-shaped rows without SIPp / live trunks.
+- **Shape:** artisan command or script in **pbx3api**, env-gated (e.g. `PBX3_CDR_FIXTURE=1` or explicit `--force` on non-prod).
+- **Path safety:** default write target = **`PBX3_CDR_SQLITE_PATH`** override pointing at a **lab copy** of `master.db` (or empty SQLite with `cdr` schema) — **do not** casually INSERT into live golden `master.db` without an explicit flag.
+- Insert N rows with recent `calldate`, lab `dst` prefixes, `src` / `accountcode` filled.
+- Done when: fixture + one query helper returns the burst rows V2 will count.
+
+| Item | Detail |
+|------|--------|
+| **Done when** | On a lab node (or fixture DB): query returns recent outbound CDR with dest, time, and extension/tenant context; prune retention does not empty the active window; fixture path documented |
 
 ---
 
@@ -72,11 +142,70 @@ Prevention (CoS / dial policy / kill DISA-class features)
 
 | Item | Detail |
 |------|--------|
-| **Goal** | Thin outbound pattern rules → Gatekeeper mail |
-| **Action** | **Notify only** — no auto-block until false-positive story is proven |
-| **Example signals** | ≥N outbound attempts (or concurrent channels) to high-cost / international-class prefixes in T minutes; optional off-hours volume (product fork — see open questions) |
-| **Emit** | Instance cron/scanner (same shape as `pbx3:ops-register-loops` / egress qualify) → `POST /api/v1/ops-events` `{type: velocity_…}` → SMTP |
-| **Done when** | Lab-seeded burst to a designated “high-cost” prefix fires **one** mail (hysteresis / de-dupe); cleared or quiet period defined; Gatekeeper down ≠ call-path impact (**Rule 5**) |
+| **Goal** | Thin outbound prefix-surge rule → Gatekeeper mail |
+| **Action** | **Notify** in V2; **auto-block required in V5** (ships immediately after V2 lab prove-out — not optional forever) |
+| **Command** | `pbx3:ops-velocity` (name locked) — schedule ~every minute when enabled |
+| **Enable** | `PBX3_OPS_VELOCITY_ENABLED=true` (+ existing `PBX3_GATEKEEPER_URL` / `TOKEN`) |
+| **Mirror** | Same shape as `pbx3:ops-register-loops` / `pbx3:ops-egress-qualify` |
+
+#### MVP rule (lab defaults — env-tunable)
+
+| Knob | Env (proposed) | Lab default |
+|------|----------------|-------------|
+| Count threshold | `PBX3_OPS_VELOCITY_N` | **10** |
+| Window minutes | `PBX3_OPS_VELOCITY_T` | **5** |
+| Quiet / hysteresis minutes | `PBX3_OPS_VELOCITY_Q` | **30** |
+| High-cost prefixes | `PBX3_OPS_VELOCITY_PREFIXES` (comma list) | Small **lab** list (e.g. designated fake premium prefixes used by fixture) |
+
+**Fire when:** count of matching outbound CDRs in window **T** ≥ **N**.
+
+**Not in V2 (notify slice only):** off-hours volume; concurrent-channel AMI; Wangiri; **auto-block** (that is **V5**, required next).
+
+#### Emit
+
+`POST /api/v1/ops-events` with:
+
+| Field | Value |
+|-------|--------|
+| `type` | **`velocity_irsf`** (locked) |
+| Payload | Instance id/label/FQDN; **extension / src** when attributable; optional tenant/`accountcode`; **masked** dest prefixes (not full numbers); count; window T; first/last calldate in burst; later: whether auto-block applied |
+
+Gatekeeper: handle `velocity_irsf` like other ops-events → SMTP to `notify_failures` (+ optional ops mailbox). Digits in mail: mask/truncate (V4 hygiene starts here — do not dump full `dst` lists).
+
+#### Hysteresis / de-dupe
+
+- Firing key: instance + **extension** (preferred) or accountcode + rule id `irsf`.
+- First fire → one mail (`transition=down` or equivalent).
+- Further scans while still over threshold within **Q** → **no** additional mail.
+- After quiet period (**Q** minutes under threshold) → optional `cleared` mail (and unban story in V5).
+
+| Item | Detail |
+|------|--------|
+| **Done when** | Fixture burst → **one** `velocity_irsf` mail; second scan within hysteresis → no spam; Gatekeeper down ≠ call-path impact (**Rule 5**); enable flag documented in **`CONTROL_HOST.md`** / node `.env` notes |
+
+---
+
+### Lab testing (settled 2026-07-23)
+
+**Day-to-day:** a **good CDR fixture deck** is enough to exercise most detection shapes without SIPp — seed `master.db`-shaped rows and run the scanner(s).
+
+| Pattern | Fixture approach |
+|---------|------------------|
+| **IRSF burst** | N outbound rows, high-cost `dst`, recent `calldate`, same `src` |
+| **Saturday-night blitz** | Same burst with `calldate` in off-hours / weekend window |
+| **Failed-attempt / short-call scanning** | Many rows, failed/busy or billsec under ~30s, premium-ish `dst`s |
+| **Dormant extension** | Rows from `src` with no prior originations in fixture history window |
+| **Concurrency** | Overlapping `calldate`/`duration` windows on same `src` or tenant |
+| **Forward chain** | Paired inbound + outbound external legs (same window / linked ids if available) |
+| **Low-and-slow** | Few rows, long `billsec`, expensive `dst` — proves CoS / future rule more than burst velocity |
+| **CFIM / Follow-me** | Divert legs in CDR **plus** planted CFIM target for config detect |
+| **VM outdial / DISA** | **Not** CDR-deck tests — prevention audits |
+
+**Flow:** fixture → pointed `PBX3_CDR_SQLITE_PATH` → `pbx3:ops-velocity` (+ later rule packs) → mail / `active=NO`. No REGISTER, media, or live trunks for day-to-day.
+
+**Optional E2E:** **SIPp** on golden when you want INVITE → real CDR → scanner confidence. Reuse **`pbx3sbc/attackTests`**; do not build a fleet call-generator. Edge SIPp flood ≠ toll-velocity HoR.
+
+**Prevention note:** for live SIPp drills, use a lab allow-listed “high-cost” prefix or temporarily open CoS so the burst is intentional.
 
 ---
 
@@ -84,9 +213,9 @@ Prevention (CoS / dial policy / kill DISA-class features)
 
 | Item | Detail |
 |------|--------|
-| **Goal** | Operators can tune thresholds / prefixes without redeploy |
-| **Direction** | Fleet template and/or per-tenant rules (product fork — see open questions) |
-| **Done when** | Change a threshold on control or instance UI/config → next scan uses it; documented defaults for greenfield |
+| **Goal** | Operators tune thresholds / prefixes without redeploy |
+| **Direction** | **Fleet-wide template first** (control → nodes or shared config); per-tenant later |
+| **Done when** | Change N/T/prefixes on control (or documented fleet config) → next scan uses it; greenfield defaults documented |
 
 ---
 
@@ -95,28 +224,99 @@ Prevention (CoS / dial policy / kill DISA-class features)
 | Item | Detail |
 |------|--------|
 | **Goal** | Right recipients; safe alert bodies |
-| **Direction** | Fleet ops first (`notify_failures`); tenant-admin subscription optional later; **mask / truncate dialled digits** in mail |
-| **Done when** | Ops receive usable alerts without full number dump; subscription story documented |
+| **Direction** | Fleet ops already in V2; **tenant-admin** subscription optional later; digit mask required from V2 mail |
+| **Done when** | Ops receive usable alerts without full number dump; tenant audience story documented if added |
 
 ---
 
-### V5 — Act (optional)
+### V5 — Auto-block (required; Fail2ban inside→out)
 
 | Item | Detail |
 |------|--------|
-| **Goal** | Beyond notify — only after V2 proven |
-| **Candidates** | Local warn tone / admin banner; temporary CoS tighten; hard block on matching dest |
-| **Done when** | Explicit product choice + lab acceptance; default remains notify-only until then |
+| **Goal** | Stop the compromised-phone spend **on the PBX** as soon as velocity fires — same *idea* as Fail2ban, opposite direction |
+| **Priority** | **Required** product outcome; ship **immediately after** V2 notify lab (do not park as “maybe later”) |
+| **Scope** | **One phone only** — the extension that sourced the surge. **Minimize inconvenience to the tenant as a whole:** do not deactivate sibling extensions, do not lock the tenant, do not change CoS fleet-wide. Whole-tenant act only if attribution is impossible (document as last resort; default is never) |
+| **Attribution (must)** | Map CDR evidence → exactly one **`ipphone`** row before acting. Prefer stable id (`shortuid` / channel endpoint) over ambiguous CLI. **If attribution is uncertain → notify only, do not deactivate** (wrong-phone deactivate is worse than a delayed ban) |
+| **Mechanism (locked)** | Flip **`ipphone.active`** to **`NO`** (existing active/inactive switch). GenAst already omits inactive phones from PJSIP |
+| **Clear forwards (must)** | On act, also **clear CFIM / CFBS / Follow-me** (runtime AstDB and/or stored forward fields — whichever the product uses) for that extension. **`active=NO` alone may not stop divert spend** if inbound still hits a forward |
+| **In-progress calls** | Deactivate + genAst does **not** tear down live channels by itself. Choose and document one: **(A)** AMI hangup of that endpoint’s channels on act, or **(B)** accept short bleed until natural hangup. Prefer **(A)** for IRSF money-clock |
+| **Enforce** | After DB updates, **Commit / genAst** + reload as today (phone-only path if available). Must bite before the next fraud burst continues |
+| **What gets blocked** | **Only that phone** (+ its forwards cleared) — rest of tenant keeps working |
+| **Notify** | Mail notes extension deactivated, forwards cleared, and whether live channels were hung up |
+| **Unban** | `active=YES` + Commit/genAst; forwards stay clear unless ops restore deliberately; optional TTL re-activate |
+| **SPA / audit (should)** | Show phone was disabled **by velocity** (not a mysterious manual toggle); control who may re-enable (prefer MSP / high privilege — avoid easy re-enable by a compromised tenant admin session) |
+| **Allowlist (should)** | Extensions that never auto-deactivate (fax/alarm/VIP) — env or fleet template later |
+| **False positives** | Easy reactivation via UI for authorized roles; V2 lab tunes N/T before enabling act |
+| **Non-goal** | Gatekeeper/SBC deciding the dial; second disable path beside `active` + clear-CF |
+
+| Item | Detail |
+|------|--------|
+| **Done when** | Attributable fixture burst → correct phone only `active=NO` + forwards cleared → genAst/reload off-net → optional AMI hangup of live legs → mail explains act → reactivation restores service; uncertain attribution never deactivates the wrong phone |
 
 ---
 
-## Explicitly later / adjacent (not blocking V2)
+### Implementer notes (locked gaps — 2026-07-23)
 
-- Wangiri heuristics (inbound short + outbound redial correlation)  
-- Traffic pumping / toll-free inbound flooding  
-- SBC Fail2ban **Peer auto-whitelist** (next carrier onboard — ops-notify / peering track)  
-- Webhooks / Slack / PagerDuty (notify-plane evolution)  
-- Prometheus/Grafana as pretty metrics (not HoR for this track)
+| Topic | Requirement |
+|-------|-------------|
+| **src → phone** | Explicit mapping rules + lab tests for multi-tenant nodes; fail safe = notify-only |
+| **Clear CF on act** | Always with deactivate; CFIM abuse is a primary real-world vector |
+| **Hangup vs bleed** | Document A vs B; default recommendation **AMI hangup** of that endpoint’s channels |
+| **Timezone** | Off-hours / Saturday-night rules use a defined clock (tenant local vs node UTC) — settle when that rule ships |
+| **Scanner silence** | Optional later: heartbeat that `pbx3:ops-velocity` is running (owned-box risk) |
+
+---
+
+## Explicitly later / adjacent (not blocking V2/V5)
+
+**Next detection shapes (after IRSF + auto-block)** — include published CDR patterns worth stealing:
+
+| Pattern | Note | Source / kin |
+|---------|------|----------------|
+| **CFIM / Follow-me to bad number** | Common post-compromise; config + CDR; **act always clears CF** with `active=NO` | Ops experience; industry “forwarding fraud” |
+| **Saturday-night / off-hours blitz** | Time-window surge (tenant-local clock when rule ships) | Ops; common CDR fraud writeups |
+| **Failed-attempt / short-call scanning** | Many short/failed CDRs to premium-ish prefixes — recon before the big run | Ops; “short-duration call storms” |
+| **Dormant extension wakes up** | Outbound from an extension with little/no recent originations (e.g. 60d quiet) | Published CDR fraud patterns |
+| **Concurrency above normal** | Overlapping outbound above trailing peak (esp. off-hours) — autodialer grabbing channels | Published CDR fraud patterns |
+| **Forward chain ending off-net** | Inbound → paired outbound external/international within seconds (redirect / divert legs) | Published CDR fraud patterns; pairs with CFIM |
+| **Premium / high-fraud country watchlist** | First-call or low-N alert to known IRSF-prone country/premium prefixes (beyond burst count) | Industry watchlists; SecAst-class fraud number DBs (we start with env list, not a paid DB) |
+| **Wangiri** | Inbound short + outbound redial correlation | Industry; noisy |
+
+**Prevention audits (not velocity scanners):**
+
+| Item | Note |
+|------|------|
+| **Voicemail outdial** | **Must stay locked out** — confirm no VM→PSTN path; hard prevention |
+| **DISA** | Technically possible, **not shipped** — keep disabled |
+| **Low-and-slow premium** | Strict **high-value CoS**; burst velocity alone is weak |
+| **External forward barred by CoS** | Where product allows: prevent off-net CFIM for most classes (prevention cousin of CFIM detect) |
+
+**Other deferred:**
+
+- Traffic pumping / toll-free (carrier plane)  
+- Tenant-wide deactivate as default (extension-first)  
+- SBC Fail2ban Peer auto-whitelist (peering track)  
+- Webhooks / Slack / PagerDuty; Prometheus as pretty metrics (not HoR)  
+- Paid third-party fraud-number / reputation feeds (optional later; SecAst-class)
+
+---
+
+## Competitive notes (2026-07-23)
+
+**Market gap:** FreePBX / Sangoma / 3CX / Issabel-class systems emphasize **prevention** (outbound rules, country allow-lists, PIN) and **outside→in** (Fail2ban / Responsive Firewall). **Carrier / Tier‑3** tools add country blocks and weekly **$** / path caps — valuable but often **slow** and **trunk-scoped**. Few ship **fast inside→out** “kill this compromised phone” as a first-class PBX feature.
+
+| Offering | Typical capability | vs pbx3 plan |
+|----------|-------------------|--------------|
+| **FreePBX / Sangoma** | Routes, PIN, time groups; Firewall / Fail2ban; SysAdmin Pro **abnormal call volume notification** | Notify / IP ban — not extension `active=NO` |
+| **3CX** | Country allow-lists, outbound rules, anti-hacking IP list | Prevention; CDR review / carrier backstop |
+| **Issabel lineage** | Dialplan CoS; AMI DIY | No built-in velocity product |
+| **SecAst (Telium)** | Fraud number DB, hacker IPs, heuristics, **disconnect calls**, dialplan override | Closest commercial Asterisk peer; heavier add-on |
+| **PBXDom** (CDR SaaS) | Alerts on after-hours, premium watchlist, short storms, dormant ext, weekend, forwarding chains | **Detect + notify**; not native PBX disable |
+| **Carriers** | Spend caps, fraud desks | Backstop; not minutes-scale extension act |
+
+**pbx3 differentiation (intent):** on-box batch CDR → ops mail → **`ipphone.active=NO` + clear CF + hangup**, fixture-testable, **one phone** blast radius — Fail2ban’s cousin **inside→out**, built in for fleet/MSP.
+
+Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weekend blitz, forward chains) are **fair game** to implement as later rule packs; cite industry practice in release notes, not proprietary UI copy.
 
 ---
 
@@ -125,32 +325,22 @@ Prevention (CoS / dial policy / kill DISA-class features)
 | Dependency | Use |
 |------------|-----|
 | Gatekeeper SMTP + `users.notify_failures` | Delivery |
-| `POST /api/v1/ops-events` | Event ingress (REGISTER, Fail2ban ban, Egress Unavail patterns) |
-| Instance CoS / dial policy | Prevention cousin |
-| Log retention / CDR prune paths | Window hygiene; V1 may extend SQLite ingest |
-
----
-
-## Open questions (product forks)
-
-1. **MVP rule set** — IRSF destination surge only, or also **off-hours volume** from day one?  
-2. **Rule authorship** — fleet-wide templates vs per-tenant (or both)?  
-3. **Near-real-time vs batch** — channel/AMI hooks vs periodic CDR scan (batch closer to existing ops scanners)?  
-4. **Audience** — fleet ops only for V2, or tenant admins in the same arc?  
-5. **V1 hard prerequisite** — full searchable SQLite CDR before V2, or agreed interim (e.g. thin SQLite ingest / Master.csv scan) for lab?
-
-Settle before coding V2; V1 choice (question 5) may unblock a thinner first lab slice.
+| `POST /api/v1/ops-events` | Event ingress (extend with `velocity_irsf`) |
+| Instance CoS / dial policy | Prevention cousin (`active` switch is the **act**) |
+| Phase 6 `master.db` + `GET /cdr` + prune | V1 HoR — do not rebuild |
+| Register-loop / egress-unavail scanners | Pattern for `pbx3:ops-velocity` |
+| SBC Fail2ban (outside→in) | Conceptual cousin only — different plane |
 
 ---
 
 ## Suggested build order
 
-1. **V0** — this doc. **Done.**  
-2. **V1** — confirm/finish instance CDR query surface for velocity windows.  
-3. **V2** — IRSF-shaped scanner + ops-event + mail on golden/lab.  
-4. **V3** — tunable rules.  
-5. **V4** — audience + digit hygiene.  
-6. **V5** — act only if still wanted after notify runs in anger.
+1. **V0** — framing + forks. **Done.**  
+2. **V1** — confirm `master.db` query surface + **CDR fixture** (path-safe).  
+3. **V2** — `pbx3:ops-velocity` + Gatekeeper `velocity_irsf` + mail (fixture-first; SIPp optional).  
+4. **V5** — **auto-block** via existing **`ipphone.active=NO`** (+ genAst) — required next; do not defer.  
+5. **V3** — fleet-wide tunable rules (shrink N control surfaces).  
+6. **V4** — tenant audience if still wanted (digit hygiene already in V2).
 
 ---
 
@@ -158,12 +348,16 @@ Settle before coding V2; V1 choice (question 5) may unblock a thinner first lab 
 
 | Doc | Role |
 |-----|------|
-| **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** | Delivery plane; velocity pointer |
-| **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** | Instance SQLite CDR HoR |
+| **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** | Delivery plane; add `velocity_irsf` when implementing |
+| **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** | Instance SQLite CDR HoR (Phase 6) |
 | **`CONTROL_HOST.md`** | Gatekeeper env / ops-events ops |
 | **`DESIGN_RULES.md`** | Rule 1, Rule 5 |
-| Instance CoS / dial policy (SPA + GenAst) | Prevention |
+| Instance CoS / dial policy (SPA + GenAst) | Prevention + act surface |
+| pbx3api `CdrIndexService` / `config/pbx3_cdr.php` | Existing CDR read path |
+| `pbx3sbc/attackTests` SIPp notes | Optional E2E only |
+| SBC Fail2ban | Outside→in analogue — not the implementation |
+| Competitive scan (2026-07-23) | FreePBX/3CX prevention+F2b; SecAst add-on; PBXDom CDR alerts; carrier spend caps — see **Competitive notes** |
 
 ---
 
-*Last updated: 2026-07-22 — V0 framing (direction of flow + V0–V5 phases).*
+*Last updated: 2026-07-23 — competitive notes + stolen published CDR patterns (dormant, concurrency, forward chains, short storms); V5 act gaps locked.*

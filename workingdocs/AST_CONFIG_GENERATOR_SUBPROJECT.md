@@ -1,8 +1,8 @@
 # Ast config generator sub-project
 
 **Status:** Framing (2026-07-23). Docs + TODO rebucket only — no staging implementation yet.  
-**Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging), including **phone PJSIP staging/overlay**.  
-**Sibling:** **pbx3cagi** cleanup — `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract, not by merging repos.
+**Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging), including **phone PJSIP staging/overlay**, **and** the paired **pbx3cagi** cleanup (same suggested-order item).  
+**CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.
 
 ---
 

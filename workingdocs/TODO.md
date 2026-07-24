@@ -8,14 +8,13 @@
 1. **Toll fraud / velocity** (V0 done — V1+ when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
 2. **Number dialect — paid Twilio + named recipe** (when ready).  
 3. **Drain affordance — tenant-scoped channel count → wipe-when-drained** (nice-to-have, parked) — see open item below.  
-4. **Ast config generator sub-project** (owns phone PJSIP staging/overlay) — **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**; sibling **pbx3cagi** cleanup.  
+4. **Ast config generator + pbx3cagi cleanup** (one track) — GenAst/staging overlay **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**; sibling cagi Phase 1.3+ **`REFACTOR_PLAN.md`** (shared dialplan↔AGI contract).  
 5. ~~**Deploy Gatekeeper** with tenant-home rebuild (control)~~ — **done 2026-07-23** (rsync + FPM; `POST …/tenant-home/rebuild` → 5 tenants).  
 6. **Instance shadowing** (parked).  
 7. **SBC SQLite + Litestream** (parked).  
 8. **S10.7 / S8.9** (parked).  
-9. **pbx3cagi** struct refactor (deferred; resume with generator track / when product allows) — **`REFACTOR_PLAN.md`**.  
-10. **Fleet auth cookie/SSO (blocked)** — stay off third-party IdP until forced.  
-11. **S7+** attested PCI — only on customer ask.  
+9. **Fleet auth cookie/SSO (blocked)** — stay off third-party IdP until forced.  
+10. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -23,9 +22,9 @@
 
 - [x] **Fleet multi-tenant phone dial / SBC AoR (2026-07-23):** Root cause was Asterisk→SBC `INVITE shortuid@VIP` → OpenSIPS domain guess (`LIMIT 1`) → 404 / hairpin. Fix: PrepDial + GenAst Q dials use `sip:shortuid@tenant.fqdn`; phone `$outbound_proxy` → `sbc.pbx3.com`; OpenSIPS usrloc for from-Asterisk FQDN RURIs. **Fleet-gated** (`PBX3_FLEET_MODE` / Egress) so singleton stays direct-to-contact. Lab: golden multi-tenant both ways + ring groups; rolled **08jzwn** + **bzy54n** (`pbx3cagi` **1.0.0-6**). Tips **pbx3cagi** **`fd9b146`**, **pbx3** **`1ea1210`**, **pbx3sbc** **`4509b5d`**. **Residue** (tmpl→staged phone copy, hardcoded SBC FQDN, Page/`***` presets, tighter OpenSIPS gate, tenant DNS ≠ VIP) → **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
 
-- [ ] **Ast config generator sub-project (framing 2026-07-23):** **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**. Owns GenAst / `GenClass` / endpoint staging; first coding target = phone tmpl + thin overlay (Commit picks up tmpl without deleting `endpoints/*_phone.conf`). Sibling: **pbx3cagi** Phase 1.3+ — keep GenAst↔CAGI dialplan/AGI contract stable. Follow-ons listed in that doc (SBC FQDN input, webrtc parity, optional generator tests).
+- [ ] **Ast config generator + pbx3cagi cleanup (one track, framing 2026-07-23):** **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**. Owns GenAst / `GenClass` / endpoint staging; first coding target = phone tmpl + thin overlay (Commit picks up tmpl without deleting `endpoints/*_phone.conf`). **pbx3cagi** Phase 1.3+ (**`REFACTOR_PLAN.md`**) — keep GenAst↔CAGI dialplan/AGI contract stable; run **`make test`** after each cagi step. Follow-ons in generator doc (SBC FQDN input, webrtc parity, optional generator tests).
 
-- [ ] **Phone PJSIP template staging (parked 2026-07-23 → under generator sub-project):** `endpoints/{shortuid}_phone.conf` copied once at create — tmpl changes need delete/refresh staged files before Commit. Always-from-tmpl kills per-phone overrides. Target model: tmpl source of truth + thin overlay — see **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §4.
+- [ ] **Phone PJSIP template staging (parked 2026-07-23 → under generator+cagi track):** `endpoints/{shortuid}_phone.conf` copied once at create — tmpl changes need delete/refresh staged files before Commit. Always-from-tmpl kills per-phone overrides. Target model: tmpl source of truth + thin overlay — see **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §4.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 
@@ -33,9 +32,9 @@
 
 - [x] **Twilio trial dialect lab (2026-07-22):** Elastic SIP Trunk DID **`+15139279738`** → golden **1000** (inbound Peers gwid **40–47**, `dialect=strict-plus-e164`); outbound Peer **50** `sip:aelsbc.pstn.twilio.com:5060`. Inbound + direct Twilio egress audio OK. Outbound gwlist lab end-state **`1,20,50`** (Brindley first — Magrathea may not take intl on this account). UK habit `001…` → cell via Brindley OK; trombone DID via Brindley→Magrathea → **no answer** (trial/Twilio-side). Golden **`extensions.conf`** symlink to GenAst path fixed earlier same arc. **Live DB only** — no new git tips this slice.
 
-- [x] **Toll fraud / velocity — V0 framing (2026-07-22):** Own track **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — direction of flow (CoS prevent → instance detect → Gatekeeper notify → later act); phases **V0–V5** with lab acceptance; IRSF-first; ops-notify § shrunk to pointer. **Next when prioritized:** V1 CDR data plane → V2 IRSF detect+notify.
+- [x] **Toll fraud / velocity — V0 framing (2026-07-22):** Own track **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — direction of flow; phases **V0–V5**. **2026-07-23:** V1/V2 build plan fleshed (batch CDR, IRSF-only, fixture-first, `velocity_irsf`). **Next when prioritized:** V1 fixture + query → V2 scanner+notify.
 
-- [ ] **Toll fraud / velocity — V1+ (when prioritized):** Searchable instance CDR for windows (V1); IRSF-shaped scanner → `ops-events` → mail, notify-only (V2); rule authorship (V3); audience + digit hygiene (V4); optional act (V5). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Delivery: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
+- [ ] **Toll fraud / velocity — V1+ (when prioritized):** Spec fleshed **2026-07-23** — forks settled; **fixture-first**; existing Phase 6 `master.db`. **V1** fixture+query → **V2** `pbx3:ops-velocity` / `velocity_irsf` mail → **V5 auto-block** = existing **`ipphone.active=NO`** (+ genAst; Fail2ban inside→out). Then V3 fleet templates / V4 tenant audience. Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Delivery: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
 
 - [ ] **Number dialect — paid Twilio + follow-ons:** Operator will sign up full Twilio; named Twilio Peer “recipe” (optional — today `strict-plus-e164`); US Egress `011:+` seed; Magrathea gwid **20** may still lack `dialect=uk-magrathea`; custom-dialect UI. Future product thread: global DID → EU CC on SBC (RTP bypass vs Asterisk/rtpengine stage). Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · MkDocs **`fleet/number-dialect`**.
 
@@ -178,7 +177,7 @@
 
 - [x] **User guides — MkDocs site (`pbx3-docs`) seed (2026-07-15):** Holding-folder **`pbx3-docs/`** + GitHub **`aelintra/pbx3-docs`** → Pages **https://aelintra.github.io/pbx3-docs/**. Approved nav (Cloud/S3 + intro schematic); operator drafts for install/TLS/admin/fleet/cloud/troubleshoot (lab URLs). Content map updated. **Ongoing:** human review/edits; agent adds sections on request. Optional later: SBC / recordings chapters; move to OSS org. **`workingdocs/`** stay unpublished.
 
-- [ ] **pbx3cagi refactor (deferred — sibling to Ast config generator track):** Phase 0 harness **golden-signed-off** on **08jzwn** (synthetic seed + `/opt/pbx3/db/sqlite.rdonly.db`; all CFIM scenarios PASS). Resume Phase **1.3 → 1.1 → 2.x** when product allows / alongside generator work; run **`make test`** after each refactor step. Keep GenAst↔CAGI contract in **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §5. Gate: **`REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**, **`TEST_RECIPE.md`**.
+- [ ] **pbx3cagi refactor (under Ast config generator + cagi track):** Phase 0 harness **golden-signed-off** on **08jzwn**. Resume Phase **1.3 → 1.1 → 2.x** with generator work; run **`make test`** after each step. Contract: **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §5. Gate: **`REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**, **`TEST_RECIPE.md`**.
 
 - [x] **Fleet S3 node IAM (§2.6.1 — 2026-07-07):** Dropped blanket **`tenants/*`** from **`pbx3-node-s3-writer.policy.json.tmpl`** + golden/bzy54n policy JSON; **`OPS_S3_RUNBOOK.md`** §3.1 / §7.1 updated. **`FleetPreflightService`** deny probe (`S3 tenants/* denied`). Future recordings/staging via control-plane presigns. Apply live policies with **`apply-node-s3-writer-policy.sh`** on fleet nodes.
  Legacy ingress relies on **`fqdninspect`** (SIP INVITE URI string match on **5060**); dialable FQDNs are usually **not published** (sniffing/DNS can still expose them). Public **`catalog/instance-index.json`** aids admin discovery but can weaken that obscurity layer — **not** the same as Sanctum/API risk. **Policy:** v0/golden OK with eyes open; production MSP fleets → **Phase D private catalog** (auth-gated `GET` or signed URLs); minimize tenant FQDN enumeration in public JSON; use **`label`** + opaque **`id`**. See **`pbx3-directory/docs/DESIGN_RULES.md`** § *SIP FQDN obscurity vs public catalog*; **`OPS_S3_RUNBOOK.md`** § 5.3.
