@@ -130,6 +130,7 @@ From packaged `cdr_sqlite3_custom.conf` table `cdr`:
 - **Shape:** artisan **`pbx3:cdr-fixture`** in **pbx3api** (`CdrFixtureService`); env-gated (`PBX3_CDR_FIXTURE=1` / `--force`) and **refuses** live `/var/log/asterisk/master.db` unless `--allow-live`.
 - **Path safety:** default write target = **`PBX3_CDR_SQLITE_PATH`** override pointing at a **lab copy** of `master.db` (or empty SQLite with `cdr` schema via `--path=`) — **do not** casually INSERT into live golden `master.db` without an explicit flag.
 - **Decks:** `irsf` (default), `failed-scan`, `internal-noise`, `mixed`. Lab premium prefix **`00900`** (matches `PBX3_OPS_VELOCITY_PREFIXES` default).
+- **CSV import (lab):** artisan **`pbx3:cdr-import-csv`** — classic Asterisk `Master.csv` / `accountcode.csv` / `.gz` (golden `/var/log/asterisk/cdr-csv/`) → lab SQLite; same path safety as fixture.
 - **Query helper:** **`VelocityCdrQuery`** + artisan **`pbx3:cdr-velocity-query`** (also `--probe` on fixture). Window **T** + prefix list; excludes empty/`isInternalDst` shapes.
 - Insert N rows with recent `calldate`, lab `dst` prefixes, `src` / `accountcode` filled.
 - Done when: fixture + one query helper returns the burst rows V2 will count.
