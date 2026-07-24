@@ -73,11 +73,11 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **Lab QA:** `vqcwd4` / `joe@gmail.com` → bzy; tenant-scoped nav correct. Wrong-door UX (Manage instance / Fleet) accepted without SSO.
 
 ### Golden / operator follow-up
-- Control Gatekeeper tree not redeployed this session — Mac rebuild (or POST rebuild) keeps rollup fresh until then.
+- Control Gatekeeper **redeployed 2026-07-23 evening** (rsync + FPM); `POST …/tenant-home/rebuild` OK (5 tenants).
 - SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
 
 ### Resume
-- Velocity **V1+**, paid Twilio dialect, phone staging, or deploy Gatekeeper tenant-home writer to control.
+- Velocity **V1+**, paid Twilio dialect, or Ast config generator (phone staging).
 
 ---
 

@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-23 (Ast config generator sub-project framing; login-homing B′ shipped)
+**Last updated:** 2026-07-23 (Gatekeeper tenant-home rebuild live on control; Ast config generator framing)
 
 ### Suggested “what next?” order
 
@@ -9,7 +9,7 @@
 2. **Number dialect — paid Twilio + named recipe** (when ready).  
 3. **Drain affordance — tenant-scoped channel count → wipe-when-drained** (nice-to-have, parked) — see open item below.  
 4. **Ast config generator sub-project** (owns phone PJSIP staging/overlay) — **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**; sibling **pbx3cagi** cleanup.  
-5. **Deploy Gatekeeper** with tenant-home rebuild (control) if register/move should auto-refresh rollup without Mac script.  
+5. ~~**Deploy Gatekeeper** with tenant-home rebuild (control)~~ — **done 2026-07-23** (rsync + FPM; `POST …/tenant-home/rebuild` → 5 tenants).  
 6. **Instance shadowing** (parked).  
 7. **SBC SQLite + Litestream** (parked).  
 8. **S10.7 / S8.9** (parked).  
@@ -208,7 +208,7 @@
 
 - [x] **Instance user privileges — P0–P4 (2026-07-22):** **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Lab: sandycroft→bzy + joe; FormField create-user fix; orphan cleanup. Source wipe in move job done 2026-07-23.
 
-- [x] **Login homing B′ thin slice (2026-07-23):** Compiled `catalog/tenant-home.json` (shortuid/cname → instance_id); Gatekeeper rebuild on register/move + `POST …/tenant-home/rebuild`; Mac `rebuild-tenant-home.sh` (macOS-safe); SPA three-door login with **Sign in to tenant first**; join to instance-index → Sanctum. Lab: published rollup (5 tenants); QA `vqcwd4` / `joe@gmail.com` → bzy tenant nav OK. Tips **pbx3** **`4d2f137`**, **pbx3spa** **`ffede89`**. Spec: **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. **Follow-up:** deploy Gatekeeper on control for auto-rebuild; three wrong-door UX stays without SSO (accepted).
+- [x] **Login homing B′ thin slice (2026-07-23):** Compiled `catalog/tenant-home.json` (shortuid/cname → instance_id); Gatekeeper rebuild on register/move + `POST …/tenant-home/rebuild`; Mac `rebuild-tenant-home.sh` (macOS-safe); SPA three-door login with **Sign in to tenant first**; join to instance-index → Sanctum. Lab: published rollup (5 tenants); QA `vqcwd4` / `joe@gmail.com` → bzy tenant nav OK. Tips **pbx3** **`4d2f137`**, **pbx3spa** **`ffede89`**. Spec: **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. **Follow-up (done same evening):** Gatekeeper rsync’d to control + FPM reload; `POST /api/v1/catalog/tenant-home/rebuild` → **200**, 5 tenants, `updated_at=2026-07-24T01:05:56Z`. Three wrong-door UX stays without SSO (accepted).
 
 - [ ] **User access privileges (SPA + API — P1–P3):** Phase 0 done (admin-or-nothing gate). Implement per **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Do **not** implement SPA Phase F in isolation — ship **pbx3api** + **pbx3spa** together. Pattern: **`ADMIN_PANELS_AND_PERMISSIONS.md`**; **`AUTH_PATTERNS.md`**.
 
