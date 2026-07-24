@@ -1,15 +1,15 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-23 (Gatekeeper tenant-home rebuild live on control; Ast config generator framing)
+**Last updated:** 2026-07-23 (session end — velocity plan fleshed; Gatekeeper tenant-home live; generator+cagi one track)
 
 ### Suggested “what next?” order
 
-1. **Toll fraud / velocity** (V0 done — V1+ when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
+1. **Toll fraud / velocity** (spec fleshed — **V1** fixture+query when prioritized) — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.  
 2. **Number dialect — paid Twilio + named recipe** (when ready).  
 3. **Drain affordance — tenant-scoped channel count → wipe-when-drained** (nice-to-have, parked) — see open item below.  
-4. **Ast config generator + pbx3cagi cleanup** (one track) — GenAst/staging overlay **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**; sibling cagi Phase 1.3+ **`REFACTOR_PLAN.md`** (shared dialplan↔AGI contract).  
-5. ~~**Deploy Gatekeeper** with tenant-home rebuild (control)~~ — **done 2026-07-23** (rsync + FPM; `POST …/tenant-home/rebuild` → 5 tenants).  
+4. **Ast config generator + pbx3cagi cleanup** (one track) — GenAst/staging overlay **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**; cagi Phase 1.3+ **`REFACTOR_PLAN.md`**.  
+5. ~~**Deploy Gatekeeper** with tenant-home rebuild (control)~~ — **done 2026-07-23**.  
 6. **Instance shadowing** (parked).  
 7. **SBC SQLite + Litestream** (parked).  
 8. **S10.7 / S8.9** (parked).  

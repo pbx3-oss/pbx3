@@ -50,7 +50,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Edge portability (Rule 7 debt)** | **`EDGE_PORTABILITY_SCORECARD.md`** — adapter vs OpenSIPS vocabulary leaks |
 | **Fleet Egress availability** | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — R1+R2 shipped; R3 EgressFailover/cagi parked |
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig + move-job + Fail2ban ban + **Egress Unavail** shipped; SPA badges later |
-| **Toll fraud / velocity** | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — V0 framing (direction + V0–V5); detect on instance → Gatekeeper mail; CoS = prevention |
+| **Toll fraud / velocity** | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — V1–V5 fleshed (fixture-first, batch CDR, `active=NO` act); competitive notes |
 | **PSTN number dialects** | **`NUMBER_DIALECT_REQUIREMENTS.md`** → MkDocs **`fleet/number-dialect`** → Peer dialect + OpenSIPS `DIALECT_*`; node Egress transform = DNID/`+CC` by serving country |
 
 | **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging WS0–WS4 **done** (lab); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR **v1 done** (scripts + scratch drill + MkDocs) |
@@ -63,21 +63,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-23 — login-homing B′)
+## Next agent session notes (2026-07-23 — velocity plan + Gatekeeper deploy + generator track)
 
-**Branches:** all **`main`** (pushed). Tips **pbx3** **`4d2f137`**, **pbx3spa** **`ffede89`**. Live Magrathea VIP **`3.93.26.82`**. Lab catalog `s3://08jzwn-pbx3/catalog/tenant-home.json` (5 tenants).
+**Branches:** all **`main`** (pushed). Tips **pbx3** **`d59e2f5`**, **pbx3spa** **`749c677`** (SPA unchanged this evening). Live Magrathea VIP **`3.93.26.82`**. Control Gatekeeper live for tenant-home.
 
 ### Shipped
-- **B′ customer login:** SPA **Sign in to tenant** (first on chooser) → `tenant-home.json` + `instance-index` → seed `api_base_url` → instance Sanctum. No Gatekeeper on customer path; no second password store.
-- **Catalog rollup:** Gatekeeper rebuilds on tenant register/move; `POST /api/v1/catalog/tenant-home/rebuild`; Mac `rebuild-tenant-home.sh` (+ hooks from register/move scripts). Schema `tenant-home.v0.json`.
-- **Lab QA:** `vqcwd4` / `joe@gmail.com` → bzy; tenant-scoped nav correct. Wrong-door UX (Manage instance / Fleet) accepted without SSO.
+- **Toll-fraud velocity requirements fleshed:** V1 (Phase 6 `master.db` + CDR fixture), V2 (`pbx3:ops-velocity` / `velocity_irsf` mail), **V5 required** auto-block = **`ipphone.active=NO`** + clear CF + hangup-or-bleed; attribution fail-safe; threat map (CFIM, Saturday-night, failed-scan, dormant/concurrency/forward chains); competitive notes (FreePBX/3CX vs SecAst/PBXDom/carriers). Fixture-first lab; batch scan not log-tail. **No code yet.**
+- **Control Gatekeeper redeployed** (rsync + FPM); `POST …/tenant-home/rebuild` → 200, 5 tenants — B′ rollup auto path live.
+- **Ast config generator + pbx3cagi** framed as **one** TODO track — **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (staging/overlay under GenAst).
 
 ### Golden / operator follow-up
-- Control Gatekeeper **redeployed 2026-07-23 evening** (rsync + FPM); `POST …/tenant-home/rebuild` OK (5 tenants).
+- Tenant register/move should refresh `catalog/tenant-home.json` via Gatekeeper without Mac script.
 - SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
 
 ### Resume
-- Velocity **V1+**, paid Twilio dialect, or Ast config generator (phone staging).
+- **Velocity V1** (CDR fixture + query) when prioritized → V2 notify → V5 `active=NO`; or **Ast config generator** G1 inventory / phone staging; or paid Twilio dialect.
+
+---
+
+## Next agent session notes (2026-07-23 — login-homing B′) — historical
+
+**Branches:** all **`main`** (pushed). Tips were **pbx3** **`4d2f137`**, **pbx3spa** **`ffede89`**. Superseded by velocity/Gatekeeper/generator block above (Gatekeeper deploy completed same evening).
+
+### Shipped
+- **B′ customer login:** SPA **Sign in to tenant** → `tenant-home.json` + instance-index → Sanctum.
+- Catalog rollup writer + Mac `rebuild-tenant-home.sh`; lab QA `vqcwd4` / joe → bzy.
+
+### Resume
+- See block above.
 
 ---
 
@@ -96,7 +109,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
 
 ### Resume
-- Superseded by **login-homing B′** block above.
+- Superseded by **velocity / Gatekeeper / generator** block above.
 
 ---
 
