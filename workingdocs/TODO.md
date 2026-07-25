@@ -1,22 +1,20 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H merged). SPA overlay on **`main`**. Lab-hot on golden + bzy (G + H). Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-25 (merge hermit→main; bzy rolled; PHP class `.php` paths)
+**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi refactor 1.3–3.1). SPA overlay on **`main`**. Lab-hot: golden cagi **`c4b06bd`** (call+CFIM OK); bzy may lag cagi tip. Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
+**Last updated:** 2026-07-25 (pbx3cagi Phase 1.3–3.1; golden build+call QA)
 
 ### Suggested “what next?” order
 
-1. **Ast config generator — hermit-crab** — **A–H on `main`**; golden + bzy rolled. **Optional:** deferred D WebRTC live WSS lab.  
-2. ~~**Ast dialplan `$row` shadow**~~ — fixed on `genast-hermit` / `main`.  
+1. **Optional:** roll **bzy54n** cagi to **`c4b06bd`** (same pull/make/install as golden).  
+2. **Ast config generator** — deferred D WebRTC live WSS lab (optional).  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
-4. ~~**Toll fraud / velocity V1–V5**~~ — **done 2026-07-24** (golden notify on; act off until asked).  
-5. **Drain affordance** (nice-to-have, parked).  
-6. **pbx3cagi** Phase 1.3+ (keep GenAst↔CAGI contract; E/G touched PrepDial/PostDial).  
-7. ~~**PHP classes — full `.php` requires**~~ — **done 2026-07-25** (defines + bashconfig point at `*.php`; extensionless symlinks removed).  
-8. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
-9. **Velocity standalone product** (parked).  
-10. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
-11. **Fleet auth cookie/SSO (blocked)**.  
-12. **S7+** attested PCI — only on customer ask.  
+4. **Drain affordance** (nice-to-have, parked).  
+5. **pbx3cagi** follow-on — thread `agi_session_t` into helpers / Phase 4 splits (**`REFACTOR_PLAN.md`**); leave `cagi.c` alone.  
+6. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
+7. **Velocity standalone product** (parked).  
+8. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
+9. **Fleet auth cookie/SSO (blocked)**.  
+10. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -42,7 +40,7 @@
 
 - [x] **PHP classes — drop extensionless symlink workaround (2026-07-25):** `config.php` / `bashconfig` / tls step1 point at `*.php`; extensionless names (`GenClass`, `HelperClass`, `PDFClass!`, …) removed. Hot-patch **`GenClass.php`** (not a bare name). Classes: AmiHelper, Db, Gen, Helper, LDAPHelper, NetHelper, S3Helper, PDF.
 
-- [ ] **Ast config generator + pbx3cagi (struct):** **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
+- [x] **pbx3cagi struct refactor Phases 1.3–3.1 (2026-07-25):** Dead code; `g_call`/`g_parms`; command table; `agi_sqlite.c`; `agi_init_call_context`; `agi_session_t` + name macros dropped. Offline `make test` green. Golden build+install **`c4b06bd`**; simple calls + CFIM OK. Tips **`db45799`** / **`3447782`** / **`c4b06bd`**. Follow-on: thread `s` into helpers / Phase 4 — **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**. Leave LGPL `cagi.c` alone. Golden deploy key for private `pbx3cagi` (SSH origin).
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 

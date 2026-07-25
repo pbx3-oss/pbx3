@@ -63,7 +63,27 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-25 — graph MCP + class `.php` layout)
+## Next agent session notes (2026-07-25 — pbx3cagi Phase 1.3–3.1 + golden QA)
+
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`e8e8715`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`3528e71`**. Magrathea VIP **`3.93.26.82`**.
+
+### Shipped
+- **pbx3cagi refactor** on **`main`**: 1.3 dead code → 1.1 structs → 2.1 command table → 2.2 `agi_sqlite` → 2.3 `agi_init_call_context` → 3.1 `agi_session_t` + drop name macros. Commits **`670c02f`…`c4b06bd`**.
+- Offline **`make test`** 7/7 throughout. **`cagi.c`** left alone (LGPL; thin used surface).
+- **Golden:** deploy key for private repo; pull/build/install **`c4b06bd`** → `/usr/share/asterisk/agi-bin/pbx3cagi.arm64` (bak `…20260725224240`). Operator: **simple calls + CFIM OK**.
+
+### Golden / operator follow-up
+- **bzy54n** cagi may still lag — same pull/`make`/install when ready.
+- Velocity still notify-on / ACT-off.
+- GenAst A–H already on `main` + both nodes from prior session.
+
+### Resume
+- Product: deferred D WebRTC WSS lab, Twilio paid dialect, drain affordance, velocity V3 — **`TODO.md`**.
+- Or cagi: thread `s` into helpers / Phase 4 — **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**.
+
+---
+
+## Next agent session notes (2026-07-25 — graph MCP + class `.php` layout) — historical
 
 **Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden still G+H hot. Tips: pbx3 **`0423e24`**, pbx3api **`2c429ab`**, pbx3cagi **`b9dd195`**, pbx3spa **`3528e71`**. Magrathea VIP **`3.93.26.82`**.
 
