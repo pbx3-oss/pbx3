@@ -65,7 +65,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-25 — pbx3cagi Phase 1.3–3.1 + golden QA)
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`db50a7c`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`38333ca`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`6de495e`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`38333ca`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **pbx3cagi refactor** on **`main`**: 1.3 dead code → 1.1 structs → 2.1 command table → 2.2 `agi_sqlite` → 2.3 `agi_init_call_context` → 3.1 `agi_session_t` + drop name macros. Commits **`670c02f`…`c4b06bd`**.
