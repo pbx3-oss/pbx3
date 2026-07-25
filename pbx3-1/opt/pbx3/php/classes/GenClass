@@ -1213,17 +1213,12 @@ HERE;
             $this->OUT .= "\texten => " . $phone['pkey'] . ",1,GoTo(" . $phone['shortuid'] . ",1)\n";
             $this->OUT .= "\texten => " . $phone['shortuid'] . ",1,agi(" . SYSAGI . ",LepDial,," . $phone['cluster'] . ",,,)\n";
 /**
- *  Queues extensions are given entirely to Astqueues to handle
- * 	When the queue calls a target it calls the "Q" extension and we 
- *  send it directly to the endpoint.
- *  Fleet: Dial with tenant AoR for SBC usrloc. Singleton: Dial endpoint only.
+ *  Queue members: Local/Q{ext}@tenant (see genQueues).
+ *  Phase E: CAGI PrepDial(type=queue) decides dial string (same recipe as LepDial /
+ *  fleet AoR), sets PBX3_DIAL, returns; dialplan Dial owns the bridge (short-run AGI).
  */
-            if ($this->isFleetMode()) {
-                $tenantFqdn = !empty($row['fqdn']) ? $row['fqdn'] : (!empty($row['cname']) ? $row['cname'] : ($row['shortuid'] . (!empty($row['domain']) ? ('.' . $row['domain']) : '.pbx3.com')));
-                $this->OUT .= "\texten => Q" . $phone['pkey'] . ",1,Dial(PJSIP/" . $phone['shortuid'] . "/sip:" . $phone['shortuid'] . "@" . $tenantFqdn . ")\n";
-            } else {
-                $this->OUT .= "\texten => Q" . $phone['pkey'] . ",1,Dial(PJSIP/" . $phone['shortuid'] . ")\n";
-            }
+            $this->OUT .= "\texten => Q" . $phone['pkey'] . ",1,agi(" . SYSAGI . ",Dial," . $phone['shortuid'] . "," . $phone['cluster'] . ",queue,,)\n";
+            $this->OUT .= "\texten => Q" . $phone['pkey'] . ",n,Dial(\${PBX3_DIAL})\n";
 
             if ($phone['dvrvmail'] != "None") {
                 if ($phone['dvrvmail'] == "") {
