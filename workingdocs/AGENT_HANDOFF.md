@@ -63,7 +63,27 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-25 — GenAst hermit G+H lab OK)
+## Next agent session notes (2026-07-25 — graph MCP + class `.php` layout)
+
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden still G+H hot. Tips: pbx3 **`51c39a5`**, pbx3api **`2c429ab`**, pbx3cagi **`b9dd195`**, pbx3spa **`51b0fa3`**. Magrathea VIP **`3.93.26.82`**.
+
+### Shipped
+- **code-review-graph MCP:** fixed (`~/.cursor/mcp.json` → `/opt/homebrew/bin/uvx` + PATH/HOME); auth + full builds for pbx3/api/spa/cagi.
+- **Graph review** of hermit vs `main`: no merge-blockers; GenClass was invisible until layout fix.
+- **PHP classes:** content in `*.php`; extensionless names are **symlinks** for `config.php`. Graph now indexes GenClass (~29 nodes). Hot-patch **`GenClass.php`**, do not clobber the symlink.
+- **TODO:** open item to drop symlink workaround (full `.php` requires).
+
+### Golden / operator follow-up
+- When rolling this pbx3 tip: preserve extensionless → `.php` symlinks under `php/classes/`.
+- bzy may still lag hermit (C2+/G/H).
+- Velocity still notify-on / ACT-off.
+
+### Resume
+1. **Merge `genast-hermit` → `main`** (pbx3 + pbx3api + pbx3cagi) — or roll bzy.
+2. Optional: D WebRTC live WSS lab; PHP class path cleanup (TODO).
+3. Not first: Twilio paid / velocity ACT / SSO / cagi struct 1.3+.
+
+## Next agent session notes (2026-07-25 — GenAst hermit G+H lab OK) — historical
 
 **Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden: G LepDial + H trunk/queue/park overlays hot; migrations applied. Tips: pbx3 **`91949be`**, pbx3api **`2c429ab`**, pbx3cagi **`b9dd195`**, pbx3spa **`51b0fa3`**. Magrathea VIP **`3.93.26.82`**.
 
@@ -77,12 +97,10 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - bzy may still lag hermit (C2+/G/H).
 - Velocity still notify-on / ACT-off.
 - SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
-- Graph MCP unavailable this session — skipped code-review-graph.
+- Graph MCP was unavailable mid-session — fixed later same day.
 
 ### Resume
-1. **Merge `genast-hermit` → `main`** (pbx3 + pbx3api + pbx3cagi) — or roll bzy.
-2. Optional: D WebRTC live WSS lab.
-3. Not first: Twilio paid / velocity ACT / SSO / cagi struct 1.3+.
+- Superseded by **graph MCP + class `.php`** block above.
 
 ## Next agent session notes (2026-07-25 — GenAst hermit A–F; E lab OK) — historical
 

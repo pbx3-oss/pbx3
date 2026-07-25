@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**); SPA overlay on **`main`**. Lab-hot on golden (G + H); bzy may lag. Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-25 (GenAst hermit A–H; G LepDial lab OK; H trunk/queue/park overlay)
+**Last updated:** 2026-07-25 (GenAst A–H; class `.php` + symlink interim; graph MCP OK)
 
 ### Suggested “what next?” order
 
@@ -11,11 +11,12 @@
 4. ~~**Toll fraud / velocity V1–V5**~~ — **done 2026-07-24** (golden notify on; act off until asked).  
 5. **Drain affordance** (nice-to-have, parked).  
 6. **pbx3cagi** Phase 1.3+ (keep GenAst↔CAGI contract; E/G touched PrepDial/PostDial).  
-7. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
-8. **Velocity standalone product** (parked).  
-9. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
-10. **Fleet auth cookie/SSO (blocked)**.  
-11. **S7+** attested PCI — only on customer ask.  
+7. **PHP classes — full `.php` requires** (drop extensionless symlink workaround — open item).  
+8. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
+9. **Velocity standalone product** (parked).  
+10. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
+11. **Fleet auth cookie/SSO (blocked)**.  
+12. **S7+** attested PCI — only on customer ask.  
 
 ---
 
