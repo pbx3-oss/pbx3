@@ -127,8 +127,8 @@ pjsip_phone.tmpl  --(always on get)-->  + overlay (DB pjsip_overlay preferred; f
 | Area | Location |
 |------|----------|
 | Entry | `scripts/genAst.sh` → `php/utilities/runAstGen.php` → `GenClass::genAsterisk()` |
-| Generator | [`php/classes/GenClass`](../pbx3-1/opt/pbx3/php/classes/GenClass) |
-| Staging CRUD | [`HelperClass`](../pbx3-1/opt/pbx3/php/classes/HelperClass) `create/get/set/move/deletePjsip*Instance` |
+| Generator | [`php/classes/GenClass.php`](../pbx3-1/opt/pbx3/php/classes/GenClass.php) (extensionless `GenClass` is a symlink for `config.php`) |
+| Staging CRUD | [`HelperClass.php`](../pbx3-1/opt/pbx3/php/classes/HelperClass.php) `create/get/set/move/deletePjsip*Instance` (same symlink pattern) |
 | Templates | `etc/asterisk/templates/` (`pjsip_phone`, webrtc, trunks, queue, transport, …) |
 | Phone overlays | `ipphone.pjsip_overlay` (HoR); optional file `etc/asterisk/endpoints/{shortuid}_phone.overlay.conf`. Legacy `{shortuid}_phone.conf` ignored after G2 |
 | Ready outputs | `pjsip_ready_phones.conf`, webrtc/trunks, queues, `extensions*` (via Commit) |
