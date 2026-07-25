@@ -1,16 +1,16 @@
 # PBX3 ToDo list
 
-**Branch:** **`genast-hermit`** (pbx3 + pbx3api) lab-hot on golden/bzy; other tracks still **`main`**. Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-25 (GenAst hermit A–C lab OK; C2 DB overlay next)
+**Branch:** **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**); SPA overlay on **`main`**. Lab-hot on golden; bzy may lag C2+. Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
+**Last updated:** 2026-07-25 (GenAst hermit A–F; E queue lab OK; G next)
 
 ### Suggested “what next?” order
 
-1. **Ast config generator — hermit-crab** (branch **`genast-hermit`**) — A–C lab OK; **C2 next:** DB `pjsip_overlay` on extension (**`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**). Then D/E.  
+1. **Ast config generator — hermit-crab** — **A–F done** on `genast-hermit` (**`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**). **Next:** **G** LepDial short-run (same as Q*), or **merge hermit → main**, or deferred D WebRTC live WSS lab. Trunk/queue overlay later.  
 2. ~~**Ast dialplan `$row` shadow**~~ — fixed on `genast-hermit`.  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
 4. ~~**Toll fraud / velocity V1–V5**~~ — **done 2026-07-24** (golden notify on; act off until asked).  
 5. **Drain affordance** (nice-to-have, parked).  
-6. **pbx3cagi** Phase 1.3+ (keep GenAst↔CAGI contract).  
+6. **pbx3cagi** Phase 1.3+ (keep GenAst↔CAGI contract; E already touched PrepDial).  
 7. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
 8. **Velocity standalone product** (parked).  
 9. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
@@ -25,9 +25,17 @@
 
 - [x] **Phone PJSIP G2 file overlay (2026-07-25 lab):** Tmpl + key merge; golden `fkdd5d` qualify override; calls OK. Branch **`genast-hermit`**.
 
-- [ ] **Phone PJSIP overlay — DB home of record (C2):** Extension column (e.g. `pjsip_overlay` TEXT); Commit merges tmpl+DB; SPA advanced textarea later; backup/move carry overlay. File mirror optional. **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0 C2**.
+- [x] **Phone PJSIP overlay — DB home of record (C2) (2026-07-25 lab):** `ipphone.pjsip_overlay`; Commit prefers DB; SPA admin textarea; golden set/clear/Commit OK. Tips **pbx3** **`9d7225f`**, **pbx3api** **`5e44203`**, **pbx3spa** **`f4e9838`**.
 
-- [ ] **Ast config generator + pbx3cagi (hermit-crab):** Branch **`genast-hermit`**. A–C done in lab; C2 DB overlay next; D/E later. **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
+- [x] **WebRTC overlay Phase D (2026-07-25):** Same pattern as phones; live WSS lab **deferred**. Tip **pbx3** **`287db3d`**.
+
+- [x] **Q* short-run Phase E (2026-07-25 lab):** GenAst `agi(Dial,…,queue)` + `Dial(${PBX3_DIAL})`; CAGI PrepDial set-and-return. Golden **Q1060** OK. Deploy cagi **before** GenAst Commit. Tips **pbx3** **`74b19ab`**, **pbx3cagi** **`e3d8522`**.
+
+- [x] **G3 hygiene Phase F (2026-07-25):** `PBX3_SBC_EGRESS_HOST`; `$clstkey`→`park-{tenant}` before `$clst`. Tip **pbx3** **`d1ddccc`** (+ session-end tip).
+
+- [ ] **Ast config generator — Phase G + merge:** LepDial short-run (generalize E); optional merge **`genast-hermit` → `main`**; deferred D WebRTC REGISTER lab; trunk/queue overlay later. **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
+
+- [ ] **Ast config generator + pbx3cagi (struct):** **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 

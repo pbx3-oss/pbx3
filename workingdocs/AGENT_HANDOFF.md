@@ -63,7 +63,30 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-25 — GenAst hermit-crab A–C lab OK)
+## Next agent session notes (2026-07-25 — GenAst hermit A–F; E lab OK)
+
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden hot: GenClass/Helper/cagi/tmpls; migrate `pjsip_overlay` on 08jzwn. Tips (session end): pbx3 **`d1ddccc`**, pbx3api **`177a28b`**, pbx3cagi **`e3d8522`**, pbx3spa **`1f74df8`**. Magrathea VIP **`3.93.26.82`**.
+
+### Shipped
+- **C2:** DB `pjsip_overlay` + SPA admin field; Commit prefers DB over file; golden set/clear/Commit OK.
+- **D:** WebRTC tmpl+overlay (same as phones); live WSS lab deferred.
+- **E:** `Q*` → short AGI PrepDial(queue) → `Dial(${PBX3_DIAL})`; golden **Q1060** OK. Deploy **cagi before** GenAst Commit.
+- **F:** `PBX3_SBC_EGRESS_HOST` for outbound_proxy; `$clstkey`→`park-{tenant}` before `$clst`; webrtc parkinglot aligned.
+- Phase E design locked in **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**.
+
+### Golden / operator follow-up
+- Commit after F deploy so ready phones pick up `$clstkey` / SBC host (if env set).
+- Deferred: WebRTC REGISTER via instance `:8089` (SG + browser client).
+- bzy may still need C2 migrate + hermit hot-patch if not done.
+- Velocity still notify-on / ACT-off.
+- SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
+
+### Resume
+1. **G:** LepDial short-run (generalize E) — or merge **`genast-hermit` → `main`**.
+2. Optional: D WebRTC live lab; roll bzy; trunk/queue overlay later.
+3. Not first: Twilio paid / velocity ACT / SSO.
+
+## Next agent session notes (2026-07-25 — GenAst hermit-crab A–C lab OK) — historical
 
 **Branches:** **pbx3** + **pbx3api** on **`genast-hermit`** (pushed; **not** merged to `main`). Live hot-patched on **08jzwn** + **bzy54n**. Tips: pbx3 **`b347c2f`**, pbx3api **`89052ac`**. Old stash on `genast-phone-overlay` superseded. Magrathea VIP **`3.93.26.82`**.
 
@@ -81,9 +104,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Velocity still notify-on / ACT-off on golden.
 
 ### Resume
-1. **C2:** migration + Commit read DB overlay + API/SPA extension-edit field (`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0 C2).
-2. Or merge **`genast-hermit` → `main`** when ready to leave lab branch.
-3. Later: D webrtc overlay; E dialplan thin / Q Dial; not velocity ACT / Twilio first.
+- Superseded by **2026-07-25** A–F block above.
 
 ## Next agent session notes (2026-07-24 — GenAst challenger review parked) — historical
 
