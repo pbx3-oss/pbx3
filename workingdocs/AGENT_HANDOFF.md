@@ -65,7 +65,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-25 — GenAst hermit A–F; E lab OK)
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden hot: GenClass/Helper/cagi/tmpls; migrate `pjsip_overlay` on 08jzwn. Tips (session end): pbx3 **`8cd132d`**, pbx3api **`177a28b`**, pbx3cagi **`e3d8522`**, pbx3spa **`1f74df8`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden hot: GenClass/Helper/cagi/tmpls; migrate `pjsip_overlay` on 08jzwn. Tips (session end): pbx3 **`e3e02ec`**, pbx3api **`177a28b`**, pbx3cagi **`e3d8522`**, pbx3spa **`3c05adb`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **C2:** DB `pjsip_overlay` + SPA admin field; Commit prefers DB over file; golden set/clear/Commit OK.
