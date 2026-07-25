@@ -65,7 +65,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-25 — GenAst hermit G+H lab OK)
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden: G LepDial + H trunk/queue/park overlays hot; migrations applied. Tips filled after this session’s push. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden: G LepDial + H trunk/queue/park overlays hot; migrations applied. Tips: pbx3 **`91949be`**, pbx3api **`2c429ab`**, pbx3cagi **`b9dd195`**, pbx3spa **`51b0fa3`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **G:** LepDial PreDial → `Dial(${PBX3_DIAL})` → PostDial; ANSWER/CANCEL skip second AGI (dead-AGI cold start). Golden lab: answer, cancel→VM, timeout→VM, AstDB CFIM, SIP DIVERT.

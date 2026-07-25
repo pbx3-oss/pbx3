@@ -35,7 +35,7 @@
 
 - [x] **LepDial short-run Phase G (2026-07-25 lab):** PreDial → `Dial(${PBX3_DIAL})` → PostDial; ANSWER/CANCEL skip second AGI. Golden: answer, cancel→VM, timeout→VM, AstDB CFIM, SIP DIVERT OK. Tips **pbx3** **`ae1364f`**, **pbx3cagi** **`b9dd195`**.
 
-- [x] **Trunk/queue/park C2 overlay Phase H (2026-07-25 lab):** Always tmpl + DB overlay (`trunks.pjsip_overlay`, `queue.queue_overlay`, `cluster.park_overlay`); SPA admin fields on Trunk/Queue/Tenant; golden migrate + legacy freeze rm + Commit OK. Tips filled at session-end push.
+- [x] **Trunk/queue/park C2 overlay Phase H (2026-07-25 lab):** Always tmpl + DB overlay (`trunks.pjsip_overlay`, `queue.queue_overlay`, `cluster.park_overlay`); SPA admin fields on Trunk/Queue/Tenant; golden migrate + legacy freeze rm + Commit OK. Tips **pbx3** **`91949be`**, **pbx3api** **`2c429ab`**, **pbx3spa** **`51b0fa3`** (cagi G already **`b9dd195`**).
 
 - [ ] **Ast config generator — merge hermit → main:** Optional roll **bzy**; deferred D WebRTC REGISTER lab. **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
 
