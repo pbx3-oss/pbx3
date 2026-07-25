@@ -63,7 +63,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-24 — GenAst challenger review parked)
+## Next agent session notes (2026-07-25 — GenAst hermit-crab A–C lab OK)
+
+**Branches:** **pbx3** + **pbx3api** on **`genast-hermit`** (pushed; **not** merged to `main`). Live hot-patched on **08jzwn** + **bzy54n**. Tips: pbx3 **`b347c2f`**, pbx3api **`89052ac`**. Old stash on `genast-phone-overlay` superseded. Magrathea VIP **`3.93.26.82`**.
+
+### Shipped
+- Hermit-crab plan solidified in **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0** (characterize → `$row` → G2 file overlay → **C2 DB overlay** next).
+- **A:** `genast-normalize.php` + `genast-characterize.sh` + `workingdocs/genast-characterize/`.
+- **B:** `genExtensionsEndpoints` `$row` → `$applrow` (no tenant shadow).
+- **C:** Phone tmpl always + thin overlay; **key merge** (replace if present, add if absent); pbx3api deletes `*_phone.overlay.conf`.
+- **Lab:** legacy `*_phone.conf` removed; Commit OK; calls OK; golden overlay `fkdd5d` → `qualify_frequency=60` live in Asterisk.
+- **C2 locked (docs only):** extension DB column (e.g. `pjsip_overlay`); SPA on extension edit for visibility; backup/move; not full stanza.
+
+### Golden / operator follow-up
+- Nodes on hermit code; file overlay still works until C2. Example overlay: `/opt/pbx3/etc/asterisk/endpoints/fkdd5d_phone.overlay.conf`.
+- SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
+- Velocity still notify-on / ACT-off on golden.
+
+### Resume
+1. **C2:** migration + Commit read DB overlay + API/SPA extension-edit field (`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0 C2).
+2. Or merge **`genast-hermit` → `main`** when ready to leave lab branch.
+3. Later: D webrtc overlay; E dialplan thin / Q Dial; not velocity ACT / Twilio first.
+
+## Next agent session notes (2026-07-24 — GenAst challenger review parked) — historical
 
 **Branches:** **pbx3** / **pbx3api** / **pbx3spa** on **`main`** (this commit = docs). Feature branch **`genast-phone-overlay`** exists with **WIP in `git stash`** (premature G2 HelperClass — not merged). Velocity code already on **`main`** earlier today. Live Magrathea VIP **`3.93.26.82`**.
 
@@ -81,10 +103,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
 
 ### Resume
-1. Read **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0** (+ Cursor plan if useful).
-2. Unstash on **`genast-phone-overlay`**, align with locked contract, add **pbx3api** overlay delete, golden Commit smoke.
-3. Optional surgical: appl/`$row` shadow fix before larger dialplan thin.
-4. Not first: velocity ACT; Twilio dialect; cagi 1.3+.
+- Superseded by **2026-07-25** hermit-crab block above.
 
 ## Next agent session notes (2026-07-23 — velocity plan + Gatekeeper + generator framing) — historical
 

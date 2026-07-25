@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-25 (GenAst hermit-crab on `genast-hermit`; velocity still live on golden)
+**Branch:** **`genast-hermit`** (pbx3 + pbx3api) lab-hot on golden/bzy; other tracks still **`main`**. Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
+**Last updated:** 2026-07-25 (GenAst hermit A–C lab OK; C2 DB overlay next)
 
 ### Suggested “what next?” order
 
