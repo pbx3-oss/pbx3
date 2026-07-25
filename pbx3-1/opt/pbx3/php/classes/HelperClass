@@ -290,11 +290,13 @@ public function createPjsipPhoneInstance($key) {
 /**
  * Stock pjsip_phone.tmpl plus optional thin overlay (pre-xlate).
  * Overlay keys replace matching keys in the same type= object; absent keys are added.
- * Legacy ASTENDPOINTS/{key}_phone.conf is ignored.
- * @param  string $key phone shortuid
+ * Home of record: $dbOverlay (ipphone.pjsip_overlay). File under endpoints/ is
+ * fallback only when DB overlay is empty. Legacy {key}_phone.conf is ignored.
+ * @param  string      $key phone shortuid
+ * @param  string|null $dbOverlay thin overlay text from extension row
  * @return string|false
  */
-public function getPjsipPhoneInstance($key) {
+public function getPjsipPhoneInstance($key, $dbOverlay = null) {
 
 	if (!file_exists(PJSIP_PHONE_TEMPLATE)) {
 		return false;
@@ -304,12 +306,20 @@ public function getPjsipPhoneInstance($key) {
 		return false;
 	}
 
-	$overlayFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE_OVERLAY;
-	if (file_exists($overlayFile) && filesize($overlayFile) > 0) {
-		$overlay = file_get_contents($overlayFile);
-		if ($overlay !== false && $overlay !== '') {
-			$buff = $this->mergePjsipPhoneOverlay($buff, $overlay);
+	$overlay = null;
+	if ($dbOverlay !== null && trim((string) $dbOverlay) !== '') {
+		$overlay = (string) $dbOverlay;
+	} else {
+		$overlayFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE_OVERLAY;
+		if (file_exists($overlayFile) && filesize($overlayFile) > 0) {
+			$fileOverlay = file_get_contents($overlayFile);
+			if ($fileOverlay !== false && trim($fileOverlay) !== '') {
+				$overlay = $fileOverlay;
+			}
 		}
+	}
+	if ($overlay !== null) {
+		$buff = $this->mergePjsipPhoneOverlay($buff, $overlay);
 	}
 	return $buff;
 }

@@ -410,7 +410,8 @@ class genAsteriskObjects
 
 			$pjsipPhoneBuff .= "\n; Tenant - " . $row['cluster'] . "\n";
 			$pjsipPhoneBuff .= "; Phone - " . $row['shortuid'] . " (" . $row['pkey'] . ")\n";
-			$pjsipPhoneBuff .= $this->helper->getPjsipPhoneInstance($row['shortuid']);
+			$dbOverlay = isset($row['pjsip_overlay']) ? $row['pjsip_overlay'] : null;
+			$pjsipPhoneBuff .= $this->helper->getPjsipPhoneInstance($row['shortuid'], $dbOverlay);
 
 			if ($pjsipPhoneBuff) {
 				$this->xlatePjsipBuff($pjsipPhoneBuff, $row);

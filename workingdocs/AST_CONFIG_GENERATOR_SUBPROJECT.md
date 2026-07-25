@@ -1,6 +1,6 @@
 # Ast config generator sub-project
 
-**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`**. Phases A–C lab-proven on golden (tmpl+file overlay with key merge; `qualify_frequency` override OK). **Next product direction locked:** thin overlay text on the **extension DB row** (SPA/backup/move); Commit still merges tmpl + overlay.  
+**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`**. Phases A–C lab-proven; **C2** (DB `pjsip_overlay` + SPA extension-edit) implemented on branch — migrate + Commit prefer DB, file fallback.  
 **Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging / dialplan emit), including **phone PJSIP staging/overlay**, **extensions.conf structure**, **and** the paired **pbx3cagi** cleanup.  
 **CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.  
 **Study depth (ephemeral):** `~/.cursor/plans/genast_challenger_review_0db5c469.plan.md` — reference only; **this file is durable truth.**
@@ -13,28 +13,30 @@
 
 - **Stock:** always read `pjsip_phone.tmpl` on Commit (`get`).
 - **Thin overlay:** fragment matched by `type=`; keys **replace** if present on that object, **add** if absent (Fail2ban-`.local` mental model). Not a second appended stanza (Asterisk keeps the first duplicate key).
-- **Lab today:** optional file `ASTENDPOINTS/{shortuid}_phone.overlay.conf` (hand/ops).
+- **Home of record:** `ipphone.pjsip_overlay` (TEXT). Commit prefers DB; optional file `ASTENDPOINTS/{shortuid}_phone.overlay.conf` only when DB empty.
 - **Not:** full frozen `*_phone.conf` copy-once; **not** full PJSIP stanza in DB as sole source of truth (SARK-old freeze).
-- **`create*`:** ensure `endpoints/` only; **`set*`:** write overlay path only (until DB home-of-record lands).
+- **`create*`:** ensure `endpoints/` only; **`set*`:** write overlay **file** path (ops mirror / hand edit); SPA/API write the DB column.
 - **Legacy cleanup:** one-time lab `rm endpoints/*_phone.conf` after deploy — do **not** auto-delete in genAst.
-- **API:** extension delete removes `*_phone.overlay.conf` (pbx3api) — keep in sync when overlay moves to DB.
+- **API:** extension delete removes `*_phone.overlay.conf` (pbx3api); DB column goes with the row.
 
-### Locked — Overlay home of record (Phase C2 — next; not built)
+### Locked — Overlay home of record (Phase C2 — built)
 
-**Direction:** store the **same thin overlay text** on the extension (ipphone) row in SQLite — e.g. column `pjsip_overlay` (TEXT, nullable). Commit reads DB overlay (preferred) and merges with tmpl; file under `endpoints/` becomes optional ops mirror or is dropped.
+**Direction:** store the **same thin overlay text** on the extension (ipphone) row — column `pjsip_overlay` (TEXT, nullable). Commit reads DB overlay (preferred) and merges with tmpl; file under `endpoints/` is optional ops fallback when DB is empty.
 
 | Corner | How DB overlay covers it |
 |--------|---------------------------|
 | Stock tmpl rolls | Still always from tmpl; overlay stays thin |
 | One-phone escape | Overlay fragment only (`[$id]` + `type=` + keys) |
-| SPA edit | Extension advanced field → column; no SSH required |
+| SPA edit | Extension advanced field (admin) → column |
 | Backup / restore | Overlay travels with DB |
 | Tenant move | Overlay travels with extension row |
-| Delete extension | Clear column (+ delete file mirror if any) |
+| Delete extension | Column gone with row (+ delete file mirror if any) |
 
-**SPA (when built):** MSP/admin “PJSIP overlay” on the **extension edit** panel (raw textarea first) so the override is visible where the extension is edited — operators don’t “forget” a one-phone change that only lived in an SSH file. Structured qualify/codec forms later if needed. Privilege: not end-user.
+**SPA:** MSP/admin “PJSIP overlay” textarea on **extension edit**. Privilege: admin (not end-user). Structured qualify/codec forms later if needed.
 
 **Rejected for C2:** JSON map of all PJSIP keys as a second schema; editable **full** stanza that replaces tmpl for that phone.
+
+**Deploy:** Laravel migration `2026_07_25_000000_add_pjsip_overlay_to_ipphone` on each node; hot-patch GenClass/HelperClass; SPA build. Lab: move `fkdd5d` file overlay into DB then remove file (or leave file until DB set).
 
 ### Locked — dialplan north star (Phase E; separate from G2)
 
@@ -62,7 +64,7 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 | **A — Characterize** | Fixture capture + normalize/diff script; baseline on pre-change output | `scripts/genast-characterize.sh` diffs two Commit output dirs cleanly |
 | **B — `$row` landmine** | Fix appl/`$row` shadow in `genExtensionsEndpoints` only | **Done** on `genast-hermit` |
 | **C — G2 phones (file overlay)** | Tmpl + merge Helper; pbx3api overlay delete; lab `rm` legacy freeze | **Lab OK** (golden override + calls) |
-| **C2 — DB overlay** | Extension column + API/SPA; Commit merges from DB; backup/move carry overlay | Column round-trips; SPA edit optional; file optional |
+| **C2 — DB overlay** | Extension column + API/SPA; Commit merges from DB; backup/move carry overlay | **Built** — migrate + lab verify pending |
 | **D — Sideways** | WebRTC (then trunks/queues) same overlay pattern | Same acceptance as phones |
 | **E — Dialplan thin** | Kill Q Dial fork; thin stubs; contract + call smoke (not byte-match old dialplan) | One Dial **decision** path in CAGI |
 | **F — G3 hygiene** | SBC FQDN input, clearer xlate, `$clstkey`, less shell-cp | Emit boring |
@@ -77,7 +79,7 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 Treat config generation as its own work track — not a one-off “delete staged phones after tmpl change” chore. Fold the parked **phone PJSIP staging** item into this track. Keep cagi struct refactor as a parallel cleanup that must not break GenAst-emitted AGI argv / Dial forms.
 
 ```text
-pjsip_phone.tmpl  --(always on get)-->  + overlay (file today; DB column = home of record next)
+pjsip_phone.tmpl  --(always on get)-->  + overlay (DB pjsip_overlay preferred; file fallback)
                                               |
                                     merge by type= (replace/add keys)
                                               |
@@ -102,7 +104,7 @@ pjsip_phone.tmpl  --(always on get)-->  + overlay (file today; DB column = home 
 | Generator | [`php/classes/GenClass`](../pbx3-1/opt/pbx3/php/classes/GenClass) |
 | Staging CRUD | [`HelperClass`](../pbx3-1/opt/pbx3/php/classes/HelperClass) `create/get/set/move/deletePjsip*Instance` |
 | Templates | `etc/asterisk/templates/` (`pjsip_phone`, webrtc, trunks, queue, transport, …) |
-| Phone overlays | `etc/asterisk/endpoints/{shortuid}_phone.overlay.conf` (thin; optional). Legacy `{shortuid}_phone.conf` ignored after G2 |
+| Phone overlays | `ipphone.pjsip_overlay` (HoR); optional file `etc/asterisk/endpoints/{shortuid}_phone.overlay.conf`. Legacy `{shortuid}_phone.conf` ignored after G2 |
 | Ready outputs | `pjsip_ready_phones.conf`, webrtc/trunks, queues, `extensions*` (via Commit) |
 | Characterize | [`scripts/genast-characterize.sh`](../pbx3-1/opt/pbx3/scripts/genast-characterize.sh), [`workingdocs/genast-characterize/`](genast-characterize/) |
 | Ops | [`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`](OPS_ASTERISK_AFTER_EGRESS_GENAST.md) — full restart vs reload |

@@ -234,6 +234,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "tls" TEXT,                              -- SSIP on/off
     "transport" TEXT DEFAULT 'udp',		     -- transport(udp/tcp/tls/wss)
     "vmailfwd" TEXT,                         -- vmail forward email address
+    "pjsip_overlay" TEXT,                    -- thin PJSIP phone overlay (tmpl key merge on Commit)
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
