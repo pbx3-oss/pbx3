@@ -1,17 +1,17 @@
 # PBX3 ToDo list
 
-**Branch:** **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**); SPA overlay on **`main`**. Lab-hot on golden (G + H); bzy may lag. Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-25 (GenAst A–H; class `.php` + symlink interim; graph MCP OK)
+**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H merged). SPA overlay on **`main`**. Lab-hot on golden + bzy (G + H). Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
+**Last updated:** 2026-07-25 (merge hermit→main; bzy rolled; PHP class `.php` paths)
 
 ### Suggested “what next?” order
 
-1. **Ast config generator — hermit-crab** — **A–H done** on `genast-hermit` (**`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**). **Next:** **merge hermit → main**, or roll **bzy**, or deferred D WebRTC live WSS lab.  
-2. ~~**Ast dialplan `$row` shadow**~~ — fixed on `genast-hermit`.  
+1. **Ast config generator — hermit-crab** — **A–H on `main`**; golden + bzy rolled. **Optional:** deferred D WebRTC live WSS lab.  
+2. ~~**Ast dialplan `$row` shadow**~~ — fixed on `genast-hermit` / `main`.  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
 4. ~~**Toll fraud / velocity V1–V5**~~ — **done 2026-07-24** (golden notify on; act off until asked).  
 5. **Drain affordance** (nice-to-have, parked).  
 6. **pbx3cagi** Phase 1.3+ (keep GenAst↔CAGI contract; E/G touched PrepDial/PostDial).  
-7. **PHP classes — full `.php` requires** (drop extensionless symlink workaround — open item).  
+7. ~~**PHP classes — full `.php` requires**~~ — **done 2026-07-25** (defines + bashconfig point at `*.php`; extensionless symlinks removed).  
 8. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
 9. **Velocity standalone product** (parked).  
 10. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
@@ -38,9 +38,9 @@
 
 - [x] **Trunk/queue/park C2 overlay Phase H (2026-07-25 lab):** Always tmpl + DB overlay (`trunks.pjsip_overlay`, `queue.queue_overlay`, `cluster.park_overlay`); SPA admin fields on Trunk/Queue/Tenant; golden migrate + legacy freeze rm + Commit OK. Tips **pbx3** **`91949be`**, **pbx3api** **`2c429ab`**, **pbx3spa** **`51b0fa3`** (cagi G already **`b9dd195`**).
 
-- [ ] **Ast config generator — merge hermit → main:** Optional roll **bzy**; deferred D WebRTC REGISTER lab. **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
+- [x] **Ast config generator — merge hermit → main:** Merged + pushed 2026-07-25 (pbx3/api/cagi). **bzy rolled** same day (G+H call OK). Deferred D WebRTC REGISTER lab. **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
 
-- [ ] **PHP classes — drop extensionless symlink workaround:** Interim (2026-07-25): content lives in `*.php`; extensionless names (`GenClass`, `HelperClass`, …) are symlinks so `config.php` / scripts keep working. **Proper fix:** point all `define`/`require`/`include` paths at `*.php`, update scripts/tests that hardcode extensionless paths, remove the symlinks (incl. `PDFClass!` → `PDFClass.php`), confirm package/hot-patch copy paths. Classes: AmiHelper, Db, Gen, Helper, LDAPHelper, NetHelper, S3Helper, PDF.
+- [x] **PHP classes — drop extensionless symlink workaround (2026-07-25):** `config.php` / `bashconfig` / tls step1 point at `*.php`; extensionless names (`GenClass`, `HelperClass`, `PDFClass!`, …) removed. Hot-patch **`GenClass.php`** (not a bare name). Classes: AmiHelper, Db, Gen, Helper, LDAPHelper, NetHelper, S3Helper, PDF.
 
 - [ ] **Ast config generator + pbx3cagi (struct):** **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
 

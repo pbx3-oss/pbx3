@@ -50,18 +50,18 @@ define('DBMESSAGE',					    DBSQL .  '/sqlite_message.sql');
 define('READONLY_DB',				    DBPATH .  '/sqlite.rdonly.db');
 define('COPY_DB',				        DBPATH .  '/sqlite.copy.db');
 
-define ('DBCLASS',                      CLASSES . '/DbClass');
-define ('GENCLASS',                     CLASSES . '/GenClass');
-define ('HELPER',                       CLASSES . '/HelperClass');
-define ('LDAPHELPER',                   CLASSES . '/LDAPHelperClass');
-define ('NETHELPER',                    CLASSES . '/NetHelperClass');
+define ('DBCLASS',                      CLASSES . '/DbClass.php');
+define ('GENCLASS',                     CLASSES . '/GenClass.php');
+define ('HELPER',                       CLASSES . '/HelperClass.php');
+define ('LDAPHELPER',                   CLASSES . '/LDAPHelperClass.php');
+define ('NETHELPER',                    CLASSES . '/NetHelperClass.php');
 
 define('RELOADER',				        SCRIPTS . '/reloader.sh');
 define('EXEC_DB_RELOAD',				RELOADER);		// alias for backward compatibility
 
 define('IDPWGEN',				        SYSPATH . '/golang/idpwgen');  // path to idpwgen binary (shortuid/password generator)
 
-define ('AMIHELPER',                    CLASSES . '/AmiHelperClass');
+define ('AMIHELPER',                    CLASSES . '/AmiHelperClass.php');
 define ('ASTMANAGER',                   CLASSES . '/AsteriskManager.php');
 define ('AMIUID',                       'pbx3');
 define ('AMIPWD',                       'bgth7rf!');

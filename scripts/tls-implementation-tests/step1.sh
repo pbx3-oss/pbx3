@@ -13,7 +13,7 @@ PBX3_ROOT="${PBX3_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 SCRIPTS_PKG="$PBX3_ROOT/pbx3-1/opt/pbx3/scripts"
 PBX3_OPT="${PBX3_OPT:-/opt/pbx3}"
 SCRIPTS_OPT="$PBX3_OPT/scripts"
-NETHELPER="$PBX3_ROOT/pbx3-1/opt/pbx3/php/classes/NetHelperClass"
+NETHELPER="$PBX3_ROOT/pbx3-1/opt/pbx3/php/classes/NetHelperClass.php"
 
 echo "=== Step 1: pbx3 backend (scripts + firewall) ==="
 
