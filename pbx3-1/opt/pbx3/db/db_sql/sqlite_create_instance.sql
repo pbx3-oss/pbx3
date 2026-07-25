@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS trunks (
     "transport" TEXT DEFAULT 'udp',
     "trunkname" TEXT,				-- freeform trunkname
     "username" TEXT,				-- far end username
+    "pjsip_overlay" TEXT,			-- thin PJSIP trunk overlay (tmpl key merge on Commit)
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',

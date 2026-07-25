@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS cluster (
     "voice_instr" INTEGER DEFAULT 1,      -- play long or short Vmail instructions
     "voip_max" INTEGER DEFAULT 30,        -- MAX outbound up calls
     "vxt" INTEGER DEFAULT 0,				   -- Enable/disable VXT
+    "park_overlay" TEXT,                     -- thin parking_lot overlay (tmpl key merge on Commit)
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
@@ -414,6 +415,7 @@ CREATE TABLE IF NOT EXISTS queue (
     "outcome" TEXT DEFAULT 'None',
     "strategy" TEXT DEFAULT 'ringall',    -- fine selection, all of the Asterisk types
     "timeout" INTEGER DEFAULT 30,
+    "queue_overlay" TEXT,                 -- thin queue.conf overlay (flat KV merge on Commit)
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',

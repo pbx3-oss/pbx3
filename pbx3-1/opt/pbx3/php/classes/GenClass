@@ -233,7 +233,10 @@ class genAsteriskObjects
 					continue;
 				}
 			}
-			$Pbuff .= $this->helper->getParkInstance($row['shortuid']);
+			$Pbuff .= $this->helper->getParkInstance(
+				$row['shortuid'],
+				isset($row['park_overlay']) ? $row['park_overlay'] : null
+			);
 			if ($Pbuff) {
 				$Pbuff = preg_replace('/\$clstpkey/', (string)($row['pkey'] ?? ''), $Pbuff);
 				$Pbuff = preg_replace('/\$clstshortuid/', (string)($row['shortuid'] ?? ''), $Pbuff);
@@ -515,7 +518,10 @@ class genAsteriskObjects
 				continue;
 			}
 
-			$pjsipTrunkBuff = $this->helper->getPjsipTrunkInstance($row);
+			$pjsipTrunkBuff = $this->helper->getPjsipTrunkInstance(
+				$row,
+				isset($row['pjsip_overlay']) ? $row['pjsip_overlay'] : null
+			);
 			if ($pjsipTrunkBuff) {
 				$this->xlatePjsipBuff($pjsipTrunkBuff,$row);
 			}
@@ -692,7 +698,10 @@ class genAsteriskObjects
 			$Qbuff .= "[" . $row['shortuid'] . "]\n";
 
 
-			$Qbuff .= $this->helper->getQInstance($row['pkey']);
+			$Qbuff .= $this->helper->getQInstance(
+				$row['pkey'],
+				isset($row['queue_overlay']) ? $row['queue_overlay'] : null
+			);
 			if ($Qbuff) {
 				$this->xlatePjsipBuff($Qbuff,$row);
 			}

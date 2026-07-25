@@ -63,7 +63,28 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-25 — GenAst hermit A–F; E lab OK)
+## Next agent session notes (2026-07-25 — GenAst hermit G+H lab OK)
+
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden: G LepDial + H trunk/queue/park overlays hot; migrations applied. Tips filled after this session’s push. Magrathea VIP **`3.93.26.82`**.
+
+### Shipped
+- **G:** LepDial PreDial → `Dial(${PBX3_DIAL})` → PostDial; ANSWER/CANCEL skip second AGI (dead-AGI cold start). Golden lab: answer, cancel→VM, timeout→VM, AstDB CFIM, SIP DIVERT.
+- **H:** Trunk/queue/park C2 — always tmpl + DB overlay (`trunks.pjsip_overlay`, `queue.queue_overlay`, `cluster.park_overlay`); SPA admin fields on Trunk/Queue/Tenant (park = Tenant → Parking). Golden migrate + legacy freeze rm + Commit OK.
+- Docs: **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §0 Phase G locked + Phase H.
+
+### Golden / operator follow-up
+- SPA: Trunk/Queue overlay visible; park overlay on **Tenant** edit (no Parks panel).
+- bzy may still lag hermit (C2+/G/H).
+- Velocity still notify-on / ACT-off.
+- SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
+- Graph MCP unavailable this session — skipped code-review-graph.
+
+### Resume
+1. **Merge `genast-hermit` → `main`** (pbx3 + pbx3api + pbx3cagi) — or roll bzy.
+2. Optional: D WebRTC live WSS lab.
+3. Not first: Twilio paid / velocity ACT / SSO / cagi struct 1.3+.
+
+## Next agent session notes (2026-07-25 — GenAst hermit A–F; E lab OK) — historical
 
 **Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden hot: GenClass/Helper/cagi/tmpls; migrate `pjsip_overlay` on 08jzwn. Tips (session end): pbx3 **`e3e02ec`**, pbx3api **`177a28b`**, pbx3cagi **`e3d8522`**, pbx3spa **`3c05adb`**. Magrathea VIP **`3.93.26.82`**.
 
@@ -82,9 +103,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - SSH: instances `pbx3test.pem`; SBC `opensips.pem`.
 
 ### Resume
-1. **G:** LepDial short-run (generalize E) — or merge **`genast-hermit` → `main`**.
-2. Optional: D WebRTC live lab; roll bzy; trunk/queue overlay later.
-3. Not first: Twilio paid / velocity ACT / SSO.
+- Superseded by **2026-07-25** G+H block above.
 
 ## Next agent session notes (2026-07-25 — GenAst hermit-crab A–C lab OK) — historical
 

@@ -195,81 +195,115 @@ public function check_pid()  {
  * @param  array $tuple Trunk row
  * @return bool  
  */
+/**
+ * Ensure trunks dir for overlays (stock tmpl is never copied).
+ * @param  array $tuple Trunk row (unused; signature kept for callers)
+ * @return bool
+ */
 public function createPjsipTrunkInstance($tuple) {
 
-	$pkey = (string)($tuple['pkey'] ?? '');
-	$fleetEgress = ($pkey === 'Egress' || $pkey === 'EgressFailover');
+	if (!is_dir(ASTTRUNKS)) {
+		$this->request_syscmd("/bin/mkdir -p " . ASTTRUNKS . " >/dev/null 2>&1");
+		$this->request_syscmd("/bin/chown asterisk:asterisk " . ASTTRUNKS . " >/dev/null 2>&1");
+	}
+	return true;
+}
 
-	if ($fleetEgress) {
-		$templateFile = PJSIP_TRUNK_EGRESS_TEMPLATE;
+/**
+ * Resolve stock trunk tmpl path from trunk row.
+ * @param  array $tuple
+ * @return string
+ */
+private function pjsipTrunkTemplateFile($tuple) {
+
+	$pkey = (string)($tuple['pkey'] ?? '');
+	if ($pkey === 'Egress' || $pkey === 'EgressFailover') {
+		return PJSIP_TRUNK_EGRESS_TEMPLATE;
+	}
+	switch ($tuple['pjsipreg'] ?? '') {
+		case 'SND':
+			return PJSIP_TRUNK_SNDREG_TEMPLATE;
+		case 'RCV':
+			return PJSIP_TRUNK_RCVREG_TEMPLATE;
+		default:
+			return PJSIP_TRUNK_TRUSTED_TEMPLATE;
+	}
+}
+
+/**
+ * Stock trunk tmpl plus optional thin overlay (pre-xlate).
+ * Home of record: $dbOverlay (trunks.pjsip_overlay). File under trunks/ is
+ * fallback when DB overlay is empty. Legacy {pkey}_trunk.conf is ignored.
+ * @param  array       $tuple Trunk row
+ * @param  string|null $dbOverlay thin overlay text from trunk row
+ * @return string|false
+ */
+public function getPjsipTrunkInstance($tuple, $dbOverlay = null) {
+
+	$this->createPjsipTrunkInstance($tuple);
+	$templateFile = $this->pjsipTrunkTemplateFile($tuple);
+	if (!file_exists($templateFile)) {
+		return false;
+	}
+	$buff = file_get_contents($templateFile);
+	if ($buff === false) {
+		return false;
+	}
+
+	$pkey = (string)($tuple['pkey'] ?? '');
+	$overlay = null;
+	if ($dbOverlay !== null && trim((string) $dbOverlay) !== '') {
+		$overlay = (string) $dbOverlay;
 	} else {
-		switch ($tuple['pjsipreg']) {
-			case "SND":
-				$templateFile = PJSIP_TRUNK_SNDREG_TEMPLATE;
-				break;
-			case "RCV":
-				$templateFile = PJSIP_TRUNK_RCVREG_TEMPLATE;
-				break;
-			default:
-				$templateFile = PJSIP_TRUNK_TRUSTED_TEMPLATE;
+		$overlayFile = ASTTRUNKS . '/' . $pkey . '_' . PJSIP_TRUNK_OVERLAY;
+		if (file_exists($overlayFile) && filesize($overlayFile) > 0) {
+			$fileOverlay = file_get_contents($overlayFile);
+			if ($fileOverlay !== false && trim($fileOverlay) !== '') {
+				$overlay = $fileOverlay;
+			}
 		}
 	}
-	$targetFile = ASTTRUNKS . '/' . $pkey . '_' . PJSIP_TRUNK;
-
-	if ($fleetEgress || !file_exists($targetFile) || 0 == filesize($targetFile)) {
-		$rc = $this->request_syscmd ("/bin/cp $templateFile $targetFile >/dev/null 2>&1");
-		$rc = $this->request_syscmd ("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
-		$rc = $this->request_syscmd ("/bin/chmod 664 $targetFile >/dev/null 2>&1");
-		return true;
+	if ($overlay !== null) {
+		$buff = $this->mergePjsipPhoneOverlay($buff, $overlay);
 	}
-	return false;
-} 
+	return $buff;
+}
 
 /**
- * get named pjsip template
- * @param  array $tuple Trunk row
- * @return bool  
+ * Write thin per-trunk overlay (not a full tmpl clone).
+ * @param  string $key trunk pkey
+ * @param  string $data overlay fragment
+ * @return bool
  */
-public function getPjsipTrunkInstance($tuple) {
+public function setPjsipTrunkInstance($key, $data) {
 
-	$pkey = (string)($tuple['pkey'] ?? '');
-	$fleetEgress = ($pkey === 'Egress' || $pkey === 'EgressFailover');
-	$targetFile = ASTTRUNKS . '/' . $pkey . '_' . PJSIP_TRUNK;
-	if ($fleetEgress || !file_exists($targetFile)) {
-		$this->createPjsipTrunkInstance($tuple);
-	}
-	if (file_exists($targetFile)) {
-		return file_get_contents($targetFile);
-	}
-	return false;
-} 
-
-/**
- * set named pjsip template
- * @param  array $tuple Trunk row
- * @return bool  
- */
-public function setPjsipTrunkInstance($key,$data) {
-	
-	$targetFile = ASTTRUNKS . '/' . $key . '_' . PJSIP_TRUNK;	
+	$this->createPjsipTrunkInstance(array('pkey' => $key));
+	$targetFile = ASTTRUNKS . '/' . $key . '_' . PJSIP_TRUNK_OVERLAY;
 	$fh = fopen($targetFile, 'w') or die("Could not open file $targetFile!");
-	fwrite($fh,$data) or die("Could not write to file $targetFile !");
+	fwrite($fh, $data) or die("Could not write to file $targetFile !");
 	fclose($fh);
-	return True;	
-} 
+	$this->request_syscmd("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
+	$this->request_syscmd("/bin/chmod 664 $targetFile >/dev/null 2>&1");
+	return true;
+}
 
 /**
- * delete named pjsip template
- * @param  array $tuple Trunk row
- * @return RC  
+ * Delete trunk overlay (and legacy frozen conf if present).
+ * @param  string $key trunk pkey
+ * @return mixed
  */
 public function deletePjsipTrunkInstance($key) {
 
-	$targetFile = ASTTRUNKS . '/' . $key . '_' . PJSIP_TRUNK;
-	if (file_exists($targetFile)) {
-		return $this->request_syscmd ("/bin/rm $targetFile >/dev/null 2>&1");
+	$rc = false;
+	$overlayFile = ASTTRUNKS . '/' . $key . '_' . PJSIP_TRUNK_OVERLAY;
+	if (file_exists($overlayFile)) {
+		$rc = $this->request_syscmd("/bin/rm $overlayFile >/dev/null 2>&1");
 	}
-	return False;	
+	$legacyFile = ASTTRUNKS . '/' . $key . '_' . PJSIP_TRUNK;
+	if (file_exists($legacyFile)) {
+		$rc = $this->request_syscmd("/bin/rm $legacyFile >/dev/null 2>&1");
+	}
+	return $rc;
 } 
 
 /**
@@ -371,6 +405,55 @@ private function mergePjsipPhoneOverlay($stock, $overlay) {
 	}
 
 	return $this->emitPjsipConfSections($base);
+}
+
+/**
+ * Merge thin overlay into a flat key=value conf body (no [sections]).
+ * Overlay keys replace matching keys in stock; absent keys are appended.
+ * @param  string $stock
+ * @param  string $overlay
+ * @return string
+ */
+private function mergeFlatConfOverlay($stock, $overlay) {
+
+	$stock = str_replace(array("\r\n", "\r"), "\n", $stock);
+	$overlay = str_replace(array("\r\n", "\r"), "\n", $overlay);
+	$lines = explode("\n", $stock);
+	$byKey = array();
+	$order = array();
+
+	foreach ($lines as $i => $line) {
+		$trimmed = trim($line);
+		if ($trimmed !== '' && $trimmed[0] !== ';' && strpos($trimmed, '=') !== false) {
+			$eq = strpos($trimmed, '=');
+			$key = trim(substr($trimmed, 0, $eq));
+			$byKey[strtolower($key)] = $i;
+		}
+		$order[] = $line;
+	}
+
+	foreach (explode("\n", $overlay) as $oline) {
+		$trimmed = trim($oline);
+		if ($trimmed === '' || $trimmed[0] === ';') {
+			$order[] = $oline;
+			continue;
+		}
+		if (strpos($trimmed, '=') === false) {
+			$order[] = $oline;
+			continue;
+		}
+		$eq = strpos($trimmed, '=');
+		$key = trim(substr($trimmed, 0, $eq));
+		$lk = strtolower($key);
+		if (isset($byKey[$lk])) {
+			$order[$byKey[$lk]] = $oline;
+		} else {
+			$byKey[$lk] = count($order);
+			$order[] = $oline;
+		}
+	}
+
+	return implode("\n", $order);
 }
 
 /**
@@ -657,74 +740,92 @@ public function deletePjsipWebrtcInstance($key) {
  */
 
 /**
- * Copy file template to named queue file
- * @param  $key
- * @return bool  
+ * Ensure queues dir for overlays (stock tmpl is never copied).
+ * @param  string $key queue pkey
+ * @return bool
  */
 public function createQInstance($key) {
 
-
-	$templateFile = QUEUE_TEMPLATE;					
-
-	$targetFile = ASTQUEUES . '/' . $key . '_' . QUEUE;
-
-	if (!file_exists($targetFile) || 0 == filesize( $targetFile )) {
-		$rc = $this->request_syscmd ("/bin/cp $templateFile $targetFile >/dev/null 2>&1");		
-		$rc = $this->request_syscmd ("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
-		$rc = $this->request_syscmd ("/bin/chmod 664 $targetFile >/dev/null 2>&1");
-		return true;
+	if (!is_dir(ASTQUEUES)) {
+		$this->request_syscmd("/bin/mkdir -p " . ASTQUEUES . " >/dev/null 2>&1");
+		$this->request_syscmd("/bin/chown asterisk:asterisk " . ASTQUEUES . " >/dev/null 2>&1");
 	}
-	return false;
-} 
+	return true;
+}
 
 /**
- * get named queue template
- * @param  array $tuple Queue row
- * @return bool  
+ * Stock queue.tmpl plus optional thin overlay (pre-xlate).
+ * Home of record: $dbOverlay (queue.queue_overlay). File under queues/ is
+ * fallback when DB empty. Legacy {pkey}_queue.conf ignored. Body is flat KV
+ * (GenClass prepends [shortuid]).
+ * @param  string      $key queue pkey
+ * @param  string|null $dbOverlay
+ * @return string|false
  */
-public function getQInstance($key) {
+public function getQInstance($key, $dbOverlay = null) {
 
-	$targetFile = ASTQUEUES . '/' . $key . '_' . QUEUE;
-	if (!file_exists($targetFile)) {		
-		$this->createQInstance($key);
+	$this->createQInstance($key);
+	if (!file_exists(QUEUE_TEMPLATE)) {
+		return false;
 	}
-	if (file_exists($targetFile)) {
-		return file_get_contents($targetFile);
+	$buff = file_get_contents(QUEUE_TEMPLATE);
+	if ($buff === false) {
+		return false;
 	}
-	return false;
-} 
+
+	$overlay = null;
+	if ($dbOverlay !== null && trim((string) $dbOverlay) !== '') {
+		$overlay = (string) $dbOverlay;
+	} else {
+		$overlayFile = ASTQUEUES . '/' . $key . '_' . QUEUE_OVERLAY;
+		if (file_exists($overlayFile) && filesize($overlayFile) > 0) {
+			$fileOverlay = file_get_contents($overlayFile);
+			if ($fileOverlay !== false && trim($fileOverlay) !== '') {
+				$overlay = $fileOverlay;
+			}
+		}
+	}
+	if ($overlay !== null) {
+		$buff = $this->mergeFlatConfOverlay($buff, $overlay);
+	}
+	return $buff;
+}
 
 /**
- * set named queue template
- * @param  array $tuple Queue row
- * @return bool  
+ * Write thin per-queue overlay.
+ * @param  string $key
+ * @param  string $data
+ * @return bool
  */
-public function setQInstance($key,$data) {
-	
-	$targetFile = ASTQUEUES . '/' . $key . '_' . QUEUE;
+public function setQInstance($key, $data) {
 
-	if (empty($data)) {		
-		$this->createQInstance($key);
-	}
-
+	$this->createQInstance($key);
+	$targetFile = ASTQUEUES . '/' . $key . '_' . QUEUE_OVERLAY;
 	$fh = fopen($targetFile, 'w') or die("Could not open file $targetFile!");
-	fwrite($fh,$data) or die("Could not write to file $targetFile !");
+	fwrite($fh, $data) or die("Could not write to file $targetFile !");
 	fclose($fh);
-	return True;	
-} 
+	$this->request_syscmd("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
+	$this->request_syscmd("/bin/chmod 664 $targetFile >/dev/null 2>&1");
+	return true;
+}
 
 /**
- * delete named queue template
- * @param  array $tuple Queue row
- * @return RC  
+ * Delete queue overlay (and legacy freeze if present).
+ * @param  string $key
+ * @return mixed
  */
 public function deleteQInstance($key) {
 
-	$targetFile = ASTQUEUES . '/' . $key . '_' . QUEUE;
-	if (file_exists($targetFile)) {
-		return $this->request_syscmd ("/bin/rm $targetFile >/dev/null 2>&1");
+	$rc = false;
+	$overlayFile = ASTQUEUES . '/' . $key . '_' . QUEUE_OVERLAY;
+	if (file_exists($overlayFile)) {
+		$rc = $this->request_syscmd("/bin/rm $overlayFile >/dev/null 2>&1");
 	}
-	return False;	
+	$legacyFile = ASTQUEUES . '/' . $key . '_' . QUEUE;
+	if (file_exists($legacyFile)) {
+		$rc = $this->request_syscmd("/bin/rm $legacyFile >/dev/null 2>&1");
+	}
+	return $rc;
 }
 
 /**
@@ -732,74 +833,91 @@ public function deleteQInstance($key) {
  */
 
 /**
- * Copy file template to named queue file
- * @param  $key
- * @return bool  
+ * Ensure callparks dir for overlays (stock tmpl is never copied).
+ * @param  string $key cluster shortuid
+ * @return bool
  */
 public function createParkInstance($key) {
 
-
-	$templateFile = PARK_TEMPLATE;					
-
-	$targetFile = ASTPARKS . '/' . $key . '_' . PARK;
-
-	if (!file_exists($targetFile) || 0 == filesize( $targetFile )) {
-		$rc = $this->request_syscmd ("/bin/cp $templateFile $targetFile >/dev/null 2>&1");		
-		$rc = $this->request_syscmd ("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
-		$rc = $this->request_syscmd ("/bin/chmod 664 $targetFile >/dev/null 2>&1");
-		return true;
+	if (!is_dir(ASTPARKS)) {
+		$this->request_syscmd("/bin/mkdir -p " . ASTPARKS . " >/dev/null 2>&1");
+		$this->request_syscmd("/bin/chown asterisk:asterisk " . ASTPARKS . " >/dev/null 2>&1");
 	}
-	return false;
-} 
+	return true;
+}
 
 /**
- * get named park template
- * @param  array $tuple Queue row
- * @return bool  
+ * Stock parking_lot.tmpl plus optional thin overlay (pre-xlate).
+ * Home of record: $dbOverlay (cluster.park_overlay). File under callparks/ is
+ * fallback when DB empty. Legacy {shortuid}_parking.conf ignored.
+ * @param  string      $key cluster shortuid
+ * @param  string|null $dbOverlay
+ * @return string|false
  */
-public function getParkInstance($key) {
+public function getParkInstance($key, $dbOverlay = null) {
 
-	$targetFile = ASTPARKS . '/' . $key . '_' . PARK;
-	if (!file_exists($targetFile)) {		
-		$this->createParkInstance($key);
+	$this->createParkInstance($key);
+	if (!file_exists(PARK_TEMPLATE)) {
+		return false;
 	}
-	if (file_exists($targetFile)) {
-		return file_get_contents($targetFile);
+	$buff = file_get_contents(PARK_TEMPLATE);
+	if ($buff === false) {
+		return false;
 	}
-	return false;
-} 
+
+	$overlay = null;
+	if ($dbOverlay !== null && trim((string) $dbOverlay) !== '') {
+		$overlay = (string) $dbOverlay;
+	} else {
+		$overlayFile = ASTPARKS . '/' . $key . '_' . PARK_OVERLAY;
+		if (file_exists($overlayFile) && filesize($overlayFile) > 0) {
+			$fileOverlay = file_get_contents($overlayFile);
+			if ($fileOverlay !== false && trim($fileOverlay) !== '') {
+				$overlay = $fileOverlay;
+			}
+		}
+	}
+	if ($overlay !== null) {
+		$buff = $this->mergePjsipPhoneOverlay($buff, $overlay);
+	}
+	return $buff;
+}
 
 /**
- * set named park template
- * @param  var cluster key
- * @return bool  
+ * Write thin per-park overlay.
+ * @param  string $key cluster shortuid
+ * @param  string $data
+ * @return bool
  */
-public function setParkInstance($key,$data) {
-	
-	$targetFile = ASTPARKS . '/' . $key . '_' . PARK;
+public function setParkInstance($key, $data) {
 
-	if (empty($data)) {		
-		$this->createParkInstance($key);
-	}
-
+	$this->createParkInstance($key);
+	$targetFile = ASTPARKS . '/' . $key . '_' . PARK_OVERLAY;
 	$fh = fopen($targetFile, 'w') or die("Could not open file $targetFile!");
-	fwrite($fh,$data) or die("Could not write to file $targetFile !");
+	fwrite($fh, $data) or die("Could not write to file $targetFile !");
 	fclose($fh);
-	return True;	
-} 
+	$this->request_syscmd("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
+	$this->request_syscmd("/bin/chmod 664 $targetFile >/dev/null 2>&1");
+	return true;
+}
 
 /**
- * delete named park template
- * @param  array 
- * @return RC  
+ * Delete park overlay (and legacy freeze if present).
+ * @param  string $key cluster shortuid
+ * @return mixed
  */
 public function deleteParkInstance($key) {
 
-	$targetFile = ASTPARKS . '/' . $key . '_' . PARK;
-	if (file_exists($targetFile)) {
-		return $this->request_syscmd ("/bin/rm $targetFile >/dev/null 2>&1");
+	$rc = false;
+	$overlayFile = ASTPARKS . '/' . $key . '_' . PARK_OVERLAY;
+	if (file_exists($overlayFile)) {
+		$rc = $this->request_syscmd("/bin/rm $overlayFile >/dev/null 2>&1");
 	}
-	return False;	
+	$legacyFile = ASTPARKS . '/' . $key . '_' . PARK;
+	if (file_exists($legacyFile)) {
+		$rc = $this->request_syscmd("/bin/rm $legacyFile >/dev/null 2>&1");
+	}
+	return $rc;
 }
 
 

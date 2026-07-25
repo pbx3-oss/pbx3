@@ -77,10 +77,12 @@ define('ASTIAX',                        SYSPATH . ASTPATH . '/iax_trunks');
 define('ASTPARKS',                      SYSPATH . ASTPATH . '/callparks');
 
 define('QUEUE',                         'queue.conf');
+define('QUEUE_OVERLAY',                 'queue.overlay.conf');
 define('QUEUE_TEMPLATE',                ASTMPL . '/queue.tmpl');
 define('READY_QUEUES',                  ASTLOCALCONF . '/ready_queues.conf');
 
 define('PARK',                         'parking.conf');
+define('PARK_OVERLAY',                 'parking.overlay.conf');
 define('PARK_TEMPLATE',                 ASTMPL . '/parking_lot.tmpl');
 define('READY_PARKS',                   ASTLOCALCONF . '/ready_parks.conf');
 
@@ -135,6 +137,7 @@ define('PJSIP_TRANSPORT',		        ASTLOCALCONF . '/pjsip_transport.conf');
 define('PJSIP_TRANSPORT_TEMPLATE',		ASTMPL . '/pjsip_transport.tmpl');
 
 define('PJSIP_TRUNK',					'trunk.conf');
+define('PJSIP_TRUNK_OVERLAY',			'trunk.overlay.conf');
 define('PJSIP_TRUNK_SNDREG_TEMPLATE',	ASTMPL . '/pjsip_trunk_sndreg.tmpl');
 define('PJSIP_TRUNK_RCVREG_TEMPLATE',	ASTMPL . '/pjsip_trunk_rcvreg.tmpl');
 define('PJSIP_TRUNK_TRUSTED_TEMPLATE',	ASTMPL . '/pjsip_trunk_trusted.tmpl');

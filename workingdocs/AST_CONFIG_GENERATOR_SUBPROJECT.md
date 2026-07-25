@@ -1,6 +1,6 @@
 # Ast config generator sub-project
 
-**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**). **A–G** built; **E** queue + **G** LepDial lab OK on golden. SBC WSS (W1) separate.  
+**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**); SPA on **`main`**. **A–G** dialplan lab OK; **trunk/queue/park C2 overlay** built (same tmpl+DB overlay pattern as phones). SBC WSS (W1) separate.  
 **Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging / dialplan emit), including **phone PJSIP staging/overlay**, **extensions.conf structure**, **and** the paired **pbx3cagi** cleanup.  
 **CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.  
 **Study depth (ephemeral):** `~/.cursor/plans/genast_challenger_review_0db5c469.plan.md` — reference only; **this file is durable truth.**
@@ -92,8 +92,9 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 | **C2 — DB overlay** | Extension column + API/SPA; Commit merges from DB; backup/move carry overlay | **Lab OK** (golden set/clear/Commit) |
 | **D — WebRTC overlay** | Same tmpl + key merge + `pjsip_overlay` / file fallback as phones (`*_webrtc.overlay.conf`); one-time `rm *_webrtc.conf` | **Built** on branch — **lab verify deferred** (same pattern as phones; confident without live WSS this session) |
 | **E — Dialplan thin + `Q*` short-run** | Remove GenAst hardcoded `Q*` Dial; `Q*` → short AGI PrepDial(queue) → Set dial var → return → dialplan `Dial(${PBX3_DIAL})`; thin stubs; call smoke | **Lab OK** (golden Q1060) |
-| **F — G3 hygiene** | SBC FQDN from `PBX3_SBC_EGRESS_HOST`; `$clstkey` → `park-{tenant}` (before `$clst`); clearer xlate docs; phone/webrtc shell-cp already gone | **Built** — trunk/queue copy-once left for later sideways |
+| **F — G3 hygiene** | SBC FQDN from `PBX3_SBC_EGRESS_HOST`; `$clstkey` → `park-{tenant}` (before `$clst`); clearer xlate docs; phone/webrtc shell-cp already gone | **Built** |
 | **G — Dial locus (generalize)** | LepDial PreDial + dialplan Dial + PostDial; ANSWER/CANCEL skip second AGI | **Lab OK** (golden answer / cancel→VM / timeout→VM / AstDB CFIM / SIP DIVERT) |
+| **H — Trunk/queue/park C2** | Always tmpl + thin overlay (DB HoR, file fallback); ignore freeze files | **Built** — migrate + Commit smoke on golden |
 
 **G1 inventory** is done (§2a). Not a gate before C.
 
@@ -146,15 +147,23 @@ pjsip_phone.tmpl  --(always on get)-->  + overlay (DB pjsip_overlay preferred; f
 - ~~Hardcoded SBC FQDN in `xlatePjsipBuff`~~ — **F:** `PBX3_SBC_EGRESS_HOST` (default `sbc.pbx3.com`).
 - Page / `***` presets.
 - Tighter OpenSIPS gate / tenant DNS ≠ VIP (edge; pointer only).
-- Trunk/queue **copy-once** staging (`/bin/cp` tmpl) — sideways after phones/webrtc; not F.
+- ~~Trunk/queue **copy-once** staging~~ — **H:** trunks/queues/parks tmpl + DB overlay (same as phones).
 - [`TODO.md`](TODO.md) **pjsipuser for extensions** / NAT tmpl keys — fold here when touched.
+
+### Phase H notes (trunk / queue / park C2 — built)
+
+- **Trunks:** `trunks.pjsip_overlay`; file `trunks/{pkey}_trunk.overlay.conf`; legacy `*_trunk.conf` ignored. Egress no longer force-copies freeze.
+- **Queues:** `queue.queue_overlay`; file `queues/{pkey}_queue.overlay.conf`; flat KV merge.
+- **Parks:** `cluster.park_overlay`; file `callparks/{shortuid}_parking.overlay.conf`; section merge on `parking_lot.tmpl`.
+- SPA admin textareas on Trunk / Queue / Tenant detail.
+- **Deploy:** migrate three columns; hot-patch GenClass/Helper; one-time `rm` legacy freeze files under trunks/queues/callparks.
 
 ### Phase F notes (G3 hygiene — built)
 
 - **`fleetSbcHost()`** — `getenv('PBX3_SBC_EGRESS_HOST')` or `sbc.pbx3.com` (same knob as fleet egress seed).
 - **`$clstkey`** — expands to `park-{cluster shortuid}` to match `genParks`; replaced **before** `$clst` so parkinglot is not mangled to `{tenant}key`.
 - **WebRTC tmpl** — parkinglot uses `$clstkey` (was `$clst`).
-- Phone/WebRTC no longer shell-cp freeze files (C/D). Trunks/queues still copy-once — later.
+- Phone/WebRTC/trunk/queue/park no longer shell-cp freeze files.
 
 ---
 
@@ -166,8 +175,9 @@ Defines live in [`config.php`](../pbx3-1/opt/pbx3/php/config.php). Commit entry:
 |--------|------------------------|--------------|-------------|------------------|
 | **Phone (G2/C2)** | `PJSIP_PHONE_TEMPLATE` → `pjsip_phone.tmpl` | DB `pjsip_overlay`; optional `*_phone.overlay.conf`. Legacy `*_phone.conf` ignored | `get/create/set/move/deletePjsipPhoneInstance` | `genPjsipPhones` → `xlatePjsipBuff` → `PJSIP_READY_PHONES` |
 | **WebRTC (D)** | `PJSIP_WEBRTC_TEMPLATE` → `pjsip_webrtc.tmpl` | Same `pjsip_overlay`; optional `*_webrtc.overlay.conf`. Legacy `*_webrtc.conf` ignored | `*PjsipWebrtcInstance` | `genPjsipWebrtc` → `PJSIP_READY_WEBRTC` |
-| Trunks | `PJSIP_TRUNK_*_TEMPLATE` (snd/rcv/trusted/egress) | Copy-once `ASTTRUNKS/{pkey}_trunk.conf` (Egress always re-copied) | `*PjsipTrunkInstance` | `genPjsipTrunks` → `PJSIP_READY_TRUNKS` — later |
-| Queue | `QUEUE_TEMPLATE` → `queue.tmpl` | Copy-once `ASTQUEUES/{pkey}_queue.conf` | `create/get/setQInstance` | `genQueues` — later |
+| **Trunks (H)** | `PJSIP_TRUNK_*_TEMPLATE` (snd/rcv/trusted/egress) | DB `pjsip_overlay`; optional `*_trunk.overlay.conf`. Legacy `*_trunk.conf` ignored | `*PjsipTrunkInstance` | `genPjsipTrunks` → `PJSIP_READY_TRUNKS` |
+| **Queue (H)** | `QUEUE_TEMPLATE` → `queue.tmpl` | DB `queue_overlay`; optional `*_queue.overlay.conf`. Legacy `*_queue.conf` ignored | `create/get/set/deleteQInstance` | `genQueues` |
+| **Park (H)** | `PARK_TEMPLATE` → `parking_lot.tmpl` | DB `cluster.park_overlay`; optional `*_parking.overlay.conf`. Legacy `*_parking.conf` ignored | `*ParkInstance` | `genParks` |
 | Transport | `PJSIP_TRANSPORT_TEMPLATE` → `pjsip_transport.tmpl` | None (read tmpl each Commit) | n/a | `genPjsipTransport` → `PJSIP_TRANSPORT` |
 
 ---
@@ -180,7 +190,7 @@ Defines live in [`config.php`](../pbx3-1/opt/pbx3/php/config.php). Commit entry:
 - Copy `pjsip_phone.tmpl` **only if** target missing or zero-size.
 - Commit path: `getPjsipPhoneInstance` → read staged file → `GenClass::xlatePjsipBuff` → `pjsip_ready_phones.conf`.
 
-**Consequence:** tmpl rollouts did not reach existing phones until operators deleted staged files. Trunks/queues still use that copy-once pattern until later. WebRTC follows phones as of Phase D.
+**Consequence:** tmpl rollouts did not reach existing phones until operators deleted staged files. Trunks/queues/parks now follow phones (Phase H). WebRTC follows phones as of Phase D.
 
 ---
 
@@ -193,11 +203,11 @@ Defines live in [`config.php`](../pbx3-1/opt/pbx3/php/config.php). Commit entry:
 1. Change `pjsip_phone.tmpl` (e.g. add/change a stock key), Commit — **all stock phones** pick up the change **without** deleting staged files.
 2. Per-phone override via `ASTENDPOINTS/{shortuid}_phone.overlay.conf` — keys replace/add on the matching `type=` object (pre-xlate); not a frozen full tmpl copy.
 3. Fleet vs singleton: `$outbound_proxy` / tenant-AoR Q dials remain **fleet-gated** (`PBX3_FLEET_MODE` / active `Egress`); singleton stays direct-to-contact.
-4. WebRTC uses the same model (Phase D); trunks later.
+4. WebRTC uses the same model (Phase D); trunks/queues/parks use the same model (Phase H).
 
 ### Legacy cleanup (lab / deploy)
 
-After deploying G2: one-time delete `endpoints/*_phone.conf` (frozen copies). After D: one-time delete `endpoints/*_webrtc.conf`. Stock endpoints need no overlay. **Do not** auto-delete in genAst.
+After deploying G2: one-time delete `endpoints/*_phone.conf` (frozen copies). After D: one-time delete `endpoints/*_webrtc.conf`. After H: one-time delete `trunks/*_trunk.conf`, `queues/*_queue.conf`, `callparks/*_parking.conf` (keep `*.overlay.conf`). Stock objects need no overlay. **Do not** auto-delete in genAst.
 
 **SBC WSS (W1)** is a separate track (`FLEET_TRUNK_PEERING_DECISION.md` §6.1) — not part of hermit D.
 

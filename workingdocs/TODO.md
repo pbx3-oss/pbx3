@@ -1,16 +1,16 @@
 # PBX3 ToDo list
 
-**Branch:** **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**); SPA overlay on **`main`**. Lab-hot on golden; bzy may lag C2+. Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-25 (GenAst hermit A–F; E queue lab OK; G next)
+**Branch:** **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**); SPA overlay on **`main`**. Lab-hot on golden (G + H); bzy may lag. Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
+**Last updated:** 2026-07-25 (GenAst hermit A–H; G LepDial lab OK; H trunk/queue/park overlay)
 
 ### Suggested “what next?” order
 
-1. **Ast config generator — hermit-crab** — **A–F done** on `genast-hermit` (**`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**). **Next:** **G** LepDial short-run (same as Q*), or **merge hermit → main**, or deferred D WebRTC live WSS lab. Trunk/queue overlay later.  
+1. **Ast config generator — hermit-crab** — **A–H done** on `genast-hermit` (**`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**). **Next:** **merge hermit → main**, or roll **bzy**, or deferred D WebRTC live WSS lab.  
 2. ~~**Ast dialplan `$row` shadow**~~ — fixed on `genast-hermit`.  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
 4. ~~**Toll fraud / velocity V1–V5**~~ — **done 2026-07-24** (golden notify on; act off until asked).  
 5. **Drain affordance** (nice-to-have, parked).  
-6. **pbx3cagi** Phase 1.3+ (keep GenAst↔CAGI contract; E already touched PrepDial).  
+6. **pbx3cagi** Phase 1.3+ (keep GenAst↔CAGI contract; E/G touched PrepDial/PostDial).  
 7. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
 8. **Velocity standalone product** (parked).  
 9. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
@@ -33,7 +33,11 @@
 
 - [x] **G3 hygiene Phase F (2026-07-25):** `PBX3_SBC_EGRESS_HOST`; `$clstkey`→`park-{tenant}` before `$clst`. Tip **pbx3** **`d1ddccc`** (+ session-end tip).
 
-- [ ] **Ast config generator — Phase G + merge:** LepDial short-run (generalize E); optional merge **`genast-hermit` → `main`**; deferred D WebRTC REGISTER lab; trunk/queue overlay later. **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
+- [x] **LepDial short-run Phase G (2026-07-25 lab):** PreDial → `Dial(${PBX3_DIAL})` → PostDial; ANSWER/CANCEL skip second AGI. Golden: answer, cancel→VM, timeout→VM, AstDB CFIM, SIP DIVERT OK. Tips **pbx3** **`ae1364f`**, **pbx3cagi** **`b9dd195`**.
+
+- [x] **Trunk/queue/park C2 overlay Phase H (2026-07-25 lab):** Always tmpl + DB overlay (`trunks.pjsip_overlay`, `queue.queue_overlay`, `cluster.park_overlay`); SPA admin fields on Trunk/Queue/Tenant; golden migrate + legacy freeze rm + Commit OK. Tips filled at session-end push.
+
+- [ ] **Ast config generator — merge hermit → main:** Optional roll **bzy**; deferred D WebRTC REGISTER lab. **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
 
 - [ ] **Ast config generator + pbx3cagi (struct):** **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
 
