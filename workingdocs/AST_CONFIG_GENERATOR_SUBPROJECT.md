@@ -12,7 +12,7 @@
 ### Locked — PJSIP phones (G2 / Phase C)
 
 - **Stock:** always read `pjsip_phone.tmpl` on Commit (`get`).
-- **Hand overlay required:** optional `ASTENDPOINTS/{shortuid}_phone.overlay.conf`, **append** pre-xlate (one-phone escapes that stay out of DB).
+- **Hand overlay required:** optional `ASTENDPOINTS/{shortuid}_phone.overlay.conf`, merged **pre-xlate** (one-phone escapes that stay out of DB). Match by `type=`; overlay keys **replace** if present on that object, **add** if absent. Not a second appended stanza (Asterisk keeps the first duplicate key).
 - **Not:** full frozen `*_phone.conf` copy-once (causes tmpl-roll delete chore).
 - **`create*`:** ensure `endpoints/` only; **`set*`:** write overlay path only.
 - **Legacy cleanup:** one-time lab `rm endpoints/*_phone.conf` after deploy — do **not** auto-delete in genAst.
@@ -135,7 +135,7 @@ Defines live in [`config.php`](../pbx3-1/opt/pbx3/php/config.php). Commit entry:
 **Acceptance (G2 phones):**
 
 1. Change `pjsip_phone.tmpl` (e.g. add/change a stock key), Commit — **all stock phones** pick up the change **without** deleting staged files.
-2. Per-phone override via `ASTENDPOINTS/{shortuid}_phone.overlay.conf` (appended pre-xlate) — not a frozen full tmpl copy.
+2. Per-phone override via `ASTENDPOINTS/{shortuid}_phone.overlay.conf` — keys replace/add on the matching `type=` object (pre-xlate); not a frozen full tmpl copy.
 3. Fleet vs singleton: `$outbound_proxy` / tenant-AoR Q dials remain **fleet-gated** (`PBX3_FLEET_MODE` / active `Egress`); singleton stays direct-to-contact.
 4. WebRTC (and later trunks) follow the same model once phones are proven.
 

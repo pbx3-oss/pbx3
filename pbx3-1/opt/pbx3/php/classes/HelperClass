@@ -289,6 +289,7 @@ public function createPjsipPhoneInstance($key) {
 
 /**
  * Stock pjsip_phone.tmpl plus optional thin overlay (pre-xlate).
+ * Overlay keys replace matching keys in the same type= object; absent keys are added.
  * Legacy ASTENDPOINTS/{key}_phone.conf is ignored.
  * @param  string $key phone shortuid
  * @return string|false
@@ -307,10 +308,158 @@ public function getPjsipPhoneInstance($key) {
 	if (file_exists($overlayFile) && filesize($overlayFile) > 0) {
 		$overlay = file_get_contents($overlayFile);
 		if ($overlay !== false && $overlay !== '') {
-			$buff .= "\n" . $overlay;
+			$buff = $this->mergePjsipPhoneOverlay($buff, $overlay);
 		}
 	}
 	return $buff;
+}
+
+/**
+ * Merge thin overlay into stock phone conf text (pre-xlate).
+ * Match overlay sections to stock by type= (endpoint/auth/aor). For each overlay
+ * key: replace if present in that object, else append. Overlay sections with a
+ * type= not present in stock are appended whole.
+ * @param  string $stock
+ * @param  string $overlay
+ * @return string
+ */
+private function mergePjsipPhoneOverlay($stock, $overlay) {
+
+	$base = $this->parsePjsipConfSections($stock);
+	$over = $this->parsePjsipConfSections($overlay);
+
+	foreach ($over as $osec) {
+		if ($osec['name'] === '' && $osec['type'] === null) {
+			continue; // ignore preamble noise in overlay
+		}
+		$idx = $this->findPjsipSectionIndex($base, $osec);
+		if ($idx === null) {
+			$base[] = $osec;
+			continue;
+		}
+		foreach ($osec['lines'] as $oline) {
+			if ($oline['kind'] !== 'kv') {
+				// comments / bare lines from overlay: append
+				$base[$idx]['lines'][] = $oline;
+				continue;
+			}
+			if (strcasecmp($oline['key'], 'type') === 0) {
+				continue; // type used only for matching
+			}
+			$replaced = false;
+			foreach ($base[$idx]['lines'] as $li => $bline) {
+				if ($bline['kind'] === 'kv' && strcasecmp($bline['key'], $oline['key']) === 0) {
+					$base[$idx]['lines'][$li] = $oline;
+					$replaced = true;
+					break;
+				}
+			}
+			if (!$replaced) {
+				$base[$idx]['lines'][] = $oline;
+			}
+		}
+	}
+
+	return $this->emitPjsipConfSections($base);
+}
+
+/**
+ * @param  string $text
+ * @return array list of sections: name, type, lines[]
+ */
+private function parsePjsipConfSections($text) {
+
+	$text = str_replace(array("\r\n", "\r"), "\n", $text);
+	$lines = explode("\n", $text);
+	$sections = array();
+	$cur = array('name' => '', 'type' => null, 'lines' => array());
+
+	foreach ($lines as $line) {
+		if (preg_match('/^\s*\[([^\]]+)\]\s*$/', $line, $m)) {
+			$sections[] = $cur;
+			$cur = array('name' => $m[1], 'type' => null, 'lines' => array());
+			continue;
+		}
+		$trimmed = trim($line);
+		if ($trimmed !== '' && $trimmed[0] !== ';' && strpos($trimmed, '=') !== false) {
+			$eq = strpos($trimmed, '=');
+			$key = trim(substr($trimmed, 0, $eq));
+			$val = substr($trimmed, $eq + 1); // keep value as-is (may have leading space)
+			$val = ltrim($val);
+			$entry = array('kind' => 'kv', 'key' => $key, 'value' => $val, 'raw' => $line);
+			$cur['lines'][] = $entry;
+			if (strcasecmp($key, 'type') === 0) {
+				$cur['type'] = $val;
+			}
+		} else {
+			$cur['lines'][] = array('kind' => 'raw', 'raw' => $line);
+		}
+	}
+	$sections[] = $cur;
+
+	// Drop a leading empty preamble if it has no content
+	if (count($sections) > 0 && $sections[0]['name'] === '') {
+		$empty = true;
+		foreach ($sections[0]['lines'] as $l) {
+			if ($l['kind'] === 'kv' || ($l['kind'] === 'raw' && trim($l['raw']) !== '')) {
+				$empty = false;
+				break;
+			}
+		}
+		if ($empty) {
+			array_shift($sections);
+		}
+	}
+
+	return $sections;
+}
+
+/**
+ * @param  array $sections
+ * @param  array $needle
+ * @return int|null
+ */
+private function findPjsipSectionIndex($sections, $needle) {
+
+	if ($needle['type'] !== null && $needle['type'] !== '') {
+		foreach ($sections as $i => $sec) {
+			if ($sec['type'] !== null && strcasecmp($sec['type'], $needle['type']) === 0) {
+				return $i;
+			}
+		}
+		return null;
+	}
+	// No type in overlay: match by section name only (last resort)
+	foreach ($sections as $i => $sec) {
+		if ($sec['name'] !== '' && strcasecmp($sec['name'], $needle['name']) === 0) {
+			return $i;
+		}
+	}
+	return null;
+}
+
+/**
+ * @param  array $sections
+ * @return string
+ */
+private function emitPjsipConfSections($sections) {
+
+	$parts = array();
+	foreach ($sections as $sec) {
+		$chunk = array();
+		if ($sec['name'] !== '') {
+			$chunk[] = '[' . $sec['name'] . ']';
+		}
+		foreach ($sec['lines'] as $line) {
+			if ($line['kind'] === 'kv') {
+				$chunk[] = $line['key'] . '=' . $line['value'];
+			} else {
+				$chunk[] = $line['raw'];
+			}
+		}
+		$parts[] = implode("\n", $chunk);
+	}
+	return implode("\n", $parts);
 }
 
 /**
