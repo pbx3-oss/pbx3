@@ -65,7 +65,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-25 — graph MCP + class `.php` layout)
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden still G+H hot. Tips: pbx3 **`51c39a5`**, pbx3api **`2c429ab`**, pbx3cagi **`b9dd195`**, pbx3spa **`51b0fa3`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden still G+H hot. Tips: pbx3 **`0423e24`**, pbx3api **`2c429ab`**, pbx3cagi **`b9dd195`**, pbx3spa **`3528e71`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **code-review-graph MCP:** fixed (`~/.cursor/mcp.json` → `/opt/homebrew/bin/uvx` + PATH/HOME); auth + full builds for pbx3/api/spa/cagi.
