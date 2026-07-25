@@ -5,8 +5,8 @@
 
 ### Suggested “what next?” order
 
-1. **Ast config generator — hermit-crab** (branch **`genast-hermit`**) — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**: A characterize → B `$row` → C G2 phones (+ pbx3api overlay delete) → D/E later. Premature stash on old `genast-phone-overlay` superseded by this branch.  
-2. ~~**Ast dialplan `$row` shadow**~~ — in flight on `genast-hermit` (Phase B with C).  
+1. **Ast config generator — hermit-crab** (branch **`genast-hermit`**) — A–C lab OK; **C2 next:** DB `pjsip_overlay` on extension (**`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**). Then D/E.  
+2. ~~**Ast dialplan `$row` shadow**~~ — fixed on `genast-hermit`.  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
 4. ~~**Toll fraud / velocity V1–V5**~~ — **done 2026-07-24** (golden notify on; act off until asked).  
 5. **Drain affordance** (nice-to-have, parked).  
@@ -23,9 +23,11 @@
 
 - [x] **Fleet multi-tenant phone dial / SBC AoR (2026-07-23):** Root cause was Asterisk→SBC `INVITE shortuid@VIP` → OpenSIPS domain guess (`LIMIT 1`) → 404 / hairpin. Fix: PrepDial + GenAst Q dials use `sip:shortuid@tenant.fqdn`; phone `$outbound_proxy` → `sbc.pbx3.com`; OpenSIPS usrloc for from-Asterisk FQDN RURIs. **Fleet-gated** (`PBX3_FLEET_MODE` / Egress) so singleton stays direct-to-contact. Lab: golden multi-tenant both ways + ring groups; rolled **08jzwn** + **bzy54n** (`pbx3cagi` **1.0.0-6**). Tips **pbx3cagi** **`fd9b146`**, **pbx3** **`1ea1210`**, **pbx3sbc** **`4509b5d`**. **Residue** (tmpl→staged phone copy, hardcoded SBC FQDN, Page/`***` presets, tighter OpenSIPS gate, tenant DNS ≠ VIP) → **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
 
-- [ ] **Ast config generator + pbx3cagi (hermit-crab 2026-07-25):** Branch **`genast-hermit`** (pbx3 + pbx3api). Order in **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**: A characterize scripts → B `$row` fix → C G2 phones (tmpl+overlay + API overlay delete) → D/E later. WIP code on branch (not merged). Old premature stash on `genast-phone-overlay` superseded. **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
+- [x] **Phone PJSIP G2 file overlay (2026-07-25 lab):** Tmpl + key merge; golden `fkdd5d` qualify override; calls OK. Branch **`genast-hermit`**.
 
-- [ ] **Phone PJSIP template staging → G2 overlay (in flight on `genast-hermit`):** Replace copy-once `*_phone.conf` with tmpl + thin overlay — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0 / §4**.
+- [ ] **Phone PJSIP overlay — DB home of record (C2):** Extension column (e.g. `pjsip_overlay` TEXT); Commit merges tmpl+DB; SPA advanced textarea later; backup/move carry overlay. File mirror optional. **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0 C2**.
+
+- [ ] **Ast config generator + pbx3cagi (hermit-crab):** Branch **`genast-hermit`**. A–C done in lab; C2 DB overlay next; D/E later. **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 

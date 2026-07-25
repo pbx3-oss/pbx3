@@ -1,6 +1,6 @@
 # Ast config generator sub-project
 
-**Status:** Hermit-crab migration in progress (2026-07-25) — branch **`genast-hermit`** (pbx3 + pbx3api). Decisions locked; code proceeding A→B→C. Premature G2 WIP remains in stash on old branch name (do not treat stash as shipped).  
+**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`**. Phases A–C lab-proven on golden (tmpl+file overlay with key merge; `qualify_frequency` override OK). **Next product direction locked:** thin overlay text on the **extension DB row** (SPA/backup/move); Commit still merges tmpl + overlay.  
 **Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging / dialplan emit), including **phone PJSIP staging/overlay**, **extensions.conf structure**, **and** the paired **pbx3cagi** cleanup.  
 **CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.  
 **Study depth (ephemeral):** `~/.cursor/plans/genast_challenger_review_0db5c469.plan.md` — reference only; **this file is durable truth.**
@@ -9,14 +9,32 @@
 
 ## 0. Locked decisions + hermit-crab build order
 
-### Locked — PJSIP phones (G2 / Phase C)
+### Locked — PJSIP phones (G2 / Phase C) — shipped on branch, lab OK
 
 - **Stock:** always read `pjsip_phone.tmpl` on Commit (`get`).
-- **Hand overlay required:** optional `ASTENDPOINTS/{shortuid}_phone.overlay.conf`, merged **pre-xlate** (one-phone escapes that stay out of DB). Match by `type=`; overlay keys **replace** if present on that object, **add** if absent. Not a second appended stanza (Asterisk keeps the first duplicate key).
-- **Not:** full frozen `*_phone.conf` copy-once (causes tmpl-roll delete chore).
-- **`create*`:** ensure `endpoints/` only; **`set*`:** write overlay path only.
+- **Thin overlay:** fragment matched by `type=`; keys **replace** if present on that object, **add** if absent (Fail2ban-`.local` mental model). Not a second appended stanza (Asterisk keeps the first duplicate key).
+- **Lab today:** optional file `ASTENDPOINTS/{shortuid}_phone.overlay.conf` (hand/ops).
+- **Not:** full frozen `*_phone.conf` copy-once; **not** full PJSIP stanza in DB as sole source of truth (SARK-old freeze).
+- **`create*`:** ensure `endpoints/` only; **`set*`:** write overlay path only (until DB home-of-record lands).
 - **Legacy cleanup:** one-time lab `rm endpoints/*_phone.conf` after deploy — do **not** auto-delete in genAst.
-- **API gap:** extension delete must also remove `*_phone.overlay.conf` (pbx3api).
+- **API:** extension delete removes `*_phone.overlay.conf` (pbx3api) — keep in sync when overlay moves to DB.
+
+### Locked — Overlay home of record (Phase C2 — next; not built)
+
+**Direction:** store the **same thin overlay text** on the extension (ipphone) row in SQLite — e.g. column `pjsip_overlay` (TEXT, nullable). Commit reads DB overlay (preferred) and merges with tmpl; file under `endpoints/` becomes optional ops mirror or is dropped.
+
+| Corner | How DB overlay covers it |
+|--------|---------------------------|
+| Stock tmpl rolls | Still always from tmpl; overlay stays thin |
+| One-phone escape | Overlay fragment only (`[$id]` + `type=` + keys) |
+| SPA edit | Extension advanced field → column; no SSH required |
+| Backup / restore | Overlay travels with DB |
+| Tenant move | Overlay travels with extension row |
+| Delete extension | Clear column (+ delete file mirror if any) |
+
+**SPA (when built):** MSP/admin “PJSIP overlay” textarea (raw first). Structured qualify/codec forms later if needed. Privilege: not end-user.
+
+**Rejected for C2:** JSON map of all PJSIP keys as a second schema; editable **full** stanza that replaces tmpl for that phone.
 
 ### Locked — dialplan north star (Phase E; separate from G2)
 
@@ -24,14 +42,14 @@
 - Thin further; **one Dial decision authority** — kill GenAst fleet `Q{ext}` Dial fork (`GenClass` ~1217–1222); same PrepDial path as LepDial.
 - **Dial locus (parked):** “authority” means who **decides** the dial string — not that CAGI must `EXEC Dial` and idle through the bridge forever. Later: decide in CAGI, execute Dial in dialplan (or short AGI) so AGI need not hold the channel for the whole call.
 - More `#include`s only for static patterns (presets already do this well).
-- **Surgical bug (Phase B):** `genExtensionsEndpoints` inner `foreach ($this->appl as $row)` **shadows** tenant `$row` (~990) — can corrupt localarea / open-close / fleet FQDN / VM context after any appl rows; `$this->applrow` unset. Fix before large dialplan refactor.
+- **Surgical bug (Phase B):** `genExtensionsEndpoints` appl/`$row` shadow — **fixed** on `genast-hermit`.
 - CoS O(phones) contexts: do not grow; redesign later.
-- Orthogonal to phone overlay — do not block G2 on dialplan rewrite.
+- Orthogonal to phone overlay — do not block G2/C2 on dialplan rewrite.
 
 ### Rejected
 
 - Always-tmpl with **no** overlay (operator needs hand override).
-- DB JSON overrides (revisit only if SPA edits overlays).
+- Full stanza in DB as the only endpoint source (recreates copy-once / blocks tmpl rolls).
 - ARI / realtime rewrite; less AGI / more dialplan; per-tenant context file sprawl as the main fix.
 - Long-lived dual GenAst stacks aiming for byte-identical everything; “clone fat `extensions.conf` then optimize.”
 
@@ -42,8 +60,9 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 | Phase | Work | Done when |
 |-------|------|-----------|
 | **A — Characterize** | Fixture capture + normalize/diff script; baseline on pre-change output | `scripts/genast-characterize.sh` diffs two Commit output dirs cleanly |
-| **B — `$row` landmine** | Fix appl/`$row` shadow in `genExtensionsEndpoints` only | Characterize re-baselined if dialplan changes; no feature mix |
-| **C — G2 phones** | Tmpl + overlay Helper; pbx3api overlay delete; lab one-time `rm` legacy freeze | Tmpl roll lands without delete chore; overlay wins for one phone |
+| **B — `$row` landmine** | Fix appl/`$row` shadow in `genExtensionsEndpoints` only | **Done** on `genast-hermit` |
+| **C — G2 phones (file overlay)** | Tmpl + merge Helper; pbx3api overlay delete; lab `rm` legacy freeze | **Lab OK** (golden override + calls) |
+| **C2 — DB overlay** | Extension column + API/SPA; Commit merges from DB; backup/move carry overlay | Column round-trips; SPA edit optional; file optional |
 | **D — Sideways** | WebRTC (then trunks/queues) same overlay pattern | Same acceptance as phones |
 | **E — Dialplan thin** | Kill Q Dial fork; thin stubs; contract + call smoke (not byte-match old dialplan) | One Dial **decision** path in CAGI |
 | **F — G3 hygiene** | SBC FQDN input, clearer xlate, `$clstkey`, less shell-cp | Emit boring |
@@ -58,7 +77,9 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 Treat config generation as its own work track — not a one-off “delete staged phones after tmpl change” chore. Fold the parked **phone PJSIP staging** item into this track. Keep cagi struct refactor as a parallel cleanup that must not break GenAst-emitted AGI argv / Dial forms.
 
 ```text
-pjsip_phone.tmpl  --(always on get)-->  + optional {shortuid}_phone.overlay.conf
+pjsip_phone.tmpl  --(always on get)-->  + overlay (file today; DB column = home of record next)
+                                              |
+                                    merge by type= (replace/add keys)
                                               |
                                          xlate on Commit
                                               v
@@ -201,7 +222,8 @@ Future hygiene: single documented semantics; optional shared source later if bot
 | **G1** | — | pbx3 | Inventory §2a — **done** |
 | **G4 early** | **A** | pbx3 | Characterize normalize/diff |
 | — | **B** | pbx3 | `$row` shadow fix |
-| **G2** | **C** | pbx3 + pbx3api | Phone overlay + API delete |
+| **G2** | **C** | pbx3 + pbx3api | Phone file overlay + merge + API delete — **lab OK** |
+| — | **C2** | pbx3 + pbx3api + spa | DB overlay column on extension; Commit from DB |
 | — | **D** | pbx3 | WebRTC / trunks overlay parity |
 | dialplan | **E** | pbx3 (+ cagi if contract) | Thin dialplan; one Dial decision |
 | **G3** | **F** | pbx3 | Hygiene |
@@ -215,9 +237,9 @@ Future hygiene: single documented semantics; optional shared source later if bot
 | Change | Repo / branch |
 |--------|----------------|
 | GenClass / HelperClass / templates / genAst / characterize | **pbx3** `genast-hermit` |
-| Extension delete overlay | **pbx3api** `genast-hermit` |
+| Extension delete overlay / C2 API | **pbx3api** `genast-hermit` |
+| C2 SPA overlay field | **pbx3spa** (when built) |
 | AGI handlers / harness | **pbx3cagi** (later) |
-| SPA Commit trigger only if API contract changes | **pbx3spa** (rare) |
 
 `pbx3-master/` is not a git root — commit per repo.
 
@@ -227,5 +249,6 @@ Future hygiene: single documented semantics; optional shared source later if bot
 
 - TODO treats staging as part of this sub-project, not an orphan park item.
 - This doc answers: what the generator track is, how staging fits, how it relates to cagi cleanup, hermit-crab order, and what “done” looks like for each phase.
-- G2: tmpl change reaches ready phones without deleting staged files; overlays stay thin.
+- G2: tmpl change reaches ready phones without deleting staged files; overlays stay thin; key merge replace/add.
+- C2 (next): overlay text on extension row is home of record for SPA/backup/move.
 - Characterize script exists before relying on feel for generator diffs.
