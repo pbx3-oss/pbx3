@@ -39,6 +39,8 @@
 
 - [ ] **Ast config generator — merge hermit → main:** Optional roll **bzy**; deferred D WebRTC REGISTER lab. **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
 
+- [ ] **PHP classes — drop extensionless symlink workaround:** Interim (2026-07-25): content lives in `*.php`; extensionless names (`GenClass`, `HelperClass`, …) are symlinks so `config.php` / scripts keep working. **Proper fix:** point all `define`/`require`/`include` paths at `*.php`, update scripts/tests that hardcode extensionless paths, remove the symlinks (incl. `PDFClass!` → `PDFClass.php`), confirm package/hot-patch copy paths. Classes: AmiHelper, Db, Gen, Helper, LDAPHelper, NetHelper, S3Helper, PDF.
+
 - [ ] **Ast config generator + pbx3cagi (struct):** **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
