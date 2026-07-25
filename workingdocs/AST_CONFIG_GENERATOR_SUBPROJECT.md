@@ -1,6 +1,6 @@
 # Ast config generator sub-project
 
-**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**). A–D built; **E** `Q*` short-run built (deploy cagi **before** GenAst Commit). SBC WSS (W1) separate.  
+**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**). **A–F** built; **E** queue lab OK on golden. **G** (LepDial short-run) next when prioritized. SBC WSS (W1) separate.  
 **Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging / dialplan emit), including **phone PJSIP staging/overlay**, **extensions.conf structure**, **and** the paired **pbx3cagi** cleanup.  
 **CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.  
 **Study depth (ephemeral):** `~/.cursor/plans/genast_challenger_review_0db5c469.plan.md` — reference only; **this file is durable truth.**
@@ -73,8 +73,8 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 | **C — G2 phones (file overlay)** | Tmpl + merge Helper; pbx3api overlay delete; lab `rm` legacy freeze | **Lab OK** (golden override + calls) |
 | **C2 — DB overlay** | Extension column + API/SPA; Commit merges from DB; backup/move carry overlay | **Lab OK** (golden set/clear/Commit) |
 | **D — WebRTC overlay** | Same tmpl + key merge + `pjsip_overlay` / file fallback as phones (`*_webrtc.overlay.conf`); one-time `rm *_webrtc.conf` | **Built** on branch — **lab verify deferred** (same pattern as phones; confident without live WSS this session) |
-| **E — Dialplan thin + `Q*` short-run** | Remove GenAst hardcoded `Q*` Dial; `Q*` → short AGI PrepDial(queue) → Set dial var → return → dialplan `Dial(${PBX3_DIAL})`; thin stubs; call smoke | **Built** on `genast-hermit` (pbx3 + pbx3cagi) — lab queue smoke pending |
-| **F — G3 hygiene** | SBC FQDN input, clearer xlate, `$clstkey`, less shell-cp | Emit boring |
+| **E — Dialplan thin + `Q*` short-run** | Remove GenAst hardcoded `Q*` Dial; `Q*` → short AGI PrepDial(queue) → Set dial var → return → dialplan `Dial(${PBX3_DIAL})`; thin stubs; call smoke | **Lab OK** (golden Q1060) |
+| **F — G3 hygiene** | SBC FQDN from `PBX3_SBC_EGRESS_HOST`; `$clstkey` → `park-{tenant}` (before `$clst`); clearer xlate docs; phone/webrtc shell-cp already gone | **Built** — trunk/queue copy-once left for later sideways |
 | **G — Dial locus (generalize)** | Same short-run pattern for LepDial / other dials (CAGI decides; dialplan Dial) | AGI need not idle through bridge on normal calls |
 
 **G1 inventory** is done (§2a). Not a gate before C.
@@ -125,10 +125,18 @@ pjsip_phone.tmpl  --(always on get)-->  + overlay (DB pjsip_overlay preferred; f
 
 ### Related parked residue (list under this track; not first coding slice)
 
-- Hardcoded SBC FQDN in `xlatePjsipBuff` (`sip:sbc.pbx3.com`) — Phase F / G3.
+- ~~Hardcoded SBC FQDN in `xlatePjsipBuff`~~ — **F:** `PBX3_SBC_EGRESS_HOST` (default `sbc.pbx3.com`).
 - Page / `***` presets.
 - Tighter OpenSIPS gate / tenant DNS ≠ VIP (edge; pointer only).
+- Trunk/queue **copy-once** staging (`/bin/cp` tmpl) — sideways after phones/webrtc; not F.
 - [`TODO.md`](TODO.md) **pjsipuser for extensions** / NAT tmpl keys — fold here when touched.
+
+### Phase F notes (G3 hygiene — built)
+
+- **`fleetSbcHost()`** — `getenv('PBX3_SBC_EGRESS_HOST')` or `sbc.pbx3.com` (same knob as fleet egress seed).
+- **`$clstkey`** — expands to `park-{cluster shortuid}` to match `genParks`; replaced **before** `$clst` so parkinglot is not mangled to `{tenant}key`.
+- **WebRTC tmpl** — parkinglot uses `$clstkey` (was `$clst`).
+- Phone/WebRTC no longer shell-cp freeze files (C/D). Trunks/queues still copy-once — later.
 
 ---
 
@@ -218,7 +226,8 @@ CAGI also receives dials/AGI from queue/recording paths (e.g. `SetRecord`, PrepD
 - Fleet dial string (authority = CAGI PrepDial): `PJSIP/{shortuid}/sip:{shortuid}@{tenant.fqdn}`.
 - Singleton: `PJSIP/{shortuid}`.
 - **Phase E `Q*`:** GenAst emits `agi(…,Dial,{shortuid},{cluster},queue,,)` then `Dial(${PBX3_DIAL})`. PrepDial(`type=queue`) sets `PBX3_DIAL` (includes trailing `,,` for queue-owned timeout) and returns — no GenAst-hardcoded Dial.
-- Phone endpoint `$outbound_proxy` → SBC only in fleet mode (`xlatePjsipBuff` / `isFleetMode()`).
+- Phone endpoint `$outbound_proxy` → SBC only in fleet mode; host from **`PBX3_SBC_EGRESS_HOST`** (Phase F).
+- **`$clstkey`** → `park-{tenant shortuid}` (parking lot); must not be expanded via bare `$clst`.
 
 ### 5.3 Duplicate fleet gate
 
@@ -246,8 +255,8 @@ Future hygiene: single documented semantics; optional shared source later if bot
 | **G2** | **C** | pbx3 + pbx3api | Phone file overlay + merge + API delete — **lab OK** |
 | — | **C2** | pbx3 + pbx3api + spa | DB overlay column on extension; Commit from DB — **lab OK** |
 | — | **D** | pbx3 + pbx3api (+ spa hint) | WebRTC tmpl+overlay parity (shared `pjsip_overlay`) |
-| dialplan | **E** | pbx3 + cagi | `Q*` short-run — **built** (lab smoke pending) |
-| **G3** | **F** | pbx3 | Hygiene |
+| dialplan | **E** | pbx3 + cagi | `Q*` short-run — **lab OK** |
+| **G3** | **F** | pbx3 | SBC host env + `$clstkey` + xlate clarity — **built** |
 | — | **G** | pbx3 + cagi | Generalize short-run locus to LepDial |
 | **C1+** | with E/G | pbx3cagi | Struct refactor; keep §5 green |
 

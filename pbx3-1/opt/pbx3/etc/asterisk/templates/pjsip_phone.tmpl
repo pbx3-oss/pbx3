@@ -17,7 +17,7 @@ rewrite_contact=yes
 rtp_symmetric=yes
 send_pai=yes
 set_var=CHANNEL(parkinglot)=$clstkey
-; $outbound_proxy expanded by GenAst: fleet → sip:sbc…;lr ; singleton → empty
+; $outbound_proxy expanded by GenAst (Phase F): fleet → sip:{PBX3_SBC_EGRESS_HOST};lr ; singleton → empty
 $outbound_proxy
 transport=transport-$transport 
 
