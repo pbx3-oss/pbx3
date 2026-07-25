@@ -72,7 +72,7 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 | **B — `$row` landmine** | Fix appl/`$row` shadow in `genExtensionsEndpoints` only | **Done** on `genast-hermit` |
 | **C — G2 phones (file overlay)** | Tmpl + merge Helper; pbx3api overlay delete; lab `rm` legacy freeze | **Lab OK** (golden override + calls) |
 | **C2 — DB overlay** | Extension column + API/SPA; Commit merges from DB; backup/move carry overlay | **Lab OK** (golden set/clear/Commit) |
-| **D — WebRTC overlay** | Same tmpl + key merge + `pjsip_overlay` / file fallback as phones (`*_webrtc.overlay.conf`); one-time `rm *_webrtc.conf` | **Built** on branch — lab verify pending |
+| **D — WebRTC overlay** | Same tmpl + key merge + `pjsip_overlay` / file fallback as phones (`*_webrtc.overlay.conf`); one-time `rm *_webrtc.conf` | **Built** on branch — **lab verify deferred** (same pattern as phones; confident without live WSS this session) |
 | **E — Dialplan thin + `Q*` short-run** | Remove GenAst hardcoded `Q*` Dial; `Q*` → short AGI PrepDial(queue) → Set dial var → return → dialplan `Dial(${PBX3_DIAL})`; thin stubs; call smoke | One Dial **decision** path (CAGI); `Q*` proves short-run AGI + dialplan locus |
 | **F — G3 hygiene** | SBC FQDN input, clearer xlate, `$clstkey`, less shell-cp | Emit boring |
 | **G — Dial locus (generalize)** | Same short-run pattern for LepDial / other dials (CAGI decides; dialplan Dial) | AGI need not idle through bridge on normal calls |
@@ -181,6 +181,15 @@ After deploying G2: one-time delete `endpoints/*_phone.conf` (frozen copies). Af
 2. Edit an innocuous comment or stock line in `pjsip_phone.tmpl`.
 3. Commit / genAst — confirm `pjsip_ready_phones.conf` reflects the tmpl change for existing shortuids without deleting overlays.
 4. Confirm fleet `$outbound_proxy` still expands via `xlatePjsipBuff` / `isFleetMode()`.
+
+### Deferred — Phase D WebRTC lab (do later; not blocking hermit)
+
+Same pattern as phones (C2 lab OK); live WSS not required to keep generator moving. When convenient:
+
+1. Deploy hermit D on a node; one-time `rm /opt/pbx3/etc/asterisk/endpoints/*_webrtc.conf`.
+2. Commit → `pjsip_ready_webrtc.conf` tracks `pjsip_webrtc.tmpl` without staged freezes.
+3. Optional: SPA `pjsip_overlay` on a WebRTC extension → Commit → key merge visible in ready.
+4. Optional live REGISTER: open instance SG to operator IP on **8089/tcp**; browser client to `wss://{instance-fqdn}:8089/...` (interim node path; SBC W1 separate).
 
 ---
 
