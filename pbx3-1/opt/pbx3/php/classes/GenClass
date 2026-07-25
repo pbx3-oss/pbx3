@@ -987,11 +987,11 @@ private function genExtensionsEndpoints()
 			return $errorMsg;
 		}
 
-        foreach ($this->appl as $row) {
-            if ($row['span'] == "Both" || $row['span'] == "Internal") {
-                if ($this->applrow['cluster'] == $row['pkey']) {
-                    $this->OUT .= "\tinclude => " . $this->applrow['pkey'] . "\n";
-                }
+        // Do not reuse $row — it is the tenant/cluster row for the rest of this loop.
+        // Appl rows are already filtered to this cluster in the SQL above.
+        foreach ($this->appl as $applrow) {
+            if ($applrow['span'] == "Both" || $applrow['span'] == "Internal") {
+                $this->OUT .= "\tinclude => " . $applrow['pkey'] . "\n";
             }
         }
 

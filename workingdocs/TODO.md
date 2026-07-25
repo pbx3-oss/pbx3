@@ -1,12 +1,12 @@
 # PBX3 ToDo list
 
 **Branch:** all **`main`**. Live Magrathea HA pair on `sbc.pbx3.com` (Manual promote; Fleet Sync now for warmth). Litestream parked.  
-**Last updated:** 2026-07-24 (GenAst challenger review parked; velocity still live on golden)
+**Last updated:** 2026-07-25 (GenAst hermit-crab on `genast-hermit`; velocity still live on golden)
 
 ### Suggested “what next?” order
 
-1. **Ast config generator — G2 phone overlay** (decisions locked 2026-07-24) — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**; Cursor plan `genast_challenger_review_0db5c469`; WIP stash on `genast-phone-overlay`.  
-2. **Ast dialplan thin / `$row` shadow fix** (same track, after or surgical before G2) — see §0 dialplan.  
+1. **Ast config generator — hermit-crab** (branch **`genast-hermit`**) — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**: A characterize → B `$row` → C G2 phones (+ pbx3api overlay delete) → D/E later. Premature stash on old `genast-phone-overlay` superseded by this branch.  
+2. ~~**Ast dialplan `$row` shadow**~~ — in flight on `genast-hermit` (Phase B with C).  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
 4. ~~**Toll fraud / velocity V1–V5**~~ — **done 2026-07-24** (golden notify on; act off until asked).  
 5. **Drain affordance** (nice-to-have, parked).  
@@ -23,9 +23,9 @@
 
 - [x] **Fleet multi-tenant phone dial / SBC AoR (2026-07-23):** Root cause was Asterisk→SBC `INVITE shortuid@VIP` → OpenSIPS domain guess (`LIMIT 1`) → 404 / hairpin. Fix: PrepDial + GenAst Q dials use `sip:shortuid@tenant.fqdn`; phone `$outbound_proxy` → `sbc.pbx3.com`; OpenSIPS usrloc for from-Asterisk FQDN RURIs. **Fleet-gated** (`PBX3_FLEET_MODE` / Egress) so singleton stays direct-to-contact. Lab: golden multi-tenant both ways + ring groups; rolled **08jzwn** + **bzy54n** (`pbx3cagi` **1.0.0-6**). Tips **pbx3cagi** **`fd9b146`**, **pbx3** **`1ea1210`**, **pbx3sbc** **`4509b5d`**. **Residue** (tmpl→staged phone copy, hardcoded SBC FQDN, Page/`***` presets, tighter OpenSIPS gate, tenant DNS ≠ VIP) → **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
 
-- [ ] **Ast config generator + pbx3cagi (challenger 2026-07-24):** Decisions in **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0** + Cursor **`genast_challenger_review_0db5c469`**. **G2 phones:** always tmpl + required hand `*_phone.overlay.conf`; legacy freeze ignored; API must delete overlay on extension delete. **Dialplan:** thin stubs; one Dial authority in CAGI; fix `genExtensionsEndpoints` appl/`$row` shadow. **WIP:** `git stash` on branch **`genast-phone-overlay`** (premature HelperClass — review before merge). **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
+- [ ] **Ast config generator + pbx3cagi (hermit-crab 2026-07-25):** Branch **`genast-hermit`** (pbx3 + pbx3api). Order in **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0**: A characterize scripts → B `$row` fix → C G2 phones (tmpl+overlay + API overlay delete) → D/E later. WIP code on branch (not merged). Old premature stash on `genast-phone-overlay` superseded. **pbx3cagi** Phase 1.3+ still **`REFACTOR_PLAN.md`**.
 
-- [ ] **Phone PJSIP template staging → G2 overlay (locked model, not shipped):** Replace copy-once `*_phone.conf` with tmpl + thin overlay — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0 / §4**.
+- [ ] **Phone PJSIP template staging → G2 overlay (in flight on `genast-hermit`):** Replace copy-once `*_phone.conf` with tmpl + thin overlay — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0 / §4**.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 

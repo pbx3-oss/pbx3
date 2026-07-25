@@ -273,83 +273,109 @@ public function deletePjsipTrunkInstance($key) {
 } 
 
 /**
- * Copy pjsip file template to named phone file
- * @param  array $tuple phone row
- * @return bool  
+ * Ensure endpoints dir for phone overlays (stock tmpl is never copied).
+ * Extension create paths may call this; it is a harmless success.
+ * @param  string $key phone shortuid
+ * @return bool
  */
 public function createPjsipPhoneInstance($key) {
 
-	$templateFile = PJSIP_PHONE_TEMPLATE;
-	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE;
-	if (!file_exists($targetFile) || 0 == filesize( $targetFile )) {
-		$rc = $this->request_syscmd ("/bin/cp $templateFile $targetFile >/dev/null 2>&1");		
-		$rc = $this->request_syscmd ("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
-		$rc = $this->request_syscmd ("/bin/chmod 664 $targetFile >/dev/null 2>&1");
-		return true;
+	if (!is_dir(ASTENDPOINTS)) {
+		$this->request_syscmd("/bin/mkdir -p " . ASTENDPOINTS . " >/dev/null 2>&1");
+		$this->request_syscmd("/bin/chown asterisk:asterisk " . ASTENDPOINTS . " >/dev/null 2>&1");
 	}
-	return false;
-} 
+	return true;
+}
 
 /**
- * get named pjsip template
- * @param  array $tuple ipphone row
- * @return bool  
+ * Stock pjsip_phone.tmpl plus optional thin overlay (pre-xlate).
+ * Legacy ASTENDPOINTS/{key}_phone.conf is ignored.
+ * @param  string $key phone shortuid
+ * @return string|false
  */
 public function getPjsipPhoneInstance($key) {
 
-	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE;
+	if (!file_exists(PJSIP_PHONE_TEMPLATE)) {
+		return false;
+	}
+	$buff = file_get_contents(PJSIP_PHONE_TEMPLATE);
+	if ($buff === false) {
+		return false;
+	}
 
-	$this->createPjsipPhoneInstance($key);
-	return file_get_contents($targetFile);
-
-	return false;
-} 
+	$overlayFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE_OVERLAY;
+	if (file_exists($overlayFile) && filesize($overlayFile) > 0) {
+		$overlay = file_get_contents($overlayFile);
+		if ($overlay !== false && $overlay !== '') {
+			$buff .= "\n" . $overlay;
+		}
+	}
+	return $buff;
+}
 
 /**
- * set named pjsip template
- * @param  array $tuple ipphone row
- * @return bool  
+ * Write thin per-phone overlay (not a full tmpl clone).
+ * @param  string $key phone shortuid
+ * @param  string $data overlay fragment
+ * @return bool
  */
 public function setPjsipPhoneInstance($key,$data) {
 
-	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE;
-	if (empty($data)) {		
-		$this->createPjsipPhoneInstance($key);
+	$this->createPjsipPhoneInstance($key);
+	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE_OVERLAY;
+	if ($data === null) {
+		$data = '';
 	}
-		
+
 	$fh = fopen($targetFile, 'w') or die("Could not open file $targetFile!");
-	fwrite($fh,$data) or die("Could not write to file $targetFile !");
+	if (fwrite($fh, $data) === false) {
+		die("Could not write to file $targetFile !");
+	}
 	fclose($fh);
-	return True;		
-} 
+	$this->request_syscmd("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
+	$this->request_syscmd("/bin/chmod 664 $targetFile >/dev/null 2>&1");
+	return True;
+}
 
 /**
- * move named pjsip object instance
- * @param  array $tuple Trunk row
- * @return RC  
+ * Move phone overlay (and legacy frozen conf if present).
+ * @param  string $key
+ * @param  string $newkey
+ * @return mixed
  */
 public function movePjsipPhoneInstance($key,$newkey) {
 
-	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE;
-	$newFile = ASTENDPOINTS . '/' . $newkey . '_' . PJSIP_PHONE;
-	if (file_exists($targetFile)) {
-		return $this->request_syscmd ("/bin/mv $targetFile $newFile >/dev/null 2>&1");
+	$rc = False;
+	$overlayFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE_OVERLAY;
+	$overlayNew = ASTENDPOINTS . '/' . $newkey . '_' . PJSIP_PHONE_OVERLAY;
+	if (file_exists($overlayFile)) {
+		$rc = $this->request_syscmd("/bin/mv $overlayFile $overlayNew >/dev/null 2>&1");
 	}
-	return False;	
-} 
+	$legacyFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE;
+	$legacyNew = ASTENDPOINTS . '/' . $newkey . '_' . PJSIP_PHONE;
+	if (file_exists($legacyFile)) {
+		$rc = $this->request_syscmd("/bin/mv $legacyFile $legacyNew >/dev/null 2>&1");
+	}
+	return $rc;
+}
 
 /**
- * delete named pjsip template
- * @param  array $tuple ipphone row
- * @return RC  
+ * Delete phone overlay (and legacy frozen conf if present).
+ * @param  string $key phone shortuid
+ * @return mixed
  */
 public function deletePjsipPhoneInstance($key) {
 
-	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE;
-	if (file_exists($targetFile)) {
-		return $this->request_syscmd ("/bin/rm $targetFile >/dev/null 2>&1");
+	$rc = False;
+	$overlayFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE_OVERLAY;
+	if (file_exists($overlayFile)) {
+		$rc = $this->request_syscmd("/bin/rm $overlayFile >/dev/null 2>&1");
 	}
-	return False;	
+	$legacyFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_PHONE;
+	if (file_exists($legacyFile)) {
+		$rc = $this->request_syscmd("/bin/rm $legacyFile >/dev/null 2>&1");
+	}
+	return $rc;
 } 
 
 /**

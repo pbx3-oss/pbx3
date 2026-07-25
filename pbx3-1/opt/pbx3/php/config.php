@@ -122,6 +122,7 @@ define('PJSIP_ANONYMOUS',				ASTLOCALCONF . '/pjsip_anonymous.conf');
 define('PJSIP_GLOBALS', 				ASTLOCALCONF . '/pjsip_globals.conf');
 
 define('PJSIP_PHONE',					'phone.conf');
+define('PJSIP_PHONE_OVERLAY',			'phone.overlay.conf');
 define('PJSIP_PHONE_TEMPLATE',          ASTMPL . '/pjsip_phone.tmpl');
 define('PJSIP_READY_PHONES',            ASTLOCALCONF . '/pjsip_ready_phones.conf');
 
