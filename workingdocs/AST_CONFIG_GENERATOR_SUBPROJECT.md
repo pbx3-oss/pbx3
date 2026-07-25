@@ -1,6 +1,6 @@
 # Ast config generator sub-project
 
-**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**); SPA on **`main`**. **A–G** dialplan lab OK; **trunk/queue/park C2 overlay** built (same tmpl+DB overlay pattern as phones). SBC WSS (W1) separate.  
+**Status:** Hermit-crab **A–H shipped on `main`** (2026-07-25) — pbx3 + pbx3api + pbx3cagi + SPA. Lab-hot on golden + bzy. **D** WebRTC overlay built (live WSS lab deferred). PHP classes are `*.php` only (no extensionless symlinks). SBC WSS (W1) separate. `genast-hermit` deleted after merge.  
 **Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging / dialplan emit), including **phone PJSIP staging/overlay**, **extensions.conf structure**, **and** the paired **pbx3cagi** cleanup.  
 **CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.  
 **Study depth (ephemeral):** `~/.cursor/plans/genast_challenger_review_0db5c469.plan.md` — reference only; **this file is durable truth.**
@@ -9,7 +9,7 @@
 
 ## 0. Locked decisions + hermit-crab build order
 
-### Locked — PJSIP phones (G2 / Phase C) — shipped on branch, lab OK
+### Locked — PJSIP phones (G2 / Phase C) — shipped on `main`, lab OK
 
 - **Stock:** always read `pjsip_phone.tmpl` on Commit (`get`).
 - **Thin overlay:** fragment matched by `type=`; keys **replace** if present on that object, **add** if absent (Fail2ban-`.local` mental model). Not a second appended stanza (Asterisk keeps the first duplicate key).
@@ -43,7 +43,7 @@
 - GenAst = **routing-table compiler** (match → AGI stub); CAGI = **call engine** (Dial **decision**, CF, fleet AoR).
 - Separate **authority** (who decides dial string) from **locus** (who runs `Dial()` / holds the bridge).
 - **One Dial decision authority** — GenAst must not invent a second dial recipe.
-- **`Q*` target flow (locked + built 2026-07-25 on `genast-hermit`):**
+- **`Q*` target flow (locked + built 2026-07-25 on `main`):**
   1. `Queue()` → `Local/Q{ext}@tenant` (unchanged member syntax)
   2. `exten Q{ext},1` → `agi(SYSAGI,Dial,{shortuid},{cluster},queue,,)`
   3. PrepDial(`type=queue`) builds dial string (fleet AoR same as LepDial), **Set(`PBX3_DIAL`)**, **return**
@@ -67,7 +67,7 @@
       same => n({suid}-done),Hangup()
      ```
 - More `#include`s only for static patterns (presets already do this well).
-- **Surgical bug (Phase B):** `genExtensionsEndpoints` appl/`$row` shadow — **fixed** on `genast-hermit`.
+- **Surgical bug (Phase B):** `genExtensionsEndpoints` appl/`$row` shadow — **fixed** on `main`.
 - CoS O(phones) contexts: do not grow; redesign later.
 - Orthogonal to phone overlay — do not block G2/C2 on dialplan rewrite.
 
@@ -87,10 +87,10 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 | Phase | Work | Done when |
 |-------|------|-----------|
 | **A — Characterize** | Fixture capture + normalize/diff script; baseline on pre-change output | `scripts/genast-characterize.sh` diffs two Commit output dirs cleanly |
-| **B — `$row` landmine** | Fix appl/`$row` shadow in `genExtensionsEndpoints` only | **Done** on `genast-hermit` |
+| **B — `$row` landmine** | Fix appl/`$row` shadow in `genExtensionsEndpoints` only | **Done** on `main` |
 | **C — G2 phones (file overlay)** | Tmpl + merge Helper; pbx3api overlay delete; lab `rm` legacy freeze | **Lab OK** (golden override + calls) |
 | **C2 — DB overlay** | Extension column + API/SPA; Commit merges from DB; backup/move carry overlay | **Lab OK** (golden set/clear/Commit) |
-| **D — WebRTC overlay** | Same tmpl + key merge + `pjsip_overlay` / file fallback as phones (`*_webrtc.overlay.conf`); one-time `rm *_webrtc.conf` | **Built** on branch — **lab verify deferred** (same pattern as phones; confident without live WSS this session) |
+| **D — WebRTC overlay** | Same tmpl + key merge + `pjsip_overlay` / file fallback as phones (`*_webrtc.overlay.conf`); one-time `rm *_webrtc.conf` | **Built** on `main` — **lab verify deferred** (same pattern as phones; confident without live WSS this session) |
 | **E — Dialplan thin + `Q*` short-run** | Remove GenAst hardcoded `Q*` Dial; `Q*` → short AGI PrepDial(queue) → Set dial var → return → dialplan `Dial(${PBX3_DIAL})`; thin stubs; call smoke | **Lab OK** (golden Q1060) |
 | **F — G3 hygiene** | SBC FQDN from `PBX3_SBC_EGRESS_HOST`; `$clstkey` → `park-{tenant}` (before `$clst`); clearer xlate docs; phone/webrtc shell-cp already gone | **Built** |
 | **G — Dial locus (generalize)** | LepDial PreDial + dialplan Dial + PostDial; ANSWER/CANCEL skip second AGI | **Lab OK** (golden answer / cancel→VM / timeout→VM / AstDB CFIM / SIP DIVERT) |
@@ -296,12 +296,12 @@ Future hygiene: single documented semantics; optional shared source later if bot
 
 | Change | Repo / branch |
 |--------|----------------|
-| GenClass / HelperClass / templates / genAst / characterize | **pbx3** `genast-hermit` |
-| Extension delete overlay / C2 API | **pbx3api** `genast-hermit` |
-| C2 SPA overlay field | **pbx3spa** (`main` — shipped with C2) |
-| PrepDial set-and-return (`type=queue` / Phase E); LepDial PreDial + **PostDial** (Phase G) | **pbx3cagi** `genast-hermit` |
+| GenClass / HelperClass / templates / genAst / characterize | **pbx3** `main` |
+| Extension delete overlay / C2 API + H overlays | **pbx3api** `main` |
+| C2/H SPA overlay fields | **pbx3spa** `main` |
+| PrepDial set-and-return (`type=queue` / Phase E); LepDial PreDial + **PostDial** (Phase G) | **pbx3cagi** `main` |
 
-`pbx3-master/` is not a git root — commit per repo.
+`pbx3-master/` is not a git root — commit per repo. Feature branch **`genast-hermit`** deleted after merge (2026-07-25).
 
 ---
 
