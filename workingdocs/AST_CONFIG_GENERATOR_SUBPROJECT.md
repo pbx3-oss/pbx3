@@ -1,6 +1,6 @@
 # Ast config generator sub-project
 
-**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`**. Phases A–C lab-proven; **C2** (DB `pjsip_overlay` + SPA extension-edit) implemented on branch — migrate + Commit prefer DB, file fallback.  
+**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`**. Phases A–C2 lab-proven on golden; **D** WebRTC tmpl+overlay (same as phones, shared `pjsip_overlay`) built on branch. SBC WSS (W1) stays a separate track.  
 **Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging / dialplan emit), including **phone PJSIP staging/overlay**, **extensions.conf structure**, **and** the paired **pbx3cagi** cleanup.  
 **CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.  
 **Study depth (ephemeral):** `~/.cursor/plans/genast_challenger_review_0db5c469.plan.md` — reference only; **this file is durable truth.**
@@ -71,8 +71,8 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 | **A — Characterize** | Fixture capture + normalize/diff script; baseline on pre-change output | `scripts/genast-characterize.sh` diffs two Commit output dirs cleanly |
 | **B — `$row` landmine** | Fix appl/`$row` shadow in `genExtensionsEndpoints` only | **Done** on `genast-hermit` |
 | **C — G2 phones (file overlay)** | Tmpl + merge Helper; pbx3api overlay delete; lab `rm` legacy freeze | **Lab OK** (golden override + calls) |
-| **C2 — DB overlay** | Extension column + API/SPA; Commit merges from DB; backup/move carry overlay | **Built** — migrate + lab verify pending |
-| **D — Sideways** | WebRTC (then trunks/queues) same overlay pattern | Same acceptance as phones |
+| **C2 — DB overlay** | Extension column + API/SPA; Commit merges from DB; backup/move carry overlay | **Lab OK** (golden set/clear/Commit) |
+| **D — WebRTC overlay** | Same tmpl + key merge + `pjsip_overlay` / file fallback as phones (`*_webrtc.overlay.conf`); one-time `rm *_webrtc.conf` | **Built** on branch — lab verify pending |
 | **E — Dialplan thin + `Q*` short-run** | Remove GenAst hardcoded `Q*` Dial; `Q*` → short AGI PrepDial(queue) → Set dial var → return → dialplan `Dial(${PBX3_DIAL})`; thin stubs; call smoke | One Dial **decision** path (CAGI); `Q*` proves short-run AGI + dialplan locus |
 | **F — G3 hygiene** | SBC FQDN input, clearer xlate, `$clstkey`, less shell-cp | Emit boring |
 | **G — Dial locus (generalize)** | Same short-run pattern for LepDial / other dials (CAGI decides; dialplan Dial) | AGI need not idle through bridge on normal calls |
@@ -138,8 +138,8 @@ Defines live in [`config.php`](../pbx3-1/opt/pbx3/php/config.php). Commit entry:
 
 | Domain | Template define / file | Staging path | Helper CRUD | GenClass → ready |
 |--------|------------------------|--------------|-------------|------------------|
-| **Phone (G2)** | `PJSIP_PHONE_TEMPLATE` → `pjsip_phone.tmpl` | Optional `ASTENDPOINTS/{shortuid}_phone.overlay.conf` (`PJSIP_PHONE_OVERLAY`). Legacy `{shortuid}_phone.conf` **ignored** after G2 | `get/create/set/move/deletePjsipPhoneInstance` | `genPjsipPhones` → `xlatePjsipBuff` → `PJSIP_READY_PHONES` |
-| WebRTC | `PJSIP_WEBRTC_TEMPLATE` → `pjsip_webrtc.tmpl` | Copy-once `ASTENDPOINTS/{shortuid}_webrtc.conf` | `*PjsipWebrtcInstance` | `genPjsipWebrtc` → `PJSIP_READY_WEBRTC` — Phase D |
+| **Phone (G2/C2)** | `PJSIP_PHONE_TEMPLATE` → `pjsip_phone.tmpl` | DB `pjsip_overlay`; optional `*_phone.overlay.conf`. Legacy `*_phone.conf` ignored | `get/create/set/move/deletePjsipPhoneInstance` | `genPjsipPhones` → `xlatePjsipBuff` → `PJSIP_READY_PHONES` |
+| **WebRTC (D)** | `PJSIP_WEBRTC_TEMPLATE` → `pjsip_webrtc.tmpl` | Same `pjsip_overlay`; optional `*_webrtc.overlay.conf`. Legacy `*_webrtc.conf` ignored | `*PjsipWebrtcInstance` | `genPjsipWebrtc` → `PJSIP_READY_WEBRTC` |
 | Trunks | `PJSIP_TRUNK_*_TEMPLATE` (snd/rcv/trusted/egress) | Copy-once `ASTTRUNKS/{pkey}_trunk.conf` (Egress always re-copied) | `*PjsipTrunkInstance` | `genPjsipTrunks` → `PJSIP_READY_TRUNKS` — later |
 | Queue | `QUEUE_TEMPLATE` → `queue.tmpl` | Copy-once `ASTQUEUES/{pkey}_queue.conf` | `create/get/setQInstance` | `genQueues` — later |
 | Transport | `PJSIP_TRANSPORT_TEMPLATE` → `pjsip_transport.tmpl` | None (read tmpl each Commit) | n/a | `genPjsipTransport` → `PJSIP_TRANSPORT` |
@@ -154,7 +154,7 @@ Defines live in [`config.php`](../pbx3-1/opt/pbx3/php/config.php). Commit entry:
 - Copy `pjsip_phone.tmpl` **only if** target missing or zero-size.
 - Commit path: `getPjsipPhoneInstance` → read staged file → `GenClass::xlatePjsipBuff` → `pjsip_ready_phones.conf`.
 
-**Consequence:** tmpl rollouts did not reach existing phones until operators deleted staged files. WebRTC/trunks/queues still use that copy-once pattern until Phase D.
+**Consequence:** tmpl rollouts did not reach existing phones until operators deleted staged files. Trunks/queues still use that copy-once pattern until later. WebRTC follows phones as of Phase D.
 
 ---
 
@@ -167,11 +167,13 @@ Defines live in [`config.php`](../pbx3-1/opt/pbx3/php/config.php). Commit entry:
 1. Change `pjsip_phone.tmpl` (e.g. add/change a stock key), Commit — **all stock phones** pick up the change **without** deleting staged files.
 2. Per-phone override via `ASTENDPOINTS/{shortuid}_phone.overlay.conf` — keys replace/add on the matching `type=` object (pre-xlate); not a frozen full tmpl copy.
 3. Fleet vs singleton: `$outbound_proxy` / tenant-AoR Q dials remain **fleet-gated** (`PBX3_FLEET_MODE` / active `Egress`); singleton stays direct-to-contact.
-4. WebRTC (and later trunks) follow the same model once phones are proven.
+4. WebRTC uses the same model (Phase D); trunks later.
 
 ### Legacy cleanup (lab / deploy)
 
-After deploying G2: one-time delete `endpoints/*_phone.conf` (frozen copies). Stock phones need no overlay. **Do not** auto-delete in genAst.
+After deploying G2: one-time delete `endpoints/*_phone.conf` (frozen copies). After D: one-time delete `endpoints/*_webrtc.conf`. Stock endpoints need no overlay. **Do not** auto-delete in genAst.
+
+**SBC WSS (W1)** is a separate track (`FLEET_TRUNK_PEERING_DECISION.md` §6.1) — not part of hermit D.
 
 ### Commit smoke (golden)
 
@@ -233,8 +235,8 @@ Future hygiene: single documented semantics; optional shared source later if bot
 | **G4 early** | **A** | pbx3 | Characterize normalize/diff |
 | — | **B** | pbx3 | `$row` shadow fix |
 | **G2** | **C** | pbx3 + pbx3api | Phone file overlay + merge + API delete — **lab OK** |
-| — | **C2** | pbx3 + pbx3api + spa | DB overlay column on extension; Commit from DB |
-| — | **D** | pbx3 | WebRTC / trunks overlay parity |
+| — | **C2** | pbx3 + pbx3api + spa | DB overlay column on extension; Commit from DB — **lab OK** |
+| — | **D** | pbx3 + pbx3api (+ spa hint) | WebRTC tmpl+overlay parity (shared `pjsip_overlay`) |
 | dialplan | **E** | pbx3 + cagi | `Q*` short-run: PrepDial decide → dialplan Dial; thin stubs |
 | **G3** | **F** | pbx3 | Hygiene |
 | — | **G** | pbx3 + cagi | Generalize short-run locus to LepDial |
@@ -260,5 +262,6 @@ Future hygiene: single documented semantics; optional shared source later if bot
 - TODO treats staging as part of this sub-project, not an orphan park item.
 - This doc answers: what the generator track is, how staging fits, how it relates to cagi cleanup, hermit-crab order, and what “done” looks like for each phase.
 - G2: tmpl change reaches ready phones without deleting staged files; overlays stay thin; key merge replace/add.
-- C2 (next): overlay text on extension row is home of record for SPA/backup/move.
+- C2: overlay text on extension row is home of record for SPA/backup/move — **lab OK**.
+- D: WebRTC tmpl rolls without deleting staged freezes; same overlay column/file pattern as phones.
 - Characterize script exists before relying on feel for generator diffs.

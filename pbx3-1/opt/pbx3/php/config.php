@@ -127,6 +127,7 @@ define('PJSIP_PHONE_TEMPLATE',          ASTMPL . '/pjsip_phone.tmpl');
 define('PJSIP_READY_PHONES',            ASTLOCALCONF . '/pjsip_ready_phones.conf');
 
 define('PJSIP_WEBRTC',					'webrtc.conf');
+define('PJSIP_WEBRTC_OVERLAY',			'webrtc.overlay.conf');
 define('PJSIP_WEBRTC_TEMPLATE',         ASTMPL . '/pjsip_webrtc.tmpl');
 define('PJSIP_READY_WEBRTC',            ASTLOCALCONF . '/pjsip_ready_webrtc.conf');
 	      

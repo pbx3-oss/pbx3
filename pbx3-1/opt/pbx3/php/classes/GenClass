@@ -461,7 +461,10 @@ class genAsteriskObjects
 				continue;
 			}
 
-			$pjsipPhoneBuff = $this->helper->getPjsipWebrtcInstance($row['shortuid']);
+			$pjsipPhoneBuff = $this->helper->getPjsipWebrtcInstance(
+				$row['shortuid'],
+				isset($row['pjsip_overlay']) ? $row['pjsip_overlay'] : null
+			);
 
 			if ($pjsipPhoneBuff) {
 				$this->xlatePjsipBuff($pjsipPhoneBuff, $row);

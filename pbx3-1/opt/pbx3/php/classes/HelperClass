@@ -538,84 +538,119 @@ public function deletePjsipPhoneInstance($key) {
 } 
 
 /**
- * Copy webrtc template to named webrtc file
- * @param  array $tuple WebRTC row
- * @return bool  
+ * Ensure endpoints dir for WebRTC overlays (stock tmpl is never copied).
+ * @param  string $key phone shortuid
+ * @return bool
  */
 public function createPjsipWebrtcInstance($key) {
 
-	$templateFile =  PJSIP_WEBRTC_TEMPLATE;
-	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC;
-	if (!file_exists($targetFile) || 0 == filesize( $targetFile )) {
-		$rc = $this->request_syscmd ("/bin/cp $templateFile $targetFile >/dev/null 2>&1");		
-		$rc = $this->request_syscmd ("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
-		$rc = $this->request_syscmd ("/bin/chmod 664 $targetFile >/dev/null 2>&1");
-		return true;
+	if (!is_dir(ASTENDPOINTS)) {
+		$this->request_syscmd("/bin/mkdir -p " . ASTENDPOINTS . " >/dev/null 2>&1");
+		$this->request_syscmd("/bin/chown asterisk:asterisk " . ASTENDPOINTS . " >/dev/null 2>&1");
 	}
-	return false;
+	return true;
 }
 
 /**
- * get webRTC template
- * @param  array $tuple ipphone row
- * @return bool  
+ * Stock pjsip_webrtc.tmpl plus optional thin overlay (pre-xlate).
+ * Same merge rules as phones. Home of record: $dbOverlay (ipphone.pjsip_overlay).
+ * File under endpoints/ is fallback when DB overlay is empty. Legacy {key}_webrtc.conf ignored.
+ * @param  string      $key phone shortuid
+ * @param  string|null $dbOverlay thin overlay text from extension row
+ * @return string|false
  */
-public function getPjsipWebrtcInstance($key) {
+public function getPjsipWebrtcInstance($key, $dbOverlay = null) {
 
-	$targetFile = ASTENDPOINTS . '/'. $key . '_' . PJSIP_WEBRTC;
+	if (!file_exists(PJSIP_WEBRTC_TEMPLATE)) {
+		return false;
+	}
+	$buff = file_get_contents(PJSIP_WEBRTC_TEMPLATE);
+	if ($buff === false) {
+		return false;
+	}
 
-	$this->createPjsipWebrtcInstance($key);
-	return file_get_contents($targetFile);
-
-	return false;
-}  
+	$overlay = null;
+	if ($dbOverlay !== null && trim((string) $dbOverlay) !== '') {
+		$overlay = (string) $dbOverlay;
+	} else {
+		$overlayFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC_OVERLAY;
+		if (file_exists($overlayFile) && filesize($overlayFile) > 0) {
+			$fileOverlay = file_get_contents($overlayFile);
+			if ($fileOverlay !== false && trim($fileOverlay) !== '') {
+				$overlay = $fileOverlay;
+			}
+		}
+	}
+	if ($overlay !== null) {
+		$buff = $this->mergePjsipPhoneOverlay($buff, $overlay);
+	}
+	return $buff;
+}
 
 /**
- * set webRTC template
- * @param  array $tuple ipphone row
- * @return bool  
+ * Write thin per-WebRTC overlay (not a full tmpl clone).
+ * @param  string $key phone shortuid
+ * @param  string $data overlay fragment
+ * @return bool
  */
 public function setPjsipWebrtcInstance($key,$data) {
 
-	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC;
-	if (empty($data)) {		
-		$this->createPjsipWebrtcInstance($key);
+	$this->createPjsipWebrtcInstance($key);
+	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC_OVERLAY;
+	if ($data === null) {
+		$data = '';
 	}
-		
-	$fh = fopen($targetFile, 'w') or die("__function__ Could not open file $targetFile!");
-	fwrite($fh,$data) or die("Could not write to file $targetFile !");
+
+	$fh = fopen($targetFile, 'w') or die("Could not open file $targetFile!");
+	if (fwrite($fh, $data) === false) {
+		die("Could not write to file $targetFile !");
+	}
 	fclose($fh);
-	return True;		
-} 
+	$this->request_syscmd("/bin/chown asterisk:asterisk $targetFile >/dev/null 2>&1");
+	$this->request_syscmd("/bin/chmod 664 $targetFile >/dev/null 2>&1");
+	return True;
+}
 
 /**
- * move webRTC object instance
- * @param  array $tuple Trunk row
- * @return RC  
+ * Move WebRTC overlay (and legacy frozen conf if present).
+ * @param  string $key
+ * @param  string $newkey
+ * @return mixed
  */
 public function movePjsipWebrtcInstance($key,$newkey) {
 
-	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC;
-	$newFile = ASTENDPOINTS . '/' . $newkey . '_' . PJSIP_WEBRTC;
-	if (file_exists($targetFile)) {
-		return $this->request_syscmd ("/bin/mv $targetFile $newFile >/dev/null 2>&1");
+	$rc = False;
+	$overlayFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC_OVERLAY;
+	$overlayNew = ASTENDPOINTS . '/' . $newkey . '_' . PJSIP_WEBRTC_OVERLAY;
+	if (file_exists($overlayFile)) {
+		$rc = $this->request_syscmd("/bin/mv $overlayFile $overlayNew >/dev/null 2>&1");
 	}
-	return False;	
-} 
+	$legacyFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC;
+	$legacyNew = ASTENDPOINTS . '/' . $newkey . '_' . PJSIP_WEBRTC;
+	if (file_exists($legacyFile)) {
+		$rc = $this->request_syscmd("/bin/mv $legacyFile $legacyNew >/dev/null 2>&1");
+	}
+	return $rc;
+}
 
 /**
- * delete webRTC template
- * @param  array $tuple ipphone row
- * @return RC  
+ * Delete WebRTC overlay (and legacy frozen conf if present).
+ * @param  string $key phone shortuid
+ * @return mixed
  */
 public function deletePjsipWebrtcInstance($key) {
 
-	$targetFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC;;
-	if (file_exists($targetFile)) {
-		return $this->request_syscmd ("/bin/rm $targetFile >/dev/null 2>&1");
+	$rc = False;
+	$overlayFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC_OVERLAY;
+	if (file_exists($overlayFile)) {
+		$rc = $this->request_syscmd("/bin/rm $overlayFile >/dev/null 2>&1");
 	}
-	return False;	
-} 
+	$legacyFile = ASTENDPOINTS . '/' . $key . '_' . PJSIP_WEBRTC;
+	if (file_exists($legacyFile)) {
+		$rc = $this->request_syscmd("/bin/rm $legacyFile >/dev/null 2>&1");
+	}
+	return $rc;
+}
 
 /**
  *  Queue functions CRUD
