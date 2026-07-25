@@ -1,6 +1,6 @@
 # Ast config generator sub-project
 
-**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**). **A–F** built; **E** queue lab OK on golden. **G** (LepDial short-run) next when prioritized. SBC WSS (W1) separate.  
+**Status:** Hermit-crab in progress (2026-07-25) — branch **`genast-hermit`** (pbx3 + pbx3api + **pbx3cagi**). **A–G** built; **E** queue + **G** LepDial lab OK on golden. SBC WSS (W1) separate.  
 **Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging / dialplan emit), including **phone PJSIP staging/overlay**, **extensions.conf structure**, **and** the paired **pbx3cagi** cleanup.  
 **CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.  
 **Study depth (ephemeral):** `~/.cursor/plans/genast_challenger_review_0db5c469.plan.md` — reference only; **this file is durable truth.**
@@ -49,7 +49,23 @@
   3. PrepDial(`type=queue`) builds dial string (fleet AoR same as LepDial), **Set(`PBX3_DIAL`)**, **return**
   4. `exten Q{ext},n` → `Dial(${PBX3_DIAL})` — dialplan owns the bridge
 - **Deploy order:** new **pbx3cagi** on the node **before** Commit with new GenAst (else `PBX3_DIAL` unset after old PrepDial still EXECs Dial).
-- **Phase G** generalizes short-run to LepDial; `Q*` is the first proof point.
+- **Phase G — LepDial short-run (locked 2026-07-25):**
+  1. `LepDial` = **PreDial only** (CFIM / twin / PrepDial) → **Set(`PBX3_DIAL`)** → return (clear `PBX3_DIAL` on entry so early exits stay empty).
+  2. Dialplan: dial only if `PBX3_DIAL` set (CFIM→VM / congestion must not fall into `Dial`).
+  3. Dialplan owns `Dial(${PBX3_DIAL})` (bridge; AGI not attached).
+  4. **Trivia gates** (dead AGI cold-start avoidance): skip PostDial on `ANSWER` / `CANCEL`.
+  5. **`PostDial`** AGI = former LepDial post-bridge policy (`DIALSTATUS` → CFBS / VM / bounce / busy). Keep defensive no-op on `ANSWER`/`CANCEL`.
+  6. Stay on **dead AGI** (`agi(pbx3cagi,…)`); persistent FastAGI / reentrancy **out of scope** for G (process-death remains GC).
+  7. Emit sketch (per shortuid; unique done label):
+     ```text
+     exten => {suid},1,agi(${SYSAGI},LepDial,,{cluster},,,)
+      same => n,GotoIf($["${PBX3_DIAL}"=""]?{suid}-done)
+      same => n,Dial(${PBX3_DIAL})
+      same => n,GotoIf($["${DIALSTATUS}"="ANSWER"]?{suid}-done)
+      same => n,GotoIf($["${DIALSTATUS}"="CANCEL"]?{suid}-done)
+      same => n,agi(${SYSAGI},PostDial,{suid},{cluster},,,)
+      same => n({suid}-done),Hangup()
+     ```
 - More `#include`s only for static patterns (presets already do this well).
 - **Surgical bug (Phase B):** `genExtensionsEndpoints` appl/`$row` shadow — **fixed** on `genast-hermit`.
 - CoS O(phones) contexts: do not grow; redesign later.
@@ -61,6 +77,8 @@
 - Full stanza in DB as the only endpoint source (recreates copy-once / blocks tmpl rolls).
 - ARI / realtime rewrite; less AGI / more dialplan; per-tenant context file sprawl as the main fix.
 - Long-lived dual GenAst stacks aiming for byte-identical everything; “clone fat `extensions.conf` then optimize.”
+- Pure dialplan PostDial on `${DIALSTATUS}` alone (CFBS policy too rich).
+- Persistent FastAGI as a G dependency (reentrancy / leak ownership deferred).
 
 ### Hermit-crab phases (build order)
 
@@ -75,7 +93,7 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 | **D — WebRTC overlay** | Same tmpl + key merge + `pjsip_overlay` / file fallback as phones (`*_webrtc.overlay.conf`); one-time `rm *_webrtc.conf` | **Built** on branch — **lab verify deferred** (same pattern as phones; confident without live WSS this session) |
 | **E — Dialplan thin + `Q*` short-run** | Remove GenAst hardcoded `Q*` Dial; `Q*` → short AGI PrepDial(queue) → Set dial var → return → dialplan `Dial(${PBX3_DIAL})`; thin stubs; call smoke | **Lab OK** (golden Q1060) |
 | **F — G3 hygiene** | SBC FQDN from `PBX3_SBC_EGRESS_HOST`; `$clstkey` → `park-{tenant}` (before `$clst`); clearer xlate docs; phone/webrtc shell-cp already gone | **Built** — trunk/queue copy-once left for later sideways |
-| **G — Dial locus (generalize)** | Same short-run pattern for LepDial / other dials (CAGI decides; dialplan Dial) | AGI need not idle through bridge on normal calls |
+| **G — Dial locus (generalize)** | LepDial PreDial + dialplan Dial + PostDial; ANSWER/CANCEL skip second AGI | **Lab OK** (golden answer / cancel→VM / timeout→VM / AstDB CFIM / SIP DIVERT) |
 
 **G1 inventory** is done (§2a). Not a gate before C.
 
@@ -211,7 +229,8 @@ From `GenClass` dialplan generation (argv after `SYSAGI`):
 
 | Command | Typical use |
 |---------|-------------|
-| `LepDial` | Extension shortuid dial entry |
+| `LepDial` | Extension PreDial (CFIM / twin / Set `PBX3_DIAL`; Phase G short-run) |
+| `PostDial` | After dialplan Dial: CFBS / VM / bounce (Phase G) |
 | `OutRoute` | Outbound route plan |
 | `OutTrunk` | Trunk match line |
 | `IVR` | IVR menu |
@@ -226,6 +245,7 @@ CAGI also receives dials/AGI from queue/recording paths (e.g. `SetRecord`, PrepD
 - Fleet dial string (authority = CAGI PrepDial): `PJSIP/{shortuid}/sip:{shortuid}@{tenant.fqdn}`.
 - Singleton: `PJSIP/{shortuid}`.
 - **Phase E `Q*`:** GenAst emits `agi(…,Dial,{shortuid},{cluster},queue,,)` then `Dial(${PBX3_DIAL})`. PrepDial(`type=queue`) sets `PBX3_DIAL` (includes trailing `,,` for queue-owned timeout) and returns — no GenAst-hardcoded Dial.
+- **Phase G LepDial:** GenAst emits LepDial → gate empty `PBX3_DIAL` → `Dial(${PBX3_DIAL})` → gate ANSWER/CANCEL → `PostDial`. PrepDial (non-queue) sets `PBX3_DIAL` and returns (no `EXEC Dial`). PostDial owns CFBS/VM/bounce.
 - Phone endpoint `$outbound_proxy` → SBC only in fleet mode; host from **`PBX3_SBC_EGRESS_HOST`** (Phase F).
 - **`$clstkey`** → `park-{tenant shortuid}` (parking lot); must not be expanded via bare `$clst`.
 
@@ -257,7 +277,7 @@ Future hygiene: single documented semantics; optional shared source later if bot
 | — | **D** | pbx3 + pbx3api (+ spa hint) | WebRTC tmpl+overlay parity (shared `pjsip_overlay`) |
 | dialplan | **E** | pbx3 + cagi | `Q*` short-run — **lab OK** |
 | **G3** | **F** | pbx3 | SBC host env + `$clstkey` + xlate clarity — **built** |
-| — | **G** | pbx3 + cagi | Generalize short-run locus to LepDial |
+| — | **G** | pbx3 + cagi | LepDial PreDial + PostDial + dialplan Dial/gates |
 | **C1+** | with E/G | pbx3cagi | Struct refactor; keep §5 green |
 
 ---
@@ -269,7 +289,7 @@ Future hygiene: single documented semantics; optional shared source later if bot
 | GenClass / HelperClass / templates / genAst / characterize | **pbx3** `genast-hermit` |
 | Extension delete overlay / C2 API | **pbx3api** `genast-hermit` |
 | C2 SPA overlay field | **pbx3spa** (`main` — shipped with C2) |
-| PrepDial set-and-return (`type=queue` / Phase E) | **pbx3cagi** `genast-hermit` |
+| PrepDial set-and-return (`type=queue` / Phase E); LepDial PreDial + **PostDial** (Phase G) | **pbx3cagi** `genast-hermit` |
 
 `pbx3-master/` is not a git root — commit per repo.
 
