@@ -32,7 +32,7 @@
 | Tenant move | Overlay travels with extension row |
 | Delete extension | Clear column (+ delete file mirror if any) |
 
-**SPA (when built):** MSP/admin “PJSIP overlay” textarea (raw first). Structured qualify/codec forms later if needed. Privilege: not end-user.
+**SPA (when built):** MSP/admin “PJSIP overlay” on the **extension edit** panel (raw textarea first) so the override is visible where the extension is edited — operators don’t “forget” a one-phone change that only lived in an SSH file. Structured qualify/codec forms later if needed. Privilege: not end-user.
 
 **Rejected for C2:** JSON map of all PJSIP keys as a second schema; editable **full** stanza that replaces tmpl for that phone.
 
