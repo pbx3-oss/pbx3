@@ -40,9 +40,16 @@
 
 ### Locked — dialplan north star (Phase E; separate from G2)
 
-- GenAst = **routing-table compiler** (match → AGI stub); CAGI = **call engine** (Dial decision, CF, fleet AoR).
-- Thin further; **one Dial decision authority** — kill GenAst fleet `Q{ext}` Dial fork (`GenClass` ~1217–1222); same PrepDial path as LepDial.
-- **Dial locus (parked):** “authority” means who **decides** the dial string — not that CAGI must `EXEC Dial` and idle through the bridge forever. Later: decide in CAGI, execute Dial in dialplan (or short AGI) so AGI need not hold the channel for the whole call.
+- GenAst = **routing-table compiler** (match → AGI stub); CAGI = **call engine** (Dial **decision**, CF, fleet AoR).
+- Separate **authority** (who decides dial string) from **locus** (who runs `Dial()` / holds the bridge).
+- **One Dial decision authority** — GenAst must not invent a second dial recipe. Today’s hardcoded `Q{ext}` `Dial(...)` in GenClass (~1217–1222) is the fork to remove.
+- **`Q*` target flow (locked 2026-07-25):** keep queue members as `Local/Q{ext}@tenant`; change only the body of `Q*`:
+  1. `Queue()` → `Local/Q{ext}@tenant`
+  2. `exten Q{ext}` → short AGI → **PrepDial(`type=queue`)** (same dial recipe as LepDial / fleet AoR)
+  3. CAGI **Set** dial string on channel (e.g. `PBX3_DIAL`) and **return** — one-and-done short run; do **not** `EXEC Dial` / idle through the bridge
+  4. Next dialplan priority → `Dial(${PBX3_DIAL})` — dialplan owns the bridge
+- PrepDial already special-cases `type=queue` (ringdelay / twin / recording ghosts); today it still `EXEC Dial` at the end — E/G flips that to set-and-return for the `Q*` path first.
+- **Phase G** generalizes the same short-run pattern to LepDial / other dials; `Q*` is the first proof point (preserves the original reason `Q*` lived in dialplan).
 - More `#include`s only for static patterns (presets already do this well).
 - **Surgical bug (Phase B):** `genExtensionsEndpoints` appl/`$row` shadow — **fixed** on `genast-hermit`.
 - CoS O(phones) contexts: do not grow; redesign later.
@@ -66,9 +73,9 @@ Same Commit entrypoint throughout (`genAst.sh` → `GenClass::genAsterisk()`). S
 | **C — G2 phones (file overlay)** | Tmpl + merge Helper; pbx3api overlay delete; lab `rm` legacy freeze | **Lab OK** (golden override + calls) |
 | **C2 — DB overlay** | Extension column + API/SPA; Commit merges from DB; backup/move carry overlay | **Built** — migrate + lab verify pending |
 | **D — Sideways** | WebRTC (then trunks/queues) same overlay pattern | Same acceptance as phones |
-| **E — Dialplan thin** | Kill Q Dial fork; thin stubs; contract + call smoke (not byte-match old dialplan) | One Dial **decision** path in CAGI |
+| **E — Dialplan thin + `Q*` short-run** | Remove GenAst hardcoded `Q*` Dial; `Q*` → short AGI PrepDial(queue) → Set dial var → return → dialplan `Dial(${PBX3_DIAL})`; thin stubs; call smoke | One Dial **decision** path (CAGI); `Q*` proves short-run AGI + dialplan locus |
 | **F — G3 hygiene** | SBC FQDN input, clearer xlate, `$clstkey`, less shell-cp | Emit boring |
-| **G — Dial locus (later)** | CAGI decides; dialplan (or short AGI) executes Dial | AGI need not idle through bridge |
+| **G — Dial locus (generalize)** | Same short-run pattern for LepDial / other dials (CAGI decides; dialplan Dial) | AGI need not idle through bridge on normal calls |
 
 **G1 inventory** is done (§2a). Not a gate before C.
 
@@ -197,8 +204,9 @@ CAGI also receives dials/AGI from queue/recording paths (e.g. `SetRecord`, PrepD
 
 ### 5.2 Dial forms (fleet-sensitive)
 
-- Fleet: `Dial(PJSIP/{shortuid}/sip:{shortuid}@{tenant.fqdn})` (Q dial / ring-group path — until Phase E moves decision fully into CAGI).
-- Singleton: `Dial(PJSIP/{shortuid})`.
+- Fleet dial string (authority = CAGI PrepDial): `PJSIP/{shortuid}/sip:{shortuid}@{tenant.fqdn}`.
+- Singleton: `PJSIP/{shortuid}`.
+- **Today:** GenAst still hardcodes that fleet form on `Q{ext}` (`GenClass` ~1217–1222). **Phase E:** same string from PrepDial(`type=queue`); dialplan `Dial(${PBX3_DIAL})` after short AGI return.
 - Phone endpoint `$outbound_proxy` → SBC only in fleet mode (`xlatePjsipBuff` / `isFleetMode()`).
 
 ### 5.3 Duplicate fleet gate
@@ -227,9 +235,9 @@ Future hygiene: single documented semantics; optional shared source later if bot
 | **G2** | **C** | pbx3 + pbx3api | Phone file overlay + merge + API delete — **lab OK** |
 | — | **C2** | pbx3 + pbx3api + spa | DB overlay column on extension; Commit from DB |
 | — | **D** | pbx3 | WebRTC / trunks overlay parity |
-| dialplan | **E** | pbx3 (+ cagi if contract) | Thin dialplan; one Dial decision |
+| dialplan | **E** | pbx3 + cagi | `Q*` short-run: PrepDial decide → dialplan Dial; thin stubs |
 | **G3** | **F** | pbx3 | Hygiene |
-| — | **G** | pbx3 + cagi | Dial locus (parked) |
+| — | **G** | pbx3 + cagi | Generalize short-run locus to LepDial |
 | **C1+** | with E/G | pbx3cagi | Struct refactor; keep §5 green |
 
 ---
@@ -240,8 +248,8 @@ Future hygiene: single documented semantics; optional shared source later if bot
 |--------|----------------|
 | GenClass / HelperClass / templates / genAst / characterize | **pbx3** `genast-hermit` |
 | Extension delete overlay / C2 API | **pbx3api** `genast-hermit` |
-| C2 SPA overlay field | **pbx3spa** (when built) |
-| AGI handlers / harness | **pbx3cagi** (later) |
+| C2 SPA overlay field | **pbx3spa** (`main` — shipped with C2) |
+| AGI handlers / harness / PrepDial set-and-return | **pbx3cagi** (Phase E/G) |
 
 `pbx3-master/` is not a git root — commit per repo.
 
