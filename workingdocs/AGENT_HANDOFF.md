@@ -65,7 +65,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-26 — emergency rollback pin + bzy cagi parity)
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`af411dc`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`a58c183`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`a12823c`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`a58c183`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **Docs:** **Emergency roll back point** for pre–E/G dial-locus — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5** (pbx3cagi **`fd9b146`** + pbx3 **`4d862e0`**; alt fleet pin pbx3 **`1ea1210`**). Paired GenAst+CAGI only — not CAGI alone.
