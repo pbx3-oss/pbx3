@@ -65,7 +65,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-26 — cagi thread-s + 3.2 AGI wrap)
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`bade9fc`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`568c604`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`b4b4020`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`568c604`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **Emergency roll back point** (pre E/G dial-locus) — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5** (paired tips; not CAGI alone).
