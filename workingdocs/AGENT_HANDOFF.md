@@ -63,7 +63,27 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-26 — emergency rollback pin + bzy cagi parity)
+## Next agent session notes (2026-07-26 — cagi thread-s + 3.2 AGI wrap)
+
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 *(session-end)*, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa *(session-end)*. Magrathea VIP **`3.93.26.82`**.
+
+### Shipped
+- **Emergency roll back point** (pre E/G dial-locus) — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5** (paired tips; not CAGI alone).
+- **pbx3cagi** Phase 3 follow-on: thread `agi_session_t *s` into helpers — PR **#1** merged (`thread-s-helpers`).
+- **pbx3cagi** Phase **3.2** thin AGI wrap (`agi_wrap.c`/`h`) — PR **#2** merged → tip **`9e4bfa9`**. Debug/Init/ListGetVal still raw `AGITool_*`.
+- **Lab:** golden + **bzy54n** on wrap build (md5 `8837a592…`). Operator: calls + local CF / diverted OK.
+
+### Golden / operator follow-up
+- Velocity still notify-on / ACT-off.
+- Phase 4 (domain splits / named feature codes) not started.
+
+### Resume
+- Optional **Phase 4** — **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**.
+- Or product: D WSS / Twilio / drain / velocity V3 — **`TODO.md`**.
+
+---
+
+## Next agent session notes (2026-07-26 — emergency rollback pin + bzy cagi parity) — historical
 
 **Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`04f9a09`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`a58c183`**. Magrathea VIP **`3.93.26.82`**.
 

@@ -1,20 +1,19 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi refactor 1.3–3.1). SPA overlay on **`main`**. Lab-hot: golden + **bzy54n** cagi **`c4b06bd`** (same md5). Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-26 (bzy cagi rolled to match golden)
+**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: golden + **bzy54n** cagi tip **`9e4bfa9`** / wrap build (md5 `8837a592…`). Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
+**Last updated:** 2026-07-26 (cagi thread-`s` + 3.2 AGI wrap merged; both nodes live)
 
 ### Suggested “what next?” order
 
-1. Operator live tests (as-is lab; both nodes on cagi **`c4b06bd`**).  
+1. **pbx3cagi Phase 4** (optional) — domain file splits + named feature-code enums — **`REFACTOR_PLAN.md`**.  
 2. **Ast config generator** — deferred D WebRTC live WSS lab (optional).  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
 4. **Drain affordance** (nice-to-have, parked).  
-5. **pbx3cagi** follow-on — thread `agi_session_t` into helpers / Phase 4 splits (**`REFACTOR_PLAN.md`**); leave `cagi.c` alone.  
-6. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
-7. **Velocity standalone product** (parked).  
-8. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
-9. **Fleet auth cookie/SSO (blocked)**.  
-10. **S7+** attested PCI — only on customer ask.  
+5. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
+6. **Velocity standalone product** (parked).  
+7. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
+8. **Fleet auth cookie/SSO (blocked)**.  
+9. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -40,7 +39,9 @@
 
 - [x] **PHP classes — drop extensionless symlink workaround (2026-07-25):** `config.php` / `bashconfig` / tls step1 point at `*.php`; extensionless names (`GenClass`, `HelperClass`, `PDFClass!`, …) removed. Hot-patch **`GenClass.php`** (not a bare name). Classes: AmiHelper, Db, Gen, Helper, LDAPHelper, NetHelper, S3Helper, PDF.
 
-- [x] **pbx3cagi struct refactor Phases 1.3–3.1 (2026-07-25):** Dead code; `g_call`/`g_parms`; command table; `agi_sqlite.c`; `agi_init_call_context`; `agi_session_t` + name macros dropped. Offline `make test` green. Golden build+install **`c4b06bd`**; simple calls + CFIM OK. **bzy54n** same binary 2026-07-26 (`pbx3cagi.arm64` md5 matched golden; bak `…20260726193238`). Tips **`db45799`** / **`3447782`** / **`c4b06bd`**. Follow-on: thread `s` into helpers / Phase 4 — **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**. Leave LGPL `cagi.c` alone. Golden deploy key for private `pbx3cagi` (SSH origin).
+- [x] **pbx3cagi struct refactor Phases 1.3–3.1 (2026-07-25):** Dead code; `g_call`/`g_parms`; command table; `agi_sqlite.c`; `agi_init_call_context`; `agi_session_t` + name macros dropped. Offline `make test` green. Golden build+install **`c4b06bd`**; simple calls + CFIM OK. Leave LGPL `cagi.c` alone.
+
+- [x] **pbx3cagi thread `s` + Phase 3.2 AGI wrap (2026-07-26):** Helpers take `agi_session_t *s` (PR **#1** → `main`). Thin `agi_wrap` over `AGITool_*` (PR **#2** → **`9e4bfa9`**). Golden + bzy live (md5 `8837a592…`); calls + local CF / diverted OK. **Emergency roll back point** still **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5**. Optional next: Phase 4 domain splits — **`REFACTOR_PLAN.md`**.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 
