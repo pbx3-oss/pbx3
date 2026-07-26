@@ -63,7 +63,25 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-25 — pbx3cagi Phase 1.3–3.1 + golden QA)
+## Next agent session notes (2026-07-26 — emergency rollback pin + bzy cagi parity)
+
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 *(this commit)*, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa *(session-end handoff)*. Magrathea VIP **`3.93.26.82`**.
+
+### Shipped
+- **Docs:** **Emergency roll back point** for pre–E/G dial-locus — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5** (pbx3cagi **`fd9b146`** + pbx3 **`4d862e0`**; alt fleet pin pbx3 **`1ea1210`**). Paired GenAst+CAGI only — not CAGI alone.
+- **Ops:** **bzy54n** cagi built/installed to match golden **`c4b06bd`** (`pbx3cagi.arm64` md5 `45a18cb5…`; bak `…20260726193238`).
+- Clarified: struct refactor (1.3–3.1) did not change dialplan contract; E/G did. Optional polish (thread `s` / 3.2 / Phase 4) left alone.
+
+### Golden / operator follow-up
+- Operator running live tests as-is (both nodes on cagi tip).
+- Velocity still notify-on / ACT-off.
+
+### Resume
+- Await operator test results; then product (D WSS / Twilio / drain / velocity V3) or optional cagi polish — **`TODO.md`**.
+
+---
+
+## Next agent session notes (2026-07-25 — pbx3cagi Phase 1.3–3.1 + golden QA) — historical
 
 **Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`6de495e`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`38333ca`**. Magrathea VIP **`3.93.26.82`**.
 

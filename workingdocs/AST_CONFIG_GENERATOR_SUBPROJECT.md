@@ -1,6 +1,7 @@
 # Ast config generator sub-project
 
 **Status:** Hermit-crab **A–H shipped on `main`** (2026-07-25) — pbx3 + pbx3api + pbx3cagi + SPA. Lab-hot on golden + bzy. **D** WebRTC overlay built (live WSS lab deferred). PHP classes are `*.php` only (no extensionless symlinks). SBC WSS (W1) separate. `genast-hermit` deleted after merge.  
+**Rollback (Emergency roll back point — pre E/G dial-locus):** paired tips in **§5.5** — pbx3cagi **`fd9b146`** + pbx3 **`4d862e0`** (or fleet pin pbx3 **`1ea1210`**). Not CAGI-alone.  
 **Owns:** Asterisk config generation (`genAst` / `GenClass` / endpoint staging / dialplan emit), including **phone PJSIP staging/overlay**, **extensions.conf structure**, **and** the paired **pbx3cagi** cleanup.  
 **CAGI plan:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 0 harness done; Phase 1.3 → 1.1 → 2.x when resumed). Linked by dialplan ↔ AGI contract; still two repos / two commit roots.  
 **Study depth (ephemeral):** `~/.cursor/plans/genast_challenger_review_0db5c469.plan.md` — reference only; **this file is durable truth.**
@@ -271,6 +272,23 @@ Future hygiene: single documented semantics; optional shared source later if bot
 - Plan: **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**
 - Harness: **`TEST_HARNESS.md`**, **`TEST_RECIPE.md`** — run **`make test`** after each cagi refactor step.
 - Resume order when product allows: Phase **1.3** (dead code) → **1.1** (structs) → **2.x** (splits). Conjunction with this sub-project = review contract above before changing GenAst dialplan emitters or cagi command handlers.
+
+### 5.5 Emergency roll back point — pre Phase E/G dial-locus (recorded 2026-07-26)
+
+**Why:** After Phase **E** (`Q*` short-run) and Phase **G** (LepDial PreDial + dialplan `Dial(${PBX3_DIAL})` + PostDial), GenAst dialplan and `pbx3cagi` are a **paired contract**. You **cannot** drop an older CAGI binary onto a node that has Commit’d E/G extensions (and the reverse is unsafe too). Field recovery = roll **both** sides back to a pre-E/G pair, then **Commit** (or restore matching `extensions.conf`), then install that CAGI.
+
+**Emergency roll back point** — last known-good classic dial-in-AGI pair (PrepDial/`LepDial` still `AGITool_exec(…, "Dial", …)`; no `PBX3_DIAL` set-and-return; no PostDial stub required):
+
+| Repo | Tip (short) | Full SHA | Note |
+|------|-------------|----------|------|
+| **pbx3cagi** | **`fd9b146`** | `fd9b146cf69e7726ead2b26ffbceb584c221736b` | 2026-07-23 — fleet-gated tenant AoR; last tip **before** Phase E (`e3d8522`) |
+| **pbx3** | **`4d862e0`** | `4d862e02b3577e291c0f74bd982f9095b6e6bf01` | 2026-07-25 — last GenAst tip **before** Phase E emitter (`74b19ab`); still A–D overlays, **not** E/G short-run dialplan |
+
+**Fleet lab pair from before hermit dial work** (same CAGI; older GenAst without A–H overlays): pbx3 **`1ea1210`** + pbx3cagi **`fd9b146`** (+ pbx3sbc **`4509b5d`** for the AoR/usrloc side). Use this if you want “multi-tenant dial OK, no hermit generator changes.” Use **`4d862e0` + `fd9b146`** if you only need to undo the E/G dial-locus fork and can keep phone overlay work.
+
+**Not sufficient alone:** rolling only `pbx3cagi` (struct refactor tips `c4b06bd` etc. still speak E/G). Struct refactor did not create this fork; **E/G did**.
+
+**Ops sketch:** checkout tips above → rebuild/install matching `pbx3cagi` on the node → restore GenAst sources / run Commit so dialplan matches → verify calls. Do not mix current `main` dialplan with `fd9b146` CAGI.
 
 ---
 

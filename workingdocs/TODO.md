@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi refactor 1.3–3.1). SPA overlay on **`main`**. Lab-hot: golden cagi **`c4b06bd`** (call+CFIM OK); bzy may lag cagi tip. Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-25 (pbx3cagi Phase 1.3–3.1; golden build+call QA)
+**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi refactor 1.3–3.1). SPA overlay on **`main`**. Lab-hot: golden + **bzy54n** cagi **`c4b06bd`** (same md5). Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
+**Last updated:** 2026-07-26 (bzy cagi rolled to match golden)
 
 ### Suggested “what next?” order
 
-1. **Optional:** roll **bzy54n** cagi to **`c4b06bd`** (same pull/make/install as golden).  
+1. Operator live tests (as-is lab; both nodes on cagi **`c4b06bd`**).  
 2. **Ast config generator** — deferred D WebRTC live WSS lab (optional).  
 3. **Number dialect — paid Twilio + named recipe** (when ready).  
 4. **Drain affordance** (nice-to-have, parked).  
@@ -36,11 +36,11 @@
 
 - [x] **Trunk/queue/park C2 overlay Phase H (2026-07-25 lab):** Always tmpl + DB overlay (`trunks.pjsip_overlay`, `queue.queue_overlay`, `cluster.park_overlay`); SPA admin fields on Trunk/Queue/Tenant; golden migrate + legacy freeze rm + Commit OK. Tips **pbx3** **`91949be`**, **pbx3api** **`2c429ab`**, **pbx3spa** **`51b0fa3`** (cagi G already **`b9dd195`**).
 
-- [x] **Ast config generator — merge hermit → main:** Merged + pushed 2026-07-25 (pbx3/api/cagi). **bzy rolled** same day (G+H call OK). Deferred D WebRTC REGISTER lab. **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
+- [x] **Ast config generator — merge hermit → main:** Merged + pushed 2026-07-25 (pbx3/api/cagi). **bzy rolled** same day (G+H call OK). Deferred D WebRTC REGISTER lab. **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**. **Emergency roll back point (§5.5):** pbx3cagi **`fd9b146`** + pbx3 **`4d862e0`** (pair; not CAGI alone).
 
 - [x] **PHP classes — drop extensionless symlink workaround (2026-07-25):** `config.php` / `bashconfig` / tls step1 point at `*.php`; extensionless names (`GenClass`, `HelperClass`, `PDFClass!`, …) removed. Hot-patch **`GenClass.php`** (not a bare name). Classes: AmiHelper, Db, Gen, Helper, LDAPHelper, NetHelper, S3Helper, PDF.
 
-- [x] **pbx3cagi struct refactor Phases 1.3–3.1 (2026-07-25):** Dead code; `g_call`/`g_parms`; command table; `agi_sqlite.c`; `agi_init_call_context`; `agi_session_t` + name macros dropped. Offline `make test` green. Golden build+install **`c4b06bd`**; simple calls + CFIM OK. Tips **`db45799`** / **`3447782`** / **`c4b06bd`**. Follow-on: thread `s` into helpers / Phase 4 — **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**. Leave LGPL `cagi.c` alone. Golden deploy key for private `pbx3cagi` (SSH origin).
+- [x] **pbx3cagi struct refactor Phases 1.3–3.1 (2026-07-25):** Dead code; `g_call`/`g_parms`; command table; `agi_sqlite.c`; `agi_init_call_context`; `agi_session_t` + name macros dropped. Offline `make test` green. Golden build+install **`c4b06bd`**; simple calls + CFIM OK. **bzy54n** same binary 2026-07-26 (`pbx3cagi.arm64` md5 matched golden; bak `…20260726193238`). Tips **`db45799`** / **`3447782`** / **`c4b06bd`**. Follow-on: thread `s` into helpers / Phase 4 — **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**. Leave LGPL `cagi.c` alone. Golden deploy key for private `pbx3cagi` (SSH origin).
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 
