@@ -44,6 +44,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — requirements draft; implement after §8 lock; before CAGI Phase 4 |
+| **Call / SIP testing (SIPp)** | **`CALL_TEST_STRATEGY.md`** → **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
 | **Failover + shadowing** (parked) | Edge HA: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Instance shadow SKU framing: **`INSTANCE_SHADOWING_REQUIREMENTS.md`** (same mechanics, paid twin) |
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
@@ -64,7 +65,26 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-26 — time-based routing requirements)
+## Next agent session notes (2026-07-26 — call-test strategy)
+
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`c2d2e2b`** — pbx3 tip after this docs commit. Magrathea VIP **`3.93.26.82`**.
+
+### Shipped
+- **Docs:** **`CALL_TEST_STRATEGY.md`** — L0 CAGI harness / L1 SIPp pathways / L2 soak / L3 PSTN manual; scenario inventory; build order (first green `in-open-ext`).
+- Pointers in **`TEST_CADENCE.md`** + Pack B row in **`CRITICAL_PATH_TEST_PACK.md`**.
+- **TODO:** call-test open item + suggested-next #1.
+- No runtime code; no SIPp scenarios yet.
+
+### Golden / operator follow-up
+- Velocity still notify-on / ACT-off.
+
+### Resume
+- Implement call-test Step 1 (SIPp + `in-open-ext` on golden), or product crumbs / time-based §8 — **`TODO.md`**.
+- Do **not** start CAGI Phase 4 ahead of schedule track.
+
+---
+
+## Next agent session notes (2026-07-26 — time-based routing requirements) — historical
 
 **Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`6d69490`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`c2d2e2b`**. Magrathea VIP **`3.93.26.82`**.
 

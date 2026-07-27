@@ -50,6 +50,7 @@ Repo-root `make test-critical` deferred until CI wiring is desired.
 | Recipe | Where | Status |
 |--------|-------|--------|
 | CAGI CFIM scenarios | **pbx3cagi** `make test` + `TEST_RECIPE.md` | **done** (golden-signed-off) |
+| Call / SIP pathway + load strategy | **`CALL_TEST_STRATEGY.md`** (SIPp L1/L2) | **todo** (strategy drafted 2026-07-26; no scenarios yet) |
 | DB restore regression | **`DB_RESTORE_REGRESSION_CHECKLIST.md`** | **lab-only** |
 | Phase A egress → SBC PSTN | Phase A notes / QUICK-START | **lab-only** |
 | Peering inbound DID / alias | PEERING-PLAN + QUICK-START | **lab-only** |

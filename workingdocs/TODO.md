@@ -1,17 +1,18 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: golden + **bzy54n** cagi tip **`9e4bfa9`** / wrap build (md5 `8837a592…`). Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-26 (time-based routing requirements draft; cagi Phase 4 parked)
+**Last updated:** 2026-07-26 (call-test strategy drafted; time-based routing requirements earlier same day)
 
 ### Suggested “what next?” order
 
-1. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
-2. **Time-based routing (day-parts + profiles)** — own track after lab cool; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
-3. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
-4. **Velocity standalone product** (parked).  
-5. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
-6. **Fleet auth cookie/SSO (blocked)**.  
-7. **S7+** attested PCI — only on customer ask.  
+1. **Call / SIP test pack (SIPp)** — strategy drafted; first green `in-open-ext` on golden when scheduled — **`CALL_TEST_STRATEGY.md`**.  
+2. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
+3. **Time-based routing (day-parts + profiles)** — own track after lab cool; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
+4. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
+5. **Velocity standalone product** (parked).  
+6. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
+7. **Fleet auth cookie/SSO (blocked)**.  
+8. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -44,6 +45,8 @@
 - [ ] **pbx3cagi Phase 4 — domain file splits (parked 2026-07-26):** Direction OK; hold until cross-cutting design (esp. time-based routing / CheckState) settles — **`REFACTOR_PLAN.md`**.
 
 - [ ] **Time-based routing — day-parts + route profiles (requirements 2026-07-26):** Replace binary DID open/close with tenant **schedule modes** + reusable **route profiles**; keep cron precompute (no GotoIfTime forest); FreePBX TC chains deferred. SARK convert first-class (dual-read). Lock §8 Q1–Q7 before code. Spec: **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Cross-repo when scheduled (pbx3 / api / cagi / spa).
+
+- [ ] **Call / SIP test strategy — SIPp L1/L2 (drafted 2026-07-26):** Open-source only. Keep CAGI `make test` as L0; build SIPp pathway scenarios on golden (L1) then light soak/spike (L2); PSTN smoke stays manual (L3). First implement step: SIPp + one green `in-open-ext` recipe under `workingdocs/call-tests/`. Spec: **`CALL_TEST_STRATEGY.md`** · cadence **`TEST_CADENCE.md`** · pack row in **`CRITICAL_PATH_TEST_PACK.md`**.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 

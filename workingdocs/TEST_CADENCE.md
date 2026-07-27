@@ -32,6 +32,7 @@ We will **not** rewrite history as test-first. Lab validation (SIP, EC2, golden 
 Existing anchors to keep (do not replace):
 
 - **pbx3cagi** — `make test`, `TEST_HARNESS.md`, `TEST_RECIPE.md`  
+- **Call / SIP pathways (SIPp + load)** — **`CALL_TEST_STRATEGY.md`** (L0–L3; build when scheduled)  
 - **DB restore** — `DB_RESTORE_REGRESSION_CHECKLIST.md`  
 - **SBC install/lab** — `pbx3sbc/docs/guides/TESTING.md` and deployment checklists  
 
