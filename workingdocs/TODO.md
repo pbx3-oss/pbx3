@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-27 (SIPp EIP 98.82.58.59; control-plane duplex parked)
+**Last updated:** 2026-07-27 (session end — SIPp EIP 98.82.58.59; control duplex parked)
 
 ### Suggested “what next?” order
 
@@ -48,7 +48,7 @@
 
 - [x] **Call / SIP test — Step 1 `in-open-ext` green (2026-07-27):** Mac SIPp → Magrathea VIP → DID `01924918076` → golden 1000; Snom always-auto-answer; BYE clean after scenario `rrs="true"`. Recipes under **`workingdocs/call-tests/`**. Full map **`CALL_TYPE_INVENTORY.md`** (U/H attendance).
 
-- [x] **Call / SIP test — L1 pack v1 + SIPp catcher (2026-07-27):** Golden tenant **`sipp`** (`pb0wsk.pbx3.com`) exts **2000/2001** + queue **2060**; Twilio DID **`+15139279738`** → catcher. **`run-pack.sh`** / **`lab-state.sh`** / catcher UAS. Pack green: open / CFIM / closed / queue. **Off-box host** EIP **`98.93.98.162`** (`SIPP_LAB_HOST.md`); SBC Peer gwid **99** → that EIP only (never office IP — office Peer stole phone INVITEs → “No inbound route”). Mac: `ssh … ubuntu@98.93.98.162 'cd ~/call-tests && ./run-pack.sh'`.
+- [x] **Call / SIP test — L1 pack v1 + SIPp catcher (2026-07-27):** Golden tenant **`sipp`** (`pb0wsk.pbx3.com`) exts **2000/2001** + queue **2060**; Twilio DID **`+15139279738`** → catcher. **`run-pack.sh`** / **`lab-state.sh`** / catcher UAS. **Off-box host** EIP **`98.82.58.59`** (was `98.93.98.162`; Peer gwid **99** updated; pack **11/11 green** after move 2026-07-27). Never Peer office IP. Mac: `ssh … ubuntu@98.82.58.59 'cd ~/call-tests && ./run-pack.sh'` when host up. Docs **`SIPP_LAB_HOST.md`** may still show old EIP until next edit.
 
 - [x] **Call / SIP test — phone 302 divert (2026-07-27):** Catcher A `uas-302` → Contact `2001`; B answers. Pack id **`phone-302-local`** green on SIPp EC2 (full pack still green). Distinct from AstDB CFIM. Inventory `maj-in-phone-302-local`.
 

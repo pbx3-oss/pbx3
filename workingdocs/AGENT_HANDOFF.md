@@ -66,22 +66,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-27 — dial-alias §8 locked + backlog)
+## Next agent session notes (2026-07-27 — SIPp EIP move + control duplex park)
 
-**Branches:** **pbx3** on **`main`** (pushed). Tip **`591eaed`**. **pbx3cagi** **`a7cdeed`** (unchanged). SPA handoff this close (docs only). Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**. SIPp carrier host **`98.93.98.162`** (keep EIP; operator may stop instance).
+**Branches:** **pbx3** on **`main`** (pushed). Tip **`018b46c`**. **pbx3cagi** **`a7cdeed`**. SPA handoff this close. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**. SIPp carrier EIP **`98.82.58.59`** (Peer **99**; instance may be **stopped** — keep EIP).
 
 ### Shipped
-- **Dial-alias requirements locked** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**: digit plan (fixed alias + var ext); fleet/SBC-required; CallerID num=`suid@fqdn` + name=human; deny/CoS; Q12 return-call; deferred Local shortcut (§15). Tips **`f07dd3f`** / follow-ons.
-- **TODO backlog:** Litestream **won’t do**; AMI wallboard = side gig; **2nd SIPp** (extension platform, non-Peer EIP) when alias implement starts — **`SIPP_LAB_HOST.md`** §9; fleet health≠Asterisk parked pre-live.
-- No product code this session.
+- Dial-alias §8 locked earlier same day (see historical block).
+- **SIPp lab EIP** → **`98.82.58.59`**; Filament Peer **99** (page 2 / Carrier SIPp lab) updated; L1 pack **11/11 green** from new host.
+- **TODO parks:** control-plane duplex/HA (ops SPOF; call fail-safe); fleet `/up`≠Asterisk; AMI wallboard side gig; Litestream won’t-do; 2nd SIPp phone host when alias starts.
 
 ### Golden / operator follow-up
-- Peer gwid **99** = SIPp EIP only (carrier host). Stop SIPp OK if EIP retained.
-- Pack still: `ssh -i …/pbx3test.pem ubuntu@98.93.98.162 'cd ~/call-tests && ./run-pack.sh'` when host up.
+- Peer **99** = `sip:98.82.58.59:5060` only. Stop SIPp OK if EIP retained.
+- Pack when up: `ssh -i …/pbx3test.pem -o UserKnownHostsFile=/dev/null ubuntu@98.82.58.59 'cd ~/call-tests && ./run-pack.sh'` (host key churn on EIP reuse).
+- Refresh **`SIPP_LAB_HOST.md`** / call-tests README EIP strings when convenient.
 
 ### Resume
-- Implement dial-alias when scheduled (slice A CRUD first, or day-parts §8 if prioritized). At alias lab: bring 2nd SIPp phone EC2.
-- Do **not** start CAGI Phase 4 first. Pre-live: fleet `/up` must grow Asterisk check before production.
+- Implement dial-alias when scheduled (or day-parts §8). At alias lab: 2nd SIPp (non-Peer). Not CAGI Phase 4 first. Pre-live: Asterisk-in-health + optional control duplex.
+
+---
+
+## Next agent session notes (2026-07-27 — dial-alias §8 locked + backlog) — historical
+
+**Branches:** **pbx3** on **`main`**. Tip then **`591eaed`**/follow-ons. SIPp was **`98.93.98.162`** (superseded by EIP move above).
+
+### Shipped
+- Dial-alias requirements locked; Litestream dropped; AMI wallboard side gig; 2nd SIPp note; fleet health≠Asterisk parked.
+
+### Resume
+- Superseded by SIPp EIP move + control duplex block above.
 
 ---
 
