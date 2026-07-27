@@ -67,7 +67,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-26 — call-test strategy)
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`c2d2e2b`** — pbx3 tip after this docs commit. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`582b16b`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`c2d2e2b`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **Docs:** **`CALL_TEST_STRATEGY.md`** — L0 CAGI harness / L1 SIPp pathways / L2 soak / L3 PSTN manual; scenario inventory; build order (first green `in-open-ext`).
