@@ -1,19 +1,17 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: golden + **bzy54n** cagi tip **`9e4bfa9`** / wrap build (md5 `8837a592…`). Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-26 (cagi thread-`s` + 3.2 AGI wrap merged; both nodes live)
+**Last updated:** 2026-07-26 (time-based routing requirements draft; cagi Phase 4 parked)
 
 ### Suggested “what next?” order
 
-1. **pbx3cagi Phase 4** (optional) — domain file splits + named feature-code enums — **`REFACTOR_PLAN.md`**.  
-2. **Ast config generator** — deferred D WebRTC live WSS lab (optional).  
-3. **Number dialect — paid Twilio + named recipe** (when ready).  
-4. **Drain affordance** (nice-to-have, parked).  
-5. **Velocity V3** / SPA “disabled by velocity” / optional ACT enable.  
-6. **Velocity standalone product** (parked).  
-7. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
-8. **Fleet auth cookie/SSO (blocked)**.  
-9. **S7+** attested PCI — only on customer ask.  
+1. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
+2. **Time-based routing (day-parts + profiles)** — own track after lab cool; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
+3. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
+4. **Velocity standalone product** (parked).  
+5. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
+6. **Fleet auth cookie/SSO (blocked)**.  
+7. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -41,7 +39,11 @@
 
 - [x] **pbx3cagi struct refactor Phases 1.3–3.1 (2026-07-25):** Dead code; `g_call`/`g_parms`; command table; `agi_sqlite.c`; `agi_init_call_context`; `agi_session_t` + name macros dropped. Offline `make test` green. Golden build+install **`c4b06bd`**; simple calls + CFIM OK. Leave LGPL `cagi.c` alone.
 
-- [x] **pbx3cagi thread `s` + Phase 3.2 AGI wrap (2026-07-26):** Helpers take `agi_session_t *s` (PR **#1** → `main`). Thin `agi_wrap` over `AGITool_*` (PR **#2** → **`9e4bfa9`**). Golden + bzy live (md5 `8837a592…`); calls + local CF / diverted OK. **Emergency roll back point** still **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5**. Optional next: Phase 4 domain splits — **`REFACTOR_PLAN.md`**.
+- [x] **pbx3cagi thread `s` + Phase 3.2 AGI wrap (2026-07-26):** Helpers take `agi_session_t *s` (PR **#1** → `main`). Thin `agi_wrap` over `AGITool_*` (PR **#2** → **`9e4bfa9`**). Golden + bzy live (md5 `8837a592…`); calls + local CF / diverted OK. **Emergency roll back point** still **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5**.
+
+- [ ] **pbx3cagi Phase 4 — domain file splits (parked 2026-07-26):** Direction OK; hold until cross-cutting design (esp. time-based routing / CheckState) settles — **`REFACTOR_PLAN.md`**.
+
+- [ ] **Time-based routing — day-parts + route profiles (requirements 2026-07-26):** Replace binary DID open/close with tenant **schedule modes** + reusable **route profiles**; keep cron precompute (no GotoIfTime forest); FreePBX TC chains deferred. SARK convert first-class (dual-read). Lock §8 Q1–Q7 before code. Spec: **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Cross-repo when scheduled (pbx3 / api / cagi / spa).
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 
