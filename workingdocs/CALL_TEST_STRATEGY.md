@@ -1,7 +1,8 @@
 # Call / SIP test strategy (open-source)
 
 **Status:** Strategy + Step 1–2 scaffolding 2026-07-27 — build what we can; **no commercial generators**.  
-**Recipes:** **`workingdocs/call-tests/`** (Mac SIPp → VIP; `in-open-ext` not green until SG + `dr_gateways` + answer).  
+**Full call-type map (majors + `*NN*` + test columns):** **`CALL_TYPE_INVENTORY.md`**.  
+**Recipes:** **`workingdocs/call-tests/`** (Mac SIPp → VIP; `in-open-ext` green 2026-07-27).  
 **Cadence home:** **`TEST_CADENCE.md`** · inventory **`CRITICAL_PATH_TEST_PACK.md`**.  
 **Existing call logic:** **pbx3cagi** `make test` · **`TEST_HARNESS.md`** · **`TEST_RECIPE.md`**.
 
@@ -73,7 +74,8 @@ L0 stays the **merge-gate** for CAGI. L1 becomes the **lab regression** for dial
 
 ## 5. Scenario inventory (L1 target)
 
-Grow as a **checklist of SIPp XML (or `.sip`) scenarios**. Names are stable IDs for Pack B.
+Grow as a **checklist of SIPp XML (or `.sip`) scenarios**. Names are stable IDs for Pack B.  
+**Complete call-type list (including shortcodes and L0/L3):** **`CALL_TYPE_INVENTORY.md`**. This §5 is the **near-term L1** subset only.
 
 ### 5.1 Inbound / tenant
 

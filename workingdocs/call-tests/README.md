@@ -1,6 +1,6 @@
 # Call / SIP tests (SIPp L1+)
 
-Strategy: **`../CALL_TEST_STRATEGY.md`**. Pack B home for pathway recipes.
+Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_INVENTORY.md`**. Pack B home for pathway recipes.
 
 ## Status
 
