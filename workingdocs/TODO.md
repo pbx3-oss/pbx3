@@ -5,14 +5,15 @@
 
 ### Suggested “what next?” order
 
-1. **Call / SIP test pack** — grow beyond pack v1 (**phone 302 + multi-tenant done**); next outbound — **`CALL_TYPE_INVENTORY.md`** · **`workingdocs/call-tests/`** · **`SIPP_LAB_HOST.md`**.  
+1. **Call / SIP test pack** — grow beyond pack v1 (**phone 302 + multi-tenant AoR done**); next outbound — **`CALL_TYPE_INVENTORY.md`** · **`workingdocs/call-tests/`**.  
 2. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
-3. **Time-based routing (day-parts + profiles)** — own track after test pack cools; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
-4. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
-5. **Velocity standalone product** (parked).  
-6. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
-7. **Fleet auth cookie/SSO (blocked)**.  
-8. **S7+** attested PCI — only on customer ask.  
+3. **Tenant short dial (site codes)** — requirements draft; lock §8 Qs before code — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.  
+4. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
+5. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
+6. **Velocity standalone product** (parked).  
+7. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
+8. **Fleet auth cookie/SSO (blocked)**.  
+9. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -49,6 +50,8 @@
 - [x] **Call / SIP test — phone 302 divert (2026-07-27):** Catcher A `uas-302` → Contact `2001`; B answers. Pack id **`phone-302-local`** green on SIPp EC2 (full pack still green). Distinct from AstDB CFIM. Inventory `maj-in-phone-302-local`.
 
 - [x] **Call / SIP test — multi-tenant AoR (2026-07-27):** Peer catcher on affcot **1199** (`s6rd88` / `9wvvnb.pbx3.com`) REGISTER’d while DID→sipp A. Pack id **`in-multi-tenant-a-b`**. Creds: golden `/tmp/sipp-peer-catcher.env` (run-pack autoloads).
+
+- [ ] **Tenant short dial — site codes (requirements 2026-07-27):** Cross-tenant dial via short prefix (not unique exts); same recipe on/off node; Rule 1. Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. Lock §8 before code. L1 `site-dial-a-b` when built.
 
 - [ ] **Call / SIP test — grow L1 beyond pack v1:** Outbound / master-closed / CFIM-external; ACK/BYE catcher NAT polish optional. Spec: **`CALL_TEST_STRATEGY.md`** · inventory **`CALL_TYPE_INVENTORY.md`**.
 

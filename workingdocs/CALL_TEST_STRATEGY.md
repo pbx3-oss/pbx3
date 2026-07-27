@@ -89,6 +89,7 @@ Grow as a **checklist of SIPp XML (or `.sip`) scenarios**. Names are stable IDs 
 | `in-queue-answer` | DID → queue → agent answer | Bridge up |
 | `in-queue-cancel-vm` | Ring then cancel | VM / failover dest |
 | `in-multi-tenant-a-b` | Tenant A ↔ B via SBC AoR | No 404 / hairpin |
+| `site-dial-a-b` | Site-code short dial A→B | Rings B ext (planned — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**) |
 
 ### 5.2 Outbound / edge
 

@@ -49,6 +49,7 @@ These are the “big” call types operators care about.
 | `maj-in-greeting` | Playback greeting | — | — | yes | **H** (or **U later** if SIPp only checks 200 + RTP) |
 | `maj-ext-to-ext` | Station ↔ station same tenant | — | — | primary lab | **H** (two phones) · **U later** (dual SIPp) |
 | `maj-ext-to-ext-sbc` | Multi-tenant via SBC AoR (domain discrimination) | — | **`in-multi-tenant-a-b`** (peer REG + DID→A) | historical lab | **L1: U** with peer catcher on 2nd tenant |
+| `maj-site-dial` | Cross-tenant short dial (`site_code`+ext) | — | planned (`site-dial-a-b`) | — | **U later** — requirements **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** |
 | `maj-out-trunk` | OutTrunk / Egress | — | planned | yes | **H** (or **U later** with SIPp UAS peer) |
 | `maj-out-route` | OutRoute | — | — | yes | **H** |
 | `maj-out-busy-reject` | Far-end reject / cancel | **`postdial-*`** **U** | planned | yes | **L0: U** · live **H** / **U later** |
@@ -171,3 +172,4 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 | 2026-07-27 | Snom auto-answer via `Call-Info`/`Alert-Info`; L1 U when phone auto-answers; note carrier-leg vs phone-leg headers. |
 | 2026-07-27 | `in-open-ext` full green (auto-answer + `rrs=true` BYE). Ring-group openroute skips `extalert`; use phone always-auto-answer. |
 | 2026-07-27 | `phone-302-local` — SIP 302 phone divert (catcher UAS) added to L1 pack; separate from AstDB CFIM. |
+| 2026-07-27 | `maj-site-dial` planned — cross-tenant site-code short dial; see **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. |
