@@ -67,7 +67,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-26 — close: call test is next)
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`644267e`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`9e2c8f7`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`5c32071`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`6c31fe7`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped (this session, docs)
 - **Time-based routing** requirements — **`TIME_BASED_ROUTING_REQUIREMENTS.md`** (day-parts + profiles; Phase 4 parked).
