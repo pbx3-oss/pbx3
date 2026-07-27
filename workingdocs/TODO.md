@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-27 (session end — dial-alias §8 locked; backlog parks)
+**Last updated:** 2026-07-27 (SIPp EIP 98.82.58.59; control-plane duplex parked)
 
 ### Suggested “what next?” order
 
@@ -14,8 +14,9 @@
 7. **Instance shadowing** / S10.7 / S8.9 (parked).  
 8. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
 9. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
-10. **Fleet auth cookie/SSO (blocked)**.  
-11. **S7+** attested PCI — only on customer ask.  
+10. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
+11. **Fleet auth cookie/SSO (blocked)**.  
+12. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -68,6 +69,8 @@
 - [ ] **pbx3cagi Phase 4 — domain file splits (parked 2026-07-26):** Direction OK; hold until cross-cutting design (esp. time-based routing / CheckState) settles — **`REFACTOR_PLAN.md`**.
 
 - [ ] **Time-based routing — day-parts + route profiles (requirements 2026-07-26):** Replace binary DID open/close with tenant **schedule modes** + reusable **route profiles**; keep cron precompute (no GotoIfTime forest); FreePBX TC chains deferred. SARK convert first-class (dual-read). Lock §8 Q1–Q7 before code. Spec: **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Cross-repo when scheduled (pbx3 / api / cagi / spa).
+
+- [ ] **Control plane duplex / HA (parked, pre-live 2026-07-27):** `control.pbx3.com` / Gatekeeper is a single host — ops SPOF (probes, Fleet UI, moves, notify, Edge promote). **Call plane fail-safe** by design (nodes+SBC keep routing). Not built. Later: active/standby + EIP/DNS; S3 catalog already shared HoR; local health SQLite/job queue need replicate-or-cold-standby story. Do **not** home on SBC. Spec seed: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5 fail-safe.
 
 - [ ] **Fleet instance health includes Asterisk (parked, pre-live 2026-07-27):** Gatekeeper node badge uses HTTP **`/up`** only (Laravel app). Asterisk can be down while the instance shows Healthy. Before production: extend probe (custom `/up` checks and/or AMI/`asterisk -rx` core status) so Fleet Instances reflects **call-plane** liveness, not just API. Keep separate from Egress qualify badge. Do not block dial-alias.
 
