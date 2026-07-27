@@ -132,7 +132,7 @@ Record: date, node, tip SHAs, max stable concurrent, CPS at failure, which proce
 | **0** | This doc + Pack pointers | Done |
 | **1** | Lab: install SIPp; one **loopback or DID** scenario green (`in-open-ext`) | **Done 2026-07-27** (Mac→VIP→DID→1000) |
 | **2** | Scenario dir layout + README (`pbx3/workingdocs/call-tests/` or `pbx3cagi/.../sipp/`) | Done (`call-tests/`) |
-| **3** | Grow L1 matrix (§5) — priority: CFIM, queue, multi-tenant, closed | Recipes for CFIM/closed/queue **added 2026-07-27**; green-lab pending |
+| **3** | Grow L1 matrix (§5) — priority: CFIM, queue, multi-tenant, closed | **Pack green 2026-07-27** on catcher (`./run-pack.sh`: open/CFIM/closed/queue). Multi-tenant still open. |
 | **4** | Optional AMI helper to force OCSTAT / confirm channel | Less manual setup |
 | **5** | One soak profile documented on golden | L2 started |
 | **6** | Wire L0 (+ later selected L1) into **`CRITICAL_PATH_TEST_PACK.md`** Pack B | Cadence updated |
@@ -187,3 +187,4 @@ Alternatively keep XML next to **pbx3cagi** if scenarios are AGI-centric — pre
 | 2026-07-27 | Step 1–2 scaffold: `workingdocs/call-tests/` + `in-open-ext` (Mac→VIP); green run still pending lab allow. |
 | 2026-07-27 | `in-open-ext` green: Mac SIPp → Magrathea VIP → DID 01924918076 → golden 1000. Temp Peer gwid 99 (`sipp-lab`). |
 | 2026-07-27 | L1 recipes: `in-cfim-local`, `in-closed-ivr-or-dest`, `feat-master-closed`, `in-queue-answer` + `run-sipp.sh`. |
+| 2026-07-27 | SIPp catcher tenant + `./run-pack.sh` green (open/CFIM/closed/queue via Twilio DID). |

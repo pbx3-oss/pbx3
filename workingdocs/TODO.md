@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: golden + **bzy54n** cagi tip **`9e4bfa9`** / wrap build (md5 `8837a592…`). Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-27 (session close — **`in-open-ext` SIPp green**; grow L1 / inventory)
+**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active. Litestream parked.  
+**Last updated:** 2026-07-27 (session close — L1 pack on SIPp EC2 green; catcher tenant)
 
 ### Suggested “what next?” order
 
-1. **Call / SIP test pack (SIPp)** — grow L1 (CFIM / closed / queue green-lab); **`CALL_TYPE_INVENTORY.md`** · **`workingdocs/call-tests/`**. `in-open-ext` done.  
+1. **Call / SIP test pack** — grow beyond pack v1 (phone **302** divert, multi-tenant, outbound); inventory **`CALL_TYPE_INVENTORY.md`** · pack **`workingdocs/call-tests/`** · host **`SIPP_LAB_HOST.md`**.  
 2. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
 3. **Time-based routing (day-parts + profiles)** — own track after test pack cools; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
 4. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
@@ -42,9 +42,13 @@
 
 - [x] **pbx3cagi thread `s` + Phase 3.2 AGI wrap (2026-07-26):** Helpers take `agi_session_t *s` (PR **#1** → `main`). Thin `agi_wrap` over `AGITool_*` (PR **#2** → **`9e4bfa9`**). Golden + bzy live (md5 `8837a592…`); calls + local CF / diverted OK. **Emergency roll back point** still **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5**.
 
-- [x] **Call / SIP test — Step 1 `in-open-ext` green (2026-07-27):** Mac SIPp → Magrathea VIP → DID `01924918076` → golden 1000; Snom always-auto-answer; BYE clean after scenario `rrs="true"`. Recipes under **`workingdocs/call-tests/`**. Full map **`CALL_TYPE_INVENTORY.md`** (U/H attendance). Temp SBC Peer gwid **99** (`sipp-lab` / `74.83.26.203`) — remove when done iterating. Lab DID may still be openroute→1000 (was ring group); restore if needed.
+- [x] **Call / SIP test — Step 1 `in-open-ext` green (2026-07-27):** Mac SIPp → Magrathea VIP → DID `01924918076` → golden 1000; Snom always-auto-answer; BYE clean after scenario `rrs="true"`. Recipes under **`workingdocs/call-tests/`**. Full map **`CALL_TYPE_INVENTORY.md`** (U/H attendance).
 
-- [ ] **Call / SIP test — grow L1 (2026-07-27):** Green-lab CFIM / closed / queue / master-closed recipes; multi-tenant / outbound later. Spec: **`CALL_TEST_STRATEGY.md`** · inventory **`CALL_TYPE_INVENTORY.md`**.
+- [x] **Call / SIP test — L1 pack v1 + SIPp catcher (2026-07-27):** Golden tenant **`sipp`** (`pb0wsk.pbx3.com`) exts **2000/2001** + queue **2060**; Twilio DID **`+15139279738`** → catcher. **`run-pack.sh`** / **`lab-state.sh`** / catcher UAS. Pack green: open / CFIM / closed / queue. **Off-box host** EIP **`98.93.98.162`** (`SIPP_LAB_HOST.md`); SBC Peer gwid **99** → that EIP only (never office IP — office Peer stole phone INVITEs → “No inbound route”). Mac: `ssh … ubuntu@98.93.98.162 'cd ~/call-tests && ./run-pack.sh'`.
+
+- [ ] **Call / SIP test — phone 302 divert (2026-07-27):** Handset (or SIPp UAS) **302 Moved Temporarily** is a separate pathway from AstDB CFIM/CFBS/DND; common customer pattern. Not in pack yet. Inventory + L1 recipe next. Spec notes in session handoff / strategy.
+
+- [ ] **Call / SIP test — grow L1 beyond pack v1:** Multi-tenant / outbound / master-closed; ACK/BYE catcher NAT polish optional. Spec: **`CALL_TEST_STRATEGY.md`** · inventory **`CALL_TYPE_INVENTORY.md`**.
 
 - [x] **Inbound route pkey allows +E.164 (2026-07-27):** Digits-only regex blocked Edit Inbound Route on `+44…` DIDs. Fixed **pbx3api** + **pbx3spa**; hot-deployed controller on golden (full `git pull` still blocked by local overlay drift).
 

@@ -9,7 +9,10 @@ Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_IN
 | SIPp on operator Mac | Installed (v3.7.x) |
 | Layout | This tree |
 | `in-open-ext` green on VIP | **Done 2026-07-27** — Mac→VIP→DID `01924918076`→1000; Snom auto-answer; BYE clean after `rrs="true"` |
-| CFIM / closed / queue scenarios | **Recipes added** — lab state + answer dest; not all green-labbed yet |
+| **SIPp catcher** | **Lab 2026-07-27** — golden tenant `sipp` (`pb0wsk.pbx3.com`), exts **2000/2001**, queue **2060**; Twilio DID `+15139279738` |
+| **L1 pack** | **`./run-pack.sh` green 2026-07-27** — open + CFIM + closed + queue (catcher UAS) |
+| CFIM / closed / queue scenarios | Pack-greened on catcher path |
+| **SIPp off-box host** | **Live 2026-07-27** — EIP `98.93.98.162`; Peer gwid **99**; pack green on host (`SIPP_LAB_HOST.md`) |
 
 ## Layout
 
@@ -17,10 +20,17 @@ Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_IN
 call-tests/
   README.md
   lab.env.example → lab.env   # gitignored
-  run-sipp.sh                 # ./run-sipp.sh <scenario-id>
-  run-in-open-ext.sh          # → run-sipp.sh in-open-ext
+  run-sipp.sh                 # ./run-sipp.sh <scenario-id> [catcher]
+  run-in-open-ext.sh          # → Magrathea DID / Snom path
+  run-in-open-ext-catcher.sh  # → Twilio DID / SIPp UAS path
+  run-catcher.sh              # REGISTER smoke or UAS auto-answer
+  run-pack.sh                 # L1 automated pack (catcher + state + scenarios)
+  lab-state.sh                # open|cfim|closed|queue on golden catcher tenant
+  SIPP_LAB_HOST.md            # EC2 off-box install sketch (caller+catcher)
   scenarios/
     in-open-ext.xml
+    catcher-register.xml
+    catcher-answer.xml
     in-cfim-local.xml
     in-closed-ivr-or-dest.xml
     feat-master-closed.xml
@@ -42,12 +52,49 @@ Mac-only for now (no jump host).
 
 1. **SIPp** — `brew install sipp`
 2. **VIP** — `3.93.26.82` (`sbc.pbx3.com`); SG UDP 5060 from your Mac public IP
-3. **Inbound trust Peer** — `dr_gateways` row for that IP (`is_from_gw` → `FROM_CARRIER`). Lab: gwid **99** `sip:74.83.26.203:5060` carrier `sipp-lab` (temp; delete when done)
-4. **DID** — `01924918076` → golden tenant `dhbm8x` / duns
-5. **`lab.env`** — copy from example; set `LOCAL_IP` to `en0` IPv4 if auto-detect fails
-6. **Answer** within `RECV_TIMEOUT` (60s) on the pathway’s expected dest — see **Snom auto-answer** below
+3. **Inbound trust Peer** — `dr_gateways` row for that IP (`is_from_gw` → `FROM_CARRIER`). **Do not leave a lab Peer on the office public IP** — it steals real phone INVITEs (phones show “No inbound route”). Temp gwid **99** `sipp-lab` was removed 2026-07-27 for this reason. Re-add only for a SIPp pack run, then delete + `dr_reload`.
+4. **DID** — Magrathea `01924918076` → `dhbm8x` / 1000 (Snom path); Twilio `+15139279738` → catcher tenant / 2000
+5. **`lab.env`** — copy from example; set `LOCAL_IP` to `en0` IPv4 if auto-detect fails; set `CATCHER_*` from golden
+6. **Answer** within `RECV_TIMEOUT` (60s) — Snom auto-answer **or** SIPp catcher UAS
 
 Public IP: `curl -4 -s ifconfig.me`.
+
+### SIPp catcher (unattended answerer)
+
+Dedicated golden tenant **`sipp`** (`pb0wsk.pbx3.com`), General SIP exts **2000** / **2001**. Phones REGISTER to SBC VIP as `{shortuid}@{tenant.fqdn}` (same fleet path as Snom). Twilio DID `+15139279738` openroutes to **2000**.
+
+```bash
+# terminal A — stay up, auto-answer
+./run-catcher.sh uas
+
+# terminal B — inbound VIP → Twilio DID → catcher
+./run-in-open-ext-catcher.sh
+# or: ./run-sipp.sh in-open-ext catcher
+```
+
+One-shot REGISTER smoke: `./run-catcher.sh register`.
+
+**Ops note:** After inserting a new SBC `domain` row, reload cache:
+`curl -sS -X POST http://127.0.0.1:8888/mi/ -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","method":"domain_reload","id":1}'` (on VIP).
+
+### L1 pack (automated)
+
+After PBX3 / cagi / GenAst / SBC changes on golden:
+
+```bash
+cd pbx3/workingdocs/call-tests
+./run-pack.sh                 # open + CFIM + closed + queue
+./run-pack.sh in-open-ext     # single id
+```
+
+Requires `GOLDEN_SSH` + `CATCHER_*` in `lab.env`. Starts catcher UAS (A + B for CFIM), toggles lab state via `lab-state.sh`, runs each scenario against Twilio DID, restores OPEN. Exit **0** = pack green. Log: `notes/pack-*.log`.
+
+| Pack id | Lab state | Answerer |
+|---------|-----------|----------|
+| `in-open-ext` | openroute 2000 | catcher A |
+| `in-cfim-local` | CFIM 2000→2001 | catcher B |
+| `in-closed-ivr-or-dest` | tenant OCSTAT CLOSED; closeroute 2000 | catcher A |
+| `in-queue-answer` | openroute queue **2060** | catcher A |
 
 ### Snom auto-answer (unattended L1)
 
@@ -78,7 +125,8 @@ SIP INVITE is the same shape for these IDs; **lab state** chooses the pathway. S
 
 | ID | Lab setup before run | Who answers |
 |----|----------------------|-------------|
-| `in-open-ext` | DID openroute → **1000**; not CLOSED; no CFIM | **1000** |
+| `in-open-ext` | Magrathea DID openroute → **1000** (or ring group); not CLOSED | **1000** / Snom |
+| `in-open-ext` + `catcher` | Twilio DID → catcher **2000**; `./run-catcher.sh uas` running | SIPp catcher |
 | `in-cfim-local` | On openroute ext, set **CFIM → local ext** (e.g. 1000→1001) | CFIM target |
 | `in-closed-ivr-or-dest` | Force **CLOSED** (day timer / `cluster.oclo` / tenant OCSTAT); `closeroute` = answerable dest | closeroute dest |
 | `feat-master-closed` | Master AstDB **`STAT/OCSTAT` = CLOSED**; closeroute answerable | closeroute dest |
@@ -94,12 +142,12 @@ cp lab.env.example lab.env   # once
 # LOCAL_IP=$(ipconfig getifaddr en0)  # recommended on Mac
 
 ./run-sipp.sh in-open-ext
+./run-sipp.sh in-open-ext catcher   # Twilio DID → SIPp UAS (start ./run-catcher.sh uas first)
 ./run-sipp.sh in-cfim-local
 ./run-sipp.sh in-closed-ivr-or-dest
 ./run-sipp.sh feat-master-closed
 ./run-sipp.sh in-queue-answer
 ```
-
 Exit **0** + “Successful call” = green for that ID. Traces: `notes/<id>-*.log`.
 
 ### Manual one-liner

@@ -37,6 +37,12 @@ source ./lab.env
 : "${RATE:=1}"
 : "${RECV_TIMEOUT:=60000}"
 
+# Optional: ./run-sipp.sh in-open-ext catcher  → uses DID_CATCHER
+if [[ "${2:-}" == "catcher" ]]; then
+  : "${DID_CATCHER:?DID_CATCHER required for catcher mode}"
+  DID="$DID_CATCHER"
+fi
+
 if ! command -v sipp >/dev/null 2>&1; then
   echo "sipp not found — install (Mac: brew install sipp)" >&2
   exit 1

@@ -65,7 +65,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-27 — SIPp in-open-ext green)
+## Next agent session notes (2026-07-27 — L1 pack + SIPp EC2)
+
+**Branches:** **pbx3** (+ spa handoff) on **`main`**. Tips after this push: see commit. Prior: pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`f87a783`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**.
+
+### Shipped
+- **SIPp catcher tenant** on golden: `sipp` / `pb0wsk.pbx3.com`, exts 2000/2001, Q2060; Twilio DID `+15139279738` → 2000; SBC domain + aliases + `domain_reload`.
+- **L1 pack v1:** `run-pack.sh` + `lab-state.sh` + catcher register/answer — open / CFIM / closed / queue **green**.
+- **Off-box lab host** `98.93.98.162` — `sip-tester`, `~/call-tests`, Peer gwid **99** → EIP only. Pack green from Mac via SSH.
+- Docs: **`SIPP_LAB_HOST.md`**, call-tests README, strategy Step 3 note.
+
+### Golden / operator follow-up
+- **Never** Peer the office IP as carrier (gwid 99 on Mac IP broke phones — “No inbound route”).
+- Phone **302** divert still untested as pack scenario (Snom attempt blocked by Peer issue).
+- Velocity still notify-on / ACT-off. Magrathea HA standby off until restarted.
+
+### Resume
+- Add **phone-302-local** (SIPp UAS 302 → catcher B) to pack / inventory.
+- Or product crumbs / time-based §8. Do **not** start CAGI Phase 4 first.
+- Pack command: `ssh -i …/pbx3test.pem ubuntu@98.93.98.162 'cd ~/call-tests && ./run-pack.sh'`
+
+---
+
+## Next agent session notes (2026-07-27 — SIPp in-open-ext green) — historical
 
 **Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** + **pbx3sbc-admin** on **`main`**. Tips: pbx3 **`976fbd6`**, pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`f87a783`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`**.
 
@@ -75,14 +97,13 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **SBC-admin** numeric next-gwid (deploy VIP Filament when convenient).
 
 ### Golden / operator follow-up
-- Temp Peer **gwid 99** `sipp-lab` / `74.83.26.203` — delete when L1 iterating done.
+- Temp Peer **gwid 99** `sipp-lab` / `74.83.26.203` — superseded (moved to EC2 EIP).
 - DID openroute may still point at **1000** (was ring group) — restore if desired.
 - Snom lab phone in **always auto-answer**; `extalert` does **not** apply on ring-group dial.
 - Velocity still notify-on / ACT-off. Agent Mac SIPp/SSH often needs sandbox-off approval.
 
 ### Resume
-- Grow L1 green-lab (CFIM / closed / queue) — **`CALL_TYPE_INVENTORY.md`** · **`call-tests/README.md`**.
-- Or product crumbs / time-based §8. Do **not** start CAGI Phase 4 first.
+- Superseded by L1 pack + EC2 block above.
 
 ---
 
