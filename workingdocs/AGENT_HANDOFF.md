@@ -65,7 +65,25 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-26 — call-test strategy)
+## Next agent session notes (2026-07-26 — close: call test is next)
+
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`644267e`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`9e2c8f7`**. Magrathea VIP **`3.93.26.82`**.
+
+### Shipped (this session, docs)
+- **Time-based routing** requirements — **`TIME_BASED_ROUTING_REQUIREMENTS.md`** (day-parts + profiles; Phase 4 parked).
+- **Call / SIP test strategy** — **`CALL_TEST_STRATEGY.md`** on `main`; TODO #1.
+- Operator close: **system largely built; proper pathway/load testing is next** (not more edge features first).
+
+### Golden / operator follow-up
+- Lab still on cagi **3.2** wrap; velocity notify-on / ACT-off.
+
+### Resume
+- **Start here:** call-test Step 1 — SIPp + green `in-open-ext` on golden — **`CALL_TEST_STRATEGY.md`**.
+- Later: time-based §8 / product crumbs. Do **not** open CAGI Phase 4 first.
+
+---
+
+## Next agent session notes (2026-07-26 — call-test strategy) — historical
 
 **Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`582b16b`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`c2d2e2b`**. Magrathea VIP **`3.93.26.82`**.
 

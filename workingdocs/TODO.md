@@ -1,13 +1,13 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: golden + **bzy54n** cagi tip **`9e4bfa9`** / wrap build (md5 `8837a592…`). Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-26 (call-test strategy drafted; time-based routing requirements earlier same day)
+**Last updated:** 2026-07-26 (session close — **call/SIP test pack is next**; strategy on `main`)
 
 ### Suggested “what next?” order
 
-1. **Call / SIP test pack (SIPp)** — strategy drafted; first green `in-open-ext` on golden when scheduled — **`CALL_TEST_STRATEGY.md`**.  
+1. **Call / SIP test pack (SIPp)** — **next** (operator lock). Strategy on `main`; first green `in-open-ext` on golden — **`CALL_TEST_STRATEGY.md`**.  
 2. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
-3. **Time-based routing (day-parts + profiles)** — own track after lab cool; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
+3. **Time-based routing (day-parts + profiles)** — own track after test pack underway / lab cool; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
 4. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
 5. **Velocity standalone product** (parked).  
 6. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
