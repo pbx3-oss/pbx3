@@ -65,7 +65,28 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-26 — close: call test is next)
+## Next agent session notes (2026-07-27 — SIPp in-open-ext green)
+
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** + **pbx3sbc-admin** on **`main`**. Tips: pbx3 **`910b2d1`**, pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`f6398fb`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`**.
+
+### Shipped
+- **Call tests:** `workingdocs/call-tests/` + **`CALL_TYPE_INVENTORY.md`** (majors/shortcodes + U/H). **`in-open-ext`** full green (Mac SIPp → VIP → DID → 1000; Snom always-auto-answer; BYE needs scenario `rrs="true"`).
+- **Inbound Route +E.164 pkey** — api + spa; golden hot-file deploy (repo tree still has overlay drift vs origin).
+- **SBC-admin** numeric next-gwid (deploy VIP Filament when convenient).
+
+### Golden / operator follow-up
+- Temp Peer **gwid 99** `sipp-lab` / `74.83.26.203` — delete when L1 iterating done.
+- DID openroute may still point at **1000** (was ring group) — restore if desired.
+- Snom lab phone in **always auto-answer**; `extalert` does **not** apply on ring-group dial.
+- Velocity still notify-on / ACT-off. Agent Mac SIPp/SSH often needs sandbox-off approval.
+
+### Resume
+- Grow L1 green-lab (CFIM / closed / queue) — **`CALL_TYPE_INVENTORY.md`** · **`call-tests/README.md`**.
+- Or product crumbs / time-based §8. Do **not** start CAGI Phase 4 first.
+
+---
+
+## Next agent session notes (2026-07-26 — close: call test is next) — historical
 
 **Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`5c32071`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`6c31fe7`**. Magrathea VIP **`3.93.26.82`**.
 

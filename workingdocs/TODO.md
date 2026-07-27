@@ -1,13 +1,13 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: golden + **bzy54n** cagi tip **`9e4bfa9`** / wrap build (md5 `8837a592…`). Magrathea HA on `sbc.pbx3.com`. Litestream parked.  
-**Last updated:** 2026-07-26 (session close — **call/SIP test pack is next**; strategy on `main`)
+**Last updated:** 2026-07-27 (session close — **`in-open-ext` SIPp green**; grow L1 / inventory)
 
 ### Suggested “what next?” order
 
-1. **Call / SIP test pack (SIPp)** — **next** (operator lock). Strategy on `main`; first green `in-open-ext` on golden — **`CALL_TEST_STRATEGY.md`**.  
+1. **Call / SIP test pack (SIPp)** — grow L1 (CFIM / closed / queue green-lab); **`CALL_TYPE_INVENTORY.md`** · **`workingdocs/call-tests/`**. `in-open-ext` done.  
 2. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
-3. **Time-based routing (day-parts + profiles)** — own track after test pack underway / lab cool; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
+3. **Time-based routing (day-parts + profiles)** — own track after test pack cools; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
 4. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
 5. **Velocity standalone product** (parked).  
 6. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
@@ -42,11 +42,17 @@
 
 - [x] **pbx3cagi thread `s` + Phase 3.2 AGI wrap (2026-07-26):** Helpers take `agi_session_t *s` (PR **#1** → `main`). Thin `agi_wrap` over `AGITool_*` (PR **#2** → **`9e4bfa9`**). Golden + bzy live (md5 `8837a592…`); calls + local CF / diverted OK. **Emergency roll back point** still **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5**.
 
+- [x] **Call / SIP test — Step 1 `in-open-ext` green (2026-07-27):** Mac SIPp → Magrathea VIP → DID `01924918076` → golden 1000; Snom always-auto-answer; BYE clean after scenario `rrs="true"`. Recipes under **`workingdocs/call-tests/`**. Full map **`CALL_TYPE_INVENTORY.md`** (U/H attendance). Temp SBC Peer gwid **99** (`sipp-lab` / `74.83.26.203`) — remove when done iterating. Lab DID may still be openroute→1000 (was ring group); restore if needed.
+
+- [ ] **Call / SIP test — grow L1 (2026-07-27):** Green-lab CFIM / closed / queue / master-closed recipes; multi-tenant / outbound later. Spec: **`CALL_TEST_STRATEGY.md`** · inventory **`CALL_TYPE_INVENTORY.md`**.
+
+- [x] **Inbound route pkey allows +E.164 (2026-07-27):** Digits-only regex blocked Edit Inbound Route on `+44…` DIDs. Fixed **pbx3api** + **pbx3spa**; hot-deployed controller on golden (full `git pull` still blocked by local overlay drift).
+
+- [x] **SBC-admin numeric gwid allocate (2026-07-27):** String `MAX(gwid)` suggested 10 after Magrathea 9. Fixed **pbx3sbc-admin** `d8ea56e` — deploy on VIP when convenient.
+
 - [ ] **pbx3cagi Phase 4 — domain file splits (parked 2026-07-26):** Direction OK; hold until cross-cutting design (esp. time-based routing / CheckState) settles — **`REFACTOR_PLAN.md`**.
 
 - [ ] **Time-based routing — day-parts + route profiles (requirements 2026-07-26):** Replace binary DID open/close with tenant **schedule modes** + reusable **route profiles**; keep cron precompute (no GotoIfTime forest); FreePBX TC chains deferred. SARK convert first-class (dual-read). Lock §8 Q1–Q7 before code. Spec: **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Cross-repo when scheduled (pbx3 / api / cagi / spa).
-
-- [ ] **Call / SIP test strategy — SIPp L1/L2 (2026-07-27):** L0 stays `make test`. **`workingdocs/call-tests/`** + `in-open-ext` **green** (Mac→VIP→DID→1000). Recipes added: CFIM / closed / queue / master-closed (lab-state driven; green-lab pending). Spec: **`CALL_TEST_STRATEGY.md`**.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 
