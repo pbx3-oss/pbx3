@@ -44,7 +44,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — requirements draft; implement after §8 lock; before CAGI Phase 4 |
-| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — per-tenant dial alias; SBC miss→dispatcher locked; implement after remaining §8 |
+| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — §8 locked; implement slices A–F when scheduled; 2nd SIPp phone host at alias lab |
 | **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** (full map) → **`CALL_TEST_STRATEGY.md`** → **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
 | **Failover + shadowing** (parked) | Edge HA: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Instance shadow SKU framing: **`INSTANCE_SHADOWING_REQUIREMENTS.md`** (same mechanics, paid twin) |
@@ -66,22 +66,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-27 — L1 pack 11/11 session end)
+## Next agent session notes (2026-07-27 — dial-alias §8 locked + backlog)
 
-**Branches:** **pbx3** + **pbx3cagi** + **pbx3spa** on **`main`** (commit this close; not pushed unless asked). Tips: pbx3 this tip; pbx3cagi **`a7cdeed`** (OutVoip); spa handoff this close. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**. SIPp host **`98.93.98.162`**.
+**Branches:** **pbx3** on **`main`** (pushed). Tip **`591eaed`**. **pbx3cagi** **`a7cdeed`** (unchanged). SPA handoff this close (docs only). Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**. SIPp carrier host **`98.93.98.162`** (keep EIP; operator may stop instance).
 
 ### Shipped
-- **L1 pack 11/11 green:** prior nine + **`in-queue-cancel-vm`** (agent 486→failover→VM) + **`out-busy-or-reject`** (Local→486→PostDial). Catcher **`uas-486`**.
-- Earlier same day: `feat-master-closed`, `in-cfim-external`, `out-egress-ok`, **SIPP_MAIN**, OutVoip `description` fix.
-- Holiday L1 deferred until day-parts.
+- **Dial-alias requirements locked** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**: digit plan (fixed alias + var ext); fleet/SBC-required; CallerID num=`suid@fqdn` + name=human; deny/CoS; Q12 return-call; deferred Local shortcut (§15). Tips **`f07dd3f`** / follow-ons.
+- **TODO backlog:** Litestream **won’t do**; AMI wallboard = side gig; **2nd SIPp** (extension platform, non-Peer EIP) when alias implement starts — **`SIPP_LAB_HOST.md`** §9; fleet health≠Asterisk parked pre-live.
+- No product code this session.
 
 ### Golden / operator follow-up
-- Peer gwid **99** = SIPp EIP only. Velocity notify-on / ACT-off.
-- OutVoip fix live on golden agi-bin (hot install); commit tip **`a7cdeed`**.
+- Peer gwid **99** = SIPp EIP only (carrier host). Stop SIPp OK if EIP retained.
+- Pack still: `ssh -i …/pbx3test.pem ubuntu@98.93.98.162 'cd ~/call-tests && ./run-pack.sh'` when host up.
 
 ### Resume
-- Lock dial-alias §8 (digit plan, CLID, trust) — not CAGI Phase 4.
-- Pack: `ssh -i …/pbx3test.pem ubuntu@98.93.98.162 'cd ~/call-tests && ./run-pack.sh'`
+- Implement dial-alias when scheduled (slice A CRUD first, or day-parts §8 if prioritized). At alias lab: bring 2nd SIPp phone EC2.
+- Do **not** start CAGI Phase 4 first. Pre-live: fleet `/up` must grow Asterisk check before production.
+
+---
+
+## Next agent session notes (2026-07-27 — L1 pack 11/11 session end) — historical
+
+**Branches:** **pbx3** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 prior; pbx3cagi **`a7cdeed`** (OutVoip). Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**. SIPp host **`98.93.98.162`**.
+
+### Shipped
+- **L1 pack 11/11 green:** prior nine + **`in-queue-cancel-vm`** + **`out-busy-or-reject`** (`uas-486`). Holiday deferred for day-parts.
+
+### Resume
+- Superseded by dial-alias §8 locked block above.
 
 ---
 

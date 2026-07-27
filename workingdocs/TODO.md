@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-27 (dial-alias §8; 2nd SIPp; AMI wallboard; fleet health≠Asterisk parked)
+**Last updated:** 2026-07-27 (session end — dial-alias §8 locked; backlog parks)
 
 ### Suggested “what next?” order
 
