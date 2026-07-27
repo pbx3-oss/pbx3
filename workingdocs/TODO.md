@@ -1,14 +1,14 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active. Litestream parked.  
-**Last updated:** 2026-07-27 (L1 pack 9/9 + OutVoip description fix)
+**Last updated:** 2026-07-27 (session end — L1 pack 11/11; queue-cancel-vm + out-busy)
 
 ### Suggested “what next?” order
 
-1. **Call / SIP test pack** — L1 pack green (9 ids) on SIPp EC2; next crumbs optional (`out-busy-or-reject`) — **`CALL_TYPE_INVENTORY.md`** · **`workingdocs/call-tests/`**.  
-2. **Tenant dial alias** — requirements drafted; lock remaining §8 (digit plan, CLID, trust) before code — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** (SBC usrloc-miss→dispatcher locked).  
+1. **Tenant dial alias** — requirements drafted; lock remaining §8 (digit plan, CLID, trust) before code — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** (SBC usrloc-miss→dispatcher locked). L1 `site-dial-a-b` when built.  
+2. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; true SIPp phone outbound (non-Peer IP) — **`CALL_TEST_STRATEGY.md`**.  
 3. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
-4. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
+4. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
 5. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
 6. **Velocity standalone product** (parked).  
 7. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
@@ -55,7 +55,9 @@
 
 - [x] **Call / SIP test — grow L1 (2026-07-27):** Pack + **`feat-master-closed`** (STAT/OCSTAT) + **`in-cfim-external`** + **`out-egress-ok`** (Local→Egress; SIPp phone UAC blocked by Peer 99 IP). Catcher **`SIPP_MAIN`** OutRoute. **CAGI OutVoip** fix: `desc`→`description` (+ callprogress col). Full pack **9/9 green** on EC2.
 
-- [ ] **Call / SIP test — optional next:** `out-busy-or-reject`; ACK/BYE catcher NAT polish. Spec: **`CALL_TEST_STRATEGY.md`**.
+- [x] **Call / SIP test — queue-cancel-vm + out-busy (2026-07-27):** `in-queue-cancel-vm` (agent 486→failover→VM) + `out-busy-or-reject` (Local→486→PostDial). Catcher **`uas-486`**. Holiday left for day-parts.
+
+- [ ] **Call / SIP test — optional polish:** ACK/BYE catcher NAT; true SIPp phone outbound (needs non-Peer IP). Spec: **`CALL_TEST_STRATEGY.md`**.
 
 - [x] **Inbound route pkey allows +E.164 (2026-07-27):** Digits-only regex blocked Edit Inbound Route on `+44…` DIDs. Fixed **pbx3api** + **pbx3spa**; hot-deployed controller on golden (full `git pull` still blocked by local overlay drift).
 

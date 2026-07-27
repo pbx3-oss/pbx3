@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Run SIPp catcher against Magrathea VIP.
-# Usage: ./run-catcher.sh [register|uas|uas-302]
+# Usage: ./run-catcher.sh [register|uas|uas-302|uas-486]
 #   register — one-shot REGISTER smoke
 #   uas      — REGISTER once, then stay up auto-answering INVITEs (Ctrl-C to stop)
 #   uas-302  — REGISTER once, then 302 Moved Temporarily → CATCHER_EXT_B (phone divert)
+#   uas-486  — REGISTER once, then 486 Busy Here (reject / busy → PostDial)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -47,7 +48,7 @@ if ! command -v sipp >/dev/null 2>&1; then
 fi
 
 if [[ -z "${LOCAL_IP:-}" ]]; then
-  LOCAL_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
+  LOCAL_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}' || true)"
 fi
 
 mkdir -p notes
@@ -81,7 +82,6 @@ run_register() {
 run_answer() {
   local calls="${CATCHER_CALLS:-9999}"
   echo "SIPp catcher answer → waiting INVITE as ${CATCHER_USER} on :${CATCHER_PORT} (m=${calls})"
-  # -l 1: one call at a time; do not re-REGISTER between answers
   exec sipp \
     -p "$CATCHER_PORT" \
     "${common_bind[@]}" \
@@ -115,6 +115,23 @@ run_answer_302() {
     -error_file "notes/catcher-answer-302-err.log"
 }
 
+run_answer_486() {
+  local calls="${CATCHER_CALLS:-9999}"
+  echo "SIPp catcher 486 → ${CATCHER_USER} on :${CATCHER_PORT} Busy Here (m=${calls})"
+  exec sipp \
+    -p "$CATCHER_PORT" \
+    "${common_bind[@]}" \
+    -sf scenarios/catcher-answer-486.xml \
+    -key user "$CATCHER_USER" \
+    -m "$calls" \
+    -l 1 \
+    -recv_timeout "$RECV_TIMEOUT" \
+    -trace_err \
+    -trace_msg \
+    -message_file "notes/catcher-answer-486-msg.log" \
+    -error_file "notes/catcher-answer-486-err.log"
+}
+
 case "$MODE" in
   register)
     run_register
@@ -127,8 +144,12 @@ case "$MODE" in
     run_register
     run_answer_302
     ;;
+  uas-486)
+    run_register
+    run_answer_486
+    ;;
   *)
-    echo "Usage: $0 [register|uas|uas-302]" >&2
+    echo "Usage: $0 [register|uas|uas-302|uas-486]" >&2
     exit 1
     ;;
 esac

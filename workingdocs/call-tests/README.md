@@ -10,7 +10,7 @@ Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_IN
 | Layout | This tree |
 | `in-open-ext` green on VIP | **Done 2026-07-27** — Mac→VIP→DID `01924918076`→1000; Snom auto-answer; BYE clean after `rrs="true"` |
 | **SIPp catcher** | **Lab 2026-07-27** — golden tenant `sipp` (`pb0wsk.pbx3.com`), exts **2000/2001**, queue **2060**; Twilio DID `+15139279738` |
-| **L1 pack** | **`./run-pack.sh`** — open + CFIM + closed + **master-closed** + queue + phone-302 + multi-tenant + **CFIM-external** + **out-egress** |
+| **L1 pack** | **`./run-pack.sh`** — **11 ids** green (incl. queue-cancel-vm + out-busy) |
 | CFIM / closed / queue / 302 / multi-tenant / outbound | Pack IDs on catcher path |
 | **SIPp off-box host** | **Live 2026-07-27** — EIP `98.93.98.162`; Peer gwid **99**; pack green on host (`SIPP_LAB_HOST.md`) |
 
@@ -108,10 +108,12 @@ Requires `GOLDEN_SSH` + `CATCHER_*` in `lab.env`. Starts catcher UAS (A + B for 
 | `in-closed-ivr-or-dest` | tenant OCSTAT CLOSED; closeroute 2000 | catcher A |
 | `feat-master-closed` | **STAT/OCSTAT=CLOSED**; closeroute 2000 | catcher A |
 | `in-queue-answer` | openroute queue **2060** | catcher A |
+| `in-queue-cancel-vm` | queue; catcher A **486** → failover → VM | Voicemail (CLI assert) |
 | `phone-302-local` | openroute 2000; **no** CFIM | A returns **302→2001**; B answers |
 | `in-multi-tenant-a-b` | open + peer REG on **affcot** `1199` | catcher A (peer is usrloc noise) |
 | `in-cfim-external` | CFIM → `CFIM_EXTERNAL_DEST` (default `01924910444`); SIPP_MAIN→Egress | Magrathea→1000 (Ext alert) / comfort 200 |
 | `out-egress-ok` | SIPP_MAIN; **Local originate** on golden (not SIPp phone — Peer IP conflict) | Magrathea→1000 / Egress Up |
+| `out-busy-or-reject` | open; catcher A **486**; Local originate to 2000 | PostDial Voicemail/Busy |
 
 ### Snom auto-answer (unattended L1)
 

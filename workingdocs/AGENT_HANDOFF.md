@@ -66,22 +66,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-27 — L1 grow outbound + OutVoip fix)
+## Next agent session notes (2026-07-27 — L1 pack 11/11 session end)
 
-**Branches:** **pbx3** + **pbx3cagi** on **`main`**. Tips: this tip (pbx3) + pbx3cagi OutVoip tip; spa handoff this close. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**. SIPp host **`98.93.98.162`**.
+**Branches:** **pbx3** + **pbx3cagi** + **pbx3spa** on **`main`** (commit this close; not pushed unless asked). Tips: pbx3 this tip; pbx3cagi **`a7cdeed`** (OutVoip); spa handoff this close. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**. SIPp host **`98.93.98.162`**.
 
 ### Shipped
-- **L1 pack 9/9 green:** + `feat-master-closed` (STAT/OCSTAT) + `in-cfim-external` + `out-egress-ok` (Local→Egress). Catcher **`SIPP_MAIN`** OutRoute.
-- **CAGI OutVoip:** `desc`→`description` (+ correct callprogress col) — Egress Dial was empty-peer broken.
-- **Note:** SIPp phone UAC from EC2 cannot outbound (EIP = Peer **99** FROM_CARRIER); pack uses Local originate.
+- **L1 pack 11/11 green:** prior nine + **`in-queue-cancel-vm`** (agent 486→failover→VM) + **`out-busy-or-reject`** (Local→486→PostDial). Catcher **`uas-486`**.
+- Earlier same day: `feat-master-closed`, `in-cfim-external`, `out-egress-ok`, **SIPP_MAIN**, OutVoip `description` fix.
+- Holiday L1 deferred until day-parts.
 
 ### Golden / operator follow-up
 - Peer gwid **99** = SIPp EIP only. Velocity notify-on / ACT-off.
-- OutVoip fix live on golden agi-bin (hot install).
+- OutVoip fix live on golden agi-bin (hot install); commit tip **`a7cdeed`**.
 
 ### Resume
-- Lock dial-alias §8 **or** optional `out-busy-or-reject` — not CAGI Phase 4.
+- Lock dial-alias §8 (digit plan, CLID, trust) — not CAGI Phase 4.
 - Pack: `ssh -i …/pbx3test.pem ubuntu@98.93.98.162 'cd ~/call-tests && ./run-pack.sh'`
+
+---
+
+## Next agent session notes (2026-07-27 — L1 grow outbound + OutVoip fix) — historical
+
+**Branches:** **pbx3** + **pbx3cagi** on **`main`**. Tips: pbx3 **`b7cedac`**, pbx3cagi **`a7cdeed`**. Magrathea VIP **`3.93.26.82`**. SIPp **`98.93.98.162`**.
+
+### Shipped
+- L1 pack 9/9: master-closed / CFIM-external / out-egress-ok + SIPP_MAIN + OutVoip fix.
+
+### Resume
+- Superseded by L1 pack 11/11 block above.
 
 ---
 

@@ -27,10 +27,12 @@ PACK_IDS=(
   in-closed-ivr-or-dest
   feat-master-closed
   in-queue-answer
+  in-queue-cancel-vm
   phone-302-local
   in-multi-tenant-a-b
   in-cfim-external
   out-egress-ok
+  out-busy-or-reject
 )
 if [[ $# -gt 0 ]]; then
   PACK_IDS=("$@")
@@ -42,7 +44,7 @@ FAIL=0
 CATCHER_A_PID=""
 CATCHER_B_PID=""
 CATCHER_PEER_PID=""
-CATCHER_A_MODE="" # answer | 302
+CATCHER_A_MODE="" # answer | 302 | 486
 : "${CATCHER_PORT_PEER:=5072}"
 
 log() { echo "$*" | tee -a "$PACK_LOG"; }
@@ -59,20 +61,27 @@ trap cleanup EXIT
 
 start_catcher() {
   local side="$1" # A|B|PEER
-  local mode="${2:-answer}" # answer|302
+  local mode="${2:-answer}" # answer|302|486
   local user pass port logfile uas_mode domain
   domain="${CATCHER_DOMAIN:?}"
   if [[ "$side" == "A" ]]; then
     user="$CATCHER_USER"
     pass="$CATCHER_PASS"
     port="$CATCHER_PORT"
-    if [[ "$mode" == "302" ]]; then
-      logfile=notes/pack-catcher-a-302.log
-      uas_mode=uas-302
-    else
-      logfile=notes/pack-catcher-a.log
-      uas_mode=uas
-    fi
+    case "$mode" in
+      302)
+        logfile=notes/pack-catcher-a-302.log
+        uas_mode=uas-302
+        ;;
+      486)
+        logfile=notes/pack-catcher-a-486.log
+        uas_mode=uas-486
+        ;;
+      *)
+        logfile=notes/pack-catcher-a.log
+        uas_mode=uas
+        ;;
+    esac
   elif [[ "$side" == "PEER" ]]; then
     user="${CATCHER_PEER_USER:?Set CATCHER_PEER_* in lab.env for multi-tenant}"
     pass="${CATCHER_PEER_PASS:?}"
@@ -98,10 +107,16 @@ start_catcher() {
   local pid=$!
   local ready_pat='waiting INVITE'
   [[ "$mode" == "302" ]] && ready_pat='redirects to'
+  [[ "$mode" == "486" ]] && ready_pat='Busy Here'
   for _ in $(seq 1 40); do
-    if grep -qE "$ready_pat|waiting INVITE" "$logfile" 2>/dev/null; then
+    if grep -qE "$ready_pat|waiting INVITE|Busy Here|redirects to" "$logfile" 2>/dev/null; then
       if [[ "$mode" == "302" ]]; then
         if grep -q 'redirects to' "$logfile" 2>/dev/null; then
+          echo "$pid"
+          return 0
+        fi
+      elif [[ "$mode" == "486" ]]; then
+        if grep -q 'Busy Here' "$logfile" 2>/dev/null; then
           echo "$pid"
           return 0
         fi
@@ -125,7 +140,7 @@ start_catcher() {
 }
 
 ensure_catcher_a() {
-  local mode="$1" # answer|302
+  local mode="$1" # answer|302|486
   if [[ "$CATCHER_A_MODE" == "$mode" && -n "$CATCHER_A_PID" ]] && kill -0 "$CATCHER_A_PID" 2>/dev/null; then
     return 0
   fi
@@ -181,14 +196,15 @@ for id in "${PACK_IDS[@]}"; do
   case "$id" in
     in-cfim-local|phone-302-local) need_b=1 ; need_a_uas=1 ;;
     in-multi-tenant-a-b) need_peer=1 ; need_a_uas=1 ;;
-    out-egress-ok|in-cfim-external) ;; # no A UAS required (CFIM before ring / phone UAC)
+    out-egress-ok|in-cfim-external) ;;
+    in-queue-cancel-vm|out-busy-or-reject) need_a_uas=1 ;; # 486 mode switched per-id
     *) need_a_uas=1 ;;
   esac
 done
 
 log "=== L1 pack start $(date -u +%Y-%m-%dT%H:%M:%SZ) ids=${PACK_IDS[*]} ==="
 
-# Default A = answer; phone-302 switches mid-pack; out-egress-ok / cfim-external stop A
+# Default A = answer; 302/486 switch mid-pack; out-egress-ok / cfim-external stop A
 if [[ "$need_a_uas" -eq 1 ]]; then
   ensure_catcher_a answer
 fi
@@ -211,6 +227,7 @@ stop_catcher_a() {
   fi
   pkill -f "scenarios/catcher-answer.*-p ${CATCHER_PORT}" 2>/dev/null || true
   pkill -f "scenarios/catcher-answer-302.*-p ${CATCHER_PORT}" 2>/dev/null || true
+  pkill -f "scenarios/catcher-answer-486.*-p ${CATCHER_PORT}" 2>/dev/null || true
   sleep 0.3
 }
 
@@ -242,6 +259,10 @@ for id in "${PACK_IDS[@]}"; do
       ensure_catcher_a answer
       ./lab-state.sh queue | tee -a "$PACK_LOG"
       ;;
+    in-queue-cancel-vm)
+      ensure_catcher_a 486
+      ./lab-state.sh queue | tee -a "$PACK_LOG"
+      ;;
     phone-302-local)
       ensure_catcher_a 302
       ./lab-state.sh open | tee -a "$PACK_LOG"
@@ -258,17 +279,22 @@ for id in "${PACK_IDS[@]}"; do
       ./lab-state.sh open | tee -a "$PACK_LOG"
       ./lab-state.sh ensure-outroute | tee -a "$PACK_LOG"
       ;;
+    out-busy-or-reject)
+      ensure_catcher_a 486
+      ./lab-state.sh open | tee -a "$PACK_LOG"
+      ;;
     *)
       log "SKIP unknown id $id"
       continue
       ;;
   esac
 
-  if [[ "$id" == "out-egress-ok" ]]; then
-    run_cmd=(./run-out-egress.sh)
-  else
-    run_cmd=(./run-sipp.sh "$id" catcher)
-  fi
+  case "$id" in
+    out-egress-ok) run_cmd=(./run-out-egress.sh) ;;
+    out-busy-or-reject) run_cmd=(./run-out-busy.sh) ;;
+    in-queue-cancel-vm) run_cmd=(./run-in-queue-cancel-vm.sh) ;;
+    *) run_cmd=(./run-sipp.sh "$id" catcher) ;;
+  esac
 
   if "${run_cmd[@]}" >>"$PACK_LOG" 2>&1; then
     log "PASS $id"

@@ -44,7 +44,7 @@ These are the “big” call types operators care about.
 | `maj-in-cfim-external` | CFIM off-box | **`cfim-external`** **U** | **`in-cfim-external`** (pack) | yes | **L0: U** · **L1: U** via SIPP_MAIN→Egress→Magrathea DID/1000 |
 | `maj-in-cfbs` | Forward busy/noanswer | — | — | yes | **H** |
 | `maj-in-dnd-vm` | DND → VM | — | — | yes | **H** |
-| `maj-in-queue` | Queue → agent | **`dial-queue-predial`** **U** | **`in-queue-answer`** recipe | yes | **L0: U** · **L1: H-setup** (queue/agents) + **H** (agent answer) |
+| `maj-in-queue` | Queue → agent | **`dial-queue-predial`** **U** | **`in-queue-answer`**, **`in-queue-cancel-vm`** (pack) | yes | **L0: U** · **L1: U** answer or agent-486→VM |
 | `maj-in-ivr` | IVR menus | — | — | yes | **H** (DTMF + listen) |
 | `maj-in-greeting` | Playback greeting | — | — | yes | **H** (or **U later** if SIPp only checks 200 + RTP) |
 | `maj-ext-to-ext` | Station ↔ station same tenant | — | — | primary lab | **H** (two phones) · **U later** (dual SIPp) |
@@ -52,7 +52,7 @@ These are the “big” call types operators care about.
 | `maj-site-dial` | Cross-tenant short dial (`site_code`+ext) | — | planned (`site-dial-a-b`) | — | **U later** — requirements **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** |
 | `maj-out-trunk` | OutTrunk / Egress | — | **`out-egress-ok`** (pack) | yes | **L1: U** Local originate→Egress Up (SIPp phone UAC blocked: lab EIP = Peer 99) · **L3: H** |
 | `maj-out-route` | OutRoute | — | via `out-egress-ok` (SIPP_MAIN) | yes | **L1: U** (same Local path) |
-| `maj-out-busy-reject` | Far-end reject / cancel | **`postdial-*`** **U** | planned | yes | **L0: U** · live **H** / **U later** |
+| `maj-out-busy-reject` | Far-end reject / cancel | **`postdial-*`** **U** | **`out-busy-or-reject`** (pack) | yes | **L0: U** · **L1: U** Local→catcher 486→PostDial VM/Busy |
 | `maj-lepdial-fleet` | Fleet dial string | **`lepdial-fleet`** **U** | — | yes | **L0: U** · live **H** |
 | `maj-page` | Page group | — | — | yes | **H** |
 | `maj-park` | Park / retrieve | — | — | yes | **H** |
@@ -175,3 +175,4 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 | 2026-07-27 | `maj-site-dial` planned — cross-tenant site-code short dial; see **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. |
 | 2026-07-27 | Pack grow: `feat-master-closed`, `in-cfim-external`, `out-egress-ok` + catcher `SIPP_MAIN`. |
 | 2026-07-27 | Clarify `out-egress-ok` = Local originate (not SIPp phone UAC); strategy status → L1 9/9. |
+| 2026-07-27 | + `in-queue-cancel-vm`, `out-busy-or-reject` (catcher uas-486). |
