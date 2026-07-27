@@ -1,19 +1,20 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active. Litestream parked.  
-**Last updated:** 2026-07-27 (session end — L1 pack 11/11; queue-cancel-vm + out-busy)
+**Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
+**Last updated:** 2026-07-27 (dial-alias §8 locked; Litestream dropped; AMI wallboard = side gig)
 
 ### Suggested “what next?” order
 
-1. **Tenant dial alias** — requirements drafted; lock remaining §8 (digit plan, CLID, trust) before code — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** (SBC usrloc-miss→dispatcher locked). L1 `site-dial-a-b` when built.  
+1. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. L1 `site-dial-a-b` when built.  
 2. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; true SIPp phone outbound (non-Peer IP) — **`CALL_TEST_STRATEGY.md`**.  
 3. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
 4. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
 5. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
 6. **Velocity standalone product** (parked).  
-7. **Instance shadowing** / SBC Litestream / S10.7 / S8.9 (parked).  
-8. **Fleet auth cookie/SSO (blocked)**.  
-9. **S7+** attested PCI — only on customer ask.  
+7. **Instance shadowing** / S10.7 / S8.9 (parked).  
+8. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
+9. **Fleet auth cookie/SSO (blocked)**.  
+10. **S7+** attested PCI — only on customer ask.  
 
 ---
 
@@ -51,7 +52,7 @@
 
 - [x] **Call / SIP test — multi-tenant AoR (2026-07-27):** Peer catcher on affcot **1199** (`s6rd88` / `9wvvnb.pbx3.com`) REGISTER’d while DID→sipp A. Pack id **`in-multi-tenant-a-b`**. Creds: golden `/tmp/sipp-peer-catcher.env` (run-pack autoloads).
 
-- [ ] **Tenant dial alias — requirements (2026-07-27):** Per-calling-tenant alias → target shortuid; dial `alias+ext` via `sip:ext@fqdn`; **SBC usrloc-miss→dispatcher** locked (Q11). Open: digit plan / CLID / trust (§8). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. No code yet. L1 `site-dial-a-b` when built.
+- [x] **Tenant dial alias — requirements locked (2026-07-27):** §8 closed (digit plan, fleet/SBC gate, CallerID num=`suid@fqdn` + name=human, deny/CoS, return-call). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. **Implement** when scheduled (slices A–F); L1 `site-dial-a-b` when built. Tip **`f07dd3f`**.
 
 - [x] **Call / SIP test — grow L1 (2026-07-27):** Pack + **`feat-master-closed`** (STAT/OCSTAT) + **`in-cfim-external`** + **`out-egress-ok`** (Local→Egress; SIPp phone UAC blocked by Peer 99 IP). Catcher **`SIPP_MAIN`** OutRoute. **CAGI OutVoip** fix: `desc`→`description` (+ callprogress col). Full pack **9/9 green** on EC2.
 
@@ -66,6 +67,8 @@
 - [ ] **pbx3cagi Phase 4 — domain file splits (parked 2026-07-26):** Direction OK; hold until cross-cutting design (esp. time-based routing / CheckState) settles — **`REFACTOR_PLAN.md`**.
 
 - [ ] **Time-based routing — day-parts + route profiles (requirements 2026-07-26):** Replace binary DID open/close with tenant **schedule modes** + reusable **route profiles**; keep cron precompute (no GotoIfTime forest); FreePBX TC chains deferred. SARK convert first-class (dual-read). Lock §8 Q1–Q7 before code. Spec: **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Cross-repo when scheduled (pbx3 / api / cagi / spa).
+
+- [ ] **AMI wallboard feed (side gig, parked 2026-07-27):** Feed-only live board (per-node AMI events → WS/SSE; optional summarized fleet overlay). **No** dependency on dialplan, moves, Gatekeeper call path, or operational running. Approximate tenant attribution (SUID-in-channel). Do not couple to drain/velocity act. When demand appears — separate small track.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** On move job `awaiting_cleanup` / Fleet Instances, show approximate active-channel count for the moving tenant on **source** (AMI `CoreShowChannels` → fleet.token → Gatekeeper overlay). Heuristic: phone channels carry extension **SUID** → tenant; SBC legs out of scope. **Follow-on:** optional **wipe-when-drained** — auto-advance Phase 8 when source tenant channel count stays at 0 for N probes (still a durable job; operator can opt in; never silent wipe without the gate existing). Best-effort — do not treat AMI as attested. Not built.
 
@@ -111,7 +114,7 @@
 
 - [x] **SBC backup + restore scripts v1 (2026-07-20):** backup/upload/cron; `restore-sbc-backup.sh`; `fetch-latest-sbc-backup.sh`; S3 + scratch restore drill done.
 
-- [ ] **SBC SQLite + Litestream (parked 2026-07-20):** Earlier portability direction. **Current engine = MariaDB.** Litestream is irrelevant while on MariaDB. Do not spike. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.
+- [x] **SBC SQLite + Litestream — dropped (2026-07-27):** Won’t do. Engine is MariaDB; Filament/S3 backup + warm sync are enough. Do not spike. Historical note: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.0.
 
 - [x] **SBC data & log aging WS0–WS4 (2026-07-20):** Lab live — purge + cron; Filament **Logs → Data retention**; MkDocs `fleet/sbc-data-retention.md`. Spec: **`pbx3-directory/docs/SBC_DATA_RETENTION_REQUIREMENTS.md`**.
 
