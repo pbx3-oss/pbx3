@@ -40,6 +40,7 @@ These are the “big” call types operators care about.
 | `maj-in-closed` | DID → closeroute | — | **`in-closed-*`**, **`feat-master-closed`** recipes | yes | **H-setup** (force CLOSED) + **H** (answer closeroute) · **U later** |
 | `maj-in-holiday` | Holiday override | — | planned | yes | **H-setup** + **H** |
 | `maj-in-cfim-local` | CFIM → local ext | **`cfim-local`** **U** | **`in-cfim-local`** recipe | yes | **L0: U** · **L1: H-setup** (set CFIM) + **H** (answer target) |
+| `maj-in-phone-302-local` | Phone **302** → local ext (not AstDB CF*) | — | **`phone-302-local`** (catcher A 302 → B) | yes | **L1: U** with catcher UAS · distinct from CFIM |
 | `maj-in-cfim-external` | CFIM off-box | **`cfim-external`** **U** | planned | yes | **L0: U** · live path **H** / PSTN |
 | `maj-in-cfbs` | Forward busy/noanswer | — | — | yes | **H** |
 | `maj-in-dnd-vm` | DND → VM | — | — | yes | **H** |
@@ -47,7 +48,7 @@ These are the “big” call types operators care about.
 | `maj-in-ivr` | IVR menus | — | — | yes | **H** (DTMF + listen) |
 | `maj-in-greeting` | Playback greeting | — | — | yes | **H** (or **U later** if SIPp only checks 200 + RTP) |
 | `maj-ext-to-ext` | Station ↔ station same tenant | — | — | primary lab | **H** (two phones) · **U later** (dual SIPp) |
-| `maj-ext-to-ext-sbc` | Multi-tenant via SBC AoR | — | planned | historical lab | **H** · **U later** (dual SIPp) |
+| `maj-ext-to-ext-sbc` | Multi-tenant via SBC AoR (domain discrimination) | — | **`in-multi-tenant-a-b`** (peer REG + DID→A) | historical lab | **L1: U** with peer catcher on 2nd tenant |
 | `maj-out-trunk` | OutTrunk / Egress | — | planned | yes | **H** (or **U later** with SIPp UAS peer) |
 | `maj-out-route` | OutRoute | — | — | yes | **H** |
 | `maj-out-busy-reject` | Far-end reject / cancel | **`postdial-*`** **U** | planned | yes | **L0: U** · live **H** / **U later** |
@@ -169,3 +170,4 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 | 2026-07-27 | Attendance: **U** / **H** / **H-setup** / **U later** on majors, shortcodes, rollup. |
 | 2026-07-27 | Snom auto-answer via `Call-Info`/`Alert-Info`; L1 U when phone auto-answers; note carrier-leg vs phone-leg headers. |
 | 2026-07-27 | `in-open-ext` full green (auto-answer + `rrs=true` BYE). Ring-group openroute skips `extalert`; use phone always-auto-answer. |
+| 2026-07-27 | `phone-302-local` — SIP 302 phone divert (catcher UAS) added to L1 pack; separate from AstDB CFIM. |

@@ -5,7 +5,7 @@
 
 ### Suggested “what next?” order
 
-1. **Call / SIP test pack** — grow beyond pack v1 (phone **302** divert, multi-tenant, outbound); inventory **`CALL_TYPE_INVENTORY.md`** · pack **`workingdocs/call-tests/`** · host **`SIPP_LAB_HOST.md`**.  
+1. **Call / SIP test pack** — grow beyond pack v1 (**phone 302 + multi-tenant done**); next outbound — **`CALL_TYPE_INVENTORY.md`** · **`workingdocs/call-tests/`** · **`SIPP_LAB_HOST.md`**.  
 2. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
 3. **Time-based routing (day-parts + profiles)** — own track after test pack cools; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started.  
 4. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
@@ -46,9 +46,11 @@
 
 - [x] **Call / SIP test — L1 pack v1 + SIPp catcher (2026-07-27):** Golden tenant **`sipp`** (`pb0wsk.pbx3.com`) exts **2000/2001** + queue **2060**; Twilio DID **`+15139279738`** → catcher. **`run-pack.sh`** / **`lab-state.sh`** / catcher UAS. Pack green: open / CFIM / closed / queue. **Off-box host** EIP **`98.93.98.162`** (`SIPP_LAB_HOST.md`); SBC Peer gwid **99** → that EIP only (never office IP — office Peer stole phone INVITEs → “No inbound route”). Mac: `ssh … ubuntu@98.93.98.162 'cd ~/call-tests && ./run-pack.sh'`.
 
-- [ ] **Call / SIP test — phone 302 divert (2026-07-27):** Handset (or SIPp UAS) **302 Moved Temporarily** is a separate pathway from AstDB CFIM/CFBS/DND; common customer pattern. Not in pack yet. Inventory + L1 recipe next. Spec notes in session handoff / strategy.
+- [x] **Call / SIP test — phone 302 divert (2026-07-27):** Catcher A `uas-302` → Contact `2001`; B answers. Pack id **`phone-302-local`** green on SIPp EC2 (full pack still green). Distinct from AstDB CFIM. Inventory `maj-in-phone-302-local`.
 
-- [ ] **Call / SIP test — grow L1 beyond pack v1:** Multi-tenant / outbound / master-closed; ACK/BYE catcher NAT polish optional. Spec: **`CALL_TEST_STRATEGY.md`** · inventory **`CALL_TYPE_INVENTORY.md`**.
+- [x] **Call / SIP test — multi-tenant AoR (2026-07-27):** Peer catcher on affcot **1199** (`s6rd88` / `9wvvnb.pbx3.com`) REGISTER’d while DID→sipp A. Pack id **`in-multi-tenant-a-b`**. Creds: golden `/tmp/sipp-peer-catcher.env` (run-pack autoloads).
+
+- [ ] **Call / SIP test — grow L1 beyond pack v1:** Outbound / master-closed / CFIM-external; ACK/BYE catcher NAT polish optional. Spec: **`CALL_TEST_STRATEGY.md`** · inventory **`CALL_TYPE_INVENTORY.md`**.
 
 - [x] **Inbound route pkey allows +E.164 (2026-07-27):** Digits-only regex blocked Edit Inbound Route on `+44…` DIDs. Fixed **pbx3api** + **pbx3spa**; hot-deployed controller on golden (full `git pull` still blocked by local overlay drift).
 

@@ -165,7 +165,8 @@ ssh -i …/pbx3test.pem ubuntu@<SIPP_EIP> 'cd ~/call-tests && ./run-pack.sh'
 - Media / RTP soak (open RTP ports; add `-m` / pcmu)  
 - Systemd units for always-on catcher  
 - CI triggering pack over SSH  
-- Phone **302** UAS scenario on catcher  
+
+**In pack now:** `phone-302-local` (catcher A `uas-302` → B).
 
 ---
 

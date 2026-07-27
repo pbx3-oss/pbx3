@@ -10,8 +10,8 @@ Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_IN
 | Layout | This tree |
 | `in-open-ext` green on VIP | **Done 2026-07-27** — Mac→VIP→DID `01924918076`→1000; Snom auto-answer; BYE clean after `rrs="true"` |
 | **SIPp catcher** | **Lab 2026-07-27** — golden tenant `sipp` (`pb0wsk.pbx3.com`), exts **2000/2001**, queue **2060**; Twilio DID `+15139279738` |
-| **L1 pack** | **`./run-pack.sh` green 2026-07-27** — open + CFIM + closed + queue (catcher UAS) |
-| CFIM / closed / queue scenarios | Pack-greened on catcher path |
+| **L1 pack** | **`./run-pack.sh`** — open + CFIM + closed + queue + phone-302 + **multi-tenant** |
+| CFIM / closed / queue / 302 / multi-tenant | Pack IDs on catcher path |
 | **SIPp off-box host** | **Live 2026-07-27** — EIP `98.93.98.162`; Peer gwid **99**; pack green on host (`SIPP_LAB_HOST.md`) |
 
 ## Layout
@@ -23,14 +23,17 @@ call-tests/
   run-sipp.sh                 # ./run-sipp.sh <scenario-id> [catcher]
   run-in-open-ext.sh          # → Magrathea DID / Snom path
   run-in-open-ext-catcher.sh  # → Twilio DID / SIPp UAS path
-  run-catcher.sh              # REGISTER smoke or UAS auto-answer
+  run-catcher.sh              # register | uas | uas-302
   run-pack.sh                 # L1 automated pack (catcher + state + scenarios)
   lab-state.sh                # open|cfim|closed|queue on golden catcher tenant
   SIPP_LAB_HOST.md            # EC2 off-box install sketch (caller+catcher)
   scenarios/
     in-open-ext.xml
+    phone-302-local.xml
+    in-multi-tenant-a-b.xml
     catcher-register.xml
     catcher-answer.xml
+    catcher-answer-302.xml
     in-cfim-local.xml
     in-closed-ivr-or-dest.xml
     feat-master-closed.xml
@@ -70,6 +73,13 @@ Dedicated golden tenant **`sipp`** (`pb0wsk.pbx3.com`), General SIP exts **2000*
 # terminal B — inbound VIP → Twilio DID → catcher
 ./run-in-open-ext-catcher.sh
 # or: ./run-sipp.sh in-open-ext catcher
+
+# phone 302 divert: A redirects to CATCHER_EXT_B; B answers
+./run-catcher.sh uas-302 &          # A on :5070
+CATCHER_USER=$CATCHER_USER_B CATCHER_PASS=$CATCHER_PASS_B CATCHER_PORT=$CATCHER_PORT_B \
+  ./run-catcher.sh uas &            # B on :5071
+./lab-state.sh open
+./run-sipp.sh phone-302-local catcher
 ```
 
 One-shot REGISTER smoke: `./run-catcher.sh register`.
@@ -83,11 +93,11 @@ After PBX3 / cagi / GenAst / SBC changes on golden:
 
 ```bash
 cd pbx3/workingdocs/call-tests
-./run-pack.sh                 # open + CFIM + closed + queue
-./run-pack.sh in-open-ext     # single id
+./run-pack.sh                      # full pack incl. phone-302 + multi-tenant
+./run-pack.sh in-multi-tenant-a-b  # single id
 ```
 
-Requires `GOLDEN_SSH` + `CATCHER_*` in `lab.env`. Starts catcher UAS (A + B for CFIM), toggles lab state via `lab-state.sh`, runs each scenario against Twilio DID, restores OPEN. Exit **0** = pack green. Log: `notes/pack-*.log`.
+Requires `GOLDEN_SSH` + `CATCHER_*` in `lab.env`. Starts catcher UAS (A + B for CFIM / 302; **peer** on affcot for multi-tenant), toggles lab state via `lab-state.sh`, runs each scenario against Twilio DID, restores OPEN. Exit **0** = pack green. Log: `notes/pack-*.log`.
 
 | Pack id | Lab state | Answerer |
 |---------|-----------|----------|
@@ -95,6 +105,8 @@ Requires `GOLDEN_SSH` + `CATCHER_*` in `lab.env`. Starts catcher UAS (A + B for 
 | `in-cfim-local` | CFIM 2000→2001 | catcher B |
 | `in-closed-ivr-or-dest` | tenant OCSTAT CLOSED; closeroute 2000 | catcher A |
 | `in-queue-answer` | openroute queue **2060** | catcher A |
+| `phone-302-local` | openroute 2000; **no** CFIM | A returns **302→2001**; B answers |
+| `in-multi-tenant-a-b` | open + peer REG on **affcot** `1199` | catcher A (peer is usrloc noise) |
 
 ### Snom auto-answer (unattended L1)
 
@@ -128,6 +140,8 @@ SIP INVITE is the same shape for these IDs; **lab state** chooses the pathway. S
 | `in-open-ext` | Magrathea DID openroute → **1000** (or ring group); not CLOSED | **1000** / Snom |
 | `in-open-ext` + `catcher` | Twilio DID → catcher **2000**; `./run-catcher.sh uas` running | SIPp catcher |
 | `in-cfim-local` | On openroute ext, set **CFIM → local ext** (e.g. 1000→1001) | CFIM target |
+| `phone-302-local` | openroute → A; A UAS **302** Contact=`CATCHER_EXT_B`; no AstDB CFIM | catcher B |
+| `in-multi-tenant-a-b` | Peer catcher REGISTER’d on **affcot**; DID → sipp A (AoR domain check) | catcher A |
 | `in-closed-ivr-or-dest` | Force **CLOSED** (day timer / `cluster.oclo` / tenant OCSTAT); `closeroute` = answerable dest | closeroute dest |
 | `feat-master-closed` | Master AstDB **`STAT/OCSTAT` = CLOSED**; closeroute answerable | closeroute dest |
 | `in-queue-answer` | openroute (or DID) → **queue**; agent logged in / ringing (lab often **Q1060**) | agent |
@@ -144,6 +158,7 @@ cp lab.env.example lab.env   # once
 ./run-sipp.sh in-open-ext
 ./run-sipp.sh in-open-ext catcher   # Twilio DID → SIPp UAS (start ./run-catcher.sh uas first)
 ./run-sipp.sh in-cfim-local
+./run-sipp.sh phone-302-local catcher
 ./run-sipp.sh in-closed-ivr-or-dest
 ./run-sipp.sh feat-master-closed
 ./run-sipp.sh in-queue-answer
@@ -172,5 +187,5 @@ sipp 3.93.26.82 -i "$LOCAL_IP" -p 5061 \
 
 ## Next
 
-- Green-lab the new IDs when convenient; multi-tenant / CFIM-external later.
+- Outbound / CFIM-external / master-closed polish.
 - L2 soak under `profiles/` later.

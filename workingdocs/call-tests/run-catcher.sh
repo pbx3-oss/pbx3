@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Run SIPp catcher against Magrathea VIP.
-# Usage: ./run-catcher.sh [register|uas]
+# Usage: ./run-catcher.sh [register|uas|uas-302]
 #   register — one-shot REGISTER smoke
 #   uas      — REGISTER once, then stay up auto-answering INVITEs (Ctrl-C to stop)
+#   uas-302  — REGISTER once, then 302 Moved Temporarily → CATCHER_EXT_B (phone divert)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -20,6 +21,7 @@ _OV_USER="${CATCHER_USER:-}"
 _OV_PASS="${CATCHER_PASS:-}"
 _OV_PORT="${CATCHER_PORT:-}"
 _OV_DOMAIN="${CATCHER_DOMAIN:-}"
+_OV_REDIR="${CATCHER_REDIR_EXT:-}"
 
 # shellcheck disable=SC1091
 source ./lab.env
@@ -28,12 +30,15 @@ source ./lab.env
 [[ -n "$_OV_PASS" ]] && CATCHER_PASS="$_OV_PASS"
 [[ -n "$_OV_PORT" ]] && CATCHER_PORT="$_OV_PORT"
 [[ -n "$_OV_DOMAIN" ]] && CATCHER_DOMAIN="$_OV_DOMAIN"
+[[ -n "$_OV_REDIR" ]] && CATCHER_REDIR_EXT="$_OV_REDIR"
 
 : "${SBC_HOST:?}"
 : "${CATCHER_DOMAIN:?}"
 : "${CATCHER_USER:?}"
 : "${CATCHER_PASS:?}"
 : "${CATCHER_PORT:=5070}"
+: "${CATCHER_EXT_B:=2001}"
+: "${CATCHER_REDIR_EXT:=$CATCHER_EXT_B}"
 : "${RECV_TIMEOUT:=60000}"
 
 if ! command -v sipp >/dev/null 2>&1; then
@@ -91,6 +96,25 @@ run_answer() {
     -error_file "notes/catcher-answer-err.log"
 }
 
+run_answer_302() {
+  local calls="${CATCHER_CALLS:-9999}"
+  echo "SIPp catcher 302 → ${CATCHER_USER} on :${CATCHER_PORT} redirects to ${CATCHER_REDIR_EXT}@${CATCHER_DOMAIN} (m=${calls})"
+  exec sipp \
+    -p "$CATCHER_PORT" \
+    "${common_bind[@]}" \
+    -sf scenarios/catcher-answer-302.xml \
+    -key user "$CATCHER_USER" \
+    -key domain "$CATCHER_DOMAIN" \
+    -key redir_ext "$CATCHER_REDIR_EXT" \
+    -m "$calls" \
+    -l 1 \
+    -recv_timeout "$RECV_TIMEOUT" \
+    -trace_err \
+    -trace_msg \
+    -message_file "notes/catcher-answer-302-msg.log" \
+    -error_file "notes/catcher-answer-302-err.log"
+}
+
 case "$MODE" in
   register)
     run_register
@@ -99,8 +123,12 @@ case "$MODE" in
     run_register
     run_answer
     ;;
+  uas-302)
+    run_register
+    run_answer_302
+    ;;
   *)
-    echo "Usage: $0 [register|uas]" >&2
+    echo "Usage: $0 [register|uas|uas-302]" >&2
     exit 1
     ;;
 esac

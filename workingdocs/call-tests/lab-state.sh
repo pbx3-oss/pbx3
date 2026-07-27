@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Toggle catcher-tenant lab state on golden for L1 pack scenarios.
-# Usage: ./lab-state.sh <open|cfim|closed|queue|status>
+# Usage: ./lab-state.sh <open|cfim|closed|queue|multitenant|status>
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -85,6 +85,12 @@ case "$cmd" in
     set_openroute "$CATCHER_QUEUE"
     echo "lab-state: QUEUE openroute=$CATCHER_QUEUE"
     ;;
+  multitenant)
+    # Preconditions only — peer REGISTER is started by run-pack.
+    : "${CATCHER_PEER_USER:?CATCHER_PEER_USER required for multitenant}"
+    : "${CATCHER_PEER_DOMAIN:?}"
+    echo "lab-state: MULTITENANT peer=${CATCHER_PEER_USER}@${CATCHER_PEER_DOMAIN} (usrloc contention); DID still → $CATCHER_EXT_A"
+    ;;
   status)
     echo "--- inroute ---"
     sql "SELECT pkey,openroute,closeroute,cluster FROM inroutes WHERE pkey='$DID_CATCHER';"
@@ -92,9 +98,13 @@ case "$cmd" in
     ast "database get cfim $CATCHER_USER" || true
     echo "--- OCSTAT ---"
     ast "database get ${CATCHER_DOMAIN%%.*} OCSTAT" || true
+    if [[ -n "${CATCHER_PEER_USER:-}" ]]; then
+      echo "--- peer phone ---"
+      sql "SELECT pkey,shortuid,cluster,active FROM ipphone WHERE shortuid='${CATCHER_PEER_USER}';"
+    fi
     ;;
   *)
-    echo "Usage: $0 <open|cfim|closed|queue|status>" >&2
+    echo "Usage: $0 <open|cfim|closed|queue|multitenant|status>" >&2
     exit 1
     ;;
 esac

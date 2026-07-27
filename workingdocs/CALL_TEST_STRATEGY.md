@@ -84,6 +84,7 @@ Grow as a **checklist of SIPp XML (or `.sip`) scenarios**. Names are stable IDs 
 | `in-open-ext` | DID → openroute → extension ring/answer | 200 + BYE clean |
 | `in-closed-ivr-or-dest` | Force closed (timer or AstDB) → closeroute | Lands on expected dest |
 | `in-cfim-local` | CFIM to local ext | No wrong hold clip; answer path |
+| `phone-302-local` | Phone SIP **302** → local ext | Lands on Contact user (not AstDB CFIM) |
 | `in-cfim-external` | CFIM off-box | Comfort / dial out as designed |
 | `in-queue-answer` | DID → queue → agent answer | Bridge up |
 | `in-queue-cancel-vm` | Ring then cancel | VM / failover dest |
@@ -132,7 +133,7 @@ Record: date, node, tip SHAs, max stable concurrent, CPS at failure, which proce
 | **0** | This doc + Pack pointers | Done |
 | **1** | Lab: install SIPp; one **loopback or DID** scenario green (`in-open-ext`) | **Done 2026-07-27** (Mac→VIP→DID→1000) |
 | **2** | Scenario dir layout + README (`pbx3/workingdocs/call-tests/` or `pbx3cagi/.../sipp/`) | Done (`call-tests/`) |
-| **3** | Grow L1 matrix (§5) — priority: CFIM, queue, multi-tenant, closed | **Pack green 2026-07-27** on catcher (`./run-pack.sh`: open/CFIM/closed/queue). Multi-tenant still open. |
+| **3** | Grow L1 matrix (§5) — priority: CFIM, queue, multi-tenant, closed, phone 302 | **Pack** + **`phone-302-local`** + **`in-multi-tenant-a-b`** (2026-07-27). Outbound still open. |
 | **4** | Optional AMI helper to force OCSTAT / confirm channel | Less manual setup |
 | **5** | One soak profile documented on golden | L2 started |
 | **6** | Wire L0 (+ later selected L1) into **`CRITICAL_PATH_TEST_PACK.md`** Pack B | Cadence updated |
@@ -188,3 +189,5 @@ Alternatively keep XML next to **pbx3cagi** if scenarios are AGI-centric — pre
 | 2026-07-27 | `in-open-ext` green: Mac SIPp → Magrathea VIP → DID 01924918076 → golden 1000. Temp Peer gwid 99 (`sipp-lab`). |
 | 2026-07-27 | L1 recipes: `in-cfim-local`, `in-closed-ivr-or-dest`, `feat-master-closed`, `in-queue-answer` + `run-sipp.sh`. |
 | 2026-07-27 | SIPp catcher tenant + `./run-pack.sh` green (open/CFIM/closed/queue via Twilio DID). |
+| 2026-07-27 | `phone-302-local` in pack (catcher A `uas-302` → B answers). |
+| 2026-07-27 | `in-multi-tenant-a-b` — peer catcher on affcot + DID→sipp A (AoR domain discrimination). |
