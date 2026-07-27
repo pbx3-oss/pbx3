@@ -8,7 +8,7 @@ Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_IN
 |------|--------|
 | SIPp on operator Mac | Installed (v3.7.x) |
 | Layout | This tree |
-| `in-open-ext` green on VIP | **Done 2026-07-27** — Mac `74.83.26.203` → VIP → DID `01924918076` → golden **1000** rang |
+| `in-open-ext` green on VIP | **Done 2026-07-27** — Mac→VIP→DID `01924918076`→1000; Snom auto-answer; BYE clean after `rrs="true"` |
 | CFIM / closed / queue scenarios | **Recipes added** — lab state + answer dest; not all green-labbed yet |
 
 ## Layout
@@ -45,9 +45,30 @@ Mac-only for now (no jump host).
 3. **Inbound trust Peer** — `dr_gateways` row for that IP (`is_from_gw` → `FROM_CARRIER`). Lab: gwid **99** `sip:74.83.26.203:5060` carrier `sipp-lab` (temp; delete when done)
 4. **DID** — `01924918076` → golden tenant `dhbm8x` / duns
 5. **`lab.env`** — copy from example; set `LOCAL_IP` to `en0` IPv4 if auto-detect fails
-6. **Answer** within `RECV_TIMEOUT` (60s) on the pathway’s expected dest
+6. **Answer** within `RECV_TIMEOUT` (60s) on the pathway’s expected dest — see **Snom auto-answer** below
 
 Public IP: `curl -4 -s ifconfig.me`.
+
+### Snom auto-answer (unattended L1)
+
+Snom can auto-answer when the **INVITE that hits the phone** carries e.g.:
+
+```text
+Call-Info: Answer-After=0
+```
+
+**PBX field:** extension **Ext alert** (`ipphone.extalert`) → LepDial `SIPAddHeader` on the **phone** INVITE.
+
+**Gotcha — ring groups:** Lab DID `01924918076` openroutes to a **ring group**, not a single LepDial. Group dial does **not** apply per-member `extalert`, so Ext alert on 1000 will **not** auto-answer that DID path. Carrier-leg SIPp `Call-Info` / `Alert-Info` are noise (stripped / new INVITE) — remove from scenarios when convenient.
+
+| Approach for unattended `in-open-ext` | Works? |
+|--------------------------------------|--------|
+| Ext alert on 1000 + DID → **single** extension | **Yes** |
+| Ext alert on 1000 + DID → **ring group** | **No** |
+| Snom **always** auto-answer (phone setting) | **Yes** (any dial path) |
+| Inject headers on group Dial() (product change) | Not today |
+
+**Lab recommendation:** either point a dedicated test DID/openroute at **one** extension with Ext alert set, or enable Snom always-auto-answer on the ringing set.
 
 **gwid allocate:** Filament used to suggest `10` (string MAX). Fixed in **pbx3sbc-admin** (numeric CAST) — deploy with that tip.
 
@@ -99,7 +120,7 @@ sipp 3.93.26.82 -i "$LOCAL_IP" -p 5061 \
 | 404 | DID / alias / dispatcher |
 | 180 then timeout | Expected dest not answering |
 | Wrong party rings | Lab state (still OPEN, CFIM unset, not queued) |
-| ACK/BYE fail after 200 | Record-Route — see `notes/*-msg.log` |
+| ACK/BYE fail / OpenSIPS **500** on BYE | Missing `rrs="true"` on INVITE 200 (Record-Route not stored) — fixed in scenarios; re-pull XML |
 
 ## Next
 

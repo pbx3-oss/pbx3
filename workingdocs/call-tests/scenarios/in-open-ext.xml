@@ -6,10 +6,12 @@
   INVITE DID → SBC VIP → tenant openroute → extension ring/answer.
   Expect: 100/18x optional, 200, ACK, short hold, BYE, 200.
 
-  Lab defaults: DID 01924918076 → golden 1000 (dhbm8x). Operator answers
-  (or auto-answer). Media not asserted (SDP present for dialog completeness).
+  Lab defaults: DID 01924918076 → ring group (not single LepDial).
+  Ext alert does not apply on group dial — see call-tests README.
+  Unattended: Snom always-auto-answer, or DID openroute to one extension.
 
-  Proxied dialog: ACK/BYE use [next_url] + Route:[routes].
+  Proxied dialog: store Record-Route on INVITE 200 (rrs=true); ACK/BYE use
+  [next_url] + Route:[routes]. Without rrs, OpenSIPS often 500s the BYE.
 -->
 <scenario name="in-open-ext">
 
@@ -43,7 +45,7 @@
   <recv response="100" optional="true"/>
   <recv response="180" optional="true"/>
   <recv response="183" optional="true"/>
-  <recv response="200" rtd="true"/>
+  <recv response="200" rtd="true" rrs="true"/>
 
   <send>
     <![CDATA[

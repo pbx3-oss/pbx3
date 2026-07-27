@@ -24,9 +24,9 @@ This is the **full call-type map**. `CALL_TEST_STRATEGY` §5 is only the **near-
 | **U** | **Unattended** — can run hands-off (CI / cron / `make test`) with no phone answer and no listening |
 | **H** | **Human** — someone must act during the run (answer/ring, hear prompt, DTMF, second phone, PSTN) |
 | **H-setup** | Human prepares lab state once (CFIM, CLOSED, queue agents, Peer allow); the SIP assert may still be **H** today if a phone must answer |
-| **U later** | Could become unattended with SIPp UAS / phone auto-answer / AMI force-answer — **not** how we run it today |
+| **U later** | Could become unattended with SIPp UAS / phone auto-answer / AMI force-answer — see call-tests **Snom auto-answer** |
 
-**Rule of thumb today:** all **L0** = **U**. All current **L1 VIP** recipes = **H** (or H-setup + H) unless an auto-answer endpoint is on the target. All **L3** = **H**.
+**Rule of thumb today:** all **L0** = **U**. **L1 VIP** = **U** if lab Snom (e.g. 1000) auto-answers; else **H**. All **L3** = **H**. SIPp scenarios send `Call-Info: Answer-After=0` + `Alert-Info` (Snom); those headers must appear on the **phone** INVITE (or use phone always-auto-answer) — carrier-leg alone is not enough on the DID/AGI path.
 
 ---
 
@@ -36,7 +36,7 @@ These are the “big” call types operators care about.
 
 | ID | What happens | L0 | L1 | L3 | Attend (today) |
 |----|--------------|----|----|-----|----------------|
-| `maj-in-open-ext` | DID → openroute → extension ring/answer | `cfim-none` (partial) **U** | **`in-open-ext`** green | PSTN smoke | **L0: U** · **L1: H** (1000 must answer / auto-answer) · **L3: H** |
+| `maj-in-open-ext` | DID → openroute → extension ring/answer | `cfim-none` (partial) **U** | **`in-open-ext`** green (BYE clean 2026-07-27) | PSTN smoke | **L0: U** · **L1: U** with Snom always-auto-answer (Ext alert unreliable on ring-group openroute) · **L3: H** |
 | `maj-in-closed` | DID → closeroute | — | **`in-closed-*`**, **`feat-master-closed`** recipes | yes | **H-setup** (force CLOSED) + **H** (answer closeroute) · **U later** |
 | `maj-in-holiday` | Holiday override | — | planned | yes | **H-setup** + **H** |
 | `maj-in-cfim-local` | CFIM → local ext | **`cfim-local`** **U** | **`in-cfim-local`** recipe | yes | **L0: U** · **L1: H-setup** (set CFIM) + **H** (answer target) |
@@ -130,25 +130,25 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 
 | What | How |
 |------|-----|
-| All existing CAGI L0 scenarios | `cd pbx3cagi-…/csource && make test` (CFIM local/external/none, postdial, queue predial, lepdial-fleet) |
-| (None of the VIP SIPp L1 pack) | Still need a human or auto-answer phone on the ringing dest |
+| All existing CAGI L0 scenarios | `cd pbx3cagi-…/csource && make test` |
+| L1 `in-open-ext` (and siblings) **if** lab Snom auto-answers | Phone always-auto-answer, **or** `Call-Info`/`Alert-Info` on the **Asterisk→phone** INVITE (see `call-tests/README.md`) |
 
 ### Need a human **now**
 
 | What | Why |
 |------|-----|
-| `in-open-ext` and sibling L1 recipes | SIPp waits for **200**; golden phone must answer (or auto-answer) |
+| L1 without auto-answer on the ringing dest | SIPp waits for **200** |
 | L1 with CFIM / CLOSED / queue | Plus **H-setup** of AstDB / day state / agents |
 | All `*NN*` feature codes, BLF open/close | Dial + hear prompt / confirm state on device |
 | IVR, page, park, pickup, conf, VM retrieve | Interactive or multi-party |
 | PSTN L3 / Magrathea-Twilio matrix | Carrier + human |
-| Ext↔ext / multi-tenant AoR | Two endpoints (until dual-SIPp) |
+| Ext↔ext / multi-tenant AoR | Two endpoints (until dual-SIPp / dual auto-answer) |
 
-### Path to more unattended L1 (not built)
+### Path to reliable unattended L1
 
-1. Auto-answer lab phone **or** SIPp UAS registered as the target ext.  
-2. AMI/scripts for **H-setup** (set/clear CFIM, OCSTAT, queue members) so a cron can arm state.  
-3. Then VIP UAC scenarios become **U** for signalling-only asserts (200/BYE); media quality stays **H**/L2 optional.
+1. Lab Snom **always auto-answer** on target ext(s), **or** GenAst/PJSIP inject `Call-Info: Answer-After=0` (+ `Alert-Info`) on the **phone** INVITE for lab.  
+2. AMI/scripts for **H-setup** (CFIM, OCSTAT, queue members).  
+3. Optional later: SIPp **UAS** as a fake phone (REGISTER via SBC).
 
 ---
 
@@ -167,3 +167,5 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 |------|------|
 | 2026-07-27 | Initial inventory from GenAst + presets + CAGI cmd table + existing L0/L1. |
 | 2026-07-27 | Attendance: **U** / **H** / **H-setup** / **U later** on majors, shortcodes, rollup. |
+| 2026-07-27 | Snom auto-answer via `Call-Info`/`Alert-Info`; L1 U when phone auto-answers; note carrier-leg vs phone-leg headers. |
+| 2026-07-27 | `in-open-ext` full green (auto-answer + `rrs=true` BYE). Ring-group openroute skips `extalert`; use phone always-auto-answer. |
