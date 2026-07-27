@@ -67,7 +67,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-27 — L1 pack + SIPp EC2)
 
-**Branches:** **pbx3** (+ spa handoff) on **`main`**. Tips: pbx3 **`e50d8bc`**, pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`187742b`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**.
+**Branches:** **pbx3** (+ spa handoff) on **`main`**. Tips: pbx3 **`c23863b`**, pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`187742b`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**.
 
 ### Shipped
 - **SIPp catcher tenant** on golden: `sipp` / `pb0wsk.pbx3.com`, exts 2000/2001, Q2060; Twilio DID `+15139279738` → 2000; SBC domain + aliases + `domain_reload`.
