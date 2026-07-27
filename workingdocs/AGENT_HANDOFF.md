@@ -67,7 +67,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-27 — SIPp in-open-ext green)
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** + **pbx3sbc-admin** on **`main`**. Tips: pbx3 **`PLACEHOLDER`**, pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`f87a783`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** + **pbx3sbc-admin** on **`main`**. Tips: pbx3 **`976fbd6`**, pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`f87a783`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **Call tests:** `workingdocs/call-tests/` + **`CALL_TYPE_INVENTORY.md`** (majors/shortcodes + U/H). **`in-open-ext`** full green (Mac SIPp → VIP → DID → 1000; Snom always-auto-answer; BYE needs scenario `rrs="true"`).
@@ -88,7 +88,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-26 — close: call test is next) — historical
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`PLACEHOLDER`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`6c31fe7`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`976fbd6`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`6c31fe7`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped (this session, docs)
 - **Time-based routing** requirements — **`TIME_BASED_ROUTING_REQUIREMENTS.md`** (day-parts + profiles; Phase 4 parked).
@@ -106,7 +106,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-26 — call-test strategy) — historical
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`PLACEHOLDER`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`c2d2e2b`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`976fbd6`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`c2d2e2b`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **Docs:** **`CALL_TEST_STRATEGY.md`** — L0 CAGI harness / L1 SIPp pathways / L2 soak / L3 PSTN manual; scenario inventory; build order (first green `in-open-ext`).
@@ -125,7 +125,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-26 — time-based routing requirements) — historical
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`PLACEHOLDER`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`c2d2e2b`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`976fbd6`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`c2d2e2b`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **Docs:** **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — day-parts + route profiles; cron precompute kept; FreePBX TC chains deferred; SARK convert + CAGI dual-read; delivery slices A–E; open **§8 Q1–Q7**.
@@ -143,7 +143,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-26 — cagi thread-s + 3.2 AGI wrap) — historical
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`PLACEHOLDER`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`568c604`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`976fbd6`**, pbx3api **`2c429ab`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`568c604`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **Emergency roll back point** (pre E/G dial-locus) — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5** (paired tips; not CAGI alone).
@@ -163,7 +163,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-26 — emergency rollback pin + bzy cagi parity) — historical
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`PLACEHOLDER`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`a58c183`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`976fbd6`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`a58c183`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **Docs:** **Emergency roll back point** for pre–E/G dial-locus — **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5** (pbx3cagi **`fd9b146`** + pbx3 **`4d862e0`**; alt fleet pin pbx3 **`1ea1210`**). Paired GenAst+CAGI only — not CAGI alone.
@@ -181,7 +181,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-25 — pbx3cagi Phase 1.3–3.1 + golden QA) — historical
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`PLACEHOLDER`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`38333ca`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** on **`main`**. Tips: pbx3 **`976fbd6`**, pbx3api **`2c429ab`**, pbx3cagi **`c4b06bd`**, pbx3spa **`38333ca`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **pbx3cagi refactor** on **`main`**: 1.3 dead code → 1.1 structs → 2.1 command table → 2.2 `agi_sqlite` → 2.3 `agi_init_call_context` → 3.1 `agi_session_t` + drop name macros. Commits **`670c02f`…`c4b06bd`**.
@@ -201,7 +201,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-25 — graph MCP + class `.php` layout) — historical
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden still G+H hot. Tips: pbx3 **`PLACEHOLDER`**, pbx3api **`2c429ab`**, pbx3cagi **`b9dd195`**, pbx3spa **`3528e71`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden still G+H hot. Tips: pbx3 **`976fbd6`**, pbx3api **`2c429ab`**, pbx3cagi **`b9dd195`**, pbx3spa **`3528e71`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **code-review-graph MCP:** fixed (`~/.cursor/mcp.json` → `/opt/homebrew/bin/uvx` + PATH/HOME); auth + full builds for pbx3/api/spa/cagi.
@@ -221,7 +221,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-25 — GenAst hermit G+H lab OK) — historical
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden: G LepDial + H trunk/queue/park overlays hot; migrations applied. Tips: pbx3 **`PLACEHOLDER`**, pbx3api **`2c429ab`**, pbx3cagi **`b9dd195`**, pbx3spa **`51b0fa3`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** on **`genast-hermit`** (pushed; **not** merged to `main`). SPA overlay on **`main`**. Golden: G LepDial + H trunk/queue/park overlays hot; migrations applied. Tips: pbx3 **`976fbd6`**, pbx3api **`2c429ab`**, pbx3cagi **`b9dd195`**, pbx3spa **`51b0fa3`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **G:** LepDial PreDial → `Dial(${PBX3_DIAL})` → PostDial; ANSWER/CANCEL skip second AGI (dead-AGI cold start). Golden lab: answer, cancel→VM, timeout→VM, AstDB CFIM, SIP DIVERT.
@@ -261,7 +261,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-25 — GenAst hermit-crab A–C lab OK) — historical
 
-**Branches:** **pbx3** + **pbx3api** on **`genast-hermit`** (pushed; **not** merged to `main`). Live hot-patched on **08jzwn** + **bzy54n**. Tips: pbx3 **`PLACEHOLDER`**, pbx3api **`89052ac`**. Old stash on `genast-phone-overlay` superseded. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** on **`genast-hermit`** (pushed; **not** merged to `main`). Live hot-patched on **08jzwn** + **bzy54n**. Tips: pbx3 **`976fbd6`**, pbx3api **`89052ac`**. Old stash on `genast-phone-overlay` superseded. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - Hermit-crab plan solidified in **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §0** (characterize → `$row` → G2 file overlay → **C2 DB overlay** next).
