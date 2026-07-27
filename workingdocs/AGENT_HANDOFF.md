@@ -67,7 +67,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-27 — SIPp in-open-ext green)
 
-**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** + **pbx3sbc-admin** on **`main`**. Tips: pbx3 **`910b2d1`**, pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`f6398fb`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`**.
+**Branches:** **pbx3** + **pbx3api** + **pbx3cagi** + **pbx3spa** + **pbx3sbc-admin** on **`main`**. Tips: pbx3 **`acc0219`**, pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`f6398fb`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`**.
 
 ### Shipped
 - **Call tests:** `workingdocs/call-tests/` + **`CALL_TYPE_INVENTORY.md`** (majors/shortcodes + U/H). **`in-open-ext`** full green (Mac SIPp → VIP → DID → 1000; Snom always-auto-answer; BYE needs scenario `rrs="true"`).
