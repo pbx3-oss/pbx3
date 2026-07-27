@@ -37,11 +37,11 @@ These are the “big” call types operators care about.
 | ID | What happens | L0 | L1 | L3 | Attend (today) |
 |----|--------------|----|----|-----|----------------|
 | `maj-in-open-ext` | DID → openroute → extension ring/answer | `cfim-none` (partial) **U** | **`in-open-ext`** green (BYE clean 2026-07-27) | PSTN smoke | **L0: U** · **L1: U** with Snom always-auto-answer (Ext alert unreliable on ring-group openroute) · **L3: H** |
-| `maj-in-closed` | DID → closeroute | — | **`in-closed-*`**, **`feat-master-closed`** recipes | yes | **H-setup** (force CLOSED) + **H** (answer closeroute) · **U later** |
+| `maj-in-closed` | DID → closeroute | — | **`in-closed-*`**, **`feat-master-closed`** (pack) | yes | **L1: U** with catcher + lab-state · **L3: H** |
 | `maj-in-holiday` | Holiday override | — | planned | yes | **H-setup** + **H** |
 | `maj-in-cfim-local` | CFIM → local ext | **`cfim-local`** **U** | **`in-cfim-local`** recipe | yes | **L0: U** · **L1: H-setup** (set CFIM) + **H** (answer target) |
 | `maj-in-phone-302-local` | Phone **302** → local ext (not AstDB CF*) | — | **`phone-302-local`** (catcher A 302 → B) | yes | **L1: U** with catcher UAS · distinct from CFIM |
-| `maj-in-cfim-external` | CFIM off-box | **`cfim-external`** **U** | planned | yes | **L0: U** · live path **H** / PSTN |
+| `maj-in-cfim-external` | CFIM off-box | **`cfim-external`** **U** | **`in-cfim-external`** (pack) | yes | **L0: U** · **L1: U** via SIPP_MAIN→Egress→Magrathea DID/1000 |
 | `maj-in-cfbs` | Forward busy/noanswer | — | — | yes | **H** |
 | `maj-in-dnd-vm` | DND → VM | — | — | yes | **H** |
 | `maj-in-queue` | Queue → agent | **`dial-queue-predial`** **U** | **`in-queue-answer`** recipe | yes | **L0: U** · **L1: H-setup** (queue/agents) + **H** (agent answer) |
@@ -50,8 +50,8 @@ These are the “big” call types operators care about.
 | `maj-ext-to-ext` | Station ↔ station same tenant | — | — | primary lab | **H** (two phones) · **U later** (dual SIPp) |
 | `maj-ext-to-ext-sbc` | Multi-tenant via SBC AoR (domain discrimination) | — | **`in-multi-tenant-a-b`** (peer REG + DID→A) | historical lab | **L1: U** with peer catcher on 2nd tenant |
 | `maj-site-dial` | Cross-tenant short dial (`site_code`+ext) | — | planned (`site-dial-a-b`) | — | **U later** — requirements **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** |
-| `maj-out-trunk` | OutTrunk / Egress | — | planned | yes | **H** (or **U later** with SIPp UAS peer) |
-| `maj-out-route` | OutRoute | — | — | yes | **H** |
+| `maj-out-trunk` | OutTrunk / Egress | — | **`out-egress-ok`** (pack) | yes | **L1: U** Local originate→Egress Up (SIPp phone UAC blocked: lab EIP = Peer 99) · **L3: H** |
+| `maj-out-route` | OutRoute | — | via `out-egress-ok` (SIPP_MAIN) | yes | **L1: U** (same Local path) |
 | `maj-out-busy-reject` | Far-end reject / cancel | **`postdial-*`** **U** | planned | yes | **L0: U** · live **H** / **U later** |
 | `maj-lepdial-fleet` | Fleet dial string | **`lepdial-fleet`** **U** | — | yes | **L0: U** · live **H** |
 | `maj-page` | Page group | — | — | yes | **H** |
@@ -122,7 +122,7 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 | `Dial` | `dial-queue-predial` **U** | `in-queue-answer` | L0 **U** · L1 **H** |
 | `PostDial` | `postdial-*` **U** | — | **U** |
 | `IVR` | — | — | live **H** |
-| `OutTrunk` / `OutRoute` / `OutQmt` | — | planned / — | live **H** · **U later** |
+| `OutTrunk` / `OutRoute` / `OutQmt` | — | **`out-egress-ok`** (OutRoute→Egress) / — | L1 **U** · live **H** · `OutQmt` still — |
 
 ---
 
@@ -173,3 +173,5 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 | 2026-07-27 | `in-open-ext` full green (auto-answer + `rrs=true` BYE). Ring-group openroute skips `extalert`; use phone always-auto-answer. |
 | 2026-07-27 | `phone-302-local` — SIP 302 phone divert (catcher UAS) added to L1 pack; separate from AstDB CFIM. |
 | 2026-07-27 | `maj-site-dial` planned — cross-tenant site-code short dial; see **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. |
+| 2026-07-27 | Pack grow: `feat-master-closed`, `in-cfim-external`, `out-egress-ok` + catcher `SIPP_MAIN`. |
+| 2026-07-27 | Clarify `out-egress-ok` = Local originate (not SIPp phone UAC); strategy status → L1 9/9. |

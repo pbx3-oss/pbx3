@@ -10,8 +10,8 @@ Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_IN
 | Layout | This tree |
 | `in-open-ext` green on VIP | **Done 2026-07-27** — Mac→VIP→DID `01924918076`→1000; Snom auto-answer; BYE clean after `rrs="true"` |
 | **SIPp catcher** | **Lab 2026-07-27** — golden tenant `sipp` (`pb0wsk.pbx3.com`), exts **2000/2001**, queue **2060**; Twilio DID `+15139279738` |
-| **L1 pack** | **`./run-pack.sh`** — open + CFIM + closed + queue + phone-302 + **multi-tenant** |
-| CFIM / closed / queue / 302 / multi-tenant | Pack IDs on catcher path |
+| **L1 pack** | **`./run-pack.sh`** — open + CFIM + closed + **master-closed** + queue + phone-302 + multi-tenant + **CFIM-external** + **out-egress** |
+| CFIM / closed / queue / 302 / multi-tenant / outbound | Pack IDs on catcher path |
 | **SIPp off-box host** | **Live 2026-07-27** — EIP `98.93.98.162`; Peer gwid **99**; pack green on host (`SIPP_LAB_HOST.md`) |
 
 ## Layout
@@ -25,7 +25,7 @@ call-tests/
   run-in-open-ext-catcher.sh  # → Twilio DID / SIPp UAS path
   run-catcher.sh              # register | uas | uas-302
   run-pack.sh                 # L1 automated pack (catcher + state + scenarios)
-  lab-state.sh                # open|cfim|closed|queue on golden catcher tenant
+  lab-state.sh                # open|cfim|cfim-external|closed|master-closed|queue|…
   SIPP_LAB_HOST.md            # EC2 off-box install sketch (caller+catcher)
   scenarios/
     in-open-ext.xml
@@ -35,9 +35,11 @@ call-tests/
     catcher-answer.xml
     catcher-answer-302.xml
     in-cfim-local.xml
+    in-cfim-external.xml
     in-closed-ivr-or-dest.xml
     feat-master-closed.xml
     in-queue-answer.xml
+    out-egress-ok.xml
   notes/                      # SIPp traces (gitignored)
 ```
 
@@ -104,9 +106,12 @@ Requires `GOLDEN_SSH` + `CATCHER_*` in `lab.env`. Starts catcher UAS (A + B for 
 | `in-open-ext` | openroute 2000 | catcher A |
 | `in-cfim-local` | CFIM 2000→2001 | catcher B |
 | `in-closed-ivr-or-dest` | tenant OCSTAT CLOSED; closeroute 2000 | catcher A |
+| `feat-master-closed` | **STAT/OCSTAT=CLOSED**; closeroute 2000 | catcher A |
 | `in-queue-answer` | openroute queue **2060** | catcher A |
 | `phone-302-local` | openroute 2000; **no** CFIM | A returns **302→2001**; B answers |
 | `in-multi-tenant-a-b` | open + peer REG on **affcot** `1199` | catcher A (peer is usrloc noise) |
+| `in-cfim-external` | CFIM → `CFIM_EXTERNAL_DEST` (default `01924910444`); SIPP_MAIN→Egress | Magrathea→1000 (Ext alert) / comfort 200 |
+| `out-egress-ok` | SIPP_MAIN; **Local originate** on golden (not SIPp phone — Peer IP conflict) | Magrathea→1000 / Egress Up |
 
 ### Snom auto-answer (unattended L1)
 
@@ -140,11 +145,13 @@ SIP INVITE is the same shape for these IDs; **lab state** chooses the pathway. S
 | `in-open-ext` | Magrathea DID openroute → **1000** (or ring group); not CLOSED | **1000** / Snom |
 | `in-open-ext` + `catcher` | Twilio DID → catcher **2000**; `./run-catcher.sh uas` running | SIPp catcher |
 | `in-cfim-local` | On openroute ext, set **CFIM → local ext** (e.g. 1000→1001) | CFIM target |
+| `in-cfim-external` | CFIM → off-box digits (`strlen>5`); catcher needs **SIPP_MAIN** OutRoute | far-end / comfort |
 | `phone-302-local` | openroute → A; A UAS **302** Contact=`CATCHER_EXT_B`; no AstDB CFIM | catcher B |
 | `in-multi-tenant-a-b` | Peer catcher REGISTER’d on **affcot**; DID → sipp A (AoR domain check) | catcher A |
 | `in-closed-ivr-or-dest` | Force **CLOSED** (day timer / `cluster.oclo` / tenant OCSTAT); `closeroute` = answerable dest | closeroute dest |
 | `feat-master-closed` | Master AstDB **`STAT/OCSTAT` = CLOSED**; closeroute answerable | closeroute dest |
 | `in-queue-answer` | openroute (or DID) → **queue**; agent logged in / ringing (lab often **Q1060**) | agent |
+| `out-egress-ok` | Catcher **Local/** originate → SIPP_MAIN→Egress (SIPp phone UAC blocked: lab EIP is Peer 99) | Magrathea→1000 / Egress Up |
 
 Restore open/CFIM/queue after each run so the next scenario is not poisoned.
 
@@ -160,10 +167,16 @@ cp lab.env.example lab.env   # once
 ./run-sipp.sh in-cfim-local
 ./run-sipp.sh phone-302-local catcher
 ./run-sipp.sh in-closed-ivr-or-dest
-./run-sipp.sh feat-master-closed
+./run-sipp.sh feat-master-closed catcher
+./run-sipp.sh in-cfim-external catcher
+./run-out-egress.sh
 ./run-sipp.sh in-queue-answer
 ```
 Exit **0** + “Successful call” = green for that ID. Traces: `notes/<id>-*.log`.
+
+**OutRoute lab note:** catcher tenant seeds **`SIPP_MAIN`** (`_XXXXX.` → Egress) via `lab-state.sh ensure-outroute` (DB + hot dialplan). Survive GenAst Commit from DB; re-run ensure after `dialplan reload` if the hot line vanished.
+
+**OutVoip note (2026-07-27):** CAGI `OutVoip` queried nonexistent column `desc` (fixed → `description` + correct `callprogress` col). Needed for any Egress Dial.
 
 ### Manual one-liner
 
@@ -187,5 +200,5 @@ sipp 3.93.26.82 -i "$LOCAL_IP" -p 5061 \
 
 ## Next
 
-- Outbound / CFIM-external / master-closed polish.
+- Optional: `out-busy-or-reject`; ACK/BYE catcher NAT polish.
 - L2 soak under `profiles/` later.

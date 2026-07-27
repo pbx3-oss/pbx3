@@ -49,10 +49,43 @@ if ! command -v sipp >/dev/null 2>&1; then
 fi
 
 if [[ -z "${LOCAL_IP:-}" ]]; then
-  LOCAL_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
+  LOCAL_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}' || true)"
 fi
 
 mkdir -p notes
+
+# Phone-originated outbound (REGISTER + INVITE digits) — not a carrier DID INVITE
+if [[ "$SCENARIO" == "out-egress-ok" ]]; then
+  : "${CATCHER_DOMAIN:?}"
+  : "${CATCHER_USER:?}"
+  : "${CATCHER_PASS:?}"
+  : "${OUT_DIGITS:=01924910444}"
+  : "${CATCHER_PORT:=5070}"
+  SIPP_ARGS=(
+    "$SBC_HOST"
+    -p "$CATCHER_PORT"
+    -sf "$SF"
+    -au "$CATCHER_USER"
+    -ap "$CATCHER_PASS"
+    -key domain "$CATCHER_DOMAIN"
+    -key user "$CATCHER_USER"
+    -key digits "$OUT_DIGITS"
+    -m "$CALLS"
+    -r "$RATE"
+    -recv_timeout "$RECV_TIMEOUT"
+    -timeout_error
+    -trace_err
+    -trace_msg
+    -message_file "notes/${SCENARIO}-msg.log"
+    -error_file "notes/${SCENARIO}-err.log"
+  )
+  if [[ -n "${LOCAL_IP:-}" ]]; then
+    SIPP_ARGS+=(-i "$LOCAL_IP")
+  fi
+  echo "SIPp ${SCENARIO} → sip:${OUT_DIGITS}@${CATCHER_DOMAIN} via ${SBC_HOST} (phone ${CATCHER_USER})"
+  echo "Far end must answer within ${RECV_TIMEOUT}ms (lab: Magrathea DID → 1000 Ext alert)."
+  exec sipp "${SIPP_ARGS[@]}"
+fi
 
 SIPP_ARGS=(
   "$SBC_HOST"

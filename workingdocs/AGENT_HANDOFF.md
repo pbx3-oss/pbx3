@@ -44,7 +44,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — requirements draft; implement after §8 lock; before CAGI Phase 4 |
-| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — site-code prefix; same recipe on/off node; implement after §8 lock |
+| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — per-tenant dial alias; SBC miss→dispatcher locked; implement after remaining §8 |
 | **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** (full map) → **`CALL_TEST_STRATEGY.md`** → **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
 | **Failover + shadowing** (parked) | Edge HA: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Instance shadow SKU framing: **`INSTANCE_SHADOWING_REQUIREMENTS.md`** (same mechanics, paid twin) |
@@ -66,7 +66,39 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-27 — L1 pack + SIPp EC2)
+## Next agent session notes (2026-07-27 — L1 grow outbound + OutVoip fix)
+
+**Branches:** **pbx3** + **pbx3cagi** on **`main`**. Tips: this tip (pbx3) + pbx3cagi OutVoip tip; spa handoff this close. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**. SIPp host **`98.93.98.162`**.
+
+### Shipped
+- **L1 pack 9/9 green:** + `feat-master-closed` (STAT/OCSTAT) + `in-cfim-external` + `out-egress-ok` (Local→Egress). Catcher **`SIPP_MAIN`** OutRoute.
+- **CAGI OutVoip:** `desc`→`description` (+ correct callprogress col) — Egress Dial was empty-peer broken.
+- **Note:** SIPp phone UAC from EC2 cannot outbound (EIP = Peer **99** FROM_CARRIER); pack uses Local originate.
+
+### Golden / operator follow-up
+- Peer gwid **99** = SIPp EIP only. Velocity notify-on / ACT-off.
+- OutVoip fix live on golden agi-bin (hot install).
+
+### Resume
+- Lock dial-alias §8 **or** optional `out-busy-or-reject` — not CAGI Phase 4.
+- Pack: `ssh -i …/pbx3test.pem ubuntu@98.93.98.162 'cd ~/call-tests && ./run-pack.sh'`
+
+---
+
+## Next agent session notes (2026-07-27 — L1 +302/multi-tenant + dial-alias reqs) — historical
+
+**Branches:** **pbx3** on **`main`** (pushed). Tips: pbx3 **`16a34b4`**, pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`187742b`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**. SIPp host **`98.93.98.162`**.
+
+### Shipped
+- **L1 pack growth:** `phone-302-local` + `in-multi-tenant-a-b`. Full pack green on EC2 (6 ids).
+- **Requirements:** **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — dial alias; usrloc miss→dispatcher locked.
+
+### Resume
+- Superseded by L1 grow outbound + OutVoip block above.
+
+---
+
+## Next agent session notes (2026-07-27 — L1 pack + SIPp EC2) — historical
 
 **Branches:** **pbx3** (+ spa handoff) on **`main`**. Tips: pbx3 **`c23863b`**, pbx3api **`106ee6b`**, pbx3cagi **`9e4bfa9`**, pbx3spa **`187742b`**, pbx3sbc-admin **`d8ea56e`**. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**.
 
@@ -82,9 +114,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Velocity still notify-on / ACT-off. Magrathea HA standby off until restarted.
 
 ### Resume
-- Add **phone-302-local** (SIPp UAS 302 → catcher B) to pack / inventory.
-- Or product crumbs / time-based §8. Do **not** start CAGI Phase 4 first.
-- Pack command: `ssh -i …/pbx3test.pem ubuntu@98.93.98.162 'cd ~/call-tests && ./run-pack.sh'`
+- Superseded by L1 +302/multi-tenant + dial-alias block above.
 
 ---
 

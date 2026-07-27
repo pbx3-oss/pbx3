@@ -1,8 +1,8 @@
 # Call / SIP test strategy (open-source)
 
-**Status:** Strategy + Step 1–2 scaffolding 2026-07-27 — build what we can; **no commercial generators**.  
+**Status:** L1 pack **9/9 green** on SIPp EC2 (2026-07-27) — build what we can; **no commercial generators**.  
 **Full call-type map (majors + `*NN*` + test columns):** **`CALL_TYPE_INVENTORY.md`**.  
-**Recipes:** **`workingdocs/call-tests/`** (Mac SIPp → VIP; `in-open-ext` green 2026-07-27).  
+**Recipes:** **`workingdocs/call-tests/`** (`./run-pack.sh`; catcher + VIP).  
 **Cadence home:** **`TEST_CADENCE.md`** · inventory **`CRITICAL_PATH_TEST_PACK.md`**.  
 **Existing call logic:** **pbx3cagi** `make test` · **`TEST_HARNESS.md`** · **`TEST_RECIPE.md`**.
 
@@ -95,7 +95,7 @@ Grow as a **checklist of SIPp XML (or `.sip`) scenarios**. Names are stable IDs 
 
 | ID | Pathway | Assert |
 |----|---------|--------|
-| `out-egress-ok` | Ext → Egress → (lab peer or loop) | 183/200 as expected |
+| `out-egress-ok` | Local originate → SIPP_MAIN → Egress (not SIPp phone UAC from Peer EIP) | Egress channel Up |
 | `out-busy-or-reject` | Far end 486/603 | CAGI/postdial behaviour |
 
 ### 5.3 Feature / override
@@ -134,7 +134,7 @@ Record: date, node, tip SHAs, max stable concurrent, CPS at failure, which proce
 | **0** | This doc + Pack pointers | Done |
 | **1** | Lab: install SIPp; one **loopback or DID** scenario green (`in-open-ext`) | **Done 2026-07-27** (Mac→VIP→DID→1000) |
 | **2** | Scenario dir layout + README (`pbx3/workingdocs/call-tests/` or `pbx3cagi/.../sipp/`) | Done (`call-tests/`) |
-| **3** | Grow L1 matrix (§5) — priority: CFIM, queue, multi-tenant, closed, phone 302 | **Pack** + **`phone-302-local`** + **`in-multi-tenant-a-b`** (2026-07-27). Outbound still open. |
+| **3** | Grow L1 matrix (§5) — priority: CFIM, queue, multi-tenant, closed, phone 302 | **Pack** + **`phone-302-local`** + **`in-multi-tenant-a-b`** + **`feat-master-closed`** + **`in-cfim-external`** + **`out-egress-ok`** (2026-07-27). |
 | **4** | Optional AMI helper to force OCSTAT / confirm channel | Less manual setup |
 | **5** | One soak profile documented on golden | L2 started |
 | **6** | Wire L0 (+ later selected L1) into **`CRITICAL_PATH_TEST_PACK.md`** Pack B | Cadence updated |
@@ -192,3 +192,5 @@ Alternatively keep XML next to **pbx3cagi** if scenarios are AGI-centric — pre
 | 2026-07-27 | SIPp catcher tenant + `./run-pack.sh` green (open/CFIM/closed/queue via Twilio DID). |
 | 2026-07-27 | `phone-302-local` in pack (catcher A `uas-302` → B answers). |
 | 2026-07-27 | `in-multi-tenant-a-b` — peer catcher on affcot + DID→sipp A (AoR domain discrimination). |
+| 2026-07-27 | L1 grow: `feat-master-closed` (STAT/OCSTAT), `in-cfim-external`, `out-egress-ok` + catcher `SIPP_MAIN` OutRoute. |
+| 2026-07-27 | Status → L1 9/9; `out-egress-ok` assert = Local→Egress Up (Peer EIP blocks phone UAC). |

@@ -21,7 +21,17 @@ source ./lab.env
 : "${CATCHER_PORT:=5070}"
 : "${CATCHER_PORT_B:=5071}"
 
-PACK_IDS=(in-open-ext in-cfim-local in-closed-ivr-or-dest in-queue-answer phone-302-local in-multi-tenant-a-b)
+PACK_IDS=(
+  in-open-ext
+  in-cfim-local
+  in-closed-ivr-or-dest
+  feat-master-closed
+  in-queue-answer
+  phone-302-local
+  in-multi-tenant-a-b
+  in-cfim-external
+  out-egress-ok
+)
 if [[ $# -gt 0 ]]; then
   PACK_IDS=("$@")
 fi
@@ -166,17 +176,22 @@ ensure_catcher_peer() {
 
 need_b=0
 need_peer=0
+need_a_uas=0
 for id in "${PACK_IDS[@]}"; do
   case "$id" in
-    in-cfim-local|phone-302-local) need_b=1 ;;
-    in-multi-tenant-a-b) need_peer=1 ;;
+    in-cfim-local|phone-302-local) need_b=1 ; need_a_uas=1 ;;
+    in-multi-tenant-a-b) need_peer=1 ; need_a_uas=1 ;;
+    out-egress-ok|in-cfim-external) ;; # no A UAS required (CFIM before ring / phone UAC)
+    *) need_a_uas=1 ;;
   esac
 done
 
 log "=== L1 pack start $(date -u +%Y-%m-%dT%H:%M:%SZ) ids=${PACK_IDS[*]} ==="
 
-# Default A = answer; phone-302 switches mid-pack via ensure_catcher_a
-ensure_catcher_a answer
+# Default A = answer; phone-302 switches mid-pack; out-egress-ok / cfim-external stop A
+if [[ "$need_a_uas" -eq 1 ]]; then
+  ensure_catcher_a answer
+fi
 
 if [[ "$need_b" -eq 1 ]]; then
   log "Starting catcher B (${CATCHER_USER_B} :${CATCHER_PORT_B})"
@@ -186,6 +201,18 @@ fi
 if [[ "$need_peer" -eq 1 ]]; then
   ensure_catcher_peer
 fi
+
+stop_catcher_a() {
+  if [[ -n "$CATCHER_A_PID" ]]; then
+    kill "$CATCHER_A_PID" 2>/dev/null || true
+    wait "$CATCHER_A_PID" 2>/dev/null || true
+    CATCHER_A_PID=""
+    CATCHER_A_MODE=""
+  fi
+  pkill -f "scenarios/catcher-answer.*-p ${CATCHER_PORT}" 2>/dev/null || true
+  pkill -f "scenarios/catcher-answer-302.*-p ${CATCHER_PORT}" 2>/dev/null || true
+  sleep 0.3
+}
 
 for id in "${PACK_IDS[@]}"; do
   log ""
@@ -199,9 +226,17 @@ for id in "${PACK_IDS[@]}"; do
       ensure_catcher_a answer
       ./lab-state.sh cfim | tee -a "$PACK_LOG"
       ;;
-    in-closed-ivr-or-dest|feat-master-closed)
+    in-cfim-external)
+      stop_catcher_a
+      ./lab-state.sh cfim-external | tee -a "$PACK_LOG"
+      ;;
+    in-closed-ivr-or-dest)
       ensure_catcher_a answer
       ./lab-state.sh closed | tee -a "$PACK_LOG"
+      ;;
+    feat-master-closed)
+      ensure_catcher_a answer
+      ./lab-state.sh master-closed | tee -a "$PACK_LOG"
       ;;
     in-queue-answer)
       ensure_catcher_a answer
@@ -218,13 +253,24 @@ for id in "${PACK_IDS[@]}"; do
       CATCHER_PEER_USER="$CATCHER_PEER_USER" CATCHER_PEER_DOMAIN="$CATCHER_PEER_DOMAIN" \
         ./lab-state.sh multitenant | tee -a "$PACK_LOG"
       ;;
+    out-egress-ok)
+      stop_catcher_a
+      ./lab-state.sh open | tee -a "$PACK_LOG"
+      ./lab-state.sh ensure-outroute | tee -a "$PACK_LOG"
+      ;;
     *)
       log "SKIP unknown id $id"
       continue
       ;;
   esac
 
-  if ./run-sipp.sh "$id" catcher >>"$PACK_LOG" 2>&1; then
+  if [[ "$id" == "out-egress-ok" ]]; then
+    run_cmd=(./run-out-egress.sh)
+  else
+    run_cmd=(./run-sipp.sh "$id" catcher)
+  fi
+
+  if "${run_cmd[@]}" >>"$PACK_LOG" 2>&1; then
     log "PASS $id"
   else
     log "FAIL $id (see $PACK_LOG and notes/${id}-*.log)"

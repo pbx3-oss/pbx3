@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+<!--
+  in-cfim-external — L1 pathway (signalling)
+
+  Same VIP DID INVITE as in-open-ext. Lab must have CFIM on the openroute
+  extension to an off-box (strlen>5) number that matches SIPP_MAIN → Egress
+  (default Magrathea DID 01924910444 → golden 1000 with Ext alert).
+
+  Assert: 200 + BYE clean (comfort Playback / cfwd_answer and/or far-end).
+
+  Proxied dialog: ACK/BYE use [next_url] + Route:[routes].
+-->
+<scenario name="in-cfim-external">
+
+  <send retrans="500">
+    <![CDATA[
+      INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: "sipp-in-cfim-external" <sip:sipp@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Contact: <sip:sipp@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      User-Agent: pbx3-call-tests/in-cfim-external
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=sipp 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[local_ip_type] [local_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0 8 101
+      a=rtpmap:0 PCMU/8000
+      a=rtpmap:8 PCMA/8000
+      a=rtpmap:101 telephone-event/8000
+      a=fmtp:101 0-15
+    ]]>
+  </send>
+
+  <recv response="100" optional="true"/>
+  <recv response="180" optional="true"/>
+  <recv response="183" optional="true"/>
+  <recv response="200" rtd="true" rrs="true"/>
+
+  <send>
+    <![CDATA[
+      ACK [next_url] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: "sipp-in-cfim-external" <sip:sipp@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      Contact: <sip:sipp@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Route: [routes]
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <pause milliseconds="2000"/>
+
+  <send retrans="500">
+    <![CDATA[
+      BYE [next_url] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: "sipp-in-cfim-external" <sip:sipp@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 2 BYE
+      Contact: <sip:sipp@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Route: [routes]
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <recv response="200"/>
+
+  <ResponseTimeRepartition value="10, 20, 50, 100, 200, 500, 1000, 2000, 5000"/>
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>
