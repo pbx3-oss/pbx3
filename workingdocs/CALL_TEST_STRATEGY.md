@@ -1,6 +1,7 @@
 # Call / SIP test strategy (open-source)
 
-**Status:** Strategy draft 2026-07-26 — build what we can; **no commercial generators**.  
+**Status:** Strategy + Step 1–2 scaffolding 2026-07-27 — build what we can; **no commercial generators**.  
+**Recipes:** **`workingdocs/call-tests/`** (Mac SIPp → VIP; `in-open-ext` not green until SG + `dr_gateways` + answer).  
 **Cadence home:** **`TEST_CADENCE.md`** · inventory **`CRITICAL_PATH_TEST_PACK.md`**.  
 **Existing call logic:** **pbx3cagi** `make test` · **`TEST_HARNESS.md`** · **`TEST_RECIPE.md`**.
 
@@ -126,10 +127,10 @@ Record: date, node, tip SHAs, max stable concurrent, CPS at failure, which proce
 
 | Step | Deliverable | Done when |
 |------|-------------|-----------|
-| **0** | This doc + Pack pointers | You are here |
-| **1** | Lab: install SIPp; one **loopback or DID** scenario green (`in-open-ext`) | Recipe in repo |
-| **2** | Scenario dir layout + README (`pbx3/workingdocs/call-tests/` or `pbx3cagi/.../sipp/`) | Second engineer can run |
-| **3** | Grow L1 matrix (§5) — priority: CFIM, queue, multi-tenant, closed | Checklist ticks |
+| **0** | This doc + Pack pointers | Done |
+| **1** | Lab: install SIPp; one **loopback or DID** scenario green (`in-open-ext`) | **Done 2026-07-27** (Mac→VIP→DID→1000) |
+| **2** | Scenario dir layout + README (`pbx3/workingdocs/call-tests/` or `pbx3cagi/.../sipp/`) | Done (`call-tests/`) |
+| **3** | Grow L1 matrix (§5) — priority: CFIM, queue, multi-tenant, closed | Recipes for CFIM/closed/queue **added 2026-07-27**; green-lab pending |
 | **4** | Optional AMI helper to force OCSTAT / confirm channel | Less manual setup |
 | **5** | One soak profile documented on golden | L2 started |
 | **6** | Wire L0 (+ later selected L1) into **`CRITICAL_PATH_TEST_PACK.md`** Pack B | Cadence updated |
@@ -181,3 +182,6 @@ Alternatively keep XML next to **pbx3cagi** if scenarios are AGI-centric — pre
 | Date | Note |
 |------|------|
 | 2026-07-26 | Initial strategy: L0–L3, SIPp-only generators, scenario inventory, build order. |
+| 2026-07-27 | Step 1–2 scaffold: `workingdocs/call-tests/` + `in-open-ext` (Mac→VIP); green run still pending lab allow. |
+| 2026-07-27 | `in-open-ext` green: Mac SIPp → Magrathea VIP → DID 01924918076 → golden 1000. Temp Peer gwid 99 (`sipp-lab`). |
+| 2026-07-27 | L1 recipes: `in-cfim-local`, `in-closed-ivr-or-dest`, `feat-master-closed`, `in-queue-answer` + `run-sipp.sh`. |
