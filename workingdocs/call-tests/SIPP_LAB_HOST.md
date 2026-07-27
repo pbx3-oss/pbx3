@@ -160,13 +160,31 @@ ssh -i …/pbx3test.pem ubuntu@<SIPP_EIP> 'cd ~/call-tests && ./run-pack.sh'
 
 ---
 
-## 8. Out of scope (later)
+## 8. Out of scope (this host)
 
 - Media / RTP soak (open RTP ports; add `-m` / pcmu)  
 - Systemd units for always-on catcher  
 - CI triggering pack over SSH  
+- **Acting as a clean phone/extension UAC** — Peer 99 IP cannot also be a non-Peer phone (see §9)
 
 **In pack now:** `phone-302-local` (catcher A `uas-302` → B).
+
+---
+
+## 9. Second SIPp — extension platform (when dial-alias starts)
+
+**Do when:** beginning tenant dial-alias implement / L1 `site-dial-a-b` — not required for current Peer-99 pack.
+
+| Role | Host | Peer? |
+|------|------|--------|
+| **Carrier / DID** | This host (EIP + gwid **99**) | Yes — UAC DID INVITEs |
+| **Extension platform** | **New** EC2 + **own EIP** | **No** — never add as `dr_gateways` Peer |
+
+**Why:** Phone REGISTER + dial (`outbound_proxy` → SBC) from the Peer-99 EIP confuses carrier matching / blocks true phone-outbound scenarios. Split roles.
+
+**Second host sketch:** same size/SG pattern as §1 (UDP to Magrathea VIP; SSH operator-only); **no** Peer insert; `lab.env` for phone A/B creds + `SBC_HOST=VIP`; use for `site-dial-a-b` UAC and optional true OutRoute-from-phone. Keep EIP allocated across stop/start so Contacts stay stable.
+
+Spec pointer: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §9 lab hosts.
 
 ---
 
@@ -174,4 +192,5 @@ ssh -i …/pbx3test.pem ubuntu@<SIPP_EIP> 'cd ~/call-tests && ./run-pack.sh'
 
 - Pack home: **`README.md`** in this directory  
 - Strategy: **`../CALL_TEST_STRATEGY.md`**  
-- Catcher tenant on golden: `sipp` / `pb0wsk.pbx3.com` / Twilio DID `+15139279738`
+- Catcher tenant on golden: `sipp` / `pb0wsk.pbx3.com` / Twilio DID `+15139279738`  
+- Dial alias: **`../TENANT_SHORT_DIAL_REQUIREMENTS.md`**

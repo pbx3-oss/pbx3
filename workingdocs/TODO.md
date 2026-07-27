@@ -1,12 +1,12 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-27 (dial-alias §8 locked; Litestream dropped; AMI wallboard = side gig)
+**Last updated:** 2026-07-27 (dial-alias §8; Litestream dropped; AMI wallboard side gig; 2nd SIPp = alias lab)
 
 ### Suggested “what next?” order
 
-1. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. L1 `site-dial-a-b` when built.  
-2. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; true SIPp phone outbound (non-Peer IP) — **`CALL_TEST_STRATEGY.md`**.  
+1. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
+2. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
 3. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
 4. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
 5. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
@@ -52,13 +52,13 @@
 
 - [x] **Call / SIP test — multi-tenant AoR (2026-07-27):** Peer catcher on affcot **1199** (`s6rd88` / `9wvvnb.pbx3.com`) REGISTER’d while DID→sipp A. Pack id **`in-multi-tenant-a-b`**. Creds: golden `/tmp/sipp-peer-catcher.env` (run-pack autoloads).
 
-- [x] **Tenant dial alias — requirements locked (2026-07-27):** §8 closed (digit plan, fleet/SBC gate, CallerID num=`suid@fqdn` + name=human, deny/CoS, return-call). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. **Implement** when scheduled (slices A–F); L1 `site-dial-a-b` when built. Tip **`f07dd3f`**.
+- [x] **Tenant dial alias — requirements locked (2026-07-27):** §8 closed (digit plan, fleet/SBC gate, CallerID num=`suid@fqdn` + name=human, deny/CoS, return-call). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. **Implement** when scheduled (slices A–F); at alias lab start bring **2nd SIPp** (phones, non-Peer EIP — **`SIPP_LAB_HOST.md`** §9); L1 `site-dial-a-b` when built. Tip **`f07dd3f`**.
 
 - [x] **Call / SIP test — grow L1 (2026-07-27):** Pack + **`feat-master-closed`** (STAT/OCSTAT) + **`in-cfim-external`** + **`out-egress-ok`** (Local→Egress; SIPp phone UAC blocked by Peer 99 IP). Catcher **`SIPP_MAIN`** OutRoute. **CAGI OutVoip** fix: `desc`→`description` (+ callprogress col). Full pack **9/9 green** on EC2.
 
 - [x] **Call / SIP test — queue-cancel-vm + out-busy (2026-07-27):** `in-queue-cancel-vm` (agent 486→failover→VM) + `out-busy-or-reject` (Local→486→PostDial). Catcher **`uas-486`**. Holiday left for day-parts.
 
-- [ ] **Call / SIP test — optional polish:** ACK/BYE catcher NAT; true SIPp phone outbound (needs non-Peer IP). Spec: **`CALL_TEST_STRATEGY.md`**.
+- [ ] **Call / SIP test — optional polish:** ACK/BYE catcher NAT. Phone-outbound / extension-platform SIPp → **2nd EC2 when dial-alias starts** (**`SIPP_LAB_HOST.md`** §9). Spec: **`CALL_TEST_STRATEGY.md`**.
 
 - [x] **Inbound route pkey allows +E.164 (2026-07-27):** Digits-only regex blocked Edit Inbound Route on `+44…` DIDs. Fixed **pbx3api** + **pbx3spa**; hot-deployed controller on golden (full `git pull` still blocked by local overlay drift).
 

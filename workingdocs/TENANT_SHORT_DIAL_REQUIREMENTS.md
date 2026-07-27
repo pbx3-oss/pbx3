@@ -297,12 +297,12 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | **B** — OpenSIPS usrloc-miss → dispatcher for `ext@tenant.fqdn` | **pbx3sbc** | None (lab INVITE probe) |
 | **C** — GenAst pattern + CAGI AliasDial (`ext@fqdn` via SBC) + AoR CallerID num / human name | pbx3, pbx3cagi | Dial works fleet lab |
 | **D** — Receive-path trust mark + URI redial lab (Snom/common) | pbx3cagi, maybe sbc | Correct CLI + permissions |
-| **E** — L1 recipe `site-dial-a-b` (SIPp dual catcher) | call-tests | Pack regression |
+| **E** — L1 recipe `site-dial-a-b` (SIPp phone UAC → catcher on B) | call-tests | Pack regression |
 | **F** — Legacy INTERSITE / InterSARK migrate notes | docs | Operator path |
 
 **Order note:** Slice **B** before or with **C** — without miss→dispatcher, AliasDial to `ext@fqdn` fails on today’s SBC. Do not regress station dial (`shortuid@fqdn` usrloc hit). Slice **D** includes return-call URI lab check.
 
-Lab: golden sipp ↔ affcot (or duns) with two site codes; same-node first, then bzy if up for cross-node proof of identical recipe.
+**Lab hosts (locked 2026-07-27):** Keep current SIPp EC2 (EIP + Peer **99**) as **carrier/DID** side. When alias work starts, bring up a **second** SIPp EC2 (**own EIP, no Peer row**) as the **extension platform** — REGISTER/dial as phones (`outbound_proxy` → SBC). Same host cannot be both Peer and clean phone IP (Peer 99 steal). See **`call-tests/SIPP_LAB_HOST.md`** §9. Same-node golden first (sipp ↔ affcot/duns); bzy if up for cross-node.
 
 ---
 
@@ -350,7 +350,7 @@ Lab: golden sipp ↔ affcot (or duns) with two site codes; same-node first, then
 | ID | Role |
 |----|------|
 | `in-multi-tenant-a-b` | Existing — usrloc domain discrimination (peer REG noise) |
-| `site-dial-a-b` (planned) | SIPp UAC as tenant A phone dials site code + B ext → catcher on B |
+| `site-dial-a-b` (planned) | SIPp **phone** UAC (2nd lab host, non-Peer) dials alias+ext → catcher on B |
 | Inventory | Add/adjust major row when implement starts — keep distinct from AoR-only test |
 
 ---
@@ -363,6 +363,7 @@ Lab: golden sipp ↔ affcot (or duns) with two site codes; same-node first, then
 | 2026-07-27 | Operator framing: **per-tenant dial alias** (`1234` → `xyzxyz`); alias≈prefix naming; lock Q3/Q4/Q10. |
 | 2026-07-27 | SBC: lock **usrloc miss → dispatcher** for `ext@tenant.fqdn` (Q11); slice B; reject node-side ext→shortuid for v1. |
 | 2026-07-27 | **§8 fully locked:** digit plan (fixed alias + variable ext); fleet-gated / SBC-required; CLID num=`suid@fqdn` + name=human; deny=congestion; CoS tenant-wide; Q12 return-call; deferred co-located Local shortcut (§15). |
+| 2026-07-27 | Lab: second SIPp EC2 as **extension platform** (non-Peer EIP) when alias implement starts; Peer-99 host stays carrier/DID. |
 
 ---
 

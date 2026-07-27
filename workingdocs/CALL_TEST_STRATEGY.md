@@ -89,7 +89,7 @@ Grow as a **checklist of SIPp XML (or `.sip`) scenarios**. Names are stable IDs 
 | `in-queue-answer` | DID → queue → agent answer | Bridge up |
 | `in-queue-cancel-vm` | Queue agent **486** → failover ext → PostDial VM | Voicemail app |
 | `in-multi-tenant-a-b` | Tenant A ↔ B via SBC AoR | No 404 / hairpin |
-| `site-dial-a-b` | Site-code short dial A→B | Rings B ext (planned — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**) |
+| `site-dial-a-b` | Site-code short dial A→B | Rings B ext (planned — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**; needs **2nd SIPp** phone host — **`SIPP_LAB_HOST.md`** §9) |
 
 ### 5.2 Outbound / edge
 
@@ -134,7 +134,7 @@ Record: date, node, tip SHAs, max stable concurrent, CPS at failure, which proce
 | **0** | This doc + Pack pointers | Done |
 | **1** | Lab: install SIPp; one **loopback or DID** scenario green (`in-open-ext`) | **Done 2026-07-27** (Mac→VIP→DID→1000) |
 | **2** | Scenario dir layout + README (`pbx3/workingdocs/call-tests/` or `pbx3cagi/.../sipp/`) | Done (`call-tests/`) |
-| **3** | Grow L1 matrix (§5) | **Pack 11 ids** incl. queue-cancel-vm + out-busy (2026-07-27). Holiday / site-dial / day-parts deferred. |
+| **3** | Grow L1 matrix (§5) | **Pack 11 ids** incl. queue-cancel-vm + out-busy (2026-07-27). Holiday / site-dial / day-parts deferred. **site-dial:** bring **2nd SIPp** (extension platform) when dial-alias starts — **`SIPP_LAB_HOST.md`** §9. |
 | **4** | Optional AMI helper to force OCSTAT / confirm channel | Less manual setup |
 | **5** | One soak profile documented on golden | L2 started |
 | **6** | Wire L0 (+ later selected L1) into **`CRITICAL_PATH_TEST_PACK.md`** Pack B | Cadence updated |
