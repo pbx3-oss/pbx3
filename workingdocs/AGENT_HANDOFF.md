@@ -67,25 +67,37 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-28 — SBC product tracks A/B/C planning)
+## Next agent session notes (2026-07-28 — SBC product tracks & roadmap)
 
-**Branches:** Docs only — **`pbx3`** / directory workingdocs (uncommitted until asked). No OpenSIPS / SPA / admin code this slice. Lab unchanged: Magrathea VIP **`3.93.26.82`**; SIPp EIP **`98.82.58.59`**; golden primary; bzy stopped.
+**Branches:** Docs on **`main`** (pushed). Tips: **pbx3** **`c7e1c9a`** (tracks + capability roadmap); **pbx3spa** **`1ed3e2a`** (handoff). No OpenSIPS / SPA product code. Lab: Magrathea VIP **`3.93.26.82`**; SIPp EIP **`98.82.58.59`**; golden primary; bzy stopped.
 
 ### Shipped
-- **`pbx3-directory/docs/SBC_PRODUCT_TRACKS.md`** — planning + **posture locked**:
-  - **Teams:** no build/certify; customer ask → **C1** (AudioCodes/Oracle/Ribbon ahead, or Operator Connect)
-  - **STIR:** pragmatic; near-term **continue Twilio** (shape A, low obligation); B/C only if needed; vendors appendable
-  - **Capability roadmap** added (ex WebRTC): SIP TLS, optional media, registration-edge, Fail2ban whitelist, Track A polish, dial-alias miss path; second-tier restore/CPS/regex/observability
-- Handoff/TODO updated. Call-path #1 still dial-alias.
+- **`pbx3-directory/docs/SBC_PRODUCT_TRACKS.md`** — tracks A/B/C + **capability roadmap**:
+  - **Teams:** C1 only (AudioCodes/Oracle/Ribbon ahead or Operator Connect) — no OpenSIPS DR
+  - **STIR:** Twilio shape A near-term; Bandwidth Hosted Signing / OpenSIPS AS only if needed; DIDWW exiting
+  - **Gaps (ex WebRTC):** SIP TLS; optional rtpengine; registration-edge; Fail2ban Peer whitelist; Track A polish; dial-alias miss path; second-tier restore/CPS/regex/observability
+- FreePBX→pbx3 **data** migrate: separate ETL later (after FreePBX-behind-SBC); not SARK `migrateLegacyDb`
+- Call-path #1 still dial-alias
 
 ### Golden / operator follow-up
-- Optional: Bandwidth contract confirm with trunking colleague (belief: DIDs + intl only).
-- DIDWW exiting — no relay enablement.
-- Continue Twilio STIR/egress lab as useful; no OpenSIPS STIR module work yet.
-- **Track A:** stand up SARK (± FreePBX); Filament domain/dispatcher; phones → SBC; prove REGISTER + basic call.
+- Optional: Bandwidth contract confirm (belief: DIDs + intl)
+- **Track A:** stand up SARK (± FreePBX) behind SBC; prove REGISTER + call
+- Continue Twilio STIR/egress lab; no OpenSIPS STIR module yet
 
 ### Resume
-- Dial-alias when scheduled, **or** SARK/FreePBX ↔ SBC lab. STIR = Twilio path for now. Teams = commercial C1 answer only. Not CAGI Phase 4 first.
+- Dial-alias when scheduled, **or** SARK/FreePBX ↔ SBC lab. STIR = Twilio. Teams = C1 answer only. Not CAGI Phase 4 first.
+
+---
+
+## Next agent session notes (2026-07-28 — SBC product tracks A/B/C planning) — historical
+
+**Branches:** Docs only — superseded by block above (same day; now pushed).
+
+### Shipped
+- Initial tracks doc + posture; later expanded with capability roadmap (see tip **`c7e1c9a`**).
+
+### Resume
+- Superseded by SBC product tracks & roadmap block above.
 
 ---
 

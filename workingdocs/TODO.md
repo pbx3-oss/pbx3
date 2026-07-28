@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-28 (SBC tracks posture locked — Teams C1-only; STIR via Twilio for now)
+**Last updated:** 2026-07-28 (session end — SBC tracks/roadmap planning)
 
 ### Suggested “what next?” order
 
