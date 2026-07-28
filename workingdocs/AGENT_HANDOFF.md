@@ -51,6 +51,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **SBC HA (VIP/EIP promote)** | **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — requirements locked; implement later |
 | **Edge portability (Rule 7 debt)** | **`EDGE_PORTABILITY_SCORECARD.md`** — adapter vs OpenSIPS vocabulary leaks |
+| **SBC product tracks (general SKU / STIR / Teams)** | **`SBC_PRODUCT_TRACKS.md`** — Track A standalone + B STIR (US+FR) + C Teams DR; ranked backlog |
 | **Fleet Egress availability** | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — R1+R2 shipped; R3 EgressFailover/cagi parked |
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig + move-job + Fail2ban ban + **Egress Unavail** shipped; SPA badges later |
 | **Toll fraud / velocity** | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — V1–V5 fleshed (fixture-first, batch CDR, `active=NO` act); competitive notes |
@@ -66,7 +67,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-28 — SBC admin geo/CDR + SPA reboot)
+## Next agent session notes (2026-07-28 — SBC product tracks A/B/C planning)
+
+**Branches:** Docs only — **`pbx3`** / directory workingdocs (uncommitted until asked). No OpenSIPS / SPA / admin code this slice. Lab unchanged: Magrathea VIP **`3.93.26.82`**; SIPp EIP **`98.82.58.59`**; golden primary; bzy stopped.
+
+### Shipped
+- **`pbx3-directory/docs/SBC_PRODUCT_TRACKS.md`** — planning + **posture locked**:
+  - **Teams:** no build/certify; customer ask → **C1** (AudioCodes/Oracle/Ribbon ahead, or Operator Connect)
+  - **STIR:** pragmatic; near-term **continue Twilio** (shape A, low obligation); B/C only if needed; vendors appendable
+  - **A** general SBC SKU still valid; **lab next:** SARK (± FreePBX) behind SBC
+- Handoff/TODO updated. Call-path #1 still dial-alias.
+
+### Golden / operator follow-up
+- Optional: Bandwidth contract confirm with trunking colleague (belief: DIDs + intl only).
+- DIDWW exiting — no relay enablement.
+- Continue Twilio STIR/egress lab as useful; no OpenSIPS STIR module work yet.
+- **Track A:** stand up SARK (± FreePBX); Filament domain/dispatcher; phones → SBC; prove REGISTER + basic call.
+
+### Resume
+- Dial-alias when scheduled, **or** SARK/FreePBX ↔ SBC lab. STIR = Twilio path for now. Teams = commercial C1 answer only. Not CAGI Phase 4 first.
+
+---
+
+## Next agent session notes (2026-07-28 — SBC admin geo/CDR + SPA reboot) — historical
 
 **Branches:** **pbx3sbc-admin** **`main`** tip **`919938c`**. **pbx3spa** **`368196b`**. Magrathea VIP **`3.93.26.82`**. SIPp EIP **`98.82.58.59`** (unchanged). Golden still primary; bzy stopped.
 
@@ -82,7 +105,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Re-run `setup-admin-panel-sudoers.sh` after LE helper path changes (already done on VIP this session).
 
 ### Resume
-- Dial-alias slices A–F when scheduled (or day-parts §8). Same parks as prior: control duplex, fleet `/up`≠Asterisk. Not CAGI Phase 4 first.
+- Superseded by SBC product tracks planning block above (same calendar day).
 
 ---
 

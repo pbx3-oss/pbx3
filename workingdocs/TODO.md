@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-28 (session end — SBC admin door-knock geo + CDR filters; SPA Home reboot align)
+**Last updated:** 2026-07-28 (SBC tracks posture locked — Teams C1-only; STIR via Twilio for now)
 
 ### Suggested “what next?” order
 
@@ -17,10 +17,15 @@
 10. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
 11. **Fleet auth cookie/SSO (blocked)**.  
 12. **S7+** attested PCI — only on customer ask.  
+13. **SBC product tracks** (posture locked 2026-07-28) — Teams = **C1 answer only**; STIR = **Twilio** for now; **Track A lab:** SARK (± FreePBX) behind SBC — **`pbx3-directory/docs/SBC_PRODUCT_TRACKS.md`**. Optional: Bandwidth contract confirm with trunking colleague.
 
 ---
 
 ## Open items
+
+- [ ] **SBC Track A lab — SARK (± FreePBX) behind SBC (2026-07-28):** Operator will stand up SARK (and maybe FreePBX) and prove REGISTER / calls via Magrathea or scratch pbx3sbc (domain → dispatcher → foreign Asterisk; phones registrar = SBC). No GenAst. Capture recipe / gaps when done — **`SBC_PRODUCT_TRACKS.md`** Track A. **After that lab:** FreePBX→pbx3 **data** migrate is a separate ETL chain (not shared with SARK `migrateLegacyDb` / `db_legacy_sql`) — requirements later.
+
+- [x] **SBC product tracks — posture locked (2026-07-28):** Spec **`pbx3-directory/docs/SBC_PRODUCT_TRACKS.md`**. **Teams:** do not reinvent — customer ask → rent/peer certified SBC (AudioCodes/Oracle/Ribbon) or Operator Connect. **STIR:** pragmatic by Peer; near-term **Twilio** testing (low cost / low obligation shape A); Bandwidth Hosted Signing / OpenSIPS AS only if circumstance requires; DIDWW exiting — no relay work. **Pending (non-blocking):** Bandwidth contract confirm with trunking colleague (belief: DIDs + intl).
 
 - [x] **SBC admin — door-knock geo + SPA-kinship polish (2026-07-28):** View Door-knock shows Geographic origin (ip-api.com + 7d cache) + OSM embed map; System nav between Routing and Fail2Ban; **Backups** rename; Certificates under System with Hostname/Cert covers/Expires/Issuer (LE sudoers refreshed on VIP). CDR filters above table; blank date range = all records (Reset clears). Tips **pbx3sbc-admin** **`919938c`** (CDR layout) / **`58e35cf`** (CDR filters) / **`a904513`** (certs) / **`d506294`** (geo+Backups). Live on **`sbc.pbx3.com`**. No SIP header capture (OpenSIPS insert path unchanged).
 
@@ -271,7 +276,7 @@
 
 - [ ] **SPA hygiene (deferred — after S8 / R1 / core panels):** No work until functionality complete; runs fine on golden/LAN today. Then: **(1)** route lazy-loading in **`router/index.js`**; **(2)** extract shared list/detail patterns when adding panels (avoid new 600+ line views). See **`pbx3spa/workingdocs/PROJECT_PLAN.md`** § Current state, **`PBX3SPA_CODEBASE_ANALYSIS.md`** § Phase H / H2.
 
-- [ ] **SARK V6 migration routines (revisit, low priority — end of list):** Golden demo data still had tenant-scoped **`cluster`** on pkey (e.g. `affcot`) because **`sqlite_fixRi.sql`** was never applied; new SPA/API writes use shortuid, which broke joins (CoS on extensions). Shipped interim repair: **`sqlite_normalize_cluster_to_shortuid.sql`** (idempotent; **pbx3 0.0.3-20**). **Later revisit:** full **`db_legacy_sql`** path (`sqlite_create_legacy.sql`, **`sqlite_fixRi.sql`**, lineio, etc.) — ensure import always runs fixRi (or the normalize script), document operator steps, cover tables fixRi omits (`dateseg`, `holiday`, `page`, `users`, CoS junctions), and decide whether fixRi stays one-shot-only with normalize as the supported repair. Do not run stock fixRi on mixed DBs (NULLs shortuid rows).
+- [ ] **SARK V6 migration routines (revisit, low priority — end of list):** Golden demo data still had tenant-scoped **`cluster`** on pkey (e.g. `affcot`) because **`sqlite_fixRi.sql`** was never applied; new SPA/API writes use shortuid, which broke joins (CoS on extensions). Shipped interim repair: **`sqlite_normalize_cluster_to_shortuid.sql`** (idempotent; **pbx3 0.0.3-20**). **Later revisit:** full **`db_legacy_sql`** path (`sqlite_create_legacy.sql`, **`sqlite_fixRi.sql`**, lineio, etc.) — ensure import always runs fixRi (or the normalize script), document operator steps, cover tables fixRi omits (`dateseg`, `holiday`, `page`, `users`, CoS junctions), and decide whether fixRi stays one-shot-only with normalize as the supported repair. Do not run stock fixRi on mixed DBs (NULLs shortuid rows). **FreePBX→pbx3 migrate:** separate future ETL (no shared components with this SARK path); defer requirements until after FreePBX-behind-SBC lab.
 
 ---
 
