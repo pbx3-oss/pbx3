@@ -66,7 +66,27 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-27 — SIPp EIP move + control duplex park)
+## Next agent session notes (2026-07-28 — SBC admin geo/CDR + SPA reboot)
+
+**Branches:** **pbx3sbc-admin** **`main`** tip **`919938c`**. **pbx3spa** **`368196b`**. Magrathea VIP **`3.93.26.82`**. SIPp EIP **`98.82.58.59`** (unchanged). Golden still primary; bzy stopped.
+
+### Shipped
+- **Door-knock View:** ip-api geo + OSM embed map; live VIP.
+- **System nav:** between Routing and Fail2Ban; **Backups** label; Certificates under System + SPA-style cert details (LE sudoers fixed on VIP).
+- **CDR:** filters above table; blank date = all records; Reset clears dates; min/max duration side-by-side, success/fail toggles on next row.
+- **SPA Home:** Reboot right-aligned with Start/Stop.
+- No OpenSIPS door-knock SIP header capture (by choice — config risk).
+
+### Golden / operator follow-up
+- SBC backups exist (System → Backups; cron + S3). Restore stays CLI.
+- Re-run `setup-admin-panel-sudoers.sh` after LE helper path changes (already done on VIP this session).
+
+### Resume
+- Dial-alias slices A–F when scheduled (or day-parts §8). Same parks as prior: control duplex, fleet `/up`≠Asterisk. Not CAGI Phase 4 first.
+
+---
+
+## Next agent session notes (2026-07-27 — SIPp EIP move + control duplex park) — historical
 
 **Branches:** **pbx3** on **`main`** (pushed). Tip **`018b46c`**. **pbx3cagi** **`a7cdeed`**. SPA handoff this close. Magrathea VIP **`3.93.26.82`** (companion **stopped**). **bzy54n stopped**. SIPp carrier EIP **`98.82.58.59`** (Peer **99**; instance may be **stopped** — keep EIP).
 
@@ -81,7 +101,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Refresh **`SIPP_LAB_HOST.md`** / call-tests README EIP strings when convenient.
 
 ### Resume
-- Implement dial-alias when scheduled (or day-parts §8). At alias lab: 2nd SIPp (non-Peer). Not CAGI Phase 4 first. Pre-live: Asterisk-in-health + optional control duplex.
+- Superseded by 2026-07-28 SBC admin block above.
 
 ---
 

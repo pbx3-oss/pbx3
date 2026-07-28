@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-27 (session end — SIPp EIP 98.82.58.59; control duplex parked)
+**Last updated:** 2026-07-28 (session end — SBC admin door-knock geo + CDR filters; SPA Home reboot align)
 
 ### Suggested “what next?” order
 
@@ -21,6 +21,10 @@
 ---
 
 ## Open items
+
+- [x] **SBC admin — door-knock geo + SPA-kinship polish (2026-07-28):** View Door-knock shows Geographic origin (ip-api.com + 7d cache) + OSM embed map; System nav between Routing and Fail2Ban; **Backups** rename; Certificates under System with Hostname/Cert covers/Expires/Issuer (LE sudoers refreshed on VIP). CDR filters above table; blank date range = all records (Reset clears). Tips **pbx3sbc-admin** **`919938c`** (CDR layout) / **`58e35cf`** (CDR filters) / **`a904513`** (certs) / **`d506294`** (geo+Backups). Live on **`sbc.pbx3.com`**. No SIP header capture (OpenSIPS insert path unchanged).
+
+- [x] **SPA Home — Reboot right-aligned (2026-07-28):** Start/Stop + Reboot one row; Reboot `margin-left: auto`. Tip **pbx3spa** **`368196b`**.
 
 - [x] **Fleet multi-tenant phone dial / SBC AoR (2026-07-23):** Root cause was Asterisk→SBC `INVITE shortuid@VIP` → OpenSIPS domain guess (`LIMIT 1`) → 404 / hairpin. Fix: PrepDial + GenAst Q dials use `sip:shortuid@tenant.fqdn`; phone `$outbound_proxy` → `sbc.pbx3.com`; OpenSIPS usrloc for from-Asterisk FQDN RURIs. **Fleet-gated** (`PBX3_FLEET_MODE` / Egress) so singleton stays direct-to-contact. Lab: golden multi-tenant both ways + ring groups; rolled **08jzwn** + **bzy54n** (`pbx3cagi` **1.0.0-6**). Tips **pbx3cagi** **`fd9b146`**, **pbx3** **`1ea1210`**, **pbx3sbc** **`4509b5d`**. **Residue** (tmpl→staged phone copy, hardcoded SBC FQDN, Page/`***` presets, tighter OpenSIPS gate, tenant DNS ≠ VIP) → **`AST_CONFIG_GENERATOR_SUBPROJECT.md`**.
 
