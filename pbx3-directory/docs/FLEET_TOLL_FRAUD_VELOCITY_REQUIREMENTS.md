@@ -2,7 +2,7 @@
 
 **Status:** **V0 framing done** (2026-07-22); **V1–V2 build plan fleshed** (2026-07-23); **auto-block required** (Fail2ban inside→out — 2026-07-23). **V1–V2 + V5 auto-block** shipped (2026-07-24) in **pbx3api** + Gatekeeper. V3/V4 later.  
 **Lab testing:** CDR fixture first; SIPp optional E2E.  
-**Related:** **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite (Phase 6 `master.db` shipped); instance **CoS** / dial policy (prevention + **act**); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only** — outside→in; velocity is the **inside→out** cousin).
+**Related:** **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite (Phase 6 `master.db` shipped); instance **CoS** / dial policy (prevention + **act**); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only** — outside→in; velocity is the **inside→out** cousin); living research **`TELEPHONE_FRAUD_RESEARCH.md`** (fleet vs carrier ownership).
 
 ---
 

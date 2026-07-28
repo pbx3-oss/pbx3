@@ -10,7 +10,7 @@
 | **B — STIR/SHAKEN** | **Pragmatic / Peer-shaped.** Near-term: continue **Twilio** lab (shape **A** — low cost, low obligation). Escalate to Bandwidth Hosted Signing (B) or OpenSIPS AS (C) only when circumstance requires. Append vendors over time. |
 | **A — General SBC** | Still valid SKU intent. **Lab next:** stand up a **SARK** box (and optionally **FreePBX**) behind Magrathea / scratch SBC — domain, dispatcher, phone registrar = SBC, one DID path — prove proxy-registrar without GenAst. |
 
-**Related:** **`DESIGN_RULES.md`** Rules **7** + **13**; **`EDGE_PORTABILITY_SCORECARD.md`**; **`NUMBER_DIALECT_REQUIREMENTS.md`**; **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WebRTC WSS); pbx3sbc proxy-registrar architecture; **`PEERING-PLAN.md`**.
+**Related:** **`DESIGN_RULES.md`** Rules **7** + **13**; **`EDGE_PORTABILITY_SCORECARD.md`**; **`NUMBER_DIALECT_REQUIREMENTS.md`**; **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WebRTC WSS); pbx3sbc proxy-registrar architecture; **`PEERING-PLAN.md`**; living research **`TELEPHONE_FRAUD_RESEARCH.md`** §5–§6 (peer STIR postures; ClearIP/Sansay bolt-on effort/cost/value).
 
 ---
 
@@ -175,6 +175,8 @@ Source: Bandwidth *STIR/SHAKEN Implementation Checklist* (fact sheet; US-focused
 **Escape hatch:** shape **A** (Twilio / DIDWW default) when you are not the obligated originator and the carrier signs under *their* obligation — but do **not** plan the US *own-TN / own-VSP* product on borrowed Identity. For own-VSP US, prefer shape **B** (Bandwidth) or **C** (OpenSIPS), never “Peer’s cert pretending to be ours.”
 
 **Rank / near-term:** Continue **Twilio** testing (shape **A**). Do **not** start Filament / STI-PA / OpenSIPS AS unless a Peer or legal circumstance requires B or C. Bandwidth shape **B** still means compliance steps **1–3** gate production own-cert US signing when that path is chosen.
+
+**ClearIP / Sansay bolt-on:** Effort/cost/value captured in **`TELEPHONE_FRAUD_RESEARCH.md` §6** — do not schedule while on shape **A**; if own-cert forced prefer Bandwidth **B** before ClearIP/Sansay/OpenSIPS **C**; Sansay Express = alternate SBC SKU, not Magrathea plugin.
 
 ---
 
