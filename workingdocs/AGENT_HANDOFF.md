@@ -51,7 +51,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
 | **SBC HA (VIP/EIP promote)** | **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — requirements locked; implement later |
 | **Edge portability (Rule 7 debt)** | **`EDGE_PORTABILITY_SCORECARD.md`** — adapter vs OpenSIPS vocabulary leaks |
-| **SBC product tracks (general SKU / STIR / Teams)** | **`SBC_PRODUCT_TRACKS.md`** — Track A standalone + B STIR (US+FR) + C Teams DR; ranked backlog |
+| **SBC product tracks & roadmap** | **`SBC_PRODUCT_TRACKS.md`** — A/B/C posture + capability gaps (SIP TLS, media mode, registration-edge, …); WebRTC committed |
 | **Fleet Egress availability** | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — R1+R2 shipped; R3 EgressFailover/cagi parked |
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig + move-job + Fail2ban ban + **Egress Unavail** shipped; SPA badges later |
 | **Toll fraud / velocity** | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — V1–V5 fleshed (fixture-first, batch CDR, `active=NO` act); competitive notes |
@@ -75,7 +75,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **`pbx3-directory/docs/SBC_PRODUCT_TRACKS.md`** — planning + **posture locked**:
   - **Teams:** no build/certify; customer ask → **C1** (AudioCodes/Oracle/Ribbon ahead, or Operator Connect)
   - **STIR:** pragmatic; near-term **continue Twilio** (shape A, low obligation); B/C only if needed; vendors appendable
-  - **A** general SBC SKU still valid; **lab next:** SARK (± FreePBX) behind SBC
+  - **Capability roadmap** added (ex WebRTC): SIP TLS, optional media, registration-edge, Fail2ban whitelist, Track A polish, dial-alias miss path; second-tier restore/CPS/regex/observability
 - Handoff/TODO updated. Call-path #1 still dial-alias.
 
 ### Golden / operator follow-up

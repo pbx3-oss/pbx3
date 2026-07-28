@@ -1,6 +1,6 @@
-# SBC product tracks (A / B / C)
+# SBC product tracks & roadmap
 
-**Status:** Planning capture **2026-07-28** (Teams C1 vendors + Twilio + Bandwidth + DIDWW). **Revisit / extend:** append more carrier Peer STIR notes under Track B as vendors are reviewed (same A / A′ / B / C shape table).
+**Status:** Planning capture **2026-07-28** (Teams C1 + STIR vendors + capability gaps). **Revisit / extend:** append STIR vendor notes under Track B; revisit gaps after WebRTC / Track A lab.
 
 ### Product posture locked (2026-07-28)
 
@@ -10,7 +10,46 @@
 | **B — STIR/SHAKEN** | **Pragmatic / Peer-shaped.** Near-term: continue **Twilio** lab (shape **A** — low cost, low obligation). Escalate to Bandwidth Hosted Signing (B) or OpenSIPS AS (C) only when circumstance requires. Append vendors over time. |
 | **A — General SBC** | Still valid SKU intent. **Lab next:** stand up a **SARK** box (and optionally **FreePBX**) behind Magrathea / scratch SBC — domain, dispatcher, phone registrar = SBC, one DID path — prove proxy-registrar without GenAst. |
 
-**Related:** **`DESIGN_RULES.md`** Rules **7** + **13**; **`EDGE_PORTABILITY_SCORECARD.md`**; **`NUMBER_DIALECT_REQUIREMENTS.md`**; **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** (separate registration-edge; not these tracks); pbx3sbc proxy-registrar architecture.
+**Related:** **`DESIGN_RULES.md`** Rules **7** + **13**; **`EDGE_PORTABILITY_SCORECARD.md`**; **`NUMBER_DIALECT_REQUIREMENTS.md`**; **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WebRTC WSS); pbx3sbc proxy-registrar architecture; **`PEERING-PLAN.md`**.
+
+---
+
+## Capability gaps & roadmap (ex WebRTC)
+
+**Committed (not “missing”):** **WebRTC / WSS on the edge** — fleet interim node `:8089`; target SBC terminates WSS (same VIP as desk phones). See **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · IMPLEMENTATION_PLAN **S8.11**. Live REGISTER lab still deferred.
+
+**Excluded by posture (not gaps to build on Magrathea):** Teams Direct Routing on OpenSIPS; first-party STI-AS on every Peer; door-knock SIP header capture; control-plane HA homed on the SBC; OpenSIPS rename-for-purity.
+
+### Material (general SBC / fleet edge)
+
+| # | Gap | Notes | Trigger |
+|---|-----|--------|---------|
+| **1** | **SIP TLS** (and SRTP when media is touched) | Admin HTTPS done; phone/carrier path still largely UDP + RTP bypass. Sibling to WebRTC TLS/WSS. | WebRTC work; enterprise / cloud Peer demand |
+| **2** | **Optional media plane** (rtpengine-class) | RTP bypass stays default. Need a **mode** for NAT hell, WebRTC↔RTP, optional transcoding, edge dialect/DID staging. | WebRTC; dialect follow-ons; Peer that forbids bypass |
+| **3** | **Downstream trunk REGISTER** | IP-trusted Peers + outbound `uac_registrant` exist. Dynamic inbound trunks that REGISTER → **separate registration-edge** instance class (not bolt-on). Spec: **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**. | Customer ITSP that only REGISTERs |
+| **4** | **Fail2ban Peer auto-whitelist** | Auto-sync carrier inbound Peer IPs on save/delete; site NATs stay manual. TODO already. | Next carrier onboard |
+| **5** | **Standalone SKU polish** | Installer/docs without Gatekeeper; SARK/FreePBX-behind-SBC recipe (Track A lab). Capability exists; packaging lags. | Track A lab |
+| **6** | **Dial-alias usrloc-miss → dispatcher** | OpenSIPS miss path for `ext@tenant.fqdn` when alias ships. Call-path, not vanity. Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. | Dial-alias schedule |
+
+### Second-tier
+
+| # | Gap | Notes |
+|---|-----|--------|
+| **7** | Filament **restore** | Backup list/upload exists; restore stays CLI. |
+| **8** | CPS / ratelimit / mid-registrar | Pike-ish pieces exist; serious shaping deferred until volume/abuse. |
+| **9** | DID **regex** / richer LCR | Prefix drouting shipped; regex DID groups deferred (`PEERING-PLAN`). |
+| **10** | Observability | CDR/geo/door-knock improved; thin vs commercial (metrics, call-trace UI, verstat dashboards). |
+
+### Roadmap order (SBC-owned, after call-path priorities)
+
+1. **WebRTC / WSS** (committed) — pulls TLS/WSS; may force media-mode decisions  
+2. **Track A lab** — SARK (± FreePBX) behind SBC; document recipe  
+3. **SIP TLS** for hardphones / Peers (align with WebRTC cert story where possible)  
+4. **Optional rtpengine path** when bypass is insufficient  
+5. **Fail2ban Peer auto-whitelist** at next carrier onboard  
+6. **Registration-edge** only on customer demand (own image)  
+7. Dial-alias OpenSIPS slice when alias lab starts (owned with call-path track)  
+8. Second-tier polish (restore UI, CPS, regex DID, observability) on ask  
 
 ---
 
@@ -181,10 +220,11 @@ Teams Phone  ↔  Microsoft-certified SBC  ↔  pbx3sbc  ↔  PBX / carrier Peer
 
 ## Recommended backlog order
 
-1. Keep **tenant dial-alias** (and other call-path TODO #1) as the *call-path* priority
-2. **A — SARK (± FreePBX) behind SBC** — operator lab prove; document gaps
-3. **B — continue Twilio STIR lab** (shape A); escalate B/C only on circumstance; append vendors over time
-4. **C — parked**; customer Teams ask → **C1** commercial answer only
+1. Keep **tenant dial-alias** (and other call-path TODO #1) as the *call-path* priority  
+2. **A — SARK (± FreePBX) behind SBC** — operator lab prove; document gaps  
+3. **B — continue Twilio STIR lab** (shape A); escalate B/C only on circumstance; append vendors over time  
+4. **C — parked**; customer Teams ask → **C1** commercial answer only  
+5. **Capability roadmap** (above) — WebRTC committed; then SIP TLS / optional media / Fail2ban whitelist / registration-edge on demand  
 
 ---
 
@@ -194,4 +234,4 @@ OpenSIPS production STIR / Teams code; Filament STIR UI; STI-CA / APNF / Bandwid
 
 ---
 
-*Last updated: 2026-07-28.*
+*Last updated: 2026-07-28 (capability gaps / roadmap added).*
