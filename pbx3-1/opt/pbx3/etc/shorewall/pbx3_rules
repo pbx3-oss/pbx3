@@ -2,6 +2,7 @@ ACCEPT net:$LAN $FW tcp 5060 - - # TCP SIP
 ACCEPT net:$LAN $FW tcp 5061 - - # TCP SIP
 ACCEPT net $FW tcp 80 - - # HTTP
 ACCEPT net $FW tcp 44300 - - # HTTPS API
+ACCEPT net $FW tcp 8089 - - # WebRTC WSS
 ACCEPT net $FW tcp 22 - - # SSH
 ACCEPT net:$LAN $FW udp 123 - - # NTP
 ACCEPT net:$LAN $FW tcp 389 - - # LDAP

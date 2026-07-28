@@ -252,7 +252,7 @@ A single SBC is acceptable for **lab / golden validation**. **Production fleet**
 | **Directory / S3 HoR** | Unchanged — catalog authoritative; edge is projection |
 ### 6.1 WebRTC / WSS endpoints (fleet edge)
 
-**Settled 2026-07-14** (product framing). Implementation of WSS-on-SBC remains a later track.
+**Settled 2026-07-14** (product framing). **Active 2026-07-28:** WSS-on-SBC promoted for golden demo (few weeks). Build: golden `:8089` baseline → **scratch SBC** W1 → Magrathea VIP cutover when booked. RTP bypass. Recovery tag **`pre-webrtc-wss-20260728`**.
 
 **Business driver:** Same **stable edge** for webphones as desk phones — **endpoint setup simplicity** (one WSS/SIP proxy forever; instance move = edge repoint). Not a requirement to make last-gen backends understand WebRTC (they already do).
 

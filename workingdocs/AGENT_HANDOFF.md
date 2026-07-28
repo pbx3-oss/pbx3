@@ -55,7 +55,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Fleet Egress availability** | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — R1+R2 shipped; R3 EgressFailover/cagi parked |
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig + move-job + Fail2ban ban + **Egress Unavail** shipped; SPA badges later |
 | **Toll fraud / velocity** | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — V1–V5 fleshed (fixture-first, batch CDR, `active=NO` act); competitive notes |
-| **Telephone fraud research** (living) | **`TELEPHONE_FRAUD_RESEARCH.md`** — class A spoof vs B toll; fleet PBX / SBC / carrier ownership; jurisdiction scratchpad |
+| **WebRTC / WSS (demo)** | **`WEBRTC_WSS_LAB.md`** (golden `:8089` baseline) → **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 → **`SBC_PRODUCT_TRACKS.md`** · IMPLEMENTATION_PLAN **W1** |
 | **PSTN number dialects** | **`NUMBER_DIALECT_REQUIREMENTS.md`** → MkDocs **`fleet/number-dialect`** → Peer dialect + OpenSIPS `DIALECT_*`; node Egress transform = DNID/`+CC` by serving country |
 
 | **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging WS0–WS4 **done** (lab); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR **v1 done** (scripts + scratch drill + MkDocs) |
@@ -68,37 +68,36 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-28 — SBC product tracks & roadmap)
+## Next agent session notes (2026-07-28 — WebRTC golden `:8089`)
 
-**Branches:** Docs on **`main`** (pushed). Tips: **pbx3** **`c7e1c9a`** (tracks + capability roadmap); **pbx3spa** **`1ed3e2a`** (handoff). No OpenSIPS / SPA product code. Lab: Magrathea VIP **`3.93.26.82`**; SIPp EIP **`98.82.58.59`**; golden primary; bzy stopped.
+**Branches:** **pbx3** **`main`** (docs dirty locally — tracks/TODO/`WEBRTC_WSS_LAB`/shorewall template). **pbx3sbc** branch **`webrtc-wss`** (OpenSIPS WSS scaffold; **not** deployed). Lab: golden **`08jzwn`** only; Magrathea VIP active (UDP untouched); bzy + companion stopped. Recovery tags **`pre-webrtc-wss-20260728`** on pbx3 / pbx3sbc / pbx3sbc-admin / pbx3spa / pbx3api / pbx3cagi (pushed).
 
 ### Shipped
-- **`pbx3-directory/docs/SBC_PRODUCT_TRACKS.md`** — tracks A/B/C + **capability roadmap**:
-  - **Teams:** C1 only (AudioCodes/Oracle/Ribbon ahead or Operator Connect) — no OpenSIPS DR
-  - **STIR:** Twilio shape A near-term; Bandwidth Hosted Signing / OpenSIPS AS only if needed; DIDWW exiting
-  - **Gaps (ex WebRTC):** SIP TLS; optional rtpengine; registration-edge; Fail2ban Peer whitelist; Track A polish; dial-alias miss path; second-tier restore/CPS/regex/observability
-- FreePBX→pbx3 **data** migrate: separate ETL later (after FreePBX-behind-SBC); not SARK `migrateLegacyDb`
-- Call-path #1 still dial-alias
+- **Fraud research** (earlier same day): **`TELEPHONE_FRAUD_RESEARCH.md`**; tip **pbx3** **`5da1084`** (pushed).
+- **WebRTC priority #1** — **`SBC_PRODUCT_TRACKS.md`**, **`TODO.md`**, §6.1; lab notes **`WEBRTC_WSS_LAB.md`**.
+- **Golden `:8089`:** LE perms + certbot deploy hook; Shorewall tcp **8089**; WebRTC ext **1500** / tenant **`dhbm8x`**; JsSIP **REGISTER OK** (`wss://…:8089/ws`). Creds: golden **`~/webrtc-1500.env`** (mode 600).
+- **Locked non-disruptive path:** stay on **golden `:8089`** for demo (does **not** disrupt Magrathea SIP UDP). Scratch SBC / Magrathea WSS = later when booked — not a gate for audio.
+- **pbx3sbc `webrtc-wss`:** commented WSS scaffold in `opensips.cfg.template` + **`WEBRTC_W1_SBC.md`** (uncommitted; defer enable).
 
 ### Golden / operator follow-up
-- Optional: Bandwidth contract confirm (belief: DIDs + intl)
-- **Track A:** stand up SARK (± FreePBX) behind SBC; prove REGISTER + call
-- Continue Twilio STIR/egress lab; no OpenSIPS STIR module yet
+- **Next:** browser **webphone audio** smoke → `wss://08jzwn.pbx3.com:8089/ws` (ext **1500**). Confirm AWS SG **8089/tcp** from client IP. On-box smoke must use loopback (EIP hairpin fails).
+- Desk UDP / Magrathea VIP: leave alone.
+- Optional later: SPA WebRTC create path; commit dirty pbx3 docs + `webrtc-wss` when asked.
 
 ### Resume
-- Dial-alias when scheduled, **or** SARK/FreePBX ↔ SBC lab. STIR = Twilio. Teams = C1 answer only. Not CAGI Phase 4 first.
+- **Webphone audio on golden `:8089`** (REGISTER done). Spec: **`WEBRTC_WSS_LAB.md`**. Do **not** cut over Magrathea WSS unless booked. Dial-alias / Track A after WebRTC demo path.
 
 ---
 
-## Next agent session notes (2026-07-28 — SBC product tracks A/B/C planning) — historical
+## Next agent session notes (2026-07-28 — SBC product tracks & roadmap) — historical
 
-**Branches:** Docs only — superseded by block above (same day; now pushed).
+**Branches:** Docs on **`main`** (pushed). Tips: **pbx3** **`c7e1c9a`**; **pbx3spa** **`1ed3e2a`**. Superseded same day by WebRTC golden block above.
 
 ### Shipped
-- Initial tracks doc + posture; later expanded with capability roadmap (see tip **`c7e1c9a`**).
+- **`SBC_PRODUCT_TRACKS.md`** tracks A/B/C + capability roadmap (Teams C1; STIR Twilio; gaps list).
 
 ### Resume
-- Superseded by SBC product tracks & roadmap block above.
+- Superseded — WebRTC golden `:8089` is #1.
 
 ---
 

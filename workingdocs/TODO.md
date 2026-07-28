@@ -1,27 +1,30 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-28 (session end — SBC tracks/roadmap planning)
+**Last updated:** 2026-07-28 (session end — WebRTC golden `:8089` REGISTER OK; audio next; Magrathea UDP untouched)
 
 ### Suggested “what next?” order
 
-1. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
-2. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
-3. **Product crumbs** (optional) — D WebRTC WSS lab / paid Twilio / drain / velocity V3 — when ready.  
-4. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
-5. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
-6. **Velocity standalone product** (parked).  
-7. **Instance shadowing** / S10.7 / S8.9 (parked).  
-8. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
-9. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
-10. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
-11. **Fleet auth cookie/SSO (blocked)**.  
-12. **S7+** attested PCI — only on customer ask.  
-13. **SBC product tracks & roadmap** (2026-07-28) — posture locked; capability gaps (SIP TLS, optional media, registration-edge, …) in **`pbx3-directory/docs/SBC_PRODUCT_TRACKS.md`**. Track A lab: SARK (± FreePBX). STIR = Twilio. Teams = C1 only.
+1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** webphone path (REGISTER done; audio via real webphone). Does **not** disrupt Magrathea UDP. SBC WSS (scratch/VIP) later when booked. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
+2. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
+3. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
+4. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
+5. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
+6. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
+7. **Velocity standalone product** (parked).  
+8. **Instance shadowing** / S10.7 / S8.9 (parked).  
+9. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
+10. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
+11. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
+12. **Fleet auth cookie/SSO (blocked)**.  
+13. **S7+** attested PCI — only on customer ask.  
+14. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.
 
 ---
 
 ## Open items
+
+- [ ] **WebRTC / WSS — golden demo path (2026-07-28):** Priority #1 on **golden `:8089`** (no Magrathea UDP impact). REGISTER smoke **OK** (JsSIP). Next: **webphone audio**. SBC WSS later (branch `webrtc-wss` scaffold). Recovery **`pre-webrtc-wss-20260728`**. Spec: **`WEBRTC_WSS_LAB.md`** · §6.1.
 
 - [ ] **SBC Track A lab — SARK (± FreePBX) behind SBC (2026-07-28):** Operator will stand up SARK (and maybe FreePBX) and prove REGISTER / calls via Magrathea or scratch pbx3sbc (domain → dispatcher → foreign Asterisk; phones registrar = SBC). No GenAst. Capture recipe / gaps when done — **`SBC_PRODUCT_TRACKS.md`** Track A. **After that lab:** FreePBX→pbx3 **data** migrate is a separate ETL chain (not shared with SARK `migrateLegacyDb` / `db_legacy_sql`) — requirements later.
 
