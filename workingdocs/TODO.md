@@ -1,24 +1,25 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-29 (ext create `$desc` tip **pbx3api** `60262a0` + hot golden; PrepDial tip **pbx3cagi** `3a9b7d7`; open TODO for `ipphone.desc` vs `description`)
+**Last updated:** 2026-07-29 (fleet-first tenant create requirements locked; CLID/localarea SPA+API digit-string fixes pending tip)
 
 ### Suggested “what next?” order
 
 1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
-2. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
-3. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
-4. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
-5. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
-6. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
-7. **Velocity standalone product** (parked).  
-8. **Instance shadowing** / S10.7 / S8.9 (parked).  
-9. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
-10. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
-11. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
-12. **Fleet auth cookie/SSO (blocked)**.  
-13. **S7+** attested PCI — only on customer ask.  
-14. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.
+2. **Fleet-first tenant create** — requirements locked; implement when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Fleet Create → push node `/fleet/tenants` → catalog → SBC domain; instance Create/Delete/FQDN locked in fleet mode; solo unchanged. Follow-on: Fleet Delete + FQDN rename.  
+3. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
+4. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
+5. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
+6. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
+7. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
+8. **Velocity standalone product** (parked).  
+9. **Instance shadowing** / S10.7 / S8.9 (parked).  
+10. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
+11. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
+12. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
+13. **Fleet auth cookie/SSO (blocked)**.  
+14. **S7+** attested PCI — only on customer ask.  
+15. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.
 
 ---
 
@@ -33,6 +34,8 @@
 - [ ] **WebRTC — third-party SPA far-end (open 2026-07-29):** Dev-team SPA: (1) **digit-only sip-user sanitize** rejects alphanumeric shortuid — must accept `[a-z0-9]` (SIP user=`8af9ee`, dialable=`1500`). (2) Inbound: INVITE arrives on WSS but no SIP response (media/permissions / `newRTCSession` likely). Outbound from SPA previously “no INVITE” may be same class of client bug. Not a golden Asterisk gate. Clamp SG **8089** when SPA host test done.
 
 - [ ] **`ipphone.desc` vs `description` — clarify / rename (parked 2026-07-29):** Historical SARK/Asterisk ambivalence: schema has both columns; SPA “User (extension name)” → `desc`, “Description” → `description`; list **User** prefers `desc` so freeform Description never shows when `desc` is set (e.g. `1501` vs “WebRTC second ep”). GenAst `$desc` token actually substitutes **`description`** (else pkey), not the `desc` column. Model comment still calls `desc` “SIP username” — wrong now that **shortuid** is PJSIP identity. Proper fix later: map roles (display name vs notes vs any remaining Asterisk/SIP use), align SPA labels + list, GenAst templates, API, migrate/rename if needed. Do not drive-by.
+
+- [ ] **Fleet-first tenant create (requirements 2026-07-29):** New tenants minted by **fleet admin** only — Gatekeeper provision pushes node `/fleet/tenants` → catalog meta → SBC `registerDomain` (same setid as host). Instance (fleet mode): no Create/Delete; FQDN/shortuid read-only; edit PBX settings + build dialplan still on-node. Solo unchanged. Follow-on: Fleet Delete + FQDN rename orchestrators. Spec: **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Do not use CLI/`register-tenant.sh` or hidden Domains URL as the routine path.
 
 - [ ] **SBC Track A lab — SARK (± FreePBX) behind SBC (2026-07-28):** Operator will stand up SARK (and maybe FreePBX) and prove REGISTER / calls via Magrathea or scratch pbx3sbc (domain → dispatcher → foreign Asterisk; phones registrar = SBC). No GenAst. Capture recipe / gaps when done — **`SBC_PRODUCT_TRACKS.md`** Track A. **After that lab:** FreePBX→pbx3 **data** migrate is a separate ETL chain (not shared with SARK `migrateLegacyDb` / `db_legacy_sql`) — requirements later.
 

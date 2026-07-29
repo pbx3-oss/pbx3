@@ -45,6 +45,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — requirements draft; implement after §8 lock; before CAGI Phase 4 |
 | **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — §8 locked; implement slices A–F when scheduled; 2nd SIPp phone host at alias lab |
+| **Fleet-first tenant create** | **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** — policy locked; implement when scheduled |
 | **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** (full map) → **`CALL_TEST_STRATEGY.md`** → **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
 | **Failover + shadowing** (parked) | Edge HA: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Instance shadow SKU framing: **`INSTANCE_SHADOWING_REQUIREMENTS.md`** (same mechanics, paid twin) |
@@ -68,7 +69,24 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-29 — WebRTC PrepDial + ext create `$desc`)
+## Next agent session notes (2026-07-29 — fleet-first tenant create + tenant field fixes)
+
+**Branches:** **pbx3** **`main`** — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** locked (not coded). **pbx3api** / **pbx3spa** — CLID/localarea digit-string fixes (tips this commit). Lab: golden **`08jzwn`**. Prior same day: PrepDial **`3a9b7d7`**, ext create `$desc` **`60262a0`**.
+
+### Shipped (docs / small fixes)
+- **Fleet-first tenant create:** MSP creates via Fleet; gatekeeper **pushes** node create then catalog + SBC domain; instance Create/Delete/FQDN locked in fleet mode; solo unchanged. Delete + FQDN rename = fleet follow-on. Spec **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.
+- **Tenant CLID / local area:** SPA create/edit use text (leading zeros); API `localarea` string|digits like `clusterclid`. (Ext create `$desc` already tipped.)
+
+### Golden / operator follow-up
+- WebRTC SPA far-end still open (sanitize + inbound SIP response).
+- Lab tenant **Aelintra** / `gwfwcv` may exist on golden without catalog/SBC — expected until fleet-first ships; manual domain for lab only.
+
+### Resume
+- Implement fleet-first when scheduled (see requirements). Or WebRTC SPA retest / dial-alias. Stay off Magrathea WSS until booked.
+
+---
+
+## Next agent session notes (2026-07-29 — WebRTC PrepDial + ext create `$desc`) — historical
 
 **Branches:** **pbx3cagi** **`main`** tip **`3a9b7d7`** (PrepDial WebRTC skip; hot golden). **pbx3api** **`main`** tip **`60262a0`** (ext create `$desc`; hot golden). **pbx3** / **pbx3spa** handoff/TODO. Lab: golden **`08jzwn`**; Magrathea UDP untouched. Recovery **`pre-webrtc-wss-20260728`**.
 
@@ -86,7 +104,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Clamp SG **8089** when SPA test done. Creds: `~/webrtc-1500.env`.
 
 ### Resume
-- Await SPA far-end fix → retest desk→1500 ring/answer. Dial-alias / Track A after WebRTC demo comfort. Stay off Magrathea WSS until booked.
+- Superseded — see fleet-first block above (same day).
 
 ---
 
