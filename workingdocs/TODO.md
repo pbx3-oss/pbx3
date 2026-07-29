@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-29 (fleet-first tenant create requirements locked; CLID/localarea SPA+API digit-string fixes pending tip)
+**Last updated:** 2026-07-29 (fleet-first requirements tip **`e5fa3c4`**; CLID/localarea tips **pbx3api** **`0aa5e71`** / **pbx3spa** **`2ebb882`**)
 
 ### Suggested “what next?” order
 
