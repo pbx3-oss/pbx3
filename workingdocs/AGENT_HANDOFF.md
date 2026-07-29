@@ -71,11 +71,12 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-07-29 — fleet-first tenant create + tenant field fixes)
 
-**Branches:** **pbx3** **`main`** — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** locked (not coded). **pbx3api** / **pbx3spa** — CLID/localarea digit-string fixes (tips this commit). Lab: golden **`08jzwn`**. Prior same day: PrepDial **`3a9b7d7`**, ext create `$desc` **`60262a0`**.
+**Branches:** **pbx3** **`main`** tips **`e5fa3c4`** / **`a6da1ee`** — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** locked (not coded). **pbx3api** **`0aa5e71`** (localarea string). **pbx3spa** **`2ebb882`** (CLID/localarea text + handoff). Lab: golden **`08jzwn`**. Prior same day: PrepDial **`3a9b7d7`**, ext create `$desc` **`60262a0`**.
 
 ### Shipped (docs / small fixes)
 - **Fleet-first tenant create:** MSP creates via Fleet; gatekeeper **pushes** node create then catalog + SBC domain; instance Create/Delete/FQDN locked in fleet mode; solo unchanged. Delete + FQDN rename = fleet follow-on. Spec **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.
-- **Tenant CLID / local area:** SPA create/edit use text (leading zeros); API `localarea` string|digits like `clusterclid`. (Ext create `$desc` already tipped.)
+- **Tenant CLID / local area:** SPA create/edit use text (leading zeros); API `localarea` string|digits like `clusterclid`. Tips **pbx3api** **`0aa5e71`**, **pbx3spa** **`2ebb882`**. Ext create `$desc` tip **`60262a0`**.
+- **Also this session:** Extension create `$desc` hot on golden; WebRTC PrepDial tipped earlier same day.
 
 ### Golden / operator follow-up
 - WebRTC SPA far-end still open (sanitize + inbound SIP response).
