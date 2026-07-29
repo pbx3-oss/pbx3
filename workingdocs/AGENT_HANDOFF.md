@@ -68,7 +68,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-28 — WebRTC golden `:8089`)
+## Next agent session notes (2026-07-28 — WebRTC REGISTER + tmpl shortuid)
+
+**Branches:** **pbx3** **`main`** (tmpl + docs this session). **pbx3spa** handoff only. **pbx3sbc** `webrtc-wss` still scaffold (defer). Lab: golden **`08jzwn`** only; Magrathea VIP UDP untouched. Recovery **`pre-webrtc-wss-20260728`**.
+
+### Shipped
+- **JsSIP audio** (earlier this arc): Chromium → `wss://08jzwn.pbx3.com:8089/ws` → Echo **1599**; ICE connected; ~60KB in/out; Asterisk **279/279** ulaw. RTP bypass OK.
+- **`pjsip_webrtc.tmpl`:** endpoint/auth/aor/username = **`$id` (shortuid)** — was wrongly `$ext` (pkey), so admin hint `PJSIP/{shortuid}` never matched. Callerid still `$ext`. `qualify_frequency=0` for WSS.
+- **Golden:** GenAst + symlink `/etc/asterisk/pjsip_ready_webrtc.conf` → GenAst output (was stale file). Live endpoint **`PJSIP/8af9ee`** (ext **1500** / `dhbm8x`).
+- **Third-party SPA:** REGISTER **OK** as SIP user **`8af9ee`** (hostname-only WSS field; no `wss://` prefix). Admin hint **Idle**. Outbound keypad dial still **no INVITE** (operator digging vs SARK 6.5).
+- Docs: **`WEBRTC_WSS_LAB.md`**, **`TODO.md`**, **`SBC_PRODUCT_TRACKS.md`**.
+
+### Golden / operator follow-up
+- SPA dial mule: compare to SARK 6.5; not blocking golden path.
+- Clamp AWS SG **8089/tcp** world-open when SPA test done (leave office IP if needed).
+- Creds: golden **`~/webrtc-1500.env`** (`sip_user=8af9ee`). Echo **1599** may still be in runtime dialplan — remove if leftover.
+- Desk Magrathea UDP: leave alone. SBC WSS later when booked.
+
+### Resume
+- Product / controlled webphone outbound on golden `:8089`, or SPA mule fix if operator finds root cause. Do **not** Magrathea WSS cutover unless booked. Dial-alias / Track A after WebRTC demo comfort.
+
+---
+
+## Next agent session notes (2026-07-28 — WebRTC golden `:8089`) — historical
 
 **Branches:** **pbx3** **`main`** (docs dirty locally — tracks/TODO/`WEBRTC_WSS_LAB`/shorewall template). **pbx3sbc** branch **`webrtc-wss`** (OpenSIPS WSS scaffold; **not** deployed). Lab: golden **`08jzwn`** only; Magrathea VIP active (UDP untouched); bzy + companion stopped. Recovery tags **`pre-webrtc-wss-20260728`** on pbx3 / pbx3sbc / pbx3sbc-admin / pbx3spa / pbx3api / pbx3cagi (pushed).
 
@@ -80,12 +102,10 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **pbx3sbc `webrtc-wss`:** commented WSS scaffold in `opensips.cfg.template` + **`WEBRTC_W1_SBC.md`** (uncommitted; defer enable).
 
 ### Golden / operator follow-up
-- **Next:** browser **webphone audio** smoke → `wss://08jzwn.pbx3.com:8089/ws` (ext **1500**). Confirm AWS SG **8089/tcp** from client IP. On-box smoke must use loopback (EIP hairpin fails).
-- Desk UDP / Magrathea VIP: leave alone.
-- Optional later: SPA WebRTC create path; commit dirty pbx3 docs + `webrtc-wss` when asked.
+- Superseded by block above (audio + shortuid tmpl + SPA REGISTER).
 
 ### Resume
-- **Webphone audio on golden `:8089`** (REGISTER done). Spec: **`WEBRTC_WSS_LAB.md`**. Do **not** cut over Magrathea WSS unless booked. Dial-alias / Track A after WebRTC demo path.
+- Superseded — see WebRTC REGISTER + tmpl shortuid block above.
 
 ---
 

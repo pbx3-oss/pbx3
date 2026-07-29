@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-28 (session end — WebRTC golden `:8089` REGISTER OK; audio next; Magrathea UDP untouched)
+**Last updated:** 2026-07-28 (session end — WebRTC golden `:8089` REGISTER + JsSIP audio OK; third-party SPA REGISTER OK as shortuid; Magrathea UDP untouched)
 
 ### Suggested “what next?” order
 
-1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** webphone path (REGISTER done; audio via real webphone). Does **not** disrupt Magrathea UDP. SBC WSS (scratch/VIP) later when booked. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
+1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** **REGISTER + JsSIP bidirectional audio OK**; third-party test-mule SPA **REGISTER OK** (SIP user = shortuid **`8af9ee`**, ext **1500**); that SPA **outbound INVITE still broken** (operator digging vs SARK 6.5). Product webphone / SBC WSS later when booked. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
 2. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
 3. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
 4. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
@@ -24,7 +24,9 @@
 
 ## Open items
 
-- [ ] **WebRTC / WSS — golden demo path (2026-07-28):** Priority #1 on **golden `:8089`** (no Magrathea UDP impact). REGISTER smoke **OK** (JsSIP). Next: **webphone audio**. SBC WSS later (branch `webrtc-wss` scaffold). Recovery **`pre-webrtc-wss-20260728`**. Spec: **`WEBRTC_WSS_LAB.md`** · §6.1.
+- [x] **WebRTC / WSS — golden demo path (2026-07-28):** Priority #1 on **golden `:8089`** (no Magrathea UDP impact). JsSIP **REGISTER + bidirectional audio OK** (Echo; ICE; channelstats 279/279). **`pjsip_webrtc.tmpl`** fixed to **`$id`/shortuid** (PBX3 phone pattern); ready conf symlink. Third-party test-mule SPA **REGISTER OK** as **`8af9ee`** (admin hint Idle); **outbound dial from that SPA still sends no INVITE** (operator comparing to SARK 6.5). SG **8089/tcp** temporarily world-open for SPA host — clamp when done. SBC WSS later (`webrtc-wss`). Recovery **`pre-webrtc-wss-20260728`**. Spec: **`WEBRTC_WSS_LAB.md`** · §6.1.
+
+- [ ] **WebRTC — third-party SPA outbound (parked 2026-07-28):** Test-mule keypad dials **1599**/**1000** produce **no INVITE** on golden despite REGISTER. Local sound OK. Operator digging vs SARK 6.5 WSS behaviour. Not a golden gate — JsSIP audio already proven.
 
 - [ ] **SBC Track A lab — SARK (± FreePBX) behind SBC (2026-07-28):** Operator will stand up SARK (and maybe FreePBX) and prove REGISTER / calls via Magrathea or scratch pbx3sbc (domain → dispatcher → foreign Asterisk; phones registrar = SBC). No GenAst. Capture recipe / gaps when done — **`SBC_PRODUCT_TRACKS.md`** Track A. **After that lab:** FreePBX→pbx3 **data** migrate is a separate ETL chain (not shared with SARK `migrateLegacyDb` / `db_legacy_sql`) — requirements later.
 
