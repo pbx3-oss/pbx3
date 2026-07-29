@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-28 (session end — WebRTC golden `:8089` REGISTER + JsSIP audio OK; third-party SPA REGISTER OK as shortuid; Magrathea UDP untouched)
+**Last updated:** 2026-07-29 (ext create `$desc` tip **pbx3api** `60262a0` + hot golden; PrepDial tip **pbx3cagi** `3a9b7d7`; open TODO for `ipphone.desc` vs `description`)
 
 ### Suggested “what next?” order
 
-1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** **REGISTER + JsSIP bidirectional audio OK**; third-party test-mule SPA **REGISTER OK** (SIP user = shortuid **`8af9ee`**, ext **1500**); that SPA **outbound INVITE still broken** (operator digging vs SARK 6.5). Product webphone / SBC WSS later when booked. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
+1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
 2. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
 3. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
 4. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
@@ -26,7 +26,13 @@
 
 - [x] **WebRTC / WSS — golden demo path (2026-07-28):** Priority #1 on **golden `:8089`** (no Magrathea UDP impact). JsSIP **REGISTER + bidirectional audio OK** (Echo; ICE; channelstats 279/279). **`pjsip_webrtc.tmpl`** fixed to **`$id`/shortuid** (PBX3 phone pattern); ready conf symlink. Third-party test-mule SPA **REGISTER OK** as **`8af9ee`** (admin hint Idle); **outbound dial from that SPA still sends no INVITE** (operator comparing to SARK 6.5). SG **8089/tcp** temporarily world-open for SPA host — clamp when done. SBC WSS later (`webrtc-wss`). Recovery **`pre-webrtc-wss-20260728`**. Spec: **`WEBRTC_WSS_LAB.md`** · §6.1.
 
-- [ ] **WebRTC — third-party SPA outbound (parked 2026-07-28):** Test-mule keypad dials **1599**/**1000** produce **no INVITE** on golden despite REGISTER. Local sound OK. Operator digging vs SARK 6.5 WSS behaviour. Not a golden gate — JsSIP audio already proven.
+- [x] **WebRTC — fleet PrepDial skip FQDN for WebRTC (2026-07-29):** Inbound desk→`8af9ee` was `Dial(PJSIP/8af9ee/sip:8af9ee@dhbm8x.pbx3.com)` → self-INVITE / “no auth ids” → VM. **Fix:** fleet PrepDial omits `/sip:user@tenant.fqdn` when `ipphone.device=WebRTC` (WSS contact). Tip **pbx3cagi** **`3a9b7d7`**; hot on golden (`pbx3cagi.arm64` bak `…20260729091530`). After fix: Dial=`PJSIP/8af9ee`; INVITE on WSS confirmed (tshark + pjsip history); SPA TCP-ACKs, no SIP 180/200.
+
+- [x] **Extension create — undefined `$desc` (2026-07-29):** SPA Create Extension fatals under Laravel (“Undefined variable $desc”). Store now reads `desc` from request (default `Ext{pkey}`) and persists `description` when sent. Tip **pbx3api** **`60262a0`**; hot on golden.
+
+- [ ] **WebRTC — third-party SPA far-end (open 2026-07-29):** Dev-team SPA: (1) **digit-only sip-user sanitize** rejects alphanumeric shortuid — must accept `[a-z0-9]` (SIP user=`8af9ee`, dialable=`1500`). (2) Inbound: INVITE arrives on WSS but no SIP response (media/permissions / `newRTCSession` likely). Outbound from SPA previously “no INVITE” may be same class of client bug. Not a golden Asterisk gate. Clamp SG **8089** when SPA host test done.
+
+- [ ] **`ipphone.desc` vs `description` — clarify / rename (parked 2026-07-29):** Historical SARK/Asterisk ambivalence: schema has both columns; SPA “User (extension name)” → `desc`, “Description” → `description`; list **User** prefers `desc` so freeform Description never shows when `desc` is set (e.g. `1501` vs “WebRTC second ep”). GenAst `$desc` token actually substitutes **`description`** (else pkey), not the `desc` column. Model comment still calls `desc` “SIP username” — wrong now that **shortuid** is PJSIP identity. Proper fix later: map roles (display name vs notes vs any remaining Asterisk/SIP use), align SPA labels + list, GenAst templates, API, migrate/rename if needed. Do not drive-by.
 
 - [ ] **SBC Track A lab — SARK (± FreePBX) behind SBC (2026-07-28):** Operator will stand up SARK (and maybe FreePBX) and prove REGISTER / calls via Magrathea or scratch pbx3sbc (domain → dispatcher → foreign Asterisk; phones registrar = SBC). No GenAst. Capture recipe / gaps when done — **`SBC_PRODUCT_TRACKS.md`** Track A. **After that lab:** FreePBX→pbx3 **data** migrate is a separate ETL chain (not shared with SARK `migrateLegacyDb` / `db_legacy_sql`) — requirements later.
 

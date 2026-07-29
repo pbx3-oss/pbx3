@@ -68,7 +68,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-28 — WebRTC REGISTER + tmpl shortuid)
+## Next agent session notes (2026-07-29 — WebRTC PrepDial + ext create `$desc`)
+
+**Branches:** **pbx3cagi** **`main`** tip **`3a9b7d7`** (PrepDial WebRTC skip; hot golden). **pbx3api** **`main`** tip **`60262a0`** (ext create `$desc`; hot golden). **pbx3** / **pbx3spa** handoff/TODO. Lab: golden **`08jzwn`**; Magrathea UDP untouched. Recovery **`pre-webrtc-wss-20260728`**.
+
+### Shipped
+- **Mac WSS REGISTER smokes:** `wss://08jzwn.pbx3.com:8089/ws` and `wss://dhbm8x.pbx3.com:8089/ws` → `sip:8af9ee@dhbm8x.pbx3.com` **SMOKE_OK** (public path; on-box uses loopback).
+- **Call lab:** WebRTC **1500→1000** OK (1000 CFIM→1001 — operator pickup mix-up resolved).
+- **Fleet PrepDial:** skip `/sip:shortuid@tenant.fqdn` when `ipphone.device=WebRTC` so inbound uses WSS AOR contact. Tip **`3a9b7d7`**; golden bak **`…20260729091530`**.
+- **Extension create:** undefined `$desc` fatal fixed (read request Name; persist description). Tip **pbx3api** **`60262a0`**.
+- **TODO:** parked **`ipphone.desc` vs `description`** clarify/rename (Asterisk/SARK ambivalence; list User prefers `desc`).
+
+### Golden / operator follow-up
+- **SPA team:** digit-only sip-user sanitize must allow alphanumeric shortuid; inbound must SIP-respond (`180`/`newRTCSession` / media permissions). Operator in talk with them.
+- Do **not** revert WebRTC SIP user to dialable `1500` — shortuid is the PJSIP identity.
+- `qualify_frequency=0` on webrtc tmpl left pending SARK WSS comparison (operator).
+- Clamp SG **8089** when SPA test done. Creds: `~/webrtc-1500.env`.
+
+### Resume
+- Await SPA far-end fix → retest desk→1500 ring/answer. Dial-alias / Track A after WebRTC demo comfort. Stay off Magrathea WSS until booked.
+
+---
+
+## Next agent session notes (2026-07-28 — WebRTC REGISTER + tmpl shortuid) — historical
 
 **Branches:** **pbx3** **`main`** (tmpl + docs this session). **pbx3spa** handoff only. **pbx3sbc** `webrtc-wss` still scaffold (defer). Lab: golden **`08jzwn`** only; Magrathea VIP UDP untouched. Recovery **`pre-webrtc-wss-20260728`**.
 
@@ -80,13 +102,10 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Docs: **`WEBRTC_WSS_LAB.md`**, **`TODO.md`**, **`SBC_PRODUCT_TRACKS.md`**.
 
 ### Golden / operator follow-up
-- SPA dial mule: compare to SARK 6.5; not blocking golden path.
-- Clamp AWS SG **8089/tcp** world-open when SPA test done (leave office IP if needed).
-- Creds: golden **`~/webrtc-1500.env`** (`sip_user=8af9ee`). Echo **1599** may still be in runtime dialplan — remove if leftover.
-- Desk Magrathea UDP: leave alone. SBC WSS later when booked.
+- Superseded by 2026-07-29 block (inbound PrepDial + SPA sanitize).
 
 ### Resume
-- Product / controlled webphone outbound on golden `:8089`, or SPA mule fix if operator finds root cause. Do **not** Magrathea WSS cutover unless booked. Dial-alias / Track A after WebRTC demo comfort.
+- Superseded — see 2026-07-29 WebRTC inbound PrepDial block above.
 
 ---
 
