@@ -1,8 +1,10 @@
 # Fleet-first tenant create — requirements (locked 2026-07-29)
 
-**Status:** Requirements locked; implementation not started.  
+**Status:** Requirements locked; **implementation in progress** on branch **`fleet-first-tenant-create`** (pbx3 / pbx3api / pbx3spa).  
 **Cursor plan:** `fleet-first_tenant_create` (agent plans).  
 **Related:** Rule 6 / 10 / 11 / 13 · mobility gotcha #3 · [`S3Registrar::registerTenant`](../pbx3-directory/gatekeeper/src/S3Registrar.php) · Fleet Tenants “Register on SBC”.
+**Gatekeeper:** [`TenantProvisioner`](../pbx3-directory/gatekeeper/src/TenantProvisioner.php) · `POST /api/v1/tenants/provision`  
+**Node:** `POST /api/fleet/tenants` · docs [`pbx3api/docs/FLEET_TENANT_CREATE.md`](../../pbx3api/docs/FLEET_TENANT_CREATE.md)
 
 ## Product decision
 
@@ -60,12 +62,13 @@ Synchronous v1 (no durable job). Rule 11: other tenants’ calls unaffected.
 
 ## Implementation map (when scheduled)
 
-| Slice | Repo |
-|-------|------|
-| `POST /fleet/tenants` create (share `TenantController::save`) | pbx3api |
-| `POST /api/v1/tenants/provision` | pbx3-directory gatekeeper |
-| Fleet Create UI | pbx3spa |
-| Fleet mode: hide Create/Delete; FQDN/shortuid read-only + API reject | pbx3spa + pbx3api |
+| Slice | Repo | Status |
+|-------|------|--------|
+| `POST /fleet/tenants` create (share `TenantController::save`) | pbx3api | **Done** (branch) |
+| Sanctum Create/Delete 403 on fleet nodes | pbx3api | **Done** (branch) |
+| `POST /api/v1/tenants/provision` | pbx3-directory gatekeeper | **Done** (branch) |
+| Fleet Create UI | pbx3spa | **Done** (branch) |
+| Fleet mode: hide Create/Delete; FQDN/shortuid read-only | pbx3spa | **Done** (branch; FQDN already readonly) |
 | Fleet Delete + FQDN rename orchestrators | **Follow-on** (policy locked; UI after create) |
 
 ## Non-goals (v1)

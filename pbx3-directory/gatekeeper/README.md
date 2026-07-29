@@ -90,6 +90,7 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `POST` | `/api/v1/fleet-users/{id}/enable` | Re-enable |
 | `POST` | `/api/v1/fleet-users/{id}/revoke-sessions` | Kill all Bearers for user |
 | `GET` | `/api/v1/tenants` | List tenant meta rows |
+| `POST` | `/api/v1/tenants/provision` | Fleet-first create: node `/fleet/tenants` → catalog meta → SBC domain (`fleet_instances`). Body: `instance_id`, `pkey`, `description`; optional `clusterclid`/`localarea`; resume after catalog fail: `resume`+`shortuid`+`fqdn` |
 | `GET` | `/api/v1/dids` | S10.5 catalog DID ownership flat list (`fleet_read`) |
 | `POST` | `/api/v1/dids/assign` | Assign/reassign DID → tenant; writes `dids.json` + `did-index`; projects SBC unless `project:false` (`fleet_edge`) |
 | `POST` | `/api/v1/dids/release` | Soft-release DID in catalog (+ project) (`fleet_edge`) |
@@ -120,7 +121,7 @@ DID / missing domain rows: **S10.5**, not this endpoint.
 | `POST` | `/api/v1/instances` | Register/upsert instance (`verify_up` optional; stamps `updated_by`) |
 | `PATCH` | `/api/v1/instances/{id}` | Update label/notes/environment/status/… (`fleet_instances`) |
 | `POST` | `/api/v1/instances/{id}/decommission` | Soft decommission (`confirm: true`, optional `notes`) |
-| `POST` | `/api/v1/tenants` | Register tenant meta |
+| `POST` | `/api/v1/tenants` | Register tenant meta only (legacy / CLI repair — prefer `/tenants/provision`) |
 | `POST` | `/api/v1/tenants/{shortuid}/move` | Move tenant homing |
 | `POST` | `/api/v1/s3/presign` | Scoped PUT/GET for `tenants/{shortuid}/migration/{job_id}/…` only (org bucket) |
 | `POST` | `/api/v1/s3/presign-recordings` | S7: PUT/GET on **`PBX3_RECORDINGS_BUCKET`**, keys `tenants/{shortuid}/recordings/…` only |

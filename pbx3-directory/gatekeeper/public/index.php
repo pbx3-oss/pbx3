@@ -26,6 +26,7 @@ use Pbx3\Gatekeeper\SbcFleetClient;
 use Pbx3\Gatekeeper\SbcSetidGuard;
 use Pbx3\Gatekeeper\TenantMoveJobStore;
 use Pbx3\Gatekeeper\TenantMoveRunner;
+use Pbx3\Gatekeeper\TenantProvisioner;
 use Pbx3\Gatekeeper\UserStore;
 
 Env::load(dirname(__DIR__).'/.env');
@@ -434,6 +435,18 @@ try {
             $m[1],
             $body
         ));
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/tenants/provision') {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        if (! is_array($body)) {
+            $body = [];
+        }
+        $result = (new TenantProvisioner($registrar, new SbcFleetClient()))->provision($body);
+        $ok = ! empty($result['ok']);
+        $status = $ok ? 201 : 502;
+        JsonResponse::send($status, $result);
     }
 
     if ($method === 'POST' && $path === '/api/v1/tenants') {

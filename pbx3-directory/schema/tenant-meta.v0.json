@@ -34,6 +34,14 @@
     "previous_instance_id": {
       "type": ["string", "null"],
       "description": "Prior hosting node after move"
+    },
+    "pkey": {
+      "type": "string",
+      "description": "Cluster name (pkey) on the home node — fleet list display"
+    },
+    "label": {
+      "type": "string",
+      "description": "Human label (often description) for Fleet Tenants list"
     }
   }
 }
