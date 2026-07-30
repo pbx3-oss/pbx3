@@ -131,12 +131,19 @@ fi
 # DOMAIN_TLD: env DOMAIN_TLD, else globals.domain from existing DB, else prompt (default pbx3.com), else pbx3.com.
 # Subdomain: 6 chars from idpwgen unless INSTANCE_FQDN legacy env, or existing fqdn+domain in DB match.
 # Legacy: INSTANCE_FQDN=node1.pbx3.com -> subdomain=node1, TLD=rest (e.g. pbx3.com).
+# Site name (friendly label): env INSTANCE_SITENAME, else prompt on first provision → globals.sitename
+#   (Home / Network; not hostname). Empty allowed → SPA falls back to FQDN.
 
 normalize_fqdn() {
     echo "$1" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
 }
 valid_fqdn() {
     [ -n "$1" ] && case "$1" in *.*) true ;; *) false ;; esac
+}
+# Friendly site name: trim ends only; keep case and internal spaces.
+normalize_sitename() {
+    # shellcheck disable=SC2001
+    echo "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
 }
 
 # Build idpwgen on *this* host only. Do not copy /opt/pbx3/golang/idpwgen from another OS or arch
@@ -153,9 +160,14 @@ fi
 # Snapshot env before we clear shell variables (legacy INSTANCE_FQDN and DOMAIN_TLD are both optional).
 _ENV_TLD=$(normalize_fqdn "${DOMAIN_TLD}")
 _LEGACY_FQDN=$(normalize_fqdn "${INSTANCE_FQDN}")
+_ENV_SITENAME=$(normalize_sitename "${INSTANCE_SITENAME}")
 INSTANCE_SUBDOMAIN=""
 DOMAIN_TLD=""
 INSTANCE_FQDN=""
+INSTANCE_SITENAME=""
+if [ -n "$_ENV_SITENAME" ]; then
+    INSTANCE_SITENAME="$_ENV_SITENAME"
+fi
 
 if valid_fqdn "$_LEGACY_FQDN"; then
     INSTANCE_SUBDOMAIN=$(echo "$_LEGACY_FQDN" | cut -d. -f1)
@@ -257,11 +269,23 @@ else
     fi
 fi
 
+# Site name (friendly label → globals.sitename). Prompt on first provision / identity apply when unset.
+if [ "$_APPLY_IDENT" -eq 1 ] && [ -z "$INSTANCE_SITENAME" ] && [ -t 0 ]; then
+    printf "Site name (friendly label for Home / Network) []: " >&2
+    read -r _site_in
+    INSTANCE_SITENAME=$(normalize_sitename "$_site_in")
+fi
+
 # Store instance domain + FQDN in globals; hostname = subdomain (fresh build or explicit migrate)
 if [ "$_APPLY_IDENT" -eq 1 ] && [ -n "$INSTANCE_FQDN" ] && [ -n "$DOMAIN_TLD" ] && [ -n "$INSTANCE_SUBDOMAIN" ]; then
     _sql_dom=$(echo "$DOMAIN_TLD" | sed "s/'/''/g")
     _sql_fq=$(echo "$INSTANCE_FQDN" | sed "s/'/''/g")
     sqlite3 $SYSDB "UPDATE globals SET domain='$_sql_dom', fqdn='$_sql_fq', shortuid='$(echo "$INSTANCE_SUBDOMAIN" | sed "s/'/''/g")' WHERE rowid=(SELECT rowid FROM globals LIMIT 1);"
+    if [ -n "$INSTANCE_SITENAME" ]; then
+        _sql_site=$(echo "$INSTANCE_SITENAME" | sed "s/'/''/g")
+        sqlite3 $SYSDB "UPDATE globals SET sitename='$_sql_site' WHERE rowid=(SELECT rowid FROM globals LIMIT 1);"
+        echo "Set globals.sitename to $INSTANCE_SITENAME"
+    fi
     # Option A / Step 0.2: default tenant row holds node FQDN for cert + firewall domain lists (GET tenants).
     _defcnt=$(sqlite3 "$SYSDB" "SELECT COUNT(*) FROM cluster WHERE pkey='default';" 2>/dev/null || echo 0)
     if [ "${_defcnt:-0}" -ge 1 ]; then

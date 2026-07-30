@@ -12,7 +12,7 @@ Target: one server, backend (pbx3) then API/frontend (pbx3api). pbx3 provides DB
 sudo /opt/pbx3/scripts/installer.sh
 ```
 
-Run it after `apt install pbx3` (required before production use). On **first** run it creates the database, instance FQDN, hostname, firewall baseline, and **globals identity** (`id`, `shortuid`, `domain`, `fqdn`). Subsequent runs behave as in the table below.
+Run it after `apt install pbx3` (required before production use). On **first** run it creates the database, instance FQDN, hostname, firewall baseline, and **globals identity** (`id`, `shortuid`, `domain`, `fqdn`). It should also prompt for **Site name** (`sysglobals.sitename` — friendly label for Home / Network; see **`pbx3spa/workingdocs/NETWORK_SYSGLOBALS_OVERLAP.md`**). Subsequent runs behave as in the table below.
 
 | Situation | What to do |
 |-----------|------------|
@@ -56,15 +56,15 @@ This installs files under `/opt/pbx3`, `/etc`, etc. It does **not** run the full
 sudo /opt/pbx3/scripts/installer.sh
 ```
 
-- Sets **domain apex** and **FQDN** for the node (for later Let’s Encrypt). Non-interactive examples:
+- Sets **domain apex** and **FQDN** for the node (for later Let’s Encrypt), and on **first provision** prompts for **Site name** (`globals.sitename` — friendly Home / Network label). Non-interactive examples:
   ```bash
-  sudo DOMAIN_TLD=example.com /opt/pbx3/scripts/installer.sh
+  sudo DOMAIN_TLD=example.com INSTANCE_SITENAME='Acme HQ' /opt/pbx3/scripts/installer.sh
   ```
-  Default apex when unset and non-interactive is `pbx3.com`. The installer generates a **6-character subdomain** with `idpwgen`, sets `globals.domain`, `globals.fqdn`, `globals.shortuid`, and sets the system hostname to that subdomain. Legacy full-FQDN override:
+  Default apex when unset and non-interactive is `pbx3.com`. The installer generates a **6-character subdomain** with `idpwgen`, sets `globals.domain`, `globals.fqdn`, `globals.shortuid`, optional `globals.sitename`, and sets the system hostname to that subdomain. Legacy full-FQDN override:
   ```bash
-  sudo INSTANCE_FQDN=node1.example.com /opt/pbx3/scripts/installer.sh
+  sudo INSTANCE_FQDN=node1.example.com INSTANCE_SITENAME='Lab node' /opt/pbx3/scripts/installer.sh
   ```
-- **First provision only** (no `sqlite.db` yet): runs **`create.initial.db`** then **`reloader.sh`** to materialize the full schema and seed data, then applies instance identity (FQDN, hostname, **`shortuid`**, default tenant FQDN where applicable).
+- **First provision only** (no `sqlite.db` yet): runs **`create.initial.db`** then **`reloader.sh`** to materialize the full schema and seed data, then applies instance identity (FQDN, hostname, **`shortuid`**, **sitename** when provided, default tenant FQDN where applicable).
 - **If `sqlite.db` already exists:** skips **`reloader.sh`** and keeps existing tenant data and instance FQDN. Runs **`normalize-globals-identity.sh`**. To **overwrite** instance FQDN / hostname / globals identity on purpose:  
   `sudo PBX3_APPLY_INSTANCE_IDENTITY=1 INSTANCE_FQDN=node.example.com /opt/pbx3/scripts/installer.sh`
 - On every run (with or without an existing DB): refreshes Asterisk/Shorewall/fail2ban links, **`setip`**, CDR MySQL bootstrap (if MySQL is present), dnsmasq, helper restarts, etc.—so avoid treating a re-run as a harmless no-op unless you intend those side effects.

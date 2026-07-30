@@ -31,6 +31,12 @@
 
 - [x] **SBC Home — Filament ops pulse + thin system (2026-07-30):** Merged to **pbx3sbc-admin `main`** **`0073471`** (via `rename-domain-routes`). Live on VIP: system strip (load/mem/disk) → SIP live posture → 24h CDR line + outcome doughnut → security pulse/trend; chart click-throughs; `HomeDashboardMetrics` short-TTL cache. Old period-sprawl widgets undiscovered. Spec: **`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**. **Not** Grafana on edge.
 
+- [ ] **SBC Home — usage meters on system strip (follow-up):** Retrofit SPA Instance Home pattern to Filament `SystemPostureWidget`: thin green→amber→red **usage meters** under Load / Memory / Disk (fill = used %; Load = load1/CPUs capped). Proven on **pbx3spa** `instance-home-ops-pulse` (`HomeHostStrip`). Spec note: **`HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
+
+- [x] **Instance friendly name = `sysglobals.sitename` (2026-07-30):** Locked — **`NETWORK_SYSGLOBALS_OVERLAP.md`**. **Installer** prompts Site name on first provision / identity apply → `globals.sitename` (`INSTANCE_SITENAME` non-interactive). SPA **`displayInstanceLabel`**: sitename → FQDN. Editable via Network Site Name. Help text updated in `sqlite_message.sql` (seed on new DB; existing nodes: Network still works; merge help when convenient).
+
+- [ ] **Catalog `label` ↔ node `sitename` (parked 2026-07-30):** On-node friendly name is HoR (`globals.sitename`; lab golden → “Golden”). Fleet directory `label` is separate today — can drift. Later: sync or seed catalog `label` from sitename on onboard / when Network saves (Gatekeeper / catalog write path; Rule 9). Do not invent a second node-local field. Spec: **`NETWORK_SYSGLOBALS_OVERLAP.md`**, **`instance-record.v0.json`**.
+
 - [ ] **Fleet SPA — edge host health scrape (parked 2026-07-30):** Multi-edge load/mem/disk (and later door-knock country rollups) via Gatekeeper ← edge summary cron → S3 HoR → Fleet overlay. **Not** browser→SBC polling; **not** on-SBC heatmaps. Checklist in **`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
 
 - [ ] **Door-knock geo heat / map (parked 2026-07-30):** Do **not** geolocate on every Home poll on the SBC. Prefer Fleet scrape path above. Edge keeps single-row geo on Door-knock View only.
