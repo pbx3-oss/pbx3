@@ -6,7 +6,7 @@
 ### Suggested “what next?” order
 
 1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
-2. **Retire Filament DID aliases** — direction locked; do the teardown when scheduled (migrate lab aliases → Number routes / Fleet DIDs; hide Filament; remove or inert `alias_db_lookup`) — **`SBC_PRODUCT_TRACKS.md`**. Do not confuse with tenant short-dial.  
+2. **Retire Filament DID aliases** — panel **hidden** 2026-07-30 (lab aliases cleared). Remaining: inert/remove `alias_db_lookup` in `FROM_CARRIER` when booked — **`SBC_PRODUCT_TRACKS.md`**. Do not confuse with tenant short-dial.  
 3. **Fleet Delete + FQDN rename** (parked) — policy locked; **Rule 14 durable jobs** when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needs catalog remove + SBC domain delete; node wipe already exists.  
 4. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
 5. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
@@ -26,7 +26,9 @@
 
 ## Open items
 
-- [ ] **SBC — retire DID aliases (do this — 2026-07-29):** Reminder todo. Direction: drop Filament **DID aliases** / Phase 5 `alias_db` fallthrough from the operator surface (confusing; redundant with Number routes + PBX inroutes). **Steps when scheduled:** (1) migrate lab alias-only DIDs (e.g. Twilio `+15139279738`, Magrathea if still aliased) into Fleet DIDs → Number routes; (2) hide/remove Filament **DID aliases**; (3) remove or inert `alias_db_lookup` in `FROM_CARRIER`. Spec: **`SBC_PRODUCT_TRACKS.md`** · **`FLEET_TRUNK_PEERING_DECISION.md`**. Not the same as tenant short-dial aliases.
+- [x] **SBC — hide Filament DID aliases (2026-07-30):** Lab aliases cleared by operator; `DbAliasResource` nav + `canViewAny` false (tip **pbx3sbc-admin**). Spec: **`SBC_PRODUCT_TRACKS.md`**.
+
+- [ ] **SBC — inert `alias_db_lookup` (open 2026-07-30):** Remove or inert Phase 5 fallthrough in `FROM_CARRIER` when booked — **`SBC_PRODUCT_TRACKS.md`** · **`FLEET_TRUNK_PEERING_DECISION.md`**. Not the same as tenant short-dial aliases.
 
 - [x] **WebRTC / WSS — golden demo path (2026-07-28):** Priority #1 on **golden `:8089`** (no Magrathea UDP impact). JsSIP **REGISTER + bidirectional audio OK** (Echo; ICE; channelstats 279/279). **`pjsip_webrtc.tmpl`** fixed to **`$id`/shortuid** (PBX3 phone pattern); ready conf symlink. Third-party test-mule SPA **REGISTER OK** as **`8af9ee`** (admin hint Idle); **outbound dial from that SPA still sends no INVITE** (operator comparing to SARK 6.5). SG **8089/tcp** temporarily world-open for SPA host — clamp when done. SBC WSS later (`webrtc-wss`). Recovery **`pre-webrtc-wss-20260728`**. Spec: **`WEBRTC_WSS_LAB.md`** · §6.1.
 
