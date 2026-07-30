@@ -208,7 +208,7 @@ without a separate “singleton vs block” data model on Asterisk. That flexibi
 
 **Optional compression:** when reconcile detects a **contiguous** set of `inroutes` DIDs for one tenant, collapse to one prefix rule — an optimisation only, never assumed at design time.
 
-**`alias_db`:** PEERING-PLAN fallback in OpenSIPS when `do_routing("1")` finds no match — not the primary fleet model. Do not force operators to maintain parallel prefix + alias inventories.
+**`alias_db` / Filament DID aliases:** PEERING-PLAN fallback when `do_routing("1")` finds no match — **not** the primary fleet model. **Direction 2026-07-29:** retire from the product surface (confusing parallel inventory; anything useful is Number route + PBX inroutes). See **`SBC_PRODUCT_TRACKS.md`** § Product direction — retire Filament DID aliases. Do not teach operators to maintain prefix + alias side by side.
 
 **Tenant move:** `inroutes` regex rows travel in the tenant miniDB; SBC delivery rows are **bulk-regenerated** to the new `setid` in the same job as `domain.setid`. No carrier reprovision.
 

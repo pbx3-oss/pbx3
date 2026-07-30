@@ -1,29 +1,32 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (pbx3 + pbx3api + **pbx3cagi**; GenAst A–H + cagi through Phase **3.2**). SPA overlay on **`main`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-29 (fleet-first requirements tip **`e5fa3c4`**; CLID/localarea tips **pbx3api** **`0aa5e71`** / **pbx3spa** **`2ebb882`**)
+**Last updated:** 2026-07-29 (fleet-first lab OK; DID aliases **retire direction** in **`SBC_PRODUCT_TRACKS.md`**)
 
 ### Suggested “what next?” order
 
 1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
-2. **Fleet-first tenant create** — requirements locked; implement when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Fleet Create → push node `/fleet/tenants` → catalog → SBC domain; instance Create/Delete/FQDN locked in fleet mode; solo unchanged. Follow-on: Fleet Delete + FQDN rename.  
-3. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
-4. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
-5. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
-6. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
-7. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
-8. **Velocity standalone product** (parked).  
-9. **Instance shadowing** / S10.7 / S8.9 (parked).  
-10. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
-11. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
-12. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
-13. **Fleet auth cookie/SSO (blocked)**.  
-14. **S7+** attested PCI — only on customer ask.  
-15. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.
+2. **Fleet-first tenant create** — **lab validated 2026-07-29** (Aelintra / `s07zmy`); merge `fleet-first-tenant-create` → `main` when ready — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Follow-on: Fleet Delete + FQDN rename.  
+3. **Retire Filament DID aliases** — direction locked; do the teardown when scheduled (migrate lab aliases → Number routes / Fleet DIDs; hide Filament; remove or inert `alias_db_lookup`) — **`SBC_PRODUCT_TRACKS.md`**. Do not confuse with tenant short-dial.  
+4. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
+5. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
+6. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
+7. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
+8. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
+9. **Velocity standalone product** (parked).  
+10. **Instance shadowing** / S10.7 / S8.9 (parked).  
+11. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
+12. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
+13. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
+14. **Fleet auth cookie/SSO (blocked)**.  
+15. **S7+** attested PCI — only on customer ask.  
+16. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.
 
 ---
 
 ## Open items
+
+- [ ] **SBC — retire DID aliases (do this — 2026-07-29):** Reminder todo. Direction: drop Filament **DID aliases** / Phase 5 `alias_db` fallthrough from the operator surface (confusing; redundant with Number routes + PBX inroutes). **Steps when scheduled:** (1) migrate lab alias-only DIDs (e.g. Twilio `+15139279738`, Magrathea if still aliased) into Fleet DIDs → Number routes; (2) hide/remove Filament **DID aliases**; (3) remove or inert `alias_db_lookup` in `FROM_CARRIER`. Spec: **`SBC_PRODUCT_TRACKS.md`** · **`FLEET_TRUNK_PEERING_DECISION.md`**. Not the same as tenant short-dial aliases.
 
 - [x] **WebRTC / WSS — golden demo path (2026-07-28):** Priority #1 on **golden `:8089`** (no Magrathea UDP impact). JsSIP **REGISTER + bidirectional audio OK** (Echo; ICE; channelstats 279/279). **`pjsip_webrtc.tmpl`** fixed to **`$id`/shortuid** (PBX3 phone pattern); ready conf symlink. Third-party test-mule SPA **REGISTER OK** as **`8af9ee`** (admin hint Idle); **outbound dial from that SPA still sends no INVITE** (operator comparing to SARK 6.5). SG **8089/tcp** temporarily world-open for SPA host — clamp when done. SBC WSS later (`webrtc-wss`). Recovery **`pre-webrtc-wss-20260728`**. Spec: **`WEBRTC_WSS_LAB.md`** · §6.1.
 

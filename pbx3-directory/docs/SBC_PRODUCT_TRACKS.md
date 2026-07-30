@@ -21,6 +21,24 @@
 
 **Excluded by posture (not gaps to build on Magrathea):** Teams Direct Routing on OpenSIPS; first-party STI-AS on every Peer; door-knock SIP header capture; control-plane HA homed on the SBC; OpenSIPS rename-for-purity; competitor-style media termination for the few-week demo.
 
+### Product direction — retire Filament DID aliases (2026-07-29)
+
+**Direction (not torn down yet):** remove **DID aliases** (`dbaliases` / Phase 5 `alias_db_lookup` fallthrough) from the operator product surface.
+
+| Keep | Drop (direction) |
+|------|------------------|
+| **Number routes** (`dr_rules` group 1) — Fleet DIDs project here: DID → tenant home Asterisk | **DID aliases** — rewrite DID → `user@tenant.fqdn` at the edge |
+
+**Why:** Aliases only compress what operators already do as **SBC DID→tenant** (Number route / Fleet DIDs) + **PBX DID→endpoint** (inroutes / dialplan). A second inventory that runs only when Number routes miss is easy to misunderstand (lab Magrathea/Twilio rows left operators fighting parallel config). Fleet HoR is catalog `dids.json` → Number routes; aliases are not projected and will not be.
+
+**Later teardown (when scheduled):** migrate any alias-only DIDs into Fleet DIDs / Number routes → hide or delete Filament **DID aliases** → remove or inert `alias_db_lookup` in `FROM_CARRIER`. Until then: prefer Number routes; treat existing aliases as lab debt.
+
+**Do not confuse with** tenant **short dial** aliases (`TENANT_SHORT_DIAL_REQUIREMENTS.md`) — different feature.
+
+**Filament naming (2026-07-29):** nav label **Call Routes** → **Domain Routes** (same `domain` table; clearer vs Number routes). Branch **`rename-domain-routes`** on pbx3sbc-admin.
+
+---
+
 ### Material (general SBC / fleet edge)
 
 | # | Gap | Notes | Trigger |
