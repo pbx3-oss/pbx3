@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** default (fleet-first create merged). SBC admin on **`rename-domain-routes`** (VIP hot). Lab-hot: **golden only** (bzy stopped). Magrathea VIP active.  
-**Last updated:** 2026-07-30 (session end: fleet-first on main; SBC Number-route filter + DID aliases hidden; Backup Filename kinship; S3-merge Backup TODO)
+**Last updated:** 2026-07-30 (SBC Home ops-pulse live; geo-heat parked → fleet/S3; Home metrics cache)
 
 ### Suggested “what next?” order
 
@@ -21,11 +21,23 @@
 14. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
 15. **Fleet auth cookie/SSO (blocked)**.  
 16. **S7+** attested PCI — only on customer ask.  
-17. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.
+17. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.  
+18. **Grafana fleet view** (parked) — unmodified OSS only; see open item below.  
+19. **Door-knock geo heat / map** (parked) — prefer Fleet SPA + S3 scrape, not on-SBC; see open item.
 
 ---
 
 ## Open items
+
+- [x] **SBC Home — Filament ops pulse (2026-07-30):** Live on VIP (branch **`sbc-home-ops-pulse`** tips **`f463e5a`** / **`549ef6e`** + metrics cache follow-on). Live posture + 24h CDR line + outcome doughnut + security pulse/trend; chart click-throughs; old period-sprawl widgets undiscovered. **Not** Grafana on edge.
+
+- [ ] **SBC Home — metrics efficiency + thin system (2026-07-30):** `HomeDashboardMetrics` short-TTL cache + slower polls; combined security SELECTs; **`SystemPostureWidget`** (load / mem% / disk% via `/proc` + `disk_*`, 45s cache). Deploy with next VIP push. Spec: **`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
+
+- [ ] **Fleet SPA — edge host health scrape (parked 2026-07-30):** Multi-edge load/mem/disk (and later door-knock country rollups) via Gatekeeper ← edge summary cron → S3 HoR → Fleet overlay. **Not** browser→SBC polling; **not** on-SBC heatmaps. Checklist in **`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
+
+- [ ] **Door-knock geo heat / map (parked 2026-07-30):** Do **not** geolocate on every Home poll on the SBC. Prefer Fleet scrape path above. Edge keeps single-row geo on Door-knock View only.
+
+- [ ] **Grafana / Homer — fleet view only, unmodified (parked 2026-07-30):** Stance locked. **SBC Home = Filament** (in-box). **Grafana** (and Homer if ever) = optional **fleet / multi-instance** observability later — operator-installed **unmodified** OSS (AGPL); no fork, no bundling into product installer, no on-licensing end users. If a use case needs modifying Grafana/Homer, **don’t do that use case**. Not next.
 
 - [ ] **SBC Filament Backup — merge S3-only into list (2026-07-30):** Kinship with SPA instance Backup: show local, S3-only, and both (Filename + **S3** / **local+S3** tags). Today panel is local FIFO only (keep 9); aged zips remain on S3 (~30d) but operators cannot discover them in UI. Touch `sbc-backup-panel.sh list` + `SbcBackupService` + Filament Backup page. Restore still CLI. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
 
