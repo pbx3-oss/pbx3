@@ -69,7 +69,26 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-29 — fleet-first tenant create + tenant field fixes)
+## Next agent session notes (2026-07-29 — fleet-first lab + SBC admin nav)
+
+**Branches:** **`fleet-first-tenant-create`** in **pbx3api** **`05ab501`**, **pbx3** **`0fa5fbb`** (+ docs **`00283f7`**), **pbx3spa** **`e37140b`**. **pbx3sbc-admin** **`rename-domain-routes`** **`6aa3a43`** (VIP hot). Lab: golden **`08jzwn`**. Not merged to **`main`**.
+
+### Shipped
+- **Fleet-first tenant create (lab OK):** Gatekeeper `POST /api/v1/tenants/provision` → node `POST /api/fleet/tenants` → catalog → SBC domain. SPA Fleet Create UI; on-node Create/Delete locked (API 403 + SPA hide empty delete column). Lab tenant **Aelintra** / shortuid **`s07zmy`**; Magrathea DID reassigned via Fleet DIDs / Number routes. DID aliases are **not** fleet-projected — retire direction in **`SBC_PRODUCT_TRACKS.md`**.
+- **SBC admin UX:** **Call Routes → Domain Routes**; **Active Calls** + **Locations** → **System** (live on VIP).
+- **Docs:** DID-alias retire reminder; operator education (Number routes vs Domain routes; `$rU` length >7 → outbound).
+
+### Golden / operator follow-up
+- Golden API was **hot-patched** (3 files; baks `*.bak.20260729234232`) — full git checkout still blocked by overlay drift.
+- WebRTC SPA far-end still open (sanitize + inbound SIP response).
+- Merge fleet-first + `rename-domain-routes` when ready; do **not** tear down DID aliases until scheduled.
+
+### Resume
+- Merge `fleet-first-tenant-create` → `main` (api/gatekeeper/spa), or WebRTC SPA retest, or DID-alias teardown when booked. Stay off Magrathea WSS until booked.
+
+---
+
+## Next agent session notes (2026-07-29 — fleet-first tenant create + tenant field fixes) — historical
 
 **Branches:** **pbx3** **`main`** tips **`e5fa3c4`** / **`a6da1ee`** — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** locked (not coded). **pbx3api** **`0aa5e71`** (localarea string). **pbx3spa** **`2ebb882`** (CLID/localarea text + handoff). Lab: golden **`08jzwn`**. Prior same day: PrepDial **`3a9b7d7`**, ext create `$desc` **`60262a0`**.
 
@@ -83,7 +102,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Lab tenant **Aelintra** / `gwfwcv` may exist on golden without catalog/SBC — expected until fleet-first ships; manual domain for lab only.
 
 ### Resume
-- Implement fleet-first when scheduled (see requirements). Or WebRTC SPA retest / dial-alias. Stay off Magrathea WSS until booked.
+- Superseded — see fleet-first lab block above.
 
 ---
 
