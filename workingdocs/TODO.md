@@ -1,13 +1,13 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** default; fleet-first work on **`fleet-first-tenant-create`** (pbx3 / pbx3api / pbx3spa — not merged). SBC admin nav on **`rename-domain-routes`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-29 (session end: fleet-first branches lab OK; SBC Domain Routes + System nav on VIP)
+**Branch:** **`main`** default. Fleet-first **create** merged to **`main`** (2026-07-30) in pbx3 / pbx3api / pbx3spa. SBC admin nav on **`rename-domain-routes`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
+**Last updated:** 2026-07-30 (fleet-first create → `main`; Delete/FQDN rename parked as Rule 14 durable jobs)
 
 ### Suggested “what next?” order
 
 1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
-2. **Fleet-first tenant create — merge** — **lab validated 2026-07-29** (Aelintra / `s07zmy`); merge `fleet-first-tenant-create` → `main` in **pbx3api** / **pbx3** / **pbx3spa** when ready — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Follow-on: Fleet Delete + FQDN rename.  
-3. **Retire Filament DID aliases** — direction locked; do the teardown when scheduled (migrate lab aliases → Number routes / Fleet DIDs; hide Filament; remove or inert `alias_db_lookup`) — **`SBC_PRODUCT_TRACKS.md`**. Do not confuse with tenant short-dial.  
+2. **Retire Filament DID aliases** — direction locked; do the teardown when scheduled (migrate lab aliases → Number routes / Fleet DIDs; hide Filament; remove or inert `alias_db_lookup`) — **`SBC_PRODUCT_TRACKS.md`**. Do not confuse with tenant short-dial.  
+3. **Fleet Delete + FQDN rename** (parked) — policy locked; **Rule 14 durable jobs** when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needs catalog remove + SBC domain delete; node wipe already exists.  
 4. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
 5. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
 6. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
@@ -38,9 +38,9 @@
 
 - [ ] **`ipphone.desc` vs `description` — clarify / rename (parked 2026-07-29):** Historical SARK/Asterisk ambivalence: schema has both columns; SPA “User (extension name)” → `desc`, “Description” → `description`; list **User** prefers `desc` so freeform Description never shows when `desc` is set (e.g. `1501` vs “WebRTC second ep”). GenAst `$desc` token actually substitutes **`description`** (else pkey), not the `desc` column. Model comment still calls `desc` “SIP username” — wrong now that **shortuid** is PJSIP identity. Proper fix later: map roles (display name vs notes vs any remaining Asterisk/SIP use), align SPA labels + list, GenAst templates, API, migrate/rename if needed. Do not drive-by.
 
-- [x] **Fleet-first tenant create — implement + lab (2026-07-29):** Branches **`fleet-first-tenant-create`** (not merged): **pbx3api** **`05ab501`** (`POST /api/fleet/tenants` + Sanctum Create/Delete **403** on fleet nodes); Gatekeeper **`0fa5fbb`** (`POST /api/v1/tenants/provision`); **pbx3spa** **`e37140b`** (Fleet Create UI + fleet locks + hide empty delete column). Lab: tenant **Aelintra** / **`s07zmy`** on golden; Call Route (domain) on SBC; Fleet DID Magrathea `+441924918076` → `s07zmy`. Hot-patched API on golden (full git checkout blocked by overlay drift). Spec: **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. **Still open:** merge → `main`; Fleet Delete + FQDN rename.
+- [x] **Fleet-first tenant create — implement + lab + merge (2026-07-30):** Merged **`fleet-first-tenant-create` → `main`**: **pbx3api** **`05ab501`**, **pbx3** **`9f153f0`** (Gatekeeper provision), **pbx3spa** **`6c1e4ac`**. Lab: **Aelintra** / **`s07zmy`** on golden. Spec: **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.
 
-- [ ] **Fleet-first — merge + follow-ons (open 2026-07-29):** Merge `fleet-first-tenant-create` → `main` (api/gatekeeper/spa). Then Fleet Delete + FQDN rename orchestrators. Do not use CLI/`register-tenant.sh` or hidden Domains URL as the routine path.
+- [ ] **Fleet Delete + FQDN rename (parked 2026-07-30):** Policy locked (Fleet owns lifecycle). **Rule 14:** confirm-gated **durable jobs** (not create-style sync). Primitives still needed: catalog tenant remove/soft-decommission; SBC `DELETE` domain. Node wipe already `DELETE /api/fleet/tenants/{shortuid}`. Spec: **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.
 
 - [x] **SBC admin — Domain Routes + System nav (2026-07-29):** Filament **Call Routes → Domain Routes**; **Active Calls** + **Locations** → **System**. Branch **`rename-domain-routes`** tip **`6aa3a43`**; hot on VIP. Merge to `main` when ready.
 
