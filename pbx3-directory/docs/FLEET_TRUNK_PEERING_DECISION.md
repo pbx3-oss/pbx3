@@ -212,9 +212,13 @@ without a separate “singleton vs block” data model on Asterisk. That flexibi
 
 **Tenant move:** `inroutes` regex rows travel in the tenant miniDB; SBC delivery rows are **bulk-regenerated** to the new `setid` in the same job as `domain.setid`. No carrier reprovision.
 
-#### Dispatcher source-IP lookup (noted)
+#### Dispatcher destinations — literal IP only (locked 2026-07-30)
 
-`GET_DOMAIN_FROM_SOURCE_IP` fails when dispatcher rows use hostname instead of IP (seen on golden). **Fix before peering Phase 1:** store Asterisk **source IP** in dispatcher `attrs` (or DNS-aware lookup). Affects the “from Asterisk → PSTN” branch and multi-tenant outbound.
+Fleet Asterisk backends (dispatcher `destination`, Domain Routes destinations, Peers with role **Asterisk** / Number-route targets) must be **`sip:<IPv4|IPv6>:port`**, not a DNS name.
+
+OpenSIPS **can** resolve a hostname when *sending* to the node, but reverse-path logic (`GET_DOMAIN_FROM_SOURCE_IP`, “is this from fleet Asterisk?”) compares packet **`$si`** to the stored destination / `attrs`. A hostname row does not match the source IP (seen on golden).
+
+**Product rule:** Filament + `FleetNodeProvisioner` reject DNS in those fields. Carrier **outbound** Peers may still use FQDN (Route53). Optional `attrs` `source_ip=` remains useful when destination IP and signaling source ever diverge; it does not license hostname destinations.
 
 ---
 
