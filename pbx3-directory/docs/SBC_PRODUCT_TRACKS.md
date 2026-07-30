@@ -31,7 +31,7 @@
 
 **Why:** Aliases only compress what operators already do as **SBC DID→tenant** (Number route / Fleet DIDs) + **PBX DID→endpoint** (inroutes / dialplan). A second inventory that runs only when Number routes miss is easy to misunderstand. Fleet HoR is catalog `dids.json` → Number routes; aliases are not projected.
 
-**Remaining:** remove or inert `alias_db_lookup` in `FROM_CARRIER` when booked.
+**Remaining (review later):** leave `alias_db_lookup` in `FROM_CARRIER` for now (harmless with empty table); decide inert vs remove when reviewing.
 
 **Do not confuse with** tenant **short dial** aliases (`TENANT_SHORT_DIAL_REQUIREMENTS.md`) — different feature.
 
