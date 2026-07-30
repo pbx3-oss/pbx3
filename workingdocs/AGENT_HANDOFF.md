@@ -69,7 +69,28 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-29 — fleet-first lab + SBC admin nav)
+## Next agent session notes (2026-07-30 — fleet-first on main; SBC Number routes + Backup UX)
+
+**Branches:** **pbx3api** / **pbx3** / **pbx3spa** **`main`** (fleet-first create merged + pushed). **pbx3sbc-admin** **`rename-domain-routes`** tip **`d0634a1`** (VIP surgical). Lab: golden **`08jzwn`**.
+
+### Shipped
+- **Fleet-first tenant create → `main`:** tips **pbx3api** **`5254c7b`**, **pbx3** (Gatekeeper provision + docs), **pbx3spa** Create UI. Deployed control Gatekeeper + golden fleet API files. Fleet Delete / FQDN rename **parked** as **Rule 14 durable jobs** (not create-style sync).
+- **SPA:** Fleet Create **Cancel create** toolbar (**`fcfb39e`**); Backup column **Filename** + show zip for S3-only (**`381abf3`**).
+- **SBC admin (VIP):** IP-only Asterisk dispatcher/Peer destinations (**`7823f87`**); hide DID aliases panel (**`6053e00`**); Number route destinations filtered by direction (**`3ffbf5e`**); Backup **Filename** + **local+S3** tag (**`d0634a1`**). Lab DID aliases cleared by operator; `alias_db_lookup` left for later review.
+- **Docs:** IP-only dispatcher rule in **`FLEET_TRUNK_PEERING_DECISION.md`**; DID-alias / Backup S3-merge TODOs.
+
+### Golden / operator follow-up
+- Golden API still dirty **`genast-hermit`** overlay — fleet-first files match `main`; full git checkout still blocked.
+- WebRTC SPA far-end still open.
+- SBC Backup Filament list still **local-only** inventory — merge S3-only rows TODO (#3).
+- Registration-edge (dynamic inbound peer REGISTER) estimated ~2–3 mo product; parked on demand.
+
+### Resume
+- WebRTC SPA far-end, or SBC Backup S3-merge list, or `alias_db_lookup` review when booked. Stay off Magrathea WSS until booked.
+
+---
+
+## Next agent session notes (2026-07-29 — fleet-first lab + SBC admin nav) — historical
 
 **Branches:** **`fleet-first-tenant-create`** in **pbx3api** **`05ab501`**, **pbx3** **`0fa5fbb`** (+ docs **`00283f7`**), **pbx3spa** **`e37140b`**. **pbx3sbc-admin** **`rename-domain-routes`** **`6aa3a43`** (VIP hot). Lab: golden **`08jzwn`**. Not merged to **`main`**.
 
@@ -84,7 +105,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Merge fleet-first + `rename-domain-routes` when ready; do **not** tear down DID aliases until scheduled.
 
 ### Resume
-- Merge `fleet-first-tenant-create` → `main` (api/gatekeeper/spa), or WebRTC SPA retest, or DID-alias teardown when booked. Stay off Magrathea WSS until booked.
+- Superseded — see 2026-07-30 block above.
 
 ---
 

@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** default. Fleet-first **create** merged to **`main`** (2026-07-30) in pbx3 / pbx3api / pbx3spa. SBC admin nav on **`rename-domain-routes`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-30 (SBC Backup S3-merge list TODO; Filename kinship)
+**Branch:** **`main`** default (fleet-first create merged). SBC admin on **`rename-domain-routes`** (VIP hot). Lab-hot: **golden only** (bzy stopped). Magrathea VIP active.  
+**Last updated:** 2026-07-30 (session end: fleet-first on main; SBC Number-route filter + DID aliases hidden; Backup Filename kinship; S3-merge Backup TODO)
 
 ### Suggested “what next?” order
 
