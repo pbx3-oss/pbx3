@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** default (fleet-first create merged). SBC admin on **`rename-domain-routes`** (VIP hot). Lab-hot: **golden only** (bzy stopped). Magrathea VIP active.  
-**Last updated:** 2026-07-30 (SBC Home ops-pulse live; geo-heat parked → fleet/S3; Home metrics cache)
+**Branch:** **`main`** default (fleet-first + **pbx3sbc-admin** Home/Domain-Routes stack on **`main`** tip **`0073471`**). Lab-hot: **golden only** (bzy stopped). Magrathea VIP active (surgical Home live).  
+**Last updated:** 2026-07-30 (session end: SBC Home ops-pulse + thin system on main; Fleet scrape path parked)
 
 ### Suggested “what next?” order
 
@@ -23,15 +23,13 @@
 16. **S7+** attested PCI — only on customer ask.  
 17. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.  
 18. **Grafana fleet view** (parked) — unmodified OSS only; see open item below.  
-19. **Door-knock geo heat / map** (parked) — prefer Fleet SPA + S3 scrape, not on-SBC; see open item.
+19. **Door-knock geo heat / Fleet edge health scrape** (parked) — see open items; **`HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
 
 ---
 
 ## Open items
 
-- [x] **SBC Home — Filament ops pulse (2026-07-30):** Live on VIP (branch **`sbc-home-ops-pulse`** tips **`f463e5a`** / **`549ef6e`** + metrics cache follow-on). Live posture + 24h CDR line + outcome doughnut + security pulse/trend; chart click-throughs; old period-sprawl widgets undiscovered. **Not** Grafana on edge.
-
-- [ ] **SBC Home — metrics efficiency + thin system (2026-07-30):** `HomeDashboardMetrics` short-TTL cache + slower polls; combined security SELECTs; **`SystemPostureWidget`** (load / mem% / disk% via `/proc` + `disk_*`, 45s cache). Deploy with next VIP push. Spec: **`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
+- [x] **SBC Home — Filament ops pulse + thin system (2026-07-30):** Merged to **pbx3sbc-admin `main`** **`0073471`** (via `rename-domain-routes`). Live on VIP: system strip (load/mem/disk) → SIP live posture → 24h CDR line + outcome doughnut → security pulse/trend; chart click-throughs; `HomeDashboardMetrics` short-TTL cache. Old period-sprawl widgets undiscovered. Spec: **`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**. **Not** Grafana on edge.
 
 - [ ] **Fleet SPA — edge host health scrape (parked 2026-07-30):** Multi-edge load/mem/disk (and later door-knock country rollups) via Gatekeeper ← edge summary cron → S3 HoR → Fleet overlay. **Not** browser→SBC polling; **not** on-SBC heatmaps. Checklist in **`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
 
@@ -41,7 +39,7 @@
 
 - [ ] **SBC Filament Backup — merge S3-only into list (2026-07-30):** Kinship with SPA instance Backup: show local, S3-only, and both (Filename + **S3** / **local+S3** tags). Today panel is local FIFO only (keep 9); aged zips remain on S3 (~30d) but operators cannot discover them in UI. Touch `sbc-backup-panel.sh list` + `SbcBackupService` + Filament Backup page. Restore still CLI. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
 
-- [x] **SBC — hide Filament DID aliases (2026-07-30):** Lab aliases cleared by operator; `DbAliasResource` nav + `canViewAny` false (tip **pbx3sbc-admin**). Spec: **`SBC_PRODUCT_TRACKS.md`**.
+- [x] **SBC — hide Filament DID aliases (2026-07-30):** Lab aliases cleared by operator; `DbAliasResource` nav + `canViewAny` false; on **`main`**. Spec: **`SBC_PRODUCT_TRACKS.md`**.
 
 - [ ] **SBC — review `alias_db_lookup` (parked 2026-07-30):** Filament DID aliases hidden; lab table empty — leave OpenSIPS Phase 5 fallthrough in `FROM_CARRIER` for now. **Review later:** inert vs remove (harmless while empty). Spec: **`SBC_PRODUCT_TRACKS.md`** · **`FLEET_TRUNK_PEERING_DECISION.md`**. Not tenant short-dial.
 
@@ -59,7 +57,7 @@
 
 - [ ] **Fleet Delete + FQDN rename (parked 2026-07-30):** Policy locked (Fleet owns lifecycle). **Rule 14:** confirm-gated **durable jobs** (not create-style sync). Primitives still needed: catalog tenant remove/soft-decommission; SBC `DELETE` domain. Node wipe already `DELETE /api/fleet/tenants/{shortuid}`. Spec: **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.
 
-- [x] **SBC admin — Domain Routes + System nav (2026-07-29):** Filament **Call Routes → Domain Routes**; **Active Calls** + **Locations** → **System**. Branch **`rename-domain-routes`** tip **`6aa3a43`**; hot on VIP. Merge to `main` when ready.
+- [x] **SBC admin — Domain Routes + System nav + Home (2026-07-30):** Filament **Call Routes → Domain Routes**; **Active Calls** + **Locations** → **System**; Home ops-pulse. Merged **`rename-domain-routes` → `main`** tip **`0073471`**; feature branches deleted. Live on VIP (surgical).
 
 - [ ] **SBC Track A lab — SARK (± FreePBX) behind SBC (2026-07-28):** Operator will stand up SARK (and maybe FreePBX) and prove REGISTER / calls via Magrathea or scratch pbx3sbc (domain → dispatcher → foreign Asterisk; phones registrar = SBC). No GenAst. Capture recipe / gaps when done — **`SBC_PRODUCT_TRACKS.md`** Track A. **After that lab:** FreePBX→pbx3 **data** migrate is a separate ETL chain (not shared with SARK `migrateLegacyDb` / `db_legacy_sql`) — requirements later.
 

@@ -69,7 +69,27 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-30 — fleet-first on main; SBC Number routes + Backup UX)
+## Next agent session notes (2026-07-30 — SBC Home ops-pulse on main)
+
+**Branches:** **pbx3sbc-admin** **`main`** tip **`0073471`** (merged `rename-domain-routes` + Home; feature branches deleted). **pbx3** / **pbx3api** / **pbx3spa** **`main`**. Lab: golden **`08jzwn`**. VIP Home live (surgical).
+
+### Shipped
+- **SBC Home ops-pulse:** system strip (load/mem/disk `/proc`) → SIP live posture → 24h CDR line + outcome doughnut → security pulse/7d trend; chart click-throughs; `HomeDashboardMetrics` short-TTL cache. Old number-wall widgets undiscovered.
+- **Merged to main:** Domain Routes rename, System nav, IP-only Asterisk destinations, DID aliases hidden, Backup Filename + local+S3 tag, Number-route direction filter — all on **`0073471`**.
+- **Stance:** Grafana/Homer = unmodified fleet-only later; door-knock geo heat / rich host history → Fleet SPA + Gatekeeper/S3 scrape (**`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**), not on-SBC Home polls.
+
+### Golden / operator follow-up
+- VIP Magrathea still small root (~7 GiB) — expect amber disk/mem on Home; not a product bug.
+- Golden API still dirty **`genast-hermit`** overlay.
+- WebRTC SPA far-end still open.
+- SBC Backup Filament list still local-only inventory (S3-merge TODO).
+
+### Resume
+- WebRTC SPA far-end, or SBC Backup S3-merge list, or `alias_db_lookup` review when booked. Stay off Magrathea WSS until booked.
+
+---
+
+## Next agent session notes (2026-07-30 — fleet-first on main; SBC Number routes + Backup UX) — historical
 
 **Branches:** **pbx3api** / **pbx3** / **pbx3spa** **`main`** (fleet-first create merged + pushed). **pbx3sbc-admin** **`rename-domain-routes`** tip **`d0634a1`** (VIP surgical). Lab: golden **`08jzwn`**.
 
@@ -86,7 +106,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Registration-edge (dynamic inbound peer REGISTER) estimated ~2–3 mo product; parked on demand.
 
 ### Resume
-- WebRTC SPA far-end, or SBC Backup S3-merge list, or `alias_db_lookup` review when booked. Stay off Magrathea WSS until booked.
+- Superseded — see 2026-07-30 Home ops-pulse block above.
 
 ---
 
