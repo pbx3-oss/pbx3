@@ -1,30 +1,33 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** default. Fleet-first **create** merged to **`main`** (2026-07-30) in pbx3 / pbx3api / pbx3spa. SBC admin nav on **`rename-domain-routes`**. Lab-hot: **golden only** (bzy + Magrathea companion **stopped** 2026-07-27). Magrathea VIP active.  
-**Last updated:** 2026-07-30 (fleet-first create → `main`; Delete/FQDN rename parked as Rule 14 durable jobs)
+**Last updated:** 2026-07-30 (SBC Backup S3-merge list TODO; Filename kinship)
 
 ### Suggested “what next?” order
 
 1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
 2. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Later: decide inert vs remove fallthrough in `FROM_CARRIER` — **`SBC_PRODUCT_TRACKS.md`**. Not tenant short-dial.  
-3. **Fleet Delete + FQDN rename** (parked) — policy locked; **Rule 14 durable jobs** when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needs catalog remove + SBC domain delete; node wipe already exists.  
-4. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
-5. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
-6. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
-7. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
-8. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
-9. **Velocity standalone product** (parked).  
-10. **Instance shadowing** / S10.7 / S8.9 (parked).  
-11. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
-12. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
-13. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
-14. **Fleet auth cookie/SSO (blocked)**.  
-15. **S7+** attested PCI — only on customer ask.  
-16. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.
+3. **SBC Filament Backup — merge S3-only rows** — list like SPA instance Backup (local + S3 + both; Filename + tags). Local FIFO keeps 9; S3 ~30d — S3-only archives invisible in panel today. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
+4. **Fleet Delete + FQDN rename** (parked) — policy locked; **Rule 14 durable jobs** when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needs catalog remove + SBC domain delete; node wipe already exists.  
+5. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
+6. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
+7. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
+8. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
+9. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
+10. **Velocity standalone product** (parked).  
+11. **Instance shadowing** / S10.7 / S8.9 (parked).  
+12. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
+13. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
+14. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
+15. **Fleet auth cookie/SSO (blocked)**.  
+16. **S7+** attested PCI — only on customer ask.  
+17. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.
 
 ---
 
 ## Open items
+
+- [ ] **SBC Filament Backup — merge S3-only into list (2026-07-30):** Kinship with SPA instance Backup: show local, S3-only, and both (Filename + **S3** / **local+S3** tags). Today panel is local FIFO only (keep 9); aged zips remain on S3 (~30d) but operators cannot discover them in UI. Touch `sbc-backup-panel.sh list` + `SbcBackupService` + Filament Backup page. Restore still CLI. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
 
 - [x] **SBC — hide Filament DID aliases (2026-07-30):** Lab aliases cleared by operator; `DbAliasResource` nav + `canViewAny` false (tip **pbx3sbc-admin**). Spec: **`SBC_PRODUCT_TRACKS.md`**.
 
