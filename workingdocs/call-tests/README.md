@@ -12,7 +12,13 @@ Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_IN
 | **SIPp catcher** | **Lab 2026-07-27** — golden tenant `sipp` (`pb0wsk.pbx3.com`), exts **2000/2001**, queue **2060**; Twilio DID `+15139279738` |
 | **L1 pack** | **`./run-pack.sh`** — **11 ids** green (incl. queue-cancel-vm + out-busy) |
 | CFIM / closed / queue / 302 / multi-tenant / outbound | Pack IDs on catcher path |
-| **SIPp off-box host** | **Live 2026-07-27** — EIP `98.93.98.162`; Peer gwid **99**; pack green on host (`SIPP_LAB_HOST.md`) |
+| **SIPp off-box host** | **Live** — EIP **`98.82.58.59`** (Peer gwid **99**); pack green on host (`SIPP_LAB_HOST.md`) |
+
+### Known residue — stuck Active Calls after pack (2026-07-30)
+
+**Not an SBC cfg bug.** Catcher UAS (`catcher-answer.xml`) waits for BYE; `run-pack.sh` **kills** SIPp between scenarios / at end. Abrupt UAS death → no BYE → OpenSIPS `dialog` stays Confirmed until the long default timeout (lab saw ~overnight). Home “Active dialogs” / Filament Active Calls look busy until MI `dlg_end_dlg` or timeout.
+
+**Wanted:** graceful teardown (BYE before kill, or post-pack MI cleanup). Tracked in **`TODO.md`**.
 
 ## Layout
 

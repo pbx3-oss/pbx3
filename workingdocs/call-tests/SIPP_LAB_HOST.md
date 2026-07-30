@@ -2,7 +2,9 @@
 
 **Why:** Mac/office public IP must **not** sit in SBC `dr_gateways` as a carrier Peer (steals phone INVITEs → “No inbound route”). Put **caller + catcher** on a dedicated tiny EC2 with its own EIP.
 
-**Status:** Lab host live 2026-07-27 — EIP **`98.93.98.162`**, Peer gwid **99**, `./run-pack.sh` green from host.
+**Status:** Lab host live — EIP **`98.82.58.59`** (was `98.93.98.162`), Peer gwid **99**, `./run-pack.sh` green from host.
+
+**Residue:** pack kill of catcher UAS can leave OpenSIPS dialogs Confirmed until timeout — prefer graceful BYE teardown (**`TODO.md`**, **`call-tests/README.md`**).
 
 ---
 

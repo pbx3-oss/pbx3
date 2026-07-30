@@ -69,7 +69,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-30 — SBC Home ops-pulse on main)
+## Next agent session notes (2026-07-30 — Instance + SBC Home kinship; next = 2nd SIPp)
+
+**Branches:** all **`main`**. Tips: **pbx3spa** **`5ea90df`** (+ dirty `HomeBarChart.vue`), **pbx3api** **`9db216b`**, **pbx3sbc-admin** **`a92aed5`**, **pbx3** **`466e99a`** (+ dirty call-tests notes / TODO). Feature branch `instance-home-ops-pulse` deleted. Lab: golden **`08jzwn`**; Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**). Companion is **not** a 2nd SIPp (hostname `companion`; dynamic IP if started).
+
+### Shipped
+- **Instance Home ops-pulse:** `GET /home/pulse`; host strip + live + CDR charts; usage meters; sitename HoR (`globals.sitename` / installer / Network); SPA canvas kinship with Filament.
+- **SBC Home:** usage meters; title **Home** only; VIP surgical + pushed **`a92aed5`**. Operator confirmed live/CDR charts after L1 pack.
+- **L1 pack:** **PACK GREEN** on `98.82.58.59`; stuck dialogs = abrupt UAS kill (not SBC cfg) — teardown TODO noted.
+- **Confirmed:** only one SIPp EC2 today; 2nd phone host never built (planned §9).
+
+### Golden / operator follow-up
+- **Uncommitted:** commit SPA bar-chart numbers + pbx3 call-tests/TODO handoff docs when asked.
+- Golden API still dirty **`genast-hermit`** overlay.
+- Magrathea small root → amber mem/disk expected.
+- Companion may be running briefly — stop if not needed for HA lab.
+
+### Resume
+- **Next booked:** stand up **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. Then demos/load; dial-alias later.
+- Optional: commit leftover SPA/docs; L1 graceful teardown; WebRTC SPA far-end; SBC Backup S3-merge.
+
+---
+
+## Next agent session notes (2026-07-30 — SBC Home ops-pulse on main) — historical
 
 **Branches:** **pbx3sbc-admin** **`main`** tip **`0073471`** (merged `rename-domain-routes` + Home; feature branches deleted). **pbx3** / **pbx3api** / **pbx3spa** **`main`**. Lab: golden **`08jzwn`**. VIP Home live (surgical).
 
@@ -85,7 +107,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - SBC Backup Filament list still local-only inventory (S3-merge TODO).
 
 ### Resume
-- WebRTC SPA far-end, or SBC Backup S3-merge list, or `alias_db_lookup` review when booked. Stay off Magrathea WSS until booked.
+- Superseded — see 2026-07-30 dual-Home / 2nd SIPp block above.
 
 ---
 

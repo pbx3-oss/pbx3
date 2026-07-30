@@ -1,29 +1,30 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** default (fleet-first + **pbx3sbc-admin** Home/Domain-Routes stack on **`main`** tip **`0073471`**). Lab-hot: **golden only** (bzy stopped). Magrathea VIP active (surgical Home live).  
-**Last updated:** 2026-07-30 (session end: SBC Home ops-pulse + thin system on main; Fleet scrape path parked)
+**Branch:** **`main`** default — Instance + SBC Home ops-pulse kinship shipped. Lab-hot: **golden** + Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**); companion may be stopped.  
+**Last updated:** 2026-07-30 (session end: dual Home ops-pulse + sitename; next = 2nd SIPp phone host)
 
 ### Suggested “what next?” order
 
-1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
-2. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Later: decide inert vs remove fallthrough in `FROM_CARRIER` — **`SBC_PRODUCT_TRACKS.md`**. Not tenant short-dial.  
-3. **SBC Filament Backup — merge S3-only rows** — list like SPA instance Backup (local + S3 + both; Filename + tags). Local FIFO keeps 9; S3 ~30d — S3-only archives invisible in panel today. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
-4. **Fleet Delete + FQDN rename** (parked) — policy locked; **Rule 14 durable jobs** when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needs catalog remove + SBC domain delete; node wipe already exists.  
-5. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. At start of alias lab: **2nd SIPp EC2** (extension platform, non-Peer EIP) — **`SIPP_LAB_HOST.md`** §9. L1 `site-dial-a-b` when built.  
-6. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; phone outbound covered by 2nd SIPp when alias lab stands up — **`CALL_TEST_STRATEGY.md`**.  
-7. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
-8. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
-9. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
-10. **Velocity standalone product** (parked).  
-11. **Instance shadowing** / S10.7 / S8.9 (parked).  
-12. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
-13. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
-14. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
-15. **Fleet auth cookie/SSO (blocked)**.  
-16. **S7+** attested PCI — only on customer ask.  
-17. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.  
-18. **Grafana fleet view** (parked) — unmodified OSS only; see open item below.  
-19. **Door-knock geo heat / Fleet edge health scrape** (parked) — see open items; **`HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
+1. **2nd SIPp EC2 — extension platform** — Stand up non-Peer phone lab host (own EIP; REGISTER/dial via Magrathea). Demos/load + later dial-alias `site-dial-a-b`. Spec: **`SIPP_LAB_HOST.md`** §9. Keep Peer-**99** catcher as carrier/DID only.  
+2. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
+3. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Later: decide inert vs remove fallthrough in `FROM_CARRIER` — **`SBC_PRODUCT_TRACKS.md`**. Not tenant short-dial.  
+4. **SBC Filament Backup — merge S3-only rows** — list like SPA instance Backup (local + S3 + both; Filename + tags). Local FIFO keeps 9; S3 ~30d — S3-only archives invisible in panel today. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
+5. **Fleet Delete + FQDN rename** (parked) — policy locked; **Rule 14 durable jobs** when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needs catalog remove + SBC domain delete; node wipe already exists.  
+6. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. Needs 2nd SIPp above before `site-dial-a-b`.  
+7. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; L1 pack graceful teardown (BYE/`dlg_end_dlg`) — **`CALL_TEST_STRATEGY.md`** / **`call-tests/README.md`**.  
+8. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
+9. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
+10. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
+11. **Velocity standalone product** (parked).  
+12. **Instance shadowing** / S10.7 / S8.9 (parked).  
+13. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
+14. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
+15. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
+16. **Fleet auth cookie/SSO (blocked)**.  
+17. **S7+** attested PCI — only on customer ask.  
+18. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.  
+19. **Grafana fleet view** (parked) — unmodified OSS only; see open item below.  
+20. **Door-knock geo heat / Fleet edge health scrape** (parked) — see open items; **`HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
 
 ---
 
@@ -31,7 +32,11 @@
 
 - [x] **SBC Home — Filament ops pulse + thin system (2026-07-30):** Merged to **pbx3sbc-admin `main`** **`0073471`** (via `rename-domain-routes`). Live on VIP: system strip (load/mem/disk) → SIP live posture → 24h CDR line + outcome doughnut → security pulse/trend; chart click-throughs; `HomeDashboardMetrics` short-TTL cache. Old period-sprawl widgets undiscovered. Spec: **`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**. **Not** Grafana on edge.
 
-- [x] **SBC Home — usage meters on system strip (2026-07-30):** Filament `SystemPostureWidget` thin green→amber→red meters (Load = load1/CPUs; Memory/Disk = used %). Home title **Home** only (FQDN on INSTANCE chip). Spec: **`HOME_SYSTEM_AND_FLEET_SCRAPE.md`**. Friendly SBC sitename still deferred.
+- [x] **SBC Home — usage meters on system strip (2026-07-30):** Filament `SystemPostureWidget` thin green→amber→red meters (Load = load1/CPUs; Memory/Disk = used %). Home title **Home** only (FQDN on INSTANCE chip). Spec: **`HOME_SYSTEM_AND_FLEET_SCRAPE.md`**. Friendly SBC sitename still deferred. Tip **pbx3sbc-admin** **`a92aed5`** (VIP surgical).
+
+- [ ] **2nd SIPp EC2 — extension platform (next session):** Stand up non-Peer phone host (own EIP; `sip-tester` + `call-tests`; lab phone REGISTER via VIP). **Not** Peer 99. Demos/load + later dial-alias. Spec: **`SIPP_LAB_HOST.md`** §9. Catcher remains **`98.82.58.59`**.
+
+- [x] **Instance Home ops-pulse + sitename (2026-07-30):** SPA/API **`main`** merge tips **pbx3spa** **`5ea90df`**, **pbx3api** **`9db216b`**. Host/live/CDR pulse; usage meters; `GET /home/pulse`; `displayInstanceLabel` sitename→FQDN; installer Site name. **Uncommitted:** SPA `HomeBarChart` axis/summary numbers. Catalog label sync parked.
 
 - [x] **Instance friendly name = `sysglobals.sitename` (2026-07-30):** Locked — **`NETWORK_SYSGLOBALS_OVERLAP.md`**. **Installer** prompts Site name on first provision / identity apply → `globals.sitename` (`INSTANCE_SITENAME` non-interactive). SPA **`displayInstanceLabel`**: sitename → FQDN. Editable via Network Site Name. Help text updated in `sqlite_message.sql` (seed on new DB; existing nodes: Network still works; merge help when convenient).
 
@@ -112,6 +117,8 @@
 - [x] **Call / SIP test — queue-cancel-vm + out-busy (2026-07-27):** `in-queue-cancel-vm` (agent 486→failover→VM) + `out-busy-or-reject` (Local→486→PostDial). Catcher **`uas-486`**. Holiday left for day-parts.
 
 - [ ] **Call / SIP test — optional polish:** ACK/BYE catcher NAT. Phone-outbound / extension-platform SIPp → **2nd EC2 when dial-alias starts** (**`SIPP_LAB_HOST.md`** §9). Spec: **`CALL_TEST_STRATEGY.md`**.
+
+- [ ] **L1 pack — graceful catcher teardown (2026-07-30):** Pack **green** but `run-pack.sh` **kills** SIPp UAS between scenarios / at end → no BYE → OpenSIPS **dialog** stays Confirmed until long default timeout (Active Calls litter; **not** an SBC cfg bug). Prefer graceful teardown: BYE before stop, or MI `dlg_end_dlg` after pack. Optional shorter lab `dialog` `default_timeout`. Note: **`call-tests/README.md`**.
 
 - [x] **Inbound route pkey allows +E.164 (2026-07-27):** Digits-only regex blocked Edit Inbound Route on `+44…` DIDs. Fixed **pbx3api** + **pbx3spa**; hot-deployed controller on golden (full `git pull` still blocked by local overlay drift).
 
