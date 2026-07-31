@@ -302,7 +302,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 
 **Order note:** Slice **B** before or with **C** — without miss→dispatcher, AliasDial to `ext@fqdn` fails on today’s SBC. Do not regress station dial (`shortuid@fqdn` usrloc hit). Slice **D** includes return-call URI lab check.
 
-**Lab hosts (locked 2026-07-27):** Keep current SIPp EC2 (EIP + Peer **99**) as **carrier/DID** side. When alias work starts, bring up a **second** SIPp EC2 (**own EIP, no Peer row**) as the **extension platform** — REGISTER/dial as phones (`outbound_proxy` → SBC). Same host cannot be both Peer and clean phone IP (Peer 99 steal). See **`call-tests/SIPP_LAB_HOST.md`** §9. Same-node golden first (sipp ↔ affcot/duns); bzy if up for cross-node.
+**Lab hosts (locked 2026-07-27; VM path 2026-07-30):** Keep SIPp EC2 (EIP + Peer **99**) as **carrier/DID**. **Extension platform** = local ARM VM **`sippuac`** (`192.168.1.51`, no Peer) — office NAT OK for phone UAC; EC2 fallback only if needed. Same host cannot be both Peer and clean phone IP. See **`call-tests/SIPP_LAB_HOST.md`** §9. Same-node golden first (sipp ↔ affcot/duns); bzy if up for cross-node.
 
 ---
 

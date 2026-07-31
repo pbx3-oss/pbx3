@@ -13,6 +13,8 @@ Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_IN
 | **L1 pack** | **`./run-pack.sh`** — **11 ids** green (incl. queue-cancel-vm + out-busy) |
 | CFIM / closed / queue / 302 / multi-tenant / outbound | Pack IDs on catcher path |
 | **SIPp off-box host** | **Live** — EIP **`98.82.58.59`** (Peer gwid **99**); pack green on host (`SIPP_LAB_HOST.md`) |
+| **SIPp extension platform** | **Live** — local ARM VM **`sippuac`** `192.168.1.51` (non-Peer phone UAC); §9 |
+| **L2 soak / demo** | **`./run-soak.sh start demo|busy`** on sippuac — ~10/20 concurrent ext↔ext |
 
 ### Known residue — stuck Active Calls after pack (2026-07-30)
 
@@ -58,6 +60,25 @@ call-tests/
 | L0 CAGI `make test` | Offline — not this tree |
 
 Mac-only for now (no jump host).
+
+## L2 soak / demo wallpaper (ext↔ext)
+
+Steady concurrent calls on catcher tenant for CDR/Home fill and live demos. Runs on **extension platform** (`sippuac`), not Peer-99.
+
+```bash
+# once — create exts 2100–2139 on golden + GenAst + soak-phones.env
+./provision-soak-phones.sh
+rsync -av soak-phones.env scenarios/soak-*.xml run-soak.sh profiles/ tech@192.168.1.51:~/call-tests/
+# on VM
+./run-soak.sh start demo    # ~10 up
+./run-soak.sh start busy    # ~20 up
+./run-soak.sh status
+./run-soak.sh stop
+```
+
+Profiles: `profiles/demo.env` / `busy.env`. Answerer hangs up after hold (clears SBC dialogs). Spec: **`CALL_TEST_STRATEGY.md`** §6 L2.
+
+---
 
 ## Shared prerequisites (all VIP scenarios)
 
@@ -205,8 +226,10 @@ sipp 3.93.26.82 -i "$LOCAL_IP" -p 5061 \
 | 180 then timeout | Expected dest not answering |
 | Wrong party rings | Lab state (still OPEN, CFIM unset, not queued) |
 | ACK/BYE fail / OpenSIPS **500** on BYE | Missing `rrs="true"` on INVITE 200 (Record-Route not stored) — fixed in scenarios; re-pull XML |
+| `Route: Route: <…>` in ACK/BYE | Scenario had `Route: [routes]`; SIPp `[routes]` already includes `Route:` — use bare `[routes]` |
+| BYE no 200 on local VM (answer OK) | Office NAT remaps VM UDP (`rport≠5070`); Mac often keeps `rport=5070`. Pathway still proven; teardown polish later |
 
 ## Next
 
-- Optional: `out-busy-or-reject`; ACK/BYE catcher NAT polish.
+- Optional: `out-busy-or-reject`; ACK/BYE NAT polish (VM + catcher pack teardown).
 - L2 soak under `profiles/` later.

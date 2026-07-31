@@ -1,3 +1,4 @@
 lab.env
+soak-phones.env
 notes/*
 !notes/.gitignore

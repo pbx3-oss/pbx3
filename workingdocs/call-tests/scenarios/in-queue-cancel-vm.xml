@@ -9,7 +9,7 @@
   Lab: openroute=queue; catcher A in uas-486. Assert: 200 (Queue Answer)
   + call stays up into Voicemail (pack also CLI-polls Voicemail) + BYE.
 
-  Proxied dialog: ACK/BYE use [next_url] + Route:[routes].
+  Proxied dialog: ACK/BYE use [next_url] + [routes].
 -->
 <scenario name="in-queue-cancel-vm">
 
@@ -55,7 +55,7 @@
       CSeq: 1 ACK
       Contact: <sip:sipp@[local_ip]:[local_port]>
       Max-Forwards: 70
-      Route: [routes]
+      [routes]
       Content-Length: 0
     ]]>
   </send>
@@ -73,7 +73,7 @@
       CSeq: 2 BYE
       Contact: <sip:sipp@[local_ip]:[local_port]>
       Max-Forwards: 70
-      Route: [routes]
+      [routes]
       Content-Length: 0
     ]]>
   </send>

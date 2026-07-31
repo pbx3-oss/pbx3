@@ -173,20 +173,42 @@ ssh -i …/pbx3test.pem ubuntu@<SIPP_EIP> 'cd ~/call-tests && ./run-pack.sh'
 
 ---
 
-## 9. Second SIPp — extension platform (when dial-alias starts)
+## 9. Second SIPp — extension platform (phone UAC)
 
-**Do when:** beginning tenant dial-alias implement / L1 `site-dial-a-b` — not required for current Peer-99 pack.
+**Do when:** demos/load, true OutRoute-from-phone, or dial-alias L1 `site-dial-a-b`. Not required for Peer-99 DID pack.
 
 | Role | Host | Peer? |
 |------|------|--------|
-| **Carrier / DID** | This host (EIP + gwid **99**) | Yes — UAC DID INVITEs |
-| **Extension platform** | **New** EC2 + **own EIP** | **No** — never add as `dr_gateways` Peer |
+| **Carrier / DID** | EC2 EIP **`98.82.58.59`** + gwid **99** | Yes — UAC DID INVITEs |
+| **Extension platform** | **Local lab VM** (preferred) or Mac | **No** — never add as `dr_gateways` Peer |
 
 **Why:** Phone REGISTER + dial (`outbound_proxy` → SBC) from the Peer-99 EIP confuses carrier matching / blocks true phone-outbound scenarios. Split roles.
 
-**Second host sketch:** same size/SG pattern as §1 (UDP to Magrathea VIP; SSH operator-only); **no** Peer insert; `lab.env` for phone A/B creds + `SBC_HOST=VIP`; use for `site-dial-a-b` UAC and optional true OutRoute-from-phone. Keep EIP allocated across stop/start so Contacts stay stable.
+**Lab choice (2026-07-30):** Office NAT already carries real phones → SBC/golden. Mac smoke proved SIPp phone UAC; **ARM Ubuntu 24.04 VM** is the extension platform (no second EC2 unless office path regresses).
 
-Spec pointer: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §9 lab hosts.
+| Item | Live |
+|------|------|
+| Host / SSH | **`sippuac`** — `ssh tech@192.168.1.51` (bridged LAN) |
+| Arch / OS | **aarch64** Ubuntu 24.04; `sip-tester` (SIPp 3.7.x) |
+| Recipes | `~/call-tests/` (rsync from Mac `pbx3/workingdocs/call-tests/`) |
+| `lab.env` | Same catcher phone creds as Mac; `LOCAL_IP=192.168.1.51` |
+| Smoke | `./run-phone-a-b.sh` — A(2000)→B(2001) answer green (2026-07-30) |
+| L2 soak | `./run-soak.sh start demo\|busy` — ~10/20 concurrent; `provision-soak-phones.sh` first |
+| Peer | **Never** insert office / VM IP into `dr_gateways` |
+
+**Residue:** BYE→200 flaky on this VM (NAT remaps UDP — `rport≠5070`; Mac often keeps `rport=5070`). Call path proven; teardown polish later. Also fixed scenarios: use bare `[routes]` (not `Route: [routes]` — SIPp already emits `Route:`).
+
+**Bootstrap sketch:**
+
+```bash
+# on VM
+sudo apt-get install -y sip-tester
+# from Mac
+rsync -av -e ssh pbx3/workingdocs/call-tests/ tech@192.168.1.51:~/call-tests/
+# on VM: set LOCAL_IP to guest bridged IP; run smokes above
+```
+
+EC2 fallback (own EIP, no Peer): same size/SG as §1 if local NAT fails. Spec pointer: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §9 lab hosts.
 
 ---
 

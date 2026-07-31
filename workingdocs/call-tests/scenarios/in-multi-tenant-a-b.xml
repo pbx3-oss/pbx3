@@ -55,7 +55,7 @@
       CSeq: 1 ACK
       Contact: <sip:sipp@[local_ip]:[local_port]>
       Max-Forwards: 70
-      Route: [routes]
+      [routes]
       Content-Length: 0
     ]]>
   </send>
@@ -72,7 +72,7 @@
       CSeq: 2 BYE
       Contact: <sip:sipp@[local_ip]:[local_port]>
       Max-Forwards: 70
-      Route: [routes]
+      [routes]
       Content-Length: 0
     ]]>
   </send>

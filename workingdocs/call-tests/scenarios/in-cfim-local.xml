@@ -7,7 +7,7 @@
   extension to a local extension that will answer (e.g. 1000 CFIM → 1001).
   Assert: 200 + BYE clean on the CFIM target (no wrong hold forever).
 
-  Proxied dialog: ACK/BYE use [next_url] + Route:[routes].
+  Proxied dialog: ACK/BYE use [next_url] + [routes].
 -->
 <scenario name="in-cfim-local">
 
@@ -53,7 +53,7 @@
       CSeq: 1 ACK
       Contact: <sip:sipp@[local_ip]:[local_port]>
       Max-Forwards: 70
-      Route: [routes]
+      [routes]
       Content-Length: 0
     ]]>
   </send>
@@ -70,7 +70,7 @@
       CSeq: 2 BYE
       Contact: <sip:sipp@[local_ip]:[local_port]>
       Max-Forwards: 70
-      Route: [routes]
+      [routes]
       Content-Length: 0
     ]]>
   </send>

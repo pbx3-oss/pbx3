@@ -1,21 +1,11 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 <!--
-  out-egress-ok — L1 pathway (signalling)
-
-  Authenticated phone path: REGISTER catcher A, then INVITE dialled digits
-  via SBC (R-URI user = digits, domain = tenant FQDN). Cosend → pb0wsk
-  SIPP_MAIN → Egress → far end (default Magrathea DID → golden 1000).
-
-  Keys (sipp -key): domain, user, digits
-  Auth: sipp -au / -ap
-
-  Target host is SBC VIP. Proxied dialog: rrs=true on INVITE 200.
-
-  Call-ID must stay [call_id] (no suffix): SIPp maps replies by Call-ID;
-  a custom [call_id]-out suffix discards 100/401 as out-of-call (Mac lab 2026-07-30).
+  soak-dial — dialer UAC; answerer hangs up after hold. Wait for BYE (or timeout).
+  Keys: domain, user, digits
+  HOLD_PLACEHOLDER = wait for answerer BYE (hold + slack), baked by run-soak.sh
 -->
-<scenario name="out-egress-ok">
+<scenario name="soak-dial">
 
   <send retrans="500">
     <![CDATA[
@@ -28,7 +18,7 @@
       Contact: <sip:[user]@[local_ip]:[local_port]>
       Max-Forwards: 70
       Expires: 3600
-      User-Agent: pbx3-call-tests/out-egress-ok
+      User-Agent: pbx3-call-tests/soak-dial
       Content-Length: 0
     ]]>
   </send>
@@ -47,7 +37,7 @@
       Max-Forwards: 70
       Expires: 3600
       [authentication]
-      User-Agent: pbx3-call-tests/out-egress-ok
+      User-Agent: pbx3-call-tests/soak-dial
       Content-Length: 0
     ]]>
   </send>
@@ -64,7 +54,7 @@
       CSeq: 1 INVITE
       Contact: <sip:[user]@[local_ip]:[local_port]>
       Max-Forwards: 70
-      User-Agent: pbx3-call-tests/out-egress-ok
+      User-Agent: pbx3-call-tests/soak-dial
       Content-Type: application/sdp
       Content-Length: [len]
 
@@ -95,7 +85,7 @@
       Contact: <sip:[user]@[local_ip]:[local_port]>
       Max-Forwards: 70
       [authentication]
-      User-Agent: pbx3-call-tests/out-egress-ok
+      User-Agent: pbx3-call-tests/soak-dial
       Content-Type: application/sdp
       Content-Length: [len]
 
@@ -132,25 +122,20 @@
     ]]>
   </send>
 
-  <pause milliseconds="2000"/>
+  <recv request="BYE" timeout="HOLD_PLACEHOLDER" ontimeout="done" crlf="true"/>
 
-  <!-- Fire-and-forget BYE: office NAT often drops response; INVITE 200 is the assert -->
   <send>
     <![CDATA[
-      BYE [next_url] SIP/2.0
-      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: <sip:[user]@[domain]>;tag=[pid]SIPpTag01[call_number]
-      To: <sip:[digits]@[domain]>[peer_tag_param]
-      Call-ID: [call_id]
-      CSeq: 3 BYE
-      Contact: <sip:[user]@[local_ip]:[local_port]>
-      Max-Forwards: 70
-      [routes]
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
       Content-Length: 0
     ]]>
   </send>
 
-  <ResponseTimeRepartition value="10, 20, 50, 100, 200, 500, 1000, 2000, 5000"/>
-  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+  <label id="done"/>
 
 </scenario>

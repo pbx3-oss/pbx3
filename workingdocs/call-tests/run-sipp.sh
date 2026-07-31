@@ -26,8 +26,17 @@ if [[ ! -f lab.env ]]; then
   exit 1
 fi
 
+# Allow env overrides (e.g. OUT_DIGITS=2001) before lab.env clobbers
+_OV_OUT_DIGITS="${OUT_DIGITS:-}"
+_OV_LOCAL_IP="${LOCAL_IP:-}"
+_OV_CATCHER_PORT="${CATCHER_PORT:-}"
+
 # shellcheck disable=SC1091
 source ./lab.env
+
+[[ -n "$_OV_OUT_DIGITS" ]] && OUT_DIGITS="$_OV_OUT_DIGITS"
+[[ -n "$_OV_LOCAL_IP" ]] && LOCAL_IP="$_OV_LOCAL_IP"
+[[ -n "$_OV_CATCHER_PORT" ]] && CATCHER_PORT="$_OV_CATCHER_PORT"
 
 : "${SBC_HOST:?}"
 : "${SBC_PORT:=5060}"
@@ -55,11 +64,12 @@ fi
 mkdir -p notes
 
 # Phone-originated outbound (REGISTER + INVITE digits) — not a carrier DID INVITE
+# Dial same-tenant ext (e.g. OUT_DIGITS=2001) or PSTN digits via OutRoute.
 if [[ "$SCENARIO" == "out-egress-ok" ]]; then
   : "${CATCHER_DOMAIN:?}"
   : "${CATCHER_USER:?}"
   : "${CATCHER_PASS:?}"
-  : "${OUT_DIGITS:=01924910444}"
+  : "${OUT_DIGITS:=${CATCHER_EXT_B:-2001}}"
   : "${CATCHER_PORT:=5070}"
   SIPP_ARGS=(
     "$SBC_HOST"
@@ -83,7 +93,7 @@ if [[ "$SCENARIO" == "out-egress-ok" ]]; then
     SIPP_ARGS+=(-i "$LOCAL_IP")
   fi
   echo "SIPp ${SCENARIO} → sip:${OUT_DIGITS}@${CATCHER_DOMAIN} via ${SBC_HOST} (phone ${CATCHER_USER})"
-  echo "Far end must answer within ${RECV_TIMEOUT}ms (lab: Magrathea DID → 1000 Ext alert)."
+  echo "Far end must answer within ${RECV_TIMEOUT}ms (lab: peer ext UAS or OutRoute dest)."
   exec sipp "${SIPP_ARGS[@]}"
 fi
 

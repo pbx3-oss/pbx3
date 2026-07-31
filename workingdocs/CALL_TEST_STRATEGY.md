@@ -119,11 +119,12 @@ Keep **separate** from L1 pass/fail.
 
 | Profile | Intent | Starting sketch |
 |---------|--------|-----------------|
-| `soak-light` | Baseline healthy | Low CPS, 15–30 min, few concurrent |
-| `ramp-find-ceiling` | Find break point | Ramp CPS until error rate or CPU pegs |
-| `spike` | Short burst | 2–3× soak rate for 60s |
+| `demo` | Demo wallpaper / light DB fill | **~10 concurrent** ext↔ext, 45s hold — `./run-soak.sh start demo` on sippuac |
+| `busy` | Busy-hour stand-in | **~20 concurrent** ext↔ext — `./run-soak.sh start busy` |
+| `ramp-find-ceiling` | Find break point | Ramp CPS until error rate or CPU pegs (later) |
+| `spike` | Short burst | 2–3× soak rate for 60s (later) |
 
-Record: date, node, tip SHAs, max stable concurrent, CPS at failure, which process saturated (Asterisk / OpenSIPS / CPU). Store notes under `pbx3/workingdocs/lab/` or handoff — not git blobs of pcap unless useful.
+Provision once: `./provision-soak-phones.sh` (exts 2100–2139 on catcher tenant). Signalling-only is enough for CDR/Home + live demo backdrop.
 
 ---
 

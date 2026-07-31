@@ -1,17 +1,17 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** default — Instance + SBC Home ops-pulse kinship shipped. Lab-hot: **golden** + Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**); companion may be stopped.  
-**Last updated:** 2026-07-30 (session end: dual Home ops-pulse + sitename; next = 2nd SIPp phone host)
+**Branch:** **`main`** default — Instance + SBC Home ops-pulse kinship shipped. Lab-hot: **golden** + Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**); extension platform **`sippuac`** `192.168.1.51`.  
+**Last updated:** 2026-07-30 (soak hangup broken; clear via OpenSIPS restart)
 
 ### Suggested “what next?” order
 
-1. **2nd SIPp EC2 — extension platform** — Stand up non-Peer phone lab host (own EIP; REGISTER/dial via Magrathea). Demos/load + later dial-alias `site-dial-a-b`. Spec: **`SIPP_LAB_HOST.md`** §9. Keep Peer-**99** catcher as carrier/DID only.  
+1. **L2 soak — clean hangup** — Dialer/answerer BYE does not clear Magrathea Active Calls (dialogs age past 45s hold; count climbs). Fix scenarios/`run-soak.sh` (prefer dialer BYE on Record-Route path), verify SBC stays ~stable at N pairs, then re-run `demo`/`busy`. Clear stuck: stop soak + `sudo systemctl restart opensips` on VIP. Spec: **`call-tests/README.md`**, **`SIPP_LAB_HOST.md`** §9.  
 2. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
 3. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Later: decide inert vs remove fallthrough in `FROM_CARRIER` — **`SBC_PRODUCT_TRACKS.md`**. Not tenant short-dial.  
 4. **SBC Filament Backup — merge S3-only rows** — list like SPA instance Backup (local + S3 + both; Filename + tags). Local FIFO keeps 9; S3 ~30d — S3-only archives invisible in panel today. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
 5. **Fleet Delete + FQDN rename** (parked) — policy locked; **Rule 14 durable jobs** when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needs catalog remove + SBC domain delete; node wipe already exists.  
-6. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. Needs 2nd SIPp above before `site-dial-a-b`.  
-7. **Call / SIP polish** (optional) — ACK/BYE catcher NAT; L1 pack graceful teardown (BYE/`dlg_end_dlg`) — **`CALL_TEST_STRATEGY.md`** / **`call-tests/README.md`**.  
+6. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. **`sippuac`** ready for `site-dial-a-b` (EC2 only if office NAT fails).  
+7. **Call / SIP polish** (optional) — ACK/BYE NAT (incl. VM `rport` remap); L1 pack graceful teardown (BYE/`dlg_end_dlg`) — **`CALL_TEST_STRATEGY.md`** / **`call-tests/README.md`**.  
 8. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
 9. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
 10. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
@@ -34,7 +34,11 @@
 
 - [x] **SBC Home — usage meters on system strip (2026-07-30):** Filament `SystemPostureWidget` thin green→amber→red meters (Load = load1/CPUs; Memory/Disk = used %). Home title **Home** only (FQDN on INSTANCE chip). Spec: **`HOME_SYSTEM_AND_FLEET_SCRAPE.md`**. Friendly SBC sitename still deferred. Tip **pbx3sbc-admin** **`a92aed5`** (VIP surgical).
 
-- [ ] **2nd SIPp EC2 — extension platform (next session):** Stand up non-Peer phone host (own EIP; `sip-tester` + `call-tests`; lab phone REGISTER via VIP). **Not** Peer 99. Demos/load + later dial-alias. Spec: **`SIPP_LAB_HOST.md`** §9. Catcher remains **`98.82.58.59`**.
+- [x] **SIPp extension platform = local ARM VM (2026-07-30):** **`sippuac`** `tech@192.168.1.51` (Ubuntu 24.04 aarch64, `sip-tester`); `~/call-tests` rsync; A→B `./run-phone-a-b.sh` green. Not 2nd EC2 unless NAT fails. Spec: **`SIPP_LAB_HOST.md`** §9.
+
+- [x] **SIPp L2 soak scaffolding (2026-07-30):** `provision-soak-phones.sh` (40 exts 2100–2139 on `pb0wsk`) + `./run-soak.sh start demo|busy` on **`sippuac`**. INVITE/200 path works; **hangup does not clear SBC** — see open item below. Spec: **`call-tests/README.md`**, **`CALL_TEST_STRATEGY.md`** §6.
+
+- [ ] **L2 soak — clean hangup / no Active Calls leak (2026-07-30):** Answerer BYE / dialer wait-for-BYE leaves Magrathea dialogs Confirmed (ages 2+ min; count climbs). Stop + OpenSIPS restart clears. Next: dialer-originated BYE (or equivalent) so both legs drop; prove dialog count steady under `demo`.
 
 - [x] **Instance Home ops-pulse + sitename (2026-07-30):** SPA/API **`main`** merge tips **pbx3spa** **`5ea90df`**, **pbx3api** **`9db216b`**. Host/live/CDR pulse; usage meters; `GET /home/pulse`; `displayInstanceLabel` sitename→FQDN; installer Site name. **Uncommitted:** SPA `HomeBarChart` axis/summary numbers. Catalog label sync parked.
 
@@ -116,7 +120,7 @@
 
 - [x] **Call / SIP test — queue-cancel-vm + out-busy (2026-07-27):** `in-queue-cancel-vm` (agent 486→failover→VM) + `out-busy-or-reject` (Local→486→PostDial). Catcher **`uas-486`**. Holiday left for day-parts.
 
-- [ ] **Call / SIP test — optional polish:** ACK/BYE catcher NAT. Phone-outbound / extension-platform SIPp → **2nd EC2 when dial-alias starts** (**`SIPP_LAB_HOST.md`** §9). Spec: **`CALL_TEST_STRATEGY.md`**.
+- [ ] **Call / SIP test — optional polish:** ACK/BYE catcher NAT. Extension platform is **`sippuac`** (EC2 fallback only) — **`SIPP_LAB_HOST.md`** §9. Spec: **`CALL_TEST_STRATEGY.md`**.
 
 - [ ] **L1 pack — graceful catcher teardown (2026-07-30):** Pack **green** but `run-pack.sh` **kills** SIPp UAS between scenarios / at end → no BYE → OpenSIPS **dialog** stays Confirmed until long default timeout (Active Calls litter; **not** an SBC cfg bug). Prefer graceful teardown: BYE before stop, or MI `dlg_end_dlg` after pack. Optional shorter lab `dialog` `default_timeout`. Note: **`call-tests/README.md`**.
 
