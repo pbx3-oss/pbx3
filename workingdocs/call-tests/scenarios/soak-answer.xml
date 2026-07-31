@@ -2,8 +2,10 @@
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 <!--
   soak-answer — answer and wait for dialer BYE (UAC hangup clears SBC dialogs).
-  Contact uses contact_ip (office WAN) so ACK/BYE match like a real NAT phone.
-  Keys: user, contact_ip
+  Contact uses contact_ip (public/WAN). Must echo Record-Route from INVITE
+  via [last_Record-Route:] on 180/200 — without it Asterisk ACKs Contact
+  directly, UAS never gets ACK, Magrathea leaves state-3. Do NOT use [routes]
+  here ([routes] emits Route: for mid-dialog requests). Keys: user, contact_ip
 -->
 <scenario name="soak-answer">
 

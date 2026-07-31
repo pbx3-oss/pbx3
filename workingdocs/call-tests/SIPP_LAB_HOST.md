@@ -184,19 +184,19 @@ ssh -i …/pbx3test.pem ubuntu@<SIPP_EIP> 'cd ~/call-tests && ./run-pack.sh'
 
 **Why:** Phone REGISTER + dial (`outbound_proxy` → SBC) from the Peer-99 EIP confuses carrier matching / blocks true phone-outbound scenarios. Split roles.
 
-**Lab choice (2026-07-30):** Office NAT already carries real phones → SBC/golden. Mac smoke proved SIPp phone UAC; **ARM Ubuntu 24.04 VM** is the extension platform (no second EC2 unless office path regresses).
+**Lab choice (2026-07-30→31):** Prefer non-Peer **EC2** for soak (no office NAT A/B confusion). **`sippuac`** remains fine for quick smokes.
 
 | Item | Live |
 |------|------|
-| Host / SSH | **`sippuac`** — `ssh tech@192.168.1.51` (bridged LAN) |
-| Arch / OS | **aarch64** Ubuntu 24.04; `sip-tester` (SIPp 3.7.x) |
+| Host / SSH (soak) | Lab EC2 **`ubuntu@13.222.41.98`** (`pbx3test.pem`) — **not** Peer 99 |
+| Host / SSH (office) | **`sippuac`** — `ssh tech@192.168.1.51` (bridged LAN) |
+| Arch / OS | EC2 x86_64 Ubuntu 24.04; sippuac aarch64; `sip-tester` (SIPp 3.7.x) |
 | Recipes | `~/call-tests/` (rsync from Mac `pbx3/workingdocs/call-tests/`) |
-| `lab.env` | Same catcher phone creds as Mac; `LOCAL_IP=192.168.1.51` |
-| Smoke | `./run-phone-a-b.sh` — A(2000)→B(2001) answer green (2026-07-30) |
-| L2 soak | Parked — Magrathea SIPp ACK residue on sippuac; **EC2 non-Peer** next (NAT A/B). Dialer BYE + register-once in recipes. |
-| Peer | **Never** insert office / VM IP into `dr_gateways` |
+| Smoke | `./run-phone-a-b.sh`; L2 `./run-soak.sh start demo` |
+| L2 soak | **Green** — Record-Route echo in `soak-answer` (`[last_Record-Route:]`); EC2 demo 10-pair stable (2026-07-30) |
+| Peer | **Never** insert office / VM / this extension EIP into `dr_gateways` |
 
-**Residue:** On **sippuac**, one-call Asterisk clears; Magrathea leaves answerer-leg **state 3** (UAS ACK timeout). Real phones clear Magrathea. BYE→200 flaky on VM NAT historically. Use bare `[routes]` (not `Route: [routes]`).
+**Learning (was “ACK residue”):** Not NAT / not OpenSIPS.cfg. SIPp UAS 180/200 must echo Magrathea **Record-Route** or Asterisk ACKs Contact directly → UAS never sees ACK → Magrathea state-3. Keyword: **`[last_Record-Route:]`**, not `[routes]`. Full note: **`call-tests/README.md`** § SIPp leanings.
 
 **Bootstrap sketch:**
 

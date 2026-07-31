@@ -13,8 +13,8 @@ Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_IN
 | **L1 pack** | **`./run-pack.sh`** — **11 ids** green (incl. queue-cancel-vm + out-busy) |
 | CFIM / closed / queue / 302 / multi-tenant / outbound | Pack IDs on catcher path |
 | **SIPp off-box host** | **Live** — EIP **`98.82.58.59`** (Peer gwid **99**); pack green on host (`SIPP_LAB_HOST.md`) |
-| **SIPp extension platform** | **Live** — local ARM VM **`sippuac`** `192.168.1.51` (non-Peer phone UAC); §9 |
-| **L2 soak / demo** | **`./run-soak.sh start demo|busy`** on sippuac — ~10/20 concurrent ext↔ext |
+| **SIPp extension platform** | **Live** — lab EC2 **`13.222.41.98`** (non-Peer phone UAC) + office VM **`sippuac`** `192.168.1.51`; §9 |
+| **L2 soak / demo** | **Green 2026-07-30** — `./run-soak.sh start demo` on EC2 (~10 concurrent); Magrathea dialogs stable (Record-Route echo in `soak-answer`) |
 
 ### Known residue — stuck Active Calls after pack (2026-07-30)
 
@@ -63,20 +63,20 @@ Mac-only for now (no jump host).
 
 ## L2 soak / demo wallpaper (ext↔ext)
 
-Steady concurrent calls on catcher tenant for CDR/Home fill and live demos. Runs on **extension platform** (`sippuac`), not Peer-99.
+Steady concurrent calls on catcher tenant for CDR/Home fill and live demos. Runs on **extension platform** (lab EC2 or `sippuac`), not Peer-99.
 
 ```bash
 # once — create exts 2100–2139 on golden + GenAst + soak-phones.env
 ./provision-soak-phones.sh
-rsync -av soak-phones.env scenarios/soak-*.xml run-soak.sh profiles/ tech@192.168.1.51:~/call-tests/
-# on VM
+rsync -av soak-phones.env scenarios/soak-*.xml run-soak.sh profiles/ lab.env ubuntu@<EXT_EIP>:~/call-tests/
+# on extension host
 ./run-soak.sh start demo    # ~10 up
 ./run-soak.sh start busy    # ~20 up
 ./run-soak.sh status
 ./run-soak.sh stop
 ```
 
-Profiles: `profiles/demo.env` / `busy.env`. Answerer hangs up after hold (clears SBC dialogs). Spec: **`CALL_TEST_STRATEGY.md`** §6 L2.
+Profiles: `profiles/demo.env` / `busy.env`. Dialer holds then BYEs (clears SBC dialogs). Spec: **`CALL_TEST_STRATEGY.md`** §6 L2.
 
 ---
 
@@ -227,9 +227,19 @@ sipp 3.93.26.82 -i "$LOCAL_IP" -p 5061 \
 | Wrong party rings | Lab state (still OPEN, CFIM unset, not queued) |
 | ACK/BYE fail / OpenSIPS **500** on BYE | Missing `rrs="true"` on INVITE 200 (Record-Route not stored) — fixed in scenarios; re-pull XML |
 | `Route: Route: <…>` in ACK/BYE | Scenario had `Route: [routes]`; SIPp `[routes]` already includes `Route:` — use bare `[routes]` |
+| **UAS ACK timeout; Magrathea answerer-leg state-3; Asterisk 0 channels** | UAS **180/200 omitted Record-Route**. Asterisk ACKs Contact directly (bypasses SBC). Fix: `rrs="true"` on INVITE recv + **`[last_Record-Route:]`** in 180/200 — **not** `[routes]` (that emits `Route:` for mid-dialog *requests*). Real phones echo RR; compare VIP pcap. See **SIPp leanings** below. |
 | BYE no 200 on local VM (answer OK) | Office NAT remaps VM UDP (`rport≠5070`); Mac often keeps `rport=5070`. Pathway still proven; teardown polish later |
+
+## SIPp leanings (recognise next time)
+
+Durable lab lessons — skim before inventing a new “SBC bug”.
+
+1. **UAS must echo Record-Route** — Magrathea inserts `Record-Route` on the answerer INVITE. Real phones copy it into 180/200. SIPp UAS must too (`[last_Record-Route:]`). Without it: dialer leg + Asterisk clear; answerer never gets ACK; Magrathea leaves **state-3**; EC2 tcpdump shows INVITE in / 200 out / **0 ACKs**. **Not** office NAT (same on non-NAT EC2). Tip **`36c9ea8`**.
+2. **`[routes]` ≠ Record-Route** — `[routes]` builds **`Route:`** for in-dialog *requests* (ACK/BYE). Response echo needs **`[last_Record-Route:]`**.
+3. **Bare `[routes]` on requests** — never `Route: [routes]` (doubles the header name).
+4. **Pack kill ≠ hangup** — `run-pack.sh` SIGKILLing catcher UAS leaves Confirmed dialogs until timeout (separate from #1).
 
 ## Next
 
-- Optional: `out-busy-or-reject`; ACK/BYE NAT polish (VM + catcher pack teardown).
-- L2 soak under `profiles/` later.
+- Optional: `out-busy-or-reject`; L1 pack graceful teardown (BYE before kill / post-pack MI cleanup).
+- Optional: wire `soak-unregister` into `run-soak.sh` start.

@@ -1,30 +1,29 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** default — Instance + SBC Home ops-pulse kinship shipped. Lab-hot: **golden** + Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**); extension platform **`sippuac`** `192.168.1.51` (parked — EC2 next for NAT A/B).  
-**Last updated:** 2026-07-30 (soak: Asterisk clears; Magrathea SIPp ACK residue; park for EC2)
+**Branch:** **`main`** default — L2 soak Record-Route fix on **`36c9ea8`**. Lab-hot: **golden** + Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**); extension soak EC2 **`13.222.41.98`**.  
+**Last updated:** 2026-07-30 (L2 soak green — answerer RR echo; demo 10-pair holds)
 
 ### Suggested “what next?” order
 
-1. **L2 soak — Magrathea dialog / NAT A/B (parked)** — Dialer BYE + register-once shipped; **one-call** on sippuac: Asterisk ring/answer/bridge/clear OK; Magrathea leaves **1× state-3** answerer-leg (UAS never gets ACK). **Real phones** `1000→1002` dialer-BYE → Magrathea **0** new dialogs. Next: **non-Peer EC2** extension platform to rule NAT in/out; bake unreg→LOCAL Contact into `run-soak.sh`; start at 1 pair; hangup-all before runs. Clear zombies: `DELETE FROM opensips.dialog` + restart (soft restart alone reloads DB). Spec: **`SIPP_LAB_HOST.md`** §9, **`call-tests/README.md`**.  
-2. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
-3. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Later: decide inert vs remove fallthrough in `FROM_CARRIER` — **`SBC_PRODUCT_TRACKS.md`**. Not tenant short-dial.  
-4. **SBC Filament Backup — merge S3-only rows** — list like SPA instance Backup (local + S3 + both; Filename + tags). Local FIFO keeps 9; S3 ~30d — S3-only archives invisible in panel today. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
-5. **Fleet Delete + FQDN rename** (parked) — policy locked; **Rule 14 durable jobs** when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needs catalog remove + SBC domain delete; node wipe already exists.  
-6. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. **`sippuac`** ready for `site-dial-a-b` (EC2 only if office NAT fails).  
-7. **Call / SIP polish** (optional) — ACK/BYE NAT (incl. VM `rport` remap); L1 pack graceful teardown (BYE/`dlg_end_dlg`) — **`CALL_TEST_STRATEGY.md`** / **`call-tests/README.md`**.  
-8. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
-9. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
-10. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
-11. **Velocity standalone product** (parked).  
-12. **Instance shadowing** / S10.7 / S8.9 (parked).  
-13. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
-14. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
-15. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
-16. **Fleet auth cookie/SSO (blocked)**.  
-17. **S7+** attested PCI — only on customer ask.  
-18. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.  
-19. **Grafana fleet view** (parked) — unmodified OSS only; see open item below.  
-20. **Door-knock geo heat / Fleet edge health scrape** (parked) — see open items; **`HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
+1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
+2. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Later: decide inert vs remove fallthrough in `FROM_CARRIER` — **`SBC_PRODUCT_TRACKS.md`**. Not tenant short-dial.  
+3. **SBC Filament Backup — merge S3-only rows** — list like SPA instance Backup (local + S3 + both; Filename + tags). Local FIFO keeps 9; S3 ~30d — S3-only archives invisible in panel today. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
+4. **Fleet Delete + FQDN rename** (parked) — policy locked; **Rule 14 durable jobs** when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needs catalog remove + SBC domain delete; node wipe already exists.  
+5. **Tenant dial alias** — §8 locked; implement when scheduled (slices A–F) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. Extension EC2 / **`sippuac`** ready for `site-dial-a-b`.  
+6. **Call / SIP polish** (optional) — L1 pack graceful teardown (BYE/`dlg_end_dlg`); VM `rport` BYE polish — **`CALL_TEST_STRATEGY.md`** / **`call-tests/README.md`**.  
+7. **Product crumbs** (optional) — paid Twilio / drain / velocity V3 — when ready.  
+8. **Time-based routing (day-parts + profiles)** — own track; lock §8 Qs first — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Not started. Holiday L1 waits on this.  
+9. **pbx3cagi Phase 4** (parked) — domain splits; wait until schedule/CheckState contract stable — **`REFACTOR_PLAN.md`**.  
+10. **Velocity standalone product** (parked).  
+11. **Instance shadowing** / S10.7 / S8.9 (parked).  
+12. **AMI wallboard feed** (side gig, parked) — feed-only; no ops/call-path dependency.  
+13. **Fleet node health ≠ Asterisk** (parked, pre-live) — `/up` is API-only; add call-plane check before production.  
+14. **Control plane duplex / HA** (parked, pre-live) — `control.pbx3.com` is ops SPOF; calls fail-safe without it.  
+15. **Fleet auth cookie/SSO (blocked)**.  
+16. **S7+** attested PCI — only on customer ask.  
+17. **SBC Track A / STIR Twilio lab** — after WebRTC demo path; see **`SBC_PRODUCT_TRACKS.md`**.  
+18. **Grafana fleet view** (parked) — unmodified OSS only; see open item below.  
+19. **Door-knock geo heat / Fleet edge health scrape** (parked) — see open items; **`HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
 
 ---
 
@@ -36,9 +35,9 @@
 
 - [x] **SIPp extension platform = local ARM VM (2026-07-30):** **`sippuac`** `tech@192.168.1.51` (Ubuntu 24.04 aarch64, `sip-tester`); `~/call-tests` rsync; A→B `./run-phone-a-b.sh` green. Not 2nd EC2 unless NAT fails. Spec: **`SIPP_LAB_HOST.md`** §9.
 
-- [x] **SIPp L2 soak scaffolding (2026-07-30):** `provision-soak-phones.sh` (40 exts 2100–2139 on `pb0wsk`) + `./run-soak.sh start demo|busy` on **`sippuac`**. INVITE/200 path works; **hangup does not clear SBC** — see open item below. Spec: **`call-tests/README.md`**, **`CALL_TEST_STRATEGY.md`** §6.
+- [x] **SIPp L2 soak scaffolding (2026-07-30):** `provision-soak-phones.sh` (40 exts 2100–2139 on `pb0wsk`) + `./run-soak.sh start demo|busy`. Spec: **`call-tests/README.md`**, **`CALL_TEST_STRATEGY.md`** §6.
 
-- [ ] **L2 soak — Magrathea ACK/dialog residue vs NAT (parked 2026-07-30):** Progress: UAC hangup scenarios; register-once (no per-call REGISTER flood); `soak-unregister.xml`; one-call LOCAL Contact after unreg → Asterisk clean; real-phone control clears Magrathea. Residue: SIPp answerer leg Magrathea **state 3** (ACK retransmit timeout on UAS). **Do not** patch OpenSIPS without ask — phones OK. Resume on **EC2 phone UAC** (non-Peer). Bake proven recipe into `run-soak.sh` before `demo` wallpaper.
+- [x] **L2 soak — Magrathea ACK/dialog residue (2026-07-30):** Root cause = SIPp UAS missing Record-Route echo (not NAT / not OpenSIPS.cfg). Fix: `[last_Record-Route:]` in `soak-answer` 180/200 (**`36c9ea8`**). EC2 one-call + demo 10-pair stable. Leanings: **`call-tests/README.md`** § SIPp leanings.
 
 - [x] **Instance Home ops-pulse + sitename (2026-07-30):** SPA/API **`main`** merge tips **pbx3spa** **`5ea90df`**, **pbx3api** **`9db216b`**. Host/live/CDR pulse; usage meters; `GET /home/pulse`; `displayInstanceLabel` sitename→FQDN; installer Site name. **Uncommitted:** SPA `HomeBarChart` axis/summary numbers. Catalog label sync parked.
 

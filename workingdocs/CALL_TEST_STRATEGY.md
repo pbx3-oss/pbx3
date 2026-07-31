@@ -119,12 +119,12 @@ Keep **separate** from L1 pass/fail.
 
 | Profile | Intent | Starting sketch |
 |---------|--------|-----------------|
-| `demo` | Demo wallpaper / light DB fill | **~10 concurrent** ext↔ext, 45s hold — `./run-soak.sh start demo` on sippuac |
+| `demo` | Demo wallpaper / light DB fill | **~10 concurrent** ext↔ext, 45s hold — `./run-soak.sh start demo` on extension EC2 / sippuac |
 | `busy` | Busy-hour stand-in | **~20 concurrent** ext↔ext — `./run-soak.sh start busy` |
 | `ramp-find-ceiling` | Find break point | Ramp CPS until error rate or CPU pegs (later) |
 | `spike` | Short burst | 2–3× soak rate for 60s (later) |
 
-Provision once: `./provision-soak-phones.sh` (exts 2100–2139 on catcher tenant). Signalling-only is enough for CDR/Home + live demo backdrop.
+Provision once: `./provision-soak-phones.sh` (exts 2100–2139 on catcher tenant). Signalling-only is enough for CDR/Home + live demo backdrop. Answerer UAS must echo Magrathea **Record-Route** (`[last_Record-Route:]` in 180/200) or Magrathea leaves state-3 — see **`call-tests/README.md`** § SIPp leanings.
 
 ---
 
