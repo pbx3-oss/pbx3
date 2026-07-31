@@ -68,17 +68,19 @@ Steady concurrent calls on catcher tenant for CDR/Home fill and live demos. Runs
 ```bash
 # once — create exts 2100–2139 on golden + GenAst + soak-phones.env
 ./provision-soak-phones.sh
-rsync -av soak-phones.env scenarios/soak-*.xml run-soak.sh profiles/ lab.env ubuntu@<EXT_EIP>:~/call-tests/
-# on extension host
-./run-soak.sh start demo    # ~10 up
-./run-soak.sh start busy    # ~20 up
-./run-soak.sh status
+# dedicated rrmemory queue 2160 (not L1 2060)
+./provision-soak-queue.sh
+rsync -av soak-phones.env soak-queue.env scenarios/soak-*.xml run-soak.sh run-queue-rr.sh profiles/ lab.env tech@192.168.1.51:~/call-tests/
+# on sippuac
+./run-soak.sh start demo    # ~10 up (1:1 Domain)
+./run-queue-rr.sh start     # 4 agents + dialers → queue 2160 rrmemory
+./run-queue-rr.sh stop
 ./run-soak.sh stop          # graceful: drain hold+BYE then kill UAS
 ./run-soak.sh stop force    # immediate (may litter Active Calls)
 ./clear-sbc-dialogs.sh      # Mac: MI/restart cleanup if residue
 ```
 
-Profiles: `profiles/demo.env` / `busy.env`. Dialer holds then BYEs (clears SBC dialogs). **`stop`** drops the run flag and waits for in-flight dialers to BYE before killing answerers — avoids Magrathea Active Calls litter. Spec: **`CALL_TEST_STRATEGY.md`** §6 L2.
+Profiles: `profiles/demo.env` / `busy.env` (soak); **`profiles/mixed-office.yaml`** (traffic-profile). Dialer holds then BYEs (clears SBC dialogs). Spec: **`CALL_TEST_STRATEGY.md`** §6 L2 · **`TRAFFIC_PROFILE_SIM.md`**.
 
 ---
 

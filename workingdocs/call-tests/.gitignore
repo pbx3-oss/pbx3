@@ -1,4 +1,5 @@
 lab.env
 soak-phones.env
+soak-queue.env
 notes/*
 !notes/.gitignore

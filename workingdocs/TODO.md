@@ -1,12 +1,12 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** default — L2 soak green (**`36c9ea8`** + leanings **`e576cc2`**). Lab-hot: **golden** + Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**); extension platform **`sippuac`** `192.168.1.51` (soak green under office NAT + RR fix).  
-**Last updated:** 2026-07-31 (dialog timeout 14400 + Call limits read-only)
+**Last updated:** 2026-07-31 (dialog timeout 14400; mixed-office queue-rr GREEN)
 
 ### Suggested “what next?” order
 
 1. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
-2. **SIPp traffic-profile sim (mini project)** — schema + `mixed-office` from PDH CDR; queue 1→N. Spec: **`call-tests/TRAFFIC_PROFILE_SIM.md`**.  
+2. **SIPp traffic-profile sim (mini project)** — `mixed-office` + queue **2160** `rrmemory` smoke **GREEN** on sippuac. Next: Numbers % / other profiles. Spec: **`call-tests/TRAFFIC_PROFILE_SIM.md`**.  
 3. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Later: decide inert vs remove fallthrough in `FROM_CARRIER` — **`SBC_PRODUCT_TRACKS.md`**. Not tenant short-dial.  
 4. **SBC Filament Backup — merge S3-only rows** — list like SPA instance Backup (local + S3 + both; Filename + tags). Local FIFO keeps 9; S3 ~30d — S3-only archives invisible in panel today. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
 5. **Fleet Delete + FQDN rename** (parked) — policy locked; **Rule 14 durable jobs** when scheduled — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needs catalog remove + SBC domain delete; node wipe already exists.  
@@ -30,7 +30,7 @@
 
 ## Open items
 
-- [ ] **SIPp traffic-profile sim (opened 2026-07-31):** Mini project — **`call-tests/TRAFFIC_PROFILE_SIM.md`**. Infra ready (sippuac Domain + Peer 99 Numbers + `019242*` out). Next: profile schema, encode **mixed-office** from `~/GiT/nonGitStuff/pdh-2026-07-28.csv`, queue 1→N runner. Later: inbound-heavy / outbound-heavy.
+- [x] **SIPp traffic-profile sim — schema + mixed-office + rrmemory smoke (2026-07-31):** YAML schema + **`mixed-office.yaml`** (concurrent **4**). Dedicated queue **2160** (`rrmemory`, members 2120–2123). `run-queue-rr.sh` **GREEN** on sippuac (each agent 2 calls; graceful stop; Magrathea dialogs→0). Later: Numbers %; inbound-/outbound-heavy; freephone-trunk CDR. Spec: **`call-tests/TRAFFIC_PROFILE_SIM.md`**.
 
 - [x] **Numbers lab — pretend DID + Peer 99 PSTN UAS (2026-07-31):** DID **01924234567** (Number route prefix **`441924234567`** after UK dialect); golden Ingress → pb0wsk **2120**. Peer **99** = SIPp Catcher. **Outbound coexistence:** prefix **`019242*`** → gwid **99**; default empty-prefix **`1,20,50`** unchanged. Scripts: `run-peer-pstn-uas.sh`, `run-did-lab-in.sh`, `run-did-lab-out.sh`. Both directions **GREEN**. Spec: **`SIPP_LAB_HOST.md`** §9.
 

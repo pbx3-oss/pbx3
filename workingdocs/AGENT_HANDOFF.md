@@ -69,7 +69,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-31 — Numbers lab + traffic-profile mini project)
+## Next agent session notes (2026-07-31 — dialog timeout + mixed-office queue-rr)
+
+**Branches:** **pbx3** **`main`** (call-tests + handoff). **pbx3sbc** / **pbx3sbc-admin** **`main`** (dialog timeout + Call limits — already pushed earlier this session). SPA/API product unchanged. Lab: golden **`08jzwn`**; Magrathea VIP; Peer-99 **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`.
+
+### Shipped
+- **SBC dialog timeout:** OpenSIPS `default_timeout` **14400** (was 12h). Filament **System → Call limits** read-only from cfg. Magrathea live.
+- **Traffic-profile:** YAML schema + **`mixed-office.yaml`** (concurrent **4**). Dedicated queue **2160** `rrmemory` (members 2120–2123). **`run-queue-rr.sh`** smoke **GREEN** on sippuac (each agent 2 calls; graceful stop; Magrathea dlg→0). Runbook: **`TRAFFIC_PROFILE_SIM.md`** §0.
+- **`freephone-trunk`** profile sketched (intl freephone → carrier); parked on CDR.
+
+### Golden / operator follow-up
+- Queue shortuid for `queue show` is in **`soak-queue.env`** (`SOAK_QUEUE_SHORTUID`, currently **305st9**) — not pkey 2160.
+- Prefer SSH key on sippuac (password used once for lab smoke; do not commit).
+- Catcher PSTN UAS when retesting Numbers; Magrathea `019242*` lab rows stay.
+
+### Resume
+- Traffic-profile: Numbers % into mixed-office; or `inbound-heavy` / `outbound-heavy`; or freephone-trunk when CDR arrives.
+- Or TODO #1 WebRTC SPA far-end (still awaiting webphone team).
+
+---
+
+## Next agent session notes (2026-07-31 — Numbers lab + traffic-profile mini project) — historical
+
+**Superseded** by dialog timeout + mixed-office queue-rr block above.
 
 **Branches:** **pbx3** **`main`** (call-tests + handoff). SPA/API unchanged. Lab: golden **`08jzwn`**; Magrathea VIP; Peer-99 SIPp Catcher **`98.82.58.59`**; extension Domain **`sippuac`** `192.168.1.51`.
 
@@ -84,8 +106,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - SBC dialog timeout align with Asterisk Globals **14400s** still open (TODO).
 
 ### Resume
-- **Next (profiles):** **`TRAFFIC_PROFILE_SIM.md`** §5 — schema → encode **mixed-office** → queue 1→N runner.
-- Or TODO #1 WebRTC SPA far-end if operator prioritizes that.
+- See newer block above.
 
 ---
 
