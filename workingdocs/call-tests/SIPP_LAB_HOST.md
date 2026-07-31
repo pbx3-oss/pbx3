@@ -179,24 +179,25 @@ ssh -i …/pbx3test.pem ubuntu@<SIPP_EIP> 'cd ~/call-tests && ./run-pack.sh'
 
 | Role | Host | Peer? |
 |------|------|--------|
-| **Carrier / DID** | EC2 EIP **`98.82.58.59`** + gwid **99** | Yes — UAC DID INVITEs |
-| **Extension platform** | **Local lab VM** (preferred) or Mac | **No** — never add as `dr_gateways` Peer |
+| **Carrier / Numbers** | SIPp Catcher EIP **`98.82.58.59`** + gwid **99** | Yes — DID UAC **and** PSTN UAS (UDP 5060) |
+| **Extension platform** | **`sippuac`** `192.168.1.51` (or non-Peer EC2) | **No** — never add as `dr_gateways` Peer |
 
-**Why:** Phone REGISTER + dial (`outbound_proxy` → SBC) from the Peer-99 EIP confuses carrier matching / blocks true phone-outbound scenarios. Split roles.
+**Why:** Phone REGISTER + dial from the Peer-99 EIP confuses carrier matching / blocks true phone-outbound. Split roles.
 
-**Lab choice (2026-07-30→31):** Prefer non-Peer **EC2** for soak (no office NAT A/B confusion). **`sippuac`** remains fine for quick smokes.
+**Lab choice (2026-07-31):** Domain soak on **`sippuac`** (RR fix). Numbers bidirectional on Peer **99**.
 
 | Item | Live |
 |------|------|
-| Host / SSH (soak) | Lab EC2 **`ubuntu@13.222.41.98`** (`pbx3test.pem`) — **not** Peer 99 |
-| Host / SSH (office) | **`sippuac`** — `ssh tech@192.168.1.51` (bridged LAN) |
-| Arch / OS | EC2 x86_64 Ubuntu 24.04; sippuac aarch64; `sip-tester` (SIPp 3.7.x) |
-| Recipes | `~/call-tests/` (rsync from Mac `pbx3/workingdocs/call-tests/`) |
-| Smoke | `./run-phone-a-b.sh`; L2 `./run-soak.sh start demo` |
-| L2 soak | **Green** — Record-Route echo in `soak-answer` (`[last_Record-Route:]`); EC2 demo 10-pair stable (2026-07-30) |
-| Peer | **Never** insert office / VM / this extension EIP into `dr_gateways` |
+| Host / SSH (Domain) | **`sippuac`** — `ssh tech@192.168.1.51` |
+| Host / SSH (Numbers) | SIPp Catcher **`ubuntu@98.82.58.59`** (`pbx3test.pem`) — Peer **99** |
+| Recipes | `~/call-tests/` (rsync from Mac) |
+| Domain smoke | `./run-phone-a-b.sh`; L2 `./run-soak.sh start demo` / graceful `stop` |
+| Numbers smoke | Catcher `./run-peer-pstn-uas.sh start`; DID in `./run-did-lab-in.sh`; out on sippuac `OUT_DIGITS=01924234567 ./run-did-lab-out.sh` |
+| Lab DID | **01924234567** — Magrathea Number route prefix **`441924234567`** (UK dialect 0…→44…); golden → pb0wsk **2120** |
+| Outbound | Prefix **`019242*`** → Peer **99** only; default empty-prefix stays **`1,20,50`** (Brindley/Magrathea/Twilio). Dial lab numbers under `019242…` for fake PSTN; everything else uses real carriers. |
+| Peer | **Never** insert office / sippuac into `dr_gateways` |
 
-**Learning (was “ACK residue”):** Not NAT / not OpenSIPS.cfg. SIPp UAS 180/200 must echo Magrathea **Record-Route** or Asterisk ACKs Contact directly → UAS never sees ACK → Magrathea state-3. Keyword: **`[last_Record-Route:]`**, not `[routes]`. Full note: **`call-tests/README.md`** § SIPp leanings.
+**Learning (was “ACK residue”):** Not NAT / not OpenSIPS.cfg. SIPp UAS 180/200 must echo Magrathea **Record-Route** or Asterisk ACKs Contact directly → UAS never gets ACK → Magrathea state-3. Keyword: **`[last_Record-Route:]`**, not `[routes]`. Full note: **`call-tests/README.md`** § SIPp leanings.
 
 **Bootstrap sketch:**
 

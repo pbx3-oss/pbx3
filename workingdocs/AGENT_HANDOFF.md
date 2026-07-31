@@ -46,7 +46,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — requirements draft; implement after §8 lock; before CAGI Phase 4 |
 | **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — §8 locked; implement slices A–F when scheduled; 2nd SIPp phone host at alias lab |
 | **Fleet-first tenant create** | **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** — policy locked; implement when scheduled |
-| **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** (full map) → **`CALL_TEST_STRATEGY.md`** → **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** |
+| **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** (full map) → **`CALL_TEST_STRATEGY.md`** → **`call-tests/TRAFFIC_PROFILE_SIM.md`** (profile library) · **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
 | **Failover + shadowing** (parked) | Edge HA: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Instance shadow SKU framing: **`INSTANCE_SHADOWING_REQUIREMENTS.md`** (same mechanics, paid twin) |
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
@@ -69,7 +69,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-30 — L2 soak green; Record-Route)
+## Next agent session notes (2026-07-31 — Numbers lab + traffic-profile mini project)
+
+**Branches:** **pbx3** **`main`** (call-tests + handoff). SPA/API unchanged. Lab: golden **`08jzwn`**; Magrathea VIP; Peer-99 SIPp Catcher **`98.82.58.59`**; extension Domain **`sippuac`** `192.168.1.51`.
+
+### Shipped
+- Domain soak back on **sippuac** (RR fix holds under office NAT). **`./run-soak.sh stop`** graceful drain (BYE before kill); `stop force` + **`clear-sbc-dialogs.sh`**.
+- Numbers lab: pretend DID **`01924234567`** (route prefix **`441924234567`**); golden → pb0wsk **2120**. Peer 99 PSTN UAS (`run-peer-pstn-uas.sh`). Outbound prefix **`019242*`** → 99; default **`1,20,50`** restored (coexist).
+- Mini project opened: **`call-tests/TRAFFIC_PROFILE_SIM.md`**. PDH CDR specimen analyzed (`~/GiT/nonGitStuff/pdh-2026-07-28.csv`). 1→N = **queue** (not N Peer INVITEs).
+
+### Golden / operator follow-up
+- Catcher: `./run-peer-pstn-uas.sh start` when testing Numbers out. Sippuac answerer for DID in if retesting.
+- Magrathea lab rows live (DID + `019242` out rule) — not in git; leave in place for profile work.
+- SBC dialog timeout align with Asterisk Globals **14400s** still open (TODO).
+
+### Resume
+- **Next (profiles):** **`TRAFFIC_PROFILE_SIM.md`** §5 — schema → encode **mixed-office** → queue 1→N runner.
+- Or TODO #1 WebRTC SPA far-end if operator prioritizes that.
+
+---
+
+## Next agent session notes (2026-07-30 — L2 soak green; Record-Route) — historical
+
+**Superseded** by Numbers lab + traffic-profile block above. RR fix + EC2 soak green still valid.
 
 **Branches:** **pbx3** **`main`** tips **`36c9ea8`** (fix) / **`e576cc2`** (leanings). SPA/API/SBC admin unchanged. Lab: golden **`08jzwn`**; Magrathea VIP; Peer-99 **`98.82.58.59`**; extension soak EC2 **`ubuntu@13.222.41.98`** (`pbx3test.pem`); **`sippuac`** still available for office smokes.
 
@@ -85,9 +107,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Hangup-all on golden before SIPp runs.
 
 ### Resume
-- **Next:** WebRTC SPA far-end (digit-only sip-user + inbound no SIP response) — **`TODO.md` #1**.
-- Optional: wire `soak-unregister` into `run-soak.sh`; L1 pack graceful teardown.
-- Later: dial-alias; SBC Backup S3-merge.
+- See newer block above.
 
 ---
 

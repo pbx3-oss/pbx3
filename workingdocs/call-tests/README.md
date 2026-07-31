@@ -14,7 +14,7 @@ Strategy: **`../CALL_TEST_STRATEGY.md`**. Full call-type map: **`../CALL_TYPE_IN
 | CFIM / closed / queue / 302 / multi-tenant / outbound | Pack IDs on catcher path |
 | **SIPp off-box host** | **Live** — EIP **`98.82.58.59`** (Peer gwid **99**); pack green on host (`SIPP_LAB_HOST.md`) |
 | **SIPp extension platform** | **Live** — lab EC2 **`13.222.41.98`** (non-Peer phone UAC) + office VM **`sippuac`** `192.168.1.51`; §9 |
-| **L2 soak / demo** | **Green 2026-07-30** — `./run-soak.sh start demo` on EC2 (~10 concurrent); Magrathea dialogs stable (Record-Route echo in `soak-answer`) |
+| **L2 soak / demo** | **Green** — sippuac + graceful `stop`; see **`TRAFFIC_PROFILE_SIM.md`** for profile library next |
 
 ### Known residue — stuck Active Calls after pack (2026-07-30)
 
@@ -73,10 +73,12 @@ rsync -av soak-phones.env scenarios/soak-*.xml run-soak.sh profiles/ lab.env ubu
 ./run-soak.sh start demo    # ~10 up
 ./run-soak.sh start busy    # ~20 up
 ./run-soak.sh status
-./run-soak.sh stop
+./run-soak.sh stop          # graceful: drain hold+BYE then kill UAS
+./run-soak.sh stop force    # immediate (may litter Active Calls)
+./clear-sbc-dialogs.sh      # Mac: MI/restart cleanup if residue
 ```
 
-Profiles: `profiles/demo.env` / `busy.env`. Dialer holds then BYEs (clears SBC dialogs). Spec: **`CALL_TEST_STRATEGY.md`** §6 L2.
+Profiles: `profiles/demo.env` / `busy.env`. Dialer holds then BYEs (clears SBC dialogs). **`stop`** drops the run flag and waits for in-flight dialers to BYE before killing answerers — avoids Magrathea Active Calls litter. Spec: **`CALL_TEST_STRATEGY.md`** §6 L2.
 
 ---
 

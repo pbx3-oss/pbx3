@@ -3,7 +3,8 @@
 #
 # Usage:
 #   ./run-soak.sh start [demo|busy]   # demo≈10, busy≈20 concurrent
-#   ./run-soak.sh stop
+#   ./run-soak.sh stop                # graceful: drain hold+BYE, then kill UAS
+#   ./run-soak.sh stop force          # immediate kill (may leave SBC Active Calls)
 #   ./run-soak.sh status
 #
 # Requires: lab.env, soak-phones.env (from provision-soak-phones.sh), sipp
@@ -14,7 +15,7 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
 CMD="${1:-}"
-PROFILE_NAME="${2:-demo}"
+ARG2="${2:-}"
 
 if [[ ! -f lab.env ]]; then
   echo "Missing lab.env" >&2
@@ -30,6 +31,10 @@ source ./lab.env
 # shellcheck disable=SC1091
 source ./soak-phones.env
 
+PROFILE_NAME=demo
+if [[ "$CMD" == "start" ]]; then
+  PROFILE_NAME="${ARG2:-demo}"
+fi
 if [[ -f "profiles/${PROFILE_NAME}.env" ]]; then
   # shellcheck disable=SC1091
   source "profiles/${PROFILE_NAME}.env"
@@ -61,7 +66,9 @@ fi
 : "${PUBLIC_IP:?Set PUBLIC_IP in lab.env (office WAN for SIP Contact)}"
 
 RUN_FLAG="$ROOT/notes/soak.run"
-PID_FILE="$ROOT/notes/soak.pids"
+UAS_PID_FILE="$ROOT/notes/soak.uas.pids"
+UAC_PID_FILE="$ROOT/notes/soak.uac.pids"
+LEGACY_PID_FILE="$ROOT/notes/soak.pids"
 LOG_DIR="$ROOT/notes/soak"
 UAS_PORT_BASE=5200
 UAC_PORT_BASE=5400
@@ -73,41 +80,111 @@ if [[ "$SOAK_CONCURRENT" -gt "$SOAK_PAIR_COUNT" ]]; then
   exit 1
 fi
 
-stop_soak() {
-  echo "Stopping soak…"
-  rm -f "$RUN_FLAG"
-  if [[ -f "$PID_FILE" ]]; then
-    while read -r pid; do
-      [[ -n "$pid" ]] || continue
-      kill "$pid" 2>/dev/null || true
-    done <"$PID_FILE"
-    rm -f "$PID_FILE"
-  fi
-  # Belt-and-braces: soak-tagged SIPp only
+pids_alive() {
+  local f="$1" n=0 pid
+  [[ -f "$f" ]] || { echo 0; return; }
+  while read -r pid; do
+    [[ -n "$pid" ]] || continue
+    if kill -0 "$pid" 2>/dev/null; then
+      n=$((n + 1))
+    fi
+  done <"$f"
+  echo "$n"
+}
+
+dial_sipp_alive() {
+  # In-flight soak-dial SIPp (parent bash may still be up waiting on it)
+  pgrep -f 'soak-dial-live\.xml' >/dev/null 2>&1
+}
+
+force_kill_soak() {
+  local pid i
+  for f in "$UAS_PID_FILE" "$UAC_PID_FILE" "$LEGACY_PID_FILE"; do
+    if [[ -f "$f" ]]; then
+      while read -r pid; do
+        [[ -n "$pid" ]] || continue
+        kill "$pid" 2>/dev/null || true
+        # Child SIPp under nohup bash
+        pkill -P "$pid" 2>/dev/null || true
+      done <"$f"
+      rm -f "$f"
+    fi
+  done
   pkill -f 'User-Agent: pbx3-call-tests/soak' 2>/dev/null || true
   pkill -f 'pbx3-soak-' 2>/dev/null || true
-  # Ports we own
+  pkill -f 'soak-dial-live\.xml' 2>/dev/null || true
+  pkill -f 'soak-answer-live\.xml' 2>/dev/null || true
   for ((i = 0; i < SOAK_CONCURRENT; i++)); do
     fuser -k $((UAS_PORT_BASE + i))/udp 2>/dev/null || true
     fuser -k $((UAC_PORT_BASE + i))/udp 2>/dev/null || true
   done
   sleep 0.5
+}
+
+stop_soak() {
+  local mode="${1:-graceful}"
+
+  if [[ "$mode" == "force" ]]; then
+    echo "Force-stopping soak (no BYE drain — may leave SBC Active Calls)…"
+    rm -f "$RUN_FLAG"
+    force_kill_soak
+    echo "Soak stopped (force). If Active Calls linger: ./clear-sbc-dialogs.sh"
+    return
+  fi
+
+  local uac_n uas_n
+  uac_n="$(pids_alive "$UAC_PID_FILE")"
+  uas_n="$(pids_alive "$UAS_PID_FILE")"
+  if [[ ! -f "$RUN_FLAG" && "$uac_n" -eq 0 && "$uas_n" -eq 0 ]] && ! dial_sipp_alive; then
+    # Stale port/pid cleanup only
+    force_kill_soak >/dev/null 2>&1 || true
+    echo "Soak already stopped."
+    return
+  fi
+
+  echo "Stopping soak (graceful)…"
+  # Drop run flag so UAC loops exit after the current hold+BYE finishes.
+  rm -f "$RUN_FLAG"
+
+  local wait_s=$((SOAK_HOLD_MS / 1000 + 30))
+  echo "Waiting up to ${wait_s}s for dialers to finish hold+BYE…"
+  local deadline now
+  deadline=$(($(date +%s) + wait_s))
+  while true; do
+    now=$(date +%s)
+    uac_n="$(pids_alive "$UAC_PID_FILE")"
+    if [[ "$uac_n" -eq 0 ]] && ! dial_sipp_alive; then
+      echo "Dialers drained."
+      break
+    fi
+    if ((now >= deadline)); then
+      echo "Dialers still running after ${wait_s}s — force-killing remainder (may leave SBC dialogs)." >&2
+      break
+    fi
+    sleep 1
+  done
+
+  # Answerers should have received BYE; tear them down.
+  force_kill_soak
   echo "Soak stopped."
 }
 
 status_soak() {
-  local n=0
-  if [[ -f "$PID_FILE" ]]; then
-    while read -r pid; do
-      if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
-        n=$((n + 1))
-      fi
-    done <"$PID_FILE"
+  local uas_n uac_n
+  uas_n="$(pids_alive "$UAS_PID_FILE")"
+  uac_n="$(pids_alive "$UAC_PID_FILE")"
+  # Legacy combined file
+  if [[ -f "$LEGACY_PID_FILE" ]]; then
+    local leg
+    leg="$(pids_alive "$LEGACY_PID_FILE")"
+    if [[ "$leg" -gt 0 && "$uas_n" -eq 0 && "$uac_n" -eq 0 ]]; then
+      uas_n="$leg"
+    fi
   fi
   if [[ -f "$RUN_FLAG" ]]; then
-    echo "soak: RUNNING flag=yes live_pids=$n concurrent_target=$SOAK_CONCURRENT hold_ms=$SOAK_HOLD_MS profile=$PROFILE_NAME"
+    echo "soak: RUNNING flag=yes uas_pids=$uas_n uac_pids=$uac_n concurrent_target=$SOAK_CONCURRENT hold_ms=$SOAK_HOLD_MS profile=$PROFILE_NAME"
   else
-    echo "soak: STOPPED live_pids=$n"
+    echo "soak: STOPPED uas_pids=$uas_n uac_pids=$uac_n"
   fi
 }
 
@@ -140,7 +217,7 @@ start_uas() {
       -error_file \"$LOG_DIR/uas-${i}-err.log\" \
       >>\"$log\" 2>&1
   " >/dev/null 2>&1 &
-  echo $! >>"$PID_FILE"
+  echo $! >>"$UAS_PID_FILE"
   disown $! 2>/dev/null || true
 }
 
@@ -181,7 +258,7 @@ start_uac_loop() {
       sleep 1
     done
   " >/dev/null 2>&1 &
-  echo $! >>"$PID_FILE"
+  echo $! >>"$UAC_PID_FILE"
   disown $! 2>/dev/null || true
 }
 
@@ -195,8 +272,12 @@ start_soak() {
     exit 1
   fi
 
-  stop_soak >/dev/null 2>&1 || true
-  : >"$PID_FILE"
+  # Immediate cleanup of any leftover processes (do not drain on start)
+  rm -f "$RUN_FLAG"
+  force_kill_soak >/dev/null 2>&1 || true
+  : >"$UAS_PID_FILE"
+  : >"$UAC_PID_FILE"
+  rm -f "$LEGACY_PID_FILE"
   touch "$RUN_FLAG"
 
   # Dialer holds then BYEs on Record-Route path (clears SBC dialog). Answerer waits for BYE.
@@ -230,15 +311,15 @@ start_soak() {
   done
 
   status_soak
-  echo "Logs: $LOG_DIR — stop with: ./run-soak.sh stop"
+  echo "Logs: $LOG_DIR — stop with: ./run-soak.sh stop  (or: stop force)"
 }
 
 case "$CMD" in
   start) start_soak ;;
-  stop) stop_soak ;;
+  stop) stop_soak "${ARG2:-graceful}" ;;
   status) status_soak ;;
   *)
-    echo "Usage: $0 {start|stop|status} [demo|busy]" >&2
+    echo "Usage: $0 {start|stop|status} [demo|busy|force]" >&2
     exit 1
     ;;
 esac
