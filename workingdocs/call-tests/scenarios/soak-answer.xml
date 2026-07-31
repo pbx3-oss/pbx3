@@ -17,6 +17,7 @@
       [last_To:];tag=[pid]SIPpTag01[call_number]
       [last_Call-ID:]
       [last_CSeq:]
+      [last_Record-Route:]
       Contact: <sip:[user]@[contact_ip]:[local_port]>
       User-Agent: pbx3-call-tests/soak-answer
       Content-Length: 0
@@ -31,6 +32,7 @@
       [last_To:];tag=[pid]SIPpTag01[call_number]
       [last_Call-ID:]
       [last_CSeq:]
+      [last_Record-Route:]
       Contact: <sip:[user]@[contact_ip]:[local_port]>
       User-Agent: pbx3-call-tests/soak-answer
       Content-Type: application/sdp
