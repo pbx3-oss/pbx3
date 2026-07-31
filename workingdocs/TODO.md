@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** default — L2 soak Record-Route fix on **`36c9ea8`**. Lab-hot: **golden** + Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**); extension soak EC2 **`13.222.41.98`**.  
-**Last updated:** 2026-07-30 (L2 soak green — answerer RR echo; demo 10-pair holds)
+**Branch:** **`main`** default — L2 soak green (**`36c9ea8`** + leanings **`e576cc2`**). Lab-hot: **golden** + Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**); extension soak EC2 **`13.222.41.98`**.  
+**Last updated:** 2026-07-30 (session end — L2 RR fix; WebRTC next)
 
 ### Suggested “what next?” order
 

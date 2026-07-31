@@ -69,26 +69,31 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-30 — soak hangup; park for EC2 NAT A/B)
+## Next agent session notes (2026-07-30 — L2 soak green; Record-Route)
 
-**Branches:** **pbx3** **`main`** (call-tests this tip). SPA/API/SBC admin unchanged. Lab: golden **`08jzwn`**; Magrathea VIP **`sbc.pbx3.com`** (`opensips.pem` → HTTP MI `:8888`); Peer-99 **`98.82.58.59`**; **`sippuac`** `tech@192.168.1.51` (password auth — operator vault).
+**Branches:** **pbx3** **`main`** tips **`36c9ea8`** (fix) / **`e576cc2`** (leanings). SPA/API/SBC admin unchanged. Lab: golden **`08jzwn`**; Magrathea VIP; Peer-99 **`98.82.58.59`**; extension soak EC2 **`ubuntu@13.222.41.98`** (`pbx3test.pem`); **`sippuac`** still available for office smokes.
 
 ### Shipped
-- **Dialer BYE** soak scenarios (`soak-dial` hold→BYE `[next_url]`+`[routes]`; `soak-answer` waits for BYE).
-- **Register-once** dialers (no per-call REGISTER / `max_contacts=1` flood); answerers use `soak-register.xml`.
-- **`soak-unregister.xml`** (Expires:0) — used in one-call recipe; **not yet wired** into `run-soak.sh`.
-- **`PUBLIC_IP` / `contact_ip`** plumbing in `run-soak.sh` (auto-detect if empty). Proven one-call uses **LOCAL_IP** Contact after unreg.
-- **Diagnosis locked:** one-call sippuac → Asterisk ring/answer/bridge/clear; Magrathea leaves **1× state-3** answerer leg (UAS ACK retransmit timeout). **Real phones** `1000→1002` dialer-BYE → Magrathea **0** new dialogs. **No OpenSIPS.cfg changes** (phones OK).
+- Root cause of Magrathea SIPp **state-3**: UAS 180/200 missing **Record-Route** echo (not office NAT — same on EC2). Asterisk ACK’d Contact directly → UAS never saw ACK.
+- Fix: `[last_Record-Route:]` in `soak-answer` (**not** `[routes]` — that emits `Route:` for requests). Tip **`36c9ea8`**.
+- EC2 one-call green; **demo 10-pair** held (~20 confirmed dialogs, cycling; no state-3). Leanings in **`call-tests/README.md`** § SIPp leanings (**`e576cc2`**).
+- Real-phone VIP pcap (`1000→1002`) confirmed Yealink echoes RR.
 
 ### Golden / operator follow-up
-- Do **not** run `./run-soak.sh start` for Home wallpaper demos yet.
-- Stuck dialogs: `DELETE FROM opensips.dialog` (+ `dialog_vars`) then `systemctl restart opensips` — restart alone reloads DB zombies. fifo MI broken; use `curl http://127.0.0.1:8888/mi`.
-- Hangup-all on golden before SIPp runs; `remove_existing=false` + `max_contacts=1` → unreg before Contact flip.
-- Operator spinning **non-Peer EC2** extension platform to rule NAT in/out.
+- Soak OK for Home wallpaper demos from extension EC2: `cd ~/call-tests && ./run-soak.sh start demo` (rsync recipes first).
+- Stuck dialogs still: `DELETE FROM opensips.dialog` (+ `dialog_vars`) then `systemctl restart opensips`. MI via `curl http://127.0.0.1:8888/mi` (fifo broken).
+- Hangup-all on golden before SIPp runs.
 
 ### Resume
-- **Next:** EC2 phone UAC (same recipes, no office NAT) → if Magrathea stays 0, NAT confirmed; bake unreg→LOCAL Contact + one-pair first into `run-soak.sh`; then `demo`.
-- Later: dial-alias; WebRTC SPA far-end; SBC Backup S3-merge.
+- **Next:** WebRTC SPA far-end (digit-only sip-user + inbound no SIP response) — **`TODO.md` #1**.
+- Optional: wire `soak-unregister` into `run-soak.sh`; L1 pack graceful teardown.
+- Later: dial-alias; SBC Backup S3-merge.
+
+---
+
+## Next agent session notes (2026-07-30 — soak hangup; park for EC2 NAT A/B) — historical
+
+**Superseded** by Record-Route fix above. NAT A/B was a red herring.
 
 ---
 
