@@ -193,10 +193,10 @@ ssh -i …/pbx3test.pem ubuntu@<SIPP_EIP> 'cd ~/call-tests && ./run-pack.sh'
 | Recipes | `~/call-tests/` (rsync from Mac `pbx3/workingdocs/call-tests/`) |
 | `lab.env` | Same catcher phone creds as Mac; `LOCAL_IP=192.168.1.51` |
 | Smoke | `./run-phone-a-b.sh` — A(2000)→B(2001) answer green (2026-07-30) |
-| L2 soak | `./run-soak.sh start demo\|busy` — ~10/20 concurrent; `provision-soak-phones.sh` first |
+| L2 soak | Parked — Magrathea SIPp ACK residue on sippuac; **EC2 non-Peer** next (NAT A/B). Dialer BYE + register-once in recipes. |
 | Peer | **Never** insert office / VM IP into `dr_gateways` |
 
-**Residue:** BYE→200 flaky on this VM (NAT remaps UDP — `rport≠5070`; Mac often keeps `rport=5070`). Call path proven; teardown polish later. Also fixed scenarios: use bare `[routes]` (not `Route: [routes]` — SIPp already emits `Route:`).
+**Residue:** On **sippuac**, one-call Asterisk clears; Magrathea leaves answerer-leg **state 3** (UAS ACK timeout). Real phones clear Magrathea. BYE→200 flaky on VM NAT historically. Use bare `[routes]` (not `Route: [routes]`).
 
 **Bootstrap sketch:**
 

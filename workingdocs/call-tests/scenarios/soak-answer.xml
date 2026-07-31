@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 <!--
-  soak-answer — answer, hold, hang up (callee BYE) so SBC dialogs clear.
-  No optional ACK before pause (SIPp 3.7 rejects that sequence).
-  Keys: user | HOLD_PLACEHOLDER baked by run-soak.sh
+  soak-answer — answer and wait for dialer BYE (UAC hangup clears SBC dialogs).
+  Contact uses contact_ip (office WAN) so ACK/BYE match like a real NAT phone.
+  Keys: user, contact_ip
 -->
 <scenario name="soak-answer">
 
@@ -17,13 +17,13 @@
       [last_To:];tag=[pid]SIPpTag01[call_number]
       [last_Call-ID:]
       [last_CSeq:]
-      Contact: <sip:[user]@[local_ip]:[local_port]>
+      Contact: <sip:[user]@[contact_ip]:[local_port]>
       User-Agent: pbx3-call-tests/soak-answer
       Content-Length: 0
     ]]>
   </send>
 
-  <send>
+  <send retrans="500">
     <![CDATA[
       SIP/2.0 200 OK
       [last_Via:]
@@ -31,7 +31,7 @@
       [last_To:];tag=[pid]SIPpTag01[call_number]
       [last_Call-ID:]
       [last_CSeq:]
-      Contact: <sip:[user]@[local_ip]:[local_port]>
+      Contact: <sip:[user]@[contact_ip]:[local_port]>
       User-Agent: pbx3-call-tests/soak-answer
       Content-Type: application/sdp
       Content-Length: [len]
@@ -49,26 +49,20 @@
     ]]>
   </send>
 
-  <!-- Brief settle; ACK may arrive as out-of-call — OK for signalling soak -->
-  <pause milliseconds="500"/>
+  <recv request="ACK" optional="true" rtd="true" crlf="true"/>
 
-  <pause milliseconds="HOLD_PLACEHOLDER"/>
+  <recv request="BYE" crlf="true"/>
 
   <send>
     <![CDATA[
-      BYE [next_url] SIP/2.0
-      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: [last_To:];tag=[pid]SIPpTag01[call_number]
-      To: [last_From:]
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
       [last_Call-ID:]
-      CSeq: 2 BYE
-      Max-Forwards: 70
-      [routes]
-      User-Agent: pbx3-call-tests/soak-answer
+      [last_CSeq:]
       Content-Length: 0
     ]]>
   </send>
-
-  <pause milliseconds="500"/>
 
 </scenario>

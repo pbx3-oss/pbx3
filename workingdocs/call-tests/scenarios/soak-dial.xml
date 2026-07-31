@@ -1,58 +1,22 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 <!--
-  soak-dial — dialer UAC; answerer hangs up after hold. Wait for BYE (or timeout).
-  Keys: domain, user, digits
-  HOLD_PLACEHOLDER = wait for answerer BYE (hold + slack), baked by run-soak.sh
+  soak-dial — INVITE-only dialer (REGISTER once via soak-register in run-soak.sh).
+  Hold then BYE on Record-Route path. Contact = contact_ip (office WAN).
+  Keys: domain, user, digits, contact_ip
+  HOLD_PLACEHOLDER = hold ms, baked by run-soak.sh
 -->
 <scenario name="soak-dial">
 
   <send retrans="500">
     <![CDATA[
-      REGISTER sip:[domain] SIP/2.0
-      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: <sip:[user]@[domain]>;tag=[pid]SIPpTag00[call_number]
-      To: <sip:[user]@[domain]>
-      Call-ID: [call_id]
-      CSeq: 1 REGISTER
-      Contact: <sip:[user]@[local_ip]:[local_port]>
-      Max-Forwards: 70
-      Expires: 3600
-      User-Agent: pbx3-call-tests/soak-dial
-      Content-Length: 0
-    ]]>
-  </send>
-
-  <recv response="401" auth="true"/>
-
-  <send retrans="500">
-    <![CDATA[
-      REGISTER sip:[domain] SIP/2.0
-      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: <sip:[user]@[domain]>;tag=[pid]SIPpTag00[call_number]
-      To: <sip:[user]@[domain]>
-      Call-ID: [call_id]
-      CSeq: 2 REGISTER
-      Contact: <sip:[user]@[local_ip]:[local_port]>
-      Max-Forwards: 70
-      Expires: 3600
-      [authentication]
-      User-Agent: pbx3-call-tests/soak-dial
-      Content-Length: 0
-    ]]>
-  </send>
-
-  <recv response="200"/>
-
-  <send retrans="500">
-    <![CDATA[
       INVITE sip:[digits]@[domain] SIP/2.0
-      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch];rport
       From: <sip:[user]@[domain]>;tag=[pid]SIPpTag01[call_number]
       To: <sip:[digits]@[domain]>
       Call-ID: [call_id]
       CSeq: 1 INVITE
-      Contact: <sip:[user]@[local_ip]:[local_port]>
+      Contact: <sip:[user]@[contact_ip]:[local_port]>
       Max-Forwards: 70
       User-Agent: pbx3-call-tests/soak-dial
       Content-Type: application/sdp
@@ -77,12 +41,12 @@
   <send retrans="500">
     <![CDATA[
       INVITE sip:[digits]@[domain] SIP/2.0
-      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch];rport
       From: <sip:[user]@[domain]>;tag=[pid]SIPpTag01[call_number]
       To: <sip:[digits]@[domain]>
       Call-ID: [call_id]
       CSeq: 2 INVITE
-      Contact: <sip:[user]@[local_ip]:[local_port]>
+      Contact: <sip:[user]@[contact_ip]:[local_port]>
       Max-Forwards: 70
       [authentication]
       User-Agent: pbx3-call-tests/soak-dial
@@ -110,32 +74,36 @@
   <send>
     <![CDATA[
       ACK [next_url] SIP/2.0
-      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch];rport
       From: <sip:[user]@[domain]>;tag=[pid]SIPpTag01[call_number]
       To: <sip:[digits]@[domain]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 2 ACK
-      Contact: <sip:[user]@[local_ip]:[local_port]>
+      Contact: <sip:[user]@[contact_ip]:[local_port]>
       Max-Forwards: 70
       [routes]
       Content-Length: 0
     ]]>
   </send>
 
-  <recv request="BYE" timeout="HOLD_PLACEHOLDER" ontimeout="done" crlf="true"/>
+  <pause milliseconds="HOLD_PLACEHOLDER"/>
 
-  <send>
+  <send retrans="500">
     <![CDATA[
-      SIP/2.0 200 OK
-      [last_Via:]
-      [last_From:]
-      [last_To:]
-      [last_Call-ID:]
-      [last_CSeq:]
+      BYE [next_url] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch];rport
+      From: <sip:[user]@[domain]>;tag=[pid]SIPpTag01[call_number]
+      To: <sip:[digits]@[domain]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 3 BYE
+      Contact: <sip:[user]@[contact_ip]:[local_port]>
+      Max-Forwards: 70
+      [routes]
+      User-Agent: pbx3-call-tests/soak-dial
       Content-Length: 0
     ]]>
   </send>
 
-  <label id="done"/>
+  <recv response="200"/>
 
 </scenario>

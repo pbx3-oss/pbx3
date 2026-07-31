@@ -69,24 +69,32 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-30 — sippuac + soak; hangup leak)
+## Next agent session notes (2026-07-30 — soak hangup; park for EC2 NAT A/B)
 
-**Branches:** **pbx3** **`main`** (call-tests + handoff this tip). SPA/API/SBC admin unchanged this session. Lab: golden **`08jzwn`**; Magrathea VIP **`sbc.pbx3.com`** (`opensips.pem`); Peer-99 catcher **`98.82.58.59`**; extension platform **`sippuac`** `tech@192.168.1.51` (password lab gash).
+**Branches:** **pbx3** **`main`** (call-tests this tip). SPA/API/SBC admin unchanged. Lab: golden **`08jzwn`**; Magrathea VIP **`sbc.pbx3.com`** (`opensips.pem` → HTTP MI `:8888`); Peer-99 **`98.82.58.59`**; **`sippuac`** `tech@192.168.1.51` (password auth — operator vault).
 
 ### Shipped
-- **Extension platform:** local ARM VM **`sippuac`** instead of 2nd EC2 — REGISTER + A→B green; docs **`SIPP_LAB_HOST.md`** §9.
-- **Scenario fixes:** plain `Call-ID: [call_id]` (`out-egress-ok`); bare `[routes]` (no double `Route:`) across pack XMLs.
-- **L2 soak scaffolding:** `provision-soak-phones.sh` (2100–2139 on catcher `pb0wsk`), `run-soak.sh` + `profiles/demo|busy.env`, `soak-*.xml`. INVITE/answer works.
-- **Not fixed:** hangup — answerer BYE / dialer wait leaves SBC Active Calls stuck (ages past hold; count climbs). Lab cleared with soak **stop** + **`systemctl restart opensips`** (dlg_end alone left state-5 zombies). Soak **stopped**, dialogs **0** at session end.
+- **Dialer BYE** soak scenarios (`soak-dial` hold→BYE `[next_url]`+`[routes]`; `soak-answer` waits for BYE).
+- **Register-once** dialers (no per-call REGISTER / `max_contacts=1` flood); answerers use `soak-register.xml`.
+- **`soak-unregister.xml`** (Expires:0) — used in one-call recipe; **not yet wired** into `run-soak.sh`.
+- **`PUBLIC_IP` / `contact_ip`** plumbing in `run-soak.sh` (auto-detect if empty). Proven one-call uses **LOCAL_IP** Contact after unreg.
+- **Diagnosis locked:** one-call sippuac → Asterisk ring/answer/bridge/clear; Magrathea leaves **1× state-3** answerer leg (UAS ACK retransmit timeout). **Real phones** `1000→1002` dialer-BYE → Magrathea **0** new dialogs. **No OpenSIPS.cfg changes** (phones OK).
 
 ### Golden / operator follow-up
-- `soak-phones.env` is gitignored on the VM/Mac — re-run provision if missing.
-- Do not use Peer-99 EIP as phone Contact/REGISTER source.
-- SPA `HomeBarChart` numbers may still be dirty from earlier session (not this tip).
+- Do **not** run `./run-soak.sh start` for Home wallpaper demos yet.
+- Stuck dialogs: `DELETE FROM opensips.dialog` (+ `dialog_vars`) then `systemctl restart opensips` — restart alone reloads DB zombies. fifo MI broken; use `curl http://127.0.0.1:8888/mi`.
+- Hangup-all on golden before SIPp runs; `remove_existing=false` + `max_contacts=1` → unreg before Contact flip.
+- Operator spinning **non-Peer EC2** extension platform to rule NAT in/out.
 
 ### Resume
-- **Next:** fix soak clean hangup (prefer **dialer BYE** after hold on Record-Route path); prove dialog count stable under `./run-soak.sh start demo`; then `busy` / Home wallpaper demos.
-- Later: dial-alias on `sippuac`; WebRTC SPA far-end; SBC Backup S3-merge.
+- **Next:** EC2 phone UAC (same recipes, no office NAT) → if Magrathea stays 0, NAT confirmed; bake unreg→LOCAL Contact + one-pair first into `run-soak.sh`; then `demo`.
+- Later: dial-alias; WebRTC SPA far-end; SBC Backup S3-merge.
+
+---
+
+## Next agent session notes (2026-07-30 — sippuac + soak; hangup leak) — historical
+
+**Superseded** by EC2 NAT A/B block above. Dialer BYE + register-once landed; Magrathea ACK residue remains on sippuac.
 
 ---
 

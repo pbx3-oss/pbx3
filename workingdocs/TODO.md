@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** default — Instance + SBC Home ops-pulse kinship shipped. Lab-hot: **golden** + Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**); extension platform **`sippuac`** `192.168.1.51`.  
-**Last updated:** 2026-07-30 (soak hangup broken; clear via OpenSIPS restart)
+**Branch:** **`main`** default — Instance + SBC Home ops-pulse kinship shipped. Lab-hot: **golden** + Magrathea VIP; SIPp catcher **`98.82.58.59`** (Peer **99**); extension platform **`sippuac`** `192.168.1.51` (parked — EC2 next for NAT A/B).  
+**Last updated:** 2026-07-30 (soak: Asterisk clears; Magrathea SIPp ACK residue; park for EC2)
 
 ### Suggested “what next?” order
 
-1. **L2 soak — clean hangup** — Dialer/answerer BYE does not clear Magrathea Active Calls (dialogs age past 45s hold; count climbs). Fix scenarios/`run-soak.sh` (prefer dialer BYE on Record-Route path), verify SBC stays ~stable at N pairs, then re-run `demo`/`busy`. Clear stuck: stop soak + `sudo systemctl restart opensips` on VIP. Spec: **`call-tests/README.md`**, **`SIPP_LAB_HOST.md`** §9.  
+1. **L2 soak — Magrathea dialog / NAT A/B (parked)** — Dialer BYE + register-once shipped; **one-call** on sippuac: Asterisk ring/answer/bridge/clear OK; Magrathea leaves **1× state-3** answerer-leg (UAS never gets ACK). **Real phones** `1000→1002` dialer-BYE → Magrathea **0** new dialogs. Next: **non-Peer EC2** extension platform to rule NAT in/out; bake unreg→LOCAL Contact into `run-soak.sh`; start at 1 pair; hangup-all before runs. Clear zombies: `DELETE FROM opensips.dialog` + restart (soft restart alone reloads DB). Spec: **`SIPP_LAB_HOST.md`** §9, **`call-tests/README.md`**.  
 2. **WebRTC / WSS demo (SBC #1)** — **golden `:8089`** path solid (JsSIP audio; Mac WSS REGISTER via node + tenant FQDN). **Outbound 1500→desk OK**. **Inbound desk→1500:** Asterisk dials plain `PJSIP/{shortuid}` for WebRTC (PrepDial tip **pbx3cagi** **`3a9b7d7`**, hot golden). INVITE leaves on WSS; far-end SPA **does not SIP-respond** (digit-only sip-user sanitize + likely media/permissions) — operator with SPA team. Spec: **`WEBRTC_WSS_LAB.md`**. Recovery **`pre-webrtc-wss-20260728`**.  
 3. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Later: decide inert vs remove fallthrough in `FROM_CARRIER` — **`SBC_PRODUCT_TRACKS.md`**. Not tenant short-dial.  
 4. **SBC Filament Backup — merge S3-only rows** — list like SPA instance Backup (local + S3 + both; Filename + tags). Local FIFO keeps 9; S3 ~30d — S3-only archives invisible in panel today. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
@@ -38,7 +38,7 @@
 
 - [x] **SIPp L2 soak scaffolding (2026-07-30):** `provision-soak-phones.sh` (40 exts 2100–2139 on `pb0wsk`) + `./run-soak.sh start demo|busy` on **`sippuac`**. INVITE/200 path works; **hangup does not clear SBC** — see open item below. Spec: **`call-tests/README.md`**, **`CALL_TEST_STRATEGY.md`** §6.
 
-- [ ] **L2 soak — clean hangup / no Active Calls leak (2026-07-30):** Answerer BYE / dialer wait-for-BYE leaves Magrathea dialogs Confirmed (ages 2+ min; count climbs). Stop + OpenSIPS restart clears. Next: dialer-originated BYE (or equivalent) so both legs drop; prove dialog count steady under `demo`.
+- [ ] **L2 soak — Magrathea ACK/dialog residue vs NAT (parked 2026-07-30):** Progress: UAC hangup scenarios; register-once (no per-call REGISTER flood); `soak-unregister.xml`; one-call LOCAL Contact after unreg → Asterisk clean; real-phone control clears Magrathea. Residue: SIPp answerer leg Magrathea **state 3** (ACK retransmit timeout on UAS). **Do not** patch OpenSIPS without ask — phones OK. Resume on **EC2 phone UAC** (non-Peer). Bake proven recipe into `run-soak.sh` before `demo` wallpaper.
 
 - [x] **Instance Home ops-pulse + sitename (2026-07-30):** SPA/API **`main`** merge tips **pbx3spa** **`5ea90df`**, **pbx3api** **`9db216b`**. Host/live/CDR pulse; usage meters; `GET /home/pulse`; `displayInstanceLabel` sitename→FQDN; installer Site name. **Uncommitted:** SPA `HomeBarChart` axis/summary numbers. Catalog label sync parked.
 

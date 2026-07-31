@@ -43,11 +43,22 @@ fi
 : "${SOAK_STAGGER_MS:=500}"
 : "${RECV_TIMEOUT:=60000}"
 : "${LOCAL_IP:=}"
+: "${PUBLIC_IP:=}"
 
 if [[ -z "$LOCAL_IP" ]]; then
   LOCAL_IP="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
 fi
 : "${LOCAL_IP:?Set LOCAL_IP in lab.env}"
+
+# Contact must be office WAN (like a real NAT phone). Private guest IP leaves
+# Asterisk→answerer dialogs stuck state-3 (ACK never matched) on Magrathea.
+if [[ -z "$PUBLIC_IP" ]]; then
+  PUBLIC_IP="$(curl -4 -fsS --max-time 5 https://ifconfig.me 2>/dev/null \
+    || curl -4 -fsS --max-time 5 https://icanhazip.com 2>/dev/null \
+    || true)"
+  PUBLIC_IP="$(echo "$PUBLIC_IP" | tr -d '[:space:]')"
+fi
+: "${PUBLIC_IP:?Set PUBLIC_IP in lab.env (office WAN for SIP Contact)}"
 
 RUN_FLAG="$ROOT/notes/soak.run"
 PID_FILE="$ROOT/notes/soak.pids"
@@ -106,10 +117,11 @@ start_uas() {
   nohup bash -c "
     sipp \"$SBC_HOST\" \
       -i \"$LOCAL_IP\" -p \"$port\" \
-      -sf scenarios/catcher-register.xml \
+      -sf scenarios/soak-register.xml \
       -au \"$user\" -ap \"$pass\" \
       -key domain \"$SOAK_DOMAIN\" \
       -key user \"$user\" \
+      -key contact_ip \"$PUBLIC_IP\" \
       -m 1 \
       -recv_timeout \"$RECV_TIMEOUT\" \
       -timeout_error \
@@ -120,6 +132,7 @@ start_uas() {
       -i \"$LOCAL_IP\" -p \"$port\" \
       -sf \"$LOG_DIR/soak-answer-live.xml\" \
       -key user \"$user\" \
+      -key contact_ip \"$PUBLIC_IP\" \
       -m 999999 \
       -l 1 \
       -recv_timeout 3600000 \
@@ -134,7 +147,22 @@ start_uas() {
 start_uac_loop() {
   local i="$1" user="$2" pass="$3" digits="$4" port="$5"
   local log="$LOG_DIR/uac-${i}.log"
+  # REGISTER once, then INVITE loop — re-REGISTER every call floods Asterisk
+  # (max_contacts=1) especially when Contact flips private→public.
   nohup bash -c "
+    sipp \"$SBC_HOST\" \
+      -i \"$LOCAL_IP\" -p \"$port\" \
+      -sf scenarios/soak-register.xml \
+      -au \"$user\" -ap \"$pass\" \
+      -key domain \"$SOAK_DOMAIN\" \
+      -key user \"$user\" \
+      -key contact_ip \"$PUBLIC_IP\" \
+      -m 1 \
+      -recv_timeout \"$RECV_TIMEOUT\" \
+      -timeout_error \
+      -trace_err \
+      -error_file \"$LOG_DIR/uac-${i}-reg-err.log\" \
+      >/dev/null 2>&1 || true
     while [[ -f \"$RUN_FLAG\" ]]; do
       sipp \"$SBC_HOST\" \
         -i \"$LOCAL_IP\" -p \"$port\" \
@@ -143,6 +171,7 @@ start_uac_loop() {
         -key domain \"$SOAK_DOMAIN\" \
         -key user \"$user\" \
         -key digits \"$digits\" \
+        -key contact_ip \"$PUBLIC_IP\" \
         -m 1 \
         -recv_timeout \"$RECV_TIMEOUT\" \
         -timeout_error \
@@ -170,12 +199,11 @@ start_soak() {
   : >"$PID_FILE"
   touch "$RUN_FLAG"
 
-  # Answerer holds then BYEs (clears SBC dialog). Dialer waits hold+slack for that BYE.
-  local dial_wait_ms=$((SOAK_HOLD_MS + 20000))
-  sed "s/HOLD_PLACEHOLDER/${SOAK_HOLD_MS}/g" scenarios/soak-answer.xml >"$LOG_DIR/soak-answer-live.xml"
-  sed "s/HOLD_PLACEHOLDER/${dial_wait_ms}/g" scenarios/soak-dial.xml >"$LOG_DIR/soak-dial-live.xml"
+  # Dialer holds then BYEs on Record-Route path (clears SBC dialog). Answerer waits for BYE.
+  cp scenarios/soak-answer.xml "$LOG_DIR/soak-answer-live.xml"
+  sed "s/HOLD_PLACEHOLDER/${SOAK_HOLD_MS}/g" scenarios/soak-dial.xml >"$LOG_DIR/soak-dial-live.xml"
 
-  echo "Starting soak profile=${PROFILE_NAME} concurrent=${SOAK_CONCURRENT} hold_ms=${SOAK_HOLD_MS} domain=${SOAK_DOMAIN} ip=${LOCAL_IP} (UAS hangup)"
+  echo "Starting soak profile=${PROFILE_NAME} concurrent=${SOAK_CONCURRENT} hold_ms=${SOAK_HOLD_MS} domain=${SOAK_DOMAIN} bind=${LOCAL_IP} contact=${PUBLIC_IP} (UAC hangup)"
 
   local i d_ext d_user d_pass a_ext a_user a_pass
   for ((i = 0; i < SOAK_CONCURRENT; i++)); do
