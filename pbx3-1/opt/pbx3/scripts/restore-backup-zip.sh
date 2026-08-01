@@ -134,7 +134,15 @@ if [[ -x /opt/pbx3/scripts/sync-hostname-from-globals.sh ]]; then
   /bin/sh /opt/pbx3/scripts/sync-hostname-from-globals.sh || true
 fi
 
-if [[ -x /opt/pbx3/scripts/srkreload ]]; then
+# Donor /etc/asterisk still has the old public IP in pjsip_transport.conf. Rewrite to
+# this node's current public IP/EIP and fully restart Asterisk (pjsip reload is not enough
+# when transport-udp failed to bind — see OPS_ASTERISK_AFTER_EGRESS_GENAST.md).
+if [[ "$FULL" -eq 1 ]] && [[ -x /opt/pbx3/scripts/refresh-pjsip-externip.sh ]]; then
+  echo "restore-backup-zip: refreshing PJSIP externip + restarting Asterisk"
+  /bin/sh /opt/pbx3/scripts/refresh-pjsip-externip.sh || {
+    echo "restore-backup-zip: WARNING: refresh-pjsip-externip failed — fix external_* and restart asterisk" >&2
+  }
+elif [[ -x /opt/pbx3/scripts/srkreload ]]; then
   echo "restore-backup-zip: requesting Asterisk reload"
   /bin/sh /opt/pbx3/scripts/srkreload || true
 fi

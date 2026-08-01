@@ -61,7 +61,7 @@ aws sts get-caller-identity   # ARN must NOT contain assumed-role/pbx3-node-
 On the **new** instance (SSH as `ubuntu`):
 
 1. Ubuntu **24.04** LTS (ARM **`t4g.*`** is the usual golden-lab shape).
-2. Security group: inbound **22**, **44300**, **80** (LE); outbound **443** (S3).
+2. Security group: inbound **22**, **44300**, **80** (LE); outbound **443** (S3). Prefer allocating an **Elastic IP** now and associating it to this instance — one DNS update this rebuild, then future rebuilds are **EIP reassociate only** (no DNS churn). Auto-assigned public IPs are not convertible to EIPs later.
 3. **Patch the AMI first** (especially on AWS ARM images — currency issues otherwise):
 
    ```bash
@@ -137,7 +137,7 @@ ssh -i ~/path/to/pbx3test.pem ubuntu@NEW_EC2_IP \
 - **Never** run **`reloader.sh`** after restore.
 - Because the backup came from **this instance’s S3 prefix**, `globals.id` (KSUID) is already correct — **no identity SQL patch** for a same-node rebuild.
 
-`restore-backup-zip.sh` also runs **`sync-hostname-from-globals.sh`** so the OS hostname matches **`globals.shortuid`** (installer may have left a throwaway name like `mgp30c`).
+`restore-backup-zip.sh` also runs **`sync-hostname-from-globals.sh`** so the OS hostname matches **`globals.shortuid`**, then **`refresh-pjsip-externip.sh`** (rewrites `pjsip_transport.conf` `external_*` to this node's current public IP/EIP and **`systemctl restart asterisk`**). Donor backups still contain the old public IP — without that step, `transport-udp` can fail to bind and Egress qualify stays Unknown/Unavail.
 
 Merge help seeds (safe, idempotent):
 
@@ -171,26 +171,30 @@ Optional backup upload smoke if a local zip exists:
 
 ---
 
-## Phase 5 — DNS, certificates, sign-off
+## Phase 5 — DNS / EIP, edge dispatcher, certificates, sign-off
 
-1. **DNS:** Point `globals.fqdn` and each tenant `{shortuid}.pbx3.com` **A** record to the **new** public IP.
-2. **LE:** SPA **Certificates → Sync with tenant list** (not **Renew** alone). Package **≥ 0.0.3-17**.
-3. **Commit:** SPA **Commit** if Asterisk configs need regeneration.
-4. **Fleet preflight** (on node):
+1. **Address cutover (pick one):**
+   - **Preferred:** Instance already has an **EIP** → point DNS A records (instance FQDN + tenant FQDNs that live on this node) at that EIP **once**. Later rebuilds: reassociate the same EIP; DNS unchanged.
+   - **Without EIP:** Point those A records at the new instance public IP (must repeat every rebuild).
+2. **Fleet SBC (Magrathea / OpenSIPS):** Update the dispatcher destination for this node's setid to `sip:{EIP_or_public_ip}:5060` (IP only — not a DNS name), then `ds_reload`. If the node already uses a stable EIP in dispatcher, **skip** when only the EIP moved onto the new EC2.
+3. **LE:** SPA **Certificates → Sync with tenant list** (not **Renew** alone), or first-issue via `le-first-cert-multi.sh` / `le-instance-bootstrap.sh` for FQDNs that already resolve here. Package **≥ 0.0.3-17** for Sync. Only include SANs whose A records point at this node.
+4. **Commit:** SPA **Commit** if Asterisk configs need regeneration (transport externip already refreshed at restore).
+5. **Fleet preflight** (on node):
 
    ```bash
    cd /opt/pbx3api && sudo php artisan pbx3:fleet-preflight
    ```
 
-5. **Backups panel:** Should list S3 archives (`source=s3` or `both`).
+6. **Backups panel:** Should list S3 archives (`source=s3` or `both`).
 
 | Check | Pass |
 |-------|------|
 | `curl -k https://127.0.0.1:44300/up` → 200 | |
 | `globals.id` = catalog `id` = S3 prefix KSUID | |
 | IAM metadata returns role name | |
-| `pbx3:fleet-preflight` all green | |
+| `pbx3:fleet-preflight` all green (incl. Egress Avail) | |
 | SPA backups show S3 rows | |
+| Phones REGISTER via SBC land on new node | |
 
 ---
 
@@ -200,8 +204,10 @@ Optional backup upload smoke if a local zip exists:
 |------|----------------|
 | EC2 IAM instance profile | Phase 4 — `onboard-fleet-instance.sh` |
 | `pbx3api/.env` fleet block | Phase 4 |
-| DNS | Phase 5 |
-| LE cert files on disk | Phase 5 — Certificates Sync |
+| DNS / EIP association | Phase 5 |
+| OpenSIPS dispatcher destination | Phase 5 (fleet SBC) — use EIP when possible |
+| LE cert files on disk | Phase 5 — Certificates Sync / first issue |
+| PJSIP `external_*` public IP | Phase 3 — `refresh-pjsip-externip.sh` (after Asterisk restore) |
 | Call recordings (until S7) | On-node media only if in backup; S3 recordings prefix separate |
 
 Catalog row (`instance-index.json`) usually **persists** in S3 — onboard verifies it; you do not re-register unless the instance was unregistered.
@@ -226,7 +232,8 @@ Catalog row (`instance-index.json`) usually **persists** in S3 — onboard verif
 | Script | Where | Role |
 |--------|-------|------|
 | `fetch-latest-instance-backup.sh` | Mac — `pbx3-directory/tools` | Download newest `backup.zip` → `pbx3bak.{epoch}.zip` |
-| `restore-backup-zip.sh` | Node — `/opt/pbx3/scripts` | Full restore from local zip + hostname sync |
+| `restore-backup-zip.sh` | Node — `/opt/pbx3/scripts` | Full restore from local zip + hostname sync + externip refresh |
+| `refresh-pjsip-externip.sh` | Node — `/opt/pbx3/scripts` | Rewrite `pjsip_transport.conf` `external_*` + Asterisk restart |
 | `sync-hostname-from-globals.sh` | Node — `/opt/pbx3/scripts` | OS hostname ← `globals.shortuid` (also called by restore) |
 | `onboard-fleet-instance.sh` | Mac — `pbx3-directory/tools` | IAM + `.env` + catalog + S3 smoke |
 | `pbx3:fleet-preflight` | Node — `php artisan` | Pass/fail fleet health checks |

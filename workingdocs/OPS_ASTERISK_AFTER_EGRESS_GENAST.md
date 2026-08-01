@@ -12,6 +12,7 @@
 | SPA **Commit** (normal tenant dialplan / extensions / inroutes) | Panel Commit is enough — it runs **`genAst.sh`** and reloads as designed. |
 | **`genAst.sh`** by hand (or after DB restore / rollback) | Prefer **`sudo /opt/pbx3/scripts/genAst.sh`**, then confirm calls. If PJSIP trunks look stale, restart Asterisk (below). |
 | Edit **Egress** template / packaged `pjsip_trunk_egress.tmpl` / seed-fleet-egress | **`sudo systemctl restart asterisk`** — do **not** rely on **`pjsip reload` alone**. |
+| **Mode 4 / backup restore** of `/etc/asterisk` | **`refresh-pjsip-externip.sh`** (runs from `restore-backup-zip.sh`) — rewrites donor `external_*` to this node's public IP/EIP, then full restart. |
 | Hot-patch under `/etc/asterisk/` that only touches non-trunk dialplan | `dialplan reload` or generator reload may suffice; if unsure, full restart. |
 
 **Lab lesson (2026-07-09 Phase A):** After egress template / identify changes on **08jzwn** and **bzy54n**, **`systemctl restart asterisk`** was required. `pjsip reload` alone left the Egress path broken.
