@@ -7,7 +7,7 @@
 
 1. **Test new golden** — Domain REGISTER/call via Magrathea; CDR UTC smoke; Home Outcomes; optional WebRTC `:8089`. Then **terminate old** `i-02ec2b05b5baacb5d` (ask).  
 2. **WebRTC / WSS demo (SBC #1)** — far-end SPA still open (digit-only sanitize + inbound no SIP response). Spec: **`WEBRTC_WSS_LAB.md`**.  
-3. **SIPp traffic-profile** — Numbers % / other profiles; re-provision soak wallpaper if needed. Spec: **[sipplab](https://github.com/aelintra/sipplab)** `docs/PROFILES.md`.  
+3. **SIPp traffic-profile** — Numbers % / other profiles; re-provision soak wallpaper if needed. Spec: **[sipplab](https://github.com/aelintra/sipplabs)** `docs/PROFILES.md`.  
 4. **Home CDR site-TZ display** — storage UTC done; panel convert via site TZ. Spec: **`CDR_TIMEZONE_POLICY.md`**.  
 5. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Spec: **`SBC_PRODUCT_TRACKS.md`**.  
 6. **SBC Filament Backup — merge S3-only rows** — Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
@@ -141,7 +141,7 @@
 
 - [ ] **L1 pack — graceful catcher teardown (2026-07-30):** Pack **green** but `run-pack.sh` **kills** SIPp UAS between scenarios / at end → no BYE → OpenSIPS **dialog** stays Confirmed until long default timeout (Active Calls litter; **not** an SBC cfg bug). Prefer graceful teardown: BYE before stop, or MI `dlg_end_dlg` after pack. Optional shorter lab `dialog` `default_timeout`. Note: **sipplab** `docs/LEANINGS.md`.
 
-- [x] **sipplab extract (2026-08-01):** Recipes moved to **https://github.com/aelintra/sipplab**; `workingdocs/call-tests/` stub only.
+- [x] **sipplab extract (2026-08-01):** Recipes moved to **https://github.com/aelintra/sipplabs**; `workingdocs/call-tests/` stub only.
 
 - [x] **Inbound route pkey allows +E.164 (2026-07-27):** Digits-only regex blocked Edit Inbound Route on `+44…` DIDs. Fixed **pbx3api** + **pbx3spa**; hot-deployed controller on golden (full `git pull` still blocked by local overlay drift).
 

@@ -2,7 +2,7 @@
 
 **Status:** L1 pack on SIPp EC2 (2026-07-27) — build what we can; **no commercial generators**.  
 **Full call-type map (majors + `*NN*` + test columns):** **`CALL_TYPE_INVENTORY.md`**.  
-**Recipes:** **[aelintra/sipplab](https://github.com/aelintra/sipplab)** (`./run-pack.sh`; catcher + VIP). Stub: **`workingdocs/call-tests/README.md`**.  
+**Recipes:** **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** (`./run-pack.sh`; catcher + VIP). Stub: **`workingdocs/call-tests/README.md`**.  
 **Cadence home:** **`TEST_CADENCE.md`** · inventory **`CRITICAL_PATH_TEST_PACK.md`**.  
 **Existing call logic:** **pbx3cagi** `make test` · **`TEST_HARNESS.md`** · **`TEST_RECIPE.md`**.
 
@@ -146,7 +146,7 @@ Do **not** block product tracks on finishing §5. Grow scenarios when dial-locus
 
 ## 8. Repo layout
 
-Harness lives in **[aelintra/sipplab](https://github.com/aelintra/sipplab)** (`scenarios/`, `run-*.sh`, `docs/`, `targets/pbx3/`).  
+Harness lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** (`scenarios/`, `run-*.sh`, `docs/`, `targets/pbx3/`).  
 pbx3 keeps strategy docs here; **`workingdocs/call-tests/`** is a redirect stub only.
 
 ---
@@ -177,7 +177,7 @@ pbx3 keeps strategy docs here; **`workingdocs/call-tests/`** is a redirect stub 
 | Date | Note |
 |------|------|
 | 2026-07-26 | Initial strategy: L0–L3, SIPp-only generators, scenario inventory, build order. |
-| 2026-08-01 | Recipes extracted to **aelintra/sipplab**; `workingdocs/call-tests/` stub only. |
+| 2026-08-01 | Recipes extracted to **aelintra/sipplabs**; `workingdocs/call-tests/` stub only. |
 | 2026-07-27 | Step 1–2 scaffold: `workingdocs/call-tests/` + `in-open-ext` (Mac→VIP); green run still pending lab allow. |
 | 2026-07-27 | `in-open-ext` green: Mac SIPp → Magrathea VIP → DID 01924918076 → golden 1000. Temp Peer gwid 99 (`sipp-lab`). |
 | 2026-07-27 | L1 recipes: `in-cfim-local`, `in-closed-ivr-or-dest`, `feat-master-closed`, `in-queue-answer` + `run-sipp.sh`. |

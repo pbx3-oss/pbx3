@@ -2,7 +2,7 @@
 
 **Status:** Living checklist 2026-07-27.  
 **Sources of truth (code):** GenAst `GenClass.php`, `extensions_presets.conf`, CAGI `agi_cmd_table` / handlers.  
-**Test homes:** L0 = **pbx3cagi** `make test` · L1 = **[sipplab](https://github.com/aelintra/sipplab)** (SIPp) · L2 = soak · L3 = operator PSTN/phone.  
+**Test homes:** L0 = **pbx3cagi** `make test` · L1 = **[sipplab](https://github.com/aelintra/sipplabs)** (SIPp) · L2 = soak · L3 = operator PSTN/phone.  
 Stub redirect: **`workingdocs/call-tests/README.md`**.  
 **Related:** **`CALL_TEST_STRATEGY.md`** (layers / build order) · **`CRITICAL_PATH_TEST_PACK.md`** Pack B.
 

@@ -2,10 +2,10 @@
 
 SIPp lab harness (runners, scenarios, profiles, docs) now lives in a dedicated repo:
 
-**https://github.com/aelintra/sipplab** (private)
+**https://github.com/aelintra/sipplabs** (private)
 
 ```bash
-git clone https://github.com/aelintra/sipplab.git
+git clone https://github.com/aelintra/sipplabs.git
 cd sipplab
 cp lab.env.example lab.env   # or restore your local secrets
 # Domain:  rsync to sippuac
