@@ -71,7 +71,30 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-07-31 — soak startup, CDR UTC, 0.0.4 build plan)
+## Next agent session notes (2026-08-01 — Mode 4 golden rebuild + 0.0.4-3)
+
+**Branches:** **pbx3** / **pbx3cagi** / **pbx3api** **`main`** (tags **`pbx3-0.0.4-3`**, **`pbx3cagi-1.0.0-7`**, **`pbx3api-genast-restore-20260801`**). SPA unchanged this session (handoff only).
+
+**Lab:** golden **`08jzwn`** on **EIP `44.196.98.191`** (`i-0625111d25ddbd410`, `t4g.small`); Magrathea VIP; Peer-99 **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`. Old box **`i-02ec2b05b5baacb5d`** (`54.236.153.81`) still running — terminate after smoke.
+
+### Shipped
+- Mode 4 rebuild: fresh S3 backup → new EC2 → **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-7** → restore (empty CDR) → onboard → DNS (4 A→EIP) → LE 4 SANs → Magrathea dispatcher setid=2 → EIP → preflight **green**.
+- Packaging: overlay postinst; **`refresh-pjsip-externip.sh`**; postinst/restore **genAst** after runLinker (apt must not wipe ready files); cagi **build-deb.sh** clears stale `debian/files`.
+- Runbook: EIP-first cutover + SBC dispatcher notes (**`REBUILD_INSTANCE_RUNBOOK.md`**).
+
+### Golden / operator follow-up
+- Next session: **test** Domain REGISTER/call, CDR UTC, Home Outcomes; then ask to **terminate** old EC2.
+- SG `:44300` still limited (e.g. control IP) — SPA from office may need SG tweak.
+- OpenSIPS **domain** setid: `0ggybk`/`vqcwd4` still setid=3 (bzy) while DNS→golden.
+
+### Resume
+- Smoke-test new golden wallpaper; terminate old only after confirm.
+
+---
+
+## Next agent session notes (2026-07-31 — soak startup, CDR UTC, 0.0.4 build plan) — historical
+
+**Superseded** by Mode 4 rebuild / 0.0.4-3 block above. Build plan executed.
 
 **Branches:** **pbx3** **`main`** (docs + `cdr_sqlite3_custom` UTC — commit this session). SPA/API/cagi package tips unchanged (cagi WebRTC PrepDial still hot-only **`3a9b7d7`**). Lab: golden **`08jzwn`** (heavily patched — rebuild next); Magrathea VIP; Peer-99 **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`.
 
@@ -87,7 +110,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Pre-cutover local `calldate` rows remain in `master.db` until rebuild wipes CDR.
 
 ### Resume
-- **`BUILD_PLAN_0.0.4.md`** kickoff prompt. Ask before terminate EC2 / DNS.
+- See newer block above.
 
 ---
 

@@ -1,13 +1,13 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** default — L2 soak green; CDR HoR UTC on golden + package tree; next: **0.0.4-1** debs + Mode 4 golden rebuild. Lab: golden **`08jzwn`**; Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51` (`tech` / SSH key preferred).  
-**Last updated:** 2026-07-31 (session end — soak startup + CDR UTC + BUILD_PLAN_0.0.4)
+**Branch:** **`main`** — golden rebuilt clean on **EIP `44.196.98.191`**; packages **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-7**; fleet-preflight green. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`. Old EC2 **`i-02ec2b05b5baacb5d`** still up until terminate confirm.  
+**Last updated:** 2026-08-01 (session end — Mode 4 rebuild + 0.0.4-3)
 
 ### Suggested “what next?” order
 
-1. **pbx3 0.0.4-1 + cagi 1.0.0-7 + golden rebuild** — execute **`BUILD_PLAN_0.0.4.md`**: overlay postinst + changelog bumps; build both debs; S3 backup; Mode 4 new EC2; restore **without CDR**; preflight; ask before terminate old.  
+1. **Test new golden** — Domain REGISTER/call via Magrathea; CDR UTC smoke; Home Outcomes; optional WebRTC `:8089`. Then **terminate old** `i-02ec2b05b5baacb5d` (ask).  
 2. **WebRTC / WSS demo (SBC #1)** — far-end SPA still open (digit-only sanitize + inbound no SIP response). Spec: **`WEBRTC_WSS_LAB.md`**.  
-3. **SIPp traffic-profile** — Numbers % / other profiles after rebuild wallpaper. Spec: **`call-tests/TRAFFIC_PROFILE_SIM.md`** §0.  
+3. **SIPp traffic-profile** — Numbers % / other profiles; re-provision soak wallpaper if needed. Spec: **`call-tests/TRAFFIC_PROFILE_SIM.md`** §0.  
 4. **Home CDR site-TZ display** — storage UTC done; panel convert via site TZ. Spec: **`CDR_TIMEZONE_POLICY.md`**.  
 5. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Spec: **`SBC_PRODUCT_TRACKS.md`**.  
 6. **SBC Filament Backup — merge S3-only rows** — Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
@@ -31,7 +31,11 @@
 
 ## Open items
 
-- [ ] **pbx3 0.0.4-1 + cagi 1.0.0-7 + golden rebuild (2026-07-31):** Build plan **`BUILD_PLAN_0.0.4.md`**. pbx3: commit CDR UTC + overlay postinst, changelog **0.0.4-1**. cagi: WebRTC PrepDial → **1.0.0-7**. Then Mode 4 rebuild golden (S3 restore, empty CDR). Ask before terminate old EC2.
+- [x] **pbx3 0.0.4 + cagi 1.0.0-7 + golden rebuild (2026-08-01):** Executed **`BUILD_PLAN_0.0.4.md`**. Packages **pbx3 0.0.4-3** / **pbx3cagi 1.0.0-7** on new golden; EIP **`44.196.98.191`**; DNS four A records; Magrathea setid=2 → EIP; onboard + LE (4 SANs); preflight green. Tags **`pbx3-0.0.4-3`**, **`pbx3cagi-1.0.0-7`**. **Still open:** terminate old EC2 **`i-02ec2b05b5baacb5d`** (ask); call/Domain test wallpaper next session.
+
+- [ ] **Terminate old golden EC2 (2026-08-01):** `i-02ec2b05b5baacb5d` (`54.236.153.81`) still running — OPTIONS noise. Confirm then terminate after smoke tests.
+
+- [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 
 - [x] **Home CDR Outcomes (today) — TZ mismatch (2026-07-31):** Cause = Laravel UTC `today` vs local `calldate`. **HoR UTC shipped** (`cdr_sqlite3_custom` STRFTIME); golden verified; `outcomeToday` sees new rows. Pre-cutover local rows remain. Still TODO: SPA **site TZ display**. Policy: **`CDR_TIMEZONE_POLICY.md`**.
 
