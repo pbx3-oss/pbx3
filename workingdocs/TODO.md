@@ -1,31 +1,32 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — golden rebuilt clean on **EIP `44.196.98.191`**; packages **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-7**; fleet-preflight green. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`. Old EC2 **`i-02ec2b05b5baacb5d`** still up until terminate confirm.  
-**Last updated:** 2026-08-01 (session end — Mode 4 rebuild + 0.0.4-3)
+**Last updated:** 2026-08-01 (sipplabs extract; SIPp opens moved off this TODO)
+
 
 ### Suggested “what next?” order
 
 1. **Test new golden** — Domain REGISTER/call via Magrathea; CDR UTC smoke; Home Outcomes; optional WebRTC `:8089`. Then **terminate old** `i-02ec2b05b5baacb5d` (ask).  
 2. **WebRTC / WSS demo (SBC #1)** — far-end SPA still open (digit-only sanitize + inbound no SIP response). Spec: **`WEBRTC_WSS_LAB.md`**.  
-3. **SIPp traffic-profile** — Numbers % / other profiles; re-provision soak wallpaper if needed. Spec: **[sipplab](https://github.com/aelintra/sipplabs)** `docs/PROFILES.md`.  
-4. **Home CDR site-TZ display** — storage UTC done; panel convert via site TZ. Spec: **`CDR_TIMEZONE_POLICY.md`**.  
-5. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Spec: **`SBC_PRODUCT_TRACKS.md`**.  
-6. **SBC Filament Backup — merge S3-only rows** — Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
-7. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
-8. **Tenant dial alias** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.  
-9. **Call / SIP polish** (optional) — L1 pack graceful teardown.  
-10. **Product crumbs** (optional) — paid Twilio / drain / velocity V3.  
-11. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**.  
-12. **pbx3cagi Phase 4** (parked).  
-13. **Velocity standalone** (parked).  
-14. **Instance shadowing** / S10.7 / S8.9 (parked).  
-15. **AMI wallboard** (parked).  
-16. **Fleet node health ≠ Asterisk** (parked).  
-17. **Control plane duplex / HA** (parked).  
-18. **Fleet auth cookie/SSO (blocked)**.  
-19. **S7+** attested PCI — customer ask.  
-20. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
-21. **Grafana / door-knock geo** (parked).
+3. **Home CDR site-TZ display** — storage UTC done; panel convert via site TZ. Spec: **`CDR_TIMEZONE_POLICY.md`**.  
+4. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Spec: **`SBC_PRODUCT_TRACKS.md`**.  
+5. **SBC Filament Backup — merge S3-only rows** — Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
+6. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
+7. **Tenant dial alias** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.  
+8. **Product crumbs** (optional) — paid Twilio / drain / velocity V3.  
+9. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**.  
+10. **pbx3cagi Phase 4** (parked).  
+11. **Velocity standalone** (parked).  
+12. **Instance shadowing** / S10.7 / S8.9 (parked).  
+13. **AMI wallboard** (parked).  
+14. **Fleet node health ≠ Asterisk** (parked).  
+15. **Control plane duplex / HA** (parked).  
+16. **Fleet auth cookie/SSO (blocked)**.  
+17. **S7+** attested PCI — customer ask.  
+18. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
+19. **Grafana / door-knock geo** (parked).  
+
+**SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
 ---
 
@@ -137,11 +138,9 @@
 
 - [x] **Call / SIP test — queue-cancel-vm + out-busy (2026-07-27):** `in-queue-cancel-vm` (agent 486→failover→VM) + `out-busy-or-reject` (Local→486→PostDial). Catcher **`uas-486`**. Holiday left for day-parts.
 
-- [ ] **Call / SIP test — optional polish:** ACK/BYE catcher NAT. Extension platform is **`sippuac`** (EC2 fallback only) — **sipplab** `docs/HOST_SETUP.md`. Spec: **`CALL_TEST_STRATEGY.md`**.
+- [x] **Call / SIP test — optional polish / L1 pack graceful teardown — moved to sipplabs (2026-08-01):** Tracked on **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` (pack graceful catcher teardown + post-pack dialog drain). Do not reopen here.
 
-- [ ] **L1 pack — graceful catcher teardown (2026-07-30):** Pack **green** but `run-pack.sh` **kills** SIPp UAS between scenarios / at end → no BYE → OpenSIPS **dialog** stays Confirmed until long default timeout (Active Calls litter; **not** an SBC cfg bug). Prefer graceful teardown: BYE before stop, or MI `dlg_end_dlg` after pack. Optional shorter lab `dialog` `default_timeout`. Note: **sipplab** `docs/LEANINGS.md`.
-
-- [x] **sipplab extract (2026-08-01):** Recipes moved to **https://github.com/aelintra/sipplabs**; `workingdocs/call-tests/` stub only.
+- [x] **sipplabs extract (2026-08-01):** Recipes moved to **https://github.com/aelintra/sipplabs**; `workingdocs/call-tests/` stub only. Live SIPp opens → sipplabs TODO.
 
 - [x] **Inbound route pkey allows +E.164 (2026-07-27):** Digits-only regex blocked Edit Inbound Route on `+44…` DIDs. Fixed **pbx3api** + **pbx3spa**; hot-deployed controller on golden (full `git pull` still blocked by local overlay drift).
 

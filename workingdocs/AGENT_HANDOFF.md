@@ -46,7 +46,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — requirements draft; implement after §8 lock; before CAGI Phase 4 |
 | **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — §8 locked; implement slices A–F when scheduled; 2nd SIPp phone host at alias lab |
 | **Fleet-first tenant create** | **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** — policy locked; implement when scheduled |
-| **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** → **`CALL_TEST_STRATEGY.md`** → **[sipplab](https://github.com/aelintra/sipplabs)** (`docs/PROFILES.md`) · **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** · stub **`call-tests/README.md`** |
+| **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** → **`CALL_TEST_STRATEGY.md`** → recipes **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** (`AGENTS.md` / `workingdocs/TODO.md`) · **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** · pbx3 stub **`call-tests/README.md`** only |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
 | **Failover + shadowing** (parked) | Edge HA: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Instance shadow SKU framing: **`INSTANCE_SHADOWING_REQUIREMENTS.md`** (same mechanics, paid twin) |
 | **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
@@ -73,24 +73,23 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-08-01 — Mode 4 golden rebuild + 0.0.4-3)
 
-**Branches:** **pbx3** / **pbx3cagi** / **pbx3api** **`main`** (tags **`pbx3-0.0.4-3`**, **`pbx3cagi-1.0.0-7`**, **`pbx3api-genast-restore-20260801`**). SPA unchanged this session (handoff only). **sipplab** sibling repo **`aelintra/sipplabs`** `main` (**`984bedd`**).
+**Branches:** **pbx3** / **pbx3cagi** / **pbx3api** **`main`** (tags **`pbx3-0.0.4-3`**, **`pbx3cagi-1.0.0-7`**, **`pbx3api-genast-restore-20260801`**). SPA unchanged this session (handoff only). **sipplabs** sibling **`aelintra/sipplabs`** `main`.
 
-**Lab:** golden **`08jzwn`** on **EIP `44.196.98.191`** (`i-0625111d25ddbd410`, `t4g.small`); Magrathea VIP; Peer-99 **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`. Old box **`i-02ec2b05b5baacb5d`** (`54.236.153.81`) still running — terminate after smoke. SIPp recipes: clone/rsync **sipplab** (not `workingdocs/call-tests/` — stub only).
+**Lab:** golden **`08jzwn`** on **EIP `44.196.98.191`** (`i-0625111d25ddbd410`, `t4g.small`); Magrathea VIP; Peer-99 **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`. Old box **`i-02ec2b05b5baacb5d`** (`54.236.153.81`) still running — terminate after smoke. SIPp recipes: **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** only (`workingdocs/call-tests/` = stub).
 
 ### Shipped
 - Mode 4 rebuild: fresh S3 backup → new EC2 → **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-7** → restore (empty CDR) → onboard → DNS (4 A→EIP) → LE 4 SANs → Magrathea dispatcher setid=2 → EIP → preflight **green**.
 - Packaging: overlay postinst; **`refresh-pjsip-externip.sh`**; postinst/restore **genAst** after runLinker (apt must not wipe ready files); cagi **build-deb.sh** clears stale `debian/files`.
 - Runbook: EIP-first cutover + SBC dispatcher notes (**`REBUILD_INSTANCE_RUNBOOK.md`**).
-- **sipplab extract:** private **https://github.com/aelintra/sipplabs** — harness + DUT-agnostic docs + `targets/pbx3`; pbx3 `workingdocs/call-tests/` → redirect stub.
+- **sipplabs extract:** **https://github.com/aelintra/sipplabs** — harness + docs; pbx3 stub only; SIPp open work (pack teardown, profiles) on **sipplabs** TODO.
 
 ### Golden / operator follow-up
 - Next session: **test** Domain REGISTER/call, CDR UTC, Home Outcomes; then ask to **terminate** old EC2.
 - SG `:44300` still limited (e.g. control IP) — SPA from office may need SG tweak.
 - OpenSIPS **domain** setid: `0ggybk`/`vqcwd4` still setid=3 (bzy) while DNS→golden.
-- Lab hosts: rsync from **`~/GiT/sipplab`** (secrets local gitignored); smoke `./run-soak.sh status` / phone-a-b.
 
 ### Resume
-- Smoke-test new golden wallpaper; terminate old only after confirm; finish sipplab host cutover if not done.
+- Smoke-test new golden wallpaper; terminate old only after confirm. For SIPp: open a **sipplabs** Cursor window (`AGENTS.md` / TODO).
 
 ---
 
@@ -101,7 +100,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 **Branches:** **pbx3** **`main`** (docs + `cdr_sqlite3_custom` UTC — commit this session). SPA/API/cagi package tips unchanged (cagi WebRTC PrepDial still hot-only **`3a9b7d7`**). Lab: golden **`08jzwn`** (heavily patched — rebuild next); Magrathea VIP; Peer-99 **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`.
 
 ### Shipped
-- **Soak startup guide:** **`TRAFFIC_PROFILE_SIM.md` §0** (cold start → stop); pointers from README + `SIPP_LAB_HOST.md` §9.
+- **Soak startup guide:** (historical path) now **sipplabs** `docs/PROFILES.md` / `docs/HOST_SETUP.md`.
 - **mixed-office queue-rr** run on sippuac (graceful stop; Asterisk C:60; 0 channels after).
 - **CDR timezone:** policy **`CDR_TIMEZONE_POLICY.md`** — UTC at rest + site TZ at panel. **SQLite HoR UTC** via `STRFTIME(${CDR(start,u)},UTC,…)` in package + live golden; `outcomeToday` sees new UTC rows. CSV already `usegmtime=yes`.
 - **Build plan:** **`BUILD_PLAN_0.0.4.md`** — pbx3 **0.0.4-1** + cagi **1.0.0-7** + Mode 4 golden rebuild (restore **without CDR**).
