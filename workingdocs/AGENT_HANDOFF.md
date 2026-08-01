@@ -73,7 +73,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-08-01 — CDR site-TZ + golden smoke)
 
-**Branches:** **pbx3api** **`b4433b7`**, **pbx3spa** **`a0d9fed`** / handoff **`fbd1107`**, **pbx3cagi** **`f2890d6`** (tag **`pbx3cagi-1.0.0-8`**), **pbx3sbc-admin** **`dad28d8`**, **pbx3** docs **`2eae3c1`**. All **`main`**.
+**Branches:** **pbx3api** **`b4433b7`**, **pbx3spa** **`a0d9fed`** / handoff **`fbd1107`**, **pbx3cagi** **`f2890d6`** (tag **`pbx3cagi-1.0.0-8`**), **pbx3sbc-admin** **`dad28d8`**, **pbx3** docs tip (this push). All **`main`**.
 
 **Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**; Magrathea VIP **`3.93.26.82`**; Peer-99 **`98.82.58.59`**; Domain **`sippuac`**. Old EC2 **`i-02ec2b05b5baacb5d`** still up — terminate (ask). Magrathea SSH: **`pbx3test.pem`** now authorized (was opensips.pem-only).
 
