@@ -134,9 +134,24 @@ if [[ -x /opt/pbx3/scripts/sync-hostname-from-globals.sh ]]; then
   /bin/sh /opt/pbx3/scripts/sync-hostname-from-globals.sh || true
 fi
 
-# Donor /etc/asterisk still has the old public IP in pjsip_transport.conf. Rewrite to
-# this node's current public IP/EIP and fully restart Asterisk (pjsip reload is not enough
-# when transport-udp failed to bind — see OPS_ASTERISK_AFTER_EGRESS_GENAST.md).
+# GenAst writes ready files under /opt/pbx3/etc/asterisk/configs (ASTLOCALCONF).
+# Restore puts a snapshot under /etc/asterisk. runLinker (apt postinst) renames those
+# to *_installed and symlinks /etc → ASTLOCALCONF — so without regenerating ASTLOCALCONF
+# from sqlite, apt upgrade leaves empty/stale PJSIP endpoints. Always genAst after restore
+# when the DB is present (sqlite is HoR for phones/trunks/dialplan).
+if [[ -f /opt/pbx3/db/sqlite.db ]] && [[ -x /opt/pbx3/scripts/genAst.sh ]]; then
+  echo "restore-backup-zip: regenerating Asterisk from DB (genAst)"
+  /opt/pbx3/scripts/genAst.sh || {
+    echo "restore-backup-zip: WARNING: genAst failed" >&2
+  }
+fi
+
+# Link /etc/asterisk → ASTLOCALCONF when possible (same as postinst), then fix externip.
+if command -v php >/dev/null 2>&1 && [[ -f /opt/pbx3/php/utilities/runLinker.php ]]; then
+  php /opt/pbx3/php/utilities/runLinker.php >/dev/null 2>&1 || true
+fi
+
+# Donor external_* public IP → this node's EIP/public IP; full Asterisk restart.
 if [[ "$FULL" -eq 1 ]] && [[ -x /opt/pbx3/scripts/refresh-pjsip-externip.sh ]]; then
   echo "restore-backup-zip: refreshing PJSIP externip + restarting Asterisk"
   /bin/sh /opt/pbx3/scripts/refresh-pjsip-externip.sh || {

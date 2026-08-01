@@ -137,7 +137,9 @@ ssh -i ~/path/to/pbx3test.pem ubuntu@NEW_EC2_IP \
 - **Never** run **`reloader.sh`** after restore.
 - Because the backup came from **this instance’s S3 prefix**, `globals.id` (KSUID) is already correct — **no identity SQL patch** for a same-node rebuild.
 
-`restore-backup-zip.sh` also runs **`sync-hostname-from-globals.sh`** so the OS hostname matches **`globals.shortuid`**, then **`refresh-pjsip-externip.sh`** (rewrites `pjsip_transport.conf` `external_*` to this node's current public IP/EIP and **`systemctl restart asterisk`**). Donor backups still contain the old public IP — without that step, `transport-udp` can fail to bind and Egress qualify stays Unknown/Unavail.
+`restore-backup-zip.sh` also runs **`sync-hostname-from-globals.sh`**, then **`genAst`** (sqlite is HoR for phones/trunks — fills ASTLOCALCONF under `/opt/pbx3/.../configs`), **`runLinker`**, and **`refresh-pjsip-externip.sh`**.  
+
+**Why genAst after restore / apt:** GenAst output lives in the package tree (`ASTLOCALCONF`). Restore writes a snapshot under `/etc/asterisk`. Apt **`runLinker`** renames those files to `*_installed` and symlinks `/etc/asterisk` → ASTLOCALCONF. Without regenerating ASTLOCALCONF from the DB, that leaves empty/stale PJSIP endpoints (seen on 0.0.4-2 upgrade). Package **≥ 0.0.4-3** postinst runs genAst + externip refresh when `sqlite.db` exists.
 
 Merge help seeds (safe, idempotent):
 

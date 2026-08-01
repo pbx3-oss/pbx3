@@ -1,3 +1,13 @@
+pbx3 (0.0.4-3) noble; urgency=medium
+
+  * postinst: after runLinker, genAst + refresh-pjsip-externip when sqlite.db
+    exists — apt upgrade must not leave /etc/asterisk symlinked to empty/stale
+    ASTLOCALCONF ready files (Mode 4 / 0.0.4-2 install lesson).
+  * restore-backup-zip: genAst + runLinker before externip refresh so restored
+    /etc/asterisk snapshots stay coherent with package layout.
+
+ -- KOKO <admin@aelintra.com>  Sat, 01 Aug 2026 17:20:00 +0000
+
 pbx3 (0.0.4-2) noble; urgency=medium
 
   * restore-backup-zip: refresh-pjsip-externip.sh after Asterisk restore —
