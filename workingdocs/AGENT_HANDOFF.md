@@ -63,29 +63,45 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Downstream peer REGISTER (future)** | **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class; no shared OpenSIPS image; interim Asterisk-proxied workaround only |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
+| **CDR timezone / Home “today”** | **`CDR_TIMEZONE_POLICY.md`** — local CDR vs Laravel UTC; near-term day buckets = node local; end-state UTC CDR + site TZ |
+| **pbx3 0.0.4-1 + cagi + golden rebuild** | **`BUILD_PLAN_0.0.4.md`** → Mode 4 **`REBUILD_INSTANCE_RUNBOOK.md`** |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
 
 **Source of truth:** Schema and code. Verify against pbx3 db_sql and code when changing behaviour; workingdocs may be outdated.
 
 ---
 
-## Next agent session notes (2026-07-31 — dialog timeout + mixed-office queue-rr)
+## Next agent session notes (2026-07-31 — soak startup, CDR UTC, 0.0.4 build plan)
 
-**Branches:** **pbx3** **`main`** (call-tests + handoff). **pbx3sbc** / **pbx3sbc-admin** **`main`** (dialog timeout + Call limits — already pushed earlier this session). SPA/API product unchanged. Lab: golden **`08jzwn`**; Magrathea VIP; Peer-99 **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`.
+**Branches:** **pbx3** **`main`** (docs + `cdr_sqlite3_custom` UTC — commit this session). SPA/API/cagi package tips unchanged (cagi WebRTC PrepDial still hot-only **`3a9b7d7`**). Lab: golden **`08jzwn`** (heavily patched — rebuild next); Magrathea VIP; Peer-99 **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`.
 
 ### Shipped
-- **SBC dialog timeout:** OpenSIPS `default_timeout` **14400** (was 12h). Filament **System → Call limits** read-only from cfg. Magrathea live.
-- **Traffic-profile:** YAML schema + **`mixed-office.yaml`** (concurrent **4**). Dedicated queue **2160** `rrmemory` (members 2120–2123). **`run-queue-rr.sh`** smoke **GREEN** on sippuac (each agent 2 calls; graceful stop; Magrathea dlg→0). Runbook: **`TRAFFIC_PROFILE_SIM.md`** §0.
-- **`freephone-trunk`** profile sketched (intl freephone → carrier); parked on CDR.
+- **Soak startup guide:** **`TRAFFIC_PROFILE_SIM.md` §0** (cold start → stop); pointers from README + `SIPP_LAB_HOST.md` §9.
+- **mixed-office queue-rr** run on sippuac (graceful stop; Asterisk C:60; 0 channels after).
+- **CDR timezone:** policy **`CDR_TIMEZONE_POLICY.md`** — UTC at rest + site TZ at panel. **SQLite HoR UTC** via `STRFTIME(${CDR(start,u)},UTC,…)` in package + live golden; `outcomeToday` sees new UTC rows. CSV already `usegmtime=yes`.
+- **Build plan:** **`BUILD_PLAN_0.0.4.md`** — pbx3 **0.0.4-1** + cagi **1.0.0-7** + Mode 4 golden rebuild (restore **without CDR**).
 
 ### Golden / operator follow-up
-- Queue shortuid for `queue show` is in **`soak-queue.env`** (`SOAK_QUEUE_SHORTUID`, currently **305st9**) — not pkey 2160.
-- Prefer SSH key on sippuac (password used once for lab smoke; do not commit).
-- Catcher PSTN UAS when retesting Numbers; Magrathea `019242*` lab rows stay.
+- Next session: execute build plan (overlay postinst still TODO before deb; changelog bumps). Fresh S3 backup before rebuild.
+- sippuac: prefer install Mac `~/.ssh/id_rsa.pub` (password used in session — do not commit).
+- Pre-cutover local `calldate` rows remain in `master.db` until rebuild wipes CDR.
 
 ### Resume
-- Traffic-profile: Numbers % into mixed-office; or `inbound-heavy` / `outbound-heavy`; or freephone-trunk when CDR arrives.
-- Or TODO #1 WebRTC SPA far-end (still awaiting webphone team).
+- **`BUILD_PLAN_0.0.4.md`** kickoff prompt. Ask before terminate EC2 / DNS.
+
+---
+
+## Next agent session notes (2026-07-31 — dialog timeout + mixed-office queue-rr) — historical
+
+**Superseded** by soak startup / CDR UTC / 0.0.4 plan block above. Dialog timeout 14400 + queue-rr GREEN still valid.
+
+**Branches:** **pbx3** **`main`**. **pbx3sbc** / **pbx3sbc-admin** **`main`** (dialog timeout + Call limits). Lab unchanged.
+
+### Shipped
+- SBC dialog timeout **14400**; Filament Call limits; mixed-office + queue **2160** `rrmemory`; `run-queue-rr.sh` GREEN.
+
+### Resume
+- See newer block above.
 
 ---
 

@@ -12,59 +12,136 @@
 
 ---
 
-## 0. How to run (mixed-office / queue-rr)
+## 0. Startup (soak) — step by step
 
-**Hosts:** Domain on **`sippuac`** `192.168.1.51` (`ssh tech@192.168.1.51`). Golden for provision/GenAst. Magrathea VIP for SIP. Never Peer-99 EIP for Domain phones.
+Cold-start guide for **Domain** soak (1:1 wallpaper and/or queue-rr). Numbers DID/PSTN is optional and separate (see §2 / `SIPP_LAB_HOST.md` §9).
 
-### One-time (Mac)
+### 0.1 Roles (do not mix)
+
+| Role | Host | SIP |
+|------|------|-----|
+| Operator Mac | your laptop | provision + rsync + Magrathea cleanup |
+| Golden | `08jzwn` | phones / queue / GenAst / `queue show` |
+| Magrathea VIP | `sbc.pbx3.com` / `3.93.26.82` | REGISTER + INVITE path |
+| Domain SIPp | **`sippuac`** `192.168.1.51` (`tech@…`) | REGISTER’d phones — **never** Peer-99 |
+| Numbers (optional) | Catcher `98.82.58.59` Peer **99** | DID in / `019242*` out only |
+
+### 0.2 Prerequisites (once)
+
+1. **sippuac** up; SSH works: `ssh tech@192.168.1.51`
+2. On sippuac: `sudo apt-get install -y sip-tester` (provides `sipp`)
+3. On Mac: `cd pbx3/workingdocs/call-tests`
+4. **`lab.env`** present (copy from `lab.env.example` if missing). Must have:
+   - `SBC_HOST=3.93.26.82`
+   - `CATCHER_DOMAIN=pb0wsk.pbx3.com` (soak tenant `sipp`)
+   - `GOLDEN_SSH='ssh -i …/pbx3test.pem -o BatchMode=yes ubuntu@08jzwn.pbx3.com'`
+5. Golden SSH works: `$GOLDEN_SSH 'hostname'` (after `source lab.env`)
+6. VIP UDP **5060** reachable from sippuac WAN (office NAT OK after Record-Route fix)
+
+On sippuac after sync, set **`LOCAL_IP`** in `lab.env` to the guest bridged address (`hostname -I`). Leave **`PUBLIC_IP`** empty to auto-detect office WAN via `ifconfig.me` (required for SIP Contact under NAT).
+
+### 0.3 One-time provision (Mac)
+
+Creates soak exts **2100–2139**, dedicated queue **2160** (`rrmemory`, members **2120–2123**), GenAst Commit, and gitignored env files.
 
 ```bash
 cd pbx3/workingdocs/call-tests
-# lab.env + soak phones already exist from L2 soak
-./provision-soak-phones.sh          # if 2100–2139 missing
-./provision-soak-queue.sh           # queue 2160 rrmemory, members 2120–2123; GenAst + app_queue reload
-# writes soak-queue.env (gitignored) — quote MEMBERS if editing by hand
+./provision-soak-phones.sh    # → soak-phones.env
+./provision-soak-queue.sh     # → soak-queue.env (SOAK_QUEUE_SHORTUID=…)
+# Re-run only if phones/queue missing or members/strategy changed.
 ```
 
-### Sync to sippuac
+### 0.4 Sync recipes to sippuac (Mac)
 
 ```bash
 cd pbx3/workingdocs/call-tests
-rsync -av soak-phones.env soak-queue.env lab.env \
-  run-queue-rr.sh run-soak.sh clear-sbc-dialogs.sh profiles/ \
+rsync -av lab.env soak-phones.env soak-queue.env \
+  run-soak.sh run-queue-rr.sh clear-sbc-dialogs.sh profiles/ \
   tech@192.168.1.51:~/call-tests/
-rsync -av scenarios/soak-register.xml scenarios/soak-answer.xml scenarios/soak-dial.xml \
+rsync -av scenarios/soak-register.xml scenarios/soak-answer.xml \
+  scenarios/soak-dial.xml scenarios/soak-unregister.xml \
   tech@192.168.1.51:~/call-tests/scenarios/
 ```
 
-### Run / stop (on sippuac)
+First bootstrap of the whole tree (optional):  
+`rsync -av -e ssh ./ tech@192.168.1.51:~/call-tests/` then re-copy `lab.env` / soak `*.env` if needed.
+
+### 0.5 Choose a mode and start (on sippuac)
 
 ```bash
+ssh tech@192.168.1.51
 cd ~/call-tests
-./run-queue-rr.sh start mixed-office   # 4 agents + 4 dialers → queue 2160; ~50s hold
-./run-queue-rr.sh status
-./run-queue-rr.sh stop                 # graceful: drain BYE then kill
-# ./run-queue-rr.sh stop force         # may litter Magrathea Active Calls
+# confirm LOCAL_IP in lab.env = this VM’s IP
 ```
 
-### Verify rotation (on golden)
+**A — Domain 1:1 wallpaper** (~10 concurrent pairs; not queue):
 
 ```bash
-# Asterisk queue *section* is shortuid (see soak-queue.env SOAK_QUEUE_SHORTUID), not pkey 2160
-sudo asterisk -rx "queue show 305st9"
-# Expect rrmemory; member call counts advancing round-robin
+./run-soak.sh start demo      # or: start busy (~20)
+./run-soak.sh status
 ```
 
-Dialplan still uses **pkey** `2160` (`Queue(305st9,…)`). Magrathea residue after force-stop: Mac `./clear-sbc-dialogs.sh`.
+**B — Queue rrmemory / mixed-office** (4 agents + 4 dialers → queue **2160**):
 
-### Related wallpaper
+```bash
+./run-queue-rr.sh start mixed-office
+./run-queue-rr.sh status
+```
 
-| Command | What |
-|---------|------|
-| `./run-soak.sh start demo` | Domain 1:1 pairs (~10), not queue |
-| `./run-soak.sh stop` | Graceful Domain soak stop |
+Do **not** run A and B at the same time (they share soak phones / ports).
 
-Profile data: **`profiles/mixed-office.yaml`**. Schema: **`profiles/SCHEMA.md`**.
+### 0.6 Verify
+
+| Check | Where | Command / look |
+|-------|--------|----------------|
+| SIPp alive | sippuac | `./run-soak.sh status` or `./run-queue-rr.sh status` |
+| Registrations | Magrathea admin | Active Calls / usrloc as needed |
+| Queue shortuid (B) | Mac or sippuac | `grep SOAK_QUEUE_SHORTUID soak-queue.env` (lab was **`305st9`**) |
+| Queue rotation (B) | golden | `sudo asterisk -rx "queue show 305st9"` — expect `rrmemory`, member counts advancing |
+
+Dialplan still dials queue **pkey** `2160`; Asterisk `queue show` wants the **shortuid**.
+
+### 0.7 Stop (always prefer graceful)
+
+```bash
+# on sippuac — matching what you started
+./run-soak.sh stop              # drain hold + BYE, then kill
+./run-queue-rr.sh stop
+# emergency only:
+# ./run-soak.sh stop force
+# ./run-queue-rr.sh stop force
+```
+
+If Magrathea Active Calls stick after **force** stop (Mac):
+
+```bash
+cd pbx3/workingdocs/call-tests
+./clear-sbc-dialogs.sh
+```
+
+### 0.8 Daily re-run (already provisioned)
+
+```bash
+# Mac — only if scripts/scenarios changed
+rsync -av run-soak.sh run-queue-rr.sh scenarios/soak-*.xml profiles/ \
+  tech@192.168.1.51:~/call-tests/
+# sippuac
+./run-queue-rr.sh start mixed-office   # or ./run-soak.sh start demo
+# … demo / observe …
+./run-queue-rr.sh stop
+```
+
+### 0.9 Troubleshooting (short)
+
+| Symptom | Likely fix |
+|---------|------------|
+| `Missing lab.env` / soak `*.env` | Re-provision on Mac; rsync env files |
+| REGISTER / no audio path / Magrathea state-3 | Answerer must echo **Record-Route** — use current `soak-answer.xml` (`[last_Record-Route:]`) |
+| `LOCAL_IP` / `PUBLIC_IP` errors | Set VM IP in `lab.env`; ensure outbound HTTPS for WAN detect or set `PUBLIC_IP` |
+| Queue members never ring | Confirm shortuid via `soak-queue.env`; agents REGISTER’d before dialers |
+| Stuck Active Calls | Graceful stop next time; else Mac `./clear-sbc-dialogs.sh` (dialogs now expire at **4h** on Magrathea) |
+
+Profile data: **`profiles/mixed-office.yaml`**. Schema: **`profiles/SCHEMA.md`**. Host notes: **`SIPP_LAB_HOST.md`** §9.
 
 ---
 

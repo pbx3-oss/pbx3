@@ -65,22 +65,20 @@ Mac-only for now (no jump host).
 
 Steady concurrent calls on catcher tenant for CDR/Home fill and live demos. Runs on **extension platform** (lab EC2 or `sippuac`), not Peer-99.
 
+**Cold start (full walkthrough):** **`TRAFFIC_PROFILE_SIM.md` §0 Startup (soak)** — prereqs → provision → rsync → start/verify/stop.
+
+Quick reminder (after provisioned):
+
 ```bash
-# once — create exts 2100–2139 on golden + GenAst + soak-phones.env
-./provision-soak-phones.sh
-# dedicated rrmemory queue 2160 (not L1 2060)
-./provision-soak-queue.sh
-rsync -av soak-phones.env soak-queue.env scenarios/soak-*.xml run-soak.sh run-queue-rr.sh profiles/ lab.env tech@192.168.1.51:~/call-tests/
-# on sippuac
-./run-soak.sh start demo    # ~10 up (1:1 Domain)
-./run-queue-rr.sh start     # 4 agents + dialers → queue 2160 rrmemory
-./run-queue-rr.sh stop
-./run-soak.sh stop          # graceful: drain hold+BYE then kill UAS
-./run-soak.sh stop force    # immediate (may litter Active Calls)
-./clear-sbc-dialogs.sh      # Mac: MI/restart cleanup if residue
+# Mac — sync if needed, then on sippuac:
+./run-soak.sh start demo       # ~10 up (1:1 Domain)
+./run-queue-rr.sh start        # 4 agents + dialers → queue 2160 rrmemory
+./run-queue-rr.sh stop         # graceful
+./run-soak.sh stop             # graceful: drain hold+BYE then kill UAS
+# Mac if force-stop litter: ./clear-sbc-dialogs.sh
 ```
 
-Profiles: `profiles/demo.env` / `busy.env` (soak); **`profiles/mixed-office.yaml`** (traffic-profile). Dialer holds then BYEs (clears SBC dialogs). Spec: **`CALL_TEST_STRATEGY.md`** §6 L2 · **`TRAFFIC_PROFILE_SIM.md`**.
+Profiles: `profiles/demo.env` / `busy.env` (soak); **`profiles/mixed-office.yaml`** (traffic-profile). Spec: **`CALL_TEST_STRATEGY.md`** §6 L2 · **`TRAFFIC_PROFILE_SIM.md`**.
 
 ---
 

@@ -192,7 +192,8 @@ ssh -i …/pbx3test.pem ubuntu@<SIPP_EIP> 'cd ~/call-tests && ./run-pack.sh'
 | Host / SSH (Numbers) | SIPp Catcher **`ubuntu@98.82.58.59`** (`pbx3test.pem`) — Peer **99** |
 | Recipes | `~/call-tests/` (rsync from Mac) |
 | Domain smoke | `./run-phone-a-b.sh`; L2 `./run-soak.sh start demo` / graceful `stop` |
-| **Traffic-profile queue-rr** | `./provision-soak-queue.sh` (Mac) → rsync → sippuac `./run-queue-rr.sh start` — see **`TRAFFIC_PROFILE_SIM.md`** §0 |
+| **Soak cold start** | Full step-by-step: **`TRAFFIC_PROFILE_SIM.md` §0** (provision → rsync → start/verify/stop) |
+| **Traffic-profile queue-rr** | After §0: sippuac `./run-queue-rr.sh start mixed-office` |
 | Numbers smoke | Catcher `./run-peer-pstn-uas.sh start`; DID in `./run-did-lab-in.sh`; out on sippuac `OUT_DIGITS=01924234567 ./run-did-lab-out.sh` |
 | Lab DID | **01924234567** — Magrathea Number route prefix **`441924234567`** (UK dialect 0…→44…); golden → pb0wsk **2120** |
 | Outbound | Prefix **`019242*`** → Peer **99** only; default empty-prefix stays **`1,20,50`** (Brindley/Magrathea/Twilio). Dial lab numbers under `019242…` for fake PSTN; everything else uses real carriers. |

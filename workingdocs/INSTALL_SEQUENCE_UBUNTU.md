@@ -68,6 +68,7 @@ sudo /opt/pbx3/scripts/installer.sh
 - **If `sqlite.db` already exists:** skips **`reloader.sh`** and keeps existing tenant data and instance FQDN. Runs **`normalize-globals-identity.sh`**. To **overwrite** instance FQDN / hostname / globals identity on purpose:  
   `sudo PBX3_APPLY_INSTANCE_IDENTITY=1 INSTANCE_FQDN=node.example.com /opt/pbx3/scripts/installer.sh`
 - On every run (with or without an existing DB): refreshes Asterisk/Shorewall/fail2ban links, **`setip`**, CDR MySQL bootstrap (if MySQL is present), dnsmasq, helper restarts, etc.—so avoid treating a re-run as a harmless no-op unless you intend those side effects.
+- **CDR clocks:** packaged `cdr.conf` `[csv]` uses **`usegmtime=yes`**; `cdr_sqlite3_custom.conf` writes **`calldate` in UTC** (`STRFTIME`…`UTC`). After Asterisk is up, place a test call and confirm `master.db` `calldate` ≈ `date -u` (not host local). SPA converts to site TZ for display — **`CDR_TIMEZONE_POLICY.md`**.
 
 Creates on **first run**: SQLite DB at `/opt/pbx3/db/sqlite.db`, hostname, `/etc/hosts`, Shorewall/Shorewall6 baseline, **`id` / `shortuid`** in **`globals`** (via installer + normalize), etc.
 
