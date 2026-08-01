@@ -1,8 +1,8 @@
 # CDR timezone policy (research + lean)
 
-**Status:** Lean locked **2026-07-31**. **SQLite HoR UTC shipped** in package + golden (`STRFTIME`…`UTC`); CSV already `usegmtime=yes`. SPA site-TZ **display** still TODO.  
+**Status:** Lean locked **2026-07-31**. **SQLite HoR UTC shipped**. **SPA + API site-TZ display/filters shipped 2026-08-01**. **SBC Filament Home/CDR site-TZ shipped 2026-08-01**. Mixed pre-cutover local rows: ignore until a production cutover needs them.  
 **Trigger:** Instance Home **Outcomes (today)** empty while **Call volume (24h)** showed soak traffic (golden).  
-**Related:** `pbx3api` `CdrIndexService::outcomeToday` / `volumeLast24h`; SPA `HomeCdrCharts`; Asterisk `cdr_sqlite3_custom` → `/var/log/asterisk/master.db`.
+**Related:** `pbx3api` `CdrIndexService` / `SiteTimezone`; SPA `formatCdrCalldate` / `HomeCdrCharts`; `pbx3sbc-admin` `HomeDashboardMetrics` / `CdrResource`; Asterisk `cdr_sqlite3_custom` → `/var/log/asterisk/master.db`.
 
 ---
 
@@ -65,11 +65,11 @@ Checklist item for any Asterisk install review: **“CDR HoR UTC?”** — verif
 ## 5. Implement later (checklist)
 
 - [x] **Asterisk SQLite HoR UTC** — `cdr_sqlite3_custom.conf` `values` use `STRFTIME(${CDR(start,u)},UTC,%Y-%m-%d %H:%M:%S)`; golden live 2026-07-31
-- [ ] SPA CDR list + Home doughnut: **display** convert via **site TZ** (storage is UTC; “business today” may still prefer site midnight over UTC midnight)
-- [ ] Unit test / docs: mixed pre-cutover local rows vs post-cutover UTC in same `master.db`
+- [x] SPA CDR list + Home doughnut: **display** convert via **site TZ** (2026-08-01)
+- [x] ~~Unit test / docs: mixed pre-cutover local rows~~ — **skipped** (no production cutover; new golden empty/UTC-only)
 - [x] Document in `INSTALL_SEQUENCE_UBUNTU.md` — CDR HoR UTC check after Asterisk bring-up
-- [ ] SBC Home outcome “today” — confirm same clock story (OpenSIPS acc vs Filament)
-- [ ] Existing lab `master.db` local rows — leave; no silent rewrite
+- [x] SBC Home outcome “today” + CDR list — same site-TZ story (`pbx3sbc-admin`, 2026-08-01)
+- [x] Existing lab `master.db` local rows — leave; no silent rewrite (rebuild wiped golden)
 
 ---
 
@@ -80,3 +80,4 @@ Checklist item for any Asterisk install review: **“CDR HoR UTC?”** — verif
 | 2026-07-31 | Lab repro on golden; industry scan; lean locked (near-term match CDR/local; end-state UTC + site TZ). UK GMT≈UTC winter caveat. |
 | 2026-07-31 | Install watch: CSV already `usegmtime=yes`; SQLite HoR still local via `${CDR(start)}` — fix at Asterisk install/package. |
 | 2026-07-31 | **Shipped package + golden:** SQLite HoR UTC via STRFTIME; verified new `calldate` ≈ `date -u`. |
+| 2026-08-01 | SPA/API site-TZ display + day filters; SBC Filament Home/CDR site-TZ; mixed-row harness skipped. |

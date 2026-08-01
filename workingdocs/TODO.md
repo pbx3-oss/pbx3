@@ -1,30 +1,29 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — golden rebuilt clean on **EIP `44.196.98.191`**; packages **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-7**; fleet-preflight green. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`. Old EC2 **`i-02ec2b05b5baacb5d`** still up until terminate confirm.  
-**Last updated:** 2026-08-01 (session end — sipplabs extract + doc scrub)
+**Branch:** **`main`** — golden on **EIP `44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8**; CDR site-TZ (SPA/API + SBC) shipped. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`**.  
+**Last updated:** 2026-08-01 (session end: Magrathea pbx3test SSH; SBC site-TZ commit)
 
 
 ### Suggested “what next?” order
 
-1. **Test new golden** — Domain REGISTER/call via Magrathea; CDR UTC smoke; Home Outcomes; optional WebRTC `:8089`. Then **terminate old** `i-02ec2b05b5baacb5d` (ask).  
+1. **Terminate old golden EC2** — `i-02ec2b05b5baacb5d` (ask; OPTIONS noise).  
 2. **WebRTC / WSS demo (SBC #1)** — far-end SPA still open (digit-only sanitize + inbound no SIP response). Spec: **`WEBRTC_WSS_LAB.md`**.  
-3. **Home CDR site-TZ display** — storage UTC done; panel convert via site TZ. Spec: **`CDR_TIMEZONE_POLICY.md`**.  
-4. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Spec: **`SBC_PRODUCT_TRACKS.md`**.  
-5. **SBC Filament Backup — merge S3-only rows** — Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
-6. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
-7. **Tenant dial alias** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.  
-8. **Product crumbs** (optional) — paid Twilio / drain / velocity V3.  
-9. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**.  
-10. **pbx3cagi Phase 4** (parked).  
-11. **Velocity standalone** (parked).  
-12. **Instance shadowing** / S10.7 / S8.9 (parked).  
-13. **AMI wallboard** (parked).  
-14. **Fleet node health ≠ Asterisk** (parked).  
-15. **Control plane duplex / HA** (parked).  
-16. **Fleet auth cookie/SSO (blocked)**.  
-17. **S7+** attested PCI — customer ask.  
-18. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
-19. **Grafana / door-knock geo** (parked).  
+3. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Spec: **`SBC_PRODUCT_TRACKS.md`**.  
+4. **SBC Filament Backup — merge S3-only rows** — Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
+5. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
+6. **Tenant dial alias** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.  
+7. **Product crumbs** (optional) — paid Twilio / drain / velocity V3.  
+8. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**.  
+9. **pbx3cagi Phase 4** (parked).  
+10. **Velocity standalone** (parked).  
+11. **Instance shadowing** / S10.7 / S8.9 (parked).  
+12. **AMI wallboard** (parked).  
+13. **Fleet node health ≠ Asterisk** (parked).  
+14. **Control plane duplex / HA** (parked).  
+15. **Fleet auth cookie/SSO (blocked)**.  
+16. **S7+** attested PCI — customer ask.  
+17. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
+18. **Grafana / door-knock geo** (parked).  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -32,7 +31,7 @@
 
 ## Open items
 
-- [x] **pbx3 0.0.4 + cagi 1.0.0-7 + golden rebuild (2026-08-01):** Executed **`BUILD_PLAN_0.0.4.md`**. Packages **pbx3 0.0.4-3** / **pbx3cagi 1.0.0-7** on new golden; EIP **`44.196.98.191`**; DNS four A records; Magrathea setid=2 → EIP; onboard + LE (4 SANs); preflight green. Tags **`pbx3-0.0.4-3`**, **`pbx3cagi-1.0.0-7`**. **Still open:** terminate old EC2 **`i-02ec2b05b5baacb5d`** (ask); call/Domain test wallpaper next session.
+- [x] **pbx3 0.0.4 + cagi 1.0.0-7 + golden rebuild (2026-08-01):** Executed **`BUILD_PLAN_0.0.4.md`**. Packages **pbx3 0.0.4-3** / **pbx3cagi 1.0.0-7** on new golden; EIP **`44.196.98.191`**; DNS four A records; Magrathea setid=2 → EIP; onboard + LE (4 SANs); preflight green. Tags **`pbx3-0.0.4-3`**, **`pbx3cagi-1.0.0-7`**. Later same day: cagi **1.0.0-8** (CLIP); catalog setid linked; operator smoke green. **Still open:** terminate old EC2 **`i-02ec2b05b5baacb5d`**.
 
 - [x] **GenAst `$outbound_proxy` comment mangling (2026-08-01):** Comment token in `pjsip_phone.tmpl` was expanded by unanchored replace → bare prose in `pjsip_ready_phones.conf`. Fix: reword comment + line-anchored `/^\$outbound_proxy/m` in `GenClass::xlatePjsipBuff` (**`c8888cf`**). Hot on golden.
 
@@ -40,7 +39,7 @@
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 
-- [x] **Home CDR Outcomes (today) — TZ mismatch (2026-07-31):** Cause = Laravel UTC `today` vs local `calldate`. **HoR UTC shipped** (`cdr_sqlite3_custom` STRFTIME); golden verified; `outcomeToday` sees new rows. Pre-cutover local rows remain. Still TODO: SPA **site TZ display**. Policy: **`CDR_TIMEZONE_POLICY.md`**.
+- [x] **Home CDR Outcomes (today) — TZ mismatch (2026-07-31):** Cause = Laravel UTC `today` vs local `calldate`. **HoR UTC shipped** (`cdr_sqlite3_custom` STRFTIME); golden verified. **2026-08-01:** SPA + API site-TZ display/filters; SBC Filament Home/CDR same clock (`pbx3sbc-admin` `SiteTimezone`). Mixed pre-UTC rows ignored (lab only). Policy: **`CDR_TIMEZONE_POLICY.md`**.
 
 - [x] **SIPp traffic-profile sim — schema + mixed-office + rrmemory smoke (2026-07-31):** YAML schema + **`mixed-office.yaml`** (concurrent **4**). Dedicated queue **2160** (`rrmemory`, members 2120–2123). `run-queue-rr.sh` **GREEN** on sippuac (each agent 2 calls; graceful stop; Magrathea dialogs→0). Later: Numbers %; inbound-/outbound-heavy; freephone-trunk CDR. Spec: **sipplab** `docs/PROFILES.md` (was call-tests).
 
