@@ -2,7 +2,7 @@
 
 **Status:** L1 pack on SIPp EC2 (2026-07-27) — build what we can; **no commercial generators**.  
 **Full call-type map (majors + `*NN*` + test columns):** **`CALL_TYPE_INVENTORY.md`**.  
-**Recipes:** **`workingdocs/call-tests/`** (`./run-pack.sh`; catcher + VIP).  
+**Recipes:** **[aelintra/sipplab](https://github.com/aelintra/sipplab)** (`./run-pack.sh`; catcher + VIP). Stub: **`workingdocs/call-tests/README.md`**.  
 **Cadence home:** **`TEST_CADENCE.md`** · inventory **`CRITICAL_PATH_TEST_PACK.md`**.  
 **Existing call logic:** **pbx3cagi** `make test` · **`TEST_HARNESS.md`** · **`TEST_RECIPE.md`**.
 
@@ -124,7 +124,7 @@ Keep **separate** from L1 pass/fail.
 | `ramp-find-ceiling` | Find break point | Ramp CPS until error rate or CPU pegs (later) |
 | `spike` | Short burst | 2–3× soak rate for 60s (later) |
 
-Provision once: `./provision-soak-phones.sh` (exts 2100–2139 on catcher tenant). Signalling-only is enough for CDR/Home + live demo backdrop. Answerer UAS must echo Magrathea **Record-Route** (`[last_Record-Route:]` in 180/200) or Magrathea leaves state-3 — see **`call-tests/README.md`** § SIPp leanings.
+Provision once: `sipplab/targets/pbx3/provision-soak-phones.sh` (exts 2100–2139 on catcher tenant). Signalling-only is enough for CDR/Home + live demo backdrop. Answerer UAS must echo Magrathea **Record-Route** (`[last_Record-Route:]` in 180/200) or Magrathea leaves state-3 — see **sipplab** `docs/LEANINGS.md` / `docs/NAT_AND_DIALOG.md`.
 
 ---
 
@@ -134,8 +134,8 @@ Provision once: `./provision-soak-phones.sh` (exts 2100–2139 on catcher tenant
 |------|-------------|-----------|
 | **0** | This doc + Pack pointers | Done |
 | **1** | Lab: install SIPp; one **loopback or DID** scenario green (`in-open-ext`) | **Done 2026-07-27** (Mac→VIP→DID→1000) |
-| **2** | Scenario dir layout + README (`pbx3/workingdocs/call-tests/` or `pbx3cagi/.../sipp/`) | Done (`call-tests/`) |
-| **3** | Grow L1 matrix (§5) | **Pack 11 ids** incl. queue-cancel-vm + out-busy (2026-07-27). Holiday / site-dial / day-parts deferred. **site-dial:** bring **2nd SIPp** (extension platform) when dial-alias starts — **`SIPP_LAB_HOST.md`** §9. |
+| **2** | Scenario dir layout + README | Done → moved to **sipplab** (2026-08-01); stub under `call-tests/` |
+| **3** | Grow L1 matrix (§5) | **Pack 11 ids** incl. queue-cancel-vm + out-busy (2026-07-27). Holiday / site-dial / day-parts deferred. **site-dial:** bring **2nd SIPp** (extension platform) when dial-alias starts — **sipplab** `docs/HOST_SETUP.md` / `docs/examples/aelintra-lab.md`. |
 | **4** | Optional AMI helper to force OCSTAT / confirm channel | Less manual setup |
 | **5** | One soak profile documented on golden | L2 started |
 | **6** | Wire L0 (+ later selected L1) into **`CRITICAL_PATH_TEST_PACK.md`** Pack B | Cadence updated |
@@ -144,20 +144,10 @@ Do **not** block product tracks on finishing §5. Grow scenarios when dial-locus
 
 ---
 
-## 8. Repo layout (proposed — create at Step 1–2)
+## 8. Repo layout
 
-```text
-pbx3/workingdocs/call-tests/          # strategy-adjacent recipes
-  README.md                           # how to run against golden
-  scenarios/
-    in-open-ext.xml                   # SIPp
-    …
-  profiles/
-    soak-light.sh
-  notes/                              # optional run logs (gitignored or thin)
-```
-
-Alternatively keep XML next to **pbx3cagi** if scenarios are AGI-centric — prefer **pbx3/workingdocs/call-tests** so SBC + node paths can share one tree.
+Harness lives in **[aelintra/sipplab](https://github.com/aelintra/sipplab)** (`scenarios/`, `run-*.sh`, `docs/`, `targets/pbx3/`).  
+pbx3 keeps strategy docs here; **`workingdocs/call-tests/`** is a redirect stub only.
 
 ---
 
@@ -187,6 +177,7 @@ Alternatively keep XML next to **pbx3cagi** if scenarios are AGI-centric — pre
 | Date | Note |
 |------|------|
 | 2026-07-26 | Initial strategy: L0–L3, SIPp-only generators, scenario inventory, build order. |
+| 2026-08-01 | Recipes extracted to **aelintra/sipplab**; `workingdocs/call-tests/` stub only. |
 | 2026-07-27 | Step 1–2 scaffold: `workingdocs/call-tests/` + `in-open-ext` (Mac→VIP); green run still pending lab allow. |
 | 2026-07-27 | `in-open-ext` green: Mac SIPp → Magrathea VIP → DID 01924918076 → golden 1000. Temp Peer gwid 99 (`sipp-lab`). |
 | 2026-07-27 | L1 recipes: `in-cfim-local`, `in-closed-ivr-or-dest`, `feat-master-closed`, `in-queue-answer` + `run-sipp.sh`. |

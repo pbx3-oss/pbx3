@@ -7,7 +7,7 @@
 
 1. **Test new golden** — Domain REGISTER/call via Magrathea; CDR UTC smoke; Home Outcomes; optional WebRTC `:8089`. Then **terminate old** `i-02ec2b05b5baacb5d` (ask).  
 2. **WebRTC / WSS demo (SBC #1)** — far-end SPA still open (digit-only sanitize + inbound no SIP response). Spec: **`WEBRTC_WSS_LAB.md`**.  
-3. **SIPp traffic-profile** — Numbers % / other profiles; re-provision soak wallpaper if needed. Spec: **`call-tests/TRAFFIC_PROFILE_SIM.md`** §0.  
+3. **SIPp traffic-profile** — Numbers % / other profiles; re-provision soak wallpaper if needed. Spec: **[sipplab](https://github.com/aelintra/sipplab)** `docs/PROFILES.md`.  
 4. **Home CDR site-TZ display** — storage UTC done; panel convert via site TZ. Spec: **`CDR_TIMEZONE_POLICY.md`**.  
 5. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Spec: **`SBC_PRODUCT_TRACKS.md`**.  
 6. **SBC Filament Backup — merge S3-only rows** — Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
@@ -39,9 +39,9 @@
 
 - [x] **Home CDR Outcomes (today) — TZ mismatch (2026-07-31):** Cause = Laravel UTC `today` vs local `calldate`. **HoR UTC shipped** (`cdr_sqlite3_custom` STRFTIME); golden verified; `outcomeToday` sees new rows. Pre-cutover local rows remain. Still TODO: SPA **site TZ display**. Policy: **`CDR_TIMEZONE_POLICY.md`**.
 
-- [x] **SIPp traffic-profile sim — schema + mixed-office + rrmemory smoke (2026-07-31):** YAML schema + **`mixed-office.yaml`** (concurrent **4**). Dedicated queue **2160** (`rrmemory`, members 2120–2123). `run-queue-rr.sh` **GREEN** on sippuac (each agent 2 calls; graceful stop; Magrathea dialogs→0). Later: Numbers %; inbound-/outbound-heavy; freephone-trunk CDR. Spec: **`call-tests/TRAFFIC_PROFILE_SIM.md`**.
+- [x] **SIPp traffic-profile sim — schema + mixed-office + rrmemory smoke (2026-07-31):** YAML schema + **`mixed-office.yaml`** (concurrent **4**). Dedicated queue **2160** (`rrmemory`, members 2120–2123). `run-queue-rr.sh` **GREEN** on sippuac (each agent 2 calls; graceful stop; Magrathea dialogs→0). Later: Numbers %; inbound-/outbound-heavy; freephone-trunk CDR. Spec: **sipplab** `docs/PROFILES.md` (was call-tests).
 
-- [x] **Numbers lab — pretend DID + Peer 99 PSTN UAS (2026-07-31):** DID **01924234567** (Number route prefix **`441924234567`** after UK dialect); golden Ingress → pb0wsk **2120**. Peer **99** = SIPp Catcher. **Outbound coexistence:** prefix **`019242*`** → gwid **99**; default empty-prefix **`1,20,50`** unchanged. Scripts: `run-peer-pstn-uas.sh`, `run-did-lab-in.sh`, `run-did-lab-out.sh`. Both directions **GREEN**. Spec: **`SIPP_LAB_HOST.md`** §9.
+- [x] **Numbers lab — pretend DID + Peer 99 PSTN UAS (2026-07-31):** DID **01924234567** (Number route prefix **`441924234567`** after UK dialect); golden Ingress → pb0wsk **2120**. Peer **99** = SIPp Catcher. **Outbound coexistence:** prefix **`019242*`** → gwid **99**; default empty-prefix **`1,20,50`** unchanged. Scripts: `run-peer-pstn-uas.sh`, `run-did-lab-in.sh`, `run-did-lab-out.sh`. Both directions **GREEN**. Spec: **sipplab** `docs/HOST_SETUP.md` / `docs/examples/aelintra-lab.md`.
 
 - [x] **SBC — orphaned dialogs / dialog timeout align (2026-07-31):** OpenSIPS `default_timeout` **14400** (was implicit 12h). Kinship: node Globals `abstimeout` default. Template + Magrathea live. Filament **System → Call limits** read-only from `/etc/opensips/opensips.cfg` (no browser edit). Ping deferred. Refs: [dialog module](https://opensips.org/docs/modules/devel/dialog.html).
 
@@ -51,11 +51,11 @@
 
 - [x] **SBC Home — usage meters on system strip (2026-07-30):** Filament `SystemPostureWidget` thin green→amber→red meters (Load = load1/CPUs; Memory/Disk = used %). Home title **Home** only (FQDN on INSTANCE chip). Spec: **`HOME_SYSTEM_AND_FLEET_SCRAPE.md`**. Friendly SBC sitename still deferred. Tip **pbx3sbc-admin** **`a92aed5`** (VIP surgical).
 
-- [x] **SIPp extension platform = local ARM VM (2026-07-30):** **`sippuac`** `tech@192.168.1.51` (Ubuntu 24.04 aarch64, `sip-tester`); `~/call-tests` rsync; A→B `./run-phone-a-b.sh` green. Not 2nd EC2 unless NAT fails. Spec: **`SIPP_LAB_HOST.md`** §9.
+- [x] **SIPp extension platform = local ARM VM (2026-07-30):** **`sippuac`** `tech@192.168.1.51` (Ubuntu 24.04 aarch64, `sip-tester`); `~/call-tests` rsync; A→B `./run-phone-a-b.sh` green. Not 2nd EC2 unless NAT fails. Spec: **sipplab** `docs/HOST_SETUP.md` / `docs/examples/aelintra-lab.md`.
 
-- [x] **SIPp L2 soak scaffolding (2026-07-30):** `provision-soak-phones.sh` (40 exts 2100–2139 on `pb0wsk`) + `./run-soak.sh start demo|busy`. Spec: **`call-tests/README.md`**, **`CALL_TEST_STRATEGY.md`** §6.
+- [x] **SIPp L2 soak scaffolding (2026-07-30):** `provision-soak-phones.sh` (40 exts 2100–2139 on `pb0wsk`) + `./run-soak.sh start demo|busy`. Spec: **sipplab** + **`CALL_TEST_STRATEGY.md`** §6.
 
-- [x] **L2 soak — Magrathea ACK/dialog residue (2026-07-30):** Root cause = SIPp UAS missing Record-Route echo (not NAT / not OpenSIPS.cfg). Fix: `[last_Record-Route:]` in `soak-answer` 180/200 (**`36c9ea8`**). EC2 one-call + demo 10-pair stable. Leanings: **`call-tests/README.md`** § SIPp leanings.
+- [x] **L2 soak — Magrathea ACK/dialog residue (2026-07-30):** Root cause = SIPp UAS missing Record-Route echo (not NAT / not OpenSIPS.cfg). Fix: `[last_Record-Route:]` in `soak-answer` 180/200 (**`36c9ea8`**). EC2 one-call + demo 10-pair stable. Leanings: **sipplab** `docs/LEANINGS.md`.
 
 - [x] **Instance Home ops-pulse + sitename (2026-07-30):** SPA/API **`main`** merge tips **pbx3spa** **`5ea90df`**, **pbx3api** **`9db216b`**. Host/live/CDR pulse; usage meters; `GET /home/pulse`; `displayInstanceLabel` sitename→FQDN; installer Site name. **Uncommitted:** SPA `HomeBarChart` axis/summary numbers. Catalog label sync parked.
 
@@ -123,23 +123,25 @@
 
 - [x] **pbx3cagi thread `s` + Phase 3.2 AGI wrap (2026-07-26):** Helpers take `agi_session_t *s` (PR **#1** → `main`). Thin `agi_wrap` over `AGITool_*` (PR **#2** → **`9e4bfa9`**). Golden + bzy live (md5 `8837a592…`); calls + local CF / diverted OK. **Emergency roll back point** still **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.5**.
 
-- [x] **Call / SIP test — Step 1 `in-open-ext` green (2026-07-27):** Mac SIPp → Magrathea VIP → DID `01924918076` → golden 1000; Snom always-auto-answer; BYE clean after scenario `rrs="true"`. Recipes under **`workingdocs/call-tests/`**. Full map **`CALL_TYPE_INVENTORY.md`** (U/H attendance).
+- [x] **Call / SIP test — Step 1 `in-open-ext` green (2026-07-27):** Mac SIPp → Magrathea VIP → DID `01924918076` → golden 1000; Snom always-auto-answer; BYE clean after scenario `rrs="true"`. Recipes now **sipplab** (was `workingdocs/call-tests/`). Full map **`CALL_TYPE_INVENTORY.md`** (U/H attendance).
 
-- [x] **Call / SIP test — L1 pack v1 + SIPp catcher (2026-07-27):** Golden tenant **`sipp`** (`pb0wsk.pbx3.com`) exts **2000/2001** + queue **2060**; Twilio DID **`+15139279738`** → catcher. **`run-pack.sh`** / **`lab-state.sh`** / catcher UAS. **Off-box host** EIP **`98.82.58.59`** (was `98.93.98.162`; Peer gwid **99** updated; pack **11/11 green** after move 2026-07-27). Never Peer office IP. Mac: `ssh … ubuntu@98.82.58.59 'cd ~/call-tests && ./run-pack.sh'` when host up. Docs **`SIPP_LAB_HOST.md`** may still show old EIP until next edit.
+- [x] **Call / SIP test — L1 pack v1 + SIPp catcher (2026-07-27):** Golden tenant **`sipp`** (`pb0wsk.pbx3.com`) exts **2000/2001** + queue **2060**; Twilio DID **`+15139279738`** → catcher. **`run-pack.sh`** / **`lab-state.sh`** / catcher UAS. **Off-box host** EIP **`98.82.58.59`** (was `98.93.98.162`; Peer gwid **99** updated; pack **11/11 green** after move 2026-07-27). Never Peer office IP. Mac: `ssh … ubuntu@98.82.58.59 'cd ~/call-tests && ./run-pack.sh'` when host up. Host notes: **sipplab** `docs/examples/aelintra-lab.md`.
 
 - [x] **Call / SIP test — phone 302 divert (2026-07-27):** Catcher A `uas-302` → Contact `2001`; B answers. Pack id **`phone-302-local`** green on SIPp EC2 (full pack still green). Distinct from AstDB CFIM. Inventory `maj-in-phone-302-local`.
 
 - [x] **Call / SIP test — multi-tenant AoR (2026-07-27):** Peer catcher on affcot **1199** (`s6rd88` / `9wvvnb.pbx3.com`) REGISTER’d while DID→sipp A. Pack id **`in-multi-tenant-a-b`**. Creds: golden `/tmp/sipp-peer-catcher.env` (run-pack autoloads).
 
-- [x] **Tenant dial alias — requirements locked (2026-07-27):** §8 closed (digit plan, fleet/SBC gate, CallerID num=`suid@fqdn` + name=human, deny/CoS, return-call). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. **Implement** when scheduled (slices A–F); at alias lab start bring **2nd SIPp** (phones, non-Peer EIP — **`SIPP_LAB_HOST.md`** §9); L1 `site-dial-a-b` when built. Tip **`f07dd3f`**.
+- [x] **Tenant dial alias — requirements locked (2026-07-27):** §8 closed (digit plan, fleet/SBC gate, CallerID num=`suid@fqdn` + name=human, deny/CoS, return-call). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. **Implement** when scheduled (slices A–F); at alias lab start bring **2nd SIPp** (phones, non-Peer EIP — **sipplab** `docs/HOST_SETUP.md`); L1 `site-dial-a-b` when built. Tip **`f07dd3f`**.
 
 - [x] **Call / SIP test — grow L1 (2026-07-27):** Pack + **`feat-master-closed`** (STAT/OCSTAT) + **`in-cfim-external`** + **`out-egress-ok`** (Local→Egress; SIPp phone UAC blocked by Peer 99 IP). Catcher **`SIPP_MAIN`** OutRoute. **CAGI OutVoip** fix: `desc`→`description` (+ callprogress col). Full pack **9/9 green** on EC2.
 
 - [x] **Call / SIP test — queue-cancel-vm + out-busy (2026-07-27):** `in-queue-cancel-vm` (agent 486→failover→VM) + `out-busy-or-reject` (Local→486→PostDial). Catcher **`uas-486`**. Holiday left for day-parts.
 
-- [ ] **Call / SIP test — optional polish:** ACK/BYE catcher NAT. Extension platform is **`sippuac`** (EC2 fallback only) — **`SIPP_LAB_HOST.md`** §9. Spec: **`CALL_TEST_STRATEGY.md`**.
+- [ ] **Call / SIP test — optional polish:** ACK/BYE catcher NAT. Extension platform is **`sippuac`** (EC2 fallback only) — **sipplab** `docs/HOST_SETUP.md`. Spec: **`CALL_TEST_STRATEGY.md`**.
 
-- [ ] **L1 pack — graceful catcher teardown (2026-07-30):** Pack **green** but `run-pack.sh` **kills** SIPp UAS between scenarios / at end → no BYE → OpenSIPS **dialog** stays Confirmed until long default timeout (Active Calls litter; **not** an SBC cfg bug). Prefer graceful teardown: BYE before stop, or MI `dlg_end_dlg` after pack. Optional shorter lab `dialog` `default_timeout`. Note: **`call-tests/README.md`**.
+- [ ] **L1 pack — graceful catcher teardown (2026-07-30):** Pack **green** but `run-pack.sh` **kills** SIPp UAS between scenarios / at end → no BYE → OpenSIPS **dialog** stays Confirmed until long default timeout (Active Calls litter; **not** an SBC cfg bug). Prefer graceful teardown: BYE before stop, or MI `dlg_end_dlg` after pack. Optional shorter lab `dialog` `default_timeout`. Note: **sipplab** `docs/LEANINGS.md`.
+
+- [x] **sipplab extract (2026-08-01):** Recipes moved to **https://github.com/aelintra/sipplab**; `workingdocs/call-tests/` stub only.
 
 - [x] **Inbound route pkey allows +E.164 (2026-07-27):** Digits-only regex blocked Edit Inbound Route on `+44…` DIDs. Fixed **pbx3api** + **pbx3spa**; hot-deployed controller on golden (full `git pull` still blocked by local overlay drift).
 

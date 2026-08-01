@@ -2,7 +2,8 @@
 
 **Status:** Living checklist 2026-07-27.  
 **Sources of truth (code):** GenAst `GenClass.php`, `extensions_presets.conf`, CAGI `agi_cmd_table` / handlers.  
-**Test homes:** L0 = **pbx3cagi** `make test` · L1 = **`workingdocs/call-tests/`** (SIPp) · L2 = soak · L3 = operator PSTN/phone.  
+**Test homes:** L0 = **pbx3cagi** `make test` · L1 = **[sipplab](https://github.com/aelintra/sipplab)** (SIPp) · L2 = soak · L3 = operator PSTN/phone.  
+Stub redirect: **`workingdocs/call-tests/README.md`**.  
 **Related:** **`CALL_TEST_STRATEGY.md`** (layers / build order) · **`CRITICAL_PATH_TEST_PACK.md`** Pack B.
 
 This is the **full call-type map**. `CALL_TEST_STRATEGY` §5 is only the **near-term L1** subset.
@@ -12,7 +13,7 @@ This is the **full call-type map**. `CALL_TEST_STRATEGY` §5 is only the **near-
 | Code | Meaning |
 |------|---------|
 | **L0** | Offline AGI harness scenario id (or —) |
-| **L1** | SIPp recipe id under `call-tests/scenarios/` (or —) |
+| **L1** | SIPp recipe id under **sipplab** `scenarios/` (or —) |
 | **L3** | Manual lab / PSTN checklist |
 | **—** | No automated coverage yet |
 | **n/a** | Not a SIP pathway (prompt/BLF only) or not applicable |
@@ -133,7 +134,7 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 | What | How |
 |------|-----|
 | All existing CAGI L0 scenarios | `cd pbx3cagi-…/csource && make test` |
-| L1 `in-open-ext` (and siblings) **if** lab Snom auto-answers | Phone always-auto-answer, **or** `Call-Info`/`Alert-Info` on the **Asterisk→phone** INVITE (see `call-tests/README.md`) |
+| L1 `in-open-ext` (and siblings) **if** lab Snom auto-answers | Phone always-auto-answer, **or** `Call-Info`/`Alert-Info` on the **Asterisk→phone** INVITE (see **sipplab** docs) |
 
 ### Need a human **now**
 

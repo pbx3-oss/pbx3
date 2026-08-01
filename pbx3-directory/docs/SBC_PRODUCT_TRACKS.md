@@ -121,7 +121,7 @@ flowchart TB
 
 **Effort:** **S–M** (docs + lab prove). Almost no new OpenSIPS features.
 
-**Rank / near-term:** Operator will stand up **SARK** (± **FreePBX**) and attempt SBC interconnect — that is the Track A proof. Capture recipe gaps in this doc or a short lab note when done.
+**Rank / near-term:** Operator will stand up **SARK** (± **FreePBX**) and attempt SBC interconnect — that is the Track A proof. Capture recipe gaps here; SIPp against foreign UAS: **[sipplab](https://github.com/aelintra/sipplab)** `targets/sark/` + `docs/ADDING_A_TARGET.md`.
 
 ---
 
