@@ -619,7 +619,8 @@ class genAsteriskObjects
 		$outbound = $this->isFleetMode()
 			? 'outbound_proxy=sip:' . $this->fleetSbcHost() . "\\;lr\n"
 			: '';
-		$buffer = preg_replace('/\$outbound_proxy\n?/', $outbound, $buffer);
+		// Line-anchored: do not substitute the token inside comments (e.g. "; $outbound_proxy …").
+		$buffer = preg_replace('/^\$outbound_proxy\n?/m', $outbound, $buffer);
 
 		$buffer = preg_replace('/\$id/', $rep($row['shortuid'] ?? null), $buffer);
 		$buffer = preg_replace('/\$pkey/', $rep($row['pkey'] ?? null), $buffer);
