@@ -53,6 +53,13 @@ if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$REC_SQL" ] && command -v sqlite3 >/de
 	sqlite3 /opt/pbx3/db/sqlite.db < "$REC_SQL" >/dev/null 2>&1 || true
 fi
 
+# GenAst hermit overlays: idempotent ALTER for upgrade paths (create SQL already
+# has columns on fresh installer runs).
+OVERLAY_APPLY="$SYSPATH/scripts/apply-sqlite-add-overlay-columns.sh"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$OVERLAY_APPLY" ]; then
+	sh "$OVERLAY_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+fi
+
 if [ ! -f /opt/pbx3/db/sqlite.db ]; then
 	cat <<'EOF'
 

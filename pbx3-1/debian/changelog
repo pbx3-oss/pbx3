@@ -1,3 +1,16 @@
+pbx3 (0.0.4-1) noble; urgency=medium
+
+  * Minor 0.0.4: GenAst hermit (phone/webrtc/trunk/queue/park overlays; LepDial /
+    PBX3_DIAL; fleet AoR / outbound_proxy / PBX3_SBC_EGRESS_HOST), WebRTC tmpl
+    shortuid + http :8089 / shorewall, sitename installer (INSTANCE_SITENAME).
+  * CDR HoR UTC: cdr_sqlite3_custom.conf uses STRFTIME(...UTC...) (aligns CSV
+    usegmtime=yes); Home Outcomes (today) matches Laravel UTC day buckets.
+  * postinst: apply-sqlite-add-overlay-columns.sh for idempotent
+    pjsip_overlay / queue_overlay / park_overlay on apt upgrade (create SQL
+    already has columns on fresh install).
+
+ -- KOKO <admin@aelintra.com>  Sat, 01 Aug 2026 16:30:00 +0000
+
 pbx3 (0.0.3-25) noble; urgency=medium
 
   * Bump to -25
