@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — golden rebuilt clean on **EIP `44.196.98.191`**; packages **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-7**; fleet-preflight green. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`. Old EC2 **`i-02ec2b05b5baacb5d`** still up until terminate confirm.  
-**Last updated:** 2026-08-01 (sipplabs extract; SIPp opens moved off this TODO)
+**Last updated:** 2026-08-01 (session end — sipplabs extract + doc scrub)
 
 
 ### Suggested “what next?” order
@@ -33,6 +33,8 @@
 ## Open items
 
 - [x] **pbx3 0.0.4 + cagi 1.0.0-7 + golden rebuild (2026-08-01):** Executed **`BUILD_PLAN_0.0.4.md`**. Packages **pbx3 0.0.4-3** / **pbx3cagi 1.0.0-7** on new golden; EIP **`44.196.98.191`**; DNS four A records; Magrathea setid=2 → EIP; onboard + LE (4 SANs); preflight green. Tags **`pbx3-0.0.4-3`**, **`pbx3cagi-1.0.0-7`**. **Still open:** terminate old EC2 **`i-02ec2b05b5baacb5d`** (ask); call/Domain test wallpaper next session.
+
+- [x] **GenAst `$outbound_proxy` comment mangling (2026-08-01):** Comment token in `pjsip_phone.tmpl` was expanded by unanchored replace → bare prose in `pjsip_ready_phones.conf`. Fix: reword comment + line-anchored `/^\$outbound_proxy/m` in `GenClass::xlatePjsipBuff` (**`c8888cf`**). Hot on golden.
 
 - [ ] **Terminate old golden EC2 (2026-08-01):** `i-02ec2b05b5baacb5d` (`54.236.153.81`) still running — OPTIONS noise. Confirm then terminate after smoke tests.
 

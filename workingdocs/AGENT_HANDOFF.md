@@ -71,7 +71,30 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-01 — Mode 4 golden rebuild + 0.0.4-3)
+## Next agent session notes (2026-08-01 — sipplabs extract)
+
+**Branches:** **pbx3** **`main`** (docs/stub + GenAst fix **`c8888cf`** / unregister **`9e6d4dd`**; tip ~**`0fc91f9`**). **sipplabs** **`aelintra/sipplabs`** `main`. SPA/API/cagi package tips unchanged this block (spa handoff only).
+
+**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**; Magrathea VIP; Peer-99 **`98.82.58.59`**; Domain **`sippuac`** `192.168.1.51`. Old EC2 **`i-02ec2b05b5baacb5d`** still up — terminate after smoke (ask). SIPp: **sipplabs only**.
+
+### Shipped
+- **sipplabs extract:** recipes → **https://github.com/aelintra/sipplabs** (domain **sipplabs.com**); pbx3 `workingdocs/call-tests/` stub; SIPp opens moved to sipplabs TODO.
+- Agent scaffold on sipplabs (`AGENTS.md`, handoff, session-end rules).
+- GenAst `$outbound_proxy` comment mangling fix (**`c8888cf`**); soak/queue-rr unregister (**`9e6d4dd`**).
+- Lab rsync to sippuac + catcher; Domain `run-phone-a-b` green earlier this session.
+
+### Golden / operator follow-up
+- **pbx3 next:** smoke Domain/CDR/Home on new golden; then ask to terminate old EC2.
+- **SIPp next:** dedicated **sipplabs** Cursor window — Domain sanity (phone-a-b / demo soak) **and** full L1 pack on catcher from the new repo.
+
+### Resume
+- pbx3: golden wallpaper smoke + terminate-old (ask). SIPp: open sipplabs (`AGENTS.md` / TODO).
+
+---
+
+## Next agent session notes (2026-08-01 — Mode 4 golden rebuild + 0.0.4-3) — historical
+
+**Superseded** by sipplabs extract block above.
 
 **Branches:** **pbx3** / **pbx3cagi** / **pbx3api** **`main`** (tags **`pbx3-0.0.4-3`**, **`pbx3cagi-1.0.0-7`**, **`pbx3api-genast-restore-20260801`**). SPA unchanged this session (handoff only). **sipplabs** sibling **`aelintra/sipplabs`** `main`.
 
