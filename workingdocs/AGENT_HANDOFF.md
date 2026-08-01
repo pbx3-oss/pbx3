@@ -380,7 +380,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 ### Golden / operator follow-up
 - Peer **99** = `sip:98.82.58.59:5060` only. Stop SIPp OK if EIP retained.
 - Pack when up: `ssh -i …/pbx3test.pem -o UserKnownHostsFile=/dev/null ubuntu@98.82.58.59 'cd ~/call-tests && ./run-pack.sh'` (host key churn on EIP reuse).
-- Refresh **`SIPP_LAB_HOST.md`** / call-tests README EIP strings when convenient.
+- Refresh host EIP strings when convenient — **obsolete:** use **sipplabs** `docs/examples/aelintra-lab.md` (not `SIPP_LAB_HOST.md`).
 
 ### Resume
 - Superseded by 2026-07-28 SBC admin block above.
@@ -444,7 +444,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **SIPp catcher tenant** on golden: `sipp` / `pb0wsk.pbx3.com`, exts 2000/2001, Q2060; Twilio DID `+15139279738` → 2000; SBC domain + aliases + `domain_reload`.
 - **L1 pack v1:** `run-pack.sh` + `lab-state.sh` + catcher register/answer — open / CFIM / closed / queue **green**.
 - **Off-box lab host** `98.93.98.162` — `sip-tester`, `~/call-tests`, Peer gwid **99** → EIP only. Pack green from Mac via SSH.
-- Docs: **`SIPP_LAB_HOST.md`**, call-tests README, strategy Step 3 note.
+- Docs: (historical) host notes now **sipplabs** `docs/HOST_SETUP.md` / `docs/examples/aelintra-lab.md`.
 
 ### Golden / operator follow-up
 - **Never** Peer the office IP as carrier (gwid 99 on Mac IP broke phones — “No inbound route”).
