@@ -244,4 +244,4 @@ Durable lab lessons — skim before inventing a new “SBC bug”.
 ## Next
 
 - Optional: `out-busy-or-reject`; L1 pack graceful teardown (BYE before kill / post-pack MI cleanup).
-- Optional: wire `soak-unregister` into `run-soak.sh` start.
+- `soak-unregister` wired into `run-soak.sh` / `run-queue-rr.sh` stop+start (clears Magrathea Contacts; shared ports 5200/5400).

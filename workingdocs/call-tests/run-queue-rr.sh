@@ -11,6 +11,10 @@
 #
 # Requires: lab.env, soak-phones.env, soak-queue.env (provision-soak-queue.sh), sipp
 # Host: sippuac (Domain) — never Peer-99 EIP.
+#
+# Shares soak answerer phones 2120+ with run-soak.sh. Use the same UAS/UAC port
+# bases (5200/5400) so a leftover demo Contact still reaches queue-rr agents.
+# Stop clears Magrathea bindings (Expires:0) like run-soak.sh.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -78,8 +82,9 @@ RUN_FLAG="$ROOT/notes/queue-rr.run"
 UAS_PID_FILE="$ROOT/notes/queue-rr.uas.pids"
 UAC_PID_FILE="$ROOT/notes/queue-rr.uac.pids"
 LOG_DIR="$ROOT/notes/queue-rr"
-UAS_PORT_BASE=5600
-UAC_PORT_BASE=5800
+# Same bases as run-soak.sh — shared answerer phones; avoids stale :5200 vs :5600 split
+UAS_PORT_BASE=5200
+UAC_PORT_BASE=5400
 
 mkdir -p "$LOG_DIR" notes
 
@@ -96,7 +101,7 @@ count_pids() {
 }
 
 force_kill() {
-  local f pid
+  local f pid i
   for f in "$UAS_PID_FILE" "$UAC_PID_FILE"; do
     [[ -f "$f" ]] || continue
     while read -r pid; do
@@ -115,13 +120,70 @@ force_kill() {
       pkill -9 -P "$pid" 2>/dev/null || true
     done <"$f"
   done
+  for ((i = 0; i < AGENT_N; i++)); do
+    fuser -k $((UAS_PORT_BASE + i))/udp 2>/dev/null || true
+  done
+  for ((i = 0; i < SOAK_CONCURRENT; i++)); do
+    fuser -k $((UAC_PORT_BASE + i))/udp 2>/dev/null || true
+  done
+  # Also free legacy 5600/5800 bases from older script revisions
+  for ((i = 0; i < AGENT_N; i++)); do
+    fuser -k $((5600 + i))/udp 2>/dev/null || true
+  done
+  for ((i = 0; i < SOAK_CONCURRENT; i++)); do
+    fuser -k $((5800 + i))/udp 2>/dev/null || true
+  done
   rm -f "$UAS_PID_FILE" "$UAC_PID_FILE" "$RUN_FLAG"
+}
+
+unregister_phone() {
+  local user="$1" pass="$2" port="$3" label="${4:-}"
+  local err="$LOG_DIR/unreg-${port}.err"
+  if ! sipp "$SBC_HOST" \
+    -i "$LOCAL_IP" -p "$port" \
+    -sf scenarios/soak-unregister.xml \
+    -au "$user" -ap "$pass" \
+    -key domain "$SOAK_DOMAIN" \
+    -key user "$user" \
+    -key contact_ip "$PUBLIC_IP" \
+    -m 1 \
+    -recv_timeout 15000 \
+    -timeout_error \
+    -trace_err \
+    -error_file "$err" \
+    >/dev/null 2>&1; then
+    echo "  warn: unregister ${label:-$user} :${port} failed (see $err)" >&2
+    return 1
+  fi
+  return 0
+}
+
+unregister_rr_bindings() {
+  local i a_user a_pass d_user d_pass
+  echo "Clearing Magrathea REGISTERs (Expires:0) for ${AGENT_N} agents + ${SOAK_CONCURRENT} dialers…"
+  mkdir -p "$LOG_DIR"
+  for ((i = 0; i < AGENT_N; i++)); do
+    eval "a_user=\${ANSWERER_${i}_USER:?}"
+    eval "a_pass=\${ANSWERER_${i}_PASS:?}"
+    # Current ports + legacy 5600 base (in case prior run left :560x Contacts)
+    unregister_phone "$a_user" "$a_pass" $((UAS_PORT_BASE + i)) "agent-$i" &
+    unregister_phone "$a_user" "$a_pass" $((5600 + i)) "agent-$i-legacy" &
+  done
+  for ((i = 0; i < SOAK_CONCURRENT; i++)); do
+    eval "d_user=\${DIALER_${i}_USER:?}"
+    eval "d_pass=\${DIALER_${i}_PASS:?}"
+    unregister_phone "$d_user" "$d_pass" $((UAC_PORT_BASE + i)) "dialer-$i" &
+    unregister_phone "$d_user" "$d_pass" $((5800 + i)) "dialer-$i-legacy" &
+  done
+  wait || true
+  echo "Unregister pass finished (warnings above if any)."
 }
 
 stop_rr() {
   local mode="${1:-graceful}"
   if [[ "$mode" == "force" ]]; then
     force_kill
+    unregister_rr_bindings || true
     echo "queue-rr stopped (force). If Active Calls linger: ./clear-sbc-dialogs.sh"
     return
   fi
@@ -136,6 +198,7 @@ stop_rr() {
     echo "Dialers still running after ${wait_s}s — force-killing remainder." >&2
   fi
   force_kill
+  unregister_rr_bindings || true
   echo "queue-rr stopped (graceful)."
 }
 
@@ -236,6 +299,8 @@ start_rr() {
   force_kill >/dev/null 2>&1 || true
   : >"$UAS_PID_FILE"
   : >"$UAC_PID_FILE"
+  # Drop stale Contacts (e.g. prior demo soak on same ports) before re-REGISTER
+  unregister_rr_bindings || true
   touch "$RUN_FLAG"
 
   cp scenarios/soak-answer.xml "$LOG_DIR/soak-answer-live.xml"

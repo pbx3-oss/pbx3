@@ -105,12 +105,14 @@ Dialplan still dials queue **pkey** `2160`; Asterisk `queue show` wants the **sh
 
 ```bash
 # on sippuac — matching what you started
-./run-soak.sh stop              # drain hold + BYE, then kill
-./run-queue-rr.sh stop
+./run-soak.sh stop              # drain hold + BYE, kill, Expires:0 REGISTER
+./run-queue-rr.sh stop          # same — clears Magrathea Contacts
 # emergency only:
 # ./run-soak.sh stop force
 # ./run-queue-rr.sh stop force
 ```
+
+Both runners share answerer phones **2120+** and UAS/UAC ports **5200/5400**. Stop (and start) run `soak-unregister` so leftover Contacts cannot black-hole the next profile. Do not skip unregister by only `pkill`ing SIPp.
 
 If Magrathea Active Calls stick after **force** stop (Mac):
 

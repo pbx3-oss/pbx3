@@ -3,12 +3,16 @@
 #
 # Usage:
 #   ./run-soak.sh start [demo|busy]   # demo≈10, busy≈20 concurrent
-#   ./run-soak.sh stop                # graceful: drain hold+BYE, then kill UAS
-#   ./run-soak.sh stop force          # immediate kill (may leave SBC Active Calls)
+#   ./run-soak.sh stop                # graceful: drain hold+BYE, kill, Expires:0 REGISTER
+#   ./run-soak.sh stop force          # immediate kill + Expires:0 (may leave SBC Active Calls)
 #   ./run-soak.sh status
 #
 # Requires: lab.env, soak-phones.env (from provision-soak-phones.sh), sipp
 # Intended host: extension platform VM (sippuac) — never Peer-99 EIP.
+#
+# Stop always clears Magrathea usrloc for the soak Contacts (soak-unregister).
+# Otherwise answerer bindings linger on UAS ports (5200+) and queue-rr (same
+# phones, different ports historically) black-holes agent INVITEs.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -114,11 +118,61 @@ force_kill_soak() {
   pkill -f 'pbx3-soak-' 2>/dev/null || true
   pkill -f 'soak-dial-live\.xml' 2>/dev/null || true
   pkill -f 'soak-answer-live\.xml' 2>/dev/null || true
+  pkill -f 'soak-unregister\.xml' 2>/dev/null || true
   for ((i = 0; i < SOAK_CONCURRENT; i++)); do
     fuser -k $((UAS_PORT_BASE + i))/udp 2>/dev/null || true
     fuser -k $((UAC_PORT_BASE + i))/udp 2>/dev/null || true
   done
   sleep 0.5
+}
+
+# Expires:0 for one Contact. Port must match the Contact we registered.
+unregister_phone() {
+  local user="$1" pass="$2" port="$3" label="${4:-}"
+  local err="$LOG_DIR/unreg-${port}.err"
+  if ! sipp "$SBC_HOST" \
+    -i "$LOCAL_IP" -p "$port" \
+    -sf scenarios/soak-unregister.xml \
+    -au "$user" -ap "$pass" \
+    -key domain "$SOAK_DOMAIN" \
+    -key user "$user" \
+    -key contact_ip "$PUBLIC_IP" \
+    -m 1 \
+    -recv_timeout 15000 \
+    -timeout_error \
+    -trace_err \
+    -error_file "$err" \
+    >/dev/null 2>&1; then
+    echo "  warn: unregister ${label:-$user} :${port} failed (see $err)" >&2
+    return 1
+  fi
+  return 0
+}
+
+# Clear Magrathea bindings for this soak's dialers+answerers (ports free).
+unregister_soak_bindings() {
+  local i d_user d_pass a_user a_pass
+  echo "Clearing Magrathea REGISTERs (Expires:0) for ${SOAK_CONCURRENT} pairs…"
+  mkdir -p "$LOG_DIR"
+  for ((i = 0; i < SOAK_CONCURRENT; i++)); do
+    eval "a_user=\${ANSWERER_${i}_USER:?}"
+    eval "a_pass=\${ANSWERER_${i}_PASS:?}"
+    eval "d_user=\${DIALER_${i}_USER:?}"
+    eval "d_pass=\${DIALER_${i}_PASS:?}"
+    (
+      unregister_phone "$a_user" "$a_pass" $((UAS_PORT_BASE + i)) "answerer-$i" || true
+      # Legacy queue-rr bases (pre-align) — ignore failures
+      unregister_phone "$a_user" "$a_pass" $((5600 + i)) "answerer-$i-legacy" || true
+      unregister_phone "$d_user" "$d_pass" $((UAC_PORT_BASE + i)) "dialer-$i" || true
+      unregister_phone "$d_user" "$d_pass" $((5800 + i)) "dialer-$i-legacy" || true
+    ) &
+    # Cap fan-out so Magrathea auth isn't stampeded
+    if (((i + 1) % 4 == 0)); then
+      wait || true
+    fi
+  done
+  wait || true
+  echo "Unregister pass finished (warnings above if any)."
 }
 
 stop_soak() {
@@ -128,6 +182,7 @@ stop_soak() {
     echo "Force-stopping soak (no BYE drain — may leave SBC Active Calls)…"
     rm -f "$RUN_FLAG"
     force_kill_soak
+    unregister_soak_bindings || true
     echo "Soak stopped (force). If Active Calls linger: ./clear-sbc-dialogs.sh"
     return
   fi
@@ -136,9 +191,10 @@ stop_soak() {
   uac_n="$(pids_alive "$UAC_PID_FILE")"
   uas_n="$(pids_alive "$UAS_PID_FILE")"
   if [[ ! -f "$RUN_FLAG" && "$uac_n" -eq 0 && "$uas_n" -eq 0 ]] && ! dial_sipp_alive; then
-    # Stale port/pid cleanup only
+    # Stale port/pid cleanup only — still clear lingering Contacts
     force_kill_soak >/dev/null 2>&1 || true
-    echo "Soak already stopped."
+    unregister_soak_bindings || true
+    echo "Soak already stopped (bindings cleared)."
     return
   fi
 
@@ -164,8 +220,9 @@ stop_soak() {
     sleep 1
   done
 
-  # Answerers should have received BYE; tear them down.
+  # Answerers should have received BYE; tear them down, then drop usrloc.
   force_kill_soak
+  unregister_soak_bindings || true
   echo "Soak stopped."
 }
 
@@ -278,6 +335,8 @@ start_soak() {
   : >"$UAS_PID_FILE"
   : >"$UAC_PID_FILE"
   rm -f "$LEGACY_PID_FILE"
+  # Drop stale Contacts from a prior unclean stop before we re-REGISTER
+  unregister_soak_bindings || true
   touch "$RUN_FLAG"
 
   # Dialer holds then BYEs on Record-Route path (clears SBC dialog). Answerer waits for BYE.
