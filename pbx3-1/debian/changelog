@@ -1,3 +1,12 @@
+pbx3 (0.0.4-2) noble; urgency=medium
+
+  * restore-backup-zip: refresh-pjsip-externip.sh after Asterisk restore —
+    rewrite donor external_media/signaling_address to this node's public
+    IP/EIP and systemctl restart asterisk (Mode 4 rebuild lesson).
+  * docs: Mode 4 runbook EIP + SBC dispatcher cutover; Asterisk ops note.
+
+ -- KOKO <admin@aelintra.com>  Sat, 01 Aug 2026 17:10:00 +0000
+
 pbx3 (0.0.4-1) noble; urgency=medium
 
   * Minor 0.0.4: GenAst hermit (phone/webrtc/trunk/queue/park overlays; LepDial /
