@@ -111,7 +111,7 @@ Scripts live in **`pbx3sbc/scripts/`** (edge-owned):
 
 | Surface | Role |
 |---------|------|
-| Filament **Backup** | Create + list local zips (+ optional S3 upload) on **VIP holder only** |
+| Filament **Backup** | Create + list **merged** local + S3 archives (tags **local+S3** / **S3**; SPA kinship) on **VIP holder only**; restore stays CLI |
 | Fleet → **Edge HA → Sync now** | Active backup+upload → standby `warm-pull` (`--db-only`); daily timer on control |
 | Restore `--full` | CLI only (cold host) |
 
@@ -129,6 +129,7 @@ Optional later: touch `sbc/{id}/meta.json` → `backup_latest_stamp` (not requir
 - [ ] Catalog reconcile after restore does not blindly destroy restored edge-authored rows (when scratch is fleet-joined — N/A for offline LAN scratch).
 - [x] Operator MkDocs page — **`pbx3-docs/docs/fleet/sbc-backup-restore.md`** (Fleet nav; publish with next Pages deploy). Litestream docs stay marked historical.
 - [x] **Filament Backup + Fleet warm sync (2026-07-21):** create/list on VIP holder; Fleet Sync now + daily `pbx3-edge-warm-sync.timer`; restore UI still deferred.
+- [x] **Filament Backup — merge S3-only into list (2026-08-01):** `sbc-backup-panel.sh list` + Filament Archives show local / **S3** / **local+S3** (SPA kinship). Restore still CLI.
 
 ## Implement order
 

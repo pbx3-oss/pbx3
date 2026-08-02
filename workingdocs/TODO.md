@@ -1,29 +1,27 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — golden on **EIP `44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8**; CDR site-TZ (SPA/API + SBC) shipped. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`**.  
-**Last updated:** 2026-08-01 (session end: Magrathea pbx3test SSH; SBC site-TZ commit)
+**Last updated:** 2026-08-01 (SBC Backup S3-only merge live on Magrathea)
 
 
 ### Suggested “what next?” order
 
-1. **Terminate old golden EC2** — `i-02ec2b05b5baacb5d` (ask; OPTIONS noise).  
-2. **WebRTC / WSS demo (SBC #1)** — far-end SPA still open (digit-only sanitize + inbound no SIP response). Spec: **`WEBRTC_WSS_LAB.md`**.  
-3. **Review OpenSIPS `alias_db_lookup`** — panel hidden; table empty. Spec: **`SBC_PRODUCT_TRACKS.md`**.  
-4. **SBC Filament Backup — merge S3-only rows** — Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.  
-5. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
-6. **Tenant dial alias** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.  
-7. **Product crumbs** (optional) — paid Twilio / drain / velocity V3.  
-8. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**.  
-9. **pbx3cagi Phase 4** (parked).  
-10. **Velocity standalone** (parked).  
-11. **Instance shadowing** / S10.7 / S8.9 (parked).  
-12. **AMI wallboard** (parked).  
-13. **Fleet node health ≠ Asterisk** (parked).  
-14. **Control plane duplex / HA** (parked).  
-15. **Fleet auth cookie/SSO (blocked)**.  
-16. **S7+** attested PCI — customer ask.  
-17. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
-18. **Grafana / door-knock geo** (parked).  
+1. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
+2. **Tenant dial alias** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.  
+3. **Product crumbs** (optional) — paid Twilio / drain / velocity V3.  
+4. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**.  
+5. **pbx3cagi Phase 4** (parked).  
+6. **Velocity standalone** (parked).  
+7. **Instance shadowing** / S10.7 / S8.9 (parked).  
+8. **AMI wallboard** (parked).  
+9. **Fleet node health ≠ Asterisk** (parked).  
+10. **Control plane duplex / HA** (parked).  
+11. **Fleet auth cookie/SSO (blocked)**.  
+12. **S7+** attested PCI — customer ask.  
+13. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
+14. **Grafana / door-knock geo** (parked).  
+15. **WebRTC / WSS demo (SBC #1)** — **blocked:** await far-end SPA team. Spec: **`WEBRTC_WSS_LAB.md`**.  
+16. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -31,11 +29,11 @@
 
 ## Open items
 
-- [x] **pbx3 0.0.4 + cagi 1.0.0-7 + golden rebuild (2026-08-01):** Executed **`BUILD_PLAN_0.0.4.md`**. Packages **pbx3 0.0.4-3** / **pbx3cagi 1.0.0-7** on new golden; EIP **`44.196.98.191`**; DNS four A records; Magrathea setid=2 → EIP; onboard + LE (4 SANs); preflight green. Tags **`pbx3-0.0.4-3`**, **`pbx3cagi-1.0.0-7`**. Later same day: cagi **1.0.0-8** (CLIP); catalog setid linked; operator smoke green. **Still open:** terminate old EC2 **`i-02ec2b05b5baacb5d`**.
+- [x] **pbx3 0.0.4 + cagi 1.0.0-7 + golden rebuild (2026-08-01):** Executed **`BUILD_PLAN_0.0.4.md`**. Packages **pbx3 0.0.4-3** / **pbx3cagi 1.0.0-7** on new golden; EIP **`44.196.98.191`**; DNS four A records; Magrathea setid=2 → EIP; onboard + LE (4 SANs); preflight green. Tags **`pbx3-0.0.4-3`**, **`pbx3cagi-1.0.0-7`**. Later same day: cagi **1.0.0-8** (CLIP); catalog setid linked; operator smoke green; old EC2 terminated.
 
 - [x] **GenAst `$outbound_proxy` comment mangling (2026-08-01):** Comment token in `pjsip_phone.tmpl` was expanded by unanchored replace → bare prose in `pjsip_ready_phones.conf`. Fix: reword comment + line-anchored `/^\$outbound_proxy/m` in `GenClass::xlatePjsipBuff` (**`c8888cf`**). Hot on golden.
 
-- [ ] **Terminate old golden EC2 (2026-08-01):** `i-02ec2b05b5baacb5d` (`54.236.153.81`) still running — OPTIONS noise. Confirm then terminate after smoke tests.
+- [x] **Terminate old golden EC2 (2026-08-01):** `i-02ec2b05b5baacb5d` (`54.236.153.81`) terminated by operator.
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 
@@ -71,11 +69,11 @@
 
 - [ ] **Grafana / Homer — fleet view only, unmodified (parked 2026-07-30):** Stance locked. **SBC Home = Filament** (in-box). **Grafana** (and Homer if ever) = optional **fleet / multi-instance** observability later — operator-installed **unmodified** OSS (AGPL); no fork, no bundling into product installer, no on-licensing end users. If a use case needs modifying Grafana/Homer, **don’t do that use case**. Not next.
 
-- [ ] **SBC Filament Backup — merge S3-only into list (2026-07-30):** Kinship with SPA instance Backup: show local, S3-only, and both (Filename + **S3** / **local+S3** tags). Today panel is local FIFO only (keep 9); aged zips remain on S3 (~30d) but operators cannot discover them in UI. Touch `sbc-backup-panel.sh list` + `SbcBackupService` + Filament Backup page. Restore still CLI. Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
+- [x] **SBC Filament Backup — merge S3-only into list (2026-08-01):** Kinship with SPA instance Backup: show local, **S3**, and **local+S3**. `sbc-backup-panel.sh list` merges S3 stamps aged out of local FIFO (keep 9); Filament **Archives** tags; restore still CLI. Live on Magrathea (33 rows: 9 both + 24 S3-only). Spec: **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`**.
 
 - [x] **SBC — hide Filament DID aliases (2026-07-30):** Lab aliases cleared by operator; `DbAliasResource` nav + `canViewAny` false; on **`main`**. Spec: **`SBC_PRODUCT_TRACKS.md`**.
 
-- [ ] **SBC — review `alias_db_lookup` (parked 2026-07-30):** Filament DID aliases hidden; lab table empty — leave OpenSIPS Phase 5 fallthrough in `FROM_CARRIER` for now. **Review later:** inert vs remove (harmless while empty). Spec: **`SBC_PRODUCT_TRACKS.md`** · **`FLEET_TRUNK_PEERING_DECISION.md`**. Not tenant short-dial.
+- [x] **SBC — review `alias_db_lookup` (decided 2026-08-01):** Leave OpenSIPS Phase 5 fallthrough in `FROM_CARRIER` as-is. Filament DID aliases stay hidden; lab table empty — harmless. No inert/remove work now. Spec: **`SBC_PRODUCT_TRACKS.md`** · **`FLEET_TRUNK_PEERING_DECISION.md`**. Not tenant short-dial.
 
 - [x] **WebRTC / WSS — golden demo path (2026-07-28):** Priority #1 on **golden `:8089`** (no Magrathea UDP impact). JsSIP **REGISTER + bidirectional audio OK** (Echo; ICE; channelstats 279/279). **`pjsip_webrtc.tmpl`** fixed to **`$id`/shortuid** (PBX3 phone pattern); ready conf symlink. Third-party test-mule SPA **REGISTER OK** as **`8af9ee`** (admin hint Idle); **outbound dial from that SPA still sends no INVITE** (operator comparing to SARK 6.5). SG **8089/tcp** temporarily world-open for SPA host — clamp when done. SBC WSS later (`webrtc-wss`). Recovery **`pre-webrtc-wss-20260728`**. Spec: **`WEBRTC_WSS_LAB.md`** · §6.1.
 
@@ -83,7 +81,7 @@
 
 - [x] **Extension create — undefined `$desc` (2026-07-29):** SPA Create Extension fatals under Laravel (“Undefined variable $desc”). Store now reads `desc` from request (default `Ext{pkey}`) and persists `description` when sent. Tip **pbx3api** **`60262a0`**; hot on golden.
 
-- [ ] **WebRTC — third-party SPA far-end (open 2026-07-29):** Dev-team SPA: (1) **digit-only sip-user sanitize** rejects alphanumeric shortuid — must accept `[a-z0-9]` (SIP user=`8af9ee`, dialable=`1500`). (2) Inbound: INVITE arrives on WSS but no SIP response (media/permissions / `newRTCSession` likely). Outbound from SPA previously “no INVITE” may be same class of client bug. Not a golden Asterisk gate. Clamp SG **8089** when SPA host test done.
+- [ ] **WebRTC — third-party SPA far-end (blocked 2026-08-01):** Await WebRTC/dev-team SPA. Open issues: (1) **digit-only sip-user sanitize** rejects alphanumeric shortuid — must accept `[a-z0-9]` (SIP user=`8af9ee`, dialable=`1500`). (2) Inbound: INVITE arrives on WSS but no SIP response (media/permissions / `newRTCSession` likely). Outbound from SPA previously “no INVITE” may be same class of client bug. Not a golden Asterisk gate. Clamp SG **8089** when SPA host test done.
 
 - [ ] **`ipphone.desc` vs `description` — clarify / rename (parked 2026-07-29):** Historical SARK/Asterisk ambivalence: schema has both columns; SPA “User (extension name)” → `desc`, “Description” → `description`; list **User** prefers `desc` so freeform Description never shows when `desc` is set (e.g. `1501` vs “WebRTC second ep”). GenAst `$desc` token actually substitutes **`description`** (else pkey), not the `desc` column. Model comment still calls `desc` “SIP username” — wrong now that **shortuid** is PJSIP identity. Proper fix later: map roles (display name vs notes vs any remaining Asterisk/SIP use), align SPA labels + list, GenAst templates, API, migrate/rename if needed. Do not drive-by.
 
