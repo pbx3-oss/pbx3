@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — golden on **EIP `44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8**; CDR site-TZ (SPA/API + SBC) shipped. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`**.  
-**Last updated:** 2026-08-01 (session end: tenant login simplify + lab catalog reconcile)
+**Last updated:** 2026-08-01 (session end: SPA LH nav solo groups)
 
 
 ### Suggested “what next?” order
@@ -38,6 +38,8 @@
 - [x] **Lab tenants must use catalog (2026-08-01):** Doc **`LAB_FLEET_TENANTS.md`** + tool **`reconcile-node-tenants.sh`** (Mode 4 Phase 5 + BUILD_PLAN). Golden reconcile OK after registering `pb0wsk`. No node-only invent on fleet boxes.
 
 - [x] **SPA tenant login one-form (2026-08-01):** Tenant id + email + password; enforce typed UID ∈ `allowed_clusters`; autofill focus guard; catalog `no-store`. Lab: `pb0wsk` / `sipusert…` CDR/Home scoped OK. Spec: **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.
+
+- [x] **SPA LH nav — solo groups (2026-08-01):** Single-link groups (Tenants, CDR, Inbound, …) are direct links (no chevron). Accordion headings + solos share explicit `1rem` / semibold / `--pbx-sidebar-heading` (avoid `font: inherit` size drift). Submenu stays `0.875rem` link color. Label **Tenancy** → **Tenants**.
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 

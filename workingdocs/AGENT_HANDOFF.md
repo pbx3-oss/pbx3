@@ -71,24 +71,32 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-01 — tenant login + lab catalog guard)
+## Next agent session notes (2026-08-01 — SPA LH nav solo groups)
 
-**Branches:** **pbx3spa** (this push), **pbx3** (docs/tools this push). Earlier today: **pbx3sbc** **`610b4de`**, **pbx3sbc-admin** **`276d67c`** (Backup S3-only). All **`main`**.
+**Branches:** **pbx3spa** (this push — `AppLayout.vue`), **pbx3** (handoff/TODO this push). Earlier today: tenant login + lab catalog; SBC Backup S3-only. All **`main`**.
 
-**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**; Magrathea VIP **`3.93.26.82`**; Peer-99 **`98.82.58.59`**; Domain **`sippuac`**. Old golden EC2 terminated. Magrathea SSH: **`pbx3test.pem`**.
+**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**; Magrathea VIP **`3.93.26.82`**; Peer-99 **`98.82.58.59`**; Domain **`sippuac`**. Magrathea SSH: **`pbx3test.pem`**.
 
 ### Shipped
-- **SPA tenant door:** one form (tenant id + email + password); enforce typed shortuid ∈ `allowed_clusters`; autofill focus guard on Tenant id; catalog fetch `cache: no-store`. Lab QA: `pb0wsk` + `sipusert.pbx3@pbx3.com` → CDR/Home tenant-scoped OK.
-- **Lab catalog discipline:** **`LAB_FLEET_TENANTS.md`** + **`reconcile-node-tenants.sh`** (Mode 4 Phase 5). Registered **`pb0wsk`** meta; tenant-home rebuild with `Cache-Control: no-cache`. Golden reconcile OK.
-- **SBC Backup Archives:** S3-only merge (earlier this session) live on Magrathea.
-- **alias_db_lookup:** leave as-is. **WebRTC far-end:** still blocked on SPA team.
+- **LH nav solo groups:** one-link groups navigate directly (no accordion). Headings + solos: `1rem` / weight 600 / `--pbx-sidebar-heading` (explicit sizes — do not use `font: inherit` on heading buttons). Submenu unchanged. **Tenancy** → **Tenants**.
 
 ### Golden / operator follow-up
 - Optional: Network/site TZ if wall clock ≠ UTC.
 - WebRTC far-end when SPA team ready; clamp SG **8089** when done.
 
 ### Resume
-- Next TODO: Fleet Delete / FQDN rename (parked) or tenant dial alias — or WebRTC when unblocked.
+- Next TODO: Fleet Delete / FQDN rename (parked) or tenant dial alias — or WebRTC when unblocked. User had a second SPA item pending earlier; ask if still wanted.
+
+---
+
+## Next agent session notes (2026-08-01 — tenant login + lab catalog guard) — historical
+
+**Superseded** by SPA LH nav solo groups block above.
+
+**Shipped (kept):** SPA one-form tenant login; **`LAB_FLEET_TENANTS.md`** + **`reconcile-node-tenants.sh`**; `pb0wsk` registered; SBC Backup S3-only; alias_db leave-as-is.
+
+### Resume
+- See newer block above.
 
 ---
 
