@@ -255,7 +255,15 @@ REMOTE
 onboard_configure_node() {
   local bucket=$1 ksuid=$2
   local region="${ONBOARD_AWS_REGION:-us-east-1}"
+  local fleet_tok="${PBX3_FLEET_SERVICE_TOKEN:-}"
+  local fleet_tok_q=""
   onboard_verify_iam_metadata
+  if [[ -z "$fleet_tok" ]]; then
+    onboard_log "WARN: PBX3_FLEET_SERVICE_TOKEN unset — set same token as gatekeeper on ops host before onboard (fleet create/move needs it on node)"
+  else
+    # Shell-quote for remote script (token may contain limited specials)
+    fleet_tok_q=$(printf '%s' "$fleet_tok" | sed "s/'/'\\\\''/g")
+  fi
   onboard_ssh_write "sudo bash -s" <<REMOTE
 set -e
 ENV=/opt/pbx3api/.env
@@ -272,6 +280,13 @@ grep -q '^PBX3_FLEET_MODE=' "\$ENV" 2>/dev/null && \
 grep -q '^PBX3_SBC_EGRESS_HOST=' "\$ENV" 2>/dev/null && \
   sed -i 's/^PBX3_SBC_EGRESS_HOST=.*/PBX3_SBC_EGRESS_HOST=${PBX3_SBC_EGRESS_HOST:-sbc.pbx3.com}/' "\$ENV" || \
   echo 'PBX3_SBC_EGRESS_HOST=${PBX3_SBC_EGRESS_HOST:-sbc.pbx3.com}' >> "\$ENV"
+if [[ -n '${fleet_tok_q}' ]]; then
+  if grep -q '^PBX3_FLEET_SERVICE_TOKEN=' "\$ENV" 2>/dev/null; then
+    sed -i "s|^PBX3_FLEET_SERVICE_TOKEN=.*|PBX3_FLEET_SERVICE_TOKEN=${fleet_tok_q}|" "\$ENV"
+  else
+    echo 'PBX3_FLEET_SERVICE_TOKEN=${fleet_tok_q}' >> "\$ENV"
+  fi
+fi
 grep -q '^AWS_DEFAULT_REGION=' "\$ENV" 2>/dev/null && \
   sed -i 's/^AWS_DEFAULT_REGION=.*/AWS_DEFAULT_REGION=${region}/' "\$ENV" || \
   echo 'AWS_DEFAULT_REGION=${region}' >> "\$ENV"

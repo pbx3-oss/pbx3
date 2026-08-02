@@ -51,6 +51,7 @@ Answer these *before* you start. The install does not invent them for you (excep
 | SSH | How do I get in? | **`ubuntu@IP` or FQDN** + path to **`.pem`** | `ubuntu@3.93.253.1` |
 | Packages | Which releases? | Paths to the two **`.deb`** files on the laptop | `…/pbx3_0.0.4-4_all.deb`, `…/pbx3cagi_1.0.0-8_all.deb` |
 | Act 2 | Which fleet? | **`PBX3_ORG_BUCKET`** | `08jzwn-pbx3` |
+| Act 2 | Gatekeeper ↔ node | **`PBX3_FLEET_SERVICE_TOKEN`** on Mac when running onboard (same value as gatekeeper `.env`) | required for Fleet Create tenant / move |
 | Act 2 | Which SBC host for dial-out? | Usually leave default | `sbc.pbx3.com` |
 
 **On the node, `installer.sh` may prompt (if you did not set env):**
@@ -152,6 +153,8 @@ Only after Act 1 is proven.
      --ssh-key /path/to/key.pem \
      --region us-east-1 \
      --org-bucket your-org-bucket
+   # Mac env (required for later Fleet Create tenant):
+   # export PBX3_FLEET_SERVICE_TOKEN=…   # same as gatekeeper /etc/pbx3-gatekeeper/.env
    ```
 
 2. **Node — prove Act 2:**
@@ -187,3 +190,4 @@ Only after Act 1 is proven.
 | Mac tooling / SSH hangs | **`OPERATOR_MAC_SETUP.md`** |
 | First org bucket ever | **`OPS_S3_RUNBOOK.md`** (not this page) |
 | SPA “Unauthorized” / no password | New install: re-run bootstrap with email/password. Existing: `bootstrap-admin-user.sh --reset` (see **Admin SPA user**) |
+| Fleet create: **PBX3_FLEET_SERVICE_TOKEN** | Put the **same** token as gatekeeper in node `/opt/pbx3api/.env`, then `php artisan config:clear` (+ fpm reload if needed) |
