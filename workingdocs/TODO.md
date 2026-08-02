@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — golden on **EIP `44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8**; SPA Users edit shipped. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`**. Operator greenfield: **ael.vcloupdbc.com** (in progress).  
-**Last updated:** 2026-08-02 (session end: Users edit + AEL greenfield)
+**Branch:** **`main`** — golden **`08jzwn`** EIP **`44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8**. Lab: Magrathea VIP **`3.93.26.82`**; second fleet node **Kildare** (`kildare.pbx3.com` / `3.93.253.1`).  
+**Last updated:** 2026-08-02 (session end: Kildare greenfield + route create fix)
 
 
 ### Suggested “what next?” order
@@ -43,7 +43,9 @@
 
 - [x] **SPA Users panel — edit (2026-08-02):** Instance **Users** list Edit → **`UserEditView`** (name/email/abilities/`allowed_clusters`; force password). Uses existing API `PUT auth/users/{id}` + `PUT …/password`. Tip **pbx3spa** **`a10c106`** on **`main`**.
 
-- [ ] **Lab fleet — AEL greenfield node (in progress 2026-08-02):** EC2 **`i-08a888f32e1391649`**, SSH `ubuntu@ael.vcloupdbc.com` (`aelsip.pem`). Join bucket **`08jzwn-pbx3`**. Operator-manual: **`NEW_INSTANCE_CHECKLIST.md`** § A + **`onboard-fleet-instance.sh`**. **Mac debs missing** for lab target — rebuild before scp: `pbx3/pbx3-1` → `dpkg-buildpackage` → `pbx3_0.0.4-3_all.deb`; `pbx3cagi` → `./scripts/build-deb.sh` for **1.0.0-8**. On-disk only: `pbx3_0.0.3-25_all.deb`, `pbx3cagi_1.0.0-3_all.deb`. Then API install → DNS/LE → Mac onboard with `--instance-id i-08a888f32e1391649`.
+- [x] **Lab fleet — Kildare greenfield (2026-08-02):** EC2 **`i-08a888f32e1391649`** (“AEL-Kildare”), public **`3.93.253.1`**, FQDN **`kildare.pbx3.com`**, shortuid **`kildare`**, key **`aelsip.pem`**. Onboarded into **`08jzwn-pbx3`**; Egress → `sbc.pbx3.com`; preflight green; fleet service token set; admin bootstrap (not unknown seed). Tenant **Kildare home office** / shortuid **`18c8z3`** / FQDN **`18c8z3.pbx3.com`**. Docs: **`INSTALL_NODE_SIMPLE.md`**, **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`**. Follow-on ships: egress auto-seed, admin bootstrap, onboard token write (pbx3 tips **`f9c3a09`** / **`cf78de0`** / **`309bb18`**).
+
+- [x] **Route create `pkey` NOT NULL (2026-08-02):** `RouteController::save` validated `pkey` but only copied `$updateableColumns` (excludes pkey) → SQLite integrity fail. Fix: move via `$createRules` + explicit `$route->pkey`. **pbx3api** **`eb8961d`**; hot on Kildare.
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 

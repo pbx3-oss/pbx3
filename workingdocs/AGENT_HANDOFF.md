@@ -71,27 +71,37 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-02 — Users edit + AEL greenfield)
+## Next agent session notes (2026-08-02 — Kildare greenfield + route pkey)
 
-**Branches:** **pbx3spa** **`a10c106`** (Users edit) on **`main`**. Handoff/TODO this session in **pbx3**. No new pbx3/pbx3api code for AEL.
+**Branches:** **pbx3api** **`eb8961d`**, **pbx3** (install/onboard **`f9c3a09`** Egress seed, **`cf78de0`** admin bootstrap, **`309bb18`** fleet token write, plus **`INSTALL_NODE_SIMPLE`** Act 2 token find), **pbx3spa** select-height polish — all **`main`** after this session end push.
 
-**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**; Magrathea VIP **`3.93.26.82`**. **New node (not shipped):** **`ael.vcloupdbc.com`** EC2 **`i-08a888f32e1391649`**, key **`~/Documents/pemfiles/aelsip.pem`**, fleet bucket **`08jzwn-pbx3`**.
+**Lab:** golden **`08jzwn`** / EIP **`44.196.98.191`**. Magrathea VIP **`3.93.26.82`**. **Kildare (live):** EC2 **`i-08a888f32e1391649`**, public **`3.93.253.1`**, FQDN **`kildare.pbx3.com`**, shortuid **`kildare`**, SSH `ubuntu@3.93.253.1` / `aelsip.pem`, bucket **`08jzwn-pbx3`**. Tenant **`18c8z3`** “Kildare home office” / **`18c8z3.pbx3.com`**. Outbound route create OK after pkey fix (hot on `/opt/pbx3api`).
 
 ### Shipped
-- **Instance Users edit:** list pencil → `UserEditView` (abilities, `allowed_clusters`, force password). API already had PUT; SPA was create/list/revoke/delete only. **`main`** **`a10c106`**.
+- **Greenfield / install path:** `GREENFIELD_FLEET_INSTANCE_INSTALL.md`, **`INSTALL_NODE_SIMPLE.md`** (Act 1/2; fleet token find/set; edge setid IP URI). Egress auto-seed on onboard; SPA admin bootstrap; onboard writes `PBX3_FLEET_SERVICE_TOKEN`.
+- **Route create:** `RouteController::save` sets `pkey` (**`eb8961d`**). Had been `NOT NULL constraint failed: route.pkey`.
+- **SPA (minor):** Fleet Tenants create Home instance `<select>` + global `FormSelect` height aligned with inputs.
+- Earlier same day: Users edit **`a10c106`**.
 
 ### Golden / operator follow-up
-- **AEL greenfield (operator running manually):** rebuild Mac debs **`pbx3_0.0.4-3`** + **`pbx3cagi 1.0.0-8`** (not on disk; changelog/tags yes). `scp` → node: `apt install` debs → `INSTANCE_FQDN=ael.vcloupdbc.com /opt/pbx3/scripts/installer.sh` → pbx3api clone+install → DNS/LE → Mac `onboard-fleet-instance.sh --instance-id i-08a888f32e1391649 --ssh ubuntu@ael.vcloupdbc.com --ssh-key …/aelsip.pem`. Checklist **`NEW_INSTANCE_CHECKLIST.md`** § A.
+- Kildare: extensions / dialplan as needed; token docs for next onboard.
+- Optional: rebuild deb **0.0.4-4** when packaging admin-bootstrap binary.
 - WebRTC far-end still blocked; clamp SG **8089** when done.
 
 ### Resume
-- Finish **AEL** install+onboard if still open; else Fleet Delete / dial alias. Wait for operator task.
+- Wait for operator task (Fleet Delete / dial alias / more Kildare lab). Do **not** invent fleet token — **`INSTALL_NODE_SIMPLE.md`** Act 2.
+
+---
+
+## Next agent session notes (2026-08-02 — Users edit + AEL greenfield) — historical
+
+**Superseded** by Kildare greenfield + route pkey block above. Users edit shipped; AEL node is now **Kildare**.
 
 ---
 
 ## Next agent session notes (2026-08-01 — SPA LH nav solo groups) — historical
 
-**Superseded** by Users edit + AEL greenfield block above.
+**Superseded** by newer 2026-08-02 blocks above.
 
 **Shipped (kept):** LH nav solo groups; earlier that day tenant login + lab catalog + SBC Backup S3-only.
 
