@@ -1,11 +1,14 @@
 # Greenfield fleet instance — install PBX3 then adopt into fleet
 
+> **Start here if this looks too long:** **`INSTALL_NODE_SIMPLE.md`** — what you need, answers to prepare, Act 1 install / Act 2 adopt.  
+> **This page** is the full copy-paste / troubleshooting path for the same install.
+
 **Scope:** **AWS EC2 only** (Ubuntu 24.04). This is not a bare-metal or Azure/GCP guide.  
 **Audience:** A human operator at a terminal — **Mac (or Linux ops workstation) + SSH into a new EC2**.  
 **Path:** Launch EC2 → install pbx3 stack → DNS/LE → fleet onboard (**new KSUID**).  
 **Not this doc:** Replacing a failed node with the **same KSUID** → **`REBUILD_INSTANCE_RUNBOOK.md`**.
 
-**Related (deeper reference):** checklist **`NEW_INSTANCE_CHECKLIST.md`** § A · fleet theory **`INSTANCE_ONBOARDING.md`** · Mac ops day-to-day **`OPERATOR_MAC_SETUP.md`** · package narrative **`INSTALL_SEQUENCE_UBUNTU.md`** · S3/IAM org bucket **`OPS_S3_RUNBOOK.md`**.
+**Related:** simple path **`INSTALL_NODE_SIMPLE.md`** · checklist **`NEW_INSTANCE_CHECKLIST.md`** § A · fleet theory **`INSTANCE_ONBOARDING.md`** · Mac ops day-to-day **`OPERATOR_MAC_SETUP.md`** · package narrative **`INSTALL_SEQUENCE_UBUNTU.md`** · S3/IAM org bucket **`OPS_S3_RUNBOOK.md`**.
 
 **Lab tip (2026-08):** Release debs in git at repo root: **`pbx3_0.0.4-3_all.deb`**, **`pbx3cagi_1.0.0-8_all.deb`**. Adjust filenames when newer.
 

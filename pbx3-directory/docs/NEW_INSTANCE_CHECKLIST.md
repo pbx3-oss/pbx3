@@ -8,7 +8,8 @@
 
 | Topic | Doc |
 |-------|-----|
-| **Greenfield: command-by-command (EC2 → apt → adopt)** | **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** ← start here for typing at a terminal |
+| **Greenfield: short path (need / answers / done)** | **`INSTALL_NODE_SIMPLE.md`** ← start here |
+| **Greenfield: command-by-command (EC2 → apt → adopt)** | **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** (full copy-paste) |
 | **Rebuild from S3 (catastrophic EC2 loss)** | **`REBUILD_INSTANCE_RUNBOOK.md`** |
 | **Mac SSH + AWS CLI** | **`OPERATOR_MAC_SETUP.md`** |
 | Ubuntu install | **`pbx3/workingdocs/INSTALL_SEQUENCE_UBUNTU.md`** |
@@ -20,7 +21,7 @@
 
 ## A — New EC2 instance (greenfield, new KSUID)
 
-**Prefer:** follow **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** end-to-end (copy-paste commands). This section is the short checkbox form of the same path.
+**Prefer:** **`INSTALL_NODE_SIMPLE.md`** for the story; **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** for every command. This section remains a checkbox form of the same path.
 
 - [ ] **A.1** Ubuntu 24.04; SG: inbound **22**, **44300**, **80** (LE), SIP as needed; outbound **443** (S3)
 - [ ] **A.2** `apt install` **pbx3** + **pbx3api** debs; deploy API under **`/opt/pbx3api`**
