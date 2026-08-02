@@ -71,21 +71,32 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-01 — SPA LH nav solo groups)
+## Next agent session notes (2026-08-02 — Users edit + AEL greenfield)
 
-**Branches:** **pbx3spa** (this push — `AppLayout.vue`), **pbx3** (handoff/TODO this push). Earlier today: tenant login + lab catalog; SBC Backup S3-only. All **`main`**.
+**Branches:** **pbx3spa** **`a10c106`** (Users edit) on **`main`**. Handoff/TODO this session in **pbx3**. No new pbx3/pbx3api code for AEL.
 
-**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**; Magrathea VIP **`3.93.26.82`**; Peer-99 **`98.82.58.59`**; Domain **`sippuac`**. Magrathea SSH: **`pbx3test.pem`**.
+**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**; Magrathea VIP **`3.93.26.82`**. **New node (not shipped):** **`ael.vcloupdbc.com`** EC2 **`i-08a888f32e1391649`**, key **`~/Documents/pemfiles/aelsip.pem`**, fleet bucket **`08jzwn-pbx3`**.
 
 ### Shipped
-- **LH nav solo groups:** one-link groups navigate directly (no accordion). Headings + solos: `1rem` / weight 600 / `--pbx-sidebar-heading` (explicit sizes — do not use `font: inherit` on heading buttons). Submenu unchanged. **Tenancy** → **Tenants**.
+- **Instance Users edit:** list pencil → `UserEditView` (abilities, `allowed_clusters`, force password). API already had PUT; SPA was create/list/revoke/delete only. **`main`** **`a10c106`**.
 
 ### Golden / operator follow-up
-- Optional: Network/site TZ if wall clock ≠ UTC.
-- WebRTC far-end when SPA team ready; clamp SG **8089** when done.
+- **AEL greenfield (operator running manually):** rebuild Mac debs **`pbx3_0.0.4-3`** + **`pbx3cagi 1.0.0-8`** (not on disk; changelog/tags yes). `scp` → node: `apt install` debs → `INSTANCE_FQDN=ael.vcloupdbc.com /opt/pbx3/scripts/installer.sh` → pbx3api clone+install → DNS/LE → Mac `onboard-fleet-instance.sh --instance-id i-08a888f32e1391649 --ssh ubuntu@ael.vcloupdbc.com --ssh-key …/aelsip.pem`. Checklist **`NEW_INSTANCE_CHECKLIST.md`** § A.
+- WebRTC far-end still blocked; clamp SG **8089** when done.
 
 ### Resume
-- Next TODO: Fleet Delete / FQDN rename (parked) or tenant dial alias — or WebRTC when unblocked. User had a second SPA item pending earlier; ask if still wanted.
+- Finish **AEL** install+onboard if still open; else Fleet Delete / dial alias. Wait for operator task.
+
+---
+
+## Next agent session notes (2026-08-01 — SPA LH nav solo groups) — historical
+
+**Superseded** by Users edit + AEL greenfield block above.
+
+**Shipped (kept):** LH nav solo groups; earlier that day tenant login + lab catalog + SBC Backup S3-only.
+
+### Resume
+- See newer block above.
 
 ---
 

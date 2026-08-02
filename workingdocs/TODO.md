@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — golden on **EIP `44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8**; CDR site-TZ (SPA/API + SBC) shipped. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`**.  
-**Last updated:** 2026-08-01 (session end: SPA LH nav solo groups)
+**Branch:** **`main`** — golden on **EIP `44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8**; SPA Users edit shipped. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`**. Operator greenfield: **ael.vcloupdbc.com** (in progress).  
+**Last updated:** 2026-08-02 (session end: Users edit + AEL greenfield)
 
 
 ### Suggested “what next?” order
@@ -40,6 +40,10 @@
 - [x] **SPA tenant login one-form (2026-08-01):** Tenant id + email + password; enforce typed UID ∈ `allowed_clusters`; autofill focus guard; catalog `no-store`. Lab: `pb0wsk` / `sipusert…` CDR/Home scoped OK. Spec: **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.
 
 - [x] **SPA LH nav — solo groups (2026-08-01):** Single-link groups (Tenants, CDR, Inbound, …) are direct links (no chevron). Accordion headings + solos share explicit `1rem` / semibold / `--pbx-sidebar-heading` (avoid `font: inherit` size drift). Submenu stays `0.875rem` link color. Label **Tenancy** → **Tenants**.
+
+- [x] **SPA Users panel — edit (2026-08-02):** Instance **Users** list Edit → **`UserEditView`** (name/email/abilities/`allowed_clusters`; force password). Uses existing API `PUT auth/users/{id}` + `PUT …/password`. Tip **pbx3spa** **`a10c106`** on **`main`**.
+
+- [ ] **Lab fleet — AEL greenfield node (in progress 2026-08-02):** EC2 **`i-08a888f32e1391649`**, SSH `ubuntu@ael.vcloupdbc.com` (`aelsip.pem`). Join bucket **`08jzwn-pbx3`**. Operator-manual: **`NEW_INSTANCE_CHECKLIST.md`** § A + **`onboard-fleet-instance.sh`**. **Mac debs missing** for lab target — rebuild before scp: `pbx3/pbx3-1` → `dpkg-buildpackage` → `pbx3_0.0.4-3_all.deb`; `pbx3cagi` → `./scripts/build-deb.sh` for **1.0.0-8**. On-disk only: `pbx3_0.0.3-25_all.deb`, `pbx3cagi_1.0.0-3_all.deb`. Then API install → DNS/LE → Mac onboard with `--instance-id i-08a888f32e1391649`.
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 
