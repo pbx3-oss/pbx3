@@ -16,7 +16,7 @@ onboard_log() {
 
 onboard_require_cmd() {
   local cmd
-  for cmd in aws jq ssh; do
+  for cmd in aws jq ssh scp; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
       onboard_log "required command not found: $cmd"
       exit 1
@@ -77,6 +77,7 @@ onboard_load_fleet_config() {
       ssh_key) [[ -z "$ONBOARD_SSH_KEY" ]] && ONBOARD_SSH_KEY="$val" ;;
       org_id) [[ -z "${ONBOARD_ORG_ID:-}" ]] && export ONBOARD_ORG_ID="$val" ;;
       environment) [[ -z "${ONBOARD_ENVIRONMENT:-}" ]] && export ONBOARD_ENVIRONMENT="$val" ;;
+      sbc_egress_host) [[ -z "${PBX3_SBC_EGRESS_HOST:-}" ]] && export PBX3_SBC_EGRESS_HOST="$val" ;;
     esac
   done <"$file"
 }
@@ -330,4 +331,47 @@ onboard_verify_catalog() {
     | jq --arg id "$ksuid" '[.instances[] | select(.id == $id)] | length')"
   [[ "$count" -ge 1 ]] || { onboard_log "catalog missing instance $ksuid"; exit 1; }
   onboard_log "catalog verified for $ksuid"
+}
+
+# Fleet nodes require trunks.pkey=Egress for dial-plane (see FLEET_TRUNK_PEERING_DECISION.md).
+# Seed DB row + genAst + Asterisk restart. SBC domain/dispatcher cutover remains a separate edge step.
+onboard_seed_egress_trunk() {
+  local seed_local sbc_host sbc_failover fail_env=""
+  sbc_host="${PBX3_SBC_EGRESS_HOST:-sbc.pbx3.com}"
+  sbc_failover="${PBX3_SBC_EGRESS_FAILOVER_HOST:-}"
+  # This file lives in tools/lib/; seed script is tools/seed-fleet-egress-trunk.sh
+  seed_local="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/seed-fleet-egress-trunk.sh"
+  [[ -f "$seed_local" ]] || {
+    onboard_log "seed script not found: $seed_local"
+    exit 1
+  }
+
+  if [[ "$ONBOARD_DRY_RUN" == "1" ]]; then
+    onboard_log "DRY-RUN: would seed Egress → ${sbc_host} (failover=${sbc_failover:-none}) + genAst + asterisk restart"
+    return 0
+  fi
+
+  onboard_log "step: fleet Egress trunk (seed + genAst)"
+  onboard_ssh_opts
+  scp "${ONBOARD_SSH_OPTS[@]}" "$seed_local" "${ONBOARD_SSH_TARGET}:/tmp/seed-fleet-egress-trunk.sh"
+
+  if [[ -n "$sbc_failover" ]]; then
+    fail_env="PBX3_SBC_EGRESS_FAILOVER_HOST=${sbc_failover}"
+  fi
+
+  # shellcheck disable=SC2086
+  onboard_ssh_write "bash -s" <<REMOTE
+set -e
+chmod +x /tmp/seed-fleet-egress-trunk.sh
+sudo env PBX3_SBC_EGRESS_HOST='${sbc_host}' ${fail_env} \\
+  /tmp/seed-fleet-egress-trunk.sh /opt/pbx3/db/sqlite.db
+rm -f /tmp/seed-fleet-egress-trunk.sh
+# Publish PJSIP Egress into ASTLOCALCONF, link into /etc/asterisk, then full Asterisk restart
+# (pjsip reload alone is not enough after egress seed — OPS_ASTERISK_AFTER_EGRESS_GENAST.md).
+sudo /opt/pbx3/scripts/genAst.sh
+sudo php /opt/pbx3/php/utilities/runLinker.php >/dev/null
+sudo systemctl restart asterisk
+echo "egress_seed_ok host=${sbc_host}"
+REMOTE
+  onboard_log "Egress trunk seeded (host=${sbc_host}); Asterisk restarted"
 }

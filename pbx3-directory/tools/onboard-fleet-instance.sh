@@ -9,16 +9,22 @@
 #   ./onboard-fleet-instance.sh \
 #     --instance-id i-0bb601e7b1253c3f5 \
 #     --ssh ubuntu@bzy54n.pbx3.com \
-#     --ssh-key ~/Documents/pemfiles/pbx3test.pem \
+#     --ssh-key {path to your pemfiles}/key.pem \
 #     --region us-east-1
 #
 # Optional fleet defaults: ~/.pbx3/fleet.yaml or --fleet-config PATH
 #   org_bucket: 08jzwn-pbx3
 #   region: us-east-1
 #   ssh_user: ubuntu
-#   ssh_key: ~/Documents/pemfiles/pbx3test.pem
+#   ssh_key: {path to your pemfiles}/key.pem
 #   org_id: example-org
 #   environment: production
+#   sbc_egress_host: sbc.pbx3.com
+#
+# After catalog/.env: seeds trunks.pkey=Egress (mandatory fleet dial-plane), runs
+# genAst + asterisk restart. Override host: PBX3_SBC_EGRESS_HOST or --sbc-egress-host.
+# Failover: PBX3_SBC_EGRESS_FAILOVER_HOST. Skip seed: --skip-egress-seed (unusual).
+# Edge domain/dispatcher cutover on the SBC remains a separate ops step.
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,6 +37,7 @@ FLEET_CONFIG=""
 SKIP_IAM=0
 SKIP_CATALOG=0
 SKIP_NODE=0
+SKIP_EGRESS_SEED=0
 ONBOARD_GIT_PULL=0
 SMOKE_BACKUP=0
 ONBOARD_ORG_ID="${ONBOARD_ORG_ID:-example-org}"
@@ -38,7 +45,7 @@ ONBOARD_ENVIRONMENT="${ONBOARD_ENVIRONMENT:-production}"
 ONBOARD_NOTES="${ONBOARD_NOTES:-}"
 
 usage() {
-  sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
 }
 
@@ -55,11 +62,13 @@ while [[ $# -gt 0 ]]; do
     --notes) ONBOARD_NOTES=$2; shift 2 ;;
     --api-port) ONBOARD_API_PORT=$2; shift 2 ;;
     --fleet-config) FLEET_CONFIG=$2; shift 2 ;;
+    --sbc-egress-host) export PBX3_SBC_EGRESS_HOST=$2; shift 2 ;;
     --git-pull) ONBOARD_GIT_PULL=1; shift ;;
     --smoke-backup) SMOKE_BACKUP=1; shift ;;
     --skip-iam) SKIP_IAM=1; shift ;;
     --skip-catalog) SKIP_CATALOG=1; shift ;;
     --skip-node) SKIP_NODE=1; shift ;;
+    --skip-egress-seed) SKIP_EGRESS_SEED=1; shift ;;
     --dry-run) ONBOARD_DRY_RUN=1; shift ;;
     -h|--help) usage 0 ;;
     *) echo "Unknown option: $1" >&2; usage 1 ;;
@@ -137,6 +146,13 @@ if [[ "$SKIP_NODE" == "0" ]]; then
   onboard_configure_node "$PBX3_ORG_BUCKET" "$ONBOARD_KSUID"
 else
   onboard_log "step: node configure (skipped)"
+fi
+
+# --- Fleet Egress trunk (mandatory for fleet dial-plane) ---
+if [[ "$SKIP_NODE" == "0" && "${SKIP_EGRESS_SEED:-0}" == "0" ]]; then
+  onboard_seed_egress_trunk
+else
+  onboard_log "step: fleet Egress seed (skipped)"
 fi
 
 # --- Verify catalog ---

@@ -153,10 +153,10 @@ If any command fails, stop and fix that prerequisite before launching an instanc
 | API | `curl -k https://127.0.0.1:44300/up` → **200** |
 | Identity | `globals.id` (KSUID), `shortuid`, `fqdn` set; catalog row `id` = same KSUID |
 | TLS | HTTPS on **44300** with LE (not only snakeoil) for `globals.fqdn` |
-| Fleet | IAM instance profile attached; `PBX3_ORG_BUCKET` set; `pbx3:fleet-preflight` green |
+| Fleet | IAM instance profile attached; `PBX3_ORG_BUCKET` set; **`trunks.pkey=Egress`** present; `pbx3:fleet-preflight` green (incl. **Egress qualify Avail** when SBC answers OPTIONS) |
 | SPA | Instance appears in fleet catalog picker after refresh |
 
-Order matters: **install and prove `/up` before onboard.** Onboard invents nothing in SQLite — it joins an already-provisioned node to S3 + catalog.
+Order matters: **install and prove `/up` before onboard.** Onboard does **not** recreate the DB, but it **does** write fleet `.env`, register the catalog row, and **seed the mandatory Egress trunk** (then genAst + runLinker + Asterisk restart). Magrathea domain/dispatcher cutover is still a separate edge step.
 
 ---
 
@@ -502,6 +502,9 @@ chmod +x onboard-fleet-instance.sh register-instance.sh
   --ssh-key "$KEY_FILE" \
   --region "$AWS_DEFAULT_REGION" \
   --org-bucket "$PBX3_ORG_BUCKET"
+# optional: --sbc-egress-host sbc.pbx3.com   (default)
+# optional: PBX3_SBC_EGRESS_FAILOVER_HOST=… for EgressFailover
+# unusual: --skip-egress-seed   (leaves fleet dial-plane incomplete)
 ```
 
 Optional: after a local backup exists on the node, add `--smoke-backup`.
@@ -513,10 +516,13 @@ Optional: after a local backup exists on the node, add `--smoke-backup`.
 3. Attaches profile to **this** `$INSTANCE_ID`  
 4. Writes **`register-instance.sh`** catalog row (`catalog/instance-index.json`)  
 5. Configures node `/opt/pbx3api/.env` (`PBX3_ORG_BUCKET`, fleet mode, egress host, cleans empty static AWS keys)  
-6. Sets SIP capture fleet mode + log cron as applicable  
-7. S3 smoke + catalog verify  
+6. Seeds **`trunks.pkey=Egress`** (host from `PBX3_SBC_EGRESS_HOST` / `--sbc-egress-host`), runs **genAst** + **runLinker** + **Asterisk restart**  
+7. Sets SIP capture fleet mode + log cron as applicable  
+8. S3 smoke + catalog verify  
 
 Do **not** put `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (even empty) in `.env` — empty strings block instance-role credentials.
+
+Edge note: seed makes the **node** ready to dial toward `sbc.pbx3.com`. Magrathea **domain / dispatcher / setid** for this FQDN remains an SBC-side step.
 
 ---
 
@@ -525,8 +531,10 @@ Do **not** put `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (even empty) in `.e
 SSH again and run:
 
 ```bash
-# Fleet env
+# Fleet env + mandatory Egress trunk (seeded by onboard)
 grep -E '^(PBX3_ORG_BUCKET|PBX3_FLEET_MODE|PBX3_DIRECTORY_BACKUP_UPLOAD|PBX3_SBC_EGRESS_HOST)=' /opt/pbx3api/.env
+sqlite3 /opt/pbx3/db/sqlite.db "SELECT pkey, active, host FROM trunks WHERE pkey='Egress';"
+# expect: Egress|YES|sbc.pbx3.com  (or your --sbc-egress-host)
 
 # Instance role visible (wait ~30s after profile attach if empty)
 curl -sS http://169.254.169.254/latest/meta-data/iam/security-credentials/
@@ -587,6 +595,8 @@ cd "${PBX3_REPO}/pbx3-directory/tools"
 | Onboard: SSH hangs | `chmod 400` key; SG 22 from Mac; use `BatchMode=yes` path |
 | Onboard: wrong AWS id | Mac must not use `pbx3-node-*` role |
 | Preflight S3 red | IAM attach lag (~30–60s); empty AWS keys in `.env`; wrong `PBX3_ORG_BUCKET` |
+| Preflight **Egress trunk** missing | Onboard skipped seed (`--skip-egress-seed`) or old onboard script — re-run current `onboard-fleet-instance.sh` or `seed-fleet-egress-trunk.sh` + genAst + runLinker + Asterisk restart |
+| Preflight **Egress qualify** Unknown/Unavail | Trunk may need a few qualify cycles; confirm `pjsip show aor Egress` Avail; check SBC OPTIONS path |
 | SPA missing instance | `register-instance` / catalog step failed; re-run with only catalog skip flags carefully |
 | Want same KSUID as a dead node | Wrong doc — use **`REBUILD_INSTANCE_RUNBOOK.md`** |
 
@@ -608,7 +618,7 @@ cd "${PBX3_REPO}/pbx3-directory/tools"
 | 9 | Node | `curl -k …/up` → 200 |
 | 10 | DNS | **A** `globals.fqdn` → EIP |
 | 11 | Node | `le-instance-bootstrap.sh email` |
-| 12 | Mac | `onboard-fleet-instance.sh --instance-id … --ssh … --ssh-key …` |
-| 13 | Node | `php artisan pbx3:fleet-preflight` green; SPA catalog refresh |
+| 12 | Mac | `onboard-fleet-instance.sh` (IAM, catalog, `.env`, **auto-seed Egress + genAst/runLinker/Asterisk restart**, S3 smoke) |
+| 13 | Node | `php artisan pbx3:fleet-preflight` green (incl. Egress trunk + qualify); SPA catalog refresh |
 
 That is the full greenfield install + fleet adopt path.
