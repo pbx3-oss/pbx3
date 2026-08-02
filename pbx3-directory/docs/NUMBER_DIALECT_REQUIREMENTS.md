@@ -129,7 +129,7 @@ Inventory `carrier` hint on DID is ops-only; **transforms follow the Peer that i
 - Fleet wire and stored CLIDs use **`+CC…`** where **CC = country code of the country that node serves** (not hard-coded `+44`).
 - After SBC inbound normalize, Asterisk sees **+E.164** R-URI (and CLI where rewritten).
 - `inroutes.pkey` may still match national or E.164 regex today; prefer patterns that match `+CC…` / digit E.164 going forward.
-- **DNID:** Egress trunk **transformation mask** converts subscriber habit → `+CC…` (UK seed `0:+44 00:+`; US needs `011:+` etc. — do not apply UK national rules on a US node).
+- **DNID:** Egress trunk **transformation mask** converts subscriber habit → `+CC…` (UK seed `00:+ 0:+44` — longer prefix first; US needs `011:+` etc. — do not apply UK national rules on a US node).
 - **CLID:** Node sends CLIP **as stored** (no transform mask today). Prefer `+CC…` in extension/cluster/trunk CLI fields; carrier PAID/RURI shape is **SBC outbound dialect**.
 - Overseas examples: UK→US `0015139266349` → `+15139266349`; US→UK `011441924918076` → `+441924918076` (after the right node transform).
 - Do **not** duplicate Magrathea/Gamma header rules on the node.

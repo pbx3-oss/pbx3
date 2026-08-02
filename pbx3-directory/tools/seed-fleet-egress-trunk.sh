@@ -34,16 +34,19 @@ INSERT INTO trunks (
   peername, pjsipreg, privileged, callprogress, swoclip, transform, z_created, z_updated, z_updater
 ) VALUES (
   '${id}', '${shortuid}', '${pkey}', 'YES', 'default', '${pkey}', 'Fleet SBC egress peer',
-  '${host}', 'SIP', 'udp', '${pkey}', NULL, 'NO', 'YES', 'YES', '0:+44 00:+',
+  '${host}', 'SIP', 'udp', '${pkey}', NULL, 'NO', 'YES', 'YES', '00:+ 0:+44',
   datetime('now'), datetime('now'), 'seed-fleet-egress'
 )
 ON CONFLICT(cluster, pkey) DO UPDATE SET
   active='YES', host='${host}', technology='SIP', transport='udp', peername='${pkey}',
   pjsipreg=NULL, privileged='NO',
-  transform=COALESCE(NULLIF(transform, ''), '0:+44 00:+'),
+  transform=CASE
+    WHEN transform IS NULL OR transform = '' OR transform = '0:+44 00:+' THEN '00:+ 0:+44'
+    ELSE transform
+  END,
   z_updated=datetime('now'), z_updater='seed-fleet-egress';
 SQL
-  echo "OK: trunks.pkey=${pkey} → ${host} (privileged=NO → context Ingress; transform UK→+E.164)"
+  echo "OK: trunks.pkey=${pkey} → ${host} (privileged=NO → context Ingress; transform UK→+E.164, 00 before 0)"
 }
 
 seed_trunk "Egress" "$SBC_HOST"

@@ -18,8 +18,10 @@ Store CLIDs as `+CC…` for that node’s serving country. Gamma/Magrathea PAID 
 [`pbx3-directory/tools/seed-fleet-egress-trunk.sh`](../pbx3-directory/tools/seed-fleet-egress-trunk.sh) sets Egress `transform` to:
 
 ```text
-0:+44 00:+
+00:+ 0:+44
 ```
+
+Longer prefix first (`00` before `0`) so overseas IDD is not mis-written as `+4400…`.
 
 | Habit | Example | After transform |
 |-------|---------|-----------------|
