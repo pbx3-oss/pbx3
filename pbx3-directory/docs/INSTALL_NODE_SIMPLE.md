@@ -11,7 +11,7 @@
 
 Copy-paste and edge cases live in **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`**. Rebuild same KSUID → **`REBUILD_INSTANCE_RUNBOOK.md`**. SBC domain/dispatcher cutover is *not* part of install or adopt.
 
-Lab package names (2026-08): **`pbx3_0.0.4-3_all.deb`**, **`pbx3cagi_1.0.0-8_all.deb`**.
+Lab package names (2026-08): **`pbx3_0.0.4-4`** (admin bootstrap) when built · else **`0.0.4-3`** + scp `bootstrap-admin-user.sh`. CAGI: **`pbx3cagi_1.0.0-8_all.deb`**.
 
 ---
 
@@ -46,10 +46,10 @@ Answer these *before* you start. The install does not invent them for you (excep
 | You / DNS | What hostname is this node? | Full **FQDN** | `kildare.pbx3.com` |
 | You / Home | What do humans call this site? | **Site name** | `AEL Nodes` |
 | LE | Who owns this cert? | **Email** | `ops@example.com` |
-| Admin SPA | First login (no default password is created) | **Email + password you invent** | `ops@example.com` + strong secret |
+| Admin SPA | installer will ask (or set env) | **Email + password you invent** | env or interactive; min 8 chars |
 | AWS | Where does it live? | **Region**, **instance id**, key name | `us-east-1`, `i-08a…`, `aelsip` |
 | SSH | How do I get in? | **`ubuntu@IP` or FQDN** + path to **`.pem`** | `ubuntu@3.93.253.1` |
-| Packages | Which releases? | Paths to the two **`.deb`** files on the laptop | `…/pbx3_0.0.4-3_all.deb`, `…/pbx3cagi_1.0.0-8_all.deb` |
+| Packages | Which releases? | Paths to the two **`.deb`** files on the laptop | `…/pbx3_0.0.4-4_all.deb`, `…/pbx3cagi_1.0.0-8_all.deb` |
 | Act 2 | Which fleet? | **`PBX3_ORG_BUCKET`** | `08jzwn-pbx3` |
 | Act 2 | Which SBC host for dial-out? | Usually leave default | `sbc.pbx3.com` |
 
@@ -59,9 +59,10 @@ Answer these *before* you start. The install does not invent them for you (excep
 |--------|----------------|
 | Domain apex / TLD | Prefer **not** using the prompt — set full FQDN instead (next section). Default alone is `pbx3.com`. |
 | Site name | Your friendly label |
+| **Admin email** | SPA login email (any RFC-ish address; need not receive mail) |
+| **Admin password** (+ confirm) | At least **8** characters — this *is* your SPA password |
 
-Prefer env vars (avoids domain/TLD prompts) — see the command in **Act 1 step 5**.
-
+Prefer env vars (avoids prompts) — see Act 1 step 5.
 ---
 
 ## Act 1 — Install the node
@@ -72,14 +73,16 @@ Do in order. Stop if a check fails.
 2. **Cloud:** Ubuntu 24.04 EC2 + SG + EIP; SSH works as `ubuntu`.  
 3. **Laptop → node:** `scp` both debs to `/tmp`.  
 4. **Node:** `apt update` / upgrade; install debs (`pbx3` then `pbx3cagi`); install **`ssmtp`** if the package complains.  
-5. **Node:** run the package installer with your FQDN and site name:
+5. **Node:** run the package installer with your FQDN, site name, and **admin SPA credentials**:
 
    ```bash
    sudo INSTANCE_FQDN=kildare.pbx3.com INSTANCE_SITENAME='AEL Nodes' \
+     PBX3_ADMIN_EMAIL=ops@example.com PBX3_ADMIN_PASSWORD='choose-a-strong-password' \
      /opt/pbx3/scripts/installer.sh
    ```
 
-   Replace the FQDN and site name with yours (from the answers sheet).
+   Or omit `PBX3_ADMIN_*` and answer the **Admin email / password** prompts on a real TTY.  
+   Package **≥ 0.0.4-4** no longer seeds `admin@pbx3.com` with an unknown hash.
 
 6. **Node:** deploy **pbx3api** to `/opt/pbx3api` and run its `installer.sh` (see full guide if you do not have a lab deploy habit yet).  
 7. **Prove Act 1 (local):**
@@ -96,44 +99,38 @@ Do in order. Stop if a check fails.
 8. **DNS:** **A** record for that `fqdn` → EIP. Wait until public DNS matches.  
 9. **Node:** LE — `le-instance-bootstrap.sh your@email` (or SPA → Certificates after first login).
 
-### First admin user (required — no default password)
+### Admin SPA user (install time + recovery)
 
-The package does **not** create an Admin SPA account. You invent email + password and create the first `admin` on the **node** over SSH (this is **not** the EC2 PEM and **not** fleet login).
+**New install (package ≥ 0.0.4-4):** `installer.sh` calls `bootstrap-admin-user.sh` and either:
+
+- uses **`PBX3_ADMIN_EMAIL` / `PBX3_ADMIN_PASSWORD`** (optional **`PBX3_ADMIN_NAME`**), or  
+- prompts interactively when the DB has **zero** users.
+
+There is **no** factory SPA password. Remember what you set.
+
+**Boxes already installed** (including pre-0.0.4-4 with seeded `admin@pbx3.com` / unknown password) — set a known password on the node:
 
 ```bash
-# SSH to the node first, then:
-cd /opt/pbx3api
-
-# optional: new box should print 0
-sudo -u www-data php artisan tinker --execute="echo App\Models\User::count();"
-
-sudo -u www-data php artisan tinker --execute="
-\$u = App\Models\User::create([
-  'name' => 'Admin',
-  'email' => 'ops@example.com',
-  'password' => 'choose-a-strong-password',
-  'abilities' => ['admin'],
-  'portable' => false,
-]);
-echo \$u->id.' '.\$u->email.PHP_EOL;
-"
+# copy bootstrap-admin-user.sh from the pbx3 repo if your package is still older, then:
+sudo PBX3_ADMIN_EMAIL=admin@pbx3.com PBX3_ADMIN_PASSWORD='choose-a-strong-password' \
+  /opt/pbx3/scripts/bootstrap-admin-user.sh --reset
 ```
 
-Replace `ops@example.com` and `choose-a-strong-password` with yours. Then open `https://<fqdn>:44300` and log in with that email/password.
+(If the email is different, use that address, or let sole-user fallback apply when only one row exists.)
 
-**Reset a forgotten password** (on the node):
+Break-glass alternate (any package age):
 
 ```bash
 cd /opt/pbx3api
-sudo -u www-data php artisan tinker --execute="
-\$u = App\Models\User::where('email', 'ops@example.com')->first();
-\$u->password = 'new-strong-password';
-\$u->save();
-echo 'updated '.\$u->email.PHP_EOL;
-"
+sudo -u www-data env HOME=/tmp php artisan tinker --execute='
+$u = App\Models\User::query()->first();
+$u->password = "choose-a-strong-password";
+$u->save();
+echo "ready: ".$u->email."\n";
+'
 ```
 
-After the first admin exists, create more users from SPA **Users** (API register already requires an admin token).
+Then open `https://<fqdn>:44300` with that email/password. More users: SPA **Users** (requires an admin session).
 
 10. **Done Act 1** when `/up` is 200, cert works, and Admin SPA login works with the user above.
 
@@ -189,4 +186,4 @@ Only after Act 1 is proven.
 | Replace dead EC2, keep KSUID | **`REBUILD_INSTANCE_RUNBOOK.md`** |
 | Mac tooling / SSH hangs | **`OPERATOR_MAC_SETUP.md`** |
 | First org bucket ever | **`OPS_S3_RUNBOOK.md`** (not this page) |
-| SPA “Unauthorized” / no password | See **First admin user** under Act 1 |
+| SPA “Unauthorized” / no password | New install: re-run bootstrap with email/password. Existing: `bootstrap-admin-user.sh --reset` (see **Admin SPA user**) |

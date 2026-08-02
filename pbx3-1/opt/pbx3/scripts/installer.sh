@@ -312,6 +312,17 @@ if [ -x "$SCRIPTS/normalize-globals-identity.sh" ]; then
     /bin/sh "$SCRIPTS/normalize-globals-identity.sh" || true
 fi
 
+# First SPA admin (no seeded password). Skip if users already exist.
+# Interactive prompts on TTY; non-interactive: PBX3_ADMIN_EMAIL + PBX3_ADMIN_PASSWORD.
+# Existing nodes with unknown seeded admin@pbx3.com: bootstrap-admin-user.sh --reset
+if [ -f "$SYSDB" ] && [ -x "$SCRIPTS/bootstrap-admin-user.sh" ]; then
+    /bin/sh "$SCRIPTS/bootstrap-admin-user.sh" "$SYSDB" || {
+        echo "WARNING: Admin SPA user bootstrap failed or skipped. On TTY re-run:" >&2
+        echo "  sudo $SCRIPTS/bootstrap-admin-user.sh" >&2
+        echo "  or: sudo PBX3_ADMIN_EMAIL=… PBX3_ADMIN_PASSWORD=… $SCRIPTS/bootstrap-admin-user.sh" >&2
+    }
+fi
+
 # Run setip once (network detection, shorewall/fail2ban/Asterisk localnet, /etc/issue)
 # Previously a systemd oneshot at boot; we run it here so the installer does not depend on it.
 echo running setip to resolve IP addresses

@@ -1,3 +1,11 @@
+pbx3 (0.0.4-4) noble; urgency=medium
+
+  * Stop seeding SPA admin with unknown password (always db_initdat).
+  * installer + bootstrap-admin-user.sh: prompt or PBX3_ADMIN_EMAIL /
+    PBX3_ADMIN_PASSWORD for first admin; --reset for existing boxes.
+
+ -- KOKO <admin@aelintra.com>  Sun, 02 Aug 2026 19:55:00 +0000
+
 pbx3 (0.0.4-3) noble; urgency=medium
 
   * postinst: after runLinker, genAst + refresh-pjsip-externip when sqlite.db
