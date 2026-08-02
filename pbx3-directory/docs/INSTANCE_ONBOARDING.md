@@ -4,7 +4,7 @@
 
 **Quick path:** **`tools/onboard-fleet-instance.sh`** — complete [Operator pre-flight (Mac)](#operator-pre-flight-mac) first, then see [Automation](#automation--onboard-fleet-instancesh-s64). Manual phases A–D are for debugging or when SSH/AWS is split across people.
 
-**Unified checklist (S8):** **`NEW_INSTANCE_CHECKLIST.md`** (greenfield) · **`REBUILD_INSTANCE_RUNBOOK.md`** (replace failed EC2, same KSUID). **Tenant move:** **`TENANT_MIGRATION_RUNBOOK.md`**.
+**Unified checklist (S8):** **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** (greenfield, command-by-command) · **`NEW_INSTANCE_CHECKLIST.md`** (short form) · **`REBUILD_INSTANCE_RUNBOOK.md`** (replace failed EC2, same KSUID). **Tenant move:** **`TENANT_MIGRATION_RUNBOOK.md`**.
 
 **Validated example:** `bzy54n.pbx3.com` joined fleet bucket `08jzwn-pbx3` alongside golden `08jzwn.pbx3.com` (May 2026).
 

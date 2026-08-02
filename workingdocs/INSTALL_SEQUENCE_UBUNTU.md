@@ -2,6 +2,8 @@
 
 Target: one server, backend (pbx3) then API/frontend (pbx3api). pbx3 provides DB, Asterisk, scripts; pbx3api provides nginx + PHP-FPM and the API on HTTPS port 44300.
 
+**New EC2 + join an existing fleet (copy-paste commands):** **`pbx3-directory/docs/GREENFIELD_FLEET_INSTANCE_INSTALL.md`**.
+
 ---
 
 ## Operator rules (read first)
