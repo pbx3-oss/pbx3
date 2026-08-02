@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — golden on **EIP `44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8**; CDR site-TZ (SPA/API + SBC) shipped. Lab: Magrathea VIP; Catcher **`98.82.58.59`**; Domain **`sippuac`**.  
-**Last updated:** 2026-08-01 (SBC Backup S3-only merge live on Magrathea)
+**Last updated:** 2026-08-01 (session end: tenant login simplify + lab catalog reconcile)
 
 
 ### Suggested “what next?” order
@@ -34,6 +34,10 @@
 - [x] **GenAst `$outbound_proxy` comment mangling (2026-08-01):** Comment token in `pjsip_phone.tmpl` was expanded by unanchored replace → bare prose in `pjsip_ready_phones.conf`. Fix: reword comment + line-anchored `/^\$outbound_proxy/m` in `GenClass::xlatePjsipBuff` (**`c8888cf`**). Hot on golden.
 
 - [x] **Terminate old golden EC2 (2026-08-01):** `i-02ec2b05b5baacb5d` (`54.236.153.81`) terminated by operator.
+
+- [x] **Lab tenants must use catalog (2026-08-01):** Doc **`LAB_FLEET_TENANTS.md`** + tool **`reconcile-node-tenants.sh`** (Mode 4 Phase 5 + BUILD_PLAN). Golden reconcile OK after registering `pb0wsk`. No node-only invent on fleet boxes.
+
+- [x] **SPA tenant login one-form (2026-08-01):** Tenant id + email + password; enforce typed UID ∈ `allowed_clusters`; autofill focus guard; catalog `no-store`. Lab: `pb0wsk` / `sipusert…` CDR/Home scoped OK. Spec: **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**.
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 

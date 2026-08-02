@@ -40,7 +40,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (index) → **TLS_IMPLEMENTATION_STEPS.md** (linear checklist) → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**Option A** spec + §11–§12). **pbx3spa**/workingdocs has stubs pointing here. |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
 | **Instance user privileges** | **pbx3spa**/workingdocs/**INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md** (P1–P4 + **B′ login homing** shipped) → **ADMIN_PANELS_AND_PERMISSIONS.md** → **AUTH_PATTERNS.md** |
-| Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`fetch-latest-instance-backup.sh`** |
+| Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **`LAB_FLEET_TENANTS.md`** (no node-only lab tenants) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`reconcile-node-tenants.sh`**, **`fetch-latest-instance-backup.sh`** |
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — requirements draft; implement after §8 lock; before CAGI Phase 4 |
@@ -71,25 +71,40 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-01 — CDR site-TZ + golden smoke)
+## Next agent session notes (2026-08-01 — tenant login + lab catalog guard)
 
-**Branches:** **pbx3api** **`b4433b7`**, **pbx3spa** **`a0d9fed`** / handoff **`fbd1107`**, **pbx3cagi** **`f2890d6`** (tag **`pbx3cagi-1.0.0-8`**), **pbx3sbc-admin** **`dad28d8`**, **pbx3** docs tip (this push). All **`main`**.
+**Branches:** **pbx3spa** (this push), **pbx3** (docs/tools this push). Earlier today: **pbx3sbc** **`610b4de`**, **pbx3sbc-admin** **`276d67c`** (Backup S3-only). All **`main`**.
 
-**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**; Magrathea VIP **`3.93.26.82`**; Peer-99 **`98.82.58.59`**; Domain **`sippuac`**. Old EC2 **`i-02ec2b05b5baacb5d`** still up — terminate (ask). Magrathea SSH: **`pbx3test.pem`** now authorized (was opensips.pem-only).
+**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**; Magrathea VIP **`3.93.26.82`**; Peer-99 **`98.82.58.59`**; Domain **`sippuac`**. Old golden EC2 terminated. Magrathea SSH: **`pbx3test.pem`**.
 
 ### Shipped
-- **pbx3cagi 1.0.0-8:** Asterisk 20 CLIP — `SetCallerPres` → `Set(CALLERID(pres)=allowed)`; on golden.
-- **Fleet setid:** operator linked setid **2** on golden (reconcile `unresolvable_expected_setid`); SPA promotes **Link setid** when missing (`a0d9fed`).
-- **CDR site-TZ:** API `SiteTimezone` + CDR/Home; SPA format + CDR nav section; SBC Filament Home/CDR same clock. Golden + Magrathea hot. Policy checklist in **`CDR_TIMEZONE_POLICY.md`**.
-- Magrathea: truncated `opensips.acc`; host TZ still **`Etc/UTC`** (display matches until Network TZ set).
+- **SPA tenant door:** one form (tenant id + email + password); enforce typed shortuid ∈ `allowed_clusters`; autofill focus guard on Tenant id; catalog fetch `cache: no-store`. Lab QA: `pb0wsk` + `sipusert.pbx3@pbx3.com` → CDR/Home tenant-scoped OK.
+- **Lab catalog discipline:** **`LAB_FLEET_TENANTS.md`** + **`reconcile-node-tenants.sh`** (Mode 4 Phase 5). Registered **`pb0wsk`** meta; tenant-home rebuild with `Cache-Control: no-cache`. Golden reconcile OK.
+- **SBC Backup Archives:** S3-only merge (earlier this session) live on Magrathea.
+- **alias_db_lookup:** leave as-is. **WebRTC far-end:** still blocked on SPA team.
 
 ### Golden / operator follow-up
-- Confirm terminate old EC2 **`i-02ec2b05b5baacb5d`**.
-- Optional: set Network/site TZ on golden + Magrathea if wall clock ≠ UTC.
-- TODO #1 after terminate: WebRTC far-end SPA.
+- Optional: Network/site TZ if wall clock ≠ UTC.
+- WebRTC far-end when SPA team ready; clamp SG **8089** when done.
 
 ### Resume
-- Ask → terminate old golden; then WebRTC SPA far-end or next TODO.
+- Next TODO: Fleet Delete / FQDN rename (parked) or tenant dial alias — or WebRTC when unblocked.
+
+---
+
+## Next agent session notes (2026-08-01 — CDR site-TZ + golden smoke) — historical
+
+**Superseded** by tenant login + lab catalog guard block above.
+
+**Branches:** **pbx3api** **`b4433b7`**, **pbx3spa** **`a0d9fed`**, **pbx3cagi** **`f2890d6`** (tag **`pbx3cagi-1.0.0-8`**), **pbx3sbc-admin** **`dad28d8`**. All **`main`**.
+
+**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**; Magrathea VIP; Peer-99; Domain **`sippuac`**. Old EC2 terminated later same day.
+
+### Shipped
+- CDR site-TZ; setid 2 linked; cagi CLIP; Magrathea `pbx3test.pem`.
+
+### Resume
+- See newer block above.
 
 ---
 

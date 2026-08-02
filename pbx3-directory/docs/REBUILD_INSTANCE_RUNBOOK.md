@@ -187,7 +187,18 @@ Optional backup upload smoke if a local zip exists:
    cd /opt/pbx3api && sudo php artisan pbx3:fleet-preflight
    ```
 
-6. **Backups panel:** Should list S3 archives (`source=s3` or `both`).
+6. **Catalog ↔ node tenants** (lab / B′ login guard — **do not skip**):
+
+   ```bash
+   # Mac/ops
+   export PBX3_ORG_BUCKET=08jzwn-pbx3   # or your org bucket
+   ./pbx3-directory/tools/reconcile-node-tenants.sh \
+     --ssh ubuntu@NEW_EC2_IP \
+     --ssh-key ~/Documents/pemfiles/pbx3test.pem
+   # node_only → Fleet Create or --fix; see LAB_FLEET_TENANTS.md
+   ```
+
+7. **Backups panel:** Should list S3 archives (`source=s3` or `both`).
 
 | Check | Pass |
 |-------|------|
@@ -195,6 +206,7 @@ Optional backup upload smoke if a local zip exists:
 | `globals.id` = catalog `id` = S3 prefix KSUID | |
 | IAM metadata returns role name | |
 | `pbx3:fleet-preflight` all green (incl. Egress Avail) | |
+| **`reconcile-node-tenants.sh` OK** (no node_only / wrong_home) | |
 | SPA backups show S3 rows | |
 | Phones REGISTER via SBC land on new node | |
 
@@ -226,6 +238,7 @@ Catalog row (`instance-index.json`) usually **persists** in S3 — onboard verif
 | Install order | **`pbx3/workingdocs/INSTALL_SEQUENCE_UBUNTU.md`** |
 | S3 / IAM detail | **`OPS_S3_RUNBOOK.md`** |
 | Tenant move (different workflow) | **`TENANT_MIGRATION_RUNBOOK.md`** |
+| Lab tenants must stay in catalog | **`LAB_FLEET_TENANTS.md`** |
 
 ---
 
@@ -238,4 +251,5 @@ Catalog row (`instance-index.json`) usually **persists** in S3 — onboard verif
 | `refresh-pjsip-externip.sh` | Node — `/opt/pbx3/scripts` | Rewrite `pjsip_transport.conf` `external_*` + Asterisk restart |
 | `sync-hostname-from-globals.sh` | Node — `/opt/pbx3/scripts` | OS hostname ← `globals.shortuid` (also called by restore) |
 | `onboard-fleet-instance.sh` | Mac — `pbx3-directory/tools` | IAM + `.env` + catalog + S3 smoke |
+| `reconcile-node-tenants.sh` | Mac — `pbx3-directory/tools` | Node `cluster` ↔ `tenants/*/meta` (lab / B′ guard) |
 | `pbx3:fleet-preflight` | Node — `php artisan` | Pass/fail fleet health checks |

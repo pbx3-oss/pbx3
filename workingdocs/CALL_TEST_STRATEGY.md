@@ -66,7 +66,7 @@ L0 stays the **merge-gate** for CAGI. L1 becomes the **lab regression** for dial
 | Generator | **SIPp** (Debian/Ubuntu package or build from source) |
 | Where it runs | Operator Mac or a small lab jump host — **toward golden**, not from CI runners (no public SIP from GitHub Actions) |
 | Media | Start **signalling-only** where possible; add RTP (`-m` / pcmu) when measuring capacity |
-| Auth / tenants | Use **lab DIDs + lab extensions** already on golden; no production tenants |
+| Auth / tenants | Use **lab DIDs + lab extensions** already on golden; no production tenants. On fleet nodes the lab tenant **must** be a **catalog** shortuid (Fleet Create) — **`LAB_FLEET_TENANTS.md`**; never SQLite-only. |
 | Assertions | SIPp scenario success/fail; optionally `asterisk -rx` / AMI event grep / CDR row for key cases |
 | Not used (for now) | pjsua as primary (optional later); Asterisk Test Suite (upstream-focused); commercial |
 

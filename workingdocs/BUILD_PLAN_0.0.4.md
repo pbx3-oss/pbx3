@@ -93,8 +93,9 @@ Follow **`REBUILD_INSTANCE_RUNBOOK.md`** (Mode 4). Lab-specific knobs:
 | 4 | **CDR:** empty `master.db` by design (not in zip) — no wipe step |
 | 5 | pbx3api deploy + migrate; fleet `.env` / onboard as runbook |
 | 6 | `pbx3:fleet-preflight` all green |
+| 6b | **`reconcile-node-tenants.sh`** OK (no node-only tenants) — **`LAB_FLEET_TENANTS.md`** |
 | 7 | Smoke: Domains REGISTER; one Domain call; **CDR `calldate` ≈ `date -u`**; Home Outcomes (today) non-empty after that call |
-| 8 | Optional: WebRTC REGISTER smoke on `:8089`; re-provision soak phones/queue if wallpaper needed |
+| 8 | Optional: WebRTC REGISTER smoke on `:8089`; re-provision soak phones/queue **under a catalog tenant** if wallpaper needed |
 | 9 | Only then: DNS/LE if needed; terminate old EC2 |
 
 **KSUID / FQDN:** keep **`08jzwn`** identity from backup (same instance). Org bucket historically `08jzwn-pbx3` — confirm from catalog before kickoff.

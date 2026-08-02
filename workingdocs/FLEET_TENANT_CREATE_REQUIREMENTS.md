@@ -37,7 +37,8 @@ One **instance** flag (existing fleet mode / `PBX3_FLEET_MODE` or equivalent) �
 3. Instance admin configures and Builds the PBX as today.
 4. Optional: Fleet DIDs assign / project.
 
-**Not** routine: Mac `register-tenant.sh`, hidden SBC Domains URL, Call Routes “new domain” (new setid footgun).
+**Not** routine: Mac `register-tenant.sh`, hidden SBC Domains URL, Call Routes “new domain” (new setid footgun).  
+**Lab:** never invent node-only tenants on a fleet box — **`pbx3-directory/docs/LAB_FLEET_TENANTS.md`** + **`tools/reconcile-node-tenants.sh`**.
 
 ## Technical flow (push)
 

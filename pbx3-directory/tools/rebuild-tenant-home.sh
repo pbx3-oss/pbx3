@@ -79,6 +79,8 @@ else
   ' "${metas[@]}" >"$OUT"
 fi
 
-registrar_s3_cp "$OUT" "$REGISTRAR_TENANT_HOME_KEY" --content-type application/json
+registrar_s3_cp "$OUT" "$REGISTRAR_TENANT_HOME_KEY" \
+  --content-type application/json \
+  --cache-control 'no-cache, max-age=0'
 count=$(jq '.tenants | length' "$OUT")
 echo "OK: wrote $REGISTRAR_TENANT_HOME_KEY ($count tenants)"
