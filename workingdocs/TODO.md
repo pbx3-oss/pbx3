@@ -22,7 +22,7 @@
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
 16. **WebRTC residual** — Magrathea **W1 lab green** (merged); golden **instance 8089 closed** and still OK. Package **pbx3cagi 1.0.0-10** + pbx3 webrtc tmpl roll to non-hot-fixed nodes; multi-AZ. Spec: **`WEBRTC_WSS_LAB.md`**.  
-17. **SPA WSS line test** — thin in-admin **line test** (register / dial / answer), not a desk softphone product. Prefer WSS host = edge when proving fleet path. See SPA **FEATURE_PLANS_INDEX**.  
+17. **SPA WSS line test** — direction locked **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`**. Implement when scheduled.  
 18. **Multi-AZ lab** — place fleet instances in **different AZs** (same-AZ lab under-tests NAT/ICE/media).  
 19. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
 
@@ -48,7 +48,7 @@
 
 - [ ] **WebRTC — package residual (2026-08-03):** Magrathea W1 **lab green**; **merged**. Golden: **instance TCP 8089 closed** (edge path only). Residual: rebuild/install **pbx3cagi 1.0.0-10** deb + **pbx3** package with webrtc tmpl on nodes beyond golden hot-fixes. Architecture write-up: **`WEBRTC_WSS_LAB.md`** § Fleet edge W1 · §6.1 **`FLEET_TRUNK_PEERING_DECISION.md`**.
 
-- [ ] **SPA WSS line test (open 2026-08-03):** First-party **in-admin line test** on **WSS** (register / dial / answer / hangup; hold/mute if cheap) against instance (later SBC W1). Job: prove the extension path for ops — **not** a desk softphone product, **not** InnovateAsterisk Browser-Phone (AGPL), **not** native app. Use SIP.js or JsSIP; SIP user = **shortuid**; dialable pkey for UI; Domain = tenant FQDN; WSS host = node or SBC. Coexists with external WSS team SPA. Track: **pbx3spa** **`FEATURE_PLANS_INDEX.md`** · lab **`WEBRTC_WSS_LAB.md`**.
+- [ ] **SPA WSS line test (locked 2026-08-03):** Direction in **pbx3spa** **`WSS_LINE_TEST_REQUIREMENTS.md`**. Instance SPA path prover; real **WebRTC** tenant extension; WSS on edge (home not wss transport); not a softphone. Implement when scheduled.
 
 - [ ] **Multi-AZ fleet lab (open 2026-08-03):** Lab today is effectively **same AZ** — under-tests ice_host / public identity / RTP / inter-instance and node↔SBC paths. **Need:** instances (at least two) in **different AZs**; smoke REGISTER, desk media, singleton-direct WebRTC if used, then SBC-faced path. Same-AZ success is not production multi-AZ proof. Notes: **`WEBRTC_WSS_LAB.md`** Next.
 
