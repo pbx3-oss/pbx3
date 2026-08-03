@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — golden **`08jzwn`** EIP **`44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8** (Kildare hot **Mangle 1.0.0-9**). Lab: Magrathea VIP **`3.93.26.82`**; second fleet node **Kildare** (`kildare.pbx3.com` / `3.93.253.1`).  
-**Last updated:** 2026-08-03 (docs garden: archive handoffs + slim closed TODOs)
+**Last updated:** 2026-08-03 (WebRTC WSS golden path fixed; multi-AZ lab TODO)
 
 
 ### Suggested “what next?” order
@@ -21,8 +21,9 @@
 13. **S7+** attested PCI — customer ask.  
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
-16. **WebRTC / WSS demo (SBC #1)** — **blocked:** await far-end SPA team. Spec: **`WEBRTC_WSS_LAB.md`**.  
-17. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
+16. **WebRTC / WSS** — golden instance path **working** (see handoff); far-end SPA re-verify + shortuid sanitize still open; W1 SBC later. Spec: **`WEBRTC_WSS_LAB.md`**.  
+17. **Multi-AZ lab** — place fleet instances in **different AZs** (same-AZ lab under-tests NAT/ICE/media).  
+18. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -44,7 +45,9 @@
 
 - [ ] **Grafana / Homer — fleet view only, unmodified (parked 2026-07-30):** Stance locked. **SBC Home = Filament** (in-box). **Grafana** (and Homer if ever) = optional **fleet / multi-instance** observability later — operator-installed **unmodified** OSS (AGPL); no fork, no bundling into product installer, no on-licensing end users. If a use case needs modifying Grafana/Homer, **don’t do that use case**. Not next.
 
-- [ ] **WebRTC — third-party SPA far-end (blocked 2026-08-01):** Await WebRTC/dev-team SPA. Open issues: (1) **digit-only sip-user sanitize** rejects alphanumeric shortuid — must accept `[a-z0-9]` (SIP user=`8af9ee`, dialable=`1500`). (2) Inbound: INVITE arrives on WSS but no SIP response (media/permissions / `newRTCSession` likely). Outbound from SPA previously “no INVITE” may be same class of client bug. Not a golden Asterisk gate. Clamp SG **8089** when SPA host test done.
+- [ ] **WebRTC — third-party SPA far-end (blocked 2026-08-01):** Await WebRTC/dev-team SPA. Open issues: (1) **digit-only sip-user sanitize** rejects alphanumeric shortuid — must accept `[a-z0-9]` (SIP user=`8af9ee`, dialable=`1500`). (2) Re-verify SPA after golden fixes (from_domain / media_address / ice_host / open RTP); earlier “INVITE black-hole” was often **PBX WSS Contact/SDP**, not only SPA. Clamp SG **8089** when SPA host test done. Spec: **`WEBRTC_WSS_LAB.md`**.
+
+- [ ] **Multi-AZ fleet lab (open 2026-08-03):** Lab today is effectively **same AZ** — under-tests ice_host / public identity / RTP / inter-instance and node↔SBC paths. **Need:** instances (at least two) in **different AZs**; smoke REGISTER, desk media, singleton-direct WebRTC if used, then SBC-faced path. Same-AZ success is not production multi-AZ proof. Notes: **`WEBRTC_WSS_LAB.md`** Next.
 
 - [ ] **`ipphone.desc` vs `description` — clarify / rename (parked 2026-07-29):** Historical SARK/Asterisk ambivalence: schema has both columns; SPA “User (extension name)” → `desc`, “Description” → `description`; list **User** prefers `desc` so freeform Description never shows when `desc` is set (e.g. `1501` vs “WebRTC second ep”). GenAst `$desc` token actually substitutes **`description`** (else pkey), not the `desc` column. Model comment still calls `desc` “SIP username” — wrong now that **shortuid** is PJSIP identity. Proper fix later: map roles (display name vs notes vs any remaining Asterisk/SIP use), align SPA labels + list, GenAst templates, API, migrate/rename if needed. Do not drive-by.
 

@@ -25,6 +25,14 @@ else
 	tls_skip "could not grep apply-active-cert hook from renew script"
 fi
 
+if grep -q "ensure_le_tree_readable" "$SCRIPTS_PKG/apply-active-cert.sh" 2>/dev/null && \
+   grep -q "ssl-cert" "$SCRIPTS_PKG/apply-active-cert.sh" 2>/dev/null && \
+   grep -q "restart asterisk\|core restart" "$SCRIPTS_PKG/apply-active-cert.sh" 2>/dev/null; then
+	tls_pass "apply-active-cert: LE ssl-cert ACLs + Asterisk restart for WSS :8089"
+else
+	tls_fail "apply-active-cert missing LE readability / asterisk restart (WSS bind)"
+fi
+
 if [[ -f "$DOCS/TLS_AND_CERTIFICATES.md" && -f "$DOCS/TLS_IMPLEMENTATION_STEPS.md" ]]; then
 	tls_pass "TLS index + implementation steps docs present (4.4)"
 else

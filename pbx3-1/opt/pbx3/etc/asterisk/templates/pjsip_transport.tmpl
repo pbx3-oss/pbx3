@@ -31,3 +31,5 @@ bind=0.0.0.0:5060
 type=transport
 protocol=wss
 bind=0.0.0.0:8089
+; Contact on outbound INVITE must use 8089/wss (default path leaned on 5060 and broke browser inbound).
+external_signaling_port=8089

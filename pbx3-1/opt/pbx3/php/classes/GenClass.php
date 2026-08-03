@@ -454,6 +454,35 @@ class genAsteriskObjects
 		$pjsipPhoneBuff = NULL;
 		$phones = $this->helper->getTable("ipphone", null, false);
 
+		// WSS outbound INVITE Contact/SDP: public FQDN + public IP (see pjsip_webrtc.tmpl $fqdn / $externip).
+		$myExternip = '';
+		if (($this->globals['sendedomain'] ?? '') == "YES") {
+			if (($this->globals['edomain'] ?? '') != "") {
+				$myExternip = $this->globals['edomain'];
+			} else {
+				$edomaindig = $this->nethelper->get_externip();
+				if ($edomaindig) {
+					$myExternip = $edomaindig;
+				}
+			}
+		}
+		// Prefer dig IP for media_address when edomain is a hostname (Contact uses $fqdn).
+		if ($myExternip !== '' && !filter_var($myExternip, FILTER_VALIDATE_IP)) {
+			$digIp = $this->nethelper->get_externip();
+			if ($digIp) {
+				$myExternip = $digIp;
+			}
+		}
+		$myFqdn = '';
+		$leDomainFile = '/opt/pbx3/etc/identity/le-domain';
+		if (is_readable($leDomainFile)) {
+			$myFqdn = trim((string) @file_get_contents($leDomainFile));
+		}
+		if ($myFqdn === '' && ($this->globals['edomain'] ?? '') != ''
+			&& !filter_var($this->globals['edomain'], FILTER_VALIDATE_IP)) {
+			$myFqdn = (string) $this->globals['edomain'];
+		}
+
 		foreach ($phones as $row) {
 
 			if ($row['active'] != "YES") {
@@ -471,6 +500,8 @@ class genAsteriskObjects
 
 			if ($pjsipPhoneBuff) {
 				$this->xlatePjsipBuff($pjsipPhoneBuff, $row);
+				$pjsipPhoneBuff = preg_replace('/\$externip/', $myExternip, $pjsipPhoneBuff);
+				$pjsipPhoneBuff = preg_replace('/\$fqdn/', $myFqdn, $pjsipPhoneBuff);
 			}
 
 			$this->OUT .= $pjsipPhoneBuff . "\n\n";

@@ -1,17 +1,19 @@
 # WebRTC lab notes — golden `:8089` baseline (2026-07-28)
 
-**Status:** Golden `:8089` **REGISTER + bidirectional audio OK** (2026-07-28). Recovery tag **`pre-webrtc-wss-20260728`**. Magrathea VIP **not** touched.
+**Status:** Golden `:8089` **REGISTER + bidirectional audio OK** (2026-07-28). Recovery **`pre-webrtc-wss-20260728`**. Magrathea VIP **not** touched.  
+**2026-08-03:** After Mode 4 rebuild, TLS again failed to bind (unreadable keys / snakeoil) → only **:8088**. Fixed ops + **source:** **`apply-active-cert.sh`** now sets **ssl-cert** ACLs on LE material and **restarts Asterisk** so WSS survives renew/rebuild.
 
 ## Done
 
 1. **Docs priority** — WebRTC/WSS #1 in **`SBC_PRODUCT_TRACKS.md`**, **`TODO.md`**, §6.1 active note in **`FLEET_TRUNK_PEERING_DECISION.md`**.
-2. **Golden HTTPS/WSS listen** — Asterisk had `tlsenable` + LE paths in `http.conf` but **could not read** LE privkey (`live/`/`archive/` mode `700`, key `600` root). Fixed: `ssl-cert` group + `750`/`640`. **HTTPS now bound on `0.0.0.0:8089`**.
-3. **Certbot deploy hook** on golden: `/etc/letsencrypt/renewal-hooks/deploy/asterisk-ssl-cert-perms.sh` so renewals keep Asterisk-readable perms.
-4. **WebRTC extension** — dialable **`1500`** / SIP user + endpoint **`8af9ee`** (shortuid) / tenant **`dhbm8x`**. **2026-07-28:** fixed `pjsip_webrtc.tmpl` to use `$id` (same pattern as phones); was wrongly `$ext` so endpoint was `1500` and admin hint `PJSIP/8af9ee` never lit. Also `/etc/asterisk/pjsip_ready_webrtc.conf` was a stale file — now symlink to GenAst output like phones/trunks. Creds: golden **`~/webrtc-1500.env`** (`sip_user=8af9ee`).
-5. **Shorewall** — `pbx3_rules` lacked **tcp 8089**; added `ACCEPT net $FW tcp 8089` (WebRTC WSS) and `shorewall restart`. Live `net-fw` multiport now `80,44300,8089,22`. RTP `10000:20000` was already open. Product template updated.
-6. **REGISTER smoke (2026-07-28):** JsSIP on-box → **`SMOKE_OK registered sip:1500@dhbm8x.pbx3.com`**. Note: on-box must use **loopback** `wss://127.0.0.1:8089/ws` (public EIP hairpin from the instance itself fails). External clients use `wss://08jzwn.pbx3.com:8089/ws`.
-7. **Webphone audio smoke (2026-07-28):** Browser JsSIP (Chromium) via `wss://08jzwn.pbx3.com:8089/ws` → dial lab Echo **1599@dhbm8x** (runtime dialplan; removed after). **ICE connected**; browser `getStats` ~60KB in/out; Asterisk `pjsip show channelstats` **279/279** ulaw packets, 0 loss. RTP bypass OK — **no rtpengine**. Magrathea UDP untouched.
-8. **Third-party SPA REGISTER (2026-07-28):** Test-mule webphone **REGISTER OK** as SIP user **`8af9ee`** (hostname-only WSS field). Admin hint **Idle**. **Outbound keypad dial still sends no INVITE** (operator comparing to SARK 6.5). Not a golden audio gate.
+2. **Golden HTTPS/WSS listen** — LE privkey mode `700`/`600` root → Asterisk cannot open key → TLS bind fails. **Product fix:** **`apply-active-cert.sh`** (ssl-cert group ACLs + Asterisk restart). Lab also used `ssl-cert` + LE paths in **`http.conf`**.
+3. **Renewal** — certbot deploy hook already invokes **`apply-active-cert.sh`** (`le-renew-with-80.sh`); no separate golden-only hook required once the package script is deployed.
+4. **WebRTC extension** — dialable **`1500`** / SIP user + endpoint **`8af9ee`** (shortuid) / tenant **`dhbm8x`**. Admin SPA shows extension **1500** (label/desc), not the SIP shortuid. **`pjsip_webrtc.tmpl`** uses **`$id`/shortuid**. Creds: golden **`~/webrtc-1500.env`**.
+5. **Shorewall** — `ACCEPT net $FW tcp 8089` (WebRTC WSS). **`ACCEPT net $FW udp 10000:20000`** (RTP — must be **net**, not **`$LAN` only**; fleet/cloud phones + browsers hit public EIP; LAN-only caused silent Snom/Yealink/WebRTC).
+6. **REGISTER smoke (2026-07-28):** JsSIP → **`SMOKE_OK`**. On-box use **loopback** `wss://127.0.0.1:8089/ws`; external clients `wss://08jzwn.pbx3.com:8089/ws`.
+7. **Webphone audio smoke (2026-07-28):** Browser JsSIP → Echo; ICE + RTP bypass OK — **no rtpengine**.
+8. **Third-party SPA REGISTER (2026-07-28):** REGISTER as **`8af9ee`** OK; outbound dial issues on that SPA were client-side.
+9. **Browser-Phone (InnovateAsterisk, local)** — good lab client (SIP.js); SIP user = shortuid, domain = tenant FQDN.
 
 ## Operator smoke (browser / product webphone)
 
@@ -24,17 +26,34 @@ Pass:     see ~/webrtc-1500.env on golden (or scp)
 
 Webphone server field: hostname only `08jzwn.pbx3.com` (no `wss://` prefix if the UI adds it), port `8089`, path `/ws`.
 
-`scp -i ~/Documents/pemfiles/pbx3test.pem ubuntu@08jzwn.pbx3.com:~/webrtc-1500.env /tmp/`
+If “Connecting…” forever: on node check `sudo asterisk -rx "http show status"` must show **HTTPS … 8089**. If only 8088: run **`sudo /opt/pbx3/scripts/apply-active-cert.sh`** (after LE and `le-domain` exist).
 
-Confirm Shorewall allows **tcp 8089** (`pbx3_rules`) and AWS SG allows **8089/tcp** (+ RTP **udp 10000–20000**) from your client IP. Desk UDP path unchanged.
+If auth works but register fails with **403 / max contacts**: stale WSS Contact under AOR **`max_contacts=1`**. New browser ports look like a second contact. Product AOR uses **`remove_existing=yes`** (`pjsip_webrtc.tmpl`). Lab clear: `sudo asterisk -rx "database deltree registrar/contact"` then re-register (or reload after template fix).
+
+## Inbound to webphone (Snom → 1500)
+
+**Fixed 2026-08-03 (lab + source):** WSS server→client INVITE was ignored until Contact/SDP hosts were public:
+
+| Broken | Working |
+|--------|---------|
+| `Contact: <sip:asterisk@08jzwn:5060;transport=ws>` | `Contact: <sip:asterisk@08jzwn.pbx3.com;transport=ws>` |
+| SDP `c=` private `172.31…` | `media_address` = public EIP (`$externip`) |
+| `from_domain` missing / short host | `from_domain` = LE FQDN (`$fqdn` from `identity/le-domain`) |
+
+With those + `direct_media=no` / `100rel=no` / `timers=no` / `remove_existing=yes`, golden log: **100 Trying → 180 Ringing → 200 OK** on WSS, ACK, full client SDP (ICE to public srflx).
+
+**Still fails if:** two WSS tabs share one AOR (`max_contacts=1`) — Contact port ≠ dialing socket → INVITE black-hole. Close extras; `database deltree registrar/contact`; one re-REGISTER; one `ss` line on `:8089`.
+
+Confirm Shorewall **tcp 8089** + **udp 10000–20000** on **net** (not LAN-only) and AWS SG same.
+
+**Post-answer audio delay (2026-08-03):** ICE advertised VPC **host** `172.31…` ahead of public **srflx** → browser spun dead candidates. Fix: **`[ice_host_candidates]`** private⇒EIP in **`rtp.conf`**, no multi-`stunaddr` (Asterisk sample). Maintained by **`refresh-pjsip-externip.sh`**. After change: re-REGISTER, answer a call; SDP host candidate should be the EIP only.
 
 ## Next (non-disruptive) — **stay on golden**
 
-**Locked:** Demo / near-term work continues on **golden `:8089`**. That does **not** disrupt Magrathea UDP desk/Peer SIP. Scratch SBC / Magrathea WSS cutover are **later** (fleet VIP story).
-
-1. Third-party SPA outbound INVITE (operator digging vs SARK 6.5) — or product/controlled webphone dial.  
-2. Clamp SG **8089/tcp** world-open when SPA host test done.  
-3. **Later:** OpenSIPS W1 on scratch or Magrathea dedicated port (`webrtc-wss` branch scaffold) when booking VIP edge for webphones.
+1. Product/controlled webphone dial; far-end SPA sanitize follow-ups.  
+2. Clamp SG **8089/tcp** world-open when host tests done.  
+3. **Cross-AZ fleet lab (required before “real” multi-AZ):** same-AZ hides ICE/NAT/host-identity and inter-node path assumptions. Stand instances (or at least phone↔node / node↔SBC legs) in **two AZs** and re-smoke REGISTER, desk phone RTP, singleton-direct WSS, and SBC path when ready.  
+4. **Later:** OpenSIPS W1 on scratch or Magrathea.
 
 ## Notes
 

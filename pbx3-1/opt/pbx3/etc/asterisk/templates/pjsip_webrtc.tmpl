@@ -7,9 +7,19 @@ callerid="$desc" <$ext>
 context=$clst
 dtls_auto_generate_cert=yes
 transport=transport-wss
+; Must bridge through Asterisk: Snom (RTP) cannot direct-media to browser (DTLS-SRTP/ICE).
+; Default direct_media=yes breaks phone→webphone (outbound web often works by chance).
+direct_media=no
+; Softphones/SIP.js often ignore PRACK; required 100rel can suppress ring progress.
+100rel=no
+; Session timers on inbound WSS INVITEs have caused mute clients with no SIP reply.
+timers=no
+; Keep Contact/SDP host public (avoids Contact sip:asterisk@hostname:5060 on WSS INVITE).
+from_domain=$fqdn
+media_address=$externip
 set_var=CHANNEL(parkinglot)=$clstkey
 webrtc=yes
-  
+
 [$id]
 type=auth
 auth_type=userpass
@@ -19,6 +29,8 @@ password=$password
 [$id]
 type=aor
 max_contacts = 1
+; Web browser re-REGISTER often uses a new ephemeral Contact; replace previous single contact
+remove_existing=yes
 ; WSS contacts: OPTIONS qualify often fails and marks Unavail; device state still tracks registration
 qualify_frequency=0
 minimum_expiration = 60 

@@ -37,7 +37,9 @@ Exactly **one** server TLS **material** (one key pair + chain) is active for ngi
 2. **Let’s Encrypt** — Material under **`/etc/letsencrypt/live/<primary>/`**. **`/opt/pbx3/etc/identity/le-domain`** = **primary** (certbot live dir basename). The cert may list **many SANs** (**Option A**): node + all **`cluster.fqdn`** included at last setup/sync.
 3. **Snakeoil** — if neither custom nor LE is usable.
 
-**`apply-active-cert.sh`** applies the resolved pair to nginx + Asterisk. **Option A** still uses **one** cert path (multi-SAN in **one** PEM).
+**`apply-active-cert.sh`** applies the resolved pair to nginx + Asterisk **`http.conf`**. **Option A** still uses **one** cert path (multi-SAN in **one** PEM).
+
+**Asterisk WSS / WebRTC (`:8089`):** LE trees default to root-only keys. apply-active-cert also: (1) adds **`asterisk`** (and **www-data**) to group **`ssl-cert`**, (2) makes **`/etc/letsencrypt/{live,archive}`** group-readable (`750` dirs, `640` privkeys), (3) **`systemctl restart asterisk`** so TLS rebinds if the previous start failed quietly (plain **:8088** only). Without this, rebuild/LE leaves **“connecting”** webphones. See **`WEBRTC_WSS_LAB.md`**.
 
 **Out of scope:** Manufacturer “3rd party” CA bundles — separate panel (**`CERTIFICATES_PANEL_AND_API.md`**).
 

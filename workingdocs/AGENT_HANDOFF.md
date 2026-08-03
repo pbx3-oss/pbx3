@@ -72,7 +72,34 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
+## Next agent session notes (2026-08-03 — WebRTC WSS golden)
+
+**Branch:** **pbx3** **`main`** (source + docs). Golden hot-applied; package not rebuilt as deb this session.
+
+**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**. WebRTC dialable **`1500`** / SIP **`8af9ee`** / tenant **`dhbm8x`**. WSS direct instance `wss://08jzwn.pbx3.com:8089/ws` (not Magrathea).
+
+### Shipped
+- **Inbound WSS broken → fixed:** Contact used short host + `:5060`; SDP `c=` private VPC. **`pjsip_webrtc.tmpl`:** `from_domain=$fqdn`, `media_address=$externip`, `direct_media=no`, `100rel=no`, `timers=no`, AOR `remove_existing=yes`. **`GenClass::genPjsipWebrtc`** substitutes `$fqdn` (le-domain) + `$externip` (public IP even when edomain is hostname).
+- **Shorewall RTP:** `ACCEPT net $FW udp 10000:20000` (was LAN-only → public desk/WebRTP drop).
+- **ICE post-answer lag:** `[ice_host_candidates]` private⇒EIP; multi-`stunaddr` removed. **`refresh-pjsip-externip.sh`** maintains mapping + restarts Asterisk.
+- **TLS/WSS bind after rebuild:** **`apply-active-cert.sh`** ssl-cert ACLs + Asterisk **restart** (not reload-only); notes in http.conf / TLS docs / step4.
+- **Transport tmpl:** WSS external signaling hints as needed lab-side.
+- **Docs:** **`WEBRTC_WSS_LAB.md`**; TODO multi-AZ + SPA re-verify wording.
+
+### Golden / operator follow-up
+- Golden has live configs + script; **apt package roll** still needed for other nodes / clean rebuilds.
+- Browser-Phone post-Accept delay = client mule (not tracking). SPA team re-test after our Contact/SDP/ICE fixes; **shortuid sanitize** may still be SPA-side.
+- Clamp SG **8089** when host tests done.
+- **Multi-AZ** lab instances before production AZ claims.
+
+### Resume
+- Product SPA webphone smoke on golden (operator). Package WebRTC/ICE pieces when packaging session. Multi-AZ when scheduled. Number-wire D1 still open.
+
+---
+
 ## Next agent session notes (2026-08-03 — docs garden)
+
+**Superseded for “read first”** by WebRTC WSS block above.
 
 **Branches:** **pbx3** + **pbx3spa** docs only — **`main`**.
 
@@ -88,7 +115,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-08-02 — Kildare PSTN + Mangle + wire draft) — recent
 
-**Superseded for “read first”** by docs garden above; still the latest product/lab arc.
+**Superseded for “read first”** by 2026-08-03 WebRTC block; still the latest PSTN/Kildare product arc.
 
 **Branches:** **pbx3cagi** **`502596e`** (Mangle fix **1.0.0-9** changelog), **pbx3** seed/docs + this handoff, **pbx3-docs** number-dialect seed order — **`main`**. Earlier same day: greenfield/route **`eb8961d`** / install tips.
 
