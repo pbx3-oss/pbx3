@@ -1,7 +1,7 @@
 # WebRTC lab notes — golden `:8089` baseline (2026-07-28)
 
-**Status:** Golden `:8089` **REGISTER + bidirectional audio OK** (singleton-direct).  
-**2026-08-03 W1:** Magrathea edge path **lab green** — `wss://sbc.pbx3.com:8089/ws` + shortuid + tenant domain; desk↔webphone both ways. Checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**.  
+**Status:** Golden `:8089` singleton-direct path (historical baseline).  
+**2026-08-03 W1:** Magrathea edge path **lab green** — desk↔webphone both ways; **home instance TCP 8089 may be closed** (proven on golden). WSS terminates only on SBC; edge→home is ordinary SIP. Checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**.  
 **2026-08-03 (earlier):** After Mode 4 rebuild, TLS bind fix via **`apply-active-cert.sh`** (ssl-cert ACLs + Asterisk restart).
 
 ## Done
@@ -49,7 +49,39 @@ Confirm Shorewall **tcp 8089** + **udp 10000–20000** on **net** (not LAN-only)
 
 **Post-answer audio delay (2026-08-03):** ICE advertised VPC **host** `172.31…` ahead of public **srflx** → browser spun dead candidates. Fix: **`[ice_host_candidates]`** private⇒EIP in **`rtp.conf`**, no multi-`stunaddr` (Asterisk sample). Maintained by **`refresh-pjsip-externip.sh`**. After change: re-REGISTER, answer a call; SDP host candidate should be the EIP only.
 
-## Fleet edge W1 client (preferred multi-tenant)
+## Fleet edge W1 (preferred multi-tenant) — architecture
+
+**Lab green 2026-08-03** including **home instance TCP 8089 closed** (AWS SG): Magrathea-path calls still work.
+
+### The cool part: WSS only at the edge
+
+OpenSIPS is a **proxy-registrar**, not a WSS tunnel to Asterisk:
+
+```text
+Browser  ── SIP over WSS (TLS :8089/ws) ──►  Magrathea (sbc.pbx3.com)
+                                                    │
+                                                    │ ordinary SIP UDP :5060
+                                                    ▼
+                                           Home instance (PJSIP)
+Browser  ◄══ media ICE/DTLS-SRTP ══════════════════╝   (RTP bypass — not via SBC)
+Desk UA  ◄══ RTP ══════════════════════════════════╝
+```
+
+| Hop | Protocol | Who opens **8089**? |
+|-----|----------|---------------------|
+| Client → edge | SIP over **WSS** | **SBC only** (`wss://sbc.pbx3.com:8089/ws`) |
+| Edge → home | Classic **SIP UDP** (same family as desk phones) | **Not needed** on the instance for this path |
+| Media | ICE / DTLS-SRTP or RTP | Home public RTP range (and existing rules) |
+
+So fleet homes are **not** “WSS extensions” for edge browsers. Home PJSIP WebRTC endpoints use:
+
+- **`transport-udp`** + fleet **`outbound_proxy=sip:sbc.pbx3.com;lr`** (desk-like signaling)
+- **`webrtc=yes`** still — browser **media** (ICE/DTLS), not “listen for WSS on :8089”
+- PrepDial fleet: `PJSIP/shortuid/sip:shortuid@tenant.fqdn` so dial hits SBC **usrloc** (not SIP.js dummy `192.0.2.x` Contact)
+
+**Side benefit (product):** one WSS edge / cert / port for all tenants; instances speak boring SIP; Track‑A / last-gen homes that already do SIP can share the same edge story without opening instance WSS to the world. **Close instance TCP 8089** for fleet Magrathea path — open it only for intentional **singleton-direct** lab (`wss://instance-fqdn:8089`).
+
+### Client settings
 
 ```text
 WSS:     wss://sbc.pbx3.com:8089/ws
@@ -58,15 +90,11 @@ Domain:   dhbm8x.pbx3.com
 Pass:     ~/webrtc-1500.env on golden
 ```
 
-**Home node (fleet):** WebRTC endpoints use **UDP + `outbound_proxy=sip:sbc.pbx3.com;lr`** (`pjsip_webrtc.tmpl`); PrepDial fleet always **tenant-FQDN RURI** (incl. WebRTC). Do not Dial the SIP.js `192.0.2.x` Contact alone.
-
 ## Next (non-disruptive)
 
-1. **Dev-team webphone** — **OK** (both paths).  
-2. **SPA WSS line test** (planned) — in-admin path prover; see **FEATURE_PLANS_INDEX** + **TODO**.  
-3. Clamp SG **8089/tcp** on **instance** when host tests done (edge SG may stay for product WSS).  
-4. **Cross-AZ fleet lab** before treating multi-AZ media as proven.  
-5. Package rolls: **pbx3** webrtc tmpl; **pbx3cagi 1.0.0-10** (PrepDial); merge **pbx3sbc `w1-magrathea-wss`**.
+1. **SPA WSS line test** (planned) — prefer WSS host = edge + SIP domain = tenant; see **FEATURE_PLANS_INDEX** + **TODO**.  
+2. **Cross-AZ fleet lab** before treating multi-AZ media as proven.  
+3. Package rolls: ensure **pbx3** webrtc tmpl + **pbx3cagi 1.0.0-10** land on nodes beyond golden hot-fix (branches already **merged to main**).
 
 ## SIP domain vs next hop (DNS) — product stance (2026-08-03)
 

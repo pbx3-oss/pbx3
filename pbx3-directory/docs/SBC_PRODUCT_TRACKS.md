@@ -9,7 +9,7 @@
 | **C — Teams** | **Do not** build or certify Direct Routing on pbx3sbc. Customer ask → **C1** answer (rent/peer Microsoft-approved SBC ahead, or Operator Connect). No C2/C3 investment. |
 | **B — STIR/SHAKEN** | **Pragmatic / Peer-shaped.** Near-term: continue **Twilio** lab (shape **A** — low cost, low obligation). Escalate to Bandwidth Hosted Signing (B) or OpenSIPS AS (C) only when circumstance requires. Append vendors over time. |
 | **A — General SBC** | Still valid SKU intent. **Lab next:** stand up a **SARK** box (and optionally **FreePBX**) behind Magrathea / scratch SBC — domain, dispatcher, phone registrar = SBC, one DID path — prove proxy-registrar without GenAst. |
-| **WebRTC / WSS (S8.11 / W1)** | **#1 now.** Golden `:8089` **REGISTER + bidirectional audio OK**. **Magrathea WSS** track: branch **`w1-magrathea-wss`**, checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`** (backup → packages → enable :8089/ws → smoke; **RTP bypass**). Tenant SIP domain stays edge-translate (**no** per-tenant public DNS required). Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · **`WEBRTC_WSS_LAB.md`**. |
+| **WebRTC / WSS (S8.11 / W1)** | **#1 near-term — Magrathea lab green 2026-08-03.** Browser **WSS only on SBC** (`wss://sbc.pbx3.com:8089/ws`); SBC → home is **ordinary SIP UDP**; RTP bypass; **home instance TCP 8089 not required** (golden closed 8089, calls OK). Home WebRTC PJSIP = UDP + `outbound_proxy` + `webrtc=yes`. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · **`WEBRTC_WSS_LAB.md`** · checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**. |
 
 **Related:** **`DESIGN_RULES.md`** Rules **7** + **13**; **`EDGE_PORTABILITY_SCORECARD.md`**; **`NUMBER_DIALECT_REQUIREMENTS.md`**; **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WebRTC WSS); pbx3sbc proxy-registrar architecture; **`PEERING-PLAN.md`**; living research **`TELEPHONE_FRAUD_RESEARCH.md`** §5–§6 (peer STIR postures; ClearIP/Sansay bolt-on effort/cost/value).
 
@@ -17,7 +17,7 @@
 
 ## Capability gaps & roadmap
 
-**Committed / active:** **WebRTC / WSS on the edge** — interim node `:8089` baseline; target SBC terminates WSS (same VIP as desk phones). See **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · IMPLEMENTATION_PLAN **S8.11** / **W1**.
+**Committed / active:** **WebRTC / WSS on the edge** — Magrathea terminates WSS; homes speak SIP UDP (see §6.1 / W1 lab). Instance `:8089` optional for singleton-direct only. See **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · IMPLEMENTATION_PLAN **S8.11** / **W1**.
 
 **Excluded by posture (not gaps to build on Magrathea):** Teams Direct Routing on OpenSIPS; first-party STI-AS on every Peer; door-knock SIP header capture; control-plane HA homed on the SBC; OpenSIPS rename-for-purity; competitor-style media termination for the few-week demo.
 

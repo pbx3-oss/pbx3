@@ -256,66 +256,69 @@ A single SBC is acceptable for **lab / golden validation**. **Production fleet**
 | **Directory / S3 HoR** | Unchanged — catalog authoritative; edge is projection |
 ### 6.1 WebRTC / WSS endpoints (fleet edge)
 
-**Settled 2026-07-14** (product framing). **Active 2026-07-28:** WSS-on-SBC promoted for golden demo (few weeks). Build: golden `:8089` baseline → **scratch SBC** W1 → Magrathea VIP cutover when booked. RTP bypass. Recovery tag **`pre-webrtc-wss-20260728`**.
+**Settled 2026-07-14** (product framing). **Magrathea lab green 2026-08-03:** browser WSS → SBC → **ordinary SIP UDP home** → RTP bypass; **home TCP 8089 can stay closed** (proven on golden).
 
 **Business driver:** Same **stable edge** for webphones as desk phones — **endpoint setup simplicity** (one WSS/SIP proxy forever; instance move = edge repoint). Not a requirement to make last-gen backends understand WebRTC (they already do).
 
+#### The model (proxy-registrar, not a WSS tunnel)
+
+OpenSIPS terminates **SIP-over-WSS** for browsers only. Toward fleet homes it speaks **classic SIP (UDP 5060)** — same dispatcher / domain / usrloc story as desk phones. That is intentional and powerful:
+
+- **One WSS cert/port** for all tenants (e.g. `sbc.pbx3.com:8089`)
+- **No per-instance public TCP 8089** for Magrathea clients
+- Home “WebRTC” endpoints = **UDP + fleet `outbound_proxy` + `webrtc=yes`** (media/ICE/DTLS) — not client-facing WSS on the node
+- Track‑A / SIP homes can share the edge without speaking WSS to the world
+
+```text
+Browser ──WSS :8089──► Magrathea ──SIP UDP :5060──► Home Asterisk
+Browser ◄════ media ICE/DTLS-SRTP (bypass SBC) ════╝
+```
+
 #### Signaling vs media (do not conflate)
 
-Browser WebRTC **always** has a media path (ICE → DTLS-SRTP). **SIP-over-WSS** is only signaling. Terminating WSS on an SBC and forwarding classic SIP (UDP/TCP) to the home instance does **not** by itself put RTP through the SBC, and does **not** make a non-WebRTC Asterisk speak browser media.
+Browser WebRTC **always** has a media path (ICE → DTLS-SRTP). **SIP-over-WSS** is only signaling. Terminating WSS on an SBC and forwarding classic SIP to the home instance does **not** by itself put RTP through the SBC, and does **not** make a non-WebRTC Asterisk speak browser media.
 
 | Path | Role |
 |------|------|
-| **SIP over WSS** | Call control (REGISTER/INVITE/…) |
-| **DTLS-SRTP / ICE** | Audio — negotiated in SDP; peer is usually Asterisk (or a media gateway), not “whatever terminated WSS” |
+| **SIP over WSS** | Call control client ↔ **SBC only** |
+| **SIP UDP** | SBC ↔ **home instance** (REGISTER / INVITE / …) |
+| **DTLS-SRTP / ICE** | Audio — usually home Asterisk ↔ browser (bypass) |
 
 #### Backend compatibility
 
 | Backend | Webphone (browser) |
 |---------|-------------------|
-| **PBX3** | Supported — PJSIP + WSS/WebRTC |
-| **Last-gen SARK** | Supported — also PJSIP + WSS; beta webphone testing uses this path |
-| **Older SARK (no WSS)** | Signaling-only WSS→UDP gateway does **not** yield audio. Full support would need a **media gateway** (e.g. rtpengine). **May never be worth it** — separate go/no-go, not implied by WSS-on-SBC. |
+| **PBX3** | Supported — fleet edge path above (UDP + `webrtc=yes`); optional singleton-direct instance WSS for lab |
+| **Last-gen SARK** | SIP-capable homes share the same edge/WSS story once media is WebRTC-capable on the home; beta also used instance WSS |
+| **Older SARK (no WebRTC media)** | Signaling-only WSS→UDP gateway does **not** yield browser audio. Full support would need a **media gateway** (e.g. rtpengine). **May never be worth it** — separate go/no-go, not implied by WSS-on-SBC. |
 
 #### RTP at the edge
 
 **Default remains RTP bypass** (signaling only at SBC). Do not anchor media for capacity or “because SBCs do media.” Revisit media anchoring only for a concrete need (e.g. WebRTC↔legacy non-WebRTC protocol translation, topology hiding). That is a **separate project** from active–passive HA and from WSS signaling normalization.
 
-#### Today (beta / interim)
+#### Today (lab / product)
 
 | Layer | WebRTC / WSS |
 |-------|----------------|
-| **pbx3sbc** | **W1 Magrathea track** — branch **`w1-magrathea-wss`**, checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**. Template: WSS sockets **default off**; SDP media rewrite skipped for WSS/ICE (RTP bypass). Live Magrathea enable after backup. |
-| **Instance (Asterisk)** | **In use** — `transport-wss` (e.g. `:8089`); webphone splits SIP (WSS) and media; golden path proven. |
+| **pbx3sbc** | **W1 lab green on Magrathea** — pbx3sbc **`main`**; checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**. Live: **:8089/ws**; SDP media rewrite skipped for WSS/ICE (RTP bypass). |
+| **Instance (Asterisk)** | **Fleet edge:** `transport-udp` + `outbound_proxy` + `webrtc=yes` (`pjsip_webrtc.tmpl`); PrepDial tenant-FQDN Dial. **Public TCP 8089 not required** for Magrathea clients. Optional **singleton-direct** lab: instance `transport-wss` `:8089`. |
 
-Interim: webRTC clients may still register **directly to the instance**. Target: **Magrathea** `wss://sbc.pbx3.com:8089/ws` + tenant SIP domain.
+Client: **`wss://sbc.pbx3.com:8089/ws`** + SIP user = shortuid + **SIP domain = tenant** (need not match WSS host).
 
-#### Target (fleet edge for webphone)
+**SIP domain ≠ DNS (desk already; W1 must respect):** Fleet does **not** require a public A record for each tenant FQDN. The tenant string is the **SIP domain / registrar name**; OpenSIPS **`domain`** table maps it to setid → home node. Prefer clients (and SPA **line test**) with **WSS host = shared edge**, **SIP domain = tenant**. Collapsed UIs may force optional public tenant DNS + LE — a tradeoff, not the default desk model. Lab: **`WEBRTC_WSS_LAB.md`** § Fleet edge W1 architecture · § SIP domain vs next hop.
 
-```text
-Webphone  →  wss://<sbc-vip-fqdn>  →  OpenSIPS (proto_wss + TLS)
-                 →  usrloc / dispatcher  →  home instance SIP (UDP/TCP or as needed)
-                 →  media: still endpoint ↔ home instance (bypass), while backends are WebRTC-capable
-```
-
-**Why SBC still attracts here:** one client config forever across PBX3 and last-gen SARK fleets — not protocol rescue for last-gen (already WSS-capable).
-
-**SIP domain ≠ DNS (desk already; W1 must respect):** Fleet does **not** require a public A record for each tenant FQDN. The tenant string is the **SIP domain / registrar name**; OpenSIPS **`domain`** table maps it to setid → home node. Phones send packets to the **SBC next hop** (VIP host/IP). **Proxy-less webphones** often collapse WSS host and SIP domain into one field. Prefer clients (and our SPA **line test**) with **WSS host = shared edge**, **SIP domain = tenant**. Collapsed UIs may force optional public tenant DNS + LE — a tradeoff, not the default fleet desk model. Lab detail: **`WEBRTC_WSS_LAB.md`** § SIP domain vs next hop.
-
-**Signaling work (later track):** `proto_wss` + TLS on SBC VIP; registrar/NAT for `;transport=wss`; same `domain` → `setid` mobility as UDP phones.
-
-**Media strategy for WSS-capable homes:** prefer **Asterisk-anchored / bypass SBC** (beta-proven shape). RTPEngine at edge only if a future requirement forces protocol translation (e.g. older non-WSS SARK webphone).
+**Media strategy for WebRTC-capable homes:** prefer **Asterisk-anchored / bypass SBC**. RTPEngine at edge only if a future requirement forces protocol translation (e.g. older non-WebRTC backend + browser).
 
 **TURN/STUN:** app / MSP concern; not pbx3sbc v1.
 
-#### Implementation order (does not block UDP fleet v1)
+#### Implementation order (historical — phases 1–4 done for Magrathea lab)
 
 ```text
-1. UDP edge stable     — soak, peering, Phase A (current)
-2. TLS on SBC          — prerequisite for WSS (pairs with LE todo for sbc FQDN)
-3. WSS listener        — proto_wss; forward toward home instance; RTP stays bypass
-4. Provision template  — wss://<sbc-vip> for webphone; same VIP as desk phones
-5. Media gateway        — only if older non-WSS backends must get browser webphone (optional / maybe never)
+1. UDP edge stable     — soak, peering, Phase A
+2. TLS on SBC          — LE on sbc FQDN
+3. WSS listener        — proto_wss; SIP toward home; RTP stays bypass  [lab green]
+4. Provision template  — wss://sbc…; home webrtc tmpl UDP + proxy
+5. Media gateway        — only if non-WebRTC backends need browser (optional / maybe never)
 ```
 
 **Does not block:** SBC soak (UDP phones), peering, Phase A Egress, move wizard v1 (UDP endpoints).
