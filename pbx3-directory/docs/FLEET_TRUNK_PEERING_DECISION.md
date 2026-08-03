@@ -285,10 +285,10 @@ Browser WebRTC **always** has a media path (ICE → DTLS-SRTP). **SIP-over-WSS**
 
 | Layer | WebRTC / WSS |
 |-------|----------------|
-| **pbx3sbc** | **Not implemented** — UDP SIP edge only. No `proto_wss` / TLS listener yet. |
-| **Instance (Asterisk)** | **In use** — `transport-wss` (e.g. `:8089`); webphone splits SIP (WSS) and media; results good in beta. |
+| **pbx3sbc** | **W1 Magrathea track** — branch **`w1-magrathea-wss`**, checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**. Template: WSS sockets **default off**; SDP media rewrite skipped for WSS/ICE (RTP bypass). Live Magrathea enable after backup. |
+| **Instance (Asterisk)** | **In use** — `transport-wss` (e.g. `:8089`); webphone splits SIP (WSS) and media; golden path proven. |
 
-WebRTC clients today register **directly to the instance** (`wss://<instance-fqdn>:8089/...`), not through the SBC. Desk phones → SBC UDP; webphone → node WSS. Acceptable pilot/hybrid.
+Interim: webRTC clients may still register **directly to the instance**. Target: **Magrathea** `wss://sbc.pbx3.com:8089/ws` + tenant SIP domain.
 
 #### Target (fleet edge for webphone)
 

@@ -54,7 +54,7 @@ Confirm Shorewall **tcp 8089** + **udp 10000–20000** on **net** (not LAN-only)
 2. **SPA WSS line test** (planned) — thin in-admin register/dial/answer **path prover**; see **FEATURE_PLANS_INDEX** + **TODO**. Not a desk softphone; not Browser-Phone.  
 3. Clamp SG **8089/tcp** world-open when host tests done.  
 4. **Cross-AZ fleet lab (required before “real” multi-AZ):** same-AZ hides ICE/NAT/host-identity and inter-node path assumptions. Stand instances (or at least phone↔node / node↔SBC legs) in **two AZs** and re-smoke REGISTER, desk phone RTP, singleton-direct WSS, and SBC path when ready.  
-5. **Later:** OpenSIPS W1 on scratch or Magrathea.
+5. **Later:** OpenSIPS **W1 on Magrathea** — checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`** (branch **`w1-magrathea-wss`**). RTP bypass; client `wss://sbc.pbx3.com:8089/ws` + SIP domain = tenant.
 
 ## SIP domain vs next hop (DNS) — product stance (2026-08-03)
 
@@ -74,7 +74,7 @@ Desk phones normally take both notions (or proxy + domain). Many **webphones hav
 3. **Lab / line test** may stay **singleton-direct** `wss://instance-fqdn:8089` (current golden). That proves PBX WebRTC, not multi-tenant proxy-registrar.
 4. **Do not** invent public tenant DNS solely to “match” desk phones — desks never required that.
 
-See also **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WSS path) and desk proxy-registrar notes in **`SBC_PRODUCT_TRACKS.md`**.
+See also **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WSS path) and desk proxy-registrar notes in **`SBC_PRODUCT_TRACKS.md`**. **Magrathea enable checklist:** **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**.
 
 ## Notes
 

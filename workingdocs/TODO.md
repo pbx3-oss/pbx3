@@ -21,7 +21,7 @@
 13. **S7+** attested PCI — customer ask.  
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
-16. **WebRTC / WSS** — golden instance path **working**; dev-team webphone **OK** (SIP user **`8af9ee`**). Residual: clamp SG **8089**; package roll; multi-AZ; W1 SBC later. Spec: **`WEBRTC_WSS_LAB.md`**.  
+16. **WebRTC / WSS** — golden instance path **working**; dev-team webphone **OK**. **Magrathea W1** checklist: **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`** (branch **`w1-magrathea-wss`**). Residual after W1: clamp SG **8089** on instance; package roll; multi-AZ. Spec: **`WEBRTC_WSS_LAB.md`**.  
 17. **SPA WSS line test** — thin in-admin **line test** (register / dial / answer), not a desk softphone product. See SPA **FEATURE_PLANS_INDEX**.  
 18. **Multi-AZ lab** — place fleet instances in **different AZs** (same-AZ lab under-tests NAT/ICE/media).  
 19. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
