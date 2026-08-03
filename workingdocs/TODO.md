@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — fleet nodes **08jzwn** / **bzy54n** / **kildare** on **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10**. EIPs: golden **`44.196.98.191`**, Kildare **`3.93.253.1`** (`kildare.pbx3.com`), bzy **`54.158.236.215`**. Magrathea VIP **`3.93.26.82`** (`sbc.pbx3.com`).  
-**Last updated:** 2026-08-03 (package roll complete: golden + bzy + Kildare)
+**Last updated:** 2026-08-03 (session end — packages on all lab nodes; bzy Magrathea unban + dispatcher IP)
 
 
 ### Suggested “what next?” order
@@ -21,7 +21,7 @@
 13. **S7+** attested PCI — customer ask.  
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
-16. **WebRTC residual** — Magrathea W1 done; packages on golden+bzy; optional **Kildare** roll; multi-AZ. Spec: **`WEBRTC_WSS_LAB.md`**.  
+16. **WebRTC residual** — Magrathea W1 done; **pbx3 0.0.4-5** + **cagi 1.0.0-10** on 08jzwn/bzy/kildare; multi-AZ still open. Spec: **`WEBRTC_WSS_LAB.md`**.  
 17. **SPA WSS line test** — direction locked **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`**. Implement when scheduled.  
 18. **Multi-AZ lab** — place fleet instances in **different AZs** (same-AZ lab under-tests NAT/ICE/media).  
 19. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  

@@ -72,27 +72,23 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-03 — Magrathea W1 done)
+## Next agent session notes (2026-08-03 — package roll + bzy Magrathea)
 
-**Branch:** **`main`** everywhere that mattered this session (pbx3, pbx3sbc, pbx3cagi, pbx3spa). Feature branches merged and pushed.
+**Branch:** **`main`** (pbx3, pbx3cagi, pbx3sbc, pbx3spa).
 
-### Shipped
-- **Magrathea W1 lab green:** browser WSS → SBC → **SIP UDP home**; RTP bypass; desk↔WebRTC both ways + audio.
-- **Home WebRTC:** `pjsip_webrtc.tmpl` fleet = **transport-udp + `$outbound_proxy`** + `webrtc=yes` (not instance WSS face).
-- **PrepDial 1.0.0-10:** fleet always `PJSIP/shortuid/sip:shortuid@tenant.fqdn` (incl. WebRTC). Golden AGI hot; deb not rebuilt.
-- **Golden:** instance **TCP 8089 closed**; Magrathea-path calls still OK. Dialplan stock `Dial(${PBX3_DIAL})`.
-- **Docs:** `WEBRTC_WSS_LAB.md` § Fleet edge architecture · §6.1 · `WEBRTC_W1_MAGRATHEA.md` · `SBC_PRODUCT_TRACKS`.
-- **SPA line test direction locked:** **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`** (instance SPA path prover; not softphone).
+### Shipped (this continuous session arc)
+- **Magrathea W1 lab green** (earlier): WSS on edge only; SIP UDP to homes; RTP bypass; desk↔WebRTC both ways; golden instance **8089 closed**.
+- **Packages:** **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** installed on **08jzwn**, **bzy54n** (`54.158.236.215`), **kildare**. Debs on `main` (`pbx3_0.0.4-5_all.deb`, `pbx3cagi_1.0.0-10_all.deb`).
+- **bzy Magrathea ops:** Fail2Ban had banned new public IP — unbanned; **whitelist** `54.158.236.215/32`; **dispatcher setid 3** updated from stale `98.82.174.36` → `sip:54.158.236.215:5060` + `source_ip=…`; **ds_reload** OK.
+- **SPA line test:** direction locked **`WSS_LINE_TEST_REQUIREMENTS.md`** (not implemented).
 
-### Golden / operator notes
-- Edge client: `wss://sbc.pbx3.com:8089/ws` · SIP **`8af9ee`** · domain **`dhbm8x.pbx3.com`** · pass `~/webrtc-1500.env` · dial **1500**.
-- WebRTC row remains **device=WebRTC** (Asterisk media); Magrathea owns WSS; no edge media gateway.
-- Package residual: **cagi 1.0.0-10** deb + pbx3 webrtc tmpl roll beyond golden hot-fix.
+### Lab notes
+- Edge WebRTC: `wss://sbc.pbx3.com:8089/ws` · shortuid **`8af9ee`** · tenant **`dhbm8x.pbx3.com`** · golden `~/webrtc-1500.env`.
+- Open item still: domain setid drift for some name.com tenants (0ggybk/vqcwd4 setid=3 vs DNS→golden) — see TODO.
+- Optional: golden dispatcher row still has no `source_ip` in attrs (setid 2 works by destination).
 
 ### Resume
-- **Operator decides next task** next session (TODO “what next?”). No assumed pick.
-- Candidates: number-wire D1, package rolls, SPA line-test implement, multi-AZ, fleet delete, etc.
-- After any GenAst on golden without package: re-check webrtc conf still has UDP + outbound_proxy.
+- Wait for operator task. Backlog top: number-wire D1, SPA line-test implement, multi-AZ, fleet delete, etc.
 
 ---
 
