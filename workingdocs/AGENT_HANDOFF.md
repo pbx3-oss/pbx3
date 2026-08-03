@@ -72,26 +72,27 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-03 — Magrathea W1 lab green)
+## Next agent session notes (2026-08-03 — Magrathea W1 done)
 
-**Branches:** **pbx3sbc** **`w1-magrathea-wss`** (edge WSS); **pbx3cagi** **`w1-webrtc-prep-fqdn`** (PrepDial **1.0.0-10** source + golden hot binary); **pbx3** **`main`** **`pjsip_webrtc.tmpl`** (fleet UDP + `$outbound_proxy`).
+**Branch:** **`main`** everywhere that mattered this session (pbx3, pbx3sbc, pbx3cagi, pbx3spa). Feature branches merged and pushed.
 
-### Shipped (lab + source)
-- Magrathea: OpenSIPS WSS **:8089/ws**, LE cert under `/etc/opensips/tls/`, SKIP_SDP for ICE/WSS, REGISTER smoke OK.
-- Desk ↔ browser WebRTC (Browser-Phone on Magrathea) **both ways + audio**. RTP bypass (edge signaling only).
-- Home: WebRTC endpoints **`transport-udp` + `outbound_proxy=sip:sbc.pbx3.com;lr`** (avoids tenant-FQDN → EIP hairpin).
-- PrepDial fleet always **tenant FQDN** dial string (incl. WebRTC); no more dummy `192.0.2.x` Contact dials.
-- Golden: dynamic dialplan override removed; stock `Dial(${PBX3_DIAL})`; AGI **pbx3cagi.arm64** hot-deployed (bak under same path `*.bak.pre-w1-*`).
-- Earlier same day: singleton-direct Contact/SDP/ICE fixes — **`WEBRTC_WSS_LAB.md`**.
+### Shipped
+- **Magrathea W1 lab green:** browser WSS → SBC → **SIP UDP home**; RTP bypass; desk↔WebRTC both ways + audio.
+- **Home WebRTC:** `pjsip_webrtc.tmpl` fleet = **transport-udp + `$outbound_proxy`** + `webrtc=yes` (not instance WSS face).
+- **PrepDial 1.0.0-10:** fleet always `PJSIP/shortuid/sip:shortuid@tenant.fqdn` (incl. WebRTC). Golden AGI hot; deb not rebuilt.
+- **Golden:** instance **TCP 8089 closed**; Magrathea-path calls still OK. Dialplan stock `Dial(${PBX3_DIAL})`.
+- **Docs:** `WEBRTC_WSS_LAB.md` § Fleet edge architecture · §6.1 · `WEBRTC_W1_MAGRATHEA.md` · `SBC_PRODUCT_TRACKS`.
+- **SPA line test direction locked:** **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`** (instance SPA path prover; not softphone).
 
-### Golden / operator follow-up
-- Client: `wss://sbc.pbx3.com:8089/ws` · SIP **`8af9ee`** · domain **`dhbm8x.pbx3.com`** · pass `~/webrtc-1500.env`.
-- Package rolls not done: deb packages remain older; commit/push/merge branches when asked; GenAst will rewrite webrtc conf from tmpl after package/deploy.
-- Residual: merge sbc branch; clamp instance **8089** when singleton tests done; multi-AZ; SPA line test.
+### Golden / operator notes
+- Edge client: `wss://sbc.pbx3.com:8089/ws` · SIP **`8af9ee`** · domain **`dhbm8x.pbx3.com`** · pass `~/webrtc-1500.env` · dial **1500**.
+- WebRTC row remains **device=WebRTC** (Asterisk media); Magrathea owns WSS; no edge media gateway.
+- Package residual: **cagi 1.0.0-10** deb + pbx3 webrtc tmpl roll beyond golden hot-fix.
 
 ### Resume
-- Prefer product backlog (number wire / fleet delete / …) or **packaging session** for cagi 1.0.0-10 + pbx3 tmpl. Re-smoke 1000↔1500 after any GenAst if live conf regresses without tmpl.
-- **SPA WSS line test** backloged (**FEATURE_PLANS_INDEX** + **TODO**) — thin in-admin path prover (not desk softphone; not Browser-Phone; coexists with external WSS team). Two-config values when W1: WSS host vs SIP domain.
+- **Operator decides next task** next session (TODO “what next?”). No assumed pick.
+- Candidates: number-wire D1, package rolls, SPA line-test implement, multi-AZ, fleet delete, etc.
+- After any GenAst on golden without package: re-check webrtc conf still has UDP + outbound_proxy.
 
 ---
 

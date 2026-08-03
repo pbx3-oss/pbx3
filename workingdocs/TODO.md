@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — golden **`08jzwn`** EIP **`44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8 package** (golden AGI hot **1.0.0-10 PrepDial** + Kildare **Mangle 1.0.0-9**). Lab: Magrathea VIP **`3.93.26.82`**; second fleet node **Kildare** (`kildare.pbx3.com` / `3.93.253.1`).  
-**Last updated:** 2026-08-03 (Magrathea W1 lab green; desk↔edge WebRTC both ways)
+**Branch:** **`main`** — golden **`08jzwn`** EIP **`44.196.98.191`**; **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** on **08jzwn** + **bzy54n** (Kildare may still be older Mangle-only hot). Lab: Magrathea VIP **`3.93.26.82`** (`sbc.pbx3.com`); second fleet node **Kildare** (`kildare.pbx3.com` / `3.93.253.1`).  
+**Last updated:** 2026-08-03 (package roll 0.0.4-5 / cagi 1.0.0-10 → golden + bzy54n)
 
 
 ### Suggested “what next?” order
@@ -21,7 +21,7 @@
 13. **S7+** attested PCI — customer ask.  
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
-16. **WebRTC residual** — Magrathea **W1 lab green** (merged); golden **instance 8089 closed** and still OK. Package **pbx3cagi 1.0.0-10** + pbx3 webrtc tmpl roll to non-hot-fixed nodes; multi-AZ. Spec: **`WEBRTC_WSS_LAB.md`**.  
+16. **WebRTC residual** — Magrathea W1 done; packages on golden+bzy; optional **Kildare** roll; multi-AZ. Spec: **`WEBRTC_WSS_LAB.md`**.  
 17. **SPA WSS line test** — direction locked **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`**. Implement when scheduled.  
 18. **Multi-AZ lab** — place fleet instances in **different AZs** (same-AZ lab under-tests NAT/ICE/media).  
 19. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
@@ -34,7 +34,7 @@
 
 - [ ] **Number wire standard — Model A vs B (open 2026-08-02):** Draft **`NUMBER_WIRE_STANDARD_DRAFT.md`**; research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Preference lean: PBX sends dialled digits; SBC owns habit + peer face (PTT). **Not locked** — do not strip node Mangle without D1.
 
-- [ ] **pbx3cagi package + golden/Kildare roll (follow-up):** Deb still **1.0.0-8** on golden package table; AGI binary hot **1.0.0-10** PrepDial on golden; Mangle hot **1.0.0-9** on Kildare only. Rebuild deb / push when packaging session runs (includes both).
+- [ ] **Kildare package residual:** golden + **bzy54n** on **pbx3 0.0.4-5** / **pbx3cagi 1.0.0-10**. Kildare still needs roll when convenient (was Mangle **1.0.0-9** hot only).
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 
@@ -46,7 +46,7 @@
 
 - [ ] **Grafana / Homer — fleet view only, unmodified (parked 2026-07-30):** Stance locked. **SBC Home = Filament** (in-box). **Grafana** (and Homer if ever) = optional **fleet / multi-instance** observability later — operator-installed **unmodified** OSS (AGPL); no fork, no bundling into product installer, no on-licensing end users. If a use case needs modifying Grafana/Homer, **don’t do that use case**. Not next.
 
-- [ ] **WebRTC — package residual (2026-08-03):** Magrathea W1 **lab green**; **merged**. Golden: **instance TCP 8089 closed** (edge path only). Residual: rebuild/install **pbx3cagi 1.0.0-10** deb + **pbx3** package with webrtc tmpl on nodes beyond golden hot-fixes. Architecture write-up: **`WEBRTC_WSS_LAB.md`** § Fleet edge W1 · §6.1 **`FLEET_TRUNK_PEERING_DECISION.md`**.
+- [x] **WebRTC package residual (2026-08-03):** **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** installed on **08jzwn** + **bzy54n** (54.158.236.215). Architecture: **`WEBRTC_WSS_LAB.md`**. Remaining: Kildare when scheduled.
 
 - [ ] **SPA WSS line test (locked 2026-08-03):** Direction in **pbx3spa** **`WSS_LINE_TEST_REQUIREMENTS.md`**. Instance SPA path prover; real **WebRTC** tenant extension; WSS on edge (home not wss transport); not a softphone. Implement when scheduled.
 
