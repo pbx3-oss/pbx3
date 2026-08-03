@@ -300,6 +300,8 @@ Webphone  →  wss://<sbc-vip-fqdn>  →  OpenSIPS (proto_wss + TLS)
 
 **Why SBC still attracts here:** one client config forever across PBX3 and last-gen SARK fleets — not protocol rescue for last-gen (already WSS-capable).
 
+**SIP domain ≠ DNS (desk already; W1 must respect):** Fleet does **not** require a public A record for each tenant FQDN. The tenant string is the **SIP domain / registrar name**; OpenSIPS **`domain`** table maps it to setid → home node. Phones send packets to the **SBC next hop** (VIP host/IP). **Proxy-less webphones** often collapse WSS host and SIP domain into one field. Prefer clients (and our SPA **line test**) with **WSS host = shared edge**, **SIP domain = tenant**. Collapsed UIs may force optional public tenant DNS + LE — a tradeoff, not the default fleet desk model. Lab detail: **`WEBRTC_WSS_LAB.md`** § SIP domain vs next hop.
+
 **Signaling work (later track):** `proto_wss` + TLS on SBC VIP; registrar/NAT for `;transport=wss`; same `domain` → `setid` mobility as UDP phones.
 
 **Media strategy for WSS-capable homes:** prefer **Asterisk-anchored / bypass SBC** (beta-proven shape). RTPEngine at edge only if a future requirement forces protocol translation (e.g. older non-WSS SARK webphone).

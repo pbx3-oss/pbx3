@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — golden **`08jzwn`** EIP **`44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8** (Kildare hot **Mangle 1.0.0-9**). Lab: Magrathea VIP **`3.93.26.82`**; second fleet node **Kildare** (`kildare.pbx3.com` / `3.93.253.1`).  
-**Last updated:** 2026-08-03 (WebRTC WSS golden path fixed; multi-AZ lab TODO)
+**Last updated:** 2026-08-03 (WebRTC SPA line-test OK; in-SPA line test backlog)
 
 
 ### Suggested “what next?” order
@@ -21,9 +21,10 @@
 13. **S7+** attested PCI — customer ask.  
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
-16. **WebRTC / WSS** — golden instance path **working** (see handoff); far-end SPA re-verify + shortuid sanitize still open; W1 SBC later. Spec: **`WEBRTC_WSS_LAB.md`**.  
-17. **Multi-AZ lab** — place fleet instances in **different AZs** (same-AZ lab under-tests NAT/ICE/media).  
-18. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
+16. **WebRTC / WSS** — golden instance path **working**; dev-team webphone **OK** (SIP user **`8af9ee`**). Residual: clamp SG **8089**; package roll; multi-AZ; W1 SBC later. Spec: **`WEBRTC_WSS_LAB.md`**.  
+17. **SPA WSS line test** — thin in-admin **line test** (register / dial / answer), not a desk softphone product. See SPA **FEATURE_PLANS_INDEX**.  
+18. **Multi-AZ lab** — place fleet instances in **different AZs** (same-AZ lab under-tests NAT/ICE/media).  
+19. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -45,7 +46,9 @@
 
 - [ ] **Grafana / Homer — fleet view only, unmodified (parked 2026-07-30):** Stance locked. **SBC Home = Filament** (in-box). **Grafana** (and Homer if ever) = optional **fleet / multi-instance** observability later — operator-installed **unmodified** OSS (AGPL); no fork, no bundling into product installer, no on-licensing end users. If a use case needs modifying Grafana/Homer, **don’t do that use case**. Not next.
 
-- [ ] **WebRTC — third-party SPA far-end (blocked 2026-08-01):** Await WebRTC/dev-team SPA. Open issues: (1) **digit-only sip-user sanitize** rejects alphanumeric shortuid — must accept `[a-z0-9]` (SIP user=`8af9ee`, dialable=`1500`). (2) Re-verify SPA after golden fixes (from_domain / media_address / ice_host / open RTP); earlier “INVITE black-hole” was often **PBX WSS Contact/SDP**, not only SPA. Clamp SG **8089** when SPA host test done. Spec: **`WEBRTC_WSS_LAB.md`**.
+- [ ] **WebRTC — SG 8089 clamp (lab residual):** Dev-team webphone **verified OK** on golden (2026-08-03): SIP user **`8af9ee`** accepted (no digit-only sanitize block); media path works after Contact/SDP/ICE fixes. Earlier “INVITE black-hole” was often PBX WSS Contact/SDP. **Still:** clamp SG **8089** when host tests finished. Spec: **`WEBRTC_WSS_LAB.md`**.
+
+- [ ] **SPA WSS line test (open 2026-08-03):** First-party **in-admin line test** on **WSS** (register / dial / answer / hangup; hold/mute if cheap) against instance (later SBC W1). Job: prove the extension path for ops — **not** a desk softphone product, **not** InnovateAsterisk Browser-Phone (AGPL), **not** native app. Use SIP.js or JsSIP; SIP user = **shortuid**; dialable pkey for UI; Domain = tenant FQDN; WSS host = node or SBC. Coexists with external WSS team SPA. Track: **pbx3spa** **`FEATURE_PLANS_INDEX.md`** · lab **`WEBRTC_WSS_LAB.md`**.
 
 - [ ] **Multi-AZ fleet lab (open 2026-08-03):** Lab today is effectively **same AZ** — under-tests ice_host / public identity / RTP / inter-instance and node↔SBC paths. **Need:** instances (at least two) in **different AZs**; smoke REGISTER, desk media, singleton-direct WebRTC if used, then SBC-faced path. Same-AZ success is not production multi-AZ proof. Notes: **`WEBRTC_WSS_LAB.md`** Next.
 

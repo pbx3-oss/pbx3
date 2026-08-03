@@ -50,10 +50,31 @@ Confirm Shorewall **tcp 8089** + **udp 10000–20000** on **net** (not LAN-only)
 
 ## Next (non-disruptive) — **stay on golden**
 
-1. Product/controlled webphone dial; far-end SPA sanitize follow-ups.  
-2. Clamp SG **8089/tcp** world-open when host tests done.  
-3. **Cross-AZ fleet lab (required before “real” multi-AZ):** same-AZ hides ICE/NAT/host-identity and inter-node path assumptions. Stand instances (or at least phone↔node / node↔SBC legs) in **two AZs** and re-smoke REGISTER, desk phone RTP, singleton-direct WSS, and SBC path when ready.  
-4. **Later:** OpenSIPS W1 on scratch or Magrathea.
+1. **Dev-team webphone** — **OK** (2026-08-03): SIP **`8af9ee`** accepted; media works after Contact/SDP/ICE. Digit-only shortuid sanitize **N/A** for that client.  
+2. **SPA WSS line test** (planned) — thin in-admin register/dial/answer **path prover**; see **FEATURE_PLANS_INDEX** + **TODO**. Not a desk softphone; not Browser-Phone.  
+3. Clamp SG **8089/tcp** world-open when host tests done.  
+4. **Cross-AZ fleet lab (required before “real” multi-AZ):** same-AZ hides ICE/NAT/host-identity and inter-node path assumptions. Stand instances (or at least phone↔node / node↔SBC legs) in **two AZs** and re-smoke REGISTER, desk phone RTP, singleton-direct WSS, and SBC path when ready.  
+5. **Later:** OpenSIPS W1 on scratch or Magrathea.
+
+## SIP domain vs next hop (DNS) — product stance (2026-08-03)
+
+Do **not** assume every tenant FQDN is in public DNS. Fleet desk path already works without that:
+
+| Concept | Role |
+|---------|------|
+| **SIP domain / registrar name** (e.g. `dhbm8x.pbx3.com` or tenant shortuid host form) | Identity on the wire. SBC **`domain`** table → setid → dispatcher. **No public A record required** for translate. |
+| **Next hop** (SBC VIP FQDN or IP) | Where the phone **sends** REGISTER / INVITE. Only this must resolve/route for UDP softpath. |
+
+Desk phones normally take both notions (or proxy + domain). Many **webphones have no outbound-proxy field** and collapse “server / WSS host / domain” into one box.
+
+**Implications for W1 (WSS on SBC):**
+
+1. **Preferred multi-tenant edge:** WSS connects to a **shared edge name** (SBC VIP/cert you already serve); SIP **domain / From-URI host** remains the **tenant** string the SBC looks up. That needs a client (or own SPA **line test**) that keeps **WSS host ≠ SIP domain**. Product SPA should plan for two values.
+2. **Collapsed-host clients only:** if one field must be both transport host and SIP domain, operators may put **tenant FQDN → edge** in public DNS + LE for that name. Acceptable product trade when needed — **not** “already public because fleet works.” Tenant DNS is optional today by design.
+3. **Lab / line test** may stay **singleton-direct** `wss://instance-fqdn:8089` (current golden). That proves PBX WebRTC, not multi-tenant proxy-registrar.
+4. **Do not** invent public tenant DNS solely to “match” desk phones — desks never required that.
+
+See also **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WSS path) and desk proxy-registrar notes in **`SBC_PRODUCT_TRACKS.md`**.
 
 ## Notes
 

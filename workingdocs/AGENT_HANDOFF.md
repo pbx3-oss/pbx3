@@ -88,12 +88,18 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ### Golden / operator follow-up
 - Golden has live configs + script; **apt package roll** still needed for other nodes / clean rebuilds.
-- Browser-Phone post-Accept delay = client mule (not tracking). SPA team re-test after our Contact/SDP/ICE fixes; **shortuid sanitize** may still be SPA-side.
+- Browser-Phone post-Accept delay = client mule (not tracking). Audio-up lag similar on both Browser-Phone and dev webphone — not a PBX-template win metric.
+- **Dev-team webphone OK (2026-08-03):** SIP **`8af9ee`** accepted; path works. Digit-only shortuid sanitize **not** an issue for that client.
 - Clamp SG **8089** when host tests done.
 - **Multi-AZ** lab instances before production AZ claims.
 
+### Design note (same day — proxy / DNS)
+- Desk path: **SIP domain** = tenant string (SBC `domain` translate); **next hop** = SBC. **No** public tenant A record required.
+- Many webphones lack outbound-proxy → WSS host and SIP domain collapse; prefer own **line test**/SPA with **two fields** (edge WSS host + tenant domain). Optional tenant DNS only for collapsed UIs. See **`WEBRTC_WSS_LAB.md`** § SIP domain vs next hop · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1.
+
 ### Resume
-- Product SPA webphone smoke on golden (operator). Package WebRTC/ICE pieces when packaging session. Multi-AZ when scheduled. Number-wire D1 still open.
+- Residual lab: SG **8089** clamp; package WebRTC/ICE for non-golden; multi-AZ when scheduled. Number-wire D1 still open.
+- **SPA WSS line test** backloged (**FEATURE_PLANS_INDEX** + **TODO**) — thin in-admin path prover (not desk softphone; not Browser-Phone; coexists with external WSS team). Two-config values when W1: WSS host vs SIP domain.
 
 ---
 
