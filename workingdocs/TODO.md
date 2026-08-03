@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — golden **`08jzwn`** EIP **`44.196.98.191`**; **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** on **08jzwn** + **bzy54n** (Kildare may still be older Mangle-only hot). Lab: Magrathea VIP **`3.93.26.82`** (`sbc.pbx3.com`); second fleet node **Kildare** (`kildare.pbx3.com` / `3.93.253.1`).  
-**Last updated:** 2026-08-03 (package roll 0.0.4-5 / cagi 1.0.0-10 → golden + bzy54n)
+**Branch:** **`main`** — fleet nodes **08jzwn** / **bzy54n** / **kildare** on **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10**. EIPs: golden **`44.196.98.191`**, Kildare **`3.93.253.1`** (`kildare.pbx3.com`), bzy **`54.158.236.215`**. Magrathea VIP **`3.93.26.82`** (`sbc.pbx3.com`).  
+**Last updated:** 2026-08-03 (package roll complete: golden + bzy + Kildare)
 
 
 ### Suggested “what next?” order
@@ -34,7 +34,7 @@
 
 - [ ] **Number wire standard — Model A vs B (open 2026-08-02):** Draft **`NUMBER_WIRE_STANDARD_DRAFT.md`**; research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Preference lean: PBX sends dialled digits; SBC owns habit + peer face (PTT). **Not locked** — do not strip node Mangle without D1.
 
-- [ ] **Kildare package residual:** golden + **bzy54n** on **pbx3 0.0.4-5** / **pbx3cagi 1.0.0-10**. Kildare still needs roll when convenient (was Mangle **1.0.0-9** hot only).
+- [x] **Fleet package roll (2026-08-03):** **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** on **08jzwn**, **bzy54n**, **kildare** (includes PrepDial WebRTC FQDN + fleet webrtc tmpl + Mangle fix from 1.0.0-9).
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 
@@ -46,7 +46,7 @@
 
 - [ ] **Grafana / Homer — fleet view only, unmodified (parked 2026-07-30):** Stance locked. **SBC Home = Filament** (in-box). **Grafana** (and Homer if ever) = optional **fleet / multi-instance** observability later — operator-installed **unmodified** OSS (AGPL); no fork, no bundling into product installer, no on-licensing end users. If a use case needs modifying Grafana/Homer, **don’t do that use case**. Not next.
 
-- [x] **WebRTC package residual (2026-08-03):** **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** installed on **08jzwn** + **bzy54n** (54.158.236.215). Architecture: **`WEBRTC_WSS_LAB.md`**. Remaining: Kildare when scheduled.
+- [x] **WebRTC package residual (2026-08-03):** **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** on **08jzwn** + **bzy54n** + **kildare**. Architecture: **`WEBRTC_WSS_LAB.md`**.
 
 - [ ] **SPA WSS line test (locked 2026-08-03):** Direction in **pbx3spa** **`WSS_LINE_TEST_REQUIREMENTS.md`**. Instance SPA path prover; real **WebRTC** tenant extension; WSS on edge (home not wss transport); not a softphone. Implement when scheduled.
 
