@@ -106,13 +106,26 @@ Sources:
 
 ### 6.2 Gamma
 
-Sources: Gamma SIP trunk CPE notes (R-URI/To/From/PAID format) as used by integrators; treat knobs as profile fields.
+**Sources (B-number / dialled — primary text 2026-08-03):** Gamma SIP presentation notes (operator extract). Related research capture: **`pbx3/workingdocs/CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`** §4.2.1.  
+**CLI / From / PAID:** still integrator CPE notes until a primary A-number extract is filed; treat knobs as profile fields.
+
+**B-numbers (called / destination) — Gamma accepts outbound R-URI / To in any of:**
+
+| Form | Example | Notes |
+|------|---------|--------|
+| UK national `0+NSN` | `01418701234` | National significant number with leading `0` |
+| `+44+NSN` | `+441418701234` | International E.164 with `+` |
+| IDD `00+CC+NSN` | `00441418701234` | International access from UK |
+| Service / emergency | short codes | **No** leading `0` or country code |
+
+Default configuration: B-numbers **presented to the customer** with a **leading `0`**. SIP fault reports: supply **time-stamped** B-numbers that failed.
 
 | Direction | Field | Accept / send |
 |-----------|--------|----------------|
-| Inbound / Outbound | R-URI / To | UK national **or** `+E.164` (some notes also IDD) |
-| Outbound | From / PAID | National-significant or `+E.164` |
-| Practice | CLI | Many stacks require **`+` CLI** for reliable presentation → preset uses plus_e164 |
+| Outbound | R-URI / To (B-number) | **Accepts** national `0…`, `+E.164` (`+44…`), IDD `00…` (multi-accept). Service codes unmodified. |
+| Inbound (Gamma → CPE) | B-number presentation | Default **leading `0`** national (carrier→customer); may differ by config |
+| Outbound | From / PAID (CLI) | National-significant or `+E.164` (integrator notes; not §B primary above) |
+| Practice | CLI | Many stacks require **`+` CLI** for reliable presentation → `uk-gamma` preset keeps **plus_e164** for determinism even though B-number multi-accept would allow national / IDD dialled |
 
 ## 7. Cross-carrier scenario
 
@@ -143,6 +156,7 @@ Inventory `carrier` hint on DID is ops-only; **transforms follow the Peer that i
 | M3 | Privacy withhold | Privacy set; CLI still present |
 | G1 | Gamma outbound +E.164 dial + CLI | Call completes |
 | G2 | Gamma inbound national or + | Same as M1 shape |
+| G3 | Gamma outbound national `0…` and/or IDD `00…` B-number (if testing multi-accept) | Call completes (optional; published accept per §6.2) |
 | X1 | DID Magrathea + egress Gamma | Dialled + CLI rendered for Gamma |
 
 Unit tests in **pbx3sbc-admin** cover preset parse/render matrices offline.

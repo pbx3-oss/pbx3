@@ -1,6 +1,6 @@
 # Carrier numbering expectations — research notes (living)
 
-**Status:** Research capture **2026-08-02**. Not a build plan; supports the open discussion in **`NUMBER_WIRE_STANDARD_DRAFT.md`**.  
+**Status:** Research capture **2026-08-02** (Gamma B-numbers primary text added **2026-08-03**). Not a build plan; supports the open discussion in **`NUMBER_WIRE_STANDARD_DRAFT.md`**.  
 **Prompt:** “What do national carriers expect? UK + USA known; old PBXs just sent what was dialled up the line.”  
 **Related:** **`NUMBER_DIALECT_REQUIREMENTS.md`** (Peer dialect matrices) · **`EGRESS_PLUS_E164_WIRE.md`** (current fleet wire practice) · **`NUMBER_WIRE_STANDARD_DRAFT.md`** (open Model A vs B).
 
@@ -72,14 +72,46 @@ Threat if the PBX also rewrites aggressively (Model A Mangle): **two independent
 
 ### 4.2 ITSP / SIP face (layer B) — what we already know
 
-| Peer class | Dialled R-URI | CLI | Notes / sources |
-|------------|---------------|-----|-----------------|
+| Peer class | Dialled R-URI (B-number) | CLI | Notes / sources |
+|------------|--------------------------|-----|-----------------|
 | **Magrathea** (wholesale ITSP) | Prefer `+E.164`; national / IDD also seen | PAID network / RPID presentation; digits/`+` | Client handbook + LI guides (see NUMBER_DIALECT §6.1); lab |
-| **Gamma** | National **or** `+E.164` | Often `+` for reliable presentation | Integrator CPE notes |
+| **Gamma** (largest UK SIP carrier) | **National `0+NSN`**, **`+44+NSN`**, **or** **`00+CC+NSN`** (three-way accept); service/emergency without leading `0`/CC | See CLI notes separately | Primary CPE text §4.2.1 (2026-08-03); NUMBER_DIALECT §6.2 |
 | **Brindley** (lab SARK “network” peer) | **`_0…` / `_00…` only** (York) | National-ish | Registration trunk; **not** a regulator doc — CPE reality |
 | **TTNC (example UK retail SIP)** | E.164 userparts cited for CLI headers | Ofcom-style allowed CLI ranges | Public CLI presentation PDF (header userpart E.164 with `+` allowed) |
 
 **Lab fact 2026-08-02:** Brindley rejected digit-E.164 `4479…` in context `mainmenu`; national `0794…` works after edge strip/prefix. That is **access-plan shaped** CPE, closer to “CO expects UK dialling” than modern wholesale +E.164.
+
+### 4.2.1 Gamma — B-numbers (called / destination) — primary text
+
+**Source:** Gamma SIP presentation notes (operator-supplied extract **2026-08-03**). B-numbers = called-party / destination numbers sent **to** Gamma.
+
+> B Numbers B-numbers relate to 'called party' or 'destination' numbers, and should be sent to us in the following format:
+>
+> - UK national 0+NSN (national significant number) — e.g. `01418701234`
+> - +44+NSN — e.g. `+441418701234`
+> - International 00+CC+NSN — e.g. `00441418701234`
+>
+> Service and emergency calls: no leading 0 or CC (country code).
+>
+> As a default configuration B-numbers will be presented to the customer including a leading 0.
+>
+> When reporting a SIP fault to us, you will be asked to supply time-stamped examples of B numbers to which calls have failed.
+
+| Form | Example (same destination) | Notes |
+|------|----------------------------|--------|
+| UK national | `01418701234` | `0` + NSN |
+| `+E.164` | `+441418701234` | `+44` + NSN |
+| IDD from UK | `00441418701234` | `00` + CC + NSN |
+| Service / emergency | short codes **without** leading `0` or CC | Do not nationalise specials |
+
+**Default presentation *to the customer* (Gamma → CPE):** B-numbers **with leading `0`** (national) unless their config is changed.
+
+**Implications for pbx3:**
+
+1. Gamma is **multi-accept** on dialled R-URI — not `+`-only and not national-only. Model A (node → `+E.164`) **and** dial-as-typed national/`00…` both match published B-number rules.
+2. Peer dialect for Gamma should list **accepted set**, not force one outbound renderer as the only lawful form. Prefer still **one** outbound render for determinism (`uk-gamma` preset may keep `plus_e164` for fleet wire symmetry).
+3. Brindley remains **stricter** than Gamma — multi-accept on Gamma does not remove Peer dialect for rigid CPE.
+4. Fault tickets: preserve **as-sent** B-number + timestamp (SIP capture / CDR) — rewrites obscure Gamma support asks.
 
 ### 4.3 Ofcom / LI (CLI honesty)
 
@@ -143,7 +175,7 @@ Pattern: **layer A varies by country; layer B is converging on E.164 for wholesa
 ## 8. Open research gaps (next source pulls)
 
 1. **Bandwidth.com / major US CLECs** — published SIP dialled + CLI format (primary PDF).  
-2. **BT Wholesale / Gamma / Vodafone UK** — latest SIP trunk CPE for R-URI (not reseller folklore).  
+2. **BT Wholesale / Vodafone UK** — latest SIP trunk CPE for R-URI (not reseller folklore). **Gamma B-numbers:** §4.2.1 filled **2026-08-03** (CLI / A-number presentation still needs primary extract if product relies on it).  
 3. **Australian SIP** (e.g. AAPT, Telstra) — 0011 vs +61 expectation.  
 4. **German DTAG / Sipgate / Telefonica DE** — national vs +49.  
 5. Confirm **Twilio Elastic SIP**: documented +E.164 only for To/From (known for CLI 403 lab).  
@@ -165,4 +197,5 @@ Pattern: **layer A varies by country; layer B is converging on E.164 for wholesa
 
 | Date | Note |
 |------|------|
+| 2026-08-03 | **Gamma B-numbers** primary text (§4.2.1): national / +44 / 00+CC multi-accept; default customer face leading `0`; service codes unmodified; fault-report B-number requirement. Gamma row in §4.2 updated. |
 | 2026-08-02 | Initial: PTT model, UK/US matrices, residual EU/AUS, Research gaps; links to wire draft. Lab Brindley national-only face noted. |
