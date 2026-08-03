@@ -72,33 +72,25 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-03 — WebRTC WSS golden)
+## Next agent session notes (2026-08-03 — Magrathea W1 lab green)
 
-**Branch:** **pbx3** **`main`** (source + docs). Golden hot-applied; package not rebuilt as deb this session.
+**Branches:** **pbx3sbc** **`w1-magrathea-wss`** (edge WSS); **pbx3cagi** **`w1-webrtc-prep-fqdn`** (PrepDial **1.0.0-10** source + golden hot binary); **pbx3** **`main`** **`pjsip_webrtc.tmpl`** (fleet UDP + `$outbound_proxy`).
 
-**Lab:** golden **`08jzwn`** EIP **`44.196.98.191`**. WebRTC dialable **`1500`** / SIP **`8af9ee`** / tenant **`dhbm8x`**. WSS direct instance `wss://08jzwn.pbx3.com:8089/ws` (not Magrathea).
-
-### Shipped
-- **Inbound WSS broken → fixed:** Contact used short host + `:5060`; SDP `c=` private VPC. **`pjsip_webrtc.tmpl`:** `from_domain=$fqdn`, `media_address=$externip`, `direct_media=no`, `100rel=no`, `timers=no`, AOR `remove_existing=yes`. **`GenClass::genPjsipWebrtc`** substitutes `$fqdn` (le-domain) + `$externip` (public IP even when edomain is hostname).
-- **Shorewall RTP:** `ACCEPT net $FW udp 10000:20000` (was LAN-only → public desk/WebRTP drop).
-- **ICE post-answer lag:** `[ice_host_candidates]` private⇒EIP; multi-`stunaddr` removed. **`refresh-pjsip-externip.sh`** maintains mapping + restarts Asterisk.
-- **TLS/WSS bind after rebuild:** **`apply-active-cert.sh`** ssl-cert ACLs + Asterisk **restart** (not reload-only); notes in http.conf / TLS docs / step4.
-- **Transport tmpl:** WSS external signaling hints as needed lab-side.
-- **Docs:** **`WEBRTC_WSS_LAB.md`**; TODO multi-AZ + SPA re-verify wording.
+### Shipped (lab + source)
+- Magrathea: OpenSIPS WSS **:8089/ws**, LE cert under `/etc/opensips/tls/`, SKIP_SDP for ICE/WSS, REGISTER smoke OK.
+- Desk ↔ browser WebRTC (Browser-Phone on Magrathea) **both ways + audio**. RTP bypass (edge signaling only).
+- Home: WebRTC endpoints **`transport-udp` + `outbound_proxy=sip:sbc.pbx3.com;lr`** (avoids tenant-FQDN → EIP hairpin).
+- PrepDial fleet always **tenant FQDN** dial string (incl. WebRTC); no more dummy `192.0.2.x` Contact dials.
+- Golden: dynamic dialplan override removed; stock `Dial(${PBX3_DIAL})`; AGI **pbx3cagi.arm64** hot-deployed (bak under same path `*.bak.pre-w1-*`).
+- Earlier same day: singleton-direct Contact/SDP/ICE fixes — **`WEBRTC_WSS_LAB.md`**.
 
 ### Golden / operator follow-up
-- Golden has live configs + script; **apt package roll** still needed for other nodes / clean rebuilds.
-- Browser-Phone post-Accept delay = client mule (not tracking). Audio-up lag similar on both Browser-Phone and dev webphone — not a PBX-template win metric.
-- **Dev-team webphone OK (2026-08-03):** SIP **`8af9ee`** accepted; path works. Digit-only shortuid sanitize **not** an issue for that client.
-- Clamp SG **8089** when host tests done.
-- **Multi-AZ** lab instances before production AZ claims.
-
-### Design note (same day — proxy / DNS)
-- Desk path: **SIP domain** = tenant string (SBC `domain` translate); **next hop** = SBC. **No** public tenant A record required.
-- Many webphones lack outbound-proxy → WSS host and SIP domain collapse; prefer own **line test**/SPA with **two fields** (edge WSS host + tenant domain). Optional tenant DNS only for collapsed UIs. See **`WEBRTC_WSS_LAB.md`** § SIP domain vs next hop · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1.
+- Client: `wss://sbc.pbx3.com:8089/ws` · SIP **`8af9ee`** · domain **`dhbm8x.pbx3.com`** · pass `~/webrtc-1500.env`.
+- Package rolls not done: deb packages remain older; commit/push/merge branches when asked; GenAst will rewrite webrtc conf from tmpl after package/deploy.
+- Residual: merge sbc branch; clamp instance **8089** when singleton tests done; multi-AZ; SPA line test.
 
 ### Resume
-- Residual lab: SG **8089** clamp; package WebRTC/ICE for non-golden; multi-AZ when scheduled. Number-wire D1 still open.
+- Prefer product backlog (number wire / fleet delete / …) or **packaging session** for cagi 1.0.0-10 + pbx3 tmpl. Re-smoke 1000↔1500 after any GenAst if live conf regresses without tmpl.
 - **SPA WSS line test** backloged (**FEATURE_PLANS_INDEX** + **TODO**) — thin in-admin path prover (not desk softphone; not Browser-Phone; coexists with external WSS team). Two-config values when W1: WSS host vs SIP domain.
 
 ---

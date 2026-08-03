@@ -6,7 +6,14 @@ allow=!all,ulaw,alaw,opus,vp8
 callerid="$desc" <$ext>
 context=$clst
 dtls_auto_generate_cert=yes
-transport=transport-wss
+; Fleet: same signaling path as desk phones — UDP via Magrathea for Dial(…@tenant.fqdn).
+; transport-wss alone makes tenant-FQDN DIMs resolve to the instance EIP (hairpin INVITE,
+; "No matching endpoint" + "no auth ids available"). Browser still REGISTERs WSS to the SBC;
+; Magrathea relays SIP/UDP to this host; outbound_proxy forces dials back through the SBC.
+; Singleton/direct WSS may set transport-wss via pjsip_overlay if no fleet edge.
+transport=transport-udp
+; outbound_proxy line (GenAst Phase F): fleet → sip:{PBX3_SBC_EGRESS_HOST};lr ; singleton → empty
+$outbound_proxy
 ; Must bridge through Asterisk: Snom (RTP) cannot direct-media to browser (DTLS-SRTP/ICE).
 ; Default direct_media=yes breaks phone→webphone (outbound web often works by chance).
 direct_media=no
