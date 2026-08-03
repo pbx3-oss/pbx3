@@ -57,7 +57,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig + move-job + Fail2ban ban + **Egress Unavail** shipped; SPA badges later |
 | **Toll fraud / velocity** | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — V1–V5 fleshed (fixture-first, batch CDR, `active=NO` act); competitive notes |
 | **WebRTC / WSS (demo)** | **`WEBRTC_WSS_LAB.md`** (golden `:8089` baseline) → **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 → **`SBC_PRODUCT_TRACKS.md`** · IMPLEMENTATION_PLAN **W1** |
-| **PSTN number dialects** | **`NUMBER_DIALECT_REQUIREMENTS.md`** → MkDocs **`fleet/number-dialect`** → Peer dialect + OpenSIPS `DIALECT_*`; node Egress transform = DNID/`+CC` by serving country |
+| **PSTN number dialects** | **`NUMBER_DIALECT_REQUIREMENTS.md`** → MkDocs **`fleet/number-dialect`** → Peer dialect + OpenSIPS `DIALECT_*`; node Egress transform = DNID/`+CC` by serving country (Model A status quo) |
+| **Number wire standard (open)** | **`NUMBER_WIRE_STANDARD_DRAFT.md`** + research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`** — PTT “dial as dialled / upstream fixes”; Model B open |
 
 | **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging WS0–WS4 **done** (lab); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR **v1 done** (scripts + scratch drill + MkDocs) |
 | **Downstream peer REGISTER (future)** | **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class; no shared OpenSIPS image; interim Asterisk-proxied workaround only |
@@ -71,31 +72,38 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-02 — Kildare greenfield + route pkey)
+## Next agent session notes (2026-08-02 — Kildare PSTN + Mangle + wire draft)
 
-**Branches:** **pbx3api** **`eb8961d`**, **pbx3** (install/onboard **`f9c3a09`** Egress seed, **`cf78de0`** admin bootstrap, **`309bb18`** fleet token write, plus **`INSTALL_NODE_SIMPLE`** Act 2 token find), **pbx3spa** select-height polish — all **`main`** after this session end push.
+**Branches:** **pbx3cagi** **`502596e`** (Mangle fix **1.0.0-9** changelog), **pbx3** seed/docs + this handoff, **pbx3-docs** number-dialect seed order — **`main`**. Earlier same day: greenfield/route **`eb8961d`** / install tips.
 
-**Lab:** golden **`08jzwn`** / EIP **`44.196.98.191`**. Magrathea VIP **`3.93.26.82`**. **Kildare (live):** EC2 **`i-08a888f32e1391649`**, public **`3.93.253.1`**, FQDN **`kildare.pbx3.com`**, shortuid **`kildare`**, SSH `ubuntu@3.93.253.1` / `aelsip.pem`, bucket **`08jzwn-pbx3`**. Tenant **`18c8z3`** “Kildare home office” / **`18c8z3.pbx3.com`**. Outbound route create OK after pkey fix (hot on `/opt/pbx3api`).
+**Lab:** golden **`08jzwn`** / EIP **`44.196.98.191`**. Magrathea VIP **`3.93.26.82`**. **Kildare:** `3.93.253.1` / `kildare.pbx3.com` / shortuid **`kildare`** / **`aelsip.pem`**. Tenant **`18c8z3`**. MainOut → Egress. DID **`+441924918076`** (inroute) / national **`01924918076`** on Brindley.
 
 ### Shipped
-- **Greenfield / install path:** `GREENFIELD_FLEET_INSTANCE_INSTALL.md`, **`INSTALL_NODE_SIMPLE.md`** (Act 1/2; fleet token find/set; edge setid IP URI). Egress auto-seed on onboard; SPA admin bootstrap; onboard writes `PBX3_FLEET_SERVICE_TOKEN`.
-- **Route create:** `RouteController::save` sets `pkey` (**`eb8961d`**). Had been `NOT NULL constraint failed: route.pkey`.
-- **SPA (minor):** Fleet Tenants create Home instance `<select>` + global `FormSelect` height aligned with inputs.
-- Earlier same day: Users edit **`a10c106`**.
+- **Mangle:** `sizeof(char*)` strlcat bug truncated UK transform to e.g. `+441924`. Fix = sized buffer. Changelog **1.0.0-9**; **hot binary on Kildare** (deb not rebuilt/packaged fleet-wide yet). Tips **pbx3cagi `502596e`**.
+- **Egress seed:** transform **`00:+ 0:+44`** (00 before 0); re-seed rewrites inverted `0:+44 00:+`. **pbx3 `35a6c50`**.
+- **Lab PSTN (ops, not all git):** Brindley peer host fixed (was EIP-hairpin); gwid1 **strip=2 / pri_prefix=0** for national face; Twilio off default gwlist (`1,20`); DID rule **21** prefix **`441924918076`** → gwid **100**; Kildare inroute pkey **`+441924918076`**; Brindley CPE context fixed by operator. **In+out OK on Kildare.**
+- **Research / open design (not locked):** **`NUMBER_WIRE_STANDARD_DRAFT.md`**; **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`** (PTT: PBX sends dialled digits; upstream owns network shape; Model A vs B). Operator leaning Model B / maybe.
 
 ### Golden / operator follow-up
-- Kildare: extensions / dialplan as needed; token docs for next onboard.
-- Optional: rebuild deb **0.0.4-4** when packaging admin-bootstrap binary.
-- WebRTC far-end still blocked; clamp SG **8089** when done.
+- Package/deploy cagi **1.0.0-9** to golden when convenient (Kildare has hot binary; golden transform still often NULL → may not hit Mangle).
+- Magrathea: prefer **named Brindley dialect** over long-term strip/prefix; Magrathea **407** if failover beyond Brindley.
+- **Wire standard D1 open** — do not implement Model B without lock.
+- WebRTC far-end blocked; clamp SG **8089** when done.
 
 ### Resume
-- Wait for operator task (Fleet Delete / dial alias / more Kildare lab). Do **not** invent fleet token — **`INSTALL_NODE_SIMPLE.md`** Act 2.
+- Product TODO (Fleet Delete / dial alias) or continue number-wire decision. Wait for task. Do not invent fleet token (**`INSTALL_NODE_SIMPLE` Act 2**).
+
+---
+
+## Next agent session notes (2026-08-02 — Kildare greenfield + route pkey) — historical
+
+**Superseded** by Kildare PSTN + Mangle block above. Greenfield + route pkey still on **`main`**.
 
 ---
 
 ## Next agent session notes (2026-08-02 — Users edit + AEL greenfield) — historical
 
-**Superseded** by Kildare greenfield + route pkey block above. Users edit shipped; AEL node is now **Kildare**.
+**Superseded** by Kildare greenfield notes. Users edit shipped; AEL node is **Kildare**.
 
 ---
 

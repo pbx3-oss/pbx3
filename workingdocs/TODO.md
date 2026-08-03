@@ -1,27 +1,28 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — golden **`08jzwn`** EIP **`44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8**. Lab: Magrathea VIP **`3.93.26.82`**; second fleet node **Kildare** (`kildare.pbx3.com` / `3.93.253.1`).  
-**Last updated:** 2026-08-02 (session end: Kildare greenfield + route create fix)
+**Branch:** **`main`** — golden **`08jzwn`** EIP **`44.196.98.191`**; **pbx3 0.0.4-3** + **pbx3cagi 1.0.0-8** (Kildare hot **Mangle 1.0.0-9**). Lab: Magrathea VIP **`3.93.26.82`**; second fleet node **Kildare** (`kildare.pbx3.com` / `3.93.253.1`).  
+**Last updated:** 2026-08-02 (session end: Kildare PSTN + Mangle + number-wire draft)
 
 
 ### Suggested “what next?” order
 
-1. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
-2. **Tenant dial alias** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.  
-3. **Product crumbs** (optional) — paid Twilio / drain / velocity V3.  
-4. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**.  
-5. **pbx3cagi Phase 4** (parked).  
-6. **Velocity standalone** (parked).  
-7. **Instance shadowing** / S10.7 / S8.9 (parked).  
-8. **AMI wallboard** (parked).  
-9. **Fleet node health ≠ Asterisk** (parked).  
-10. **Control plane duplex / HA** (parked).  
-11. **Fleet auth cookie/SSO (blocked)**.  
-12. **S7+** attested PCI — customer ask.  
-13. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
-14. **Grafana / door-knock geo** (parked).  
-15. **WebRTC / WSS demo (SBC #1)** — **blocked:** await far-end SPA team. Spec: **`WEBRTC_WSS_LAB.md`**.  
-16. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
+1. **Number wire standard (open)** — decide Model A (node Mangle) vs B (PBX dials-as-typed; SBC normalizes) — **`NUMBER_WIRE_STANDARD_DRAFT.md`** · research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. No implement until D1.  
+2. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
+3. **Tenant dial alias** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.  
+4. **Product crumbs** (optional) — paid Twilio / drain / velocity V3.  
+5. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**.  
+6. **pbx3cagi Phase 4** (parked).  
+7. **Velocity standalone** (parked).  
+8. **Instance shadowing** / S10.7 / S8.9 (parked).  
+9. **AMI wallboard** (parked).  
+10. **Fleet node health ≠ Asterisk** (parked).  
+11. **Control plane duplex / HA** (parked).  
+12. **Fleet auth cookie/SSO (blocked)**.  
+13. **S7+** attested PCI — customer ask.  
+14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
+15. **Grafana / door-knock geo** (parked).  
+16. **WebRTC / WSS demo (SBC #1)** — **blocked:** await far-end SPA team. Spec: **`WEBRTC_WSS_LAB.md`**.  
+17. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -46,6 +47,14 @@
 - [x] **Lab fleet — Kildare greenfield (2026-08-02):** EC2 **`i-08a888f32e1391649`** (“AEL-Kildare”), public **`3.93.253.1`**, FQDN **`kildare.pbx3.com`**, shortuid **`kildare`**, key **`aelsip.pem`**. Onboarded into **`08jzwn-pbx3`**; Egress → `sbc.pbx3.com`; preflight green; fleet service token set; admin bootstrap (not unknown seed). Tenant **Kildare home office** / shortuid **`18c8z3`** / FQDN **`18c8z3.pbx3.com`**. Docs: **`INSTALL_NODE_SIMPLE.md`**, **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`**. Follow-on ships: egress auto-seed, admin bootstrap, onboard token write (pbx3 tips **`f9c3a09`** / **`cf78de0`** / **`309bb18`**).
 
 - [x] **Route create `pkey` NOT NULL (2026-08-02):** `RouteController::save` validated `pkey` but only copied `$updateableColumns` (excludes pkey) → SQLite integrity fail. Fix: move via `$createRules` + explicit `$route->pkey`. **pbx3api** **`eb8961d`**; hot on Kildare.
+
+- [x] **Mangle sizeof(pointer) + Egress seed order (2026-08-02):** UK Egress transform truncated DNID (`+441924…` → `+441924`). Fix build into `mangled[]`; seed **`00:+ 0:+44`**. Tips **pbx3cagi `502596e`**, **pbx3 `35a6c50`**, **pbx3-docs**. Kildare hot binary.
+
+- [x] **Kildare Brindley PSTN lab (2026-08-02):** In+out working. Fixes: Brindley host not hairpin to Kildare EIP; peer **strip=2/pri_prefix=0** (national); Twilio off gwlist; DID rule **441924918076→gwid 100**; inroute **`+441924918076`**; York trunk context (op). Egress transform stays **`00:+ 0:+44`**.
+
+- [ ] **Number wire standard — Model A vs B (open 2026-08-02):** Draft **`NUMBER_WIRE_STANDARD_DRAFT.md`**; research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Preference lean: PBX sends dialled digits; SBC owns habit + peer face (PTT). **Not locked** — do not strip node Mangle without D1.
+
+- [ ] **pbx3cagi 1.0.0-9 package + golden roll (follow-up):** Changelog + hot on Kildare only; rebuild deb / push package when packaging session runs.
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 
