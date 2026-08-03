@@ -1,13 +1,24 @@
 # workingdocs
 
-**AI:** Read **AGENT_HANDOFF.md** first. It contains current state and read-order by task.
+**AI:** Start at **AGENT_HANDOFF.md** (§ Next agent session notes top block) → **TODO.md** → **pbx3spa/workingdocs/SESSION_HANDOFF.md** (top Session end only).
 
-**User guides (operators/installers):** Not stored here. Published docs plan: **USER_GUIDES_MKDOCS_CONTENT_MAP.md** (MkDocs / `pbx3-docs` repo). This folder remains **developer + AI** only.
+**User guides (operators):** MkDocs / **`pbx3-docs`** — map: **USER_GUIDES_MKDOCS_CONTENT_MAP.md**. This folder is **developer + AI** only.
 
-**Session end:** When the user says **`session end`** — **SESSION_END_CHECKLIST.md** (update TODO + AGENT_HANDOFF + pbx3spa SESSION_HANDOFF only).
+## Map (keep this short)
 
-**Repos / releases:** **REPOS_AND_RELEASES.md** — remotes, deploy targets, multi-repo policy, compatibility matrix.
+| Kind | Where | Examples |
+|------|--------|----------|
+| **Live session** | `AGENT_HANDOFF.md`, `TODO.md`, SPA `SESSION_HANDOFF.md` | Top block only |
+| **Session archaeology** | **`archive/`** | `AGENT_HANDOFF_HISTORY.md`, SPA `archive/SESSION_HANDOFF_HISTORY.md`, `TODO_DONE_LOG.md` |
+| **Session end habit** | **SESSION_END_CHECKLIST.md** | Update the three live files only |
+| **Research (not locked)** | living `*_RESEARCH.md` / `*_DRAFT.md` | `CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md` |
+| **Locked product / fleet** | Prefer **`pbx3-directory/docs/`** when fleet-wide | DESIGN_RULES, runbooks, dialect reqs |
+| **Feature plans (instance)** | This folder | TLS, short dial, time-based routing, test packs |
+| **Repos / releases** | **REPOS_AND_RELEASES.md** | Multi-repo policy |
 
-**Tests / identity:** **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** · **`FLEET_AUTH_COOKIE_SSO.md`** (cookies, SSO-agnostic stance, abilities).
+**Do not** re-grow closed TODO checkmarks in **TODO.md** — closed ledger → **archive/TODO_DONE_LOG.md**. Optional: move superseded handoff blocks into archive when the live file gets heavy again (~yearly garden, not every session).
 
-Other notes in this folder include **`TLS_AND_CERTIFICATES.md`** (TLS doc index — **read first for certificates**), **`CERTIFICATES_PANEL_AND_API.md`**, **`LETSENCRYPT_PER_TENANT_FQDN.md`**, **TODO.md**, **DBSTRUCT_SMOKE_CHECKLIST.md** (post–schema-change checks), and **SQL_CHECK_CONSTRAINT_SIDEPROJECT.md** (SQLite CHECK constraints exploration).
+**Repos / releases:** **REPOS_AND_RELEASES.md**.  
+**Tests:** **TEST_CADENCE.md** · **CRITICAL_PATH_TEST_PACK.md**.  
+**TLS index:** **TLS_AND_CERTIFICATES.md**.  
+**Fleet auth stance:** **FLEET_AUTH_COOKIE_SSO.md**.

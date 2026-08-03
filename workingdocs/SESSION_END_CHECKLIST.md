@@ -4,15 +4,17 @@
 
 **Purpose:** Keep **one current truth** at the top of handoff files. Do **not** rationalize or rewrite other workingdocs.
 
+**History:** Older session blocks live in **`workingdocs/archive/`** (and SPA **`workingdocs/archive/`**). Session end does **not** append into those archives. Optional garden: when the live handoff grows past ~a few historical stubs, move superseded blocks into the matching archive file.
+
 ---
 
 ## Files to update (only these)
 
 | # | File | Action |
 |---|------|--------|
-| 1 | **`pbx3/workingdocs/TODO.md`** | Check off completed open items. Add new open items from the session. Update **Suggested “what next?”** only if priorities changed. Bump **Last updated** date. |
-| 2 | **`pbx3/workingdocs/AGENT_HANDOFF.md`** | Add or replace **`## Next agent session notes (YYYY-MM-DD)`** at the top of that section (below read-order tables). Include: branch(es), what shipped, golden/node follow-ups, resume line. Mark older blocks in that section as historical or leave them below the new block. |
-| 3 | **`pbx3spa/workingdocs/SESSION_HANDOFF.md`** | Prepend **`## Session end YYYY-MM-DD — {short title}`** immediately after the “AI: read this first” intro (above older session blocks). Same resume info from the SPA/operator angle. |
+| 1 | **`pbx3/workingdocs/TODO.md`** | Check off **open** items by removing or flipping and **not** re-building a long closed list here — completed work is git + optional one-liner in handoff. Add new open items from the session. Update **Suggested “what next?”** only if priorities changed. Bump **Last updated** date. Closed ledger archive: **`archive/TODO_DONE_LOG.md`**. |
+| 2 | **`pbx3/workingdocs/AGENT_HANDOFF.md`** | Add or replace **`## Next agent session notes (YYYY-MM-DD)`** as the single current block (below read-order tables; above **Session history (archived)** pointer). Include: branch(es), what shipped, golden/node follow-ups, resume line. |
+| 3 | **`pbx3spa/workingdocs/SESSION_HANDOFF.md`** | Prepend **`## Session end YYYY-MM-DD — {short title}`** immediately after the “AI: read this first” intro (above the archive pointer / Quick start). Same resume info from the SPA/operator angle. |
 
 ---
 
