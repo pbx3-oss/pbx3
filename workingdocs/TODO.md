@@ -21,7 +21,7 @@
 13. **S7+** attested PCI — customer ask.  
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
-16. **WebRTC residual** — Magrathea **W1 lab green** (`WEBRTC_W1_MAGRATHEA.md`); merge **`w1-magrathea-wss`**; package **pbx3cagi 1.0.0-10** + pbx3 webrtc tmpl roll; clamp instance SG **8089**; multi-AZ. Spec: **`WEBRTC_WSS_LAB.md`**.  
+16. **WebRTC residual** — Magrathea **W1 lab green** (merged). Package **pbx3cagi 1.0.0-10** + pbx3 webrtc tmpl roll; optional: tighten golden **instance** AWS SG 8089 if world-open for lab (edge Magrathea 8089 is product); multi-AZ. Spec: **`WEBRTC_WSS_LAB.md`**.  
 17. **SPA WSS line test** — thin in-admin **line test** (register / dial / answer), not a desk softphone product. Prefer WSS host = edge when proving fleet path. See SPA **FEATURE_PLANS_INDEX**.  
 18. **Multi-AZ lab** — place fleet instances in **different AZs** (same-AZ lab under-tests NAT/ICE/media).  
 19. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
@@ -46,7 +46,7 @@
 
 - [ ] **Grafana / Homer — fleet view only, unmodified (parked 2026-07-30):** Stance locked. **SBC Home = Filament** (in-box). **Grafana** (and Homer if ever) = optional **fleet / multi-instance** observability later — operator-installed **unmodified** OSS (AGPL); no fork, no bundling into product installer, no on-licensing end users. If a use case needs modifying Grafana/Homer, **don’t do that use case**. Not next.
 
-- [ ] **WebRTC — merge + package residual (2026-08-03):** Magrathea W1 **lab green** (REGISTER + desk↔webphone audio). Residual: merge **`pbx3sbc` `w1-magrathea-wss`**; roll **pbx3** `pjsip_webrtc.tmpl` (fleet UDP + outbound_proxy) when GenAst package ships; package cagi **1.0.0-10**; clamp instance SG **8089** when host-direct tests finished. Spec: **`WEBRTC_WSS_LAB.md`** · checklist **`WEBRTC_W1_MAGRATHEA.md`**.
+- [ ] **WebRTC — package residual (2026-08-03):** Magrathea W1 **lab green**; **merged/pushed** sbc + cagi PrepDial + pbx3 tmpl. Residual: rebuild/install **pbx3cagi 1.0.0-10** deb + **pbx3** package with webrtc tmpl on nodes beyond golden hot-fixes. Optional ops: if golden’s **instance** security group left **TCP 8089** wide open for direct WSS tests, restrict to lab/operator CIDRs (or close once only using Magrathea WSS). Spec: **`WEBRTC_WSS_LAB.md`**.
 
 - [ ] **SPA WSS line test (open 2026-08-03):** First-party **in-admin line test** on **WSS** (register / dial / answer / hangup; hold/mute if cheap) against instance (later SBC W1). Job: prove the extension path for ops — **not** a desk softphone product, **not** InnovateAsterisk Browser-Phone (AGPL), **not** native app. Use SIP.js or JsSIP; SIP user = **shortuid**; dialable pkey for UI; Domain = tenant FQDN; WSS host = node or SBC. Coexists with external WSS team SPA. Track: **pbx3spa** **`FEATURE_PLANS_INDEX.md`** · lab **`WEBRTC_WSS_LAB.md`**.
 
