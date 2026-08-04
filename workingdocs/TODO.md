@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — fleet nodes **08jzwn** / **bzy54n** / **kildare** on **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10**. EIPs: golden **`44.196.98.191`**, Kildare **`3.93.253.1`** (`kildare.pbx3.com`), bzy **`54.158.236.215`**. Magrathea VIP **`3.93.26.82`** (`sbc.pbx3.com`).  
-**Last updated:** 2026-08-03 (session end — packages on all lab nodes; bzy Magrathea unban + dispatcher IP)
+**Last updated:** 2026-08-03 (SPA line test lab green; pre-release SPA bundle diet parked)
 
 
 ### Suggested “what next?” order
@@ -22,9 +22,10 @@
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
 16. **WebRTC residual** — Magrathea W1 done; **pbx3 0.0.4-5** + **cagi 1.0.0-10** on 08jzwn/bzy/kildare; multi-AZ still open. Spec: **`WEBRTC_WSS_LAB.md`**.  
-17. **SPA WSS line test** — direction locked **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`**. Implement when scheduled.  
+17. **SPA WSS line test** — **done / lab green** (JsSIP dialler + post-call report on WebRTC extension detail). Spec: **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`**.  
 18. **Multi-AZ lab** — place fleet instances in **different AZs** (same-AZ lab under-tests NAT/ICE/media).  
-19. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
+19. **Pre-first-release — SPA bundle diet** (parked) — single ~1.1 MB / ~295 kB gzip main chunk; defer until before first product release.  
+20. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -48,7 +49,9 @@
 
 - [x] **WebRTC package residual (2026-08-03):** **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** on **08jzwn** + **bzy54n** + **kildare**. Architecture: **`WEBRTC_WSS_LAB.md`**.
 
-- [ ] **SPA WSS line test (locked 2026-08-03):** Direction in **pbx3spa** **`WSS_LINE_TEST_REQUIREMENTS.md`**. Instance SPA path prover; real **WebRTC** tenant extension; WSS on edge (home not wss transport); not a softphone. Implement when scheduled.
+- [x] **SPA WSS line test (lab green 2026-08-03):** **pbx3spa** `main` — JsSIP diagnostic dialler on WebRTC extension detail; edge WSS; post-call report. Spec: **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`**.
+
+- [ ] **Pre-first-release — SPA production bundle diet (parked 2026-08-03):** Do **before first product release**, not now. Prod SPA is a single Vite chunk ~**1.1 MB** min / ~**295 kB** gzip (all instance + fleet panels + help markdown + **JsSIP**). Acceptable lab admin; want a deliberate diet prior to release. Prefer: (1) **dynamic `import()` of line-test + JsSIP** only when Line test opens; (2) **route-level code-split** for heavy views; (3) optional split of `marked`/`dompurify` off the critical path. Measure with `npm run build` before/after. Repo: **pbx3spa**.
 
 - [ ] **Multi-AZ fleet lab (open 2026-08-03):** Lab today is effectively **same AZ** — under-tests ice_host / public identity / RTP / inter-instance and node↔SBC paths. **Need:** instances (at least two) in **different AZs**; smoke REGISTER, desk media, singleton-direct WebRTC if used, then SBC-faced path. Same-AZ success is not production multi-AZ proof. Notes: **`WEBRTC_WSS_LAB.md`** Next.
 
