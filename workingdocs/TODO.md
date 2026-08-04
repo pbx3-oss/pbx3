@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** (tenant short dial merged 2026-08-04); lab packages still **0.0.4-5** / cagi **1.0.0-10** until package roll.  
-**Last updated:** 2026-08-04 (session end — short dial A–E lab green + merge)
+**Last updated:** 2026-08-04 (session end — SIPp pack 11/11 + Magrathea/golden DID lab fix)
 
 
 ### Suggested “what next?” order
@@ -40,7 +40,10 @@
 
 - [ ] **Tenant short dial residual (2026-08-04):** Package roll (pbx3 + pbx3cagi + Magrathea opensips from git — lab still partially live-patched). **D** desk missed-call redial OEM-dependent. Optional **E** pack-gate. **F** InterSARK operator migrate polish. Prefer free shortuids for SIPp (max_contacts=1 vs desk phones).
 
-- [ ] **Number wire standard — Model A vs B (open 2026-08-02):** Draft **`NUMBER_WIRE_STANDARD_DRAFT.md`**; research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Preference lean: PBX sends dialled digits; SBC owns habit + peer face (PTT). **Not locked** — do not strip node Mangle without D1.
+- [ ] **Number wire standard — Model A vs B (open 2026-08-02):** Draft **`NUMBER_WIRE_STANDARD_DRAFT.md`**; research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Preference lean: PBX sends dialled digits; SBC owns habit + peer face (PTT). **Not locked** — do not strip node Mangle without D1.  
+  **Lab note (2026-08-04):** Magrathea inbound dialect **0… → 44…** before `do_routing` — DID **`dr_rules` prefixes must be digit E.164** (e.g. `441924910444` not `01924910444`). Asterisk Ingress needs wire form **`+441924…`** after genAst. Brindley **outbound** gwid strip2+prefix0 also expects digit E.164 from the node, not national `0…` (SIPp pack `OUT_DIGITS=441924910444`). Office **01924** DIDs → **Kildare** (e.g. rule `441924918076` → gwid 100); **910444** still lab on golden until operator moves it.
+
+- [x] **L1 SIPp pack green (2026-08-04 session):** Full **`run-pack.sh` 11/11** on Peer `98.82.58.59` after outbound `OUT_DIGITS` digit-E.164 fix. Site-dial dual-host still green.
 
 - [x] **Fleet package roll (2026-08-03):** **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** on **08jzwn**, **bzy54n**, **kildare** (includes PrepDial WebRTC FQDN + fleet webrtc tmpl + Mangle fix from 1.0.0-9).
 

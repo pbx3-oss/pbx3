@@ -72,7 +72,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
+## Next agent session notes (2026-08-04 — SIPp pack green + DID lab)
+
+**Branch:** **`main`** all product repos + **sipplab**. No product code shipped this session — lab/ops debug. Packages still **0.0.4-5** / cagi **1.0.0-10** until package roll.
+
+### Shipped (lab)
+- **L1 pack 11/11** on Peer SIPp host `98.82.58.59` (PEM `pbx3test`). `out-egress-ok` required digit-E.164 **`OUT_DIGITS=441924910444`** — national `01924910444` is mangled by Brindley gwid strip2+prefix0 (`0924910444`). Pack Peer + Mac sipplab `lab.env` updated (gitignored).
+- **Site-dial** dual-host re-proven green after pack (UAC `98.93.32.43` / UAS `98.82.58.59`).
+- **Magrathea DID `01924910444`:** `dr_rules` prefix **`441924910444`** → gwid 10 golden (post-dialect key; national prefix never matched). Golden Ingress **`+441924910444` → 1000** + genAst. PSTN via Brindley → Magrathea VIP green.
+- **Policy:** office **01924** DIDs → **Kildare** (e.g. `441924918076` → gwid 100). Leave 18076 on Kildare. **910444** stays lab golden until operator moves.
+
+### Resume
+1. **Package roll** short dial + Magrathea cfg from git vs live (incl. DID rule prefixes as digit E.164).  
+2. Product: **time-based routing** when scheduled.  
+3. Optional: move **910444** → Kildare when ready (same pattern: digit-E.164 rule + wire Ingress on Kildare).
+
+### Golden / ops
+- Magrathea VIP **`3.93.26.82`** · golden EIP **`44.196.98.191`** · Kildare **`3.93.253.1`**. SIPp: Domain phones, not Peer-99 for short dial. SBC **503 No gateways** often = remapped golden **603** via `DR_FAILOVER` (not “no route”).
+
+---
+
 ## Next agent session notes (2026-08-04 — tenant short dial merge)
+
+**Superseded for “read first”** by **SIPp pack green + DID lab** block above.
 
 **Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**, **pbx3sbc**, **sipplab** (feature branches merged). Lab packages still **0.0.4-5** / cagi **1.0.0-10** until package roll — golden/Magrathea may still run live patches.
 
@@ -96,7 +118,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-08-03 — SPA line test shipped)
 
-**Superseded for “read first”** by **2026-08-04** short dial merge block above.
+**Superseded for “read first”** by **2026-08-04** short dial merge / DID lab blocks above.
 
 **Branch:** **`main`** (**pbx3spa** product; **pbx3** docs/TODO). Earlier package/W1 work still on fleet nodes.
 
