@@ -1180,7 +1180,8 @@ private function genExtensionsEndpoints()
 //			Master timers only accessible to the default cluster   
 	        $this->OUT .= <<<HERE
 ;
-;   Visual open/close MASTER throw
+;   Visual open/close MASTER throw (AstDB STAT/OCSTAT: CLOSED force closed; AUTO resume schedule;
+;   CAGI also accepts day-part mode tokens in OCSTAT e.g. lunch)
 ;
 	exten => MASTER,hint,Custom:MASTER
 
