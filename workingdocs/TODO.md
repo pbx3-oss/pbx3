@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — fleet nodes **08jzwn** / **bzy54n** / **kildare** on **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10**. EIPs: golden **`44.196.98.191`**, Kildare **`3.93.253.1`** (`kildare.pbx3.com`), bzy **`54.158.236.215`**. Magrathea VIP **`3.93.26.82`** (`sbc.pbx3.com`).  
-**Last updated:** 2026-08-03 (session end — SPA line test shipped; next big: short dial / TBR)
+**Last updated:** 2026-08-03 (session end + sitename/catalog label sync policy locked)
 
 
 ### Suggested “what next?” order
@@ -41,7 +41,16 @@
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 
-- [ ] **Catalog `label` ↔ node `sitename` (parked 2026-07-30):** On-node friendly name is HoR (`globals.sitename`; lab golden → “Golden”). Fleet directory `label` is separate today — can drift. Later: sync or seed catalog `label` from sitename on onboard / when Network saves (Gatekeeper / catalog write path; Rule 9). Do not invent a second node-local field. Spec: **`NETWORK_SYSGLOBALS_OVERLAP.md`**, **`instance-record.v0.json`**.
+- [ ] **Catalog `label` ↔ node `sitename` (policy locked 2026-08-03; implement when scheduled):**  
+  **Must not drift** (chooser “Kildare” vs Home “AEL Nodes”).  
+  - **HoR:** on-node **`globals.sitename`** (Network / System Globals Site Name).  
+  - **Catalog `label`:** fleet picker mirror — same string as sitename when fleet catalog is in use.  
+  - **Display:** `sitename || label || shortuid` (not FQDN as friendly fallback).  
+  - **Edit path:** operator changes **sitename** only → dual-write `sitename` then Gatekeeper **`PATCH …/instances/{id}`** `label` (Rule **9/10**).  
+  - **Fleet + catalog write path available:** save both or **fail the whole save** if Gatekeeper/catalog (S3 via GK) is unavailable — do **not** leave sitename updated and label stale.  
+  - **Solo / no fleet catalog configured:** sitename save always allowed (no catalog row).  
+  - **Lab one-shot:** align golden / kildare / bzy so label === sitename.  
+  Spec: **`NETWORK_SYSGLOBALS_OVERLAP.md`** · **`instance-record.v0.json`**. Repos: pbx3api (sitename save hook), gatekeeper path, pbx3spa display + error when dual-write fails.
 
 - [ ] **Fleet SPA — edge host health scrape (parked 2026-07-30):** Multi-edge load/mem/disk (and later door-knock country rollups) via Gatekeeper ← edge summary cron → S3 HoR → Fleet overlay. **Not** browser→SBC polling; **not** on-SBC heatmaps. Checklist in **`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
 
