@@ -80,7 +80,7 @@ Tenant T:  inbound / internal path → LepDial(ext) → phone
 | **No dial-time expand** | Do **not** resolve shortuid → FQDN (or instance → tenant) at call time or via live Gatekeeper. |
 | **Config UX** | Operator picks/enters **tenant** FQDNs from fleet-visible tenant list (preferred) or validated free form. Target need not live on this node. |
 | **Shortuid** | Optional display pin only. If shortuid and FQDN disagree, **FQDN wins** for dial. |
-| **Slice A gap** | First A cut used local tenant shortuid. **A′:** required `target_fqdn` (tenant); fleet-aware tenant-FQDN picker; never instance FQDN. Product UI name: **Dial prefixes**, not aliases. |
+| **Slice A gap** | First A cut used local tenant shortuid. **A′:** required `target_fqdn` (tenant); fleet-aware tenant-FQDN picker; never instance FQDN. Product UI name: **Dial prefixes**, not aliases. **Implemented** on branch `tenant-short-dial-a` (schema + API + SPA). |
 ### 3.2 Why not unique extensions again
 
 - Collides with multi-tenant density and convert-from-diverse DBs.  
@@ -251,8 +251,9 @@ INVITE `sip:{ext}@{fqdn}` arrives via SBC → Asterisk tenant context. Must:
 
 ### 5.5 SPA / API
 
-- Per-tenant admin: list/add/edit dial prefixes (digits → **target FQDN**).  
-- **Target field (Q14):** primary control is **FQDN** — pick from fleet catalog FQDN list and/or validated free form (implement choice). Show friendly name/shortuid if available. Not limited to local `GET tenants`. Persist `target_fqdn` (required); shortuid optional.  
+- **Who:** **Instance admin only** (`abilities:admin`). Not tenant-panel operators. There is no customer/tenant-group CRM model; cross-tenant dial prefixes are fleet/node ops, not per-tenant self-serve.  
+- Per-admin: list/add/edit dial prefixes (digits → **target FQDN**).  
+- **Target field (Q14):** **restricted picker** of known tenant FQDNs only — local tenants with `fqdn` **plus** fleet `tenant-home` `cname`s when catalog is reachable. No freeform invent. Labels show friendly name/shortuid + FQDN. Persist `target_fqdn` (required); shortuid optional pin. Catalog down → local-known only (Create stays if any local FQDN exists).  
 - Help: “Prefix is only for this tenant. Dial prefix then extension. Target is the other **tenant’s** FQDN (e.g. sister.pbx3.com) — not the instance hostname — and that site may sit on another fleet node. No feature codes after the prefix.”  
 - Fleet console: optional later helper — **not** on the call path.  
 - Hide / no-op on non-fleet singleton (v1).
@@ -323,7 +324,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 |-------|--------|------------------|
 | **A** — schema + API + SPA dial prefixes (no dial yet) | pbx3, pbx3api, pbx3spa | Admin CRUD |
 | **A′** — target = FQDN (Q14): required `target_fqdn`; fleet-aware FQDN picker (not local cluster shortuid-only); API does not require target ∈ local `cluster` | pbx3, pbx3api, pbx3spa | Admin can aim at remote sister site by FQDN |
-| **B** — OpenSIPS usrloc-miss → dispatcher for `ext@tenant.fqdn` | **pbx3sbc** | None (lab INVITE probe) |
+| **B** — OpenSIPS usrloc-miss → dispatcher for `ext@tenant.fqdn` | **pbx3sbc** | None (lab INVITE probe) — **template done** (`opensips.cfg.template`; deploy + probe still needed) |
 | **C** — GenAst pattern + CAGI PrefixDial (`ext@fqdn` via SBC) + AoR CallerID num / human name | pbx3, pbx3cagi | Dial works fleet lab |
 | **D** — Receive-path trust mark + URI redial lab (Snom/common) | pbx3cagi, maybe sbc | Correct CLI + permissions |
 | **E** — L1 recipe `site-dial-a-b` (SIPp phone UAC → catcher on B) | call-tests | Pack regression |

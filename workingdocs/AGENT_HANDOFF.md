@@ -72,7 +72,30 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
+## Next agent session notes (2026-08-03 — tenant short dial A′ + B)
+
+**Branches (not merged):** **`tenant-short-dial-a`** in **pbx3**, **pbx3api**, **pbx3spa**; **`tenant-short-dial-b`** in **pbx3sbc**. Packages on lab nodes still **0.0.4-5** / cagi **1.0.0-10** (no C yet).
+
+### Shipped
+- **A′ / admin product (slice A complete for admin):** Dial prefixes CRUD with required **`target_fqdn`** (tenant FQDN, never instance). Restricted picker = local tenant FQDNs + fleet **`tenant-home`** (no freeform invent). **Instance admin only** (not tenant panel). Fleet-gated SPA. Schema migrate **`sqlite_add_dialalias_target_fqdn.sql`**. Product name **Dial prefixes**; table still `dialalias`.
+- **Golden:** dialalias has `target_fqdn`; API controller/model/routes (admin) deployed under `/opt/pbx3api`; lab row e.g. prefix `81` → `dhbm8x.pbx3.com`.
+- **Slice B template only:** OpenSIPS **`DOMAIN_CHECK`** — Asterisk INVITE `user@tenant.fqdn`: usrloc hit→phone; **miss→domain dispatcher**. Doc **`pbx3sbc/workingdocs/SLICE_B_USRLOC_MISS_DISPATCHER.md`**. **Magrathea live cfg not updated.**
+- Locks: prefix **stripped on PBX** (CAGI when C lands), not SBC; no tenant CRM groups for reverse-link.
+
+### Resume tomorrow
+1. Deploy **B** on Magrathea (merge template → live opensips.cfg, reload) + probe `sip:{ext}@{tenant.fqdn}` miss→home; regress shortuid AoR.  
+2. **Slice C** — GenAst patterns + CAGI PrefixDial (`ext@fqdn` via SBC) + AoR CallerID num / name.  
+3. Merge/PR feature branches when lab happy.  
+4. Optional: merge short-dial SPA/API without waiting for C if admin-only ship is enough.
+
+### Golden / ops
+- Golden EIP **`44.196.98.191`** · Magrathea VIP **`3.93.26.82`**. SPA local `npm run dev` against golden API for dial prefixes panel.
+
+---
+
 ## Next agent session notes (2026-08-03 — SPA line test shipped)
+
+**Superseded for “read first”** by tenant short dial block above.
 
 **Branch:** **`main`** (**pbx3spa** product; **pbx3** docs/TODO). Earlier package/W1 work still on fleet nodes.
 
@@ -86,7 +109,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Password still session/paste (regen shows once).
 
 ### Resume
-- Operator priority **next big:** **tenant short dial** · **time-based routing**. Then backlog (number-wire D1, multi-AZ, fleet delete, …). Provisioning server = early thought only — no implement until requirements seed.
+- See current block (short dial).
 
 ---
 

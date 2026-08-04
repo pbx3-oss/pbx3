@@ -1,12 +1,12 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** — fleet nodes **08jzwn** / **bzy54n** / **kildare** on **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10**. EIPs: golden **`44.196.98.191`**, Kildare **`3.93.253.1`** (`kildare.pbx3.com`), bzy **`54.158.236.215`**. Magrathea VIP **`3.93.26.82`** (`sbc.pbx3.com`).  
-**Last updated:** 2026-08-03 (session end + sitename/catalog label sync policy locked)
+**Branch:** feature branches for short dial (see handoff); lab still on packages **0.0.4-5** / cagi **1.0.0-10**.  
+**Last updated:** 2026-08-03 (session end — tenant short dial A′ + B template; admin-only dial prefixes)
 
 
 ### Suggested “what next?” order
 
-1. **Tenant short dial** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** (§8 locked; implement slices A–F when scheduled).  
+1. **Tenant short dial** — resume **slice B deploy Magrathea** then **C** (GenAst + CAGI PrefixDial). Spec **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. Branches: **`tenant-short-dial-a`** (pbx3/api/spa), **`tenant-short-dial-b`** (pbx3sbc).  
 2. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`** (lock §8 then implement; before CAGI Phase 4).  
 3. **Number wire standard (open)** — Model A vs B — **`NUMBER_WIRE_STANDARD_DRAFT.md`** · **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. No implement until D1.  
 4. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
@@ -35,6 +35,8 @@
 ---
 
 ## Open items
+
+- [ ] **Tenant short dial — resume (2026-08-03):** **A / A′** admin CRUD + `target_fqdn` + restricted known-tenant picker + **instance admin only** on branches **`tenant-short-dial-a`** (pbx3, pbx3api, pbx3spa); golden has schema + API. **B** template: OpenSIPS usrloc-miss → dispatcher on **`tenant-short-dial-b`** (pbx3sbc) — **not on Magrathea live yet**. **Next:** deploy Magrathea + probe `ext@fqdn`; then **C** GenAst + CAGI PrefixDial. Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.
 
 - [ ] **Number wire standard — Model A vs B (open 2026-08-02):** Draft **`NUMBER_WIRE_STANDARD_DRAFT.md`**; research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Preference lean: PBX sends dialled digits; SBC owns habit + peer face (PTT). **Not locked** — do not strip node Mangle without D1.
 
