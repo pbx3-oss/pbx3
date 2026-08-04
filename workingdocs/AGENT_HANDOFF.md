@@ -72,47 +72,60 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-04 — SIPp pack green + DID lab)
+## Next agent session notes (2026-08-04 — short dial package roll + residual docs)
 
-**Branch:** **`main`** all product repos + **sipplab**. No product code shipped this session — lab/ops debug. Packages still **0.0.4-5** / cagi **1.0.0-10** until package roll.
+**Branch:** **`main`** pbx3 **`b697384`**, pbx3cagi **`97ca501`**, pbx3-docs **`092f831`**, sipplab **`08bb19b`**. Lab: **pbx3 0.0.4-6** + **cagi 1.0.0-11** on **08jzwn**, **bzy54n**, **kildare**; dialaliases API synced on all three.
 
-### Shipped (lab)
-- **L1 pack 11/11** on Peer SIPp host `98.82.58.59` (PEM `pbx3test`). `out-egress-ok` required digit-E.164 **`OUT_DIGITS=441924910444`** — national `01924910444` is mangled by Brindley gwid strip2+prefix0 (`0924910444`). Pack Peer + Mac sipplab `lab.env` updated (gitignored).
-- **Site-dial** dual-host re-proven green after pack (UAC `98.93.32.43` / UAS `98.82.58.59`).
-- **Magrathea DID `01924910444`:** `dr_rules` prefix **`441924910444`** → gwid 10 golden (post-dialect key; national prefix never matched). Golden Ingress **`+441924910444` → 1000** + genAst. PSTN via Brindley → Magrathea VIP green.
-- **Policy:** office **01924** DIDs → **Kildare** (e.g. `441924918076` → gwid 100). Leave 18076 on Kildare. **910444** stays lab golden until operator moves.
+### Shipped
+- **Package roll** short dial: GenAst PrefixDial / SbcSiteOut / SiteRing / dialalias postinst; PrefixDial cagi; debs committed. Mag B already live (sitedial).
+- **F** operator migrate **`DIAL_PREFIX_LEGACY_MIGRATE.md`** + MkDocs fleet pointer.
+- **E** pack-gate **plan only** — sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** (not executed).
+- **D** residual framed: desk lab → **least-ugly *guaranteed* return** (Q10 one-way; candidates SUID / DID / PAI / hybrid — measure first). Spec §3.9 / **TODO**.
 
 ### Resume
-1. **Package roll** short dial + Magrathea cfg from git vs live (incl. DID rule prefixes as digit E.164).  
-2. Product: **time-based routing** when scheduled.  
-3. Optional: move **910444** → Kildare when ready (same pattern: digit-E.164 rule + wire Ingress on Kildare).
+1. **D** desk CLIP/redial matrix when scheduled (success = guaranteed return, not pretty CLIP).  
+2. Optional **E** pack-gate per plan.  
+3. **Time-based routing** when scheduled.  
+4. Optional: move **910444** → Kildare (digit-E.164 rule + Ingress).
 
 ### Golden / ops
-- Magrathea VIP **`3.93.26.82`** · golden EIP **`44.196.98.191`** · Kildare **`3.93.253.1`**. SIPp: Domain phones, not Peer-99 for short dial. SBC **503 No gateways** often = remapped golden **603** via `DR_FAILOVER` (not “no route”).
+- Magrathea **`3.93.26.82`** · golden EIP **`44.196.98.191`** · Kildare **`3.93.253.1`** · bzy **`54.158.236.215`**. Packages **0.0.4-6** / **1.0.0-11**. Dial prefixes: SPA instance admin **Outbound → Dial prefixes**.
+
+---
+
+## Next agent session notes (2026-08-04 — SIPp pack green + DID lab)
+
+**Superseded for “read first”** by **short dial package roll** block above.
+
+**Branch:** **`main`** all product repos + **sipplab**. Lab packages later rolled to **0.0.4-6** / **1.0.0-11**.
+
+### Shipped (lab)
+- **L1 pack 11/11** on Peer SIPp host `98.82.58.59` (PEM `pbx3test`). `out-egress-ok` required digit-E.164 **`OUT_DIGITS=441924910444`**.
+- **Site-dial** dual-host re-proven green (UAC `98.93.32.43` / UAS `98.82.58.59`).
+- **Magrathea DID `01924910444`:** `dr_rules` prefix **`441924910444`** → gwid 10 golden. Office **01924** DIDs → **Kildare**; **910444** lab golden until move.
+
+### Resume
+See current block (package roll / D residual).
+
+### Golden / ops
+- Magrathea VIP **`3.93.26.82`** · golden EIP **`44.196.98.191`** · Kildare **`3.93.253.1`**.
 
 ---
 
 ## Next agent session notes (2026-08-04 — tenant short dial merge)
 
-**Superseded for “read first”** by **SIPp pack green + DID lab** block above.
+**Superseded for “read first”** by **package roll** block above.
 
-**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**, **pbx3sbc**, **sipplab** (feature branches merged). Lab packages still **0.0.4-5** / cagi **1.0.0-10** until package roll — golden/Magrathea may still run live patches.
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**, **pbx3sbc**, **sipplab**. Package roll completed later same calendar day.
 
 ### Shipped
-- **A/A′** Dial prefixes admin: required **`target_fqdn`**, restricted known-tenant picker, instance admin only.
-- **B** OpenSIPS usrloc miss → domain dispatcher for `ext@tenant.fqdn`; Magrathea hairpin **X-PBX3-Pres-Num** / PAI / From→`sitedial` (avoid shortuid 401 on same-box).
-- **C** GenAst `_prefixX.` → CAGI **PrefixDial**; **SbcSiteOut{tenant}** egress; **SbcDomainRoute** inbound.
-- **D partial / CLIP:** desk display = extension pkey; network return = PAI `suid@fqdn` via **SiteRing** + `b(pbx3-site-pai)`; `suid@fqdn` usrloc return probe green. Desk history redial OEM-dependent.
-- **E** SIPp **`site-dial-a-b`** dual-host L1 **green** (2026-08-04): runbook **[sipplab `docs/examples/site-dial-lab.md`](https://github.com/aelintra/sipplabs/blob/main/docs/examples/site-dial-lab.md)** — UAC `98.93.32.43` / UAS `98.82.58.59`, PEM **`pbx3test`**, Magrathea **`3.93.26.82`**: free phones `15200b@9wvvnb` → **`811003`** → `8pmfxd@dhbm8x`. Prefer free shortuids (`max_contacts=1`).
-- Spec / handoff: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.
+- **A–E** short dial product + dual-host L1 green; **D partial** desk redial OEM-open.
 
 ### Resume
-1. **Package roll** (pbx3 + cagi; Magrathea cfg from git vs live).  
-2. Optional: E pack-gate; F InterSARK migrate polish; D desk redial matrix if product cares.  
-3. Next product track when scheduled: **time-based routing**.
+See current block.
 
 ### Golden / ops
-- Golden EIP **`44.196.98.191`** · Magrathea VIP **`3.93.26.82`** · lab dialalias `81` → `dhbm8x.pbx3.com`. SIPp path = **Domain**, not Peer-99.
+- Golden EIP **`44.196.98.191`** · Magrathea VIP **`3.93.26.82`**.
 
 ---
 

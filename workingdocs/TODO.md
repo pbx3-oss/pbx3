@@ -1,12 +1,12 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** (tenant short dial merged 2026-08-04); lab packages still **0.0.4-5** / cagi **1.0.0-10** until package roll.  
-**Last updated:** 2026-08-04 (short dial D — least-ugly guaranteed return lab)
+**Branch:** **`main`**. Fleet packages **pbx3 0.0.4-6** / **pbx3cagi 1.0.0-11** (short dial package roll 2026-08-04).  
+**Last updated:** 2026-08-04 (session end — short dial package roll + F migrate + D/E residual framing)
 
 
 ### Suggested “what next?” order
 
-1. **Tenant short dial residual** — **D:** lab desks → **least-ugly *guaranteed* return** recipe (see open ToDo); **E** pack-gate planned; **F** migrate done. Spec **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.9.  
+1. **Tenant short dial residual** — **D:** desk lab → **least-ugly *guaranteed* return** (open ToDo); **E** pack-gate plan only — sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`**. **F** migrate done. Spec **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.9.  
 2. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`** (lock §8 then implement; before CAGI Phase 4).  
 3. **Number wire standard (open)** — Model A vs B — **`NUMBER_WIRE_STANDARD_DRAFT.md`** · **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. No implement until D1.  
 4. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
@@ -38,7 +38,11 @@
 
 - [x] **Tenant short dial core (lab green 2026-08-04):** **A/A′** admin CRUD; **B** Magrathea miss→dispatcher (+ hairpin Pres-Num/PAI/sitedial); **C** GenAst PrefixDial + CAGI; dual CLIP (presentation ext + return AoR PAI/SiteRing); **E** dual-host SIPp L1 green (`9wvvnb` → `811003` → `dhbm8x` via Magrathea). Merged to **`main`** (pbx3, api, spa, cagi, sbc; sipplab). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.
 
-- [x] **Tenant short dial F — InterSARK / INTERSITE migrate (2026-08-04):** Operator recipe **`DIAL_PREFIX_LEGACY_MIGRATE.md`** (inventory SQL, dual-run, retire gates, CLIP coaching). Spec §7. Docs only — no auto-delete of routes.
+- [x] **Tenant short dial package roll (2026-08-04):** **pbx3 0.0.4-6** + **pbx3cagi 1.0.0-11** installed **08jzwn**, **bzy54n**, **kildare**; debs on **`main`**. API app/routes synced for dialaliases. Mag slice B already live (sitedial/Pres); template clone refreshed. Tags/commits: pbx3 **`b697384`**, cagi **`97ca501`**.
+
+- [x] **Tenant short dial F — InterSARK / INTERSITE migrate (2026-08-04):** Operator recipe **`DIAL_PREFIX_LEGACY_MIGRATE.md`** + MkDocs fleet pointer. Spec §7. Docs only — no auto-delete of routes.
+
+- [x] **Tenant short dial E pack-gate plan (2026-08-04, not executed):** sipplab **`workingdocs/SITE_DIAL_PACK_GATE_PLAN.md`** — dual-host last-in-pack SSH; UAC+UAS+homes enough. Implement when scheduled.
 
 - [ ] **Tenant short dial D — lab → least-ugly guaranteed return (2026-08-04):** Path is **partial** (presentation ext + PAI return AoR / SiteRing; SIPp `suid@fqdn` usrloc probe green).
 
@@ -53,8 +57,6 @@
   - Hybrids (e.g. DID if present else SUID) if they still pass the guarantee bar.
 
   **Deliverables:** (1) per-vendor table: on-wire From/PAI + what missed-call/history redial emits; (2) chosen least-ugly **guaranteed** policy; (3) implement or explicit “not guaranteed” ops guidance. Spec §3.9 · slice **D**. Prefer free shortuids if SIPp Domain (`max_contacts=1`).
-
-- [ ] **Tenant short dial residual (other):** Package roll if any node still on live patches (`0.0.4-6` / cagi `1.0.0-11`). **E** pack-gate planned only — sipplab **`workingdocs/SITE_DIAL_PACK_GATE_PLAN.md`**.
 
 - [ ] **Number wire standard — Model A vs B (open 2026-08-02):** Draft **`NUMBER_WIRE_STANDARD_DRAFT.md`**; research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Preference lean: PBX sends dialled digits; SBC owns habit + peer face (PTT). **Not locked** — do not strip node Mangle without D1.  
   **Lab note (2026-08-04):** Magrathea inbound dialect **0… → 44…** before `do_routing` — DID **`dr_rules` prefixes must be digit E.164** (e.g. `441924910444` not `01924910444`). Asterisk Ingress needs wire form **`+441924…`** after genAst. Brindley **outbound** gwid strip2+prefix0 also expects digit E.164 from the node, not national `0…` (SIPp pack `OUT_DIGITS=441924910444`). Office **01924** DIDs → **Kildare** (e.g. rule `441924918076` → gwid 100); **910444** still lab on golden until operator moves it.
