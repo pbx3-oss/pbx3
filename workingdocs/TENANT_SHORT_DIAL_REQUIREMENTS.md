@@ -1,6 +1,6 @@
 # Tenant short dial requirements (per-tenant dial prefixes)
 
-**Status:** Requirements locked 2026-07-27. **A/A′** admin + **B** Magrathea miss→dispatcher (lab) + **C** PrefixDial lab green. **D** lab partial: presentation CLIP = extension; network return AoR in PAI (SiteRing); return via `suid@fqdn` usrloc probe green. Desk missed-call redial still depends on handset (PAI vs From). **E** SIPp `site-dial-a-b` skeleton in sipplab (not pack-gated yet). Branches: `tenant-short-dial-a` / `-b` / `-c`. Package roll / merge TBD.  
+**Status:** Requirements locked 2026-07-27. **A–C + E L1 lab green** (2026-08-04) and **merged to `main`**. **D** lab partial: presentation CLIP = extension; network return AoR in PAI (SiteRing); `suid@fqdn` usrloc probe green; desk missed-call redial still handset-dependent. **E** dual-host SIPp green (not pack-gated). Package roll still open (lab may run live patches until install).  
 **Scope:** Allow an extension on tenant A to call an extension on tenant B **when allowed**, using a **dial prefix** that is **local to the calling tenant**, plus the target’s normal extension (`pkey`). Same call recipe whether B is on **this node or another** (fleet).  
 **Not:** Globally unique extension numbers (SARK model — rejected). Not directory/gatekeeper in the call path (**Rule 1**). Not replacing PSTN OutRoute / Egress.  
 **Related:** Fleet AoR dial (`sip:shortuid@tenant.fqdn`) · L1 `in-multi-tenant-a-b` (usrloc domain discrimination only) · legacy InterSARK / SailToSail / `DUNS_INTERSITE` OutRoute · **`CALL_TYPE_INVENTORY.md`** · **`DESIGN_RULES.md` Rule 1**.
@@ -339,7 +339,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | **B** — OpenSIPS usrloc-miss → dispatcher for `ext@tenant.fqdn` | **pbx3sbc** | None — **lab Magrathea + template** (Pres-Num / PAI / sitedial hairpin) |
 | **C** — GenAst pattern + CAGI PrefixDial (`ext@fqdn` via SBC) + CLIP | pbx3, pbx3cagi | Dial works fleet lab (presentation ext; see §3.9 lab note) |
 | **D** — Receive-path + return lab | pbx3cagi, sbc | **Partial:** SbcDomainRoute, SiteRing PAI, AoR usrloc probe; desk history redial handset-specific |
-| **E** — L1 recipe `site-dial-a-b` | **sipplab** | Skeleton (`run-site-dial-a-b.sh`) — not pack-gated |
+| **E** — L1 recipe `site-dial-a-b` | **sipplab** | Dual-host L1 lab green 2026-08-04 — not pack-gated |
 | **F** — Legacy INTERSITE / InterSARK migrate notes | docs | §7 operator recipe (draft) |
 
 **Order note:** Complete **A′ (Q14)** before treating Admin as done for C — local-only target picker is **not** product-complete. Slice **B** before or with **C** — without miss→dispatcher, PrefixDial to `ext@fqdn` fails on today’s SBC. Do not regress station dial (`shortuid@fqdn` usrloc hit). Slice **D** includes return-call URI lab check.
