@@ -72,7 +72,31 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
+## Next agent session notes (2026-08-04 — tenant short dial merge)
+
+**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**, **pbx3sbc**, **sipplab** (feature branches merged). Lab packages still **0.0.4-5** / cagi **1.0.0-10** until package roll — golden/Magrathea may still run live patches.
+
+### Shipped
+- **A/A′** Dial prefixes admin: required **`target_fqdn`**, restricted known-tenant picker, instance admin only.
+- **B** OpenSIPS usrloc miss → domain dispatcher for `ext@tenant.fqdn`; Magrathea hairpin **X-PBX3-Pres-Num** / PAI / From→`sitedial` (avoid shortuid 401 on same-box).
+- **C** GenAst `_prefixX.` → CAGI **PrefixDial**; **SbcSiteOut{tenant}** egress; **SbcDomainRoute** inbound.
+- **D partial / CLIP:** desk display = extension pkey; network return = PAI `suid@fqdn` via **SiteRing** + `b(pbx3-site-pai)`; `suid@fqdn` usrloc return probe green. Desk history redial OEM-dependent.
+- **E** SIPp **`site-dial-a-b`** dual-host L1 **green** (2026-08-04): UAC `98.93.32.43` / UAS `98.82.58.59`, PEM **`pbx3test`**, Magrathea **`3.93.26.82`**: free phones `15200b@9wvvnb` → **`811003`** → `8pmfxd@dhbm8x` (REGISTER→180/200/BYE). Prefer free shortuids (`max_contacts=1`).
+- Spec / handoff: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.
+
+### Resume
+1. **Package roll** (pbx3 + cagi; Magrathea cfg from git vs live).  
+2. Optional: E pack-gate; F InterSARK migrate polish; D desk redial matrix if product cares.  
+3. Next product track when scheduled: **time-based routing**.
+
+### Golden / ops
+- Golden EIP **`44.196.98.191`** · Magrathea VIP **`3.93.26.82`** · lab dialalias `81` → `dhbm8x.pbx3.com`. SIPp path = **Domain**, not Peer-99.
+
+---
+
 ## Next agent session notes (2026-08-03 — SPA line test shipped)
+
+**Superseded for “read first”** by **2026-08-04** short dial merge block above.
 
 **Branch:** **`main`** (**pbx3spa** product; **pbx3** docs/TODO). Earlier package/W1 work still on fleet nodes.
 
@@ -86,7 +110,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Password still session/paste (regen shows once).
 
 ### Resume
-- Operator priority **next big:** **tenant short dial** · **time-based routing**. Then backlog (number-wire D1, multi-AZ, fleet delete, …). Provisioning server = early thought only — no implement until requirements seed.
+- See current block (short dial).
 
 ---
 

@@ -558,7 +558,15 @@ class genAsteriskObjects
 			}
 		
 
-			if ($row['privileged'] == "NO") {
+			/*
+			 * Fleet Egress: Prefer SbcDomainRoute so sip:{ext}@{tenant.fqdn}
+			 * from Magrathea (PrefixDial miss→home) lands in tenant dialplan.
+			 * Carrier DID RURIs (domain ≠ tenant FQDN, or +E164) fall through
+			 * to Ingress. Privileged trunks still use cluster context.
+			 */
+			if (($row['pkey'] ?? '') === 'Egress' && $this->isFleetMode()) {
+				$pjsipTrunkBuff = preg_replace('/\$context/', 'SbcDomainRoute', $pjsipTrunkBuff);
+			} elseif ($row['privileged'] == "NO") {
 				$pjsipTrunkBuff = preg_replace('/\$context/', 'Ingress', $pjsipTrunkBuff);
 			} else {
 				$pjsipTrunkBuff = preg_replace('/\$context/', (string)($row['cluster'] ?? ''), $pjsipTrunkBuff);
@@ -566,6 +574,94 @@ class genAsteriskObjects
 			$pjsipReadyTrunks .= $pjsipTrunkBuff;
 			$pjsipReadyTrunks .= "\n\n";
 			$pjsipTrunkBuff = NULL;
+		}
+
+		/*
+		 * Fleet: one outbound PJSIP face per tenant for PrefixDial.
+		 * from_domain = tenant FQDN so CALLERID(num)=shortuid becomes From
+		 * sip:suid@tenant.fqdn (not suid%40fqdn@host). Same SBC contact as Egress.
+		 * Outbound only — no identify (shared SBC IP stays on Egress identify).
+		 */
+		if ($this->isFleetMode()) {
+			$sbcHost = $this->fleetSbcHost();
+			try {
+				$sql = "SELECT shortuid, fqdn FROM cluster WHERE fqdn IS NOT NULL AND TRIM(fqdn) != '' ORDER BY shortuid";
+				$qRes = $this->dbh->query($sql);
+				$tenants = $qRes ? $qRes->fetchAll() : [];
+				$qRes = NULL;
+				$instanceFqdn = '';
+				$gq = $this->dbh->query("SELECT fqdn FROM globals LIMIT 1");
+				$grow = $gq ? $gq->fetch(PDO::FETCH_ASSOC) : false;
+				if ($grow && !empty($grow['fqdn'])) {
+					$instanceFqdn = strtolower(trim((string) $grow['fqdn']));
+				}
+				foreach ($tenants as $trow) {
+					$suid = isset($trow['shortuid']) ? trim((string) $trow['shortuid']) : '';
+					$fqdn = isset($trow['fqdn']) ? strtolower(trim((string) $trow['fqdn'])) : '';
+					if ($suid === '' || !preg_match('/^[a-z0-9]+$/i', $suid)) {
+						continue;
+					}
+					if ($fqdn === '' || !preg_match('/^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}$/i', $fqdn)) {
+						continue;
+					}
+					// Never use instance FQDN as a SIP From domain (not a tenant namespace)
+					if ($instanceFqdn !== '' && $fqdn === $instanceFqdn) {
+						continue;
+					}
+					$ep = 'SbcSiteOut' . $suid;
+					$pjsipReadyTrunks .= "; Tenant site-dial outbound ({$suid} → From domain {$fqdn})\n";
+					$pjsipReadyTrunks .= "[{$ep}]\n";
+					$pjsipReadyTrunks .= "type=endpoint\n";
+					$pjsipReadyTrunks .= "transport=transport-udp\n";
+					$pjsipReadyTrunks .= "context=SbcDomainRoute\n";
+					$pjsipReadyTrunks .= "rtp_symmetric=yes\n";
+					$pjsipReadyTrunks .= "force_rport=yes\n";
+					$pjsipReadyTrunks .= "rewrite_contact=yes\n";
+					$pjsipReadyTrunks .= "disallow=all\n";
+					$pjsipReadyTrunks .= "allow=ulaw\n";
+					$pjsipReadyTrunks .= "allow=alaw\n";
+					$pjsipReadyTrunks .= "aors={$ep}\n";
+					$pjsipReadyTrunks .= "direct_media=no\n";
+					$pjsipReadyTrunks .= "from_domain={$fqdn}\n";
+					/* trust PAI if hairpin path ever hits this face inbound (rare) */
+					$pjsipReadyTrunks .= "trust_id_inbound=yes\n";
+					$pjsipReadyTrunks .= "outbound_proxy=sip:{$sbcHost}\\;lr\n";
+					$pjsipReadyTrunks .= "\n";
+					$pjsipReadyTrunks .= "[{$ep}]\n";
+					$pjsipReadyTrunks .= "type=aor\n";
+					$pjsipReadyTrunks .= "contact=sip:{$sbcHost}\n";
+					$pjsipReadyTrunks .= "qualify_frequency=30\n";
+					$pjsipReadyTrunks .= "\n\n";
+				}
+				/*
+				 * Outbound face for ringing a handset after site-dial receive.
+				 * send_pai=no so PJSIP does not overwrite PrepDial b() PAI
+				 * (return AoR) with CALLERID presentation digits.
+				 */
+				$pjsipReadyTrunks .= "; Fleet site-dial ring: PAI via dialplan only\n";
+				$pjsipReadyTrunks .= "[SiteRing]\n";
+				$pjsipReadyTrunks .= "type=endpoint\n";
+				$pjsipReadyTrunks .= "transport=transport-udp\n";
+				$pjsipReadyTrunks .= "context=SbcDomainRoute\n";
+				$pjsipReadyTrunks .= "rtp_symmetric=yes\n";
+				$pjsipReadyTrunks .= "force_rport=yes\n";
+				$pjsipReadyTrunks .= "rewrite_contact=yes\n";
+				$pjsipReadyTrunks .= "disallow=all\n";
+				$pjsipReadyTrunks .= "allow=ulaw\n";
+				$pjsipReadyTrunks .= "allow=alaw\n";
+				$pjsipReadyTrunks .= "aors=SiteRing\n";
+				$pjsipReadyTrunks .= "direct_media=no\n";
+				$pjsipReadyTrunks .= "send_pai=no\n";
+				$pjsipReadyTrunks .= "outbound_proxy=sip:{$sbcHost}\\;lr\n";
+				$pjsipReadyTrunks .= "\n";
+				$pjsipReadyTrunks .= "[SiteRing]\n";
+				$pjsipReadyTrunks .= "type=aor\n";
+				$pjsipReadyTrunks .= "contact=sip:{$sbcHost}\n";
+				$pjsipReadyTrunks .= "qualify_frequency=30\n";
+				$pjsipReadyTrunks .= "\n\n";
+			} catch (PDOException $e) {
+				// leave trunks as Egress-only
+			}
 		}
 
 /**
@@ -1190,6 +1286,35 @@ HERE;
                 $this->OUT .= "\texten => _" . $linerow['match'] . "X.,1,agi(" . SYSAGI . ",OutTrunk," . $linerow['pkey'] . "," . $linerow['cluster'] . ",,,)\n";
             }
         }
+        /*
+         * Tenant short dial (fleet): fixed-width dial prefix + digit remainder → PrefixDial.
+         * Pattern _81X. so * / # do not match. CAGI resolves target_fqdn from dialalias (Rule 1).
+         */
+        if ($this->isFleetMode()) {
+            $this->OUT .= <<<HERE
+;
+;   Dial prefixes (tenant short dial → PrefixDial via Egress/SBC)
+;	
+HERE;
+            $this->OUT .= "\n";
+            try {
+                $sql = "SELECT pkey FROM dialalias WHERE cluster='" . $row['shortuid'] . "' AND active='YES' ORDER BY pkey";
+                $qRes = $this->dbh->query($sql);
+                $aliases = $qRes ? $qRes->fetchAll() : [];
+                $qRes = NULL;
+                foreach ($aliases as $aliasrow) {
+                    $prefix = isset($aliasrow['pkey']) ? trim((string) $aliasrow['pkey']) : '';
+                    if ($prefix === '' || !preg_match('/^\d{2,4}$/', $prefix)) {
+                        continue;
+                    }
+                    $this->OUT .= "\texten => _" . $prefix . "X.,1,agi(" . SYSAGI . ",PrefixDial," . $prefix . "," . $row['shortuid'] . ",,,)\n";
+                }
+            } catch (PDOException $e) {
+                if (stripos($e->getMessage(), 'no such table') === false) {
+                    return $e->getMessage();
+                }
+            }
+        }
         $this->OUT .= <<<HERE
 ;
 ;   ACD objects (page, callgroup, queue) 
@@ -1507,6 +1632,79 @@ if (empty($orideclosedarray[$coskeys['cos_pkey']])) {
 [mainmenu]   ;Compatibility
 	include => Ingress	
 
+HERE;
+
+		/*
+		 * Fleet only: Egress identify → SbcDomainRoute.
+		 * PrefixDial / site dial home path: R-URI user@tenant.fqdn after SBC
+		 * usrloc miss → dispatcher. Map FQDN → local tenant context; else DID Ingress.
+		 */
+		if ($this->isFleetMode()) {
+			/*
+			 * PrefixDial Dial b() gosub — attach return AoR as PAI on outbound PJSIP
+			 * (PJSIP_HEADER only works on the channel that will send the INVITE).
+			 */
+			$this->OUT .= "\n[pbx3-site-pai]\n";
+			$this->OUT .= "\texten => s,1,NoOp(site-dial PAI \${PBX3_RETURN_AOR})\n";
+			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_RETURN_AOR}\"=\"\"]?done)\n";
+			/* remove any PAI first; SiteRing has send_pai=no so this is authoritative */
+			$this->OUT .= "\tsame => n,Set(PJSIP_HEADER(remove,P-Asserted-Identity)=)\n";
+			$this->OUT .= "\tsame => n,Set(PJSIP_HEADER(add,P-Asserted-Identity)=<sip:\${PBX3_RETURN_AOR}>)\n";
+			$this->OUT .= "\tsame => n(done),Return()\n";
+			$this->OUT .= "\n";
+
+			$this->OUT .= "\n[SbcDomainRoute]\n";
+			$this->OUT .= "; Carrier +E164 → DID pool (do not treat as site-dial extension)\n";
+			$this->OUT .= "\texten => _+X.,1,Goto(Ingress,\${EXTEN},1)\n";
+			$this->OUT .= "; Digit R-URI: route by Request-URI host when it is a known tenant FQDN\n";
+			$this->OUT .= "\texten => _X.,1,NoOp(SBC domain route \${EXTEN})\n";
+			$this->OUT .= "\tsame => n,Set(__PBX3_SITE_DIAL=YES)\n";
+			/*
+			 * Magrathea may set X-PBX3-Pres-Num (extension digits) while PAI holds
+			 * return AoR (suid@fqdn). Prefer presentation digits for CALLERID num;
+			 * stash AoR for later return-call polish without stuffing URI into CLIP.
+			 */
+			$this->OUT .= "\tsame => n,Set(PBX3_PRES=\${PJSIP_HEADER(read,X-PBX3-Pres-Num)})\n";
+			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_PRES}\"=\"\"]?sbr_no_pres)\n";
+			$this->OUT .= "\tsame => n,Set(CALLERID(num)=\${PBX3_PRES})\n";
+			$this->OUT .= "\tsame => n(sbr_no_pres),Set(PBX3_PAI=\${PJSIP_HEADER(read,P-Asserted-Identity)})\n";
+			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_PAI}\"=\"\"]?sbr_no_pai)\n";
+			$this->OUT .= "\tsame => n,Set(PBX3_PAI_USER=\${PJSIP_PARSE_URI(\${PBX3_PAI},user)})\n";
+			$this->OUT .= "\tsame => n,Set(PBX3_PAI_HOST=\${PJSIP_PARSE_URI(\${PBX3_PAI},host)})\n";
+			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_PAI_USER}\"=\"\" | \"\${PBX3_PAI_HOST}\"=\"\"]?sbr_no_pai)\n";
+			$this->OUT .= "\tsame => n,Set(__PBX3_RETURN_AOR=\${PBX3_PAI_USER}@\${PBX3_PAI_HOST})\n";
+			$this->OUT .= "\tsame => n(sbr_no_pai),Set(PBX3_RURI_HOST=\${PJSIP_PARSE_URI(\${CHANNEL(pjsip,request_uri)},host)})\n";
+			try {
+				$sql = "SELECT shortuid, fqdn FROM cluster WHERE fqdn IS NOT NULL AND TRIM(fqdn) != '' ORDER BY shortuid";
+				$qRes = $this->dbh->query($sql);
+				$tenants = $qRes ? $qRes->fetchAll() : [];
+				$qRes = NULL;
+				$instanceFqdn = '';
+				$gq = $this->dbh->query("SELECT fqdn FROM globals LIMIT 1");
+				$grow = $gq ? $gq->fetch(PDO::FETCH_ASSOC) : false;
+				if ($grow && !empty($grow['fqdn'])) {
+					$instanceFqdn = strtolower(trim((string) $grow['fqdn']));
+				}
+				foreach ($tenants as $trow) {
+					$suid = isset($trow['shortuid']) ? trim((string) $trow['shortuid']) : '';
+					$fqdn = isset($trow['fqdn']) ? strtolower(trim((string) $trow['fqdn'])) : '';
+					if ($suid === '' || $fqdn === '' || !preg_match('/^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}$/i', $fqdn)) {
+						continue;
+					}
+					if ($instanceFqdn !== '' && $fqdn === $instanceFqdn) {
+						continue;
+					}
+					// Escape dots for literal dialplan string compare
+					$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_RURI_HOST}\"=\"" . $fqdn . "\"]?" . $suid . ",\${EXTEN},1)\n";
+				}
+			} catch (PDOException $e) {
+				// Keep route; fall through to Ingress on empty map
+			}
+			$this->OUT .= "\tsame => n,Goto(Ingress,\${EXTEN},1)\n";
+			$this->OUT .= "\n";
+		}
+
+    $this->OUT .= <<<HERE
 [Ingress]
         
 HERE;

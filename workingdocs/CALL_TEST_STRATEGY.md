@@ -89,7 +89,7 @@ Grow as a **checklist of SIPp XML (or `.sip`) scenarios**. Names are stable IDs 
 | `in-queue-answer` | DID → queue → agent answer | Bridge up |
 | `in-queue-cancel-vm` | Queue agent **486** → failover ext → PostDial VM | Voicemail app |
 | `in-multi-tenant-a-b` | Tenant A ↔ B via SBC AoR | No 404 / hairpin |
-| `site-dial-a-b` | Site-code short dial A→B | Rings B ext (planned — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**; needs Domain SIPp phone host — **sipplabs** `docs/HOST_SETUP.md` / `docs/examples/aelintra-lab.md`) |
+| `site-dial-a-b` | Site-code short dial A→B | Rings B ext — **sipplab** `site-dial-a-b` + `run-site-dial-a-b.sh` (skeleton 2026-08-04; `SITE_DIAL_DIGITS`; not full pack) |
 
 ### 5.2 Outbound / edge
 

@@ -584,6 +584,21 @@ CREATE TABLE route (
     "z_updater" TEXT DEFAULT 'system',
     UNIQUE("cluster", "pkey")
 );
+CREATE TABLE dialalias (
+    "id" TEXT PRIMARY KEY,
+    "shortuid" TEXT UNIQUE,
+    "pkey" TEXT NOT NULL,
+    "active" TEXT DEFAULT 'YES',
+    "cluster" TEXT DEFAULT 'default',
+    "target_cluster" TEXT,
+    "target_fqdn" TEXT NOT NULL,
+    "cname" TEXT,
+    "description" TEXT,
+    "z_created" datetime,
+    "z_updated" datetime,
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
+);
 CREATE TABLE trunks (
     "id" TEXT PRIMARY KEY,              -- 27 char ksuid    
     "shortuid" TEXT UNIQUE,         -- human readable key

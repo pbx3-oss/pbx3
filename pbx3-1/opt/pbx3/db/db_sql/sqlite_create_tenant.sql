@@ -444,6 +444,23 @@ CREATE TABLE IF NOT EXISTS route (
     "z_updater" TEXT DEFAULT 'system',
     UNIQUE("cluster", "pkey")
 );
+/* Per-calling-tenant dial prefixes (short dial A′ Q14) — prefix → target tenant FQDN; moves with miniDB */
+CREATE TABLE IF NOT EXISTS dialalias (
+    "id" TEXT PRIMARY KEY,                  -- 27 char ksuid
+    "shortuid" TEXT UNIQUE,                 -- human readable 8 char uid
+    "pkey" TEXT NOT NULL,                   -- dial prefix digits (2–4), unique per calling tenant
+    "active" TEXT DEFAULT 'YES',
+    "cluster" TEXT DEFAULT 'default',       -- calling tenant shortuid
+    "target_cluster" TEXT,                  -- optional target shortuid (label / rename pin)
+    "target_fqdn" TEXT NOT NULL,            -- dial target: full tenant FQDN (never instance FQDN)
+    "cname" TEXT,
+    "description" TEXT,
+    "z_created" datetime,
+    "z_updated" datetime,
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
+);
+
 /* Call recording index (Phase R1.5+) — tenant-scoped; moves with miniDB export */
 CREATE TABLE IF NOT EXISTS recordings (
     "id" TEXT PRIMARY KEY,
