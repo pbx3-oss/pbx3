@@ -1,3 +1,13 @@
+pbx3 (0.0.4-6) noble; urgency=medium
+
+  * Tenant short dial: GenAst PrefixDial patterns from dialalias rows;
+    fleet SbcSiteOut{tenant} + SiteRing endpoints; SbcDomainRoute inbound;
+    pbx3-site-pai Dial b() for return AoR PAI.
+  * Schema: dialalias table (target_fqdn A′) + help rows; postinst applies
+    sqlite_add_dialalias_table.sql and dialalias help on existing DBs.
+
+ -- KOKO <admin@aelintra.com>  Tue, 04 Aug 2026 19:00:00 +0000
+
 pbx3 (0.0.4-5) noble; urgency=medium
 
   * Fleet WebRTC: pjsip_webrtc.tmpl uses transport-udp + $outbound_proxy

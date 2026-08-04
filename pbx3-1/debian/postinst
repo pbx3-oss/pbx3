@@ -56,6 +56,19 @@ if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$REC_SQL" ] && command -v sqlite3 >/de
 	sqlite3 /opt/pbx3/db/sqlite.db < "$REC_SQL" >/dev/null 2>&1 || true
 fi
 
+# Tenant short dial: dialalias (A′ target_fqdn). CREATE IF NOT EXISTS only —
+# does not rebuild a pre-A′ table missing target_fqdn (run target_fqdn SQL once
+# by hand if needed). New installs get the table from sqlite_create_tenant.sql.
+DIAL_SQL="$SYSPATH/db/db_sql/sqlite_add_dialalias_table.sql"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$DIAL_SQL" ] && command -v sqlite3 >/dev/null 2>&1; then
+	sqlite3 /opt/pbx3/db/sqlite.db < "$DIAL_SQL" >/dev/null 2>&1 || true
+	# Help seeds (INSERT OR IGNORE) for Dial prefixes panel
+	sqlite3 /opt/pbx3/db/sqlite.db <<'EOF' >/dev/null 2>&1 || true
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('dialalias','Dial prefix','2–4 digit prefix local to this tenant. Dial prefix then the remote extension (digits only). Example: prefix 81 + extension 1000 → dial 811000. Feature codes (*…) stay local — not after a prefix.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('dialalias_target','Target tenant','Pick another tenant from the known list (this node plus fleet catalog when available). Stored as that tenant’s full FQDN — not the instance hostname. Prefix is only for the calling tenant; reverse needs its own prefix on the other side.');
+EOF
+fi
+
 # GenAst hermit overlays: idempotent ALTER for upgrade paths (create SQL already
 # has columns on fresh installer runs).
 OVERLAY_APPLY="$SYSPATH/scripts/apply-sqlite-add-overlay-columns.sh"

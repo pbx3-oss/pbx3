@@ -1,6 +1,6 @@
 # Tenant short dial requirements (per-tenant dial prefixes)
 
-**Status:** Requirements locked 2026-07-27. **A–C + E L1 lab green** (2026-08-04) and **merged to `main`**. **D** lab partial: presentation CLIP = extension; network return AoR in PAI (SiteRing); `suid@fqdn` usrloc probe green; desk missed-call redial still handset-dependent. **E** dual-host SIPp green (not pack-gated). Package roll still open (lab may run live patches until install).  
+**Status:** Requirements locked 2026-07-27. **A–C + E L1 lab green** (2026-08-04) and **merged to `main`**. **D** lab partial: presentation CLIP = extension; network return AoR in PAI (SiteRing); `suid@fqdn` usrloc probe green; desk missed-call redial still handset-dependent. **E** dual-host SIPp green (pack-gate planned, not executed). **F** operator migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**.  
 **Scope:** Allow an extension on tenant A to call an extension on tenant B **when allowed**, using a **dial prefix** that is **local to the calling tenant**, plus the target’s normal extension (`pkey`). Same call recipe whether B is on **this node or another** (fleet).  
 **Not:** Globally unique extension numbers (SARK model — rejected). Not directory/gatekeeper in the call path (**Rule 1**). Not replacing PSTN OutRoute / Egress.  
 **Related:** Fleet AoR dial (`sip:shortuid@tenant.fqdn`) · L1 `in-multi-tenant-a-b` (usrloc domain discrimination only) · legacy InterSARK / SailToSail / `DUNS_INTERSITE` OutRoute · **`CALL_TYPE_INVENTORY.md`** · **`DESIGN_RULES.md` Rule 1**.
@@ -177,11 +177,15 @@ Return / redial  →  sip:ab12cd@pb0wsk.pbx3.com  → Alice’s phone (usrloc)
 
 **Lab implement (2026-08-04 — golden / Magrathea):** Handset **display** is presentation **extension** (`CALLERID(num)` = pkey), not `suid@fqdn` (URI/`%40` broke UX; bare shortuid ends in a letter). **Network return AoR** stays in **`P-Asserted-Identity`** (`sip:suid@tenant.fqdn`) on the ring leg via fleet **`SiteRing`** + dialplan gosub; Magrathea miss→hairpin uses `X-PBX3-Pres-Num` + kept PAI + From `sitedial`. Desk “redial from history” may follow **From** (digits / pkey) rather than PAI — vendor-specific; reverse-prefix numeric CLIP remains deferred (§15). Lab proved: dialling `suid@fqdn` still **usrloc-hits** Alice after site dial.
 
-No reverse dial prefix required for callback. Prefix dial R-URI stays `ext@fqdn` (miss→dispatcher); return uses `suid@fqdn` (usrloc hit) — keep SBC tests distinct.
+No reverse dial prefix required for callback (Q10 one-way OK). Prefix dial R-URI stays `ext@fqdn` (miss→dispatcher); ideal network return uses `suid@fqdn` (usrloc hit). **Open product residual:** lab desks + history capture, then choose the **least-ugly solution that still guarantees return** to the original station (may be SUID presentation, DID when present + fallback, PAI-centric OEM behaviour, or hybrid) — **`TODO.md`** “Tenant short dial D — desk return CLIP lab → least-ugly guaranteed fix”. Do not ship a pretty but wrong redial.
 
 **Caveats:**
 
-- Desk phones that drop the domain and redial only the user-part may fail — lab-check Snom/common sets in slice D.  
+- Desk phones that drop the domain and redial only the user-part may fail — lab-check Snom/common sets in slice D residual ToDo.  
+- **No guaranteed reverse site-code** — bidirectional prefix is optional; cannot rely on “dial their prefix back.”  
+- **PSTN DID as cross-tenant CLID** (so redial is E.164 via OutRoute) is an incomplete workaround idea — many extensions have **no DID**.  
+- **Shortuid as presentation CLIP** (num = `suid`, not pkey) — uglier than 4-digit desks, but **non-digit SIP users are valid** (Asterisk handbook; fleet already uses shortuid AoR for REG/station dial). Residual risk is **handset history/redial behaviour** (preserve user+domain vs digit-only), not “Asterisk rejects letters.” Lab matrix before product lock.  
+- Do not implement DID- or SUID-as-CLI until matrix findings + product lock.  
 - Queue/IVR origin without a phone shortuid: set name where possible; num may be attendant/DDI or non-returnable (at implement).  
 - Reverse-prefix numeric CLIP is a **deferred** desk-phone polish if URI redial is weak in the field (§15).
 
@@ -290,12 +294,16 @@ INVITE `sip:{ext}@{fqdn}` arrives via SBC → Asterisk tenant context. Must:
 |--------|----------|
 | Unique ext + bare dial | Map sister sites to **dial prefixes**; keep local bare dial. |
 | InterSARK / SailToSail trunks | Candidates to replace with prefixes; human “who” moves to CallerID name; return uses AoR / PAI, not bare extension. |
-| `*_INTERSITE` OutRoute digit maps | Inventory per tenant at implement; do not auto-delete; dual-run until prefixes proven. |
+| `*_INTERSITE` OutRoute digit maps | Inventory per tenant; do not auto-delete; dual-run until prefixes proven. |
 | Same-node multi-tenant lab (v1) | Prefix dial **must** still go FQDN/SBC recipe (no Local shortcut) so convert behaviour matches fleet. |
 
-### Operator migrate recipe (slice F — draft)
+### Operator migrate recipe (slice F)
 
-1. **Inventory (per calling tenant):** list InterSARK / SailToSail trunks and `*_INTERSITE` OutRoute digit maps (old digit → peer).  
+**Full runbook:** **`DIAL_PREFIX_LEGACY_MIGRATE.md`** (inventory SQL, dual-run, retire gates, CLIP coaching, fleet FQDN rules).
+
+Summary:
+
+1. **Inventory (per calling tenant):** InterSARK / SailToSail trunks and `*_INTERSITE` OutRoute maps (old digits → peer).  
 2. **Choose fixed prefix(es)** (2–4 digits) not colliding with local LepDial, OutRoutes, or emergency patterns.  
 3. **Admin → Dial prefixes:** one row per sister: prefix → **tenant FQDN** of B (not instance/node FQDN). Bidirectional ⇒ mirror row on B.  
 4. **Commit / genAst** on both homes after prefix CRUD.  
@@ -303,7 +311,7 @@ INVITE `sip:{ext}@{fqdn}` arrives via SBC → Asterisk tenant context. Must:
 6. **Retire:** deactivate INTERSITE OutRoutes / InterSARK peers only after operator training; no auto-delete of PSTN routes.  
 7. **CLIP coaching:** callers show **local extension**; return is best-effort via phone history / PAI (`suid@fqdn`); do not promise InterSARK-style globally unique bare-ext redial.
 
-**Acceptance for convert:** Documented operator recipe; no silent change of PSTN routes.  
+**Acceptance for convert:** Operator recipe documented (above file); no silent change of PSTN routes. **Done 2026-08-04** (docs only).  
 
 ---
 
@@ -338,9 +346,9 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | **A′** — target = FQDN (Q14): required `target_fqdn`; fleet-aware FQDN picker (not local cluster shortuid-only); API does not require target ∈ local `cluster` | pbx3, pbx3api, pbx3spa | Admin can aim at remote sister site by FQDN |
 | **B** — OpenSIPS usrloc-miss → dispatcher for `ext@tenant.fqdn` | **pbx3sbc** | None — **lab Magrathea + template** (Pres-Num / PAI / sitedial hairpin) |
 | **C** — GenAst pattern + CAGI PrefixDial (`ext@fqdn` via SBC) + CLIP | pbx3, pbx3cagi | Dial works fleet lab (presentation ext; see §3.9 lab note) |
-| **D** — Receive-path + return lab | pbx3cagi, sbc | **Partial:** SbcDomainRoute, SiteRing PAI, AoR usrloc probe; desk history redial handset-specific |
-| **E** — L1 recipe `site-dial-a-b` | **sipplab** | Dual-host L1 lab green 2026-08-04 — not pack-gated |
-| **F** — Legacy INTERSITE / InterSARK migrate notes | docs | §7 operator recipe (draft) |
+| **D** — Receive-path + return lab | pbx3cagi, sbc (+ lab desks) | Path partial; **open ToDo** → lab + choose **least-ugly guaranteed** return (no bidir prefix assume) — **`TODO.md`** |
+| **E** — L1 recipe `site-dial-a-b` | **sipplab** | Dual-host L1 lab green 2026-08-04 — **not pack-gated**; plan when scheduled: sipplab **`workingdocs/SITE_DIAL_PACK_GATE_PLAN.md`** |
+| **F** — Legacy INTERSITE / InterSARK migrate notes | docs | **Done 2026-08-04** — **`DIAL_PREFIX_LEGACY_MIGRATE.md`** |
 
 **Order note:** Complete **A′ (Q14)** before treating Admin as done for C — local-only target picker is **not** product-complete. Slice **B** before or with **C** — without miss→dispatcher, PrefixDial to `ext@fqdn` fails on today’s SBC. Do not regress station dial (`shortuid@fqdn` usrloc hit). Slice **D** includes return-call URI lab check.
 
@@ -409,6 +417,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | 2026-07-27 | Lab: second SIPp EC2 as **extension platform** (non-Peer EIP) when prefix implement starts; Peer-99 host stays carrier/DID. |
 | 2026-08-03 | **Q13 / remainder charset:** digits only after prefix; no feature shortcodes through prefix path (unless later explicit product reopen). Deny = congestion. |
 | 2026-08-03 | **Q14:** target is **tenant FQDN** (not instance). Always full FQDN; move preserves FQDN → no prefix rewrite; rename re-save/reconcile; no dial-time expand. |
+| 2026-08-04 | **D residual:** lab → **least-ugly *guaranteed* return** recipe (SUID / DID / PAI / hybrid candidates); no implement until findings. |
 
 ---
 
