@@ -72,7 +72,27 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
+## Next agent session notes (2026-08-03 — SPA line test shipped)
+
+**Branch:** **`main`** (**pbx3spa** product; **pbx3** docs/TODO). Earlier package/W1 work still on fleet nodes.
+
+### Shipped
+- **SPA WSS line test (lab green):** JsSIP diagnostic dialler on **WebRTC** extension detail (violet **Line test**, right-aligned). Edge WSS default `wss://sbc.pbx3.com:8089/ws`; SIP domain = tenant FQDN; shortuid auth. Actions: Register · Dial · Answer · Hangup + status log; **getStats** sampling → post-call report (loss/jitter/RTT/bitrate/ICE/timeline + copy summary). Inbound fix: keep Answer after auto-180/progress. Click press/flash feedback. Hide **MAC** on WebRTC edit.
+- **pbx3spa `main`:** e.g. `070736a` feat … through `9837e12` UX/MAC (see log).
+- **TODO parks:** pre-first-release SPA **bundle diet** (lazy JsSIP / route split); **lab DB anonymize** (real-site surnames); **provisioning server class** exploratory (SARK 6.5–style; directory inventory undecided).
+
+### Lab notes
+- Proven path: golden WebRTC **`8af9ee`** / **`dhbm8x.pbx3.com`** via Magrathea WSS; outbound + inbound + report OK.
+- Password still session/paste (regen shows once).
+
+### Resume
+- Operator priority **next big:** **tenant short dial** · **time-based routing**. Then backlog (number-wire D1, multi-AZ, fleet delete, …). Provisioning server = early thought only — no implement until requirements seed.
+
+---
+
 ## Next agent session notes (2026-08-03 — package roll + bzy Magrathea)
+
+**Superseded for “read first”** by SPA line test block above.
 
 **Branch:** **`main`** (pbx3, pbx3cagi, pbx3sbc, pbx3spa).
 
@@ -80,7 +100,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **Magrathea W1 lab green** (earlier): WSS on edge only; SIP UDP to homes; RTP bypass; desk↔WebRTC both ways; golden instance **8089 closed**.
 - **Packages:** **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** installed on **08jzwn**, **bzy54n** (`54.158.236.215`), **kildare**. Debs on `main` (`pbx3_0.0.4-5_all.deb`, `pbx3cagi_1.0.0-10_all.deb`).
 - **bzy Magrathea ops:** Fail2Ban had banned new public IP — unbanned; **whitelist** `54.158.236.215/32`; **dispatcher setid 3** updated from stale `98.82.174.36` → `sip:54.158.236.215:5060` + `source_ip=…`; **ds_reload** OK.
-- **SPA line test:** direction locked **`WSS_LINE_TEST_REQUIREMENTS.md`** (not implemented).
+- **SPA line test:** was locked-not-implemented; **superseded — shipped this evening**.
 
 ### Lab notes
 - Edge WebRTC: `wss://sbc.pbx3.com:8089/ws` · shortuid **`8af9ee`** · tenant **`dhbm8x.pbx3.com`** · golden `~/webrtc-1500.env`.
@@ -88,7 +108,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Optional: golden dispatcher row still has no `source_ip` in attrs (setid 2 works by destination).
 
 ### Resume
-- Wait for operator task. Backlog top: number-wire D1, SPA line-test implement, multi-AZ, fleet delete, etc.
+- See current block (line test session).
 
 ---
 

@@ -1,16 +1,16 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** — fleet nodes **08jzwn** / **bzy54n** / **kildare** on **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10**. EIPs: golden **`44.196.98.191`**, Kildare **`3.93.253.1`** (`kildare.pbx3.com`), bzy **`54.158.236.215`**. Magrathea VIP **`3.93.26.82`** (`sbc.pbx3.com`).  
-**Last updated:** 2026-08-03 (SPA line test + pre-release SPA diet; lab DB anonymize parked)
+**Last updated:** 2026-08-03 (session end — SPA line test shipped; next big: short dial / TBR)
 
 
 ### Suggested “what next?” order
 
-1. **Number wire standard (open)** — decide Model A (node Mangle) vs B (PBX dials-as-typed; SBC normalizes) — **`NUMBER_WIRE_STANDARD_DRAFT.md`** · research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. No implement until D1.  
-2. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
-3. **Tenant dial alias** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.  
-4. **Product crumbs** (optional) — paid Twilio / drain / velocity V3.  
-5. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`**.  
+1. **Tenant short dial** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** (§8 locked; implement slices A–F when scheduled).  
+2. **Time-based routing** — **`TIME_BASED_ROUTING_REQUIREMENTS.md`** (lock §8 then implement; before CAGI Phase 4).  
+3. **Number wire standard (open)** — Model A vs B — **`NUMBER_WIRE_STANDARD_DRAFT.md`** · **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. No implement until D1.  
+4. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
+5. **Product crumbs** (optional) — paid Twilio / drain / velocity V3.  
 6. **pbx3cagi Phase 4** (parked).  
 7. **Velocity standalone** (parked).  
 8. **Instance shadowing** / S10.7 / S8.9 (parked).  
@@ -21,12 +21,13 @@
 13. **S7+** attested PCI — customer ask.  
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
-16. **WebRTC residual** — Magrathea W1 done; **pbx3 0.0.4-5** + **cagi 1.0.0-10** on 08jzwn/bzy/kildare; multi-AZ still open. Spec: **`WEBRTC_WSS_LAB.md`**.  
-17. **SPA WSS line test** — **done / lab green** (JsSIP dialler + post-call report on WebRTC extension detail). Spec: **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`**.  
-18. **Multi-AZ lab** — place fleet instances in **different AZs** (same-AZ lab under-tests NAT/ICE/media).  
-19. **Pre-first-release — SPA bundle diet** (parked) — single ~1.1 MB / ~295 kB gzip main chunk; defer until before first product release.  
-20. **Lab / demo DB anonymize** (parked) — real-site source data still has live surnames / friendly names; scrub before wider demos or exports.  
-21. **OpenSIPS `alias_db_lookup`** — **leave as-is** (panel hidden; empty table; fallthrough harmless).  
+16. **WebRTC residual** — Magrathea W1 done; multi-AZ still open. Spec: **`WEBRTC_WSS_LAB.md`**.  
+17. **SPA WSS line test** — **done / lab green** — **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`**.  
+18. **Multi-AZ lab** — instances in **different AZs**.  
+19. **Pre-first-release — SPA bundle diet** (parked) — ~1.1 MB / ~295 kB gzip single chunk; lazy JsSIP / route-split before first product release.  
+20. **Lab / demo DB anonymize** (parked) — real-site surnames / friendly names.  
+21. **Provisioning server class** (exploratory, early) — SARK 6.5–style provision image; directory for phone inventory TBD; not yet a requirements file.  
+22. **OpenSIPS `alias_db_lookup`** — **leave as-is**.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -55,6 +56,8 @@
 - [ ] **Pre-first-release — SPA production bundle diet (parked 2026-08-03):** Do **before first product release**, not now. Prod SPA is a single Vite chunk ~**1.1 MB** min / ~**295 kB** gzip (all instance + fleet panels + help markdown + **JsSIP**). Acceptable lab admin; want a deliberate diet prior to release. Prefer: (1) **dynamic `import()` of line-test + JsSIP** only when Line test opens; (2) **route-level code-split** for heavy views; (3) optional split of `marked`/`dompurify` off the critical path. Measure with `npm run build` before/after. Repo: **pbx3spa**.
 
 - [ ] **Lab / demo SQLite anonymize (parked 2026-08-03):** Golden (and any other) test DB originated from a **real site** — still carries live **surnames**, **friendly tenant / sitename-style labels**, and similar PII-ish free text. **Do before** wider demos, third-party access, or public screenshots. Scope (at least): extension **`desc` / `description` / display names** → drop or fake surnames; **tenant / cluster friendly names** and any panel labels that identify the original org; scan for other human strings (callerid, greetings titles, mailbox labels, help/sysnotes if any). Prefer a **one-shot idempotent SQL + short runbook** (lab golden first; document how to re-apply after restore from production dump). Keep dial plans / shortuids functional for SIPp and WebRTC path tests. Not urgent for closed lab if access is operator-only; do not ship site-derived dump as “sample data” without this.
+
+- [ ] **Provisioning server class (exploratory 2026-08-03):** Future **product server type** (not bolted on home PBX or SBC call plane). Lift posture from **SARK 6.5** provisioning; early thought: **directory / fleet catalog** as phone inventory HoR — **undecided**. No requirements file yet; do not implement. When scheduled: thin **`PROVISIONING_SERVER_REQUIREMENTS.md`** (class sketch, inventory HoR, phone path to provision FQDN only, non-goals).
 
 - [ ] **Multi-AZ fleet lab (open 2026-08-03):** Lab today is effectively **same AZ** — under-tests ice_host / public identity / RTP / inter-instance and node↔SBC paths. **Need:** instances (at least two) in **different AZs**; smoke REGISTER, desk media, singleton-direct WebRTC if used, then SBC-faced path. Same-AZ success is not production multi-AZ proof. Notes: **`WEBRTC_WSS_LAB.md`** Next.
 
