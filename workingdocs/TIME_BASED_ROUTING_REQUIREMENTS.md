@@ -1,6 +1,6 @@
 # Time-based routing requirements (day-parts + route profiles)
 
-**Status:** Design direction locked 2026-07-26; **§8 Q1–Q7 locked 2026-08-04**. Branches **`time-based-routing`** (pbx3, pbx3cagi, pbx3api, pbx3spa). **Slice A in progress** (schema + convert + CAGI dual-read + L0); SPA multi-mode later.  
+**Status:** Design direction locked 2026-07-26; **§8 Q1–Q7 locked 2026-08-04**. Branches **`time-based-routing`** (pbx3, pbx3cagi, pbx3api, pbx3spa). **Slices A–B shipped** (schema/convert/CAGI dual-read; timer multi-mode). **Slice C in progress** (API + SPA profiles + day/holiday fields).  
 **Scope:** Instance / tenant inbound schedule → destination selection (`dateseg`, `holiday`, `pbx3timer.php`, `CheckState` / `CheckTime`, `inroutes`, SPA Day/Holiday timers + Inbound + route profiles).  
 **Not:** Fleet control plane, **SBC / Magrathea product code** (unchanged path edge), FreePBX-style time-condition chains (deferred — §6), trunk legacy open/close fields.  
 **Related:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 4 parked — this track changes CheckState contract first) · `CALL_TEST_STRATEGY.md` / CAGI **`TEST_RECIPE.md`** · canvas study [time-based routing review](file:///Users/jeffstokoe/.cursor/projects/Users-jeffstokoe-GiT-pbx3-master/canvases/time-based-routing-review.canvas.tsx) · SARK convert: `db_legacy_sql/`.
