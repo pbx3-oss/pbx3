@@ -1,6 +1,6 @@
 # Time-based routing requirements (day-parts + route profiles)
 
-**Status:** Design direction locked 2026-07-26; **§8 Q1–Q7 locked 2026-08-04**. Branches **`time-based-routing`**. **A–C shipped;** **C lab** lunch profile + Ingress → 1001 green (golden). **D (CAGI force modes) code + L0 green; hot ELF on golden AGI** (`STAT/OCSTAT=lunch` → 1001 beats holiday). *30/*31 still CLOSED/AUTO BLF; mode force via AstDB/API later SPA.  
+**Status:** **TRACK COMPLETE 2026-08-04** on **`time-based-routing`**. Slices **A–E** delivered (dual-read retained). Golden: lunch profile + force modes lab green; packages **pbx3 0.0.4-7** + **pbx3cagi 1.0.0-13**; day-parts help applied. SPA profiles primary; open/close demoted. BLF *30/*31 AUTO/CLOSED; multi-mode force via AstDB. **Not** pushed/merged. **Kildare** untouched.  
 **Scope:** Instance / tenant inbound schedule → destination selection (`dateseg`, `holiday`, `pbx3timer.php`, `CheckState` / `CheckTime`, `inroutes`, SPA Day/Holiday timers + Inbound + route profiles).  
 **Not:** Fleet control plane, **SBC / Magrathea product code** (unchanged path edge), FreePBX-style time-condition chains (deferred — §6), trunk legacy open/close fields.  
 **Related:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 4 parked — this track changes CheckState contract first) · `CALL_TEST_STRATEGY.md` / CAGI **`TEST_RECIPE.md`** · canvas study [time-based routing review](file:///Users/jeffstokoe/.cursor/projects/Users-jeffstokoe-GiT-pbx3-master/canvases/time-based-routing-review.canvas.tsx) · SARK convert: `db_legacy_sql/`.

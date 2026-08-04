@@ -1,3 +1,10 @@
+pbx3 (0.0.4-8) noble; urgency=medium
+
+  * Time-based routing track finish: day-parts help text; convert/apply help.
+  * Timer dual-write already in 0.0.4-7; this ships help + script wiring.
+
+ -- KoKo <admin@aelintra.com>  Tue, 04 Aug 2026 21:15:00 +0000
+
 pbx3 (0.0.4-7) noble; urgency=medium
 
   * Time-based routing slice A+B: schema (sched_mode, dateseg mode/priority,

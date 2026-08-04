@@ -63,4 +63,11 @@ fi
 # --- profile tables ---
 sqlite3 "$DB" < "$SQL"
 echo "time-based routing schema applied on $DB"
+
+HELP_SQL="$SQL_DIR/sqlite_update_day_parts_help.sql"
+if [ -f "$HELP_SQL" ] && has_table tt_help_core; then
+	sqlite3 "$DB" < "$HELP_SQL" || true
+	echo "day-parts help updated on $DB"
+fi
+
 exit 0
