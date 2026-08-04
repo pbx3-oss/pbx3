@@ -10,6 +10,9 @@ allow=ulaw
 allow=alaw
 aors=$trunk
 direct_media=no
+; Magrathea miss→dispatcher may assert original caller AoR via PAI while From user
+; is rewritten to sitedial (see opensips site-dial hairpin). Trust PAI for CLIP.
+trust_id_inbound=yes
 outbound_proxy=sip:$host\;lr
 
 [$trunk]

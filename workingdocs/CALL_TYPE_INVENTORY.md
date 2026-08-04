@@ -50,7 +50,7 @@ These are the “big” call types operators care about.
 | `maj-in-greeting` | Playback greeting | — | — | yes | **H** (or **U later** if SIPp only checks 200 + RTP) |
 | `maj-ext-to-ext` | Station ↔ station same tenant | — | — | primary lab | **H** (two phones) · **U later** (dual SIPp) |
 | `maj-ext-to-ext-sbc` | Multi-tenant via SBC AoR (domain discrimination) | — | **`in-multi-tenant-a-b`** (peer REG + DID→A) | historical lab | **L1: U** with peer catcher on 2nd tenant |
-| `maj-site-dial` | Cross-tenant short dial (`site_code`+ext) | — | planned (`site-dial-a-b`) | — | **U later** — requirements **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** |
+| `maj-site-dial` | Cross-tenant short dial (`site_code`+ext) | lab green (prefix path) | `site-dial-a-b` skeleton (sipplab) | — | **Partial** — pbx3 A–D lab; SIPp E not pack-gated; see **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** |
 | `maj-out-trunk` | OutTrunk / Egress | — | **`out-egress-ok`** (pack) | yes | **L1: U** Local originate→Egress Up (SIPp phone UAC blocked: lab EIP = Peer 99) · **L3: H** |
 | `maj-out-route` | OutRoute | — | via `out-egress-ok` (SIPP_MAIN) | yes | **L1: U** (same Local path) |
 | `maj-out-busy-reject` | Far-end reject / cancel | **`postdial-*`** **U** | **`out-busy-or-reject`** (pack) | yes | **L0: U** · **L1: U** Local→catcher 486→PostDial VM/Busy |
