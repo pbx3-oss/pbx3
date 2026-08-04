@@ -1,6 +1,6 @@
 # Tenant short dial requirements (per-tenant dial prefixes)
 
-**Status:** Requirements locked 2026-07-27 — ready to schedule slices A–F. **Slice A (schema + API + SPA CRUD) in progress on branch `tenant-short-dial-a`** — no dialplan/AGI/SBC yet.  
+**Status:** Requirements locked 2026-07-27. **Slice A/A′** admin CRUD on `tenant-short-dial-a`. **Slice B** OpenSIPS template on `tenant-short-dial-b` (Magrathea live TBD). **Slice C** GenAst + CAGI `PrefixDial` on `tenant-short-dial-a` / `tenant-short-dial-c` (code + L0 tests; lab package deploy TBD).  
 **Scope:** Allow an extension on tenant A to call an extension on tenant B **when allowed**, using a **dial prefix** that is **local to the calling tenant**, plus the target’s normal extension (`pkey`). Same call recipe whether B is on **this node or another** (fleet).  
 **Not:** Globally unique extension numbers (SARK model — rejected). Not directory/gatekeeper in the call path (**Rule 1**). Not replacing PSTN OutRoute / Egress.  
 **Related:** Fleet AoR dial (`sip:shortuid@tenant.fqdn`) · L1 `in-multi-tenant-a-b` (usrloc domain discrimination only) · legacy InterSARK / SailToSail / `DUNS_INTERSITE` OutRoute · **`CALL_TYPE_INVENTORY.md`** · **`DESIGN_RULES.md` Rule 1**.

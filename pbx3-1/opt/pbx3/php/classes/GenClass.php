@@ -1190,6 +1190,35 @@ HERE;
                 $this->OUT .= "\texten => _" . $linerow['match'] . "X.,1,agi(" . SYSAGI . ",OutTrunk," . $linerow['pkey'] . "," . $linerow['cluster'] . ",,,)\n";
             }
         }
+        /*
+         * Tenant short dial (fleet): fixed-width dial prefix + digit remainder → PrefixDial.
+         * Pattern _81X. so * / # do not match. CAGI resolves target_fqdn from dialalias (Rule 1).
+         */
+        if ($this->isFleetMode()) {
+            $this->OUT .= <<<HERE
+;
+;   Dial prefixes (tenant short dial → PrefixDial via Egress/SBC)
+;	
+HERE;
+            $this->OUT .= "\n";
+            try {
+                $sql = "SELECT pkey FROM dialalias WHERE cluster='" . $row['shortuid'] . "' AND active='YES' ORDER BY pkey";
+                $qRes = $this->dbh->query($sql);
+                $aliases = $qRes ? $qRes->fetchAll() : [];
+                $qRes = NULL;
+                foreach ($aliases as $aliasrow) {
+                    $prefix = isset($aliasrow['pkey']) ? trim((string) $aliasrow['pkey']) : '';
+                    if ($prefix === '' || !preg_match('/^\d{2,4}$/', $prefix)) {
+                        continue;
+                    }
+                    $this->OUT .= "\texten => _" . $prefix . "X.,1,agi(" . SYSAGI . ",PrefixDial," . $prefix . "," . $row['shortuid'] . ",,,)\n";
+                }
+            } catch (PDOException $e) {
+                if (stripos($e->getMessage(), 'no such table') === false) {
+                    return $e->getMessage();
+                }
+            }
+        }
         $this->OUT .= <<<HERE
 ;
 ;   ACD objects (page, callgroup, queue) 
