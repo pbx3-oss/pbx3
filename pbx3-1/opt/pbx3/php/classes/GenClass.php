@@ -558,7 +558,15 @@ class genAsteriskObjects
 			}
 		
 
-			if ($row['privileged'] == "NO") {
+			/*
+			 * Fleet Egress: Prefer SbcDomainRoute so sip:{ext}@{tenant.fqdn}
+			 * from Magrathea (PrefixDial miss→home) lands in tenant dialplan.
+			 * Carrier DID RURIs (domain ≠ tenant FQDN, or +E164) fall through
+			 * to Ingress. Privileged trunks still use cluster context.
+			 */
+			if (($row['pkey'] ?? '') === 'Egress' && $this->isFleetMode()) {
+				$pjsipTrunkBuff = preg_replace('/\$context/', 'SbcDomainRoute', $pjsipTrunkBuff);
+			} elseif ($row['privileged'] == "NO") {
 				$pjsipTrunkBuff = preg_replace('/\$context/', 'Ingress', $pjsipTrunkBuff);
 			} else {
 				$pjsipTrunkBuff = preg_replace('/\$context/', (string)($row['cluster'] ?? ''), $pjsipTrunkBuff);
@@ -1536,6 +1544,42 @@ if (empty($orideclosedarray[$coskeys['cos_pkey']])) {
 [mainmenu]   ;Compatibility
 	include => Ingress	
 
+HERE;
+
+		/*
+		 * Fleet only: Egress identify → SbcDomainRoute.
+		 * PrefixDial / site dial home path: R-URI user@tenant.fqdn after SBC
+		 * usrloc miss → dispatcher. Map FQDN → local tenant context; else DID Ingress.
+		 */
+		if ($this->isFleetMode()) {
+			$this->OUT .= "\n[SbcDomainRoute]\n";
+			$this->OUT .= "; Carrier +E164 → DID pool (do not treat as site-dial extension)\n";
+			$this->OUT .= "\texten => _+X.,1,Goto(Ingress,\${EXTEN},1)\n";
+			$this->OUT .= "; Digit R-URI: route by Request-URI host when it is a known tenant FQDN\n";
+			$this->OUT .= "\texten => _X.,1,NoOp(SBC domain route \${EXTEN})\n";
+			$this->OUT .= "\tsame => n,Set(PBX3_RURI_HOST=\${PJSIP_PARSE_URI(\${CHANNEL(pjsip,request_uri)},host)})\n";
+			try {
+				$sql = "SELECT shortuid, fqdn FROM cluster WHERE fqdn IS NOT NULL AND TRIM(fqdn) != '' ORDER BY shortuid";
+				$qRes = $this->dbh->query($sql);
+				$tenants = $qRes ? $qRes->fetchAll() : [];
+				$qRes = NULL;
+				foreach ($tenants as $trow) {
+					$suid = isset($trow['shortuid']) ? trim((string) $trow['shortuid']) : '';
+					$fqdn = isset($trow['fqdn']) ? strtolower(trim((string) $trow['fqdn'])) : '';
+					if ($suid === '' || $fqdn === '' || !preg_match('/^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}$/i', $fqdn)) {
+						continue;
+					}
+					// Escape dots for literal dialplan string compare
+					$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_RURI_HOST}\"=\"" . $fqdn . "\"]?" . $suid . ",\${EXTEN},1)\n";
+				}
+			} catch (PDOException $e) {
+				// Keep route; fall through to Ingress on empty map
+			}
+			$this->OUT .= "\tsame => n,Goto(Ingress,\${EXTEN},1)\n";
+			$this->OUT .= "\n";
+		}
+
+    $this->OUT .= <<<HERE
 [Ingress]
         
 HERE;
