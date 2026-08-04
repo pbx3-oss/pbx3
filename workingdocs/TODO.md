@@ -27,7 +27,8 @@
 19. **Pre-first-release — SPA bundle diet** (parked) — ~1.1 MB / ~295 kB gzip single chunk; lazy JsSIP / route-split before first product release.  
 20. **Lab / demo DB anonymize** (parked) — real-site surnames / friendly names.  
 21. **Provisioning server class** (exploratory, early) — SARK 6.5–style provision image; directory for phone inventory TBD; not yet a requirements file.  
-22. **OpenSIPS `alias_db_lookup`** — **leave as-is**.  
+22. **SPA list action icons component** (parked) — extract shared **`ListEditIcon` / `ListDeleteIcon`** (or row-actions) from the duplicated Lucide-style stroke SVGs in every `*ListView`; drop emoji/shortcuts; one component for all list edit/delete columns. Repo: **pbx3spa**.  
+23. **OpenSIPS `alias_db_lookup`** — **leave as-is**.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -67,6 +68,8 @@
 - [ ] **Lab / demo SQLite anonymize (parked 2026-08-03):** Golden (and any other) test DB originated from a **real site** — still carries live **surnames**, **friendly tenant / sitename-style labels**, and similar PII-ish free text. **Do before** wider demos, third-party access, or public screenshots. Scope (at least): extension **`desc` / `description` / display names** → drop or fake surnames; **tenant / cluster friendly names** and any panel labels that identify the original org; scan for other human strings (callerid, greetings titles, mailbox labels, help/sysnotes if any). Prefer a **one-shot idempotent SQL + short runbook** (lab golden first; document how to re-apply after restore from production dump). Keep dial plans / shortuids functional for SIPp and WebRTC path tests. Not urgent for closed lab if access is operator-only; do not ship site-derived dump as “sample data” without this.
 
 - [ ] **Provisioning server class (exploratory 2026-08-03):** Future **product server type** (not bolted on home PBX or SBC call plane). Lift posture from **SARK 6.5** provisioning; early thought: **directory / fleet catalog** as phone inventory HoR — **undecided**. No requirements file yet; do not implement. When scheduled: thin **`PROVISIONING_SERVER_REQUIREMENTS.md`** (class sketch, inventory HoR, phone path to provision FQDN only, non-goals).
+
+- [ ] **SPA list action icons — shared component (parked 2026-08-03):** Pencil/trash stroke SVGs are copy-pasted across list views; Dial prefixes briefly used emoji. Extract small **`ListEditIcon` / `ListDeleteIcon`** (or combined row-actions) in **pbx3spa** and reuse everywhere. Optional busy/spin state for delete. Not urgent polish.
 
 - [ ] **Multi-AZ fleet lab (open 2026-08-03):** Lab today is effectively **same AZ** — under-tests ice_host / public identity / RTP / inter-instance and node↔SBC paths. **Need:** instances (at least two) in **different AZs**; smoke REGISTER, desk media, singleton-direct WebRTC if used, then SBC-faced path. Same-AZ success is not production multi-AZ proof. Notes: **`WEBRTC_WSS_LAB.md`** Next.
 
