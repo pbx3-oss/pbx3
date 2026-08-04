@@ -393,7 +393,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | ID | Role |
 |----|------|
 | `in-multi-tenant-a-b` | Existing — usrloc domain discrimination (peer REG noise) |
-| `site-dial-a-b` (planned) | SIPp **phone** UAC (2nd lab host, non-Peer) dials prefix+ext → catcher on B |
+| `site-dial-a-b` | SIPp **phone** UAC (Domain, non-Peer) dials prefix+ext → UAS on B — dual-host lab **[sipplab `docs/examples/site-dial-lab.md`](https://github.com/aelintra/sipplabs/blob/main/docs/examples/site-dial-lab.md)** (green 2026-08-04) |
 | Inventory | Add/adjust major row when implement starts — keep distinct from AoR-only test |
 
 ---
