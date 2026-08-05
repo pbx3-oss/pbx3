@@ -120,6 +120,9 @@ CREATE TABLE IF NOT EXISTS cluster (
     "name" TEXT,
     "number_range_regex" TEXT,
     "oclo" TEXT,
+    "sched_mode" TEXT,                       -- day-parts current mode (timer); dual-read with oclo
+    "holiday_force_mode" TEXT,               -- redesigned holiday (timer writes; optional)
+    "holiday_force_dest" TEXT,               -- redesigned holiday dest (dual-read with routeoverride)
     "operator" INTEGER DEFAULT 100,
     "padminpass" INTEGER DEFAULT 44068,	-- phone browser ADMIN password - NOT HERE
     "puserpass" INTEGER DEFAULT 31524,	   -- phone browser USER password - NOT HERE
@@ -153,7 +156,7 @@ CREATE TABLE IF NOT EXISTS cluster (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-/* open/closed automation */
+/* open/closed automation / day-parts windows */
 CREATE TABLE IF NOT EXISTS dateseg (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
     "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
@@ -165,6 +168,8 @@ CREATE TABLE IF NOT EXISTS dateseg (
     "dayofweek" TEXT DEFAULT '*',
     "description" TEXT DEFAULT '*NEW RULE*',
     "month" TEXT DEFAULT '*',
+    "mode" TEXT DEFAULT 'closed',      -- schedule mode asserted when window matches
+    "priority" INTEGER DEFAULT 0,      -- higher wins on overlap (time-based routing Q3)
     "state" TEXT DEFAULT 'IDLE',
     "timespan" TEXT DEFAULT '*',
     "z_created" datetime,
@@ -185,7 +190,7 @@ CREATE TABLE IF NOT EXISTS greeting (
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
 );
-/* Holiday overrides */
+/* Holiday overrides (redesign: force_mode + force_dest; route kept for convert) */
 CREATE TABLE IF NOT EXISTS holiday (
     "id" TEXT PRIMARY KEY,                -- 27 char ksuid
     "shortuid" TEXT UNIQUE,                  -- human readable 8 char uid
@@ -193,12 +198,40 @@ CREATE TABLE IF NOT EXISTS holiday (
     "cluster" TEXT DEFAULT 'default',			-- tenant
     "cname" TEXT,
     "description" TEXT,								-- Description						
-    "route" TEXT,								      -- Holiday scheduler route override
-    "stime" INTEGER,							      -- Epoch start
+    "route" TEXT,								      -- Legacy force dest (SARK/pbx3timer routeoverride path)
+    "force_mode" TEXT,							      -- day-parts: mode when active (optional)
+    "force_dest" TEXT,							      -- day-parts: dest override when active (optional)
+    "stime" INTEGER,							      -- Epoch start (legacy import; product prefers calendar+TZ)
     "etime" INTEGER,							      -- Epoch end
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system'
+);
+/* Route profiles: tenant map mode → destination (reused across DIDs) */
+CREATE TABLE IF NOT EXISTS route_profile (
+    "id" TEXT PRIMARY KEY,
+    "shortuid" TEXT UNIQUE,
+    "pkey" TEXT,
+    "cluster" TEXT DEFAULT 'default',
+    "name" TEXT,
+    "default_mode" TEXT DEFAULT 'open',
+    "cname" TEXT,
+    "description" TEXT,
+    "z_created" datetime,
+    "z_updated" datetime,
+    "z_updater" TEXT DEFAULT 'system'
+);
+CREATE TABLE IF NOT EXISTS route_profile_line (
+    "id" TEXT PRIMARY KEY,
+    "shortuid" TEXT UNIQUE,
+    "profile" TEXT NOT NULL,               -- route_profile.shortuid
+    "cluster" TEXT DEFAULT 'default',
+    "mode" TEXT NOT NULL,                  -- open / closed / lunch / …
+    "destination" TEXT NOT NULL,             -- same vocabulary as openroute/closeroute
+    "z_created" datetime,
+    "z_updated" datetime,
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("profile", "mode")
 );
 /* Extensions */
 CREATE TABLE IF NOT EXISTS ipphone (
@@ -331,19 +364,21 @@ CREATE TABLE IF NOT EXISTS inroutes (
     "callback" TEXT,				-- denotes callback trunk
     "callerid" TEXT,				-- high-order (weak) CLID
     "callprogress" TEXT DEFAULT 'YES',		-- send progress tones on dial
-    "closeroute" TEXT DEFAULT 'None',		-- closed inbound route
+    "closeroute" TEXT DEFAULT 'None',		-- closed inbound route (dual-read; demote when profile used)
     "cluster" TEXT DEFAULT 'default',		-- cluster (Tenant) this trunk belongs to
     "cname" TEXT,
     "description" TEXT,			-- weak Asterisk username 
     "devicerec" TEXT,			-- RECOPTS
     "disa" TEXT,					-- DISA capable trunk
     "disapass" TEXT,				-- DISA password
+    "entry_dest" TEXT,			-- always-this dest (skip schedule) when set
     "host" TEXT,					-- Host IP address
     "iaxreg" TEXT DEFAULT NULL,	-- Asterisk IAX registration (SND/RCV/NULL)		
     "inprefix" TEXT,				-- prepend prefix on inbound
     "match" TEXT,					-- trunk seize sequence
     "moh" TEXT DEFAULT 'NO',	-- play moh instead of ring
-    "openroute" TEXT DEFAULT 'None',		-- open inbound route
+    "openroute" TEXT DEFAULT 'None',		-- open inbound route (dual-read)
+    "route_profile" TEXT,			-- route_profile.shortuid (tenant-scoped)
     "password" TEXT,				-- far end password
     "peername" TEXT,				-- strong Asterisk username
     "pjsipreg" TEXT DEFAULT NULL,	-- Asterisk pjsip registration (SND/RCV/NULL)									

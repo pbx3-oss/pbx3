@@ -1,228 +1,195 @@
 <?php
 // +-----------------------------------------------------------------------+
-// |  Copyright (c) KoKoSoft 2005-10                                  |
+// | Time-based routing timer — day segments + holidays (cron ~1/min)        |
 // +-----------------------------------------------------------------------+
-// | This file is free software; you can redistribute it and/or modify     |
-// | it under the terms of the GNU General Public License as published by  |
-// | the Free Software Foundation; either version 2 of the License, or     |
-// | (at your option) any later version.                                   |
-// | This file is distributed in the hope that it will be useful           |
-// | but WITHOUT ANY WARRANTY; without even the implied warranty of        |
-// | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          |
-// | GNU General Public License for more details.                          |
-// +-----------------------------------------------------------------------+
-// | Author: KoKoSoft
-// +-----------------------------------------------------------------------+
+// Precompute cluster.sched_mode (+ dual-write oclo), dateseg.state, holiday
+// routeoverride / holiday_force_dest. Call path: CAGI CheckState (O(1)).
 //
-/**
- *  !!!! Requires rework if/when we remove routecalsses (which we will) !!!!
- * 
- */
+// Requires: pbx3-schedule.php pure helpers (unit-tested).
 
 require_once __DIR__ . "/../config.php";
-
 require_once DBCLASS;
 require_once HELPER;
+require_once __DIR__ . "/pbx3-schedule.php";
 
-	$helper = new helper;        
+	$helper = new helper;
 	$dbh = DB::getInstance();
-    $cluster=array();
-    $holarray=array();
-    $dateseg=array();
-    $tuple = array();
-    $dbupdated = false;
-    $debug = false; 	// set true for debug output
-    
-    $helper->logit(" SYSTIMER Started", 10 );
+	$cluster_mode = array();   // pkey => mode string
+	$holarray = array();
+	$dateseg_state = array();
+	$tuple = array();
+	$dbupdated = false;
+	$debug = false;
+	// Network panel TZ (/etc/timezone) — config.php also sets this; re-assert for clarity.
+	$site_tz = pbx3_schedule_use_site_timezone();
+	$now = time();
 
-		
-// initialize a holiday array
+	$helper->logit(" SYSTIMER Started tz=$site_tz " . date('D Y-m-d H:i:s T', $now), 10 );
 
-	$rows = $helper->getTable("cluster");	
-    foreach ($rows as $row) {
-    	$holarray[$row['pkey']] = array (
+	// --- Holidays (legacy epochs; dual-write routeoverride + holiday_force_dest) ---
+
+	$rows = $helper->getTable("cluster");
+	foreach ($rows as $row) {
+		$holarray[$row['pkey']] = array(
 			'cluster' => $row['pkey'],
-			'route' => NULL,
+			'route' => null,
 		);
-    }
-    	
-// initialize a dateseg array	
+	}
 
-	$rows = $helper->getTable("dateseg");	
-    foreach ($rows as $row) {
-    	$dateseg[$row['pkey']] = 'IDLE';
-    }	
-	
-// check for holiday overrides in the clusters
 	$holidays = $helper->getTable("holiday");
-	$now = time(); 
-
-// only consider holidays which are active	
-    foreach ($holidays as $row) {
-    	if ($row['stime'] <= $now && $row['etime'] >= $now) {
-			$holarray[$row['cluster']] = array (
-				'cluster' => $row['cluster'],
-				'route' => $row['route'],
-			);
+	foreach ($holidays as $row) {
+		if (!pbx3_holiday_active($row, $now)) {
+			continue;
 		}
-    }
-    
-    if ($debug) {
-		print_r($holidays);
+		$dest = pbx3_holiday_force_dest($row);
+		$ck = isset($row['cluster']) ? $row['cluster'] : null;
+		if ($ck === null || $ck === '') {
+			continue;
+		}
+		// Prefer index by cluster key as stored (pkey or shortuid)
+		$holarray[$ck] = array(
+			'cluster' => $ck,
+			'route' => $dest,
+		);
+	}
+
+	if ($debug) {
 		print_r($holarray);
 	}
 
-// now we can set any holidays into the cluster table
-    foreach ($holarray as $k) {
-//		print "K[cluster] IS " . $k['cluster'] . " \n";
-		$res = $dbh->query("SELECT pkey, routeoverride FROM cluster WHERE pkey = '" . $k['cluster'] . "'")->fetch(PDO::FETCH_ASSOC);
-		if ($debug) {
-			print_r($res);
-		}
-
-		if ($res['routeoverride'] == $k['route']) {
+	foreach ($holarray as $k) {
+		$ck = $k['cluster'];
+		// Match either pkey or shortuid
+		$res = $dbh->query(
+			"SELECT pkey, routeoverride, holiday_force_dest FROM cluster WHERE pkey=" .
+			$dbh->quote($ck) . " OR shortuid=" . $dbh->quote($ck)
+		)->fetch(PDO::FETCH_ASSOC);
+		if (!$res) {
 			continue;
 		}
-			
-		$tuple['pkey'] = $k['cluster'];
-		$tuple['routeoverride'] = $k['route'];
-        $ret = $helper->setTuple('cluster',$tuple);
-        $helper->logit("Updated Cluster " . $tuple['pkey'] . " with route " . $tuple['routeoverride'] , 0 );
-        $dbupdated = true;
-    }
-    
-    
-// now we can deal with regular timers
-
-	$rows = $helper->getTable("cluster");	
-    foreach ($rows as $row) {
-    	$cluster[$row['pkey']] = "OPEN";
-    }
-    
-    $rows = $helper->getTable("dateseg");
-    foreach ($rows as $row) {
-    	$match = false;
-    	if ($row['month'] != "*" ) {
-			if ($row['month'] != strtolower(date("M", time())) ) {
-				if ($debug) {
-					echo "MONTH FAILS  - WE'RE OPEN " . $row['month'] . "\n";
-				}
-               	continue;
-			}
-			$match = true;
-			if ($debug) {
-				echo "MONTH MATCHED " . $row['month'] . "\n";
-			}
-        }
-        if ($row['dayofweek'] != "*" ) {
-			if ($row['dayofweek'] != strtolower(date("D", time())) ) {
-				if ($debug) {
-					echo "DAY FAILS  - WE'RE OPEN " . $row['dayofweek'] . "\n";
-				}
-               	continue;
-			}
-			$match = true;
-			if ($debug) {
-				echo "DAY MATCHED " . $row['dayofweek'] . "\n";
-			}
-        }
-        if ($row['datemonth'] != "*" ) {
-			if ($row['datemonth'] != date( "j", time() ) ) {
-				if ($debug) {
-					echo "DATE FAILS  - WE'RE OPEN " . $row['datemonth'] . "\n";
-				}
-               	continue;
-			}
-			$match = true;
-			if ($debug) {
-				echo "DATE " . $row['datemonth'] . "\n";
-			}
-        }
-        if ($row['timespan'] == "*-*" ) {
-			if ($match == true) {
-				if ($debug) {
-					echo "TIMESPAN = * BUT MATCHED  - WE'RE CLOSED " . $row['timespan'] . "\n";
-				}
-                $cluster[$row['cluster']] = "CLOSED";
-                $dateseg[$row['pkey']] = "*INUSE*";
-               	continue;
-           }
-           else {
-				if ($debug) {
-					echo "ALL STARS  - WE'RE OPEN " . $row['cluster'] . "\n";
-				}
-                continue;
-           }
-        }
-        if (preg_match(" /^(\d\d):(\d\d)-(\d\d):(\d\d)$/",$row['timespan'],$matches)) {
-			$tstart =  $matches[1] . $matches[2];
-			if ($debug) {
-				echo "TSTART $tstart \n";
-			}
-			$tend =  $matches[3] . $matches[4];
-			if ($debug) {
-				echo "TEND $tend \n";
-			}
-			if ($tstart > $tend) {           
-				if ( $tstart <  date( "Hi", time()) || $tend > date( "Hi", time()) ) {
-					if ($debug) {
-						echo "DATE - " . date( "Hi", time()) . "\n";
-						echo "Invert TIMESPAN MATCHED  - WE'RE CLOSED " . $row['cluster'] . "\n";
-					}
-					$cluster[$row['cluster']] = "CLOSED";
-					$dateseg[$row['pkey']] = "*INUSE*";
-					continue;                
-				}
-           }
-           if ( $tstart <  date( "Hi", time()) && $tend > date( "Hi", time()) ) { 
-				if ($debug) {
-					echo "DATE - " . date( "Hi", time()) . "\n";
-					echo "TIMESPAN MATCHED  - WE'RE CLOSED " . $row['cluster'] . "\n";
-				}
-        		$cluster[$row['cluster']] = "CLOSED";
-        		$dateseg[$row['pkey']] = "*INUSE*";
-                continue;
-           }
-        }
-        if ($debug) {
-			echo "NO MATCH  - WE'RE OPEN " . $row['pkey'] . "\n";
+		$want = $k['route']; // may be null → clear
+		if ($want === null) {
+			$want = '';
 		}
-    }
-    
-    foreach ($cluster as $k=>$v) {
-		$dboclo = $dbh->query("select oclo from cluster WHERE pkey='" . $k . "'")->fetch();
-		if ($dboclo['oclo'] == $v) {
+		$cur_ro = isset($res['routeoverride']) ? $res['routeoverride'] : '';
+		$cur_fd = isset($res['holiday_force_dest']) ? $res['holiday_force_dest'] : '';
+		if ((string) $cur_ro === (string) $want && (string) $cur_fd === (string) $want) {
 			continue;
 		}
-		$tuple['pkey'] = $k;
-		$tuple['oclo'] = $v;
-        $ret = $helper->setTuple('cluster',$tuple);
-        $dbupdated = true;
-    }
-    if ($debug) {
-		print_r($dateseg);
-	} 
-	unset($tuple); 
-	$tuple=array();  
-    foreach ($dateseg as $k=>$v) {
-		$state = $dbh->query("select state from dateseg WHERE pkey='" . $k . "'")->fetch();
+		$tuple = array(
+			'pkey' => $res['pkey'],
+			'routeoverride' => $want,
+			'holiday_force_dest' => $want,
+		);
+		$helper->setTuple('cluster', $tuple);
+		$helper->logit(
+			"Updated Cluster " . $res['pkey'] . " holiday dest " . var_export($want, true),
+			0
+		);
+		$dbupdated = true;
+	}
+
+	// --- Day timers → sched_mode (priority win) + dual-write oclo ---
+
+	$rows = $helper->getTable("cluster");
+	$cluster_by_pkey = array();
+	foreach ($rows as $row) {
+		$cluster_by_pkey[$row['pkey']] = $row;
+		$cluster_mode[$row['pkey']] = 'open';
+	}
+
+	$all_dateseg = $helper->getTable("dateseg");
+	foreach ($all_dateseg as $row) {
+		$dateseg_state[isset($row['pkey']) ? $row['pkey'] : $row['id']] = 'IDLE';
+	}
+
+	// Resolve per cluster: collect rows by cluster key matching pkey OR shortuid
+	foreach ($cluster_by_pkey as $pkey => $crow) {
+		$aliases = array($pkey);
+		if (!empty($crow['shortuid'])) {
+			$aliases[] = $crow['shortuid'];
+		}
+		$tenant_rows = array();
+		foreach ($all_dateseg as $row) {
+			$rc = isset($row['cluster']) ? (string) $row['cluster'] : '';
+			if ($rc !== '' && in_array($rc, $aliases, true)) {
+				$tenant_rows[] = $row;
+			}
+		}
+		$res = pbx3_resolve_sched_mode($tenant_rows, null, $now);
+		$cluster_mode[$pkey] = $res['mode'];
+		if ($res['winner_pkey'] !== null) {
+			$dateseg_state[$res['winner_pkey']] = '*INUSE*';
+		}
+		// Mark all matched still visible? Spec: winner *INUSE* only — already set
+	}
+
+	foreach ($cluster_mode as $pkey => $mode) {
+		$oclo = pbx3_oclo_from_mode($mode);
+		$row = $dbh->query(
+			"SELECT oclo, sched_mode FROM cluster WHERE pkey=" . $dbh->quote($pkey)
+		)->fetch(PDO::FETCH_ASSOC);
+		if (!$row) {
+			continue;
+		}
+		$cur_oclo = isset($row['oclo']) ? $row['oclo'] : '';
+		$cur_sm = isset($row['sched_mode']) ? $row['sched_mode'] : '';
+		if ($cur_oclo === $oclo && strtolower((string) $cur_sm) === strtolower((string) $mode)) {
+			continue;
+		}
+		$tuple = array(
+			'pkey' => $pkey,
+			'oclo' => $oclo,
+			'sched_mode' => $mode,
+		);
+		$helper->setTuple('cluster', $tuple);
+		$dbupdated = true;
+		$helper->logit("Cluster $pkey sched_mode=$mode oclo=$oclo", 5);
+	}
+
+	if ($debug) {
+		print_r($dateseg_state);
+		print_r($cluster_mode);
+	}
+
+	foreach ($dateseg_state as $k => $v) {
+		$state = $dbh->query(
+			"SELECT state FROM dateseg WHERE pkey=" . $dbh->quote($k)
+		)->fetch(PDO::FETCH_ASSOC);
+		if (!$state) {
+			// try id
+			$state = $dbh->query(
+				"SELECT state FROM dateseg WHERE id=" . $dbh->quote($k)
+			)->fetch(PDO::FETCH_ASSOC);
+			if (!$state) {
+				continue;
+			}
+			if ($state['state'] == $v) {
+				continue;
+			}
+			// update by id if no pkey path — setTuple may need pkey
+			continue;
+		}
 		if ($state['state'] == $v) {
 			continue;
 		}
-		
-		$tuple['pkey'] = $k;
-		$tuple['state'] = $v;
-        $ret = $helper->setTuple('dateseg',$tuple);
-        $dbupdated = true;
-    }
-        
-    if ($dbupdated == true) {
+		$tuple = array(
+			'pkey' => $k,
+			'state' => $v,
+		);
+		$helper->setTuple('dateseg', $tuple);
+		$dbupdated = true;
+	}
+
+	if ($dbupdated == true) {
 		$helper->logit(" CODENAME TIMER MODIFY", 10 );
-		$cmd = '/usr/bin/sqlite3 '.SYSDB.' "UPDATE globals SET mycommit=\'NO\';"';
+		$cmd = '/usr/bin/sqlite3 ' . escapeshellarg(SYSDB) . " \"UPDATE globals SET mycommit='NO';\"";
 		`$cmd`;
-		$rc = `/bin/cp SYSDB COPY_DB`;
-		$rc = `/bin/mv COPY_DB READONLYDB`;
-#		$rc = `/bin/chown www:www READONLYDB`;  
+		// Refresh CAGI readonly snapshot (constants, not literal filenames).
+		if (@copy(SYSDB, COPY_DB)) {
+			@rename(COPY_DB, READONLY_DB);
+		} else {
+			$helper->logit(" SYSTIMER failed to copy " . SYSDB . " → " . COPY_DB, 0);
+		}
 	}
 	$helper->logit(" CODENAME TIMER Ended", 10 );
-?>

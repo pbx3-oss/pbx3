@@ -1,3 +1,23 @@
+pbx3 (0.0.4-8) noble; urgency=medium
+
+  * Time-based routing track finish: day-parts help text; convert/apply help.
+  * Timer: site timezone + half-open timespans; day-of-week forward ranges
+    (*, mon, mon-fri / sat-sun / any a-b; reject wrap).
+  * Convert: emit real 6-char shortuids for route profiles (not hex blobs).
+  * Timer dual-write already in 0.0.4-7.
+
+ -- KoKo <admin@aelintra.com>  Wed, 05 Aug 2026 14:45:00 +0000
+
+pbx3 (0.0.4-7) noble; urgency=medium
+
+  * Time-based routing slice A+B: schema (sched_mode, dateseg mode/priority,
+    route_profile tables, inroutes.route_profile); postinst apply +
+    convert-route-profiles; timer multi-mode (pbx3-schedule + sched_mode dual-write).
+  * Convert fix: unique profile line shortuids + backfill missing lines.
+  * Slice C SPA later; binary open/close remains dual-read until operators edit.
+
+ -- KOKO <admin@aelintra.com>  Tue, 04 Aug 2026 20:30:00 +0000
+
 pbx3 (0.0.4-6) noble; urgency=medium
 
   * Tenant short dial: GenAst PrefixDial patterns from dialalias rows;

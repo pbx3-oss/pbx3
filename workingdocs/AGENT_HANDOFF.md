@@ -43,7 +43,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **`LAB_FLEET_TENANTS.md`** (no node-only lab tenants) → **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** (EC2 → packages → onboard, step-by-step) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`reconcile-node-tenants.sh`**, **`fetch-latest-instance-backup.sh`** |
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
-| **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — requirements draft; implement after §8 lock; before CAGI Phase 4 |
+| **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — **TRACK COMPLETE** on branch **`time-based-routing`** (A–E); push/merge when ready; before CAGI Phase 4 |
 | **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — §8 locked; A–E lab green; **F** migrate **`DIAL_PREFIX_LEGACY_MIGRATE.md`**; E pack-gate plan in sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** |
 | **Fleet-first tenant create** | **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** — policy locked; implement when scheduled |
 | **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** → **`CALL_TEST_STRATEGY.md`** → recipes **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** (`AGENTS.md` / `workingdocs/TODO.md`) · **site-dial pack gate plan** sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** · **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** · pbx3 stub **`call-tests/README.md`** only |
@@ -72,30 +72,63 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-04 — short dial package roll + residual docs)
+## Next agent session notes (2026-08-04 — day-parts play-test + timer harden + UX residuals)
 
-**Branch:** **`main`** pbx3 **`b697384`**, pbx3cagi **`97ca501`**, pbx3-docs **`092f831`**, sipplab **`08bb19b`**. Lab: **pbx3 0.0.4-6** + **cagi 1.0.0-11** on **08jzwn**, **bzy54n**, **kildare**; dialaliases API synced on all three.
+**Branch:** **`time-based-routing`** (push this session): pbx3 / pbx3spa (+ api/cagi still on branch from A–E). **`main`** still short-dial packages fleet-wide except golden day-parts lab packages.
 
-### Shipped
-- **Package roll** short dial: GenAst PrefixDial / SbcSiteOut / SiteRing / dialalias postinst; PrefixDial cagi; debs committed. Mag B already live (sitedial).
-- **F** operator migrate **`DIAL_PREFIX_LEGACY_MIGRATE.md`** + MkDocs fleet pointer.
-- **E** pack-gate **plan only** — sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** (not executed).
-- **D** residual framed: desk lab → **least-ugly *guaranteed* return** (Q10 one-way; candidates SUID / DID / PAI / hybrid — measure first). Spec §3.9 / **TODO**.
+### Shipped (this session)
+- **Golden Aelintra lab timers:** open / lunch / evening Mon–Fri + overnight closed + sat/sun closed (22 rows — clone pain drove residuals).
+- **Timer harden:** site TZ from Network `/etc/timezone` (not PHP UTC); timespan **half-open `[start, end)`**; readonly DB copy fix (`SYSDB`/`COPY_DB` constants). Live on golden; unit tests extended.
+- **SPA:** Day timer **Every day** label for `*` (was bare asterisk).
+- **Product locks / docs (`TIME_BASED_ROUTING_REQUIREMENTS.md` §5.8–5.9):** **default open** reaffirmed (BLF-only / no-timer shops); default-closed **rejected**; **day-of-week ranges (`mon-fri`)** = primary UX residual (likely solves most clone pain); SARK 3-row binary sample vs day-parts+profiles tradeoff documented.
 
-### Resume
-1. **D** desk CLIP/redial matrix when scheduled (success = guaranteed return, not pretty CLIP).  
-2. Optional **E** pack-gate per plan.  
-3. **Time-based routing** when scheduled.  
-4. Optional: move **910444** → Kildare (digit-E.164 rule + Ingress).
+### Resume (flip)
+1. **Daytimer `mon-fri` / ranges** — matcher + API + SPA (§5.9); then collapse Aelintra lab toward fewer rows.  
+2. Push/PR/merge **`time-based-routing`** four repos when ready (api/cagi may already be pushed from prior session — verify).  
+3. Optional: SARK-like list start/end columns, timepicker, `*INUSE*` highlight.
 
 ### Golden / ops
-- Magrathea **`3.93.26.82`** · golden EIP **`44.196.98.191`** · Kildare **`3.93.253.1`** · bzy **`54.158.236.215`**. Packages **0.0.4-6** / **1.0.0-11**. Dial prefixes: SPA instance admin **Outbound → Dial prefixes**.
+- Magrathea **`3.93.26.82`** · golden EIP **`44.196.98.191`** · DID **`01924910444`** · tenant **Aelintra** / `s07zmy`. Timer evaluates **America/New_York**. Packages still **0.0.4-7** / cagi **1.0.0-13** on golden (timer PHP hot-patched — package bump when rolling).
+
+---
+
+## Next agent session notes (2026-08-04 — time-based routing A–E complete)
+
+**Superseded for “read first”** by play-test / timer harden block above.
+
+**Branch:** **`time-based-routing`**: pbx3 **`e314ba0`**, pbx3api **`09f8349`**, pbx3spa **`d3d6a95`**, pbx3cagi **`e34dd40`** (pre this session).
+
+### Shipped (historical)
+- Day-parts A–E track complete; golden packages **0.0.4-7** / **1.0.0-13**.
+
+### Resume
+See current block.
+
+### Golden / ops
+- See current block.
+
+---
+
+## Next agent session notes (2026-08-04 — short dial package roll + residual docs)
+
+**Superseded for “read first”** by **time-based routing** block above.
+
+**Branch:** **`main`** pbx3 **`b697384`**, pbx3cagi **`97ca501`**. Fleet short dial: **0.0.4-6** / **1.0.0-11** on **08jzwn**, **bzy54n**, **kildare**.
+
+### Shipped (historical)
+- Package roll short dial; **F** migrate; **E** pack-gate plan only; **D** residual framed.
+
+### Resume
+See current block (day-parts close-out) + **TODO** short dial **D**.
+
+### Golden / ops
+- Packages on non-golden still short-dial baselines until day-parts roll.
 
 ---
 
 ## Next agent session notes (2026-08-04 — SIPp pack green + DID lab)
 
-**Superseded for “read first”** by **short dial package roll** block above.
+**Superseded for “read first”** by **time-based routing** block above.
 
 **Branch:** **`main`** all product repos + **sipplab**. Lab packages later rolled to **0.0.4-6** / **1.0.0-11**.
 

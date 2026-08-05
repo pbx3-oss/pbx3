@@ -76,6 +76,16 @@ if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$OVERLAY_APPLY" ]; then
 	sh "$OVERLAY_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
 fi
 
+# Time-based routing (day-parts) slice A: schema + dual-read profile convert.
+TIMEBASE_APPLY="$SYSPATH/scripts/apply-sqlite-add-time-based-routing.sh"
+TIMEBASE_CONVERT="$SYSPATH/scripts/convert-route-profiles.sh"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$TIMEBASE_APPLY" ]; then
+	sh "$TIMEBASE_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+	if [ -f "$TIMEBASE_CONVERT" ]; then
+		sh "$TIMEBASE_CONVERT" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+	fi
+fi
+
 # After apt upgrade + runLinker, regenerate PJSIP/dialplan from sqlite (HoR) into
 # ASTLOCALCONF so symlinked /etc/asterisk is not left pointing at empty/stale ready files.
 # Then rewrite external_* to this node's public IP/EIP and restart Asterisk.
