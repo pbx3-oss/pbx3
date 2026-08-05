@@ -43,7 +43,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **`LAB_FLEET_TENANTS.md`** (no node-only lab tenants) → **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** (EC2 → packages → onboard, step-by-step) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`reconcile-node-tenants.sh`**, **`fetch-latest-instance-backup.sh`** |
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
-| **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — **TRACK COMPLETE** on branch **`time-based-routing`** (A–E); push/merge when ready; before CAGI Phase 4 |
+| **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — **done on `main`** (A–E + DOW ranges + DID open-seed); golden **0.0.4-8** / cagi **1.0.0-13**; before CAGI Phase 4 |
 | **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — §8 locked; A–E lab green; **F** migrate **`DIAL_PREFIX_LEGACY_MIGRATE.md`**; E pack-gate plan in sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** |
 | **Fleet-first tenant create** | **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** — policy locked; implement when scheduled |
 | **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** → **`CALL_TEST_STRATEGY.md`** → recipes **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** (`AGENTS.md` / `workingdocs/TODO.md`) · **site-dial pack gate plan** sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** · **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** · pbx3 stub **`call-tests/README.md`** only |
@@ -72,7 +72,30 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
+## Next agent session notes (2026-08-05 — day-parts close-out + DID open-seed)
+
+**Branch:** **`main`** — pbx3 / pbx3api / pbx3spa / pbx3cagi / pbx3-docs. Feature branch **`time-based-routing`** merged and pushed.
+
+### Shipped
+- **Day-parts track closed:** A–E + site TZ/half-open + **DOW forward ranges** (`mon-fri` / `sat-sun` / …); Aelintra timers → 3 rows; docs admin page.
+- **Packages:** golden **pbx3 0.0.4-8** (deb on `main`); **pbx3cagi 1.0.0-13** unchanged. API hot-synced on golden for open-seed.
+- **DID create open-seed:** require open dest; closed defaults to open; empty profile → auto `DID {n}` with open/closed lines; profile save requires real open line. **pbx3api** `4ac992f` · **pbx3spa** `ee576cb`.
+- **Parked note:** seed outbound OutRoute(s) on tenant create — locale pack vs iron-PBX “longer than extlen → Egress” (**TODO**).
+
+### Golden / ops
+- Magrathea **`3.93.26.82`** · EIP **`44.196.98.191`** · DID **`01924910444`** on **duns** (`dhbm8x`) profile **`c59b6m`** (open/closed→1000, lunch→1001). Day timers labbed on **Aelintra** (`s07zmy`) — cluster mismatch still a lab quirk if testing timers vs that DID.
+- Non-golden fleet still short-dial **0.0.4-6** / **1.0.0-11** unless rolled. **Kildare** careful.
+
+### Resume
+1. **Tenant short dial D** — least-ugly guaranteed return CLIP — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.9.  
+2. Optional: day-parts pack roll beyond golden; closed/holiday/force smokes.  
+3. Later: tenant-create outbound seed (decide locale vs shunt before code).
+
+---
+
 ## Next agent session notes (2026-08-04 — day-parts play-test + timer harden + UX residuals)
+
+**Superseded for “read first”** by **2026-08-05** block above.
 
 **Branch:** **`time-based-routing`** (push this session): pbx3 / pbx3spa (+ api/cagi still on branch from A–E). **`main`** still short-dial packages fleet-wide except golden day-parts lab packages.
 
