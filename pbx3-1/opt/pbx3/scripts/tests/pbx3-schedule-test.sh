@@ -110,5 +110,27 @@ $r4 = pbx3_resolve_sched_mode(array($open, $eve, $night), null, $t2000);
 if ($r4["mode"] !== "closed") fail("at 20:00 want closed got ".$r4["mode"]);
 ok("half-open abut");
 
+// Day-of-week ranges (forward mon→sun only)
+date_default_timezone_set("UTC");
+$wedNoon = strtotime("2026-08-05 12:00:00"); // Wednesday
+$satNoon = strtotime("2026-08-08 12:00:00"); // Saturday
+if (date("D", $wedNoon) !== "Wed") fail("fixture wed");
+if (date("D", $satNoon) !== "Sat") fail("fixture sat");
+if (!pbx3_dayofweek_is_valid("mon-fri")) fail("mon-fri valid");
+if (!pbx3_dayofweek_is_valid("tue-fri")) fail("tue-fri valid");
+if (!pbx3_dayofweek_is_valid("mon-thu")) fail("mon-thu valid");
+if (!pbx3_dayofweek_is_valid("sat-sun")) fail("sat-sun valid");
+if (pbx3_dayofweek_is_valid("tue-mon")) fail("tue-mon must reject");
+if (pbx3_dayofweek_is_valid("fri-mon")) fail("fri-mon must reject");
+if (pbx3_dayofweek_is_valid("mon-mon")) fail("mon-mon range must reject");
+if (!pbx3_dayofweek_matches("mon-fri", $wedNoon)) fail("wed in mon-fri");
+if (pbx3_dayofweek_matches("mon-fri", $satNoon)) fail("sat not in mon-fri");
+if (!pbx3_dayofweek_matches("sat-sun", $satNoon)) fail("sat in sat-sun");
+if (pbx3_dayofweek_matches("sat-sun", $wedNoon)) fail("wed not in sat-sun");
+$rowMf = array("month"=>"*","dayofweek"=>"mon-fri","datemonth"=>"*","timespan"=>"12:00-13:00","mode"=>"lunch","priority"=>20,"pkey"=>20);
+if (!pbx3_dateseg_matches($rowMf, $wedNoon)) fail("mon-fri lunch wed");
+if (pbx3_dateseg_matches($rowMf, $satNoon)) fail("mon-fri lunch not sat");
+ok("dow ranges");
+
 echo "PASS: pbx3-schedule-test\n";
 ' "$SCHED"

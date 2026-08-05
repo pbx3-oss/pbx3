@@ -31,6 +31,94 @@ function pbx3_schedule_use_site_timezone($tz_file = '/etc/timezone')
 }
 
 /**
+ * Weekday tokens in Mon→Sun order (Asterisk-style abbreviated English).
+ *
+ * @return string[]
+ */
+function pbx3_dow_order()
+{
+	return array('mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun');
+}
+
+/**
+ * Normalize dayofweek field: trim + lowercase. Empty → '*'.
+ *
+ * @param string|null $spec
+ * @return string
+ */
+function pbx3_dayofweek_normalize($spec)
+{
+	$s = strtolower(trim((string) $spec));
+	return ($s === '') ? '*' : $s;
+}
+
+/**
+ * Whether dayofweek spec is valid: *, single dow, or forward range start-end (no wrap).
+ *
+ * @param string|null $spec
+ * @return bool
+ */
+function pbx3_dayofweek_is_valid($spec)
+{
+	$s = pbx3_dayofweek_normalize($spec);
+	if ($s === '*') {
+		return true;
+	}
+	$order = pbx3_dow_order();
+	$idx = array_flip($order);
+	if (isset($idx[$s])) {
+		return true;
+	}
+	if (!preg_match('/^([a-z]{3})-([a-z]{3})$/', $s, $m)) {
+		return false;
+	}
+	$a = $m[1];
+	$b = $m[2];
+	if (!isset($idx[$a]) || !isset($idx[$b])) {
+		return false;
+	}
+	// Forward only on Mon→Sun line; reject wrap (tue-mon) and same-day range (use single).
+	if ($idx[$a] >= $idx[$b]) {
+		return false;
+	}
+	return true;
+}
+
+/**
+ * Whether $now's weekday matches dayofweek spec (*, single, or forward range).
+ *
+ * @param string|null $spec
+ * @param int|null $now
+ * @return bool
+ */
+function pbx3_dayofweek_matches($spec, $now = null)
+{
+	if ($now === null) {
+		$now = time();
+	}
+	$s = pbx3_dayofweek_normalize($spec);
+	if ($s === '*') {
+		return true;
+	}
+	if (!pbx3_dayofweek_is_valid($s)) {
+		// Invalid stored rows never match (fail closed for that window).
+		return false;
+	}
+	$today = strtolower(date('D', $now));
+	$order = pbx3_dow_order();
+	$idx = array_flip($order);
+	if (!isset($idx[$today])) {
+		return false;
+	}
+	if (strpos($s, '-') === false) {
+		return ($s === $today);
+	}
+	list($a, $b) = explode('-', $s, 2);
+	$ti = $idx[$today];
+	return ($ti >= $idx[$a] && $ti <= $idx[$b]);
+}
+
+/**
  * Whether a dateseg row matches calendar + timespan for $now.
  *
  * @param array $row dateseg fields: month, dayofweek, datemonth, timespan
@@ -51,7 +139,7 @@ function pbx3_dateseg_matches(array $row, $now = null)
 		$match = true;
 	}
 	if (isset($row['dayofweek']) && $row['dayofweek'] !== '*') {
-		if (strtolower((string) $row['dayofweek']) !== strtolower(date('D', $now))) {
+		if (!pbx3_dayofweek_matches($row['dayofweek'], $now)) {
 			return false;
 		}
 		$match = true;

@@ -264,14 +264,13 @@ So: keep the SARK sample as the **binary-hours** teaching pattern; do **not** co
 
 SARK framed windows as **closed periods** (sclose/eclose) on default-open — matches Q1 heritage, not open-hours framing.
 
-**Asterisk `mon-fri`:** native date matching supports dow ranges; **SARK timers UI did not expose ranges** (only Every Day / one day). Target for pbx3: **keep Every Day**, and **add** Asterisk-native `mon-fri` / `sat-sun` so office open hours are not five clones. Do **not** invent a parallel grammar.
+**Asterisk `mon-fri`:** native date matching supports dow ranges; **SARK timers UI did not expose ranges** (only Every Day / one day). **Shipped:** pbx3 keeps Every Day, and accepts Asterisk-style forward ranges (`mon-fri`, `mon-thu`, `tue-fri`, `sat-sun`, or any `start-end` on Mon→Sun). Wrap-around (`tue-mon`) is rejected. Do **not** invent a parallel grammar.
 
 **Also lift from SARK when touching SPA:** start/end columns + timepicker (and optional live-state highlight). Ranges + visible Every Day = usable office UX.
 
 **With ranges under default open:** typical office → ~3–5 rows (open/lunch/evening on `mon-fri`, overnight `*` or `mon-fri`, sat/sun closed) — not 22.
 
-**Priority:** **first residual after day-parts push/merge** — day ranges alone likely clear most of the “slavish weekday clone” pain. Default stays **open** (§5.8). Spec + TODO; not unlocked for this ship.
-
+**Status (2026-08-05):** matcher + API + SPA options shipped on **`time-based-routing`**.
 ---
 
 ## 6. Non-goals (v1)
@@ -283,7 +282,7 @@ SARK framed windows as **closed periods** (sclose/eclose) on default-open — ma
 - CAGI Phase 4 domain file splits (parked until this contract is stable).  
 - Instance-shared profile library (Q6).  
 - Open-hours / **default-closed** as fleet default — **rejected** (§5.8; BLF-only shops).  
-- Day-of-week ranges (`mon-fri`) in v1 ship — **§5.9** residual (required before calling day-parts UX product-complete).  
+- Day-of-week ranges (`mon-fri`) — **shipped 2026-08-05** (§5.9).  
 - Faithful preservation of SARK holiday absolute-time subversion (Q4).
 
 ---
