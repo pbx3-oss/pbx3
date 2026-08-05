@@ -79,6 +79,13 @@ if [[ "$same" -ne 1 ]]; then
   exit 1
 fi
 
+non6=$(sqlite3 "$DB" "SELECT count(*) FROM route_profile WHERE length(shortuid) != 6;")
+if [[ "$non6" -ne 0 ]]; then
+  echo "FAIL: all route_profile.shortuid must be 6-char product shortuids, got $non6 bad" >&2
+  sqlite3 "$DB" "SELECT shortuid, length(shortuid) FROM route_profile;" >&2
+  exit 1
+fi
+
 line_open=$(sqlite3 "$DB" "
 SELECT l.destination FROM inroutes i
 JOIN route_profile_line l ON l.profile = i.route_profile AND l.mode = 'open'

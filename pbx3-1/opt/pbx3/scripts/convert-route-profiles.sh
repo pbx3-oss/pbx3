@@ -4,9 +4,12 @@
 # Usage: convert-route-profiles.sh [/path/to/sqlite.db]
 #
 # Accept: open/close destinations for DIDs unchanged after convert (columns kept).
+# Profile shortuid = product 6-char idpwgen shortuid (not hex of open|close).
 set -eu
 
 DB="${1:-/opt/pbx3/db/sqlite.db}"
+IDPWGEN="${IDPWGEN:-/opt/pbx3/golang/idpwgen}"
+SHORTUID_CHARSET='0123456789bcdfghjkmnpqrstvwxyz'
 
 if [ ! -f "$DB" ]; then
 	echo "convert-route-profiles: no DB at $DB" >&2
@@ -21,6 +24,41 @@ has_col() {
 	table="$1"
 	col="$2"
 	sqlite3 "$DB" "PRAGMA table_info($table);" | awk -F'|' '{print $2}' | grep -qx "$col"
+}
+
+# Product shortuid (6 chars, same charset as generate_shortuid / idpwgen).
+gen_shortuid() {
+	if [ -x "$IDPWGEN" ]; then
+		"$IDPWGEN" 6 "$SHORTUID_CHARSET" | tr 'A-Z' 'a-z'
+		return
+	fi
+	# Test / offline fallback when idpwgen is absent
+	awk -v charset="$SHORTUID_CHARSET" 'BEGIN {
+		srand();
+		n = length(charset);
+		out = "";
+		for (i = 0; i < 6; i++) out = out substr(charset, int(rand() * n) + 1, 1);
+		print out;
+	}'
+}
+
+unique_shortuid() {
+	tries=0
+	while [ "$tries" -lt 32 ]; do
+		suid=$(gen_shortuid)
+		exists=$(sqlite3 "$DB" "SELECT 1 FROM route_profile WHERE shortuid = '$suid' LIMIT 1;")
+		if [ -z "$exists" ]; then
+			printf '%s\n' "$suid"
+			return 0
+		fi
+		tries=$((tries + 1))
+	done
+	echo "convert-route-profiles: could not allocate unique shortuid" >&2
+	exit 1
+}
+
+sql_escape() {
+	printf "%s" "$1" | sed "s/'/''/g"
 }
 
 if ! has_col inroutes route_profile; then
@@ -56,164 +94,154 @@ WHERE (force_dest IS NULL OR trim(force_dest) = '')
 SQL
 fi
 
+# Remap legacy convert hex / non-product shortuids → real 6-char shortuids.
+# Safe to re-run: only touches length(shortuid) != 6.
+sqlite3 "$DB" "SELECT shortuid FROM route_profile WHERE length(shortuid) != 6;" | while IFS= read -r old || [ -n "$old" ]; do
+	[ -z "$old" ] && continue
+	new=$(unique_shortuid)
+	old_esc=$(sql_escape "$old")
+	new_esc=$(sql_escape "$new")
+	sqlite3 "$DB" <<SQL
+BEGIN;
+UPDATE route_profile SET shortuid = '$new_esc', pkey = '$new_esc' WHERE shortuid = '$old_esc';
+UPDATE route_profile_line SET profile = '$new_esc' WHERE profile = '$old_esc';
+UPDATE route_profile_line SET shortuid = substr('$new_esc' || '_open', 1, 24)
+  WHERE profile = '$new_esc' AND mode = 'open' AND shortuid LIKE '%_open';
+UPDATE route_profile_line SET shortuid = substr('$new_esc' || '_closed', 1, 24)
+  WHERE profile = '$new_esc' AND mode = 'closed' AND shortuid LIKE '%_closed';
+UPDATE inroutes SET route_profile = '$new_esc' WHERE route_profile = '$old_esc';
+COMMIT;
+SQL
+	echo "convert-route-profiles: remapped profile $old → $new"
+done
+
 # Build profiles per tenant for each distinct (openroute, closeroute) pair among DIDs that lack a profile.
-# IDs: deterministic hex from pair so convert is idempotent.
-# Also backfill route_profile_line for any profile missing open/closed lines.
-sqlite3 "$DB" <<'SQL'
--- Distinct pairs that need a profile (DIDs with empty route_profile)
-CREATE TEMP TABLE _rp_pairs AS
+# Reuse existing profile with same open/closed lines when present; else allocate a 6-char shortuid.
+sqlite3 -separator '	' "$DB" <<'SQL' | while IFS='	' read -r cluster openroute closeroute || [ -n "$cluster" ]; do
 SELECT DISTINCT
-  trim(coalesce(cluster, 'default')) AS cluster,
-  coalesce(nullif(trim(openroute), ''), 'None') AS openroute,
-  coalesce(nullif(trim(closeroute), ''), 'None') AS closeroute
+  trim(coalesce(cluster, 'default')),
+  coalesce(nullif(trim(openroute), ''), 'None'),
+  coalesce(nullif(trim(closeroute), ''), 'None')
 FROM inroutes
 WHERE (route_profile IS NULL OR trim(route_profile) = '');
+SQL
+	[ -z "${cluster:-}" ] && continue
+	cluster_esc=$(sql_escape "$cluster")
+	open_esc=$(sql_escape "$openroute")
+	close_esc=$(sql_escape "$closeroute")
 
--- Existing profile that already matches a pair (reuse shortuid)
-CREATE TEMP TABLE _rp_existing AS
-SELECT
-  p.cluster AS cluster,
-  max(CASE WHEN l.mode = 'open' THEN l.destination END) AS openroute,
-  max(CASE WHEN l.mode = 'closed' THEN l.destination END) AS closeroute,
-  p.shortuid AS shortuid
+	existing=$(sqlite3 "$DB" <<SQL
+SELECT p.shortuid
 FROM route_profile p
-LEFT JOIN route_profile_line l ON l.profile = p.shortuid
-GROUP BY p.cluster, p.shortuid;
-
-CREATE TEMP TABLE _rp_map (
-  cluster TEXT,
-  openroute TEXT,
-  closeroute TEXT,
-  shortuid TEXT,
-  id TEXT
-);
-
-INSERT INTO _rp_map (cluster, openroute, closeroute, shortuid, id)
-SELECT
-  pr.cluster,
-  pr.openroute,
-  pr.closeroute,
-  -- Full hex of open|closed|cluster so shared tenant prefix does not collide when truncated
-  substr(lower(hex(printf('%s|%s|%s', pr.openroute, pr.closeroute, pr.cluster))), 1, 16),
-  substr(lower(hex(printf('id|%s|%s|%s', pr.openroute, pr.closeroute, pr.cluster))), 1, 27)
-FROM _rp_pairs pr;
-
--- Prefer reusing existing profile with same open/closed destinations
-UPDATE _rp_map
-SET shortuid = (
-  SELECT e.shortuid FROM _rp_existing e
-  WHERE e.cluster = _rp_map.cluster
-    AND e.openroute = _rp_map.openroute
-    AND e.closeroute = _rp_map.closeroute
-  LIMIT 1
+LEFT JOIN route_profile_line lo ON lo.profile = p.shortuid AND lo.mode = 'open'
+LEFT JOIN route_profile_line lc ON lc.profile = p.shortuid AND lc.mode = 'closed'
+WHERE p.cluster = '$cluster_esc'
+  AND coalesce(lo.destination, '') = '$open_esc'
+  AND coalesce(lc.destination, '') = '$close_esc'
+LIMIT 1;
+SQL
 )
-WHERE EXISTS (
-  SELECT 1 FROM _rp_existing e
-  WHERE e.cluster = _rp_map.cluster
-    AND e.openroute = _rp_map.openroute
-    AND e.closeroute = _rp_map.closeroute
-);
 
+	if [ -n "$existing" ]; then
+		suid=$existing
+	else
+		suid=$(unique_shortuid)
+		suid_esc=$(sql_escape "$suid")
+		id_esc=$(sql_escape "rp$(printf '%s' "$suid" | sed 's/[^0-9a-z]//g')$(awk 'BEGIN{srand(); printf "%08d", int(rand()*1e8)}')")
+		sqlite3 "$DB" <<SQL
 INSERT OR IGNORE INTO route_profile (id, shortuid, pkey, cluster, name, default_mode, description, z_updater)
-SELECT
-  m.id,
-  m.shortuid,
-  m.shortuid,
-  m.cluster,
+VALUES (
+  '$id_esc',
+  '$suid_esc',
+  '$suid_esc',
+  '$cluster_esc',
   'Converted open/close',
   'open',
-  printf('auto from %s / %s', m.openroute, m.closeroute),
+  'auto from $open_esc / $close_esc',
   'convert-route-profiles'
-FROM _rp_map m
-WHERE NOT EXISTS (SELECT 1 FROM route_profile p WHERE p.shortuid = m.shortuid);
-
+);
 INSERT OR IGNORE INTO route_profile_line (id, shortuid, profile, cluster, mode, destination, z_updater)
-SELECT
-  substr(lower(hex(printf('id|o|%s|%s', m.shortuid, m.openroute))), 1, 27),
-  substr(m.shortuid || '_open', 1, 24),
-  m.shortuid,
-  m.cluster,
+VALUES (
+  '${id_esc}_o',
+  substr('$suid_esc' || '_open', 1, 24),
+  '$suid_esc',
+  '$cluster_esc',
   'open',
-  m.openroute,
+  '$open_esc',
   'convert-route-profiles'
-FROM _rp_map m
-WHERE NOT EXISTS (
-  SELECT 1 FROM route_profile_line l WHERE l.profile = m.shortuid AND l.mode = 'open'
 );
-
 INSERT OR IGNORE INTO route_profile_line (id, shortuid, profile, cluster, mode, destination, z_updater)
-SELECT
-  substr(lower(hex(printf('id|c|%s|%s', m.shortuid, m.closeroute))), 1, 27),
-  substr(m.shortuid || '_closed', 1, 24),
-  m.shortuid,
-  m.cluster,
+VALUES (
+  '${id_esc}_c',
+  substr('$suid_esc' || '_closed', 1, 24),
+  '$suid_esc',
+  '$cluster_esc',
   'closed',
-  m.closeroute,
+  '$close_esc',
   'convert-route-profiles'
-FROM _rp_map m
-WHERE NOT EXISTS (
-  SELECT 1 FROM route_profile_line l WHERE l.profile = m.shortuid AND l.mode = 'closed'
 );
-
-UPDATE inroutes
-SET route_profile = (
-  SELECT m.shortuid FROM _rp_map m
-  WHERE m.cluster = trim(coalesce(inroutes.cluster, 'default'))
-    AND m.openroute = coalesce(nullif(trim(inroutes.openroute), ''), 'None')
-    AND m.closeroute = coalesce(nullif(trim(inroutes.closeroute), ''), 'None')
-  LIMIT 1
-)
-WHERE (route_profile IS NULL OR trim(route_profile) = '');
-
--- Backfill lines for profiles that already exist (headers without lines after shortuid collision bug)
-INSERT OR IGNORE INTO route_profile_line (id, shortuid, profile, cluster, mode, destination, z_updater)
-SELECT
-  substr(lower(hex(printf('bf|o|%s|%s', i.route_profile, i.openroute))), 1, 27),
-  substr(i.route_profile || '_open', 1, 24),
-  i.route_profile,
-  trim(coalesce(i.cluster, 'default')),
-  'open',
-  coalesce(nullif(trim(i.openroute), ''), 'None'),
-  'convert-route-profiles'
-FROM (
-  SELECT route_profile, cluster,
-         min(openroute) AS openroute,
-         min(closeroute) AS closeroute
-  FROM inroutes
-  WHERE route_profile IS NOT NULL AND trim(route_profile) != ''
-  GROUP BY route_profile, cluster
-) i
-WHERE NOT EXISTS (
-  SELECT 1 FROM route_profile_line l WHERE l.profile = i.route_profile AND l.mode = 'open'
-);
-
-INSERT OR IGNORE INTO route_profile_line (id, shortuid, profile, cluster, mode, destination, z_updater)
-SELECT
-  substr(lower(hex(printf('bf|c|%s|%s', i.route_profile, i.closeroute))), 1, 27),
-  substr(i.route_profile || '_closed', 1, 24),
-  i.route_profile,
-  trim(coalesce(i.cluster, 'default')),
-  'closed',
-  coalesce(nullif(trim(i.closeroute), ''), 'None'),
-  'convert-route-profiles'
-FROM (
-  SELECT route_profile, cluster,
-         min(openroute) AS openroute,
-         min(closeroute) AS closeroute
-  FROM inroutes
-  WHERE route_profile IS NOT NULL AND trim(route_profile) != ''
-  GROUP BY route_profile, cluster
-) i
-WHERE NOT EXISTS (
-  SELECT 1 FROM route_profile_line l WHERE l.profile = i.route_profile AND l.mode = 'closed'
-);
-
-DROP TABLE _rp_pairs;
-DROP TABLE _rp_existing;
-DROP TABLE _rp_map;
 SQL
+	fi
+
+	suid_esc=$(sql_escape "$suid")
+	sqlite3 "$DB" <<SQL
+UPDATE inroutes
+SET route_profile = '$suid_esc'
+WHERE (route_profile IS NULL OR trim(route_profile) = '')
+  AND trim(coalesce(cluster, 'default')) = '$cluster_esc'
+  AND coalesce(nullif(trim(openroute), ''), 'None') = '$open_esc'
+  AND coalesce(nullif(trim(closeroute), ''), 'None') = '$close_esc';
+SQL
+done
+
+# Backfill open/closed lines for profiles that already exist but lack lines
+sqlite3 -separator '	' "$DB" <<'SQL' | while IFS='	' read -r profile cluster openroute closeroute || [ -n "$profile" ]; do
+SELECT i.route_profile, trim(coalesce(i.cluster, 'default')),
+       coalesce(nullif(trim(min(i.openroute)), ''), 'None'),
+       coalesce(nullif(trim(min(i.closeroute)), ''), 'None')
+FROM inroutes i
+WHERE i.route_profile IS NOT NULL AND trim(i.route_profile) != ''
+GROUP BY i.route_profile, trim(coalesce(i.cluster, 'default'));
+SQL
+	[ -z "${profile:-}" ] && continue
+	profile_esc=$(sql_escape "$profile")
+	cluster_esc=$(sql_escape "$cluster")
+	open_esc=$(sql_escape "$openroute")
+	close_esc=$(sql_escape "$closeroute")
+	sqlite3 "$DB" <<SQL
+INSERT OR IGNORE INTO route_profile_line (id, shortuid, profile, cluster, mode, destination, z_updater)
+SELECT
+  'bf_o_' || '$profile_esc',
+  substr('$profile_esc' || '_open', 1, 24),
+  '$profile_esc',
+  '$cluster_esc',
+  'open',
+  '$open_esc',
+  'convert-route-profiles'
+WHERE NOT EXISTS (
+  SELECT 1 FROM route_profile_line l WHERE l.profile = '$profile_esc' AND l.mode = 'open'
+);
+INSERT OR IGNORE INTO route_profile_line (id, shortuid, profile, cluster, mode, destination, z_updater)
+SELECT
+  'bf_c_' || '$profile_esc',
+  substr('$profile_esc' || '_closed', 1, 24),
+  '$profile_esc',
+  '$cluster_esc',
+  'closed',
+  '$close_esc',
+  'convert-route-profiles'
+WHERE NOT EXISTS (
+  SELECT 1 FROM route_profile_line l WHERE l.profile = '$profile_esc' AND l.mode = 'closed'
+);
+SQL
+done
 
 profiles=$(sqlite3 "$DB" "SELECT count(*) FROM route_profile;")
 linked=$(sqlite3 "$DB" "SELECT count(*) FROM inroutes WHERE route_profile IS NOT NULL AND trim(route_profile) != '';")
-echo "convert-route-profiles: profiles=$profiles inroutes_with_profile=$linked on $DB"
+bad=$(sqlite3 "$DB" "SELECT count(*) FROM route_profile WHERE length(shortuid) != 6;")
+echo "convert-route-profiles: profiles=$profiles inroutes_with_profile=$linked non6_shortuid=$bad on $DB"
+if [ "$bad" -ne 0 ]; then
+	echo "convert-route-profiles: warning: $bad profile(s) still have non-6-char shortuid" >&2
+	exit 1
+fi
 exit 0
