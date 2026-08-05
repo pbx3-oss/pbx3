@@ -80,5 +80,35 @@ if (!pbx3_holiday_active(array("stime"=>1,"etime"=>9999999999), 100)) fail("holi
 if (pbx3_holiday_active(array("stime"=>100,"etime"=>200), 50)) fail("holiday inactive");
 ok("holiday active");
 
+// site TZ helper: set from a temp file (do not depend on host /etc/timezone)
+$tzfile = sys_get_temp_dir() . "/pbx3-sched-tz-test-" . getmypid();
+file_put_contents($tzfile, "America/New_York\n");
+$got = pbx3_schedule_use_site_timezone($tzfile);
+@unlink($tzfile);
+if ($got !== "America/New_York") fail("site tz want America/New_York got $got");
+if (date_default_timezone_get() !== "America/New_York") fail("date_default_timezone not set");
+ok("site timezone");
+
+// Half-open [start, end): abutting overnight + open at 08:30 / 20:00
+date_default_timezone_set("UTC");
+$open = array("month"=>"*","dayofweek"=>"*","datemonth"=>"*","timespan"=>"08:30-16:30","mode"=>"open","priority"=>10,"pkey"=>10);
+$eve = array("month"=>"*","dayofweek"=>"*","datemonth"=>"*","timespan"=>"16:30-20:00","mode"=>"evening","priority"=>15,"pkey"=>11);
+$night = array("month"=>"*","dayofweek"=>"*","datemonth"=>"*","timespan"=>"20:00-08:30","mode"=>"closed","priority"=>25,"pkey"=>12);
+$t0830 = strtotime("2026-08-05 08:30:00");
+$t0829 = strtotime("2026-08-05 08:29:00");
+$t2000 = strtotime("2026-08-05 20:00:00");
+$t1959 = strtotime("2026-08-05 19:59:00");
+if (!pbx3_dateseg_matches($open, $t0830)) fail("open must include 08:30");
+if (pbx3_dateseg_matches($night, $t0830)) fail("overnight must exclude 08:30");
+if (!pbx3_dateseg_matches($night, $t0829)) fail("overnight must include 08:29");
+if (!pbx3_dateseg_matches($night, $t2000)) fail("overnight must include 20:00");
+if (pbx3_dateseg_matches($eve, $t2000)) fail("evening must exclude 20:00");
+if (!pbx3_dateseg_matches($eve, $t1959)) fail("evening must include 19:59");
+$r3 = pbx3_resolve_sched_mode(array($open, $eve, $night), null, $t0830);
+if ($r3["mode"] !== "open") fail("at 08:30 want open got ".$r3["mode"]);
+$r4 = pbx3_resolve_sched_mode(array($open, $eve, $night), null, $t2000);
+if ($r4["mode"] !== "closed") fail("at 20:00 want closed got ".$r4["mode"]);
+ok("half-open abut");
+
 echo "PASS: pbx3-schedule-test\n";
 ' "$SCHED"

@@ -1,8 +1,34 @@
 <?php
 /**
  * Pure schedule evaluation helpers for pbx3timer (day-parts / time-based routing).
- * Injectable $now for unit tests. No DB I/O here.
+ * Injectable $now for unit tests. No DB I/O here (except optional /etc/timezone read).
+ *
+ * Wall clock: instance site TZ from Network panel (`/etc/timezone`) — same as CDR
+ * SiteTimezone. Operators enter local office hours; never assume PHP CLI UTC.
  */
+
+/**
+ * Apply Network / OS site timezone for schedule evaluation.
+ *
+ * @param string $tz_file usually /etc/timezone
+ * @return string IANA id in effect after call
+ */
+function pbx3_schedule_use_site_timezone($tz_file = '/etc/timezone')
+{
+	if (is_readable($tz_file)) {
+		$tz = trim((string) @file_get_contents($tz_file));
+		if ($tz !== '') {
+			try {
+				new DateTimeZone($tz);
+				date_default_timezone_set($tz);
+				return $tz;
+			} catch (Exception $e) {
+				// fall through
+			}
+		}
+	}
+	return date_default_timezone_get();
+}
 
 /**
  * Whether a dateseg row matches calendar + timespan for $now.
@@ -53,11 +79,14 @@ function pbx3_dateseg_matches(array $row, $now = null)
 		$tstart = $matches[1] . $matches[2];
 		$tend = $matches[3] . $matches[4];
 		$hi = date('Hi', $now);
+		// Half-open [start, end): start inclusive, end exclusive.
+		// Abutting windows (e.g. 20:00-08:30 closed + 08:30-16:30 open) hand off
+		// cleanly — no 19:59 / 08:31 fudge times.
 		if ($tstart > $tend) {
-			// wraps midnight
-			return ($tstart < $hi || $tend > $hi);
+			// wraps midnight: [start, 24:00) U [00:00, end)
+			return ($hi >= $tstart || $hi < $tend);
 		}
-		return ($tstart < $hi && $tend > $hi);
+		return ($hi >= $tstart && $hi < $tend);
 	}
 
 	return false;

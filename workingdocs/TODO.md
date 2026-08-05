@@ -1,12 +1,13 @@
 # PBX3 ToDo list
 
 **Branch:** product day-parts on **`time-based-routing`** (pbx3 / api / spa / cagi — push/merge when ready). Fleet short-dial packages on **`main`**: **pbx3 0.0.4-6** / **pbx3cagi 1.0.0-11**. Golden day-parts lab: **0.0.4-7** / **1.0.0-13**.  
-**Last updated:** 2026-08-04 (session end — time-based routing A–E complete; push/merge open)
+**Last updated:** 2026-08-04 (session end — timer TZ + half-open + day-parts UX residuals locked; flip for ranges)
 
 
 ### Suggested “what next?” order
 
 1. **Time-based routing close-out** — push **`time-based-routing`** four repos; PR/merge when operator ready; optional closed/force→AUTO smokes + pack roll beyond golden. Spec **`TIME_BASED_ROUTING_REQUIREMENTS.md`**.  
+1a. **Daytimer day-of-week ranges** (**UX must-have** residual) — `mon-fri`; **likely solves most office-spec pain** — **§5.9**. Default stays **open** (BLF-only shops).  
 2. **Tenant short dial residual** — **D:** desk lab → **least-ugly *guaranteed* return** (open ToDo); **E** pack-gate plan only — sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`**. **F** migrate done. Spec **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.9.  
 3. **Number wire standard (open)** — Model A vs B — **`NUMBER_WIRE_STANDARD_DRAFT.md`** · **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. No implement until D1.  
 4. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
@@ -107,6 +108,10 @@
 - [ ] **pbx3cagi Phase 4 — domain file splits (parked 2026-07-26):** Direction OK; **CheckState / day-parts contract now on branch** — reopen Phase 4 only after time-based merge settles — **`REFACTOR_PLAN.md`**.
 
 - [x] **Time-based routing — day-parts + route profiles (track complete 2026-08-04):** Slices **A–E** on **`time-based-routing`** (not yet pushed/merged). Schema + convert + timer multi-mode + API profiles + SPA profile-first UI + CAGI dual-read + multi-mode force matrix. Golden **pbx3 0.0.4-7** / **cagi 1.0.0-13**; lunch + force lab green; ~1 min sideband OK. Spec: **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Residual: PR/merge; optional full closed/holiday/natural-timer pack; multi-mode force SPA UI beyond AUTO/CLOSED.
+
+- [ ] **Daytimer day-of-week ranges (UX must-have, parked 2026-08-04):** **Not polish.** Single-token weekday forces slavish Mon–Fri clones (Aelintra **22** rows). SARK had **Every Day** (`*`) as escape hatch (SPA label fixed). **Surpass SARK:** Asterisk-native `mon-fri` / `sat-sun`. Default stays **open** (BLF-only shops — §5.8). Spec **§5.9**. Soon after day-parts push/merge.
+
+- [x] **Schedule no-match default = open (reaffirmed 2026-08-04):** **Q1 locked.** Many shops use **no timers** — only BLF open/closed throw (lamp on = closed). Default-closed rejected as fleet default. Office row count → fix with **§5.9 day ranges**, not by flipping baseline. Spec **§5.8**.
 
 - [ ] **Control plane duplex / HA (parked, pre-live 2026-07-27):** `control.pbx3.com` / Gatekeeper is a single host — ops SPOF (probes, Fleet UI, moves, notify, Edge promote). **Call plane fail-safe** by design (nodes+SBC keep routing). Not built. Later: active/standby + EIP/DNS; S3 catalog already shared HoR; local health SQLite/job queue need replicate-or-cold-standby story. Do **not** home on SBC. Spec seed: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5 fail-safe.
 

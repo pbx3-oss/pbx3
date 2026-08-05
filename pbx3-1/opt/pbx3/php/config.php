@@ -177,3 +177,25 @@ define('ASTGEN',                        UTILITIES . '/runAstGen.php');
 define('SIPFIX',                        UTILITIES . '/sipiaxfix.php'); 	//loc. of the V6 sipiaxfixup routine
 define('GENAST',                        SCRIPTS . '/genAst.sh');		//loc. of the generator
 define('HTTPOWNER',                     'www-data:www-data');		//HTTP server user/group (Apache/nginx + PHP-FPM for API)
+
+/**
+ * Site wall clock = Network panel OS timezone (/etc/timezone).
+ * Day timers / holidays / other CLI utilities must not evaluate in bare PHP UTC.
+ * Same source as pbx3api SiteTimezone (CDR presentation).
+ */
+(static function (): void {
+	$path = '/etc/timezone';
+	if (!is_readable($path)) {
+		return;
+	}
+	$tz = trim((string) @file_get_contents($path));
+	if ($tz === '') {
+		return;
+	}
+	try {
+		new DateTimeZone($tz);
+		date_default_timezone_set($tz);
+	} catch (Throwable $e) {
+		// leave PHP default
+	}
+})();

@@ -72,23 +72,40 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-04 — time-based routing A–E complete)
+## Next agent session notes (2026-08-04 — day-parts play-test + timer harden + UX residuals)
 
-**Branch:** **`time-based-routing`** (no upstream until push): pbx3 **`e314ba0`**, pbx3api **`09f8349`**, pbx3spa **`d3d6a95`**, pbx3cagi **`e34dd40`**. **`main`** still short-dial packages fleet-wide.
+**Branch:** **`time-based-routing`** (push this session): pbx3 / pbx3spa (+ api/cagi still on branch from A–E). **`main`** still short-dial packages fleet-wide except golden day-parts lab packages.
 
-### Shipped
-- **Day-parts track complete (dual-read retained):** schema + convert; timer multi-mode/priority + dual-write `oclo`; API route profiles + day/holiday/inbound fields; SPA profiles primary + demoted open/close; CAGI profile lookup + force matrix (mode tokens, holiday under force); day-parts help.
-- **Golden only:** packages **pbx3 0.0.4-7** / **pbx3cagi 1.0.0-13** (build cagi **on Linux**/golden — Mac binary broke AGI briefly). Lunch via `sched_mode` + force over holiday lab green. Sideband ~**1 min** accepted.
-- **UI timer state:** tenants list **Schedule** (`masteroclo` + `sched_mode`); tenant **Schedule mode (timer)**; day/holiday **state** `IDLE`/`*INUSE*`. No live auto-refresh banner.
-- **Kildare** untouched. **No** SBC product branch.
+### Shipped (this session)
+- **Golden Aelintra lab timers:** open / lunch / evening Mon–Fri + overnight closed + sat/sun closed (22 rows — clone pain drove residuals).
+- **Timer harden:** site TZ from Network `/etc/timezone` (not PHP UTC); timespan **half-open `[start, end)`**; readonly DB copy fix (`SYSDB`/`COPY_DB` constants). Live on golden; unit tests extended.
+- **SPA:** Day timer **Every day** label for `*` (was bare asterisk).
+- **Product locks / docs (`TIME_BASED_ROUTING_REQUIREMENTS.md` §5.8–5.9):** **default open** reaffirmed (BLF-only / no-timer shops); default-closed **rejected**; **day-of-week ranges (`mon-fri`)** = primary UX residual (likely solves most clone pain); SARK 3-row binary sample vs day-parts+profiles tradeoff documented.
 
-### Resume
-1. Operator play-test; **push** four repos + PR/merge when ready.  
-2. Optional residuals: closed/holiday/natural-timer full pack; multi-mode force SPA beyond AUTO/CLOSED; BLF multi-mode.  
-3. Then backlog: short dial **D**, number-wire, etc.
+### Resume (flip)
+1. **Daytimer `mon-fri` / ranges** — matcher + API + SPA (§5.9); then collapse Aelintra lab toward fewer rows.  
+2. Push/PR/merge **`time-based-routing`** four repos when ready (api/cagi may already be pushed from prior session — verify).  
+3. Optional: SARK-like list start/end columns, timepicker, `*INUSE*` highlight.
 
 ### Golden / ops
-- Magrathea **`3.93.26.82`** · golden EIP **`44.196.98.191`** · DID **`01924910444`**. After mutating `sched_mode`, sync **`sqlite.rdonly.db`** or wait timer. Deploy cagi as **`pbx3cagi.arm64`** from gold Linux build.
+- Magrathea **`3.93.26.82`** · golden EIP **`44.196.98.191`** · DID **`01924910444`** · tenant **Aelintra** / `s07zmy`. Timer evaluates **America/New_York**. Packages still **0.0.4-7** / cagi **1.0.0-13** on golden (timer PHP hot-patched — package bump when rolling).
+
+---
+
+## Next agent session notes (2026-08-04 — time-based routing A–E complete)
+
+**Superseded for “read first”** by play-test / timer harden block above.
+
+**Branch:** **`time-based-routing`**: pbx3 **`e314ba0`**, pbx3api **`09f8349`**, pbx3spa **`d3d6a95`**, pbx3cagi **`e34dd40`** (pre this session).
+
+### Shipped (historical)
+- Day-parts A–E track complete; golden packages **0.0.4-7** / **1.0.0-13**.
+
+### Resume
+See current block.
+
+### Golden / ops
+- See current block.
 
 ---
 

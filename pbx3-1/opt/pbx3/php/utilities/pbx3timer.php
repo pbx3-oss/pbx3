@@ -20,9 +20,11 @@ require_once __DIR__ . "/pbx3-schedule.php";
 	$tuple = array();
 	$dbupdated = false;
 	$debug = false;
+	// Network panel TZ (/etc/timezone) — config.php also sets this; re-assert for clarity.
+	$site_tz = pbx3_schedule_use_site_timezone();
 	$now = time();
 
-	$helper->logit(" SYSTIMER Started", 10 );
+	$helper->logit(" SYSTIMER Started tz=$site_tz " . date('D Y-m-d H:i:s T', $now), 10 );
 
 	// --- Holidays (legacy epochs; dual-write routeoverride + holiday_force_dest) ---
 
@@ -181,9 +183,13 @@ require_once __DIR__ . "/pbx3-schedule.php";
 
 	if ($dbupdated == true) {
 		$helper->logit(" CODENAME TIMER MODIFY", 10 );
-		$cmd = '/usr/bin/sqlite3 '.SYSDB.' "UPDATE globals SET mycommit=\'NO\';"';
+		$cmd = '/usr/bin/sqlite3 ' . escapeshellarg(SYSDB) . " \"UPDATE globals SET mycommit='NO';\"";
 		`$cmd`;
-		$rc = `/bin/cp SYSDB COPY_DB`;
-		$rc = `/bin/mv COPY_DB READONLYDB`;
+		// Refresh CAGI readonly snapshot (constants, not literal filenames).
+		if (@copy(SYSDB, COPY_DB)) {
+			@rename(COPY_DB, READONLY_DB);
+		} else {
+			$helper->logit(" SYSTIMER failed to copy " . SYSDB . " → " . COPY_DB, 0);
+		}
 	}
 	$helper->logit(" CODENAME TIMER Ended", 10 );
