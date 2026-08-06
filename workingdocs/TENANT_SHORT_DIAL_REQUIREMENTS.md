@@ -1,6 +1,6 @@
 # Tenant short dial requirements (per-tenant dial prefixes)
 
-**Status:** Requirements locked 2026-07-27. **A–C + E L1 lab green** (2026-08-04) and **merged to `main`**. **D desk lab 2026-08-05:** findings + lean **option A** (our-SBC shortuid repair) — see **§3.9.1**. **E** pack-gate planned, not executed. **F** migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**.  
+**Status:** Requirements locked 2026-07-27. **A–C + E L1 lab green** (2026-08-04) and **merged to `main`**. **D product-locked option A** (2026-08-05): our-SBC shortuid usrloc repair — see **§3.9.1**; implement on branch `slice-d-shortuid-usrloc-repair`. **E** pack-gate planned, not executed. **F** migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**.  
 **Scope:** Allow an extension on tenant A to call an extension on tenant B **when allowed**, using a **dial prefix** that is **local to the calling tenant**, plus the target’s normal extension (`pkey`). Same call recipe whether B is on **this node or another** (fleet).  
 **Not:** Globally unique extension numbers (SARK model — rejected). Not directory/gatekeeper in the call path (**Rule 1**). Not replacing PSTN OutRoute / Egress.  
 **Related:** Fleet AoR dial (`sip:shortuid@tenant.fqdn`) · L1 `in-multi-tenant-a-b` (usrloc domain discrimination only) · legacy InterSARK / SailToSail / `DUNS_INTERSITE` OutRoute · **`CALL_TYPE_INVENTORY.md`** · **`DESIGN_RULES.md` Rule 1**.
@@ -208,16 +208,16 @@ From: "1101" <sip:59507r@9wvvnb.pbx3.com>   ← From correctly local
 
 **Rejected as sole product fix:** DID-on-every-extension (cost, PSTN trombone, incomplete). SUID uniqueness was never wrong — **handset host rewrite** broke full-AoR redial.
 
-**Recommendation (lean — not fully locked):**
+**Product lock (2026-08-05): option A.**
 
 | Option | Meaning | Portability |
 |--------|---------|-------------|
-| **A (preferred next)** | CLID carries **shortuid** (user); **our SBC** repairs phone-originated INVITE: usrloc miss on `user@wrong-domain` → lookup Contact by **username** (globally unique shortuid) and RELAY / fix `$rd`. Guaranteed history return on **pbx3 + our edge**. | **Our SBC only** for *guaranteed* desk callback (forward site dial already SBC-shaped) |
-| **B** | No history-return guarantee; coach name/LDAP display; return via reverse prefix / optional DID | Any SBC |
+| **A (locked)** | CLID carries **shortuid** (user); **our SBC** repairs phone-originated INVITE: usrloc miss on `user@wrong-domain` → lookup Contact by **username** (globally unique shortuid) and RELAY / fix `$rd`. Guaranteed history return on **pbx3 + our edge**. | **Our SBC only** for *guaranteed* desk callback (forward site dial already SBC-shaped) |
+| **B (rejected for v1)** | No history-return guarantee; coach name/LDAP display; return via reverse prefix / optional DID | Any SBC |
 
-**Next implement (A):** Confirm product lock on A, then Magrathea change per **`pbx3sbc/workingdocs/SLICE_D_SHORTUID_USRLOC_REPAIR.md`**.
+**Implement (A):** Magrathea / template change per **`pbx3sbc/workingdocs/SLICE_D_SHORTUID_USRLOC_REPAIR.md`** (branch `slice-d-shortuid-usrloc-repair`). Generator reject-all-digit shortuids **parked** (no all-digit phone suids in fleet now; letter gate is enough).
 
-**SBC pattern (summary — detail in that file):** Today phone INVITE `user@caller-fqdn` skips usrloc and **`TO_DISPATCHER`** → caller home → 404. Slice B miss→dispatcher is **Asterisk-only** and does not apply. **Path 1 (preferred):** before dispatcher, for phone-sourced INVITE where `$rU` looks like shortuid (has letter), `lookup(user@$rd)` then on miss **username-only** `location` query (shortuids globally unique — unlike digit exts); hit → same Contact **`route(RELAY)`** as Asterisk→phone. Gate auth: From user registered / `$si` matches Contact. **Path 2 (alt):** rewrite `$rd` to registered domain → dispatcher **callee** home. Keep receive CLID = `suid@fqdn`; CallerID **name** = human. Do not username-only digit R-URIs.
+**SBC pattern (summary — detail in that file):** Today phone INVITE `user@caller-fqdn` skips usrloc and **`TO_DISPATCHER`** → caller home → 404. Slice B miss→dispatcher is **Asterisk-only** and does not apply. **Path 1 (locked):** before dispatcher, for phone-sourced INVITE where `$rU` looks like shortuid (**charset + letter**, no fixed length), **username-only** `location` query (shortuids globally unique — unlike digit exts); hit → same Contact **`route(RELAY)`** as Asterisk→phone. Gate auth: From user registered on `$fd` and `$si` matches Contact/`received`. **Path 2 (alt, not v1):** rewrite `$rd` to registered domain → dispatcher **callee** home. Keep receive CLID = `suid@fqdn`; CallerID **name** = human. Do not username-only digit R-URIs.
 
 **Caveats (still true):**
 
