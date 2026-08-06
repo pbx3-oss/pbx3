@@ -1,6 +1,6 @@
 # Tenant short dial requirements (per-tenant dial prefixes)
 
-**Status:** Requirements locked 2026-07-27. **A–C + E L1 lab green** (2026-08-04) and **merged to `main`**. **D** lab partial: presentation CLIP = extension; network return AoR in PAI (SiteRing); `suid@fqdn` usrloc probe green; desk missed-call redial still handset-dependent. **E** dual-host SIPp green (pack-gate planned, not executed). **F** operator migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**.  
+**Status:** Requirements locked 2026-07-27. **A–C + E L1 lab green** (2026-08-04) and **merged to `main`**. **D desk lab 2026-08-05:** findings + lean **option A** (our-SBC shortuid repair) — see **§3.9.1**. **E** pack-gate planned, not executed. **F** migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**.  
 **Scope:** Allow an extension on tenant A to call an extension on tenant B **when allowed**, using a **dial prefix** that is **local to the calling tenant**, plus the target’s normal extension (`pkey`). Same call recipe whether B is on **this node or another** (fleet).  
 **Not:** Globally unique extension numbers (SARK model — rejected). Not directory/gatekeeper in the call path (**Rule 1**). Not replacing PSTN OutRoute / Egress.  
 **Related:** Fleet AoR dial (`sip:shortuid@tenant.fqdn`) · L1 `in-multi-tenant-a-b` (usrloc domain discrimination only) · legacy InterSARK / SailToSail / `DUNS_INTERSITE` OutRoute · **`CALL_TYPE_INVENTORY.md`** · **`DESIGN_RULES.md` Rule 1**.
@@ -175,19 +175,51 @@ Bob’s phone shows:  name = "1000 Alice"   (or similar)
 Return / redial  →  sip:ab12cd@pb0wsk.pbx3.com  → Alice’s phone (usrloc)
 ```
 
-**Lab implement (2026-08-04 — golden / Magrathea):** Handset **display** is presentation **extension** (`CALLERID(num)` = pkey), not `suid@fqdn` (URI/`%40` broke UX; bare shortuid ends in a letter). **Network return AoR** stays in **`P-Asserted-Identity`** (`sip:suid@tenant.fqdn`) on the ring leg via fleet **`SiteRing`** + dialplan gosub; Magrathea miss→hairpin uses `X-PBX3-Pres-Num` + kept PAI + From `sitedial`. Desk “redial from history” may follow **From** (digits / pkey) rather than PAI — vendor-specific; reverse-prefix numeric CLIP remains deferred (§15). Lab proved: dialling `suid@fqdn` still **usrloc-hits** Alice after site dial.
+**Lab implement (2026-08-04 — golden / Magrathea):** Handset **display** started as presentation **extension** (`CALLERID(num)` = pkey). **Network return AoR** in **`P-Asserted-Identity`** (`sip:suid@tenant.fqdn`) via **`SiteRing`** + dialplan gosub; Magrathea miss→hairpin uses `X-PBX3-Pres-Num` + kept PAI + From `sitedial`. SIPp: dialling `suid@fqdn` **usrloc-hits**. See **§3.9.1** for desk matrix outcome.
 
-No reverse dial prefix required for callback (Q10 one-way OK). Prefix dial R-URI stays `ext@fqdn` (miss→dispatcher); ideal network return uses `suid@fqdn` (usrloc hit). **Open product residual:** lab desks + history capture, then choose the **least-ugly solution that still guarantees return** to the original station (may be SUID presentation, DID when present + fallback, PAI-centric OEM behaviour, or hybrid) — **`TODO.md`** “Tenant short dial D — desk return CLIP lab → least-ugly guaranteed fix”. Do not ship a pretty but wrong redial.
+No reverse dial prefix required for *product* callback (Q10 one-way OK). Prefix dial R-URI stays `ext@fqdn` (miss→dispatcher; **Asterisk-sourced only** today).
 
-**Caveats:**
+#### 3.9.1 Desk return lab (2026-08-05) — findings + recommendation
 
-- Desk phones that drop the domain and redial only the user-part may fail — lab-check Snom/common sets in slice D residual ToDo.  
-- **No guaranteed reverse site-code** — bidirectional prefix is optional; cannot rely on “dial their prefix back.”  
-- **PSTN DID as cross-tenant CLID** (so redial is E.164 via OutRoute) is an incomplete workaround idea — many extensions have **no DID**.  
-- **Shortuid as presentation CLIP** (num = `suid`, not pkey) — uglier than 4-digit desks, but **non-digit SIP users are valid** (Asterisk handbook; fleet already uses shortuid AoR for REG/station dial). Residual risk is **handset history/redial behaviour** (preserve user+domain vs digit-only), not “Asterisk rejects letters.” Lab matrix before product lock.  
-- Do not implement DID- or SUID-as-CLI until matrix findings + product lock.  
-- Queue/IVR origin without a phone shortuid: set name where possible; num may be attendant/DDI or non-returnable (at implement).  
-- Reverse-prefix numeric CLIP is a **deferred** desk-phone polish if URI redial is weak in the field (§15).
+**Lab path:** affcot (`9wvvnb`) ↔ duns (`dhbm8x`) via Magrathea; prefixes `81` both ways (reverse row added for capture). Phones: Snom D717 / similar; registered Contacts via Magrathea.
+
+| Experiment | Result |
+|------------|--------|
+| CLID = bare ext (`1101`) | History redial → local/wrong digits; fail |
+| CLID = `1101@calling-tenant` | Phone INVITE never usrloc/miss→home as hoped; **phone→`ext@fqdn` is not Asterisk miss→dispatcher** → no/home fail |
+| CLID = `suid@fqdn` on receive (GenAst `SbcDomainRoute`) | Snom **does** URI-redial the **user**; **rewrites host to own registrar** |
+
+**Snom redial trace (decisive):** after inbound with CLID `hb64kj@dhbm8x…`, redial emitted:
+
+```text
+INVITE sip:hb64kj@9wvvnb.pbx3.com   ← user correct, domain = local identity
+From: "1101" <sip:59507r@9wvvnb.pbx3.com>   ← From correctly local
+```
+
+→ Magrathea/Asterisk look up `hb64kj` under **affcot** → **404**. Alice never rings.
+
+**Snom setting check:** No documented toggle to “keep remote party domain on history redial.” Dial-plan `\d` = **this identity’s registrar** (append local domain). `block_url_dialing` is dial-pad letters only. From must stay local identity (else call appears to originate as remote); that does **not** justify rewriting **Request-URI** host — but desks do it anyway.
+
+**Also observed (separate):** same-box site dial — callee hangup does not always clear caller (hairpin/BYE asymmetry); caller hangup clears callee. Track separately from CLIP.
+
+**LDAP:** display lookup can key off shortuid/CLIP; **click-to-dial** across tenants needs qualified dial (AoR or prefix+ext), not bare extension — else same domain-rewrite / local-ext problem.
+
+**Rejected as sole product fix:** DID-on-every-extension (cost, PSTN trombone, incomplete). SUID uniqueness was never wrong — **handset host rewrite** broke full-AoR redial.
+
+**Recommendation (lean — not fully locked):**
+
+| Option | Meaning | Portability |
+|--------|---------|-------------|
+| **A (preferred next)** | CLID carries **shortuid** (user); **our SBC** repairs phone-originated INVITE: usrloc miss on `user@wrong-domain` → lookup Contact by **username** (globally unique shortuid) and RELAY / fix `$rd`. Guaranteed history return on **pbx3 + our edge**. | **Our SBC only** for *guaranteed* desk callback (forward site dial already SBC-shaped) |
+| **B** | No history-return guarantee; coach name/LDAP display; return via reverse prefix / optional DID | Any SBC |
+
+**Next implement (A):** Magrathea/OpenSIPS username usrloc fallback (phone-sourced); keep receive CLID = `suid@fqdn` (or bare suid if enough after A); CallerID **name** = human; LDAP dial attributes policy later. Confirm product lock on A before coding edge.
+
+**Caveats (still true):**
+
+- **No guaranteed reverse site-code** — bidirectional prefix optional (Q10).  
+- Queue/IVR without phone shortuid: name where possible; num may be non-returnable.  
+- Reverse-prefix numeric CLIP remains deferred polish (§15).  
 
 ---
 

@@ -1667,13 +1667,29 @@ HERE;
 			 */
 			$this->OUT .= "\tsame => n,Set(PBX3_PRES=\${PJSIP_HEADER(read,X-PBX3-Pres-Num)})\n";
 			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_PRES}\"=\"\"]?sbr_no_pres)\n";
-			$this->OUT .= "\tsame => n,Set(CALLERID(num)=\${PBX3_PRES})\n";
+			/*
+			 * Slice D lab: handset redial follows CLID. Phone→Magrathea cannot
+			 * miss→dispatcher for digit-ext@fqdn (Asterisk-only). suid@fqdn hits
+			 * usrloc. Prefer PAI (return AoR); Pres-Num stays for name/display hints.
+			 */
+			$this->OUT .= "\tsame => n,Set(PBX3_PAI=\${PJSIP_HEADER(read,P-Asserted-Identity)})\n";
+			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_PAI}\"=\"\"]?sbr_pres_digits)\n";
+			$this->OUT .= "\tsame => n,Set(PBX3_PAI_USER=\${PJSIP_PARSE_URI(\${PBX3_PAI},user)})\n";
+			$this->OUT .= "\tsame => n,Set(PBX3_PAI_HOST=\${PJSIP_PARSE_URI(\${PBX3_PAI},host)})\n";
+			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_PAI_USER}\"=\"\" | \"\${PBX3_PAI_HOST}\"=\"\"]?sbr_pres_digits)\n";
+			$this->OUT .= "\tsame => n,Set(CALLERID(num)=\${PBX3_PAI_USER}@\${PBX3_PAI_HOST})\n";
+			$this->OUT .= "\tsame => n,Goto(sbr_pres_done)\n";
+			$this->OUT .= "\tsame => n(sbr_pres_digits),Set(CALLERID(num)=\${PBX3_PRES})\n";
+			$this->OUT .= "\tsame => n(sbr_pres_done),NoOp(site-dial CLID \${CALLERID(num)})\n";
 			$this->OUT .= "\tsame => n(sbr_no_pres),Set(PBX3_PAI=\${PJSIP_HEADER(read,P-Asserted-Identity)})\n";
 			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_PAI}\"=\"\"]?sbr_no_pai)\n";
 			$this->OUT .= "\tsame => n,Set(PBX3_PAI_USER=\${PJSIP_PARSE_URI(\${PBX3_PAI},user)})\n";
 			$this->OUT .= "\tsame => n,Set(PBX3_PAI_HOST=\${PJSIP_PARSE_URI(\${PBX3_PAI},host)})\n";
 			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_PAI_USER}\"=\"\" | \"\${PBX3_PAI_HOST}\"=\"\"]?sbr_no_pai)\n";
 			$this->OUT .= "\tsame => n,Set(__PBX3_RETURN_AOR=\${PBX3_PAI_USER}@\${PBX3_PAI_HOST})\n";
+			/* If no Pres-Num but PAI exists, still put return AoR in CLID for redial */
+			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${CALLERID(num)}\"!=\"\"]?sbr_no_pai)\n";
+			$this->OUT .= "\tsame => n,Set(CALLERID(num)=\${PBX3_PAI_USER}@\${PBX3_PAI_HOST})\n";
 			$this->OUT .= "\tsame => n(sbr_no_pai),Set(PBX3_RURI_HOST=\${PJSIP_PARSE_URI(\${CHANNEL(pjsip,request_uri)},host)})\n";
 			try {
 				$sql = "SELECT shortuid, fqdn FROM cluster WHERE fqdn IS NOT NULL AND TRIM(fqdn) != '' ORDER BY shortuid";
