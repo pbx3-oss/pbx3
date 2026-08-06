@@ -86,7 +86,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Magrathea **`3.93.26.82`** · golden **`08jzwn`**. Test: affcot **1101** (`59507r`) ↔ duns **1002** (`hb64kj`) via **`81`**. Packages **0.0.4-8** / cagi **1.0.0-13**.
 
 ### Resume
-1. **Product-lock A** (or B), then implement OpenSIPS shortuid usrloc fallback for phone-sourced INVITEs; re-smoke Snom redial.  
+1. **Product-lock A** (or B). Implement: **`pbx3sbc/workingdocs/SLICE_D_SHORTUID_USRLOC_REPAIR.md`** — Path 1 in `DOMAIN_CHECK` (phone + shortuid-shaped `$rU` → username-only usrloc → RELAY). Not Slice B. Spec §3.9.1.  
 2. Optional: callee-BYE hairpin; day-parts pack roll; tenant outbound seed note.
 
 ---

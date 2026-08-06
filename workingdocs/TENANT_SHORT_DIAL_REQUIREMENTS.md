@@ -215,7 +215,9 @@ From: "1101" <sip:59507r@9wvvnb.pbx3.com>   ← From correctly local
 | **A (preferred next)** | CLID carries **shortuid** (user); **our SBC** repairs phone-originated INVITE: usrloc miss on `user@wrong-domain` → lookup Contact by **username** (globally unique shortuid) and RELAY / fix `$rd`. Guaranteed history return on **pbx3 + our edge**. | **Our SBC only** for *guaranteed* desk callback (forward site dial already SBC-shaped) |
 | **B** | No history-return guarantee; coach name/LDAP display; return via reverse prefix / optional DID | Any SBC |
 
-**Next implement (A):** Magrathea/OpenSIPS username usrloc fallback (phone-sourced); keep receive CLID = `suid@fqdn` (or bare suid if enough after A); CallerID **name** = human; LDAP dial attributes policy later. Confirm product lock on A before coding edge.
+**Next implement (A):** Confirm product lock on A, then Magrathea change per **`pbx3sbc/workingdocs/SLICE_D_SHORTUID_USRLOC_REPAIR.md`**.
+
+**SBC pattern (summary — detail in that file):** Today phone INVITE `user@caller-fqdn` skips usrloc and **`TO_DISPATCHER`** → caller home → 404. Slice B miss→dispatcher is **Asterisk-only** and does not apply. **Path 1 (preferred):** before dispatcher, for phone-sourced INVITE where `$rU` looks like shortuid (has letter), `lookup(user@$rd)` then on miss **username-only** `location` query (shortuids globally unique — unlike digit exts); hit → same Contact **`route(RELAY)`** as Asterisk→phone. Gate auth: From user registered / `$si` matches Contact. **Path 2 (alt):** rewrite `$rd` to registered domain → dispatcher **callee** home. Keep receive CLID = `suid@fqdn`; CallerID **name** = human. Do not username-only digit R-URIs.
 
 **Caveats (still true):**
 
