@@ -41,10 +41,11 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
 | **Instance user privileges** | **pbx3spa**/workingdocs/**INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md** (P1–P4 + **B′ login homing** shipped) → **ADMIN_PANELS_AND_PERMISSIONS.md** → **AUTH_PATTERNS.md** |
 | Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **`LAB_FLEET_TENANTS.md`** (no node-only lab tenants) → **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** (EC2 → packages → onboard, step-by-step) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`reconcile-node-tenants.sh`**, **`fetch-latest-instance-backup.sh`** |
+| **Fleet naming** | **`FLEET_NAMING_LOCK.md`** (shortuid + Name + Description + FQDN=`{suid}.{apex}`; **D6 cancelled**) → instance sitename detail **pbx3spa**/workingdocs/**NETWORK_SYSGLOBALS_OVERLAP.md** · Delete **`FLEET_TENANT_DELETE_REQUIREMENTS.md`** |
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — **done on `main`** (A–E + DOW ranges + DID open-seed); golden **0.0.4-8** / cagi **1.0.0-13**; before CAGI Phase 4 |
-| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — A–E + **D Path 1** lab green; **F** migrate docs; Local shortcut **rejected** (§15); pack gate sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** |
+| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — A–E + **D Path 1** lab green; **F** migrate docs; Local shortcut **rejected** (§15); pack gate sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`**. **Wild model:** **`DIAL_COHORT_REQUIREMENTS.md`** (sisterhood; not coded yet) |
 | **Fleet-first tenant create** | **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** — policy locked; implement when scheduled |
 | **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** → **`CALL_TEST_STRATEGY.md`** → recipes **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** (`AGENTS.md` / `workingdocs/TODO.md`) · **site-dial pack gate plan** sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** · **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** · pbx3 stub **`call-tests/README.md`** only |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
@@ -74,7 +75,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ## Next agent session notes (2026-08-06) — Fleet Delete lab green
 
-**Branch:** **`main`** — pbx3 **`de8d701`**, pbx3spa **`305dc80`**, pbx3sbc-admin **`398f5ef`**, pbx3-docs **`42ecb8e`** (Instance API docs earlier: pbx3-docs **`7e5554b`**, pbx3api **`10684fe`**). Day-parts golden **0.0.4-8** / cagi **1.0.0-13**. Earlier same day: number wire D1=C + MainOut seed (still on `main`).
+**Branch:** **`main`** — pbx3 (Fleet Delete + handoff), pbx3spa **`305dc80`**, pbx3sbc-admin **`398f5ef`**, pbx3-docs **`42ecb8e`** (Instance API docs earlier: pbx3-docs **`7e5554b`**, pbx3api **`10684fe`**). Day-parts golden **0.0.4-8** / cagi **1.0.0-13**. Earlier same day: number wire D1=C + MainOut seed (still on `main`).
 
 ### Shipped (this session)
 - **Fleet Delete (Rule 14) — lab green:** Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`**. D0–D5: SBC admin `DELETE /api/fleet/domains/{domain}`; catalog soft-decom; Gatekeeper durable job `/api/v1/tenant-deletes*` (`pending → … → completed`); SPA Fleet Tenants Delete + Jobs confirm; MkDocs `fleet/tenant-delete`. Throwaway lab delete OK (control + SBC hot-deployed). **D6 FQDN rename** parked.
@@ -84,8 +85,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - Dev API: `https://08jzwn.pbx3.com:44300/api`. Gatekeeper: **`control.pbx3.com`**. SBC admin: **`sbc.pbx3.com`**. SPA: `npm run dev`. SBC VIP **`3.93.26.82`**.
 
 ### Resume
-1. **FQDN rename (D6)** — optional; same Rule 14 job pattern. Spec delete requirements § D6.  
-2. Product crumbs / number wire Phase 2 / US seed (O4) as needed.
+1. **Naming hygiene** — pkey as tenant Name; sitename≡label; no vanity FQDN. Spec **`FLEET_NAMING_LOCK.md`**.  
+2. Product crumbs / number wire Phase 2 as needed.
 
 ---
 
