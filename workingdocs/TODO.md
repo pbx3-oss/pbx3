@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** all product repos. Day-parts merged; golden **pbx3 0.0.4-8** / **pbx3cagi 1.0.0-13**. Fleet short-dial still **0.0.4-6** / **1.0.0-11** on non-golden unless rolled.  
-**Last updated:** 2026-08-05 (short dial D lab green + E pack-gate 12/12; Local shortcut rejected)
+**Last updated:** 2026-08-05 (session end — short dial A–E + D Path 1 closed; pack targets stay `9wvvnb`/`dhbm8x` until dedicated SIPp instance)
 
 
 ### Suggested “what next?” order

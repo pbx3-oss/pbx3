@@ -44,7 +44,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — **done on `main`** (A–E + DOW ranges + DID open-seed); golden **0.0.4-8** / cagi **1.0.0-13**; before CAGI Phase 4 |
-| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — §8 locked; A–E lab green; **D §3.9.1** desk findings lean SBC option A; **F** migrate; E pack-gate plan sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** |
+| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — A–E + **D Path 1** lab green; **F** migrate docs; Local shortcut **rejected** (§15); pack gate sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** |
 | **Fleet-first tenant create** | **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** — policy locked; implement when scheduled |
 | **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** → **`CALL_TEST_STRATEGY.md`** → recipes **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** (`AGENTS.md` / `workingdocs/TODO.md`) · **site-dial pack gate plan** sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** · **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** · pbx3 stub **`call-tests/README.md`** only |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
@@ -72,40 +72,38 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-05 — short dial D desk lab)
+## Next agent session notes (2026-08-05)
 
-**Branch:** **`main`**. Day-parts already closed earlier today; this block is **D return-CLIP**.
+**Branch:** **`main`** all product repos + sipplab. Day-parts already on `main`; golden **pbx3 0.0.4-8** / **cagi 1.0.0-13**. Fleet short-dial packages still **0.0.4-6** / **1.0.0-11** on non-golden unless rolled.
 
-### Shipped / lab
-- Desk matrix + Snom D717 SIP capture: history redial **keeps shortuid, rewrites domain to local registrar** → 404. Documented **§3.9.1**; lean **option A** (Magrathea username usrloc repair). No Snom “keep remote domain” setting.
-- Golden GenAst receive CLID = **`suid@fqdn`** (`GenClass` `SbcDomainRoute` — commit with this session). Reverse dialalias **duns `81` → affcot** on golden DB (lab only).
-- Rejected sole fixes: bare ext CLID; `ext@fqdn` from phone; DID-on-every-ext. LDAP click-to-dial needs qualified dial across tenants.
-- Side note: site-dial **callee hangup ≠ caller clear** (hairpin BYE) — separate residual.
+### Shipped (this session)
+- **Short dial D Path 1:** Magrathea username-only usrloc repair live; desk matrix affcot **1101** Snom ↔ duns **1002** Yealink — forward + missed-call dialback both ways. Docs: **`SLICE_D_SHORTUID_USRLOC_REPAIR.md`**, spec **§3.9.1**. Gate: shortuid charset + letter (**no** hardcoded length 6).
+- **All-digit shortuid reject:** pbx3 `idpwgen` + PHP + pbx3api `generate_shortuid` on `main` (live golden needs rebuilt `idpwgen` binary for binary path).
+- **Local co-locate shortcut:** **rejected** (spec §15) — dual-path debt for a short SBC bounce.
+- **E pack-gate:** sipplab `run-site-dial-dual-host.sh` + last-in-pack; Peer **12/12** ×2. Targets: UAC `15200b`@`9wvvnb` → `811003` → UAS `8pmfxd`@`dhbm8x` (golden hairpin). Operator keeps this set **as-is** until a dedicated SIPp instance; retarget via `lab.env` when ready.
+- Hairpin BYE asymmetry: **cause unknown — watch**; not caused by Path 1. Same Snom/Yealink pair, multiple tenant accounts.
 
 ### Golden / ops
-- Magrathea **`3.93.26.82`** · golden **`08jzwn`**. Test: affcot **1101** (`59507r`) ↔ duns **1002** (`hb64kj`) via **`81`**. Packages **0.0.4-8** / cagi **1.0.0-13**.
+- Magrathea VIP **`3.93.26.82`** (backup `/root/opensips.cfg.pre-slice-d.20260805210656`). Desk: affcot↔duns via **`81`**. Pack: Domain UAC `98.93.32.43` + Peer/UAS `98.82.58.59`; `SITE_DIAL_PACK=0` for Peer-only.
 
 ### Resume
-1. **Product-lock A** (or B). Implement: **`pbx3sbc/workingdocs/SLICE_D_SHORTUID_USRLOC_REPAIR.md`** — Path 1 in `DOMAIN_CHECK` (phone + shortuid-shaped `$rU` → username-only usrloc → RELAY). Not Slice B. Spec §3.9.1.  
-2. Optional: callee-BYE hairpin; day-parts pack roll; tenant outbound seed note.
+1. **Number wire standard** Model A vs B — **`NUMBER_WIRE_STANDARD_DRAFT.md`** (no implement until D1).  
+2. Optional: dedicated SIPp home + retarget pack; fleet package roll beyond golden; seed outbound on tenant create; hairpin BYE watch.
+
+---
+
+## Next agent session notes (2026-08-05 — short dial D desk lab)
+
+**Superseded for “read first”** by block above. Desk findings → Path 1 shipped Magrathea; product-lock A done.
 
 ---
 
 ## Next agent session notes (2026-08-05 — day-parts close-out + DID open-seed)
 
-**Superseded for “read first”** by **short dial D** block above.
-
-**Branch:** **`main`** — pbx3 / pbx3api / pbx3spa / pbx3cagi / pbx3-docs. Feature branch **`time-based-routing`** merged and pushed.
-
-### Shipped
-- **Day-parts track closed:** A–E + site TZ/half-open + **DOW forward ranges**; Aelintra → 3 rows; docs admin page.
-- **Packages:** golden **pbx3 0.0.4-8**; **pbx3cagi 1.0.0-13**. DID create open-seed API/SPA on **`main`**.
-- **Parked note:** seed outbound OutRoute(s) on tenant create — locale vs iron-PBX shunt.
-
-### Resume
-See current block (short dial D → lock A).
+**Superseded.** Day-parts + DID open-seed on `main`; golden **0.0.4-8** / cagi **1.0.0-13**.
 
 ---
+
 
 ## Next agent session notes (2026-08-04 — day-parts play-test + timer harden + UX residuals)
 
