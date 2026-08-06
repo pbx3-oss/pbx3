@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"os"
 	"strings"
+	"unicode"
 )
 
 func GenerateID(length int, charset string) (string, error) {
@@ -34,6 +35,46 @@ func GenerateID(length int, charset string) (string, error) {
 	return string(result), nil
 }
 
+func charsetHasLetter(charset string) bool {
+	for _, r := range charset {
+		if unicode.IsLetter(r) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasLetter(s string) bool {
+	for _, r := range s {
+		if unicode.IsLetter(r) {
+			return true
+		}
+	}
+	return false
+}
+
+// GenerateIDWithLetterPolicy regenerates until the ID contains at least one letter
+// when the charset includes letters (so all-digit shortuids never escape). Digit-only
+// charsets are unchanged. Caps attempts to avoid a pathological hang.
+func GenerateIDWithLetterPolicy(length int, charset string, maxAttempts int) (string, error) {
+	if maxAttempts <= 0 {
+		maxAttempts = 64
+	}
+	requireLetter := charsetHasLetter(charset)
+	var last string
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		id, err := GenerateID(length, charset)
+		if err != nil {
+			return "", err
+		}
+		last = id
+		if !requireLetter || hasLetter(id) {
+			return id, nil
+		}
+	}
+	return "", fmt.Errorf("could not generate ID with a letter after %d attempts (last=%q)", maxAttempts, last)
+}
+
 func main() {
 
 	// Defaults preserve existing behaviour when no flags are provided.
@@ -45,7 +86,7 @@ func main() {
 	charset := flag.String("charset", defaultCharset, "characters to use when generating the ID")
 	flag.Parse()
 
-	id, err := GenerateID(*length, *charset)
+	id, err := GenerateIDWithLetterPolicy(*length, *charset, 64)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)

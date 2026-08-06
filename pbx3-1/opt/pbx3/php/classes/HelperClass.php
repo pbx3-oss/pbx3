@@ -99,8 +99,16 @@ private static function runIdpwgen($length, $charset) {
 public static function generate($length = 6, $charset = '')
 {
 	$charset = $charset ?: self::$DEFAULT_CHARSET;
-	$out = self::runIdpwgen($length, $charset);
-	return strtolower($out);
+	// Slice D / desk history: never emit all-digit shortuids (OpenSIPS gate needs a letter).
+	// idpwgen also enforces this; retry here so stale binaries stay safe.
+	$requireLetter = (bool) preg_match('/[a-zA-Z]/', $charset);
+	for ($attempt = 0; $attempt < 64; $attempt++) {
+		$out = strtolower(self::runIdpwgen($length, $charset));
+		if (!$requireLetter || preg_match('/[a-z]/', $out)) {
+			return $out;
+		}
+	}
+	throw new \RuntimeException('idpwgen could not produce a shortuid with a letter');
 }
 
 /**

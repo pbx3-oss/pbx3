@@ -27,19 +27,33 @@ has_col() {
 }
 
 # Product shortuid (6 chars, same charset as generate_shortuid / idpwgen).
+# Reject all-digit (Slice D OpenSIPS gate needs a letter).
 gen_shortuid() {
-	if [ -x "$IDPWGEN" ]; then
-		"$IDPWGEN" 6 "$SHORTUID_CHARSET" | tr 'A-Z' 'a-z'
-		return
-	fi
-	# Test / offline fallback when idpwgen is absent
-	awk -v charset="$SHORTUID_CHARSET" 'BEGIN {
-		srand();
-		n = length(charset);
-		out = "";
-		for (i = 0; i < 6; i++) out = out substr(charset, int(rand() * n) + 1, 1);
-		print out;
-	}'
+	tries=0
+	while [ "$tries" -lt 64 ]; do
+		if [ -x "$IDPWGEN" ]; then
+			# Prefer flagged CLI; fall back to positional for older binaries
+			suid=$("$IDPWGEN" -length 6 -charset "$SHORTUID_CHARSET" 2>/dev/null | tr 'A-Z' 'a-z' | tr -d '[:space:]')
+			if [ -z "$suid" ]; then
+				suid=$("$IDPWGEN" 6 "$SHORTUID_CHARSET" 2>/dev/null | tr 'A-Z' 'a-z' | tr -d '[:space:]')
+			fi
+		else
+			# Test / offline fallback when idpwgen is absent
+			suid=$(awk -v charset="$SHORTUID_CHARSET" 'BEGIN {
+				srand();
+				n = length(charset);
+				out = "";
+				for (i = 0; i < 6; i++) out = out substr(charset, int(rand() * n) + 1, 1);
+				print out;
+			}')
+		fi
+		tries=$((tries + 1))
+		case "$suid" in
+			*[!0-9]*) printf '%s\n' "$suid"; return 0 ;;
+		esac
+	done
+	echo "convert-route-profiles: could not allocate shortuid with a letter" >&2
+	exit 1
 }
 
 unique_shortuid() {
