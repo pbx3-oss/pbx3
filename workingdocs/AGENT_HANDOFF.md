@@ -45,7 +45,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — **done on `main`** (A–E + DOW ranges + DID open-seed); golden **0.0.4-8** / cagi **1.0.0-13**; before CAGI Phase 4 |
-| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — A–E + **D Path 1** lab green; **F** migrate docs; Local shortcut **rejected** (§15); pack gate sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`**. **Wild / release stopper:** **`DIAL_COHORT_REQUIREMENTS.md`** (UI Site Group; C1–C5) |
+| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — A–E + **D Path 1** lab green; **F** migrate docs. **Site Groups / dial cohort:** **`DIAL_COHORT_REQUIREMENTS.md`** — **C0–C6 lab green** (UI Site Group; hand prefixes = lab only). Slice D shortuid repair kept as PAI-CLIP fallback. |
 | **Fleet-first tenant create** | **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** — policy locked; implement when scheduled |
 | **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** → **`CALL_TEST_STRATEGY.md`** → recipes **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** (`AGENTS.md` / `workingdocs/TODO.md`) · **site-dial pack gate plan** sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** · **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** · pbx3 stub **`call-tests/README.md`** only |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
@@ -73,21 +73,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-06) — naming lock + dial cohort stopper
+## Next agent session notes (2026-08-06) — Site Groups C0–C6 lab green
 
-**Branch:** **`main`** — pbx3 / pbx3api / pbx3spa (naming + Fleet-only Name + dial cohort **spec**; pushed with this session end).
+**Branch:** **`main`** — pbx3 `10e0ed0`, pbx3api `3ce29ce`, pbx3spa `8cb3a71`, pbx3cagi `a2005e3`, pbx3-docs `5ce247a` (pushed).
 
 ### Shipped
-- **Fleet naming lock** — Spec **`FLEET_NAMING_LOCK.md`**. Tenant Name = **pkey**; instance Name = **sitename ≡ catalog `label`**; Description = notes; FQDN always `{shortuid}.{apex}`; **D6 FQDN rename cancelled**. Lab Names: Golden / AEL Nodes / **Labtest-B** (bzy).
-- **Edit surface:** Fleet → Instances only pushes `PUT /fleet/sitename` then catalog label; Network Site Name **read-only** on fleet nodes; Sanctum sitename change → **403**. Gatekeeper `NodeSitenameClient`; installer vanity FQDN reject (needs package roll).
-- **Dial cohort / Site Group — RELEASE STOPPER** — Spec **`DIAL_COHORT_REQUIREMENTS.md`** (§11 locked; C0 done; C1–C6 not coded). UI **Site Group**; tech dial cohort. Hand prefixes = lab only. **No first product release** until C1–C5 lab-green.
+- **Site Groups (dial cohort) C1–C6** — Gatekeeper catalog + materialise jobs; node managed dialalias fleet API; SPA Fleet → Site Groups; dual-home lab (Golden+Labtest-B) + SIPp `841003` PASS; desk CLIP = `{routing_prefix}{ext}` + digit callback green; MkDocs **`fleet/site-groups`**. Spec **`DIAL_COHORT_REQUIREMENTS.md`**.
+- **CLIP** — PrefixDial sets prefix+ext when co-located managed mesh targets us; GenAst `SbcDomainRoute` prefers `X-PBX3-Pres-Num` (no PAI-on-ring when Pres present).
+- **Slice D** shortuid usrloc repair — **kept** (not on Site Group digit-callback path; insurance for PAI-CLIP fallback). Accepted this session.
 
 ### Golden / ops
-- Dev API: `https://08jzwn.pbx3.com:44300/api`. Gatekeeper: **`control.pbx3.com`**. SPA: `npm run dev`. Naming code hot-deployed earlier this session (control + fleet nodes).
+- Hot: control Gatekeeper; API/schema/GenClass/cagi on **08jzwn**, **bzy54n**, **kildare**. SPA Site Groups = **`npm run dev`** only (not Pages). Package roll not done.
+- Lab cohort example: **C5 dual-home lab** `dc_9bce78a6…`; SITE_DIAL digits on Peer host often **`841003`** (duns prefix 84).
+- Dev: Gatekeeper **`control.pbx3.com`** · golden API **`https://08jzwn.pbx3.com:44300/api`** · SPA `npm run dev` · SIPp UAC `98.93.32.43` / UAS `98.82.58.59`.
 
 ### Resume
-1. **Dial cohort C1** — catalog + Gatekeeper CRUD (Site Group / routing_prefix). Spec **`DIAL_COHORT_REQUIREMENTS.md`**.  
-2. Optional: remove unused `InstanceCatalogLabelSync` (superseded by Fleet→node push); pbx3 package roll for installer vanity guard.
+1. Optional **package roll** (pbx3/cagi/api) so rebuilds aren’t hot-only.  
+2. Product crumbs / parked items in **`TODO.md`** (Site Group stopper closed).
+
+---
+
+## Next agent session notes (2026-08-06) — naming lock + dial cohort stopper (superseded)
+
+**Superseded for “read first”** by Site Groups C0–C6 block above. Naming lock still on `main`.
 
 ---
 

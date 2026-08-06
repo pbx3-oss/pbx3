@@ -1,12 +1,12 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** all product repos. Day-parts merged; golden **pbx3 0.0.4-8** / **pbx3cagi 1.0.0-13**. Fleet short-dial still **0.0.4-6** / **1.0.0-11** on non-golden unless rolled.  
-**Last updated:** 2026-08-06 (session end — naming shipped; dial cohort = **release stopper**)
+**Branch:** **`main`** all product repos. Site Groups (dial cohort) **C0–C6 lab green** + MkDocs; hot on Golden / Labtest-B / Kildare (not package-rolled). SPA Site Groups via **`npm run dev`**. Golden day-parts **pbx3 0.0.4-8** / **pbx3cagi 1.0.0-13**.  
+**Last updated:** 2026-08-06 (session end — Site Groups C1–C6 shipped)
 
 ### Suggested “what next?” order
 
-1. **Dial cohort / Site Group — RELEASE STOPPER** — destination routing prefix + explicit cohort + Rule 14 materialise. Spec **`DIAL_COHORT_REQUIREMENTS.md`**. **No first product release** until C1–C5 lab-green. Hand prefixes = lab only.  
-2. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes / pack roll beyond golden.  
+1. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes / pack roll beyond golden.  
+2. **Package roll** (optional) — bake Site Group GenAst/CAGI/API into debs so rebuilds are not hot-only.  
 3. **pbx3cagi Phase 4** (parked).  
 4. **Velocity standalone** (parked).  
 5. **Instance shadowing** / S10.7 / S8.9 (parked).  
@@ -35,8 +35,7 @@
 
 ## Open items
 
-- [ ] **Dial cohort / Site Group — RELEASE STOPPER (spec 2026-08-06 — §11 locked; not coded):** Destination **routing prefix** + explicit **cohort** (UI: Site Group) + Rule 14 project to managed dialalias rows. Inter-cohort fail closed. **Blocks first product release** until C1–C5 lab-green. Hand-entered prefixes = **lab only**. Spec **`DIAL_COHORT_REQUIREMENTS.md`**.
-
+- [x] **Dial cohort / Site Group — RELEASE STOPPER (lab green 2026-08-06):** C0–C6 done on **`main`**. Destination routing prefix + Site Group mesh + materialise; dual-home SIPp + desk CLIP callback (`prefix+ext`). Spec **`DIAL_COHORT_REQUIREMENTS.md`**. MkDocs **`pbx3-docs` fleet/site-groups**. Hand prefixes remain lab/break-glass; Slice D shortuid usrloc repair **kept** as PAI-CLIP fallback insurance (not on Site Group digit-callback path). Hot on control + Golden/Labtest-B/Kildare — package roll later.
 - [x] **Tenant short dial core (lab green 2026-08-04):** **A/A′** admin CRUD; **B** Magrathea miss→dispatcher (+ hairpin Pres-Num/PAI/sitedial); **C** GenAst PrefixDial + CAGI; dual CLIP (presentation ext + return AoR PAI/SiteRing); **E** dual-host SIPp L1 green (`9wvvnb` → `811003` → `dhbm8x` via Magrathea). Merged to **`main`** (pbx3, api, spa, cagi, sbc; sipplab). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. **Wild operator model deferred to dial cohort.**
 
 - [x] **Tenant short dial package roll (2026-08-04):** **pbx3 0.0.4-6** + **pbx3cagi 1.0.0-11** installed **08jzwn**, **bzy54n**, **kildare**; debs on **`main`**. API app/routes synced for dialaliases. Mag slice B already live (sitedial/Pres); template clone refreshed. Tags/commits: pbx3 **`b697384`**, cagi **`97ca501`**.
