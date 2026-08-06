@@ -1,3 +1,17 @@
+pbx3 (0.0.5-1) noble; urgency=medium
+
+  * Minor after Site Groups (dial cohort) lab green + naming / seed outbound.
+  * Site Groups: dialalias source + cohort_id (create SQL + upgrade apply);
+    postinst runs apply-sqlite-add-dialalias-cohort.sh.
+  * GenAst SbcDomainRoute: prefer X-PBX3-Pres-Num for site-dial CLIP
+    (prefix+ext callback; PAI only when Pres-Num absent).
+  * Seed outbound: globals.default_outbound_dialplan → MainOut on tenant create
+    (UK _0. _00.); postinst apply script.
+  * Fleet naming: installer rejects vanity FQDN; FQDN={shortuid}.{apex}.
+  * idpwgen: reject all-digit shortuids and regenerate.
+
+ -- KoKo <admin@aelintra.com>  Thu, 06 Aug 2026 23:15:00 +0000
+
 pbx3 (0.0.4-8) noble; urgency=medium
 
   * Time-based routing track finish: day-parts help text; convert/apply help.

@@ -92,6 +92,13 @@ if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$OUTDIAL_APPLY" ]; then
 	sh "$OUTDIAL_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
 fi
 
+# Site Groups (dial cohort C2): managed dialalias projections (source + cohort_id).
+# CREATE TABLE IF NOT EXISTS above does not ALTER existing dialalias tables.
+DIAL_COHORT_APPLY="$SYSPATH/scripts/apply-sqlite-add-dialalias-cohort.sh"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$DIAL_COHORT_APPLY" ]; then
+	sh "$DIAL_COHORT_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+fi
+
 # After apt upgrade + runLinker, regenerate PJSIP/dialplan from sqlite (HoR) into
 # ASTLOCALCONF so symlinked /etc/asterisk is not left pointing at empty/stale ready files.
 # Then rewrite external_* to this node's public IP/EIP and restart Asterisk.
