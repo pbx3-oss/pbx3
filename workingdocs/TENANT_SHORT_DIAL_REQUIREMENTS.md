@@ -200,6 +200,8 @@ From: "1101" <sip:59507r@9wvvnb.pbx3.com>   ← From correctly local
 
 **Snom setting check:** No documented toggle to “keep remote party domain on history redial.” Dial-plan `\d` = **this identity’s registrar** (append local domain). `block_url_dialing` is dial-pad letters only. From must stay local identity (else call appears to originate as remote); that does **not** justify rewriting **Request-URI** host — but desks do it anyway.
 
+**Industry corroboration (operator note, 2026-08-05):** Snom call-log return anchors outbound INVITEs to the **active Identity/registrar domain**, not the host from the logged CLID URI; outbound proxy / identity domain can force Request-URI (and From/To) rewrite. Suggested mitigations: check Identity → SIP proxy/domain; **PBX/SBC dynamically remap/canonicalize** inbound from that registration domain (same shape as lean **option A**); or force registrar domain ≡ expected multi-tenant profile (not viable for cross-tenant history return). Confirms lab — phone-side “keep remote domain” is not the product path.
+
 **Also observed (separate):** same-box site dial — callee hangup does not always clear caller (hairpin/BYE asymmetry); caller hangup clears callee. Track separately from CLIP.
 
 **LDAP:** display lookup can key off shortuid/CLIP; **click-to-dial** across tenants needs qualified dial (AoR or prefix+ext), not bare extension — else same domain-rewrite / local-ext problem.
