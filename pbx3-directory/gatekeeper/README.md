@@ -123,6 +123,14 @@ DID / missing domain rows: **S10.5**, not this endpoint.
 | `POST` | `/api/v1/instances/{id}/decommission` | Soft decommission (`confirm: true`, optional `notes`) |
 | `POST` | `/api/v1/tenants` | Register tenant meta only (legacy / CLI repair — prefer `/tenants/provision`) |
 | `POST` | `/api/v1/tenants/{shortuid}/move` | Move tenant homing |
+| `POST` | `/api/v1/tenants/{shortuid}/decommission` | Soft-decommission tenant meta (`confirm: true`; `fleet_instances`) |
+| `POST` | `/api/v1/tenant-deletes` | Create delete job + run to `awaiting_confirm` (`fleet_instances`) |
+| `GET` | `/api/v1/tenant-deletes` | List recent delete jobs |
+| `GET` | `/api/v1/tenant-deletes/{job_id}` | Read delete job (`?tenant=shortuid` optional) |
+| `POST` | `/api/v1/tenant-deletes/{job_id}/run` | Run until confirm gate |
+| `POST` | `/api/v1/tenant-deletes/{job_id}/confirm` | `{confirm:true, typed_shortuid}` then edge wipe + node wipe + catalog |
+| `POST` | `/api/v1/tenant-deletes/{job_id}/abort` | Abort before node wipe |
+| `POST` | `/api/v1/tenant-deletes/{job_id}/retry` | Resume after `failed` |
 | `POST` | `/api/v1/s3/presign` | Scoped PUT/GET for `tenants/{shortuid}/migration/{job_id}/…` only (org bucket) |
 | `POST` | `/api/v1/s3/presign-recordings` | S7: PUT/GET on **`PBX3_RECORDINGS_BUCKET`**, keys `tenants/{shortuid}/recordings/…` only |
 | `POST` | `/api/v1/tenant-moves` | Create move job (`job.json` in S3) |

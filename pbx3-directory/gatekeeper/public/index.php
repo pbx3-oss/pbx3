@@ -24,6 +24,8 @@ use Pbx3\Gatekeeper\S3RecordingsPresign;
 use Pbx3\Gatekeeper\S3Registrar;
 use Pbx3\Gatekeeper\SbcFleetClient;
 use Pbx3\Gatekeeper\SbcSetidGuard;
+use Pbx3\Gatekeeper\TenantDeleteJobStore;
+use Pbx3\Gatekeeper\TenantDeleteRunner;
 use Pbx3\Gatekeeper\TenantMoveJobStore;
 use Pbx3\Gatekeeper\TenantMoveRunner;
 use Pbx3\Gatekeeper\TenantProvisioner;
@@ -309,6 +311,8 @@ try {
     $presign = new S3Presign();
     $jobs = new TenantMoveJobStore();
     $runner = new TenantMoveRunner($jobs, $presign, $registrar);
+    $deleteJobs = new TenantDeleteJobStore();
+    $deleteRunner = new TenantDeleteRunner($deleteJobs, $registrar, new SbcFleetClient());
 
     if ($method === 'GET' && $path === '/api/v1/catalog') {
         Auth::requireAbility(FleetAbilities::READ);
@@ -459,6 +463,17 @@ try {
         Auth::requireAbility(FleetAbilities::MOVES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         JsonResponse::send(200, $registrar->moveTenant($m[1], $body));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/tenants/([a-z0-9]+)/decommission$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $registrar->decommissionTenant(
+            $m[1],
+            is_array($body) ? $body : [],
+            is_string($actor) ? $actor : null
+        ));
     }
 
     if ($method === 'POST' && $path === '/api/v1/s3/presign') {
@@ -701,6 +716,83 @@ try {
         $shortuid = $body['tenant_shortuid'] ?? null;
         $actor = Auth::user()['email'] ?? null;
         JsonResponse::send(200, $runner->rollback(
+            $m[1],
+            is_string($shortuid) ? $shortuid : null,
+            is_string($actor) ? $actor : null
+        ));
+    }
+
+    // Fleet Delete (Rule 14) — durable job
+    if ($method === 'POST' && $path === '/api/v1/tenant-deletes') {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        if (! is_array($body)) {
+            $body = [];
+        }
+        $actor = Auth::user()['email'] ?? null;
+        if (is_string($actor) && $actor !== '' && empty($body['created_by'])) {
+            $body['created_by'] = $actor;
+        }
+        $job = $deleteJobs->create($body, $registrar);
+        JsonResponse::send(201, $deleteRunner->runUntilGate(
+            (string) $job['job_id'],
+            (string) $job['tenant_shortuid']
+        ));
+    }
+
+    if ($method === 'GET' && $path === '/api/v1/tenant-deletes') {
+        Auth::requireAbility(FleetAbilities::READ);
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 50;
+        JsonResponse::send(200, ['jobs' => $deleteJobs->list($limit)]);
+    }
+
+    if ($method === 'GET' && preg_match('#^/api/v1/tenant-deletes/([A-Za-z0-9_-]+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::READ);
+        $shortuid = $_GET['tenant'] ?? null;
+        JsonResponse::send(200, $deleteJobs->get($m[1], is_string($shortuid) ? $shortuid : null));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/tenant-deletes/([A-Za-z0-9_-]+)/run$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $shortuid = $body['tenant_shortuid'] ?? ($_GET['tenant'] ?? null);
+        JsonResponse::send(200, $deleteRunner->runUntilGate($m[1], is_string($shortuid) ? $shortuid : null));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/tenant-deletes/([A-Za-z0-9_-]+)/confirm$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        if (! is_array($body)) {
+            $body = [];
+        }
+        $shortuid = $body['tenant_shortuid'] ?? null;
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $deleteRunner->confirm(
+            $m[1],
+            $body,
+            is_string($shortuid) ? $shortuid : null,
+            is_string($actor) ? $actor : null
+        ));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/tenant-deletes/([A-Za-z0-9_-]+)/abort$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $shortuid = $body['tenant_shortuid'] ?? null;
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $deleteRunner->abort(
+            $m[1],
+            is_string($shortuid) ? $shortuid : null,
+            is_string($actor) ? $actor : null
+        ));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/tenant-deletes/([A-Za-z0-9_-]+)/retry$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $shortuid = $body['tenant_shortuid'] ?? null;
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $deleteRunner->retry(
             $m[1],
             is_string($shortuid) ? $shortuid : null,
             is_string($actor) ? $actor : null

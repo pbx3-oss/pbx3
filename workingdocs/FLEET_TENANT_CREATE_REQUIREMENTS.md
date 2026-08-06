@@ -1,6 +1,6 @@
 # Fleet-first tenant create — requirements (locked 2026-07-29)
 
-**Status:** Create **shipped on `main`** (2026-07-30 merge). Delete / FQDN rename = **follow-on** (Rule 14 durable jobs — not sync like create).  
+**Status:** Create **shipped on `main`** (2026-07-30 merge). Delete = **[`FLEET_TENANT_DELETE_REQUIREMENTS.md`](FLEET_TENANT_DELETE_REQUIREMENTS.md)** (Rule 14 durable job; slices D1–D5). FQDN rename = D6 after Delete.  
 **Cursor plan:** `fleet-first_tenant_create` (agent plans).  
 **Related:** Rule 6 / 10 / 11 / **14** · mobility gotcha #3 · [`S3Registrar::registerTenant`](../pbx3-directory/gatekeeper/src/S3Registrar.php) · Fleet Tenants “Register on SBC”.
 **Gatekeeper:** [`TenantProvisioner`](../pbx3-directory/gatekeeper/src/TenantProvisioner.php) · `POST /api/v1/tenants/provision`  
@@ -72,7 +72,7 @@ Synchronous v1 (no durable job). Rule 11: other tenants’ calls unaffected.
 | `POST /api/v1/tenants/provision` | pbx3-directory gatekeeper | **Done** (`main`) |
 | Fleet Create UI | pbx3spa | **Done** (`main`) |
 | Fleet mode: hide Create/Delete; FQDN/shortuid read-only | pbx3spa | **Done** (`main`; FQDN already readonly) |
-| Fleet Delete + FQDN rename | **Follow-on / release blocker** | Policy locked; **Rule 14 durable jobs** (confirm + stages + resume/audit). Not create-style sync. Needs catalog tenant remove/soft-decommission + SBC domain delete primitives; node wipe already `DELETE /fleet/tenants/{shortuid}`. **Blocks first product release** (2026-08-06). |
+| Fleet Delete + FQDN rename | **Delete: see FLEET_TENANT_DELETE_REQUIREMENTS.md** | Spec locked 2026-08-06. Node wipe exists. Implement D1–D5; FQDN rename D6 later. **Blocks first product release**. |
 
 ## Non-goals (v1)
 

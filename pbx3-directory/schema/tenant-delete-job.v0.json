@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/tenant-delete-job.v0.json",
+  "title": "PBX3 tenant delete job (v0)",
+  "description": "tenants/{shortuid}/deletion/{job_id}/job.json — durable Fleet Delete orchestrator (Rule 14)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "tenant_shortuid",
+    "instance_id",
+    "state",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "job_id": { "type": "string", "minLength": 8 },
+    "tenant_shortuid": { "type": "string" },
+    "tenant_pkey": { "type": ["string", "null"] },
+    "tenant_fqdn": { "type": ["string", "null"] },
+    "instance_id": { "type": "string" },
+    "api_base_url": { "type": ["string", "null"] },
+    "state": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "preflight",
+        "awaiting_confirm",
+        "removing_edge",
+        "wiping_node",
+        "catalog",
+        "completed",
+        "failed",
+        "aborted"
+      ]
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "phases": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["pending", "running", "ok", "failed", "skipped"]
+          },
+          "started_at": { "type": "string", "format": "date-time" },
+          "finished_at": { "type": "string", "format": "date-time" },
+          "message": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "error": { "type": ["string", "null"] },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "safe_to_abort": { "type": "boolean" },
+        "hint": { "type": "string" }
+      }
+    },
+    "next_human_action": { "type": ["string", "null"] },
+    "created_by": { "type": ["string", "null"] },
+    "last_action_by": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

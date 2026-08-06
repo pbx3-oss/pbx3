@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** all product repos. Day-parts merged; golden **pbx3 0.0.4-8** / **pbx3cagi 1.0.0-13**. Fleet short-dial still **0.0.4-6** / **1.0.0-11** on non-golden unless rolled.  
-**Last updated:** 2026-08-06 (session end — number wire D1=C + seed MainOut; Fleet Delete = release blocker)
+**Last updated:** 2026-08-06 (session end — Fleet Delete lab green; Instance API MkDocs)
 
 ### Suggested “what next?” order
 
-1. **Fleet Delete + FQDN rename — next / release blocker** — confirm-gated durable job (Rule 14): catalog remove + SBC domain delete + node wipe (primitive already exists). Spec **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needed fairly soon; **blocks product release**.  
+1. **FQDN rename (D6)** — optional follow-on to Fleet Delete; Rule 14 job. Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`** § D6.  
 2. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes / pack roll beyond golden.  
 3. **pbx3cagi Phase 4** (parked).  
 4. **Velocity standalone** (parked).  
@@ -27,6 +27,7 @@
 20. **OpenSIPS `alias_db_lookup`** — **leave as-is**.  
 21. **Number wire Phase 2 / D2–D4** (parked) — when scheduled; Phase 1 policy stands.  
 22. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
+23. **Instance API digest deepen** (optional) — bodies still *verify* vs controllers / `GET /schemas`; OpenAPI track separate.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -86,7 +87,9 @@
 
 - [ ] **`ipphone.desc` vs `description` — clarify / rename (parked 2026-07-29):** Historical SARK/Asterisk ambivalence: schema has both columns; SPA “User (extension name)” → `desc`, “Description” → `description`; list **User** prefers `desc` so freeform Description never shows when `desc` is set (e.g. `1501` vs “WebRTC second ep”). GenAst `$desc` token actually substitutes **`description`** (else pkey), not the `desc` column. Model comment still calls `desc` “SIP username” — wrong now that **shortuid** is PJSIP identity. Proper fix later: map roles (display name vs notes vs any remaining Asterisk/SIP use), align SPA labels + list, GenAst templates, API, migrate/rename if needed. Do not drive-by.
 
-- [ ] **Fleet Delete + FQDN rename — release blocker (bumped 2026-08-06):** Policy locked (Fleet owns lifecycle). **Blocks first product release** — cannot ship fleet create without a safe delete/decommission path. **Rule 14:** confirm-gated **durable jobs** (not create-style sync). Node wipe already `DELETE /api/fleet/tenants/{shortuid}` (`destroyTenantData` — tenant tables + cluster; trunks stay; media trees v1 gap). Still need: Fleet SPA Delete; catalog tenant remove/soft-decommission; SBC `DELETE` domain; job stages + resume/audit. FQDN rename same follow-on track. Spec: **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.
+- [x] **Fleet Delete — lab green (2026-08-06):** Rule 14 durable job. Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`**. D0–D5: SBC `DELETE /fleet/domains/{domain}`; catalog soft-decom; Gatekeeper `/api/v1/tenant-deletes*`; SPA Tenants Delete + Jobs; MkDocs `fleet/tenant-delete`. Lab throwaway delete OK (control + SBC deployed). **D6 FQDN rename** parked. Media trees still v1 wipe gap.
+
+- [ ] **FQDN rename (D6 — parked 2026-08-06):** Separate Rule 14 job after Fleet Delete. Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`** § D6.
 
 - [ ] **SBC Track A lab — SARK (± FreePBX) behind SBC (2026-07-28):** Operator will stand up SARK (and maybe FreePBX) and prove REGISTER / calls via Magrathea or scratch pbx3sbc (domain → dispatcher → foreign Asterisk; phones registrar = SBC). No GenAst. Capture recipe / gaps when done — **`SBC_PRODUCT_TRACKS.md`** Track A. **After that lab:** FreePBX→pbx3 **data** migrate is a separate ETL chain (not shared with SARK `migrateLegacyDb` / `db_legacy_sql`) — requirements later.
 

@@ -314,6 +314,50 @@ final class S3Registrar
     }
 
     /**
+     * Soft-decommission a tenant in catalog (Fleet Delete). Keeps meta.json for audit.
+     *
+     * @param  array<string, mixed>  $body  confirm: true required; optional notes
+     * @return array<string, mixed>
+     */
+    public function decommissionTenant(string $shortuid, array $body, ?string $updatedBy = null): array
+    {
+        if (empty($body['confirm'])) {
+            throw new \InvalidArgumentException('confirm: true required to decommission tenant', 422);
+        }
+
+        $metaKey = "tenants/{$shortuid}/meta.json";
+        $meta = $this->readJson($metaKey, []);
+        if ($meta === []) {
+            throw new \RuntimeException("Tenant not found: {$shortuid}", 404);
+        }
+
+        $now = $this->nowIso();
+        $notes = isset($body['notes']) && is_string($body['notes']) ? trim($body['notes']) : '';
+        $meta['status'] = 'decommissioned';
+        $meta['decommissioned_at'] = $now;
+        $meta['updated_at'] = $now;
+        $meta['notes'] = $notes !== '' ? $notes : ('Decommissioned '.$now);
+        if ($updatedBy !== null && $updatedBy !== '') {
+            $meta['updated_by'] = $updatedBy;
+        }
+        $this->writeJson($metaKey, $meta);
+        $this->rebuildTenantHomeIndex();
+
+        return $meta;
+    }
+
+    /** @return array<string, mixed> */
+    public function getTenant(string $shortuid): array
+    {
+        $meta = $this->readJson("tenants/{$shortuid}/meta.json", []);
+        if ($meta === []) {
+            throw new \RuntimeException("Tenant not found: {$shortuid}", 404);
+        }
+
+        return $meta;
+    }
+
+    /**
      * B′ login homing — compiled public rollup for SPA tenant-id resolve.
      * Source of truth remains tenants/{shortuid}/meta.json.
      *

@@ -72,29 +72,32 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-06)
+## Next agent session notes (2026-08-06) — Fleet Delete lab green
 
-**Branch:** **`main`** — pbx3 **`7a5360d`**, pbx3api **`976fd51`**, pbx3spa **`3a6e94a`**, pbx3-docs **`5c9b4fa`**. Day-parts golden **0.0.4-8** / cagi **1.0.0-13**; fleet short-dial packages still **0.0.4-6** / **1.0.0-11** unless rolled.
+**Branch:** **`main`** — pbx3 **`de8d701`**, pbx3spa **`305dc80`**, pbx3sbc-admin **`398f5ef`**, pbx3-docs **`42ecb8e`** (Instance API docs earlier: pbx3-docs **`7e5554b`**, pbx3api **`10684fe`**). Day-parts golden **0.0.4-8** / cagi **1.0.0-13**. Earlier same day: number wire D1=C + MainOut seed (still on `main`).
 
 ### Shipped (this session)
-- **Number wire D1 = Model C:** SBC-max translation; PBX uncompromised; Phase 1 keep node Mangle. Policy **`NUMBER_WIRE_POLICY.md`**; draft + research updated. Magrathea = UK ITSP Peer (not the SBC). Brindley demoted as Peer archetype.
-- **Seed outbound on tenant create:** `globals.default_outbound_dialplan` (UK `_0. _00.`) → copy **MainOut** OutRoute on create (`path1=Egress` when fleet). Lab green on Fleet create. Spec **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.
-- **Fleet service token:** restored `PBX3_FLEET_SERVICE_TOKEN` on golden / bzy / kildare (was missing on nodes; matched control).
-- **Deploy:** API live all three nodes; bzy/kildare `/opt/pbx3api` reset to **`976fd51`**; golden still hot-deploy (not a git checkout). bzy = dynamic public IP (FQDN), not EIP.
+- **Fleet Delete (Rule 14) — lab green:** Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`**. D0–D5: SBC admin `DELETE /api/fleet/domains/{domain}`; catalog soft-decom; Gatekeeper durable job `/api/v1/tenant-deletes*` (`pending → … → completed`); SPA Fleet Tenants Delete + Jobs confirm; MkDocs `fleet/tenant-delete`. Throwaway lab delete OK (control + SBC hot-deployed). **D6 FQDN rename** parked.
+- **Instance API MkDocs** (earlier this session): SARK-style pages in **pbx3-docs** `docs/api/` (already on `main` / Pages).
 
 ### Golden / ops
-- Dev API: `https://08jzwn.pbx3.com:44300/api`. SBC VIP **`3.93.26.82`**. bzy SSH: **`bzy54n.pbx3.com`** / `pbx3test.pem`. kildare: **`3.93.253.1`** / `aelsip.pem`.
-- Instance Globals → **Outbound** default dialplan. Fleet create only on fleet nodes.
+- Dev API: `https://08jzwn.pbx3.com:44300/api`. Gatekeeper: **`control.pbx3.com`**. SBC admin: **`sbc.pbx3.com`**. SPA: `npm run dev`. SBC VIP **`3.93.26.82`**.
 
 ### Resume
-1. **Fleet Delete + FQDN rename — release blocker** — Rule 14 durable job; node wipe exists; need SPA + catalog + SBC domain. Spec **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
-2. Optional: number wire Phase 2 / D2–D4; US outbound dialplan string (O4); package roll beyond golden.
+1. **FQDN rename (D6)** — optional; same Rule 14 job pattern. Spec delete requirements § D6.  
+2. Product crumbs / number wire Phase 2 / US seed (O4) as needed.
+
+---
+
+## Next agent session notes (2026-08-06) — number wire (superseded)
+
+**Superseded for “read first”** by Fleet Delete block above. Number wire D1=C + seed MainOut shipped earlier same day; Fleet Delete was the resume target then.
 
 ---
 
 ## Next agent session notes (2026-08-05)
 
-**Superseded for “read first”** by **2026-08-06** block above. Short dial D+E closed; number wire was open then.
+**Superseded for “read first”** by **2026-08-06** Fleet Delete block above. Short dial D+E closed; number wire was open then.
 
 ---
 

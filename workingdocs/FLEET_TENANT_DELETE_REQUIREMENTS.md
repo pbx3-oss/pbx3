@@ -1,0 +1,76 @@
+# Fleet tenant delete — requirements (locked 2026-08-06)
+
+**Status:** Spec locked; implementation slices **D1–D5**. FQDN rename = **D6** (after Delete v1).  
+**Policy:** Rule **6 / 10 / 14** · [`FLEET_TENANT_CREATE_REQUIREMENTS.md`](FLEET_TENANT_CREATE_REQUIREMENTS.md) · [`DESIGN_RULES.md`](../pbx3-directory/docs/DESIGN_RULES.md) Rule 14.  
+**Mirror:** Tenant-move durable jobs — **not** Fleet Create sync provision.
+
+## Product decision
+
+| Decision | Lock |
+|----------|------|
+| Who deletes a fleet tenant | **Fleet admin only** |
+| Instance Sanctum Delete on fleet node | Still **403** (create already locked) |
+| Solo / kick-tyres | On-node Delete **unchanged** |
+| Catalog on delete | **Soft-decommission** (`status=decommissioned`); keep `meta.json` for audit. Hard S3 prefix purge = later |
+| Ability | Same as Create: **`fleet_instances`** |
+| FQDN rename | **Separate** Rule 14 job after Delete ships (D6) |
+
+## Job stages (v1)
+
+```text
+pending → preflight
+       → awaiting_confirm   (HUMAN: type shortuid; irreversible)
+       → removing_edge      (SBC DELETE domain)
+       → wiping_node        (DELETE /fleet/tenants/{shortuid} + cert sync + commit best-effort)
+       → catalog            (soft-decommission tenant meta)
+       → completed
+```
+
+| State | Notes |
+|-------|--------|
+| `preflight` | Resolve home instance, FQDN, node reachable; warn if catalog DIDs still attached (no auto-unassign v1) |
+| `awaiting_confirm` | Operator must send typed `shortuid` match + `confirm: true` |
+| `removing_edge` | Idempotent if domain already absent |
+| `wiping_node` | Existing wipe primitive; **media trees not deleted** (known gap) |
+| `catalog` | `status=decommissioned`; hidden from Fleet Tenants list |
+| `failed` / `aborted` | Terminal; notify like move jobs |
+
+**Abort boundary:** Safe **before** `wiping_node`. If SBC domain already deleted, repair with **Register on SBC**. After wipe, recovery = re-provision (out of scope).
+
+## Confirm UX
+
+- SPA: Fleet → Tenants → **Delete** creates job → opens job detail (Jobs list also).
+- Gate: type tenant **shortuid**; danger button; irreversible copy (node data wipe + SIP domain gone).
+- Reopen anytime via Fleet → **Jobs** (do not require staying on the page).
+
+## Not in v1
+
+- Drain / AMI wait-for-zero channels  
+- Auto DID unassign / S3 backup purge / media tree wipe  
+- Sync one-shot POST (violates Rule 14)  
+- FQDN rename (D6)
+
+## Implementation map
+
+| Slice | Repo | Status |
+|-------|------|--------|
+| D0 Spec | pbx3 workingdocs | **Done** |
+| D1 SBC `DELETE /fleet/domains/{domain}` + Gatekeeper client | pbx3sbc-admin + gatekeeper | **Done** |
+| D2 Catalog `decommissionTenant` | gatekeeper | **Done** |
+| D3 Delete job store/runner/routes | gatekeeper | **Done** |
+| D4 SPA Delete + Jobs confirm | pbx3spa | **Done** |
+| D5 Lab + MkDocs | pbx3-docs | **Done** (operator page; lab operator verifies) |
+| D6 FQDN rename job | later | **Parked** — after Delete lab green |
+
+## D6 — FQDN rename (parked)
+
+Separate Rule 14 job after Delete v1 is lab-green. Expected shape: confirm → update node `cluster.fqdn` → catalog meta FQDN → SBC delete old domain + register new (or repoint) → LE sync. Do not fold into Delete.
+
+## Lab acceptance
+
+1. Fleet Create lab tenant → Delete job → confirm shortuid.  
+2. SBC domain gone (REGISTER to FQDN fails / unknown domain).  
+3. Node: cluster row and tenant tables gone.  
+4. Catalog: tenant `decommissioned`, hidden from Fleet Tenants.  
+5. Job `completed`; reopen from Jobs works mid-flight.  
+6. Solo: instance Delete still works.

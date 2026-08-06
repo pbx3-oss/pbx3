@@ -141,6 +141,21 @@ final class SbcFleetClient
     }
 
     /**
+     * Fleet Delete — remove SIP domain on edge (idempotent if absent).
+     *
+     * @return array<string, mixed>
+     */
+    public function deleteDomain(string $domain): array
+    {
+        $domain = strtolower(trim($domain));
+        if ($domain === '') {
+            throw new \InvalidArgumentException('domain required', 422);
+        }
+
+        return $this->requestJson('DELETE', '/fleet/domains/'.rawurlencode($domain), null);
+    }
+
+    /**
      * S10.5 residue — create/update dispatcher set + Asterisk Peer for a node.
      *
      * @param  array<string, mixed>  $body
