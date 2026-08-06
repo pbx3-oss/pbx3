@@ -12,11 +12,15 @@ require_once dirname(__DIR__).'/vendor/autoload.php';
 use Pbx3\Gatekeeper\Auth;
 use Pbx3\Gatekeeper\CatalogHealthOverlay;
 use Pbx3\Gatekeeper\CatalogReconcile;
+use Pbx3\Gatekeeper\DialCohortJobStore;
+use Pbx3\Gatekeeper\DialCohortMaterialiseRunner;
+use Pbx3\Gatekeeper\DialCohortStore;
 use Pbx3\Gatekeeper\DidInventory;
 use Pbx3\Gatekeeper\Env;
 use Pbx3\Gatekeeper\FleetAbilities;
 use Pbx3\Gatekeeper\Http\JsonResponse;
 use Pbx3\Gatekeeper\InstanceEdgeProvision;
+use Pbx3\Gatekeeper\NodeFleetDialClient;
 use Pbx3\Gatekeeper\NotifyDispatcher;
 use Pbx3\Gatekeeper\OpsEventThrottle;
 use Pbx3\Gatekeeper\S3Presign;
@@ -327,6 +331,174 @@ try {
     if ($method === 'GET' && $path === '/api/v1/tenants') {
         Auth::requireAbility(FleetAbilities::READ);
         JsonResponse::send(200, ['tenants' => $registrar->listTenants()]);
+    }
+
+    // C1/C3 — dial cohorts (UI: Site Groups) + materialise jobs.
+    $dialCohorts = new DialCohortStore($registrar);
+    $dialJobs = new DialCohortJobStore($registrar);
+    $dialRunner = new DialCohortMaterialiseRunner($dialJobs, $registrar, new NodeFleetDialClient());
+
+    if ($method === 'GET' && $path === '/api/v1/dial-cohorts') {
+        Auth::requireAbility(FleetAbilities::READ);
+        JsonResponse::send(200, $dialCohorts->listIndex());
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/dial-cohorts') {
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(201, $dialCohorts->create(
+            is_array($body) ? $body : [],
+            is_string($actor) ? $actor : null
+        ));
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/catalog/dial-cohort-index/rebuild') {
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
+        JsonResponse::send(200, $dialCohorts->rebuildIndex());
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/dial-cohorts/([A-Za-z0-9_-]+)/sync$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $dialRunner->syncNow(
+            $m[1],
+            is_array($body) ? $body : [],
+            is_string($actor) ? $actor : null
+        ));
+    }
+
+    if ($method === 'GET' && preg_match('#^/api/v1/dial-cohorts/([A-Za-z0-9_-]+)/jobs$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::READ);
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 20;
+        JsonResponse::send(200, ['jobs' => $dialJobs->listForCohort($m[1], $limit)]);
+    }
+
+    if ($method === 'GET' && preg_match('#^/api/v1/dial-cohorts/([A-Za-z0-9_-]+)/jobs/([A-Za-z0-9_-]+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::READ);
+        JsonResponse::send(200, $dialJobs->get($m[1], $m[2]));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/dial-cohorts/([A-Za-z0-9_-]+)/jobs/([A-Za-z0-9_-]+)/run$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $dialRunner->run($m[1], $m[2], is_string($actor) ? $actor : null));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/dial-cohorts/([A-Za-z0-9_-]+)/jobs/([A-Za-z0-9_-]+)/retry$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $dialRunner->retry($m[1], $m[2], is_string($actor) ? $actor : null));
+    }
+
+    if ($method === 'GET' && preg_match('#^/api/v1/dial-cohorts/([A-Za-z0-9_-]+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::READ);
+        JsonResponse::send(200, $dialCohorts->get($m[1]));
+    }
+
+    if ($method === 'PATCH' && preg_match('#^/api/v1/dial-cohorts/([A-Za-z0-9_-]+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $dialCohorts->patch(
+            $m[1],
+            is_array($body) ? $body : [],
+            is_string($actor) ? $actor : null
+        ));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/dial-cohorts/([A-Za-z0-9_-]+)/decommission$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        $out = $dialCohorts->decommission(
+            $m[1],
+            is_array($body) ? $body : [],
+            is_string($actor) ? $actor : null
+        );
+        $former = is_array($out['former_members'] ?? null) ? $out['former_members'] : [];
+        if ($former !== [] && (! isset($body['materialise']) || ! empty($body['materialise']))) {
+            try {
+                $out['prune'] = $dialRunner->pruneCohortFromNodes($m[1], $former);
+            } catch (\Throwable $e) {
+                $out['prune_error'] = $e->getMessage();
+            }
+        }
+        JsonResponse::send(200, $out);
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/dial-cohorts/([A-Za-z0-9_-]+)/members$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        if (! is_array($body)) {
+            $body = [];
+        }
+        $actor = Auth::user()['email'] ?? null;
+        $out = $dialCohorts->addMember(
+            $m[1],
+            $body,
+            is_string($actor) ? $actor : null
+        );
+        if (! isset($body['materialise']) || ! empty($body['materialise'])) {
+            $out['job'] = $dialRunner->syncNow(
+                $m[1],
+                ['reason' => 'add_member', 'prune_unmanaged' => $body['prune_unmanaged'] ?? true],
+                is_string($actor) ? $actor : null
+            );
+        }
+        JsonResponse::send(200, $out);
+    }
+
+    if ($method === 'DELETE' && preg_match('#^/api/v1/dial-cohorts/([A-Za-z0-9_-]+)/members/([a-z0-9]+)$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
+        $actor = Auth::user()['email'] ?? null;
+        $qs = [];
+        parse_str((string) (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY) ?: ''), $qs);
+        $materialise = ! isset($qs['materialise']) || $qs['materialise'] === '' || filter_var($qs['materialise'], FILTER_VALIDATE_BOOL);
+        $out = $dialCohorts->removeMember(
+            $m[1],
+            $m[2],
+            is_string($actor) ? $actor : null
+        );
+        if ($materialise) {
+            $out['job'] = $dialRunner->syncNow(
+                $m[1],
+                ['reason' => 'remove_member'],
+                is_string($actor) ? $actor : null
+            );
+            // Also prune managed rows for the removed tenant (no longer in cohort members list).
+            try {
+                $out['prune_removed'] = $dialRunner->pruneCohortFromNodes($m[1], [$m[2]]);
+            } catch (\Throwable $e) {
+                $out['prune_removed_error'] = $e->getMessage();
+            }
+        }
+        JsonResponse::send(200, $out);
+    }
+
+    if ($method === 'PATCH' && preg_match('#^/api/v1/tenants/([a-z0-9]+)/routing-prefix$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        if (! is_array($body)) {
+            $body = [];
+        }
+        $actor = Auth::user()['email'] ?? null;
+        $meta = $dialCohorts->setRoutingPrefix(
+            $m[1],
+            $body,
+            is_string($actor) ? $actor : null
+        );
+        $cohortId = trim((string) ($meta['dial_cohort_id'] ?? ''));
+        $out = ['tenant' => $meta];
+        if ($cohortId !== '' && (! isset($body['materialise']) || ! empty($body['materialise']))) {
+            $out['job'] = $dialRunner->syncNow(
+                $cohortId,
+                ['reason' => 'routing_prefix_change'],
+                is_string($actor) ? $actor : null
+            );
+        }
+        JsonResponse::send(200, $out);
     }
 
     // S10.5 — catalog DID ownership (HoR). List = read; assign/release = fleet_edge.

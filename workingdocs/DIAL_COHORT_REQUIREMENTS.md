@@ -1,6 +1,6 @@
 # Dial cohort — destination routing prefix
 
-**Status:** Design locked 2026-08-06 (§11); **C0 done**; C1–C6 not coded.  
+**Status:** Design locked 2026-08-06 (§11); **C0–C6 done** (`dial-cohort-c1` + MkDocs Site Groups). Lab green C1–C5; CLIP callback (prefix+ext) lab-proven.  
 **Release stopper:** **First product release blocked** until Site Group (dial cohort) lab-green (C1–C5). Hand-entered per-sender prefixes = **lab only** — must not ship as the wild operator model.  
 **Builds on:** [`TENANT_SHORT_DIAL_REQUIREMENTS.md`](TENANT_SHORT_DIAL_REQUIREMENTS.md) (call path A–E lab green).  
 **Policy:** Rule **1** (no live directory in call path) · Rule **10** (S3 HoR) · Rule **14** (durable jobs) · [`DESIGN_RULES.md`](../pbx3-directory/docs/DESIGN_RULES.md).
@@ -272,12 +272,12 @@ Legacy InterSARK migrate recipe ([`DIAL_PREFIX_LEGACY_MIGRATE.md`](DIAL_PREFIX_L
 | Slice | Deliverable | Est. |
 |-------|-------------|------|
 | **C0** | Spec + §11 locks (`routing_prefix`, cohort JSON paths, dialalias `managed`, UI Site Group) | **done** 2026-08-06 |
-| **C1** | Catalog + Gatekeeper CRUD (cohort, set prefix) — no materialise yet | ~1–2 d |
-| **C2** | Node fleet managed dialalias upsert/delete + Sanctum guards | ~1–2 d |
-| **C3** | Materialise job (add/remove/sync) + retry; **prune unmanaged** cross-tenant dialalias on touched members | ~3–5 d |
-| **C4** | Fleet SPA Site Groups + tenant card fields; instance dial-prefix read-only for managed | ~2–3 d |
-| **C5** | Lab: 3–4 tenants, two homes, isolate on same instance, join/leave, misdial inter-cohort; **prune unmanaged dialalias** on members (node SQLite — not SBC) | ~1–2 d |
-| **C6** | Docs / MkDocs: short-dial interim (lab) vs Site Group release; no legacy migrate pointer | ~0.5 d |
+| **C1** | Catalog + Gatekeeper CRUD (cohort, set prefix) — no materialise yet | **done** lab (control smoke 2026-08-06) |
+| **C2** | Node fleet managed dialalias upsert/delete + Sanctum guards | **done** lab (golden 2026-08-06) |
+| **C3** | Materialise job (add/remove/sync) + retry; **prune unmanaged** cross-tenant dialalias on touched members | **done** lab smoke (same-home) |
+| **C4** | Fleet SPA Site Groups + tenant card fields; instance dial-prefix read-only for managed | **done** API smoke + SPA build 2026-08-06 |
+| **C5** | Lab: 3–4 tenants, two homes, isolate on same instance, join/leave, misdial inter-cohort; **prune unmanaged dialalias** on members (node SQLite — not SBC) | **done** lab 2026-08-06 (Golden+Labtest-B; cohort `dc_9bce78a6…`) |
+| **C6** | Docs / MkDocs: short-dial interim (lab) vs Site Group release; no legacy migrate pointer | **done** 2026-08-06 (`pbx3-docs` fleet/site-groups.md) |
 
 **Thin vertical lab-green:** C1–C5 ≈ **1½–2½ weeks** focused.  
 **Call-path / GenAst / SBC:** expect **no** change if projections are normal dialalias rows.

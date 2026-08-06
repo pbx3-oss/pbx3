@@ -90,6 +90,20 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `POST` | `/api/v1/fleet-users/{id}/enable` | Re-enable |
 | `POST` | `/api/v1/fleet-users/{id}/revoke-sessions` | Kill all Bearers for user |
 | `GET` | `/api/v1/tenants` | List tenant meta rows |
+| `GET` | `/api/v1/dial-cohorts` | C1 Site Groups index (`catalog/dial-cohort-index.json`) (`fleet_read`) |
+| `POST` | `/api/v1/dial-cohorts` | Create dial cohort `{name, prefix_width?}` (`fleet_dial_cohorts`) |
+| `GET` | `/api/v1/dial-cohorts/{id}` | Read cohort document (`fleet_read`) |
+| `PATCH` | `/api/v1/dial-cohorts/{id}` | Rename / change `prefix_width` (`fleet_dial_cohorts`) |
+| `POST` | `/api/v1/dial-cohorts/{id}/members` | Add member `{tenant_shortuid, routing_prefix}` — catalog + materialise job unless `materialise:false` (`fleet_dial_cohorts`) |
+| `DELETE` | `/api/v1/dial-cohorts/{id}/members/{shortuid}` | Remove member; clears prefix + cohort back-pointer; materialise+prune (`fleet_dial_cohorts`) |
+| `POST` | `/api/v1/dial-cohorts/{id}/decommission` | Soft-decommission cohort (`confirm: true`); prunes managed node rows (`fleet_dial_cohorts`) |
+| `POST` | `/api/v1/dial-cohorts/{id}/sync` | C3 Sync now — materialise mesh + prune unmanaged + one commit/home (`fleet_dial_cohorts`) |
+| `GET` | `/api/v1/dial-cohorts/{id}/jobs` | List materialise jobs (`fleet_read`) |
+| `GET` | `/api/v1/dial-cohorts/{id}/jobs/{job_id}` | Read job (`fleet_read`) |
+| `POST` | `/api/v1/dial-cohorts/{id}/jobs/{job_id}/run` | Run pending job (`fleet_dial_cohorts`) |
+| `POST` | `/api/v1/dial-cohorts/{id}/jobs/{job_id}/retry` | Retry failed job (`fleet_dial_cohorts`) |
+| `PATCH` | `/api/v1/tenants/{shortuid}/routing-prefix` | Set/clear destination `routing_prefix`; materialise if in cohort (`fleet_dial_cohorts`) |
+| `POST` | `/api/v1/catalog/dial-cohort-index/rebuild` | Rebuild Site Groups index from cohort docs (`fleet_dial_cohorts`) |
 | `POST` | `/api/v1/tenants/provision` | Fleet-first create: node `/fleet/tenants` → catalog meta → SBC domain (`fleet_instances`). Body: `instance_id`, `pkey`, `description`; optional `clusterclid`/`localarea`; resume after catalog fail: `resume`+`shortuid`+`fqdn` |
 | `GET` | `/api/v1/dids` | S10.5 catalog DID ownership flat list (`fleet_read`) |
 | `POST` | `/api/v1/dids/assign` | Assign/reassign DID → tenant; writes `dids.json` + `did-index`; projects SBC unless `project:false` (`fleet_edge`) |

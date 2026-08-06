@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/dial-cohort.v0.json",
+  "title": "PBX3 dial cohort / Site Group (v0)",
+  "description": "catalog/dial-cohorts/{cohort_id}.json — HoR membership + prefix_width. UI: Site Group. Node dialalias rows are projections (C2/C3).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "members", "prefix_width", "status", "created_at", "updated_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Cohort id (KSUID-style)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Operator label (e.g. Acme offices)"
+    },
+    "members": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9]+$" },
+      "description": "Tenant shortuids (active members)"
+    },
+    "prefix_width": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 4,
+      "description": "Digit width for all members' routing_prefix in this mesh"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "decommissioned"]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "updated_by": {
+      "type": ["string", "null"],
+      "description": "Actor email when known"
+    }
+  }
+}

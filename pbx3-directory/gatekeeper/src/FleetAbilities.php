@@ -18,6 +18,9 @@ final class FleetAbilities
 
     public const EDGE = 'fleet_edge';
 
+    /** Dial cohort / Site Group CRUD + routing prefix (C1+). Not folded into fleet_instances. */
+    public const DIAL_COHORTS = 'fleet_dial_cohorts';
+
     public const ADMIN = 'fleet_admin';
 
     /** @var list<string> */
@@ -26,6 +29,7 @@ final class FleetAbilities
         self::INSTANCES,
         self::MOVES,
         self::EDGE,
+        self::DIAL_COHORTS,
         self::ADMIN,
     ];
 

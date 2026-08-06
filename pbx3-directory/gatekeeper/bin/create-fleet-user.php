@@ -11,7 +11,7 @@ declare(strict_types=1);
  *   php bin/create-fleet-user.php --email reader@example.com --password 'long-secret' --abilities fleet_read
  *   php bin/create-fleet-user.php ... --abilities fleet_read,fleet_moves
  *
- * Default abilities: fleet_admin (full power). Valid: fleet_read, fleet_instances, fleet_moves, fleet_edge, fleet_admin.
+ * Default abilities: fleet_admin (full power). Valid: fleet_read, fleet_instances, fleet_moves, fleet_edge, fleet_dial_cohorts, fleet_admin.
  */
 
 require_once dirname(__DIR__).'/vendor/autoload.php';

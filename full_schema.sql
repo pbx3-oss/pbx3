@@ -594,6 +594,8 @@ CREATE TABLE dialalias (
     "target_fqdn" TEXT NOT NULL,
     "cname" TEXT,
     "description" TEXT,
+    "source" TEXT DEFAULT 'manual',
+    "cohort_id" TEXT,
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',

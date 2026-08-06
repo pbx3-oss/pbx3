@@ -490,6 +490,8 @@ CREATE TABLE IF NOT EXISTS dialalias (
     "target_fqdn" TEXT NOT NULL,            -- dial target: full tenant FQDN (never instance FQDN)
     "cname" TEXT,
     "description" TEXT,
+    "source" TEXT DEFAULT 'manual',         -- manual | cohort (Site Group projection)
+    "cohort_id" TEXT,                       -- dial cohort id when source=cohort
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',

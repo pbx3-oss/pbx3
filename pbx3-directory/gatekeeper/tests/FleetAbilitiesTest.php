@@ -77,6 +77,7 @@ final class FleetAbilitiesTest extends TestCase
         Auth::requireAbility(FleetAbilities::INSTANCES);
         Auth::requireAbility(FleetAbilities::MOVES);
         Auth::requireAbility(FleetAbilities::EDGE);
+        Auth::requireAbility(FleetAbilities::DIAL_COHORTS);
         Auth::requireAbility(FleetAbilities::ADMIN);
         $this->assertSame(FleetAbilities::ALL, Auth::effectiveAbilities());
     }

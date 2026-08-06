@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/dial-cohort-index.v0.json",
+  "title": "PBX3 dial cohort index (v0)",
+  "description": "catalog/dial-cohort-index.json — fleet list rollup for Site Groups. Rebuildable from catalog/dial-cohorts/*.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "updated_at", "cohorts"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "cohorts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "member_count", "prefixes_ready", "prefix_width", "status", "updated_at"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "member_count": { "type": "integer", "minimum": 0 },
+          "prefixes_ready": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Members with routing_prefix set to cohort prefix_width"
+          },
+          "prefix_width": { "type": "integer", "minimum": 2, "maximum": 4 },
+          "status": { "type": "string", "enum": ["active", "decommissioned"] },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

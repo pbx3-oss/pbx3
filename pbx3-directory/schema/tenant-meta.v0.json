@@ -42,6 +42,21 @@
     "label": {
       "type": "string",
       "description": "Human label (often description) for Fleet Tenants list"
+    },
+    "routing_prefix": {
+      "type": "string",
+      "pattern": "^[0-9]{0,4}$",
+      "description": "Destination-owned short-dial digits (empty = isolate). Unique fleet-wide when non-empty."
+    },
+    "routing_prefix_width": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 4,
+      "description": "Optional; else cohort / fleet default"
+    },
+    "dial_cohort_id": {
+      "type": ["string", "null"],
+      "description": "Active dial cohort (Site Group) KSUID, or null/omit when isolate"
     }
   }
 }

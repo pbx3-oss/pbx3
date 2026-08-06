@@ -481,6 +481,159 @@ final class S3Registrar
         $this->writeJson('catalog/did-index.json', $index);
     }
 
+    /**
+     * Replace tenants/{shortuid}/meta.json (Gatekeeper sole writer).
+     *
+     * @param  array<string, mixed>  $meta
+     * @return array<string, mixed>
+     */
+    public function putTenantMeta(string $shortuid, array $meta): array
+    {
+        $shortuid = strtolower(trim($shortuid));
+        if ($shortuid === '' || ! preg_match('/^[a-z0-9]+$/', $shortuid)) {
+            throw new \InvalidArgumentException('shortuid required (lowercase alnum)', 422);
+        }
+        $meta['shortuid'] = $shortuid;
+        if (! isset($meta['tenant_shortuid'])) {
+            $meta['tenant_shortuid'] = $shortuid;
+        }
+        if (! isset($meta['updated_at'])) {
+            $meta['updated_at'] = $this->nowIso();
+        }
+        $this->writeJson("tenants/{$shortuid}/meta.json", $meta);
+
+        return $meta;
+    }
+
+    private const DIAL_COHORT_INDEX_KEY = 'catalog/dial-cohort-index.json';
+
+    /** @return array<string, mixed> */
+    public function getDialCohort(string $id): array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return [];
+        }
+
+        return $this->readJson('catalog/dial-cohorts/'.$id.'.json', []);
+    }
+
+    /** @param array<string, mixed> $doc */
+    public function putDialCohort(string $id, array $doc): void
+    {
+        $id = trim($id);
+        if ($id === '') {
+            throw new \InvalidArgumentException('cohort id required', 422);
+        }
+        $doc['id'] = $id;
+        $this->writeJson('catalog/dial-cohorts/'.$id.'.json', $doc);
+    }
+
+    /** @return array{version: int, updated_at: string, cohorts: list<array<string, mixed>>} */
+    public function getDialCohortIndex(): array
+    {
+        $index = $this->readJson(self::DIAL_COHORT_INDEX_KEY, []);
+        if ($index === []) {
+            return [
+                'version' => 1,
+                'updated_at' => $this->nowIso(),
+                'cohorts' => [],
+            ];
+        }
+        if (! isset($index['cohorts']) || ! is_array($index['cohorts'])) {
+            $index['cohorts'] = [];
+        }
+        $index['version'] = 1;
+
+        return $index;
+    }
+
+    /** @param array<string, mixed> $index */
+    public function putDialCohortIndex(array $index): void
+    {
+        $index['version'] = 1;
+        if (! isset($index['updated_at'])) {
+            $index['updated_at'] = $this->nowIso();
+        }
+        if (! isset($index['cohorts']) || ! is_array($index['cohorts'])) {
+            $index['cohorts'] = [];
+        }
+        $this->writeJson(self::DIAL_COHORT_INDEX_KEY, $index);
+    }
+
+    /**
+     * List cohort document ids under catalog/dial-cohorts/*.json (excludes jobs/).
+     *
+     * @return list<string>
+     */
+    public function listDialCohortIds(): array
+    {
+        $result = $this->s3->listObjectsV2([
+            'Bucket' => $this->bucket,
+            'Prefix' => 'catalog/dial-cohorts/',
+        ]);
+        $ids = [];
+        foreach ($result['Contents'] ?? [] as $obj) {
+            $key = (string) ($obj['Key'] ?? '');
+            // catalog/dial-cohorts/{id}.json — skip nested jobs/
+            if (! preg_match('#^catalog/dial-cohorts/([^/]+)\.json$#', $key, $m)) {
+                continue;
+            }
+            $ids[] = $m[1];
+        }
+        sort($ids);
+
+        return $ids;
+    }
+
+    /** @return array<string, mixed> */
+    public function getDialCohortJob(string $cohortId, string $jobId): array
+    {
+        $cohortId = trim($cohortId);
+        $jobId = trim($jobId);
+        if ($cohortId === '' || $jobId === '') {
+            return [];
+        }
+
+        return $this->readJson("catalog/dial-cohorts/{$cohortId}/jobs/{$jobId}.json", []);
+    }
+
+    /** @param array<string, mixed> $job */
+    public function putDialCohortJob(string $cohortId, string $jobId, array $job): void
+    {
+        $cohortId = trim($cohortId);
+        $jobId = trim($jobId);
+        if ($cohortId === '' || $jobId === '') {
+            throw new \InvalidArgumentException('cohort_id and job_id required', 422);
+        }
+        $this->writeJson("catalog/dial-cohorts/{$cohortId}/jobs/{$jobId}.json", $job);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function listDialCohortJobIds(string $cohortId): array
+    {
+        $cohortId = trim($cohortId);
+        if ($cohortId === '') {
+            return [];
+        }
+        $result = $this->s3->listObjectsV2([
+            'Bucket' => $this->bucket,
+            'Prefix' => "catalog/dial-cohorts/{$cohortId}/jobs/",
+        ]);
+        $ids = [];
+        foreach ($result['Contents'] ?? [] as $obj) {
+            $key = (string) ($obj['Key'] ?? '');
+            if (preg_match('#/jobs/([^/]+)\.json$#', $key, $m)) {
+                $ids[] = $m[1];
+            }
+        }
+        sort($ids);
+
+        return $ids;
+    }
+
     public function nowIso(): string
     {
         return gmdate('Y-m-d\TH:i:s\Z');
