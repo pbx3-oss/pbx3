@@ -28,9 +28,9 @@ Fill this once. Empty cells = stop and get them. Do not invent a new S3 bucket p
 | ☐ | **GitHub access** to private **`pbx3`** + **`pbx3cagi`** | Debs live at each repo root on `main` (today) |
 | ☐ | **Ubuntu 24.04 EC2** | Prefer ARM `t4g.*`; open inbound **22**, **80**, **44300**; outbound **443** |
 | ☐ | **Elastic IP** (recommended) | Sticky public IP for DNS/LE |
-| ☐ | **FQDN you control** | DNS **A** record → that public IP (e.g. `kildare.pbx3.com`) |
+| ☐ | **FQDN you control** | DNS **A** for **`{opaque-shortuid}.{apex}`** (set at install; not a vanity name like `kildare.pbx3.com`) |
 | ☐ | **Email for Let’s Encrypt** | Any real mailbox you read |
-| ☐ | **Friendly site name** | Shown in Admin Home (e.g. “AEL Nodes”) |
+| ☐ | **Friendly site name** | Human **Name** on Admin Home (e.g. “Kildare”) — not the hostname |
 | ☐ | **(Act 2 only) existing fleet org bucket** | e.g. lab `08jzwn-pbx3` — first-ever fleet is a *different* bootstrap |
 | ☐ | **(Act 2 only) fleet service token** | Same shared secret as gatekeeper — how to **find** it is under Act 2; not inventing a new per-node value |
 
@@ -44,8 +44,8 @@ Answer these *before* you start. The install does not invent them for you (excep
 
 | When | Question | Provide | Example |
 |------|----------|---------|---------|
-| You / DNS | What hostname is this node? | Full **FQDN** | `kildare.pbx3.com` |
-| You / Home | What do humans call this site? | **Site name** | `AEL Nodes` |
+| You / DNS | Apex + opaque host | **DOMAIN_TLD**; FQDN becomes `{shortuid}.{apex}` after install | `pbx3.com` → e.g. `08jzwn.pbx3.com` |
+| You / Home | What do humans call this site? | **Site name** (Name) | `Kildare` |
 | LE | Who owns this cert? | **Email** | `ops@example.com` |
 | Admin SPA | installer will ask (or set env) | **Email + password you invent** | env or interactive; min 8 chars |
 | AWS | Where does it live? | **Region**, **instance id**, key name | `us-east-1`, `i-08a…`, `aelsip` |
@@ -59,8 +59,8 @@ Answer these *before* you start. The install does not invent them for you (excep
 
 | Prompt | What to type |
 |--------|----------------|
-| Domain apex / TLD | Prefer **not** using the prompt — set full FQDN instead (next section). Default alone is `pbx3.com`. |
-| Site name | Your friendly label |
+| Domain apex / TLD | e.g. `pbx3.com` — installer mints opaque shortuid; FQDN = `{shortuid}.{apex}` |
+| Site name | Friendly **Name** (e.g. Kildare) — not the hostname |
 | **Admin email** | SPA login email (any RFC-ish address; need not receive mail) |
 | **Admin password** (+ confirm) | At least **8** characters — this *is* your SPA password |
 
@@ -76,13 +76,15 @@ Do in order. Stop if a check fails.
 2. **Cloud:** Ubuntu 24.04 EC2 + SG + EIP; SSH works as `ubuntu`.  
 3. **Laptop → node:** `scp` both debs to `/tmp`.  
 4. **Node:** `apt update` / upgrade; install debs (`pbx3` then `pbx3cagi`); install **`ssmtp`** if the package complains.  
-5. **Node:** run the package installer with your FQDN, site name, and **admin SPA credentials**:
+5. **Node:** run the package installer with apex, site **Name**, and **admin SPA credentials**:
 
    ```bash
-   sudo INSTANCE_FQDN=kildare.pbx3.com INSTANCE_SITENAME='AEL Nodes' \
+   sudo DOMAIN_TLD=pbx3.com INSTANCE_SITENAME='Kildare' \
      PBX3_ADMIN_EMAIL=ops@example.com PBX3_ADMIN_PASSWORD='choose-a-strong-password' \
      /opt/pbx3/scripts/installer.sh
    ```
+
+   FQDN becomes `{opaque-shortuid}.pbx3.com` — do **not** set vanity `INSTANCE_FQDN=kildare.pbx3.com` (rejected unless `PBX3_ALLOW_VANITY_FQDN=1` lab debt). See **`FLEET_NAMING_LOCK.md`**.
 
    Or omit `PBX3_ADMIN_*` and answer the **Admin email / password** prompts on a real TTY.  
    Package **≥ 0.0.4-4** no longer seeds `admin@pbx3.com` with an unknown hash.

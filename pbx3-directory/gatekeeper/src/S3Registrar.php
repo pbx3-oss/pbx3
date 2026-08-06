@@ -126,6 +126,17 @@ final class S3Registrar
         }
         $record['updated_at'] = $now;
 
+        $label = trim((string) ($record['label'] ?? ''));
+        $apiBase = (string) ($record['api_base_url'] ?? '');
+        if ($label !== '' && $apiBase !== '') {
+            try {
+                (new NodeSitenameClient())->putSitename($apiBase, $label);
+            } catch (\Throwable $e) {
+                // Register still writes catalog; node may be unreachable at first register.
+                error_log('[gatekeeper] register sitename push failed: '.$e->getMessage());
+            }
+        }
+
         return $this->writeInstanceRecord($record, $now);
     }
 
@@ -172,6 +183,16 @@ final class S3Registrar
         }
         if (array_key_exists('sbc_dispatcher_setid', $apply) && $apply['sbc_dispatcher_setid'] !== null) {
             $apply['sbc_dispatcher_setid'] = (int) $apply['sbc_dispatcher_setid'];
+        }
+
+        // Friendly Name: push sitename to node before catalog write (fail whole save).
+        if (array_key_exists('label', $apply)) {
+            $label = trim((string) $apply['label']);
+            if ($label === '') {
+                throw new \InvalidArgumentException('label (friendly Name) required', 422);
+            }
+            $apiBase = (string) ($instances[$index]['api_base_url'] ?? '');
+            (new NodeSitenameClient())->putSitename($apiBase, $label);
         }
 
         $now = $this->nowIso();

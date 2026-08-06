@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** all product repos. Day-parts merged; golden **pbx3 0.0.4-8** / **pbx3cagi 1.0.0-13**. Fleet short-dial still **0.0.4-6** / **1.0.0-11** on non-golden unless rolled.  
-**Last updated:** 2026-08-06 (session end — Fleet Delete lab green; Instance API MkDocs)
+**Last updated:** 2026-08-06 (session end — naming shipped; dial cohort = **release stopper**)
 
 ### Suggested “what next?” order
 
-1. **FQDN rename (D6)** — optional follow-on to Fleet Delete; Rule 14 job. Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`** § D6.  
+1. **Dial cohort / Site Group — RELEASE STOPPER** — destination routing prefix + explicit cohort + Rule 14 materialise. Spec **`DIAL_COHORT_REQUIREMENTS.md`**. **No first product release** until C1–C5 lab-green. Hand prefixes = lab only.  
 2. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes / pack roll beyond golden.  
 3. **pbx3cagi Phase 4** (parked).  
 4. **Velocity standalone** (parked).  
@@ -35,7 +35,9 @@
 
 ## Open items
 
-- [x] **Tenant short dial core (lab green 2026-08-04):** **A/A′** admin CRUD; **B** Magrathea miss→dispatcher (+ hairpin Pres-Num/PAI/sitedial); **C** GenAst PrefixDial + CAGI; dual CLIP (presentation ext + return AoR PAI/SiteRing); **E** dual-host SIPp L1 green (`9wvvnb` → `811003` → `dhbm8x` via Magrathea). Merged to **`main`** (pbx3, api, spa, cagi, sbc; sipplab). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**.
+- [ ] **Dial cohort / Site Group — RELEASE STOPPER (spec 2026-08-06 — §11 locked; not coded):** Destination **routing prefix** + explicit **cohort** (UI: Site Group) + Rule 14 project to managed dialalias rows. Inter-cohort fail closed. **Blocks first product release** until C1–C5 lab-green. Hand-entered prefixes = **lab only**. Spec **`DIAL_COHORT_REQUIREMENTS.md`**.
+
+- [x] **Tenant short dial core (lab green 2026-08-04):** **A/A′** admin CRUD; **B** Magrathea miss→dispatcher (+ hairpin Pres-Num/PAI/sitedial); **C** GenAst PrefixDial + CAGI; dual CLIP (presentation ext + return AoR PAI/SiteRing); **E** dual-host SIPp L1 green (`9wvvnb` → `811003` → `dhbm8x` via Magrathea). Merged to **`main`** (pbx3, api, spa, cagi, sbc; sipplab). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. **Wild operator model deferred to dial cohort.**
 
 - [x] **Tenant short dial package roll (2026-08-04):** **pbx3 0.0.4-6** + **pbx3cagi 1.0.0-11** installed **08jzwn**, **bzy54n**, **kildare**; debs on **`main`**. API app/routes synced for dialaliases. Mag slice B already live (sitedial/Pres); template clone refreshed. Tags/commits: pbx3 **`b697384`**, cagi **`97ca501`**.
 
@@ -45,7 +47,7 @@
 
 - [x] **Tenant short dial D — Path 1 (lab green 2026-08-05):** Magrathea username usrloc repair; desk matrix Snom↔Yealink both ways. Spec **§3.9.1**. Generator reject-all-digit on `main`. Hairpin BYE cause unknown — watch.
 
-- [x] **Number wire — D1 = C + policy (2026-08-06):** Operator policy **`NUMBER_WIRE_POLICY.md`**. Detail **`NUMBER_WIRE_STANDARD_DRAFT.md`**. Research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Phase 1 = node Mangle; Phase 2 = SBC habit when gated. **Do not strip node Mangle** until Phase-2 gate. D2–D4 parked (suggested next §21).  
+- [x] **Number wire — D1 = C + policy (2026-08-06):** Operator policy **`NUMBER_WIRE_POLICY.md`**. Detail **`NUMBER_WIRE_STANDARD_DRAFT.md`**. Research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Phase 1 = node Mangle; Phase 2 = SBC habit when gated. **Do not strip node Mangle** until Phase-2 gate. D2–D4 parked (suggested next §20).  
   **Lab note (2026-08-04):** SBC inbound dialect (Magrathea Peer) **0… → 44…** before `do_routing` — DID **`dr_rules` prefixes must be digit E.164** (e.g. `441924910444` not `01924910444`). Asterisk Ingress needs wire form **`+441924…`** after genAst. Brindley **outbound** gwid strip2+prefix0 also expects digit E.164 from the node, not national `0…` (SIPp pack `OUT_DIGITS=441924910444`). Office **01924** DIDs → **Kildare** (e.g. rule `441924918076` → gwid 100); **910444** still lab on golden until operator moves it.
 
 - [x] **L1 SIPp pack green (2026-08-04 session):** Full **`run-pack.sh` 11/11** on Peer `98.82.58.59` after outbound `OUT_DIGITS` digit-E.164 fix. Site-dial dual-host still green.
@@ -54,16 +56,11 @@
 
 - [ ] **OpenSIPS domain setid drift (parked 2026-08-01):** name.com `0ggybk` / `vqcwd4` A→golden EIP, but Magrathea **domain** table still **setid=3** (bzy). SIP via SBC ≠ DNS/LE path until moved to setid=2 (or DNS corrected).
 
-- [ ] **Catalog `label` ↔ node `sitename` (policy locked 2026-08-03; implement when scheduled):**  
-  **Must not drift** (chooser “Kildare” vs Home “AEL Nodes”).  
-  - **HoR:** on-node **`globals.sitename`** (Network / System Globals Site Name).  
-  - **Catalog `label`:** fleet picker mirror — same string as sitename when fleet catalog is in use.  
-  - **Display:** `sitename || label || shortuid` (not FQDN as friendly fallback).  
-  - **Edit path:** operator changes **sitename** only → dual-write `sitename` then Gatekeeper **`PATCH …/instances/{id}`** `label` (Rule **9/10**).  
-  - **Fleet + catalog write path available:** save both or **fail the whole save** if Gatekeeper/catalog (S3 via GK) is unavailable — do **not** leave sitename updated and label stale.  
-  - **Solo / no fleet catalog configured:** sitename save always allowed (no catalog row).  
-  - **Lab one-shot:** align golden / kildare / bzy so label === sitename.  
-  Spec: **`NETWORK_SYSGLOBALS_OVERLAP.md`** · **`instance-record.v0.json`**. Repos: pbx3api (sitename save hook), gatekeeper path, pbx3spa display + error when dual-write fails.
+- [x] **Fleet naming — tenant Name = pkey (locked + code 2026-08-06):** Spec **`FLEET_NAMING_LOCK.md`**. Gatekeeper `label = pkey`; SPA/DID prefer pkey; Create UI notes. Existing catalog rows may still have old description labels until re-provision/PATCH.
+
+- [x] **Fleet naming — instance Name dual-write + FQDN policy (code 2026-08-06):** FQDN=`{shortuid}.{apex}`; installer vanity reject. **Edit surface:** Fleet → Instances only (Gatekeeper → `PUT /fleet/sitename` + catalog label); Network Site Name read-only on fleet nodes. Solo: Network edit.
+
+- [x] **Lab naming one-shot (done 2026-08-06):** catalog `label === sitename` — **Golden**, **AEL Nodes**, **Labtest-B** (bzy). Vanity FQDN debt (`kildare.pbx3.com`) left as-is until rebuild. Spec **`FLEET_NAMING_LOCK.md`**. **D6 FQDN rename** remains cancelled (Name edit covers rebrand).
 
 - [ ] **Fleet SPA — edge host health scrape (parked 2026-07-30):** Multi-edge load/mem/disk (and later door-knock country rollups) via Gatekeeper ← edge summary cron → S3 HoR → Fleet overlay. **Not** browser→SBC polling; **not** on-SBC heatmaps. Checklist in **`pbx3sbc-admin/workingdocs/HOME_SYSTEM_AND_FLEET_SCRAPE.md`**.
 
@@ -87,9 +84,9 @@
 
 - [ ] **`ipphone.desc` vs `description` — clarify / rename (parked 2026-07-29):** Historical SARK/Asterisk ambivalence: schema has both columns; SPA “User (extension name)” → `desc`, “Description” → `description`; list **User** prefers `desc` so freeform Description never shows when `desc` is set (e.g. `1501` vs “WebRTC second ep”). GenAst `$desc` token actually substitutes **`description`** (else pkey), not the `desc` column. Model comment still calls `desc` “SIP username” — wrong now that **shortuid** is PJSIP identity. Proper fix later: map roles (display name vs notes vs any remaining Asterisk/SIP use), align SPA labels + list, GenAst templates, API, migrate/rename if needed. Do not drive-by.
 
-- [x] **Fleet Delete — lab green (2026-08-06):** Rule 14 durable job. Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`**. D0–D5: SBC `DELETE /fleet/domains/{domain}`; catalog soft-decom; Gatekeeper `/api/v1/tenant-deletes*`; SPA Tenants Delete + Jobs; MkDocs `fleet/tenant-delete`. Lab throwaway delete OK (control + SBC deployed). **D6 FQDN rename** parked. Media trees still v1 wipe gap.
+- [x] **Fleet Delete — lab green (2026-08-06):** Rule 14 durable job. Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`**. D0–D5 done. **D6 FQDN rename cancelled** (2026-08-06). Media trees still v1 wipe gap.
 
-- [ ] **FQDN rename (D6 — parked 2026-08-06):** Separate Rule 14 job after Fleet Delete. Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`** § D6.
+- [x] **FQDN rename (D6) — cancelled (2026-08-06):** No product use case. FQDN always `{shortuid}.{apex}`; Name holds human words (e.g. Kildare). Spec **`FLEET_NAMING_LOCK.md`**. Lab `kildare.pbx3.com` = policy debt.
 
 - [ ] **SBC Track A lab — SARK (± FreePBX) behind SBC (2026-07-28):** Operator will stand up SARK (and maybe FreePBX) and prove REGISTER / calls via Magrathea or scratch pbx3sbc (domain → dispatcher → foreign Asterisk; phones registrar = SBC). No GenAst. Capture recipe / gaps when done — **`SBC_PRODUCT_TRACKS.md`** Track A. **After that lab:** FreePBX→pbx3 **data** migrate is a separate ETL chain (not shared with SARK `migrateLegacyDb` / `db_legacy_sql`) — requirements later.
 

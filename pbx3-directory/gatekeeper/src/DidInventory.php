@@ -59,7 +59,7 @@ final class DidInventory
                     'e164_key' => self::e164Key((string) ($did['e164'] ?? '')),
                     'sip_prefix' => isset($did['sip_prefix']) ? (string) $did['sip_prefix'] : null,
                     'tenant_shortuid' => $shortuid,
-                    'tenant_label' => (string) ($meta['label'] ?? $meta['pkey'] ?? $shortuid),
+                    'tenant_label' => (string) ($meta['pkey'] ?? $meta['label'] ?? $shortuid),
                     'tenant_fqdn' => (string) ($meta['fqdn'] ?? ''),
                     'instance_id' => $instanceId,
                     'sbc_dispatcher_setid' => $instance['sbc_dispatcher_setid'] ?? null,

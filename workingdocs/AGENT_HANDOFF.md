@@ -45,7 +45,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
 | **Time-based routing (day-parts)** | **`TIME_BASED_ROUTING_REQUIREMENTS.md`** — **done on `main`** (A–E + DOW ranges + DID open-seed); golden **0.0.4-8** / cagi **1.0.0-13**; before CAGI Phase 4 |
-| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — A–E + **D Path 1** lab green; **F** migrate docs; Local shortcut **rejected** (§15); pack gate sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`**. **Wild model:** **`DIAL_COHORT_REQUIREMENTS.md`** (sisterhood; not coded yet) |
+| **Tenant short dial (cross-tenant)** | **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** — A–E + **D Path 1** lab green; **F** migrate docs; Local shortcut **rejected** (§15); pack gate sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`**. **Wild / release stopper:** **`DIAL_COHORT_REQUIREMENTS.md`** (UI Site Group; C1–C5) |
 | **Fleet-first tenant create** | **`FLEET_TENANT_CREATE_REQUIREMENTS.md`** — policy locked; implement when scheduled |
 | **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** → **`CALL_TEST_STRATEGY.md`** → recipes **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** (`AGENTS.md` / `workingdocs/TODO.md`) · **site-dial pack gate plan** sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** · **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** · pbx3 stub **`call-tests/README.md`** only |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
@@ -73,26 +73,33 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-06) — Fleet Delete lab green
+## Next agent session notes (2026-08-06) — naming lock + dial cohort stopper
 
-**Branch:** **`main`** — pbx3 (Fleet Delete + handoff), pbx3spa **`305dc80`**, pbx3sbc-admin **`398f5ef`**, pbx3-docs **`42ecb8e`** (Instance API docs earlier: pbx3-docs **`7e5554b`**, pbx3api **`10684fe`**). Day-parts golden **0.0.4-8** / cagi **1.0.0-13**. Earlier same day: number wire D1=C + MainOut seed (still on `main`).
+**Branch:** **`main`** — pbx3 / pbx3api / pbx3spa (naming + Fleet-only Name + dial cohort **spec**; pushed with this session end).
 
-### Shipped (this session)
-- **Fleet Delete (Rule 14) — lab green:** Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`**. D0–D5: SBC admin `DELETE /api/fleet/domains/{domain}`; catalog soft-decom; Gatekeeper durable job `/api/v1/tenant-deletes*` (`pending → … → completed`); SPA Fleet Tenants Delete + Jobs confirm; MkDocs `fleet/tenant-delete`. Throwaway lab delete OK (control + SBC hot-deployed). **D6 FQDN rename** parked.
-- **Instance API MkDocs** (earlier this session): SARK-style pages in **pbx3-docs** `docs/api/` (already on `main` / Pages).
+### Shipped
+- **Fleet naming lock** — Spec **`FLEET_NAMING_LOCK.md`**. Tenant Name = **pkey**; instance Name = **sitename ≡ catalog `label`**; Description = notes; FQDN always `{shortuid}.{apex}`; **D6 FQDN rename cancelled**. Lab Names: Golden / AEL Nodes / **Labtest-B** (bzy).
+- **Edit surface:** Fleet → Instances only pushes `PUT /fleet/sitename` then catalog label; Network Site Name **read-only** on fleet nodes; Sanctum sitename change → **403**. Gatekeeper `NodeSitenameClient`; installer vanity FQDN reject (needs package roll).
+- **Dial cohort / Site Group — RELEASE STOPPER** — Spec **`DIAL_COHORT_REQUIREMENTS.md`** (§11 locked; C0 done; C1–C6 not coded). UI **Site Group**; tech dial cohort. Hand prefixes = lab only. **No first product release** until C1–C5 lab-green.
 
 ### Golden / ops
-- Dev API: `https://08jzwn.pbx3.com:44300/api`. Gatekeeper: **`control.pbx3.com`**. SBC admin: **`sbc.pbx3.com`**. SPA: `npm run dev`. SBC VIP **`3.93.26.82`**.
+- Dev API: `https://08jzwn.pbx3.com:44300/api`. Gatekeeper: **`control.pbx3.com`**. SPA: `npm run dev`. Naming code hot-deployed earlier this session (control + fleet nodes).
 
 ### Resume
-1. **Naming hygiene** — pkey as tenant Name; sitename≡label; no vanity FQDN. Spec **`FLEET_NAMING_LOCK.md`**.  
-2. Product crumbs / number wire Phase 2 as needed.
+1. **Dial cohort C1** — catalog + Gatekeeper CRUD (Site Group / routing_prefix). Spec **`DIAL_COHORT_REQUIREMENTS.md`**.  
+2. Optional: remove unused `InstanceCatalogLabelSync` (superseded by Fleet→node push); pbx3 package roll for installer vanity guard.
+
+---
+
+## Next agent session notes (2026-08-06) — Fleet Delete lab green (superseded)
+
+**Superseded for “read first”** by naming + dial cohort block above. Fleet Delete D0–D5 still lab green on `main`.
 
 ---
 
 ## Next agent session notes (2026-08-06) — number wire (superseded)
 
-**Superseded for “read first”** by Fleet Delete block above. Number wire D1=C + seed MainOut shipped earlier same day; Fleet Delete was the resume target then.
+**Superseded.** Number wire D1=C + seed MainOut shipped earlier same day.
 
 ---
 

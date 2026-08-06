@@ -73,6 +73,6 @@ final class TenantProvisionerTest extends TestCase
         $this->assertSame('inst1', $rec['instance_id']);
         $this->assertSame('active', $rec['status']);
         $this->assertSame('acme', $rec['pkey']);
-        $this->assertSame('Acme Corp', $rec['label']);
+        $this->assertSame('acme', $rec['label']);
     }
 }

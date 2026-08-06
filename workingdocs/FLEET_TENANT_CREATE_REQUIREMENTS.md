@@ -1,6 +1,6 @@
 # Fleet-first tenant create — requirements (locked 2026-07-29)
 
-**Status:** Create **shipped on `main`** (2026-07-30 merge). Delete = **[`FLEET_TENANT_DELETE_REQUIREMENTS.md`](FLEET_TENANT_DELETE_REQUIREMENTS.md)** (Rule 14 durable job; slices D1–D5). FQDN rename = D6 after Delete.  
+**Status:** Create **shipped on `main`** (2026-07-30 merge). Delete = **[`FLEET_TENANT_DELETE_REQUIREMENTS.md`](FLEET_TENANT_DELETE_REQUIREMENTS.md)** (Rule 14; D1–D5 done; **D6 FQDN rename cancelled**). Naming: **[`FLEET_NAMING_LOCK.md`](FLEET_NAMING_LOCK.md)**.  
 **Cursor plan:** `fleet-first_tenant_create` (agent plans).  
 **Related:** Rule 6 / 10 / 11 / **14** · mobility gotcha #3 · [`S3Registrar::registerTenant`](../pbx3-directory/gatekeeper/src/S3Registrar.php) · Fleet Tenants “Register on SBC”.
 **Gatekeeper:** [`TenantProvisioner`](../pbx3-directory/gatekeeper/src/TenantProvisioner.php) · `POST /api/v1/tenants/provision`  
@@ -22,8 +22,9 @@
 |-----------|--------|
 | Create + home + SBC `domain → setid` | Fleet |
 | Delete / decommission | Fleet |
-| Rename FQDN / change shortuid | Fleet |
-| Edit PBX tenant settings (description, CLID, local area, timers, …) | Instance |
+| FQDN | Always `{shortuid}.{apex}` — **not** renamed (D6 cancelled). Shortuid immutable. **`FLEET_NAMING_LOCK.md`** |
+| Edit PBX tenant settings (description = notes, CLID, local area, timers, …) | Instance |
+| Tenant **Name** | **`pkey`** (canon; e.g. `Kildare` legal). Do **not** use description→catalog `label` as Name — **`FLEET_NAMING_LOCK.md`** |
 | Extensions / queues / IVRs / inbound / CoS / Commit | Instance |
 | Default outbound dialplan template (locale) | **Instance** `globals.default_outbound_dialplan` — see [`SEED_OUTBOUND_ON_TENANT_CREATE.md`](SEED_OUTBOUND_ON_TENANT_CREATE.md) (**shipped**) |
 | OutRoute rows after tenant create | Tenant (auto-seeded `MainOut` from globals when set) |
@@ -34,7 +35,7 @@ One **instance** flag (existing fleet mode / `PBX3_FLEET_MODE` or equivalent) �
 
 ## Human process (happy path)
 
-1. Fleet → Tenants → **Create** (home instance, `pkey`, description, optional CLID / local area as digit **strings**).
+1. Fleet → Tenants → **Create** (home instance, **Name** = `pkey`, description = notes, optional CLID / local area as digit **strings**). Catalog Name = **pkey** (`FLEET_NAMING_LOCK.md`).
 2. One action: row on node + catalog meta + SBC domain.
 3. Instance admin configures and Builds the PBX as today.
 4. Optional: Fleet DIDs assign / project.
@@ -72,7 +73,7 @@ Synchronous v1 (no durable job). Rule 11: other tenants’ calls unaffected.
 | `POST /api/v1/tenants/provision` | pbx3-directory gatekeeper | **Done** (`main`) |
 | Fleet Create UI | pbx3spa | **Done** (`main`) |
 | Fleet mode: hide Create/Delete; FQDN/shortuid read-only | pbx3spa | **Done** (`main`; FQDN already readonly) |
-| Fleet Delete + FQDN rename | **Delete: see FLEET_TENANT_DELETE_REQUIREMENTS.md** | Spec locked 2026-08-06. Node wipe exists. Implement D1–D5; FQDN rename D6 later. **Blocks first product release**. |
+| Fleet Delete (D1–D5) | see **`FLEET_TENANT_DELETE_REQUIREMENTS.md`** | **Done**. **D6 cancelled**. Delete still matters for first product release; rename does not. |
 
 ## Non-goals (v1)
 

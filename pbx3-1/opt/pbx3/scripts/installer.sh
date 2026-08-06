@@ -127,18 +127,22 @@ if [ -d $SHOREWALL ]; then
 fi
 
 # Instance identity (applied only on fresh DB rebuild, unless PBX3_APPLY_INSTANCE_IDENTITY=1 — see below).
-# FQDN = {subdomain}.{DOMAIN_TLD}; hostname = subdomain (for Let's Encrypt later).
+# FQDN = {shortuid}.{DOMAIN_TLD}; hostname = shortuid (opaque). Friendly Name = sitename (INSTANCE_SITENAME).
 # DOMAIN_TLD: env DOMAIN_TLD, else globals.domain from existing DB, else prompt (default pbx3.com), else pbx3.com.
-# Subdomain: 6 chars from idpwgen unless INSTANCE_FQDN legacy env, or existing fqdn+domain in DB match.
-# Legacy: INSTANCE_FQDN=node1.pbx3.com -> subdomain=node1, TLD=rest (e.g. pbx3.com).
-# Site name (friendly label): env INSTANCE_SITENAME, else prompt on first provision → globals.sitename
-#   (Home / Network; not hostname). Empty allowed → SPA falls back to FQDN.
+# Subdomain/shortuid: 6-char idpwgen opaque unless recovering existing DB, or INSTANCE_FQDN with opaque label.
+# Vanity INSTANCE_FQDN (e.g. kildare.pbx3.com) is rejected unless PBX3_ALLOW_VANITY_FQDN=1 (lab debt only).
+# Site name (friendly Name): env INSTANCE_SITENAME, else prompt on first provision → globals.sitename
+#   (Home / Network; not hostname). Empty allowed → SPA falls back to shortuid.
 
 normalize_fqdn() {
     echo "$1" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]'
 }
 valid_fqdn() {
     [ -n "$1" ] && case "$1" in *.*) true ;; *) false ;; esac
+}
+# Opaque shortuid / FQDN first label: 6 chars, idpwgen charset (no vowels / ambiguous).
+opaque_shortuid() {
+    echo "$1" | grep -Eq '^[0-9bcdfghjkmnpqrstvwxyz]{6}$' && echo "$1" | grep -Eq '[bcdfghjkmnpqrstvwxyz]'
 }
 # Friendly site name: trim ends only; keep case and internal spaces.
 normalize_sitename() {
@@ -172,7 +176,18 @@ fi
 if valid_fqdn "$_LEGACY_FQDN"; then
     INSTANCE_SUBDOMAIN=$(echo "$_LEGACY_FQDN" | cut -d. -f1)
     DOMAIN_TLD=$(echo "$_LEGACY_FQDN" | cut -d. -f2-)
-    INSTANCE_FQDN="$_LEGACY_FQDN"
+    if opaque_shortuid "$INSTANCE_SUBDOMAIN"; then
+        INSTANCE_FQDN="$_LEGACY_FQDN"
+    elif [ "${PBX3_ALLOW_VANITY_FQDN:-}" = "1" ]; then
+        echo "WARNING: PBX3_ALLOW_VANITY_FQDN=1 — accepting vanity INSTANCE_FQDN=$_LEGACY_FQDN (lab debt; prefer opaque shortuid + INSTANCE_SITENAME)." >&2
+        INSTANCE_FQDN="$_LEGACY_FQDN"
+    else
+        echo "ERROR: INSTANCE_FQDN first label must be opaque 6-char shortuid (idpwgen), not a vanity name like 'kildare'." >&2
+        echo "  Use: DOMAIN_TLD=pbx3.com INSTANCE_SITENAME='Kildare'  (FQDN becomes {idpwgen}.pbx3.com)" >&2
+        echo "  Or lab override: PBX3_ALLOW_VANITY_FQDN=1 INSTANCE_FQDN=..." >&2
+        echo "  See pbx3/workingdocs/FLEET_NAMING_LOCK.md" >&2
+        exit 1
+    fi
 fi
 
 if [ -z "$DOMAIN_TLD" ] && valid_fqdn "$_ENV_TLD"; then
@@ -259,19 +274,24 @@ else
     if [ -x "$SCRIPTS/normalize-globals-identity.sh" ]; then
         /bin/sh "$SCRIPTS/normalize-globals-identity.sh" || true
     fi
-    # Explicit host migration only: INSTANCE_FQDN=node.example.com PBX3_APPLY_INSTANCE_IDENTITY=1 installer.sh
+    # Explicit host migration only: INSTANCE_FQDN=opaque.example.com PBX3_APPLY_INSTANCE_IDENTITY=1 installer.sh
     if [ "${PBX3_APPLY_INSTANCE_IDENTITY:-}" = "1" ] && valid_fqdn "$_LEGACY_FQDN"; then
         INSTANCE_SUBDOMAIN=$(echo "$_LEGACY_FQDN" | cut -d. -f1)
         DOMAIN_TLD=$(echo "$_LEGACY_FQDN" | cut -d. -f2-)
-        INSTANCE_FQDN="$_LEGACY_FQDN"
-        echo "PBX3_APPLY_INSTANCE_IDENTITY=1: applying INSTANCE_FQDN=$INSTANCE_FQDN"
-        _APPLY_IDENT=1
+        if opaque_shortuid "$INSTANCE_SUBDOMAIN" || [ "${PBX3_ALLOW_VANITY_FQDN:-}" = "1" ]; then
+            INSTANCE_FQDN="$_LEGACY_FQDN"
+            echo "PBX3_APPLY_INSTANCE_IDENTITY=1: applying INSTANCE_FQDN=$INSTANCE_FQDN"
+            _APPLY_IDENT=1
+        else
+            echo "ERROR: PBX3_APPLY_INSTANCE_IDENTITY with vanity INSTANCE_FQDN rejected (set PBX3_ALLOW_VANITY_FQDN=1 for lab debt)." >&2
+            exit 1
+        fi
     fi
 fi
 
-# Site name (friendly label → globals.sitename). Prompt on first provision / identity apply when unset.
+# Site name (friendly Name → globals.sitename). Prompt on first provision / identity apply when unset.
 if [ "$_APPLY_IDENT" -eq 1 ] && [ -z "$INSTANCE_SITENAME" ] && [ -t 0 ]; then
-    printf "Site name (friendly label for Home / Network) []: " >&2
+    printf "Site name (friendly Name for Home / Network, e.g. Kildare) []: " >&2
     read -r _site_in
     INSTANCE_SITENAME=$(normalize_sitename "$_site_in")
 fi

@@ -1,7 +1,7 @@
 # Fleet tenant delete — requirements (locked 2026-08-06)
 
-**Status:** Spec locked; implementation slices **D1–D5**. FQDN rename = **D6** (after Delete v1).  
-**Policy:** Rule **6 / 10 / 14** · [`FLEET_TENANT_CREATE_REQUIREMENTS.md`](FLEET_TENANT_CREATE_REQUIREMENTS.md) · [`DESIGN_RULES.md`](../pbx3-directory/docs/DESIGN_RULES.md) Rule 14.  
+**Status:** Spec locked; implementation slices **D1–D5** **done**. **D6 FQDN rename — cancelled** (2026-08-06).  
+**Policy:** Rule **6 / 10 / 14** · [`FLEET_TENANT_CREATE_REQUIREMENTS.md`](FLEET_TENANT_CREATE_REQUIREMENTS.md) · [`DESIGN_RULES.md`](../pbx3-directory/docs/DESIGN_RULES.md) Rule 14 · naming [`FLEET_NAMING_LOCK.md`](FLEET_NAMING_LOCK.md).  
 **Mirror:** Tenant-move durable jobs — **not** Fleet Create sync provision.
 
 ## Product decision
@@ -13,7 +13,7 @@
 | Solo / kick-tyres | On-node Delete **unchanged** |
 | Catalog on delete | **Soft-decommission** (`status=decommissioned`); keep `meta.json` for audit. Hard S3 prefix purge = later |
 | Ability | Same as Create: **`fleet_instances`** |
-| FQDN rename | **Separate** Rule 14 job after Delete ships (D6) |
+| FQDN rename (D6) | **Cancelled** — FQDN always `{shortuid}.{apex}`; see **`FLEET_NAMING_LOCK.md`** |
 
 ## Job stages (v1)
 
@@ -48,7 +48,7 @@ pending → preflight
 - Drain / AMI wait-for-zero channels  
 - Auto DID unassign / S3 backup purge / media tree wipe  
 - Sync one-shot POST (violates Rule 14)  
-- FQDN rename (D6)
+- FQDN rename (D6 — **cancelled**; not a Delete non-goal forever, just not a product)
 
 ## Implementation map
 
@@ -60,11 +60,11 @@ pending → preflight
 | D3 Delete job store/runner/routes | gatekeeper | **Done** |
 | D4 SPA Delete + Jobs confirm | pbx3spa | **Done** |
 | D5 Lab + MkDocs | pbx3-docs | **Done** (operator page; lab operator verifies) |
-| D6 FQDN rename job | later | **Parked** — after Delete lab green |
+| D6 FQDN rename job | — | **Cancelled** 2026-08-06 — see § D6 |
 
-## D6 — FQDN rename (parked)
+## D6 — FQDN rename (**cancelled** 2026-08-06)
 
-Separate Rule 14 job after Delete v1 is lab-green. Expected shape: confirm → update node `cluster.fqdn` → catalog meta FQDN → SBC delete old domain + register new (or repoint) → LE sync. Do not fold into Delete.
+**No longer planned.** Tenant (and instance) FQDN is always **`{shortuid}.{apex}`**; shortuid is immutable; human rebrand = edit **Name** (`pkey` / sitename). Vanity hostnames (lab `kildare.pbx3.com`) are policy debt — **`FLEET_NAMING_LOCK.md`**. Fleet-wide apex change = separate ops problem if ever needed.
 
 ## Lab acceptance
 

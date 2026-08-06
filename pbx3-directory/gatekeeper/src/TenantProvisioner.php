@@ -253,7 +253,8 @@ final class TenantProvisioner
             'fqdn' => $fqdn,
             'status' => 'active',
             'pkey' => $pkey,
-            'label' => $description !== '' ? $description : $pkey,
+            // Name = pkey (FLEET_NAMING_LOCK). Description is notes only — never catalog Name.
+            'label' => $pkey,
         ];
     }
 

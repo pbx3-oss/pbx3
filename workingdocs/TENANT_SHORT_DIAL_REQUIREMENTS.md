@@ -1,9 +1,10 @@
 # Tenant short dial requirements (per-tenant dial prefixes)
 
 **Status:** Requirements locked 2026-07-27. **A–D + E pack-gate lab green** (2026-08-05) and **merged to `main`**. **D** Path 1 Magrathea + desk matrix; **E** sipplab pack **12/12** ×2. **F** migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**. Local shortcut **rejected** (§15).  
+**Wild / release operator model (2026-08-06):** Hand-invented per-sender prefixes are **lab / interim only**. Production = destination **routing prefix** + **dial cohort** (UI Site Group) + Rule 14 materialise — **[`DIAL_COHORT_REQUIREMENTS.md`](DIAL_COHORT_REQUIREMENTS.md)** (**release stopper** until done). Call path here stays; config HoR moves.  
 **Scope:** Allow an extension on tenant A to call an extension on tenant B **when allowed**, using a **dial prefix** that is **local to the calling tenant**, plus the target’s normal extension (`pkey`). Same call recipe whether B is on **this node or another** (fleet).  
 **Not:** Globally unique extension numbers (SARK model — rejected). Not directory/gatekeeper in the call path (**Rule 1**). Not replacing PSTN OutRoute / Egress.  
-**Related:** Fleet AoR dial (`sip:shortuid@tenant.fqdn`) · L1 `in-multi-tenant-a-b` (usrloc domain discrimination only) · legacy InterSARK / SailToSail / `DUNS_INTERSITE` OutRoute · **`CALL_TYPE_INVENTORY.md`** · **`DESIGN_RULES.md` Rule 1**.
+**Related:** Fleet AoR dial (`sip:shortuid@tenant.fqdn`) · L1 `in-multi-tenant-a-b` (usrloc domain discrimination only) · legacy InterSARK / SailToSail / `DUNS_INTERSITE` OutRoute · **`CALL_TYPE_INVENTORY.md`** · **`DESIGN_RULES.md` Rule 1** · **`DIAL_COHORT_REQUIREMENTS.md`**.
 
 **Naming (locked 2026-08-03):** Product term is **dial prefix** (or **prefix**). Historical workingdocs / some code may still say *alias* — same concept. Prefer **prefix** in UI, help, and new docs. Schema/API resource names (`dialalias`, `dialaliases`) may lag as implementation identifiers until a rename pass.
 
