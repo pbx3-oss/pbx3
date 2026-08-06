@@ -86,6 +86,12 @@ if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$TIMEBASE_APPLY" ]; then
 	fi
 fi
 
+# Default outbound dialplan (globals string → copy to tenant OutRoute on create).
+OUTDIAL_APPLY="$SYSPATH/scripts/apply-sqlite-add-default-outbound-dialplan.sh"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$OUTDIAL_APPLY" ]; then
+	sh "$OUTDIAL_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+fi
+
 # After apt upgrade + runLinker, regenerate PJSIP/dialplan from sqlite (HoR) into
 # ASTLOCALCONF so symlinked /etc/asterisk is not left pointing at empty/stale ready files.
 # Then rewrite external_* to this node's public IP/EIP and restart Asterisk.

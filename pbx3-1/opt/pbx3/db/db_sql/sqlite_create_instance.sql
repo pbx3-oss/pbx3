@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS globals (
 "domain" TEXT,                       -- domain name of this instance (e.g. example.com)
 "edomain" TEXT,                       -- external IP address of this server
 "emergency" TEXT DEFAULT '999 112 911',  -- **MOVED**
+"default_outbound_dialplan" TEXT DEFAULT '_0. _00.',  -- copied to tenant OutRoute.dialplan on create (locale time-saver; UK seed)
 "fqdn" TEXT DEFAULT NULL,				-- default is shortuid.domain
 "fqdninspect" TEXT DEFAULT 'NO',		-- Require FQDN in SIP Ops Shorewall 4.6+ 
 "fqdnprov" TEXT,						-- use FQDN in remote provisioning YES/NO

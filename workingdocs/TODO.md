@@ -1,33 +1,32 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** all product repos. Day-parts merged; golden **pbx3 0.0.4-8** / **pbx3cagi 1.0.0-13**. Fleet short-dial still **0.0.4-6** / **1.0.0-11** on non-golden unless rolled.  
-**Last updated:** 2026-08-05 (session end — short dial A–E + D Path 1 closed; pack targets stay `9wvvnb`/`dhbm8x` until dedicated SIPp instance)
-
+**Last updated:** 2026-08-06 (Fleet Delete = release blocker)
 
 ### Suggested “what next?” order
 
-1. **Number wire standard (open)** — Model A vs B — **`NUMBER_WIRE_STANDARD_DRAFT.md`** · **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. No implement until D1.  
-2. **Seed outbound on tenant create (parked note)** — locale template vs iron-PBX “longer than extlen → Egress”; decide before code.  
-3. **Fleet Delete + FQDN rename** (parked) — **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
-4. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes / pack roll beyond golden.  
-5. **pbx3cagi Phase 4** (parked).  
-6. **Velocity standalone** (parked).  
-7. **Instance shadowing** / S10.7 / S8.9 (parked).  
-8. **AMI wallboard** (parked).  
-9. **Fleet node health ≠ Asterisk** (parked).  
-10. **Control plane duplex / HA** (parked).  
-11. **Fleet auth cookie/SSO (blocked)**.  
-12. **S7+** attested PCI — customer ask.  
-13. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
-14. **Grafana / door-knock geo** (parked).  
-15. **WebRTC residual** — Magrathea W1 done; multi-AZ still open. Spec: **`WEBRTC_WSS_LAB.md`**.  
-16. **SPA WSS line test** — **done / lab green** — **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`**.  
-17. **Multi-AZ lab** — instances in **different AZs**.  
-18. **Pre-first-release — SPA bundle diet** (parked) — ~1.1 MB / ~295 kB gzip single chunk; lazy JsSIP / route-split before first product release.  
-19. **Lab / demo DB anonymize** (parked) — real-site surnames / friendly names.  
-20. **Provisioning server class** (exploratory, early) — SARK 6.5–style provision image; directory for phone inventory TBD; not yet a requirements file.  
-21. **SPA list action icons component** (parked) — extract shared **`ListEditIcon` / `ListDeleteIcon`** (or row-actions) from the duplicated Lucide-style stroke SVGs in every `*ListView`; drop emoji/shortcuts; one component for all list edit/delete columns. Repo: **pbx3spa**.  
-22. **OpenSIPS `alias_db_lookup`** — **leave as-is**.  
+1. **Fleet Delete + FQDN rename — next / release blocker** — confirm-gated durable job (Rule 14): catalog remove + SBC domain delete + node wipe (primitive already exists). Spec **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**. Needed fairly soon; **blocks product release**.  
+2. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes / pack roll beyond golden.  
+3. **pbx3cagi Phase 4** (parked).  
+4. **Velocity standalone** (parked).  
+5. **Instance shadowing** / S10.7 / S8.9 (parked).  
+6. **AMI wallboard** (parked).  
+7. **Fleet node health ≠ Asterisk** (parked).  
+8. **Control plane duplex / HA** (parked).  
+9. **Fleet auth cookie/SSO (blocked)**.  
+10. **S7+** attested PCI — customer ask.  
+11. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
+12. **Grafana / door-knock geo** (parked).  
+13. **WebRTC residual** — Magrathea W1 done; multi-AZ still open. Spec: **`WEBRTC_WSS_LAB.md`**.  
+14. **SPA WSS line test** — **done / lab green** — **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`**.  
+15. **Multi-AZ lab** — instances in **different AZs**.  
+16. **Pre-first-release — SPA bundle diet** (parked) — ~1.1 MB / ~295 kB gzip single chunk; lazy JsSIP / route-split before first product release.  
+17. **Lab / demo DB anonymize** (parked) — real-site surnames / friendly names.  
+18. **Provisioning server class** (exploratory, early) — SARK 6.5–style provision image; directory for phone inventory TBD; not yet a requirements file.  
+19. **SPA list action icons component** (parked) — extract shared **`ListEditIcon` / `ListDeleteIcon`** (or row-actions) from the duplicated Lucide-style stroke SVGs in every `*ListView`; drop emoji/shortcuts; one component for all list edit/delete columns. Repo: **pbx3spa**.  
+20. **OpenSIPS `alias_db_lookup`** — **leave as-is**.  
+21. **Number wire Phase 2 / D2–D4** (parked) — when scheduled; Phase 1 policy stands.  
+22. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -45,8 +44,8 @@
 
 - [x] **Tenant short dial D — Path 1 (lab green 2026-08-05):** Magrathea username usrloc repair; desk matrix Snom↔Yealink both ways. Spec **§3.9.1**. Generator reject-all-digit on `main`. Hairpin BYE cause unknown — watch.
 
-- [ ] **Number wire standard — Model A vs B (open 2026-08-02):** Draft **`NUMBER_WIRE_STANDARD_DRAFT.md`**; research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Preference lean: PBX sends dialled digits; SBC owns habit + peer face (PTT). **Not locked** — do not strip node Mangle without D1.  
-  **Lab note (2026-08-04):** Magrathea inbound dialect **0… → 44…** before `do_routing` — DID **`dr_rules` prefixes must be digit E.164** (e.g. `441924910444` not `01924910444`). Asterisk Ingress needs wire form **`+441924…`** after genAst. Brindley **outbound** gwid strip2+prefix0 also expects digit E.164 from the node, not national `0…` (SIPp pack `OUT_DIGITS=441924910444`). Office **01924** DIDs → **Kildare** (e.g. rule `441924918076` → gwid 100); **910444** still lab on golden until operator moves it.
+- [ ] **Number wire — D1 = C + policy (2026-08-06):** Operator policy **`NUMBER_WIRE_POLICY.md`**. Detail **`NUMBER_WIRE_STANDARD_DRAFT.md`**. Research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Phase 1 = node Mangle; Phase 2 = SBC habit when gated. **Do not strip node Mangle** until Phase-2 gate. D2–D4 open.  
+  **Lab note (2026-08-04):** SBC inbound dialect (Magrathea Peer) **0… → 44…** before `do_routing` — DID **`dr_rules` prefixes must be digit E.164** (e.g. `441924910444` not `01924910444`). Asterisk Ingress needs wire form **`+441924…`** after genAst. Brindley **outbound** gwid strip2+prefix0 also expects digit E.164 from the node, not national `0…` (SIPp pack `OUT_DIGITS=441924910444`). Office **01924** DIDs → **Kildare** (e.g. rule `441924918076` → gwid 100); **910444** still lab on golden until operator moves it.
 
 - [x] **L1 SIPp pack green (2026-08-04 session):** Full **`run-pack.sh` 11/11** on Peer `98.82.58.59` after outbound `OUT_DIGITS` digit-E.164 fix. Site-dial dual-host still green.
 
@@ -87,7 +86,7 @@
 
 - [ ] **`ipphone.desc` vs `description` — clarify / rename (parked 2026-07-29):** Historical SARK/Asterisk ambivalence: schema has both columns; SPA “User (extension name)” → `desc`, “Description” → `description`; list **User** prefers `desc` so freeform Description never shows when `desc` is set (e.g. `1501` vs “WebRTC second ep”). GenAst `$desc` token actually substitutes **`description`** (else pkey), not the `desc` column. Model comment still calls `desc` “SIP username” — wrong now that **shortuid** is PJSIP identity. Proper fix later: map roles (display name vs notes vs any remaining Asterisk/SIP use), align SPA labels + list, GenAst templates, API, migrate/rename if needed. Do not drive-by.
 
-- [ ] **Fleet Delete + FQDN rename (parked 2026-07-30):** Policy locked (Fleet owns lifecycle). **Rule 14:** confirm-gated **durable jobs** (not create-style sync). Primitives still needed: catalog tenant remove/soft-decommission; SBC `DELETE` domain. Node wipe already `DELETE /api/fleet/tenants/{shortuid}`. Spec: **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.
+- [ ] **Fleet Delete + FQDN rename — release blocker (bumped 2026-08-06):** Policy locked (Fleet owns lifecycle). **Blocks first product release** — cannot ship fleet create without a safe delete/decommission path. **Rule 14:** confirm-gated **durable jobs** (not create-style sync). Node wipe already `DELETE /api/fleet/tenants/{shortuid}` (`destroyTenantData` — tenant tables + cluster; trunks stay; media trees v1 gap). Still need: Fleet SPA Delete; catalog tenant remove/soft-decommission; SBC `DELETE` domain; job stages + resume/audit. FQDN rename same follow-on track. Spec: **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.
 
 - [ ] **SBC Track A lab — SARK (± FreePBX) behind SBC (2026-07-28):** Operator will stand up SARK (and maybe FreePBX) and prove REGISTER / calls via Magrathea or scratch pbx3sbc (domain → dispatcher → foreign Asterisk; phones registrar = SBC). No GenAst. Capture recipe / gaps when done — **`SBC_PRODUCT_TRACKS.md`** Track A. **After that lab:** FreePBX→pbx3 **data** migrate is a separate ETL chain (not shared with SARK `migrateLegacyDb` / `db_legacy_sql`) — requirements later.
 
@@ -99,7 +98,7 @@
 
 - [x] **Schedule no-match default = open (reaffirmed 2026-08-04):** **Q1 locked.** Many shops use **no timers** — only BLF open/closed throw (lamp on = closed). Default-closed rejected as fleet default. Office row count → fix with **§5.9 day ranges**, not by flipping baseline. Spec **§5.8**.
 
-- [ ] **Seed outbound OutRoute(s) on tenant create (parked 2026-08-05):** Same instinct as DID create → require open dest + auto-build profile. Today tenant create = cluster (+ fleet catalog/SBC domain) only; operator must add OutRoute(s) `path1=Egress` + Commit. **Look at two shapes:** (A) **locale template** (UK `0`/`00`, US NANP/`011`, …) — correct for carriers, harder to pick (CLID country? create picker? site default?). (B) **Iron-PBX shunt** — anything longer than extension length → Egress (one catch-all pattern). Simple, but collisions with short-dial prefixes, feature codes, emergency / short national codes, variable ext lengths. Prefer decide before code; keep `path1=Egress` only (no trunk invent). Related: DID open-seed (**pbx3api/spa main**); fleet egress design; **`NUMBER_DIALECT_REQUIREMENTS.md`**.
+- [x] **Seed outbound OutRoute(s) on tenant create (shipped 2026-08-06):** `globals.default_outbound_dialplan` → `MainOut` on tenant create; fleet `path1=Egress`. UK default `_0. _00.`. SPA Instance Globals. Spec **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**. Apply: `apply-sqlite-add-default-outbound-dialplan.sh` (or API ensureSchema). Remaining: US seed string (O4).
 
 - [ ] **Control plane duplex / HA (parked, pre-live 2026-07-27):** `control.pbx3.com` / Gatekeeper is a single host — ops SPOF (probes, Fleet UI, moves, notify, Edge promote). **Call plane fail-safe** by design (nodes+SBC keep routing). Not built. Later: active/standby + EIP/DNS; S3 catalog already shared HoR; local health SQLite/job queue need replicate-or-cold-standby story. Do **not** home on SBC. Spec seed: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5 fail-safe.
 

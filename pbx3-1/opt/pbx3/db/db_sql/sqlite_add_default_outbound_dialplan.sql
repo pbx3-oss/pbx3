@@ -1,0 +1,3 @@
+-- Idempotent notes for default_outbound_dialplan (applied by apply-sqlite-add-default-outbound-dialplan.sh).
+-- Fresh installs: column is in sqlite_create_instance.sql.
+-- ALTER TABLE globals ADD COLUMN default_outbound_dialplan TEXT DEFAULT '_0. _00.';

@@ -1,8 +1,10 @@
 # Fleet Egress wire — +E.164 toward SBC
 
-**Related:** [`pbx3-directory/docs/NUMBER_DIALECT_REQUIREMENTS.md`](../pbx3-directory/docs/NUMBER_DIALECT_REQUIREMENTS.md) · operator manual [`pbx3-docs` `fleet/number-dialect.md`](../../pbx3-docs/docs/fleet/number-dialect.md)
+**Related:** [`NUMBER_WIRE_POLICY.md`](../pbx3-directory/docs/NUMBER_WIRE_POLICY.md) (who does what) · [`NUMBER_DIALECT_REQUIREMENTS.md`](../pbx3-directory/docs/NUMBER_DIALECT_REQUIREMENTS.md) · operator manual [`pbx3-docs` `fleet/number-dialect.md`](../../pbx3-docs/docs/fleet/number-dialect.md)
 
 Fleet nodes dial PSTN only via the **Egress** trunk to the SBC. Carrier-specific formats are applied on the SBC Peer dialect. The **node → SBC** userpart should be **`+CC…`** where **CC is the country code of the country that node serves** (UK `+44…`, US `+1…`) — not a hard-coded `+44` everywhere.
+
+**Phase 1 (current policy):** the **node** produces that `+E.164` via Egress transform. Do not empty the transform until Phase 2 is gated — see the policy doc.
 
 ## DNID vs CLID on the node
 

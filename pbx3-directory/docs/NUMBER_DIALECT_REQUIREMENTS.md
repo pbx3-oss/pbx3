@@ -1,7 +1,7 @@
 # Number dialect requirements (PSTN)
 
 **Status:** Requirements locked for UK-first implementation (Magrathea + Gamma).  
-**Related:** [`DID_ASSIGNMENT_DESIGN.md`](DID_ASSIGNMENT_DESIGN.md) · [`FLEET_TRUNK_PEERING_DECISION.md`](FLEET_TRUNK_PEERING_DECISION.md) §3 · [`DESIGN_RULES.md`](DESIGN_RULES.md) Rule 13 · [`pbx3sbc/workingdocs/PEERING-PLAN.md`](../../../pbx3sbc/workingdocs/PEERING-PLAN.md)
+**Related:** [`NUMBER_WIRE_POLICY.md`](NUMBER_WIRE_POLICY.md) (who does what) · [`DID_ASSIGNMENT_DESIGN.md`](DID_ASSIGNMENT_DESIGN.md) · [`FLEET_TRUNK_PEERING_DECISION.md`](FLEET_TRUNK_PEERING_DECISION.md) §3 · [`DESIGN_RULES.md`](DESIGN_RULES.md) Rule 13 · [`pbx3sbc/workingdocs/PEERING-PLAN.md`](../../../pbx3sbc/workingdocs/PEERING-PLAN.md)
 
 ## 1. Problem
 
@@ -34,10 +34,13 @@ See also: [Twilio E.164](https://www.twilio.com/docs/glossary/what-e164).
 
 ## 3. Layer ownership (locked)
 
+See also **[`NUMBER_WIRE_POLICY.md`](NUMBER_WIRE_POLICY.md)** for the full Phase 1 / Phase 2 habit split.
+
 | Concern | Owner | Notes |
 |---------|--------|--------|
 | Which CLI number to present | **Node** (routes / extension / cluster CLID) | Existing |
 | How to format dialled + CLI for a carrier | **SBC Peer** (dialect profile) | Rule 13 — edge-authored |
+| Habit → `+E.164` (Phase 1) | **Node** Egress Mangle | Phase 2 may move to SBC — policy doc |
 | DID ownership | Fleet catalog | Digits HoR; no call-path directory |
 | Trivial digit strip/prefix | `dr_gateways.strip` / `pri_prefix` | Fallback only |
 

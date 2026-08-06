@@ -25,6 +25,8 @@
 | Rename FQDN / change shortuid | Fleet |
 | Edit PBX tenant settings (description, CLID, local area, timers, …) | Instance |
 | Extensions / queues / IVRs / inbound / CoS / Commit | Instance |
+| Default outbound dialplan template (locale) | **Instance** `globals.default_outbound_dialplan` — see [`SEED_OUTBOUND_ON_TENANT_CREATE.md`](SEED_OUTBOUND_ON_TENANT_CREATE.md) (**shipped**) |
+| OutRoute rows after tenant create | Tenant (auto-seeded `MainOut` from globals when set) |
 
 ### Cheap solo vs fleet split
 
@@ -70,7 +72,7 @@ Synchronous v1 (no durable job). Rule 11: other tenants’ calls unaffected.
 | `POST /api/v1/tenants/provision` | pbx3-directory gatekeeper | **Done** (`main`) |
 | Fleet Create UI | pbx3spa | **Done** (`main`) |
 | Fleet mode: hide Create/Delete; FQDN/shortuid read-only | pbx3spa | **Done** (`main`; FQDN already readonly) |
-| Fleet Delete + FQDN rename | **Follow-on** | Policy locked; **Rule 14 durable jobs** (confirm + stages + resume/audit). Not create-style sync. Needs catalog tenant remove/soft-decommission + SBC domain delete primitives; node wipe already `DELETE /fleet/tenants/{shortuid}`. |
+| Fleet Delete + FQDN rename | **Follow-on / release blocker** | Policy locked; **Rule 14 durable jobs** (confirm + stages + resume/audit). Not create-style sync. Needs catalog tenant remove/soft-decommission + SBC domain delete primitives; node wipe already `DELETE /fleet/tenants/{shortuid}`. **Blocks first product release** (2026-08-06). |
 
 ## Non-goals (v1)
 

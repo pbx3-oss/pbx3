@@ -57,8 +57,8 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Ops failure notification** | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** — probe+SMTP + lifecycle + misconfig + move-job + Fail2ban ban + **Egress Unavail** shipped; SPA badges later |
 | **Toll fraud / velocity** | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — V1–V5 fleshed (fixture-first, batch CDR, `active=NO` act); competitive notes |
 | **WebRTC / WSS (demo)** | **`WEBRTC_WSS_LAB.md`** (golden `:8089` baseline) → **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 → **`SBC_PRODUCT_TRACKS.md`** · IMPLEMENTATION_PLAN **W1** |
-| **PSTN number dialects** | **`NUMBER_DIALECT_REQUIREMENTS.md`** → MkDocs **`fleet/number-dialect`** → Peer dialect + OpenSIPS `DIALECT_*`; node Egress transform = DNID/`+CC` by serving country (Model A status quo) |
-| **Number wire standard (open)** | **`NUMBER_WIRE_STANDARD_DRAFT.md`** + research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`** — PTT “dial as dialled / upstream fixes”; Model B open |
+| **PSTN number dialects / wire** | **`NUMBER_WIRE_POLICY.md`** (who does what) → **`NUMBER_DIALECT_REQUIREMENTS.md`** → MkDocs **`fleet/number-dialect`** → Peer dialect + OpenSIPS `DIALECT_*`; Phase 1 node Egress = DNID/`+CC` by serving country (**D1 = C**) |
+| **Number wire policy / D1** | **`NUMBER_WIRE_POLICY.md`** (who does what) → **`NUMBER_WIRE_STANDARD_DRAFT.md`** + **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`** — **D1 = C** locked; Phase 2 not scheduled |
 
 | **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging WS0–WS4 **done** (lab); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR **v1 done** (scripts + scratch drill + MkDocs) |
 | **Downstream peer REGISTER (future)** | **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class; no shared OpenSIPS image; interim Asterisk-proxied workaround only |
