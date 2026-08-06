@@ -202,7 +202,7 @@ From: "1101" <sip:59507r@9wvvnb.pbx3.com>   ← From correctly local
 
 **Industry corroboration (operator note, 2026-08-05):** Snom call-log return anchors outbound INVITEs to the **active Identity/registrar domain**, not the host from the logged CLID URI; outbound proxy / identity domain can force Request-URI (and From/To) rewrite. Suggested mitigations: check Identity → SIP proxy/domain; **PBX/SBC dynamically remap/canonicalize** inbound from that registration domain (same shape as lean **option A**); or force registrar domain ≡ expected multi-tenant profile (not viable for cross-tenant history return). Confirms lab — phone-side “keep remote domain” is not the product path.
 
-**Also observed (separate):** same-box site dial — callee hangup does not always clear caller (hairpin/BYE asymmetry); caller hangup clears callee. Track separately from CLIP.
+**Also observed (separate):** same-box site dial — callee hangup did not always clear caller (hairpin/BYE asymmetry). **Not Slice D.** Same Snom/Yealink pair. **2026-08-05:** looks OK now — **cause unknown**; keep an eye on it.
 
 **LDAP:** display lookup can key off shortuid/CLIP; **click-to-dial** across tenants needs qualified dial (AoR or prefix+ext), not bare extension — else same domain-rewrite / local-ext problem.
 
