@@ -1,6 +1,6 @@
 # Tenant short dial requirements (per-tenant dial prefixes)
 
-**Status:** Requirements locked 2026-07-27. **A–C + E L1 lab green** (2026-08-04) and **merged to `main`**. **D product-locked option A** (2026-08-05): our-SBC shortuid usrloc repair — see **§3.9.1**; implement on branch `slice-d-shortuid-usrloc-repair`. **E** pack-gate planned, not executed. **F** migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**.  
+**Status:** Requirements locked 2026-07-27. **A–D + E pack-gate lab green** (2026-08-05) and **merged to `main`**. **D** Path 1 Magrathea + desk matrix; **E** sipplab pack **12/12** ×2. **F** migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**. Local shortcut **rejected** (§15).  
 **Scope:** Allow an extension on tenant A to call an extension on tenant B **when allowed**, using a **dial prefix** that is **local to the calling tenant**, plus the target’s normal extension (`pkey`). Same call recipe whether B is on **this node or another** (fleet).  
 **Not:** Globally unique extension numbers (SARK model — rejected). Not directory/gatekeeper in the call path (**Rule 1**). Not replacing PSTN OutRoute / Egress.  
 **Related:** Fleet AoR dial (`sip:shortuid@tenant.fqdn`) · L1 `in-multi-tenant-a-b` (usrloc domain discrimination only) · legacy InterSARK / SailToSail / `DUNS_INTERSITE` OutRoute · **`CALL_TYPE_INVENTORY.md`** · **`DESIGN_RULES.md` Rule 1**.
@@ -31,7 +31,7 @@ Today’s near-misses:
 ## 2. Goals
 
 1. **Per-tenant dial prefixes** — on calling tenant only: `prefix → target tenant FQDN`; dial `{prefix}{extension}` (digit plan §3.8).  
-2. **Location-agnostic (v1)** — one SBC/FQDN recipe for same-node and cross-node (deferred Local shortcut in §15). **Primary real-world use = sister sites on different nodes** (Q14).  
+2. **Location-agnostic (v1)** — one SBC/FQDN recipe for same-node and cross-node (**Local shortcut rejected** — §15). **Primary real-world use = sister sites on different nodes** (Q14).  
 3. **Allow = configured** — active prefix row on this tenant ⇒ allowed for all CoS classes (v1).  
 4. **Rule 1** — prefix table is **node-local / tenant-local**. No live directory/gatekeeper lookup at call time.  
 5. **Fleet-native routing** — prefix row's **target is the tenant FQDN** (e.g. `dhbm8x.pbx3.com`); place call as `sip:{ext}@{target_fqdn}` via SBC. Do **not** require the target to exist in this node’s `cluster` table. Shortuid (if stored) is **label / optional key only**, not the dial target.  
@@ -96,7 +96,7 @@ Tenant `shortuid` / FQDN remain the **routing key**. Dialling `xyzxyz1000` is po
 - One recipe for co-located and remote tenants.  
 - Reuses domain → dispatcher for **extension** delivery after the SBC change in §3.6.  
 - Avoids dual maintenance of Local/ vs PJSIP/ peer dial strings in v1.  
-- **Inter-tenant dial requires the SBC.** Singleton multi-tenant without an SBC cannot use prefix dial in v1 (§3.8 Q5, §15 deferred shortcut).
+- **Inter-tenant dial requires the SBC.** Singleton multi-tenant without an SBC cannot use prefix dial (§3.8 Q5; §15 Local shortcut rejected).
 
 ### 3.5 Relation to phone AoR (`shortuid@fqdn`)
 
@@ -154,7 +154,7 @@ Same-node “hairpin” back to the same Asterisk via dispatcher is **correct** 
 | **GenAst** | One dialplan pattern per active prefix; remainder is digit-only target extension. Prefer `_81X.` (or length-bounded) so `*`/`#` do not match. CAGI must also reject non-digit remainder if dialled outside pattern. |
 | **Collision hygiene** | Operator owns not colliding with local exts / PSTN OutRoute. Admin help + validation guidance; no auto-steal of bare LepDial or OutRoute. |
 | **Fleet gate** | Feature **fleet-gated** in v1. Requires SBC path. |
-| **Singleton** | Multi-tenant singleton **without SBC** cannot inter-tenant prefix dial in v1 — accepted. See §15 for deferred Local shortcut. |
+| **Singleton** | Multi-tenant singleton **without SBC** cannot inter-tenant prefix dial — accepted. Local shortcut **rejected** (§15). |
 | **Deny** | Missing/inactive prefix **or non-digit remainder** → **congestion + hangup** (no attendant / custom playback v1). |
 | **CoS** | **Tenant-wide:** active prefix row ⇒ allowed for all CoS classes. Per-class grant later if needed. |
 
@@ -223,7 +223,7 @@ From: "1101" <sip:59507r@9wvvnb.pbx3.com>   ← From correctly local
 
 - **No guaranteed reverse site-code** — bidirectional prefix optional (Q10).  
 - Queue/IVR without phone shortuid: name where possible; num may be non-returnable.  
-- Reverse-prefix numeric CLIP remains deferred polish (§15).  
+- Reverse-prefix numeric CLIP remains deferred polish (not Path 1).  
 
 ---
 
@@ -316,8 +316,8 @@ INVITE `sip:{ext}@{fqdn}` arrives via SBC → Asterisk tenant context. Must:
 - Requiring tenant DNS to equal VIP (existing AoR residue stays separate).  
 - Automatic mesh of every tenant to every other tenant.  
 - Changing L1 `in-multi-tenant-a-b` meaning (that stays usrloc discrimination).  
-- **Singleton multi-tenant prefix dial without an SBC** (accepted limitation; §15 maybe later).  
-- **Co-located Local shortcut** in v1 (deferred §15 — not “never”).  
+- **Singleton multi-tenant prefix dial without an SBC** (accepted limitation; Local shortcut rejected — §15).  
+- **Co-located Local shortcut** — **rejected** (§15); not worth dual-path debt for a short SBC bounce.  
 - Promising **bare extension** as the return-call contract (use `suid@fqdn` + CallerID name).  
 - **Feature shortcodes via prefix** (`81*50…`, remote park by free digits, etc.) — digits-only remainder; local codes stay local.  
 - **Same-node-only product** — rejected (Q14); sister sites almost always span nodes.
@@ -359,7 +359,7 @@ Summary:
 | **Q2** | Extension after prefix | **Variable remainder** (`_X.`); **digits only** (no feature shortcodes / `*` / `#`); operator collision hygiene. |
 | **Q3** | Prefix uniqueness | Unique per **calling tenant** only. |
 | **Q4** | Table ownership | Per calling tenant prefix rows (not instance/org shared directory). |
-| **Q5** | Singleton / non-fleet | **Fleet-gated**; SBC required. Singleton multi-tenant without SBC = no prefix dial in v1. Deferred Local shortcut §15. |
+| **Q5** | Singleton / non-fleet | **Fleet-gated**; SBC required. Singleton multi-tenant without SBC = no prefix dial. Local shortcut **rejected** (§15). |
 | **Q6** | CLID | **Num** = returnable AoR; **name** = human detail (§3.9). No per-prefix CLID policy knobs in v1. |
 | **Q7** | Target trust | Mark receive as **site-dial / internal** (not carrier); mechanism at implement. |
 | **Q8** | Deny behaviour | **Congestion + hangup** (missing/inactive prefix **or** non-digit remainder). |
@@ -383,7 +383,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | **B** — OpenSIPS usrloc-miss → dispatcher for `ext@tenant.fqdn` | **pbx3sbc** | None — **lab Magrathea + template** (Pres-Num / PAI / sitedial hairpin) |
 | **C** — GenAst pattern + CAGI PrefixDial (`ext@fqdn` via SBC) + CLIP | pbx3, pbx3cagi | Dial works fleet lab (presentation ext; see §3.9 lab note) |
 | **D** — Receive-path + return lab | pbx3cagi, sbc (+ lab desks) | Path partial; **open ToDo** → lab + choose **least-ugly guaranteed** return (no bidir prefix assume) — **`TODO.md`** |
-| **E** — L1 recipe `site-dial-a-b` | **sipplab** | Dual-host L1 lab green 2026-08-04 — **not pack-gated**; plan when scheduled: sipplab **`workingdocs/SITE_DIAL_PACK_GATE_PLAN.md`** |
+| **E** — L1 recipe `site-dial-a-b` | **sipplab** | Dual-host L1 + **pack gate** lab green 2026-08-05 (**12/12** ×2) — sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** |
 | **F** — Legacy INTERSITE / InterSARK migrate notes | docs | **Done 2026-08-04** — **`DIAL_PREFIX_LEGACY_MIGRATE.md`** |
 
 **Order note:** Complete **A′ (Q14)** before treating Admin as done for C — local-only target picker is **not** product-complete. Slice **B** before or with **C** — without miss→dispatcher, PrefixDial to `ext@fqdn` fails on today’s SBC. Do not regress station dial (`shortuid@fqdn` usrloc hit). Slice **D** includes return-call URI lab check.
@@ -449,25 +449,22 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | 2026-07-27 | Initial draft: prefix namespaces; location-agnostic SBC/FQDN recipe; Rule 1; reject unique-ext; InterSARK legacy; open §8 Q1–Q10. |
 | 2026-07-27 | Operator framing: **per-tenant dial prefix** (`1234` → `xyzxyz`); product prefix; legacy alias OK; lock Q3/Q4/Q10. |
 | 2026-07-27 | SBC: lock **usrloc miss → dispatcher** for `ext@tenant.fqdn` (Q11); slice B; reject node-side ext→shortuid for v1. |
-| 2026-07-27 | **§8 fully locked:** digit plan (fixed prefix + variable ext); fleet-gated / SBC-required; CLID num=`suid@fqdn` + name=human; deny=congestion; CoS tenant-wide; Q12 return-call; deferred co-located Local shortcut (§15). |
+| 2026-07-27 | **§8 fully locked:** digit plan (fixed prefix + variable ext); fleet-gated / SBC-required; CLID num=`suid@fqdn` + name=human; deny=congestion; CoS tenant-wide; Q12 return-call; co-located Local shortcut (§15). |
 | 2026-07-27 | Lab: second SIPp EC2 as **extension platform** (non-Peer EIP) when prefix implement starts; Peer-99 host stays carrier/DID. |
 | 2026-08-03 | **Q13 / remainder charset:** digits only after prefix; no feature shortcodes through prefix path (unless later explicit product reopen). Deny = congestion. |
 | 2026-08-03 | **Q14:** target is **tenant FQDN** (not instance). Always full FQDN; move preserves FQDN → no prefix rewrite; rename re-save/reconcile; no dial-time expand. |
 | 2026-08-04 | **D residual:** lab → **least-ugly *guaranteed* return** recipe (SUID / DID / PAI / hybrid candidates); no implement until findings. |
+| 2026-08-05 | **§15 Local shortcut rejected** — dual-path debt not worth same-node SBC bounce; Path 1 desk return lab green. |
 
 ---
 
-## 15. Deferred: co-located Local shortcut (maybe later)
+## 15. Co-located Local shortcut — **rejected**
 
-**Not v1.** Documented so singleton multi-tenant or hairpin cost can be revisited without rediscovering the tradeoff.
+**Not building.** Same-node PrefixDial keeps the SBC/`sip:{ext}@{fqdn}` recipe (hairpin via dispatcher is correct and cheap). A Local/`Goto` branch would be dual-path debt for a short Magrathea bounce; primary use is sister sites on **different** nodes (Q14), where Local never helps. Singleton multi-tenant **without** SBC stays unsupported for prefix dial (Q5) unless that becomes an explicit sales ask — revisit only then.
 
-**Idea:** If `target_cluster` exists in **this node’s** local `cluster` table, dial `Local/{ext}@{target_cluster}` (or `Goto(target,ext,1)`) instead of `sip:{ext}@{fqdn}` via SBC. Cross-node / unknown target still uses SBC miss→dispatcher. Co-location test is **node-local DB only** (Rule 1 OK).
+| Variant | Verdict |
+|---------|---------|
+| **S1 / S2** GenAst or CAGI co-locate branch | **Reject** — two live recipes, move-off-box footguns, CLIP/PostDial parity tax |
+| **S3** Hand overlay | **Reject as product** — fights GenAst Commit |
 
-| Variant | What it is | Rough effort | Risk |
-|---------|------------|--------------|------|
-| **S1 — Singleton GenAst branch** | When `!fleet_mode`, PrefixDial patterns emit `Goto`/`Local/` into target tenant context; no SBC. | **Small** (~½–1 day once prefix GenAst exists) | Dual dialplan vs fleet; PostDial/busy/VM parity easy to miss. |
-| **S2 — CAGI co-locate branch** | If target in local `cluster` → `Local/`; else `sip:ext@fqdn`. Fleet same-node + enables singleton if ungated. | **Medium** (~1–2 days + L1 both paths) | Two live recipes; fixes may land on one path only. |
-| **S3 — Pure conf tweak** | Hand overlay `exten => _81X.,1,Goto(...)` with no CAGI. | **Tiny** lab hack | **Reject as product** — fights GenAst Commit; no CRUD/CLID. |
-
-Also deferred (related polish): reverse-prefix **numeric** CLIP if desk-phone URI redial proves weak — not the v1 return contract (§3.9).
-| 2026-08-03 | **Product naming:** prefer **dial prefix** / **prefix** over alias in UI and docs. |
+Also deferred (related polish): reverse-prefix **numeric** CLIP if ever wanted — not the v1 return contract (§3.9); Path 1 desk return covers URI history on our edge.
