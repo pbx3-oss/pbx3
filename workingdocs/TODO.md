@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** **`main`** all product repos. Day-parts merged; golden **pbx3 0.0.4-8** / **pbx3cagi 1.0.0-13**. Fleet short-dial still **0.0.4-6** / **1.0.0-11** on non-golden unless rolled.  
-**Last updated:** 2026-08-06 (Fleet Delete = release blocker)
+**Last updated:** 2026-08-06 (session end — number wire D1=C + seed MainOut; Fleet Delete = release blocker)
 
 ### Suggested “what next?” order
 
@@ -44,7 +44,7 @@
 
 - [x] **Tenant short dial D — Path 1 (lab green 2026-08-05):** Magrathea username usrloc repair; desk matrix Snom↔Yealink both ways. Spec **§3.9.1**. Generator reject-all-digit on `main`. Hairpin BYE cause unknown — watch.
 
-- [ ] **Number wire — D1 = C + policy (2026-08-06):** Operator policy **`NUMBER_WIRE_POLICY.md`**. Detail **`NUMBER_WIRE_STANDARD_DRAFT.md`**. Research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Phase 1 = node Mangle; Phase 2 = SBC habit when gated. **Do not strip node Mangle** until Phase-2 gate. D2–D4 open.  
+- [x] **Number wire — D1 = C + policy (2026-08-06):** Operator policy **`NUMBER_WIRE_POLICY.md`**. Detail **`NUMBER_WIRE_STANDARD_DRAFT.md`**. Research **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`**. Phase 1 = node Mangle; Phase 2 = SBC habit when gated. **Do not strip node Mangle** until Phase-2 gate. D2–D4 parked (suggested next §21).  
   **Lab note (2026-08-04):** SBC inbound dialect (Magrathea Peer) **0… → 44…** before `do_routing` — DID **`dr_rules` prefixes must be digit E.164** (e.g. `441924910444` not `01924910444`). Asterisk Ingress needs wire form **`+441924…`** after genAst. Brindley **outbound** gwid strip2+prefix0 also expects digit E.164 from the node, not national `0…` (SIPp pack `OUT_DIGITS=441924910444`). Office **01924** DIDs → **Kildare** (e.g. rule `441924918076` → gwid 100); **910444** still lab on golden until operator moves it.
 
 - [x] **L1 SIPp pack green (2026-08-04 session):** Full **`run-pack.sh` 11/11** on Peer `98.82.58.59` after outbound `OUT_DIGITS` digit-E.164 fix. Site-dial dual-host still green.

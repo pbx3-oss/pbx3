@@ -72,23 +72,29 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-05)
+## Next agent session notes (2026-08-06)
 
-**Branch:** **`main`** all product repos + sipplab. Day-parts already on `main`; golden **pbx3 0.0.4-8** / **cagi 1.0.0-13**. Fleet short-dial packages still **0.0.4-6** / **1.0.0-11** on non-golden unless rolled.
+**Branch:** **`main`** — pbx3 **`7a5360d`**, pbx3api **`976fd51`**, pbx3spa **`3a6e94a`**, pbx3-docs **`5c9b4fa`**. Day-parts golden **0.0.4-8** / cagi **1.0.0-13**; fleet short-dial packages still **0.0.4-6** / **1.0.0-11** unless rolled.
 
 ### Shipped (this session)
-- **Short dial D Path 1:** Magrathea username-only usrloc repair live; desk matrix affcot **1101** Snom ↔ duns **1002** Yealink — forward + missed-call dialback both ways. Docs: **`SLICE_D_SHORTUID_USRLOC_REPAIR.md`**, spec **§3.9.1**. Gate: shortuid charset + letter (**no** hardcoded length 6).
-- **All-digit shortuid reject:** pbx3 `idpwgen` + PHP + pbx3api `generate_shortuid` on `main` (live golden needs rebuilt `idpwgen` binary for binary path).
-- **Local co-locate shortcut:** **rejected** (spec §15) — dual-path debt for a short SBC bounce.
-- **E pack-gate:** sipplab `run-site-dial-dual-host.sh` + last-in-pack; Peer **12/12** ×2. Targets: UAC `15200b`@`9wvvnb` → `811003` → UAS `8pmfxd`@`dhbm8x` (golden hairpin). Operator keeps this set **as-is** until a dedicated SIPp instance; retarget via `lab.env` when ready.
-- Hairpin BYE asymmetry: **cause unknown — watch**; not caused by Path 1. Same Snom/Yealink pair, multiple tenant accounts.
+- **Number wire D1 = Model C:** SBC-max translation; PBX uncompromised; Phase 1 keep node Mangle. Policy **`NUMBER_WIRE_POLICY.md`**; draft + research updated. Magrathea = UK ITSP Peer (not the SBC). Brindley demoted as Peer archetype.
+- **Seed outbound on tenant create:** `globals.default_outbound_dialplan` (UK `_0. _00.`) → copy **MainOut** OutRoute on create (`path1=Egress` when fleet). Lab green on Fleet create. Spec **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.
+- **Fleet service token:** restored `PBX3_FLEET_SERVICE_TOKEN` on golden / bzy / kildare (was missing on nodes; matched control).
+- **Deploy:** API live all three nodes; bzy/kildare `/opt/pbx3api` reset to **`976fd51`**; golden still hot-deploy (not a git checkout). bzy = dynamic public IP (FQDN), not EIP.
 
 ### Golden / ops
-- Magrathea VIP **`3.93.26.82`** (backup `/root/opensips.cfg.pre-slice-d.20260805210656`). Desk: affcot↔duns via **`81`**. Pack: Domain UAC `98.93.32.43` + Peer/UAS `98.82.58.59`; `SITE_DIAL_PACK=0` for Peer-only.
+- Dev API: `https://08jzwn.pbx3.com:44300/api`. SBC VIP **`3.93.26.82`**. bzy SSH: **`bzy54n.pbx3.com`** / `pbx3test.pem`. kildare: **`3.93.253.1`** / `aelsip.pem`.
+- Instance Globals → **Outbound** default dialplan. Fleet create only on fleet nodes.
 
 ### Resume
-1. **Number wire standard** Model A vs B — **`NUMBER_WIRE_STANDARD_DRAFT.md`** (no implement until D1).  
-2. Optional: dedicated SIPp home + retarget pack; fleet package roll beyond golden; seed outbound on tenant create; hairpin BYE watch.
+1. **Fleet Delete + FQDN rename — release blocker** — Rule 14 durable job; node wipe exists; need SPA + catalog + SBC domain. Spec **`FLEET_TENANT_CREATE_REQUIREMENTS.md`**.  
+2. Optional: number wire Phase 2 / D2–D4; US outbound dialplan string (O4); package roll beyond golden.
+
+---
+
+## Next agent session notes (2026-08-05)
+
+**Superseded for “read first”** by **2026-08-06** block above. Short dial D+E closed; number wire was open then.
 
 ---
 
