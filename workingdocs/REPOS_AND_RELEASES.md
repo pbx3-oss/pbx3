@@ -21,6 +21,8 @@
 
 **Target org (OSS):** e.g. `github.com/pbx3/{pbx3,pbx3api,pbx3spa,pbx3cagi,pbx3-docs}` — transfer from `aelintra` when org exists; update remotes in local clones.
 
+**Before transfer:** extract **SARK V6 → pbx3 migration** (`db_legacy_sql`, migrate helpers, etc.) into a **separate repo that remains under `aelintra`** — see **`TODO.md`** *SARK migration → separate Aelintra repo*. Do not move that bridge with the OSS product tree.
+
 **Not in git:** `pbx3-master/` workspace root; transient exports (e.g. `tt_help_core.json` at workspace root).
 
 ---

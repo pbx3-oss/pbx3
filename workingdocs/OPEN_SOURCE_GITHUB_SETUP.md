@@ -12,6 +12,8 @@ Use this when creating a **new GitHub organization** for PBX3 and preparing for 
 
 Inventory and version coupling: **`workingdocs/REPOS_AND_RELEASES.md`**. **Policy: multi-repo** (not one amalgamated monorepo).
 
+**Before transferring repos out of `aelintra`:** extract SARK migration code into an **Aelintra-owned** repo (stays behind). See **`TODO.md`** *SARK migration → separate Aelintra repo*.
+
 - `pbx3` — backend package + installer + workingdocs + **`pbx3-directory/`**
 - `pbx3api` — API (Laravel) + nginx installer
 - `pbx3spa` — admin SPA (Vue) + GitHub Pages deploy (S6.2)

@@ -69,6 +69,8 @@ Do **not** block first out on these:
 - Velocity standalone / AMI wallboard / Grafana / door-knock heat  
 - cagi Phase 4 / Ast generator deep refactor  
 - S7+ PCI / OSS org transfer  
+- **SARK migration extract to Aelintra repo** (required **before** OSS org move; not first-out)  
+- **Device templates** — seed leaned to 11 rows + nav removed; residual prune/routes/JSON optional  
 - SPA list icon component / help-row prune (polish)  
 - `ipphone.desc` vs `description` rename  
 

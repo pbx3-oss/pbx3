@@ -26,6 +26,9 @@
 18. **Number wire Phase 2 / D2–D4** (parked).  
 19. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
 20. **Instance API digest deepen** (optional).  
+21. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
+22. **SARK migration → Aelintra repo** — before PBX3 OSS org move (not first-out critical).  
+23. **OSS org + repo transfer** — after SARK migration extract.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -45,7 +48,7 @@
 
 - [ ] **Lab / demo SQLite anonymize (parked 2026-08-03):** Golden (and any other) test DB originated from a **real site** — still carries live **surnames**, **friendly tenant / sitename-style labels**, and similar PII-ish free text. **Do before** wider demos, third-party access, or public screenshots. Scope (at least): extension **`desc` / `description` / display names** → drop or fake surnames; **tenant / cluster friendly names** and any panel labels that identify the original org; scan for other human strings (callerid, greetings titles, mailbox labels, help/sysnotes if any). Prefer a **one-shot idempotent SQL + short runbook** (lab golden first; document how to re-apply after restore from production dump). Keep dial plans / shortuids functional for SIPp and WebRTC path tests. Not urgent for closed lab if access is operator-only; do not ship site-derived dump as “sample data” without this.
 
-- [ ] **Provisioning server class (parked 2026-08-06 — line in the sand):** Maybe don't build. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`** §0 / **§0.1** (M1–M5 management paths; near-term lean M1+M2, M3 if co-locate). SARK worked co-located with shared secrets. Resume only on explicit ask.
+- [ ] **Device table — lean done in seed; residual (2026-08-06):** No in-house provisioner. **`sqlite_device_data.sql`** now **11** keepers (General SIP, WebRTC, MAILBOX + Yealink/Cisco/Polycom/Fanvil/Gigaset/Aastra/Vtech/Panasonic). Prune existing DBs: **`sqlite_device_lean_prune.sql`**. SPA **Devices** removed from System nav (routes/API still exist for break-glass). **Still open:** drop Devices routes/views entirely; Snom/Grandstream pkey gap; optional later move keepers to packaged JSON (no inline PHP). Not call-plane.
 
 - [ ] **SPA list action icons — shared component (parked 2026-08-03):** Pencil/trash stroke SVGs are copy-pasted across list views; Dial prefixes briefly used emoji. Extract small **`ListEditIcon` / `ListDeleteIcon`** (or combined row-actions) in **pbx3spa** and reuse everywhere. Optional busy/spin state for delete. Not urgent polish.
 
@@ -91,7 +94,9 @@
 
 - [ ] **S7+ — Attested PCI / scale (deferred):** KMS CMK; CloudTrail→WORM audit bucket; Security Hub; QSA; PSP handoff; Athena/manifests. Do not start without customer ask. Design §6.2 / §7 S7+.
 
-- [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**, **`pbx3-docs`**. Maintain **`REPOS_AND_RELEASES.md`**. Interim docs repo already on **`aelintra/pbx3-docs`**. Update local clone remotes; keep **`pbx3-master/`** holding-folder layout.
+- [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**, **`pbx3-docs`**. Maintain **`REPOS_AND_RELEASES.md`**. Interim docs repo already on **`aelintra/pbx3-docs`**. Update local clone remotes; keep **`pbx3-master/`** holding-folder layout. **Prerequisite before transfer:** extract **SARK migration** out of pbx3 into an **Aelintra-owned** repo (see next item) so legacy ETL does not move with the OSS product.
+
+- [ ] **SARK migration → separate Aelintra repo (before PBX3 org move) (2026-08-06):** Break all **SARK V6 → pbx3** migration code/SQL out of the **pbx3** product tree into its **own repo that stays under `aelintra`** when PBX3 transfers to the new org. Scope at least: **`db_legacy_sql`**, `migrateLegacyDb` / related scripts, fixRi / normalize helpers, any sail-coupled import docs. Not critical for first out; **must be done before** OSS org transfer so product repos are clean and Aelintra keeps the legacy bridge. FreePBX→pbx3 ETL remains a separate future track. Cross-link: SARK V6 migration revisit item below · **`OPEN_SOURCE_GITHUB_SETUP.md`** / **`REPOS_AND_RELEASES.md`**.
 
 - [ ] **pbx3cagi refactor (under Ast config generator + cagi track):** Phase 0 harness **golden-signed-off** on **08jzwn**. Resume Phase **1.3 → 1.1 → 2.x** with generator work; run **`make test`** after each step. Contract: **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §5. Gate: **`REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**, **`TEST_RECIPE.md`**.
 
@@ -120,7 +125,7 @@
 
 - [ ] **SPA hygiene (deferred — after S8 / R1 / core panels):** No work until functionality complete; runs fine on golden/LAN today. Then: **(1)** route lazy-loading in **`router/index.js`**; **(2)** extract shared list/detail patterns when adding panels (avoid new 600+ line views). See **`pbx3spa/workingdocs/PROJECT_PLAN.md`** § Current state, **`PBX3SPA_CODEBASE_ANALYSIS.md`** § Phase H / H2.
 
-- [ ] **SARK V6 migration routines (revisit, low priority — end of list):** Golden demo data still had tenant-scoped **`cluster`** on pkey (e.g. `affcot`) because **`sqlite_fixRi.sql`** was never applied; new SPA/API writes use shortuid, which broke joins (CoS on extensions). Shipped interim repair: **`sqlite_normalize_cluster_to_shortuid.sql`** (idempotent; **pbx3 0.0.3-20**). **Later revisit:** full **`db_legacy_sql`** path (`sqlite_create_legacy.sql`, **`sqlite_fixRi.sql`**, lineio, etc.) — ensure import always runs fixRi (or the normalize script), document operator steps, cover tables fixRi omits (`dateseg`, `holiday`, `page`, `users`, CoS junctions), and decide whether fixRi stays one-shot-only with normalize as the supported repair. Do not run stock fixRi on mixed DBs (NULLs shortuid rows). **FreePBX→pbx3 migrate:** separate future ETL (no shared components with this SARK path); defer requirements until after FreePBX-behind-SBC lab.
+- [ ] **SARK V6 migration routines (revisit, low priority — end of list):** Golden demo data still had tenant-scoped **`cluster`** on pkey (e.g. `affcot`) because **`sqlite_fixRi.sql`** was never applied; new SPA/API writes use shortuid, which broke joins (CoS on extensions). Shipped interim repair: **`sqlite_normalize_cluster_to_shortuid.sql`** (idempotent; **pbx3 0.0.3-20**). **Later revisit:** full **`db_legacy_sql`** path (`sqlite_create_legacy.sql`, **`sqlite_fixRi.sql`**, lineio, etc.) — ensure import always runs fixRi (or the normalize script), document operator steps, cover tables fixRi omits (`dateseg`, `holiday`, `page`, `users`, CoS junctions), and decide whether fixRi stays one-shot-only with normalize as the supported repair. Do not run stock fixRi on mixed DBs (NULLs shortuid rows). **Repo destiny:** extract this bridge to an **Aelintra-owned** repo before PBX3 org move (see **SARK migration → separate Aelintra repo** above). **FreePBX→pbx3 migrate:** separate future ETL (no shared components with this SARK path); defer requirements until after FreePBX-behind-SBC lab.
 
 ---
 
