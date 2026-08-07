@@ -75,24 +75,30 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-06) — first-out triage + Device lean + provisioning park
+## Next agent session notes (2026-08-07) — SBC TOTP 2FA lab green
 
-**Branch:** **`main`** — pbx3 / pbx3spa (this session). Packages still **pbx3 0.0.5-1** / **cagi 1.0.0-14** on `main` (fleet install deferred).
+**Branch:** **`main`** — pbx3sbc-admin **`ecd6b77`** (Magrathea on **`main`**). pbx3 / pbx3spa docs. Packages still **pbx3 0.0.5-1** / **cagi 1.0.0-14** (fleet install deferred).
 
 ### Shipped
-- **`PROVISIONING_SERVER_REQUIREMENTS.md`** — exploratory; lean **don’t build** (vendor/reseller RPS); §0.1 **M1–M5** management paths; S3 MAC inventory sketched; secrets dual-consumer open; **line in the sand**.
-- **`FIRST_OUT_CHECKLIST.md`** — must-fix **F1–F6** vs nice **N*** vs parked (incl. SARK→Aelintra **before** OSS org move).
-- **Device lean** — `sqlite_device_data.sql` **11** keepers; **`sqlite_device_lean_prune.sql`** for existing DBs; SPA **Devices** removed from System nav (routes remain break-glass).
-- **TODO / OSS docs** — SARK migration extract prerequisite on org transfer.
+- **SBC Filament TOTP** — Breezy ^2.6; topbar **Profile** enroll; issuer **`PBX3_TOTP_ISSUER`** (default `Aelintra SBC`); recovery codes; Fleet Bearer untouched. Lab green Magrathea.
+- Specs: **`TOTP_2FA_REQUIREMENTS.md`** · **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`** · MkDocs **`fleet/install-sbc`** §4.
+- SPA/Sanctum 2FA still **parked**.
 
 ### Golden / ops
-- Run prune SQL on golden/bzy when convenient (**F6**). Deploy API/SPA tip + install **0.0.5-1** / **1.0.0-14** still open (**F1–F2**).
-- Dev: Gatekeeper **`control.pbx3.com`** · golden **`https://08jzwn.pbx3.com:44300/api`** · SPA `npm run dev`.
+- Magrathea admin was dirty/~66 commits behind before tip — now git-only **`main`**; prefer pull over rsync.
+- Multi-edge: set distinct `PBX3_TOTP_ISSUER` **before** enroll on each box.
+- First-out F1–F4 / package install still open.
 
 ### Resume
-1. **First-out cleanup** — **`FIRST_OUT_CHECKLIST.md`** F1–F4 (install + tip + smoke + DNS).  
-2. **F5** anonymize if external demo; **F6** Device prune on lab DBs.  
-3. Do **not** reopen provisioning server unless explicit; do **not** start OSS org move before SARK extract.
+1. **First-out** — **`FIRST_OUT_CHECKLIST.md`** F1–F4 when scheduled.  
+2. SPA Sanctum TOTP only if explicitly scheduled.  
+3. Do not reopen provisioning / OSS org move before SARK extract.
+
+---
+
+## Next agent session notes (2026-08-06) — first-out triage + Device lean + provisioning park (superseded)
+
+**Superseded for “read first”** by SBC TOTP block above. Device lean / first-out checklist still on `main`.
 
 ---
 

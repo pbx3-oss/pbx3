@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** all product repos. Site Groups **C0–C6 lab green**. Fleet DNS/LE lock on **`main`**. Device seed leaned (11 keepers); SPA Devices nav removed. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-06 (session end — first-out triage + Device lean + provisioning park)
+**Branch:** **`main`** all product repos. Site Groups **C0–C6 lab green**. Fleet DNS/LE lock on **`main`**. Device seed leaned (11 keepers). **SBC TOTP 2FA** on **`pbx3sbc-admin` `main`** (Magrathea lab green). Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
+**Last updated:** 2026-08-07 (session end — SBC TOTP 2FA)
 
 ### Suggested “what next?” order
 
@@ -16,7 +16,7 @@
 8. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
 9. **Control plane duplex / HA** (parked).  
 10. **Fleet auth cookie/SSO (blocked)**.  
-11. **TOTP 2FA SPA + SBC** (parked — **`TOTP_2FA_REQUIREMENTS.md`**).  
+11. **TOTP 2FA — instance SPA / Sanctum** (parked — SBC done; **`TOTP_2FA_REQUIREMENTS.md`**).  
 12. **S7+** attested PCI — customer ask.  
 13. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 14. **Grafana / door-knock geo** (parked).  
@@ -79,7 +79,9 @@
 
 - [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough without a big IdP. **SSO-agnostic:** we own `fleet` / `fleet_*` abilities; optional OIDC later maps groups → abilities. Cookies need same-site Fleet UI (or BFF). Soft step-up via Exit Fleet revoke. **Also later:** tighten CORS to SPA origin; login rate-limit. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
 
-- [ ] **TOTP 2FA — instance SPA + SBC (parked 2026-08-07; SBC slice in progress):** Authenticator-app MFA (no SMS). Separate enrollments for Sanctum (`pbx3api`/`pbx3spa`) and Filament (`pbx3sbc-admin`); distinct issuer labels; recovery codes; opt-in v1. **SBC:** Breezy on Filament 3 — **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`**. SPA/API still parked. Spec: **`TOTP_2FA_REQUIREMENTS.md`**.
+- [x] **TOTP 2FA — SBC Filament (2026-08-07):** Breezy on Filament 3; Profile enroll; issuer **Aelintra SBC**; lab green Magrathea; **`main`** **`ecd6b77`**. Spec: **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`**.
+
+- [ ] **TOTP 2FA — instance SPA / Sanctum (parked 2026-08-07):** Authenticator-app MFA (no SMS) for `pbx3api`/`pbx3spa`; distinct issuer vs SBC; recovery codes; opt-in v1. Spec: **`TOTP_2FA_REQUIREMENTS.md`**.
 
 - [ ] **Phase S10 — remaining:** **S10.7**/S10.2b orchestrated IAM onboard/rebuild — **parked** (2026-07-15) pending cloud-adapter / portability discussion; Mode 4 + Mac scripts stay. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10.
 
