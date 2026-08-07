@@ -41,7 +41,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (**§0 fleet lock**) → **TLS_IMPLEMENTATION_STEPS.md** → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**solo/direct Option A only**) |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
 | **Instance user privileges** | **pbx3spa**/workingdocs/**INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md** (P1–P4 + **B′ login homing** shipped) → **ADMIN_PANELS_AND_PERMISSIONS.md** → **AUTH_PATTERNS.md** |
-| **TOTP 2FA** (SPA + SBC, parked) | **`TOTP_2FA_REQUIREMENTS.md`** → **pbx3spa**/workingdocs/**AUTH_PATTERNS.md** §2 · SBC Filament plugin path in same doc |
+| **TOTP 2FA** (instance + SBC + Fleet) | **`TOTP_2FA_REQUIREMENTS.md`** → **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** → **pbx3spa**/workingdocs/**AUTH_PATTERNS.md** §2 · SBC **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`** |
 | Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **`LAB_FLEET_TENANTS.md`** (no node-only lab tenants) → **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** (EC2 → packages → onboard, step-by-step) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`reconcile-node-tenants.sh`**, **`fetch-latest-instance-backup.sh`** |
 | **Fleet naming** | **`FLEET_NAMING_LOCK.md`** (shortuid + Name + Description + FQDN=`{suid}.{apex}`; **D6 cancelled**) → instance sitename detail **pbx3spa**/workingdocs/**NETWORK_SYSGLOBALS_OVERLAP.md** · Delete **`FLEET_TENANT_DELETE_REQUIREMENTS.md`** |
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
@@ -75,25 +75,31 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-07) — SPA Sanctum TOTP lab green
+## Next agent session notes (2026-08-07) — Fleet Gatekeeper TOTP lab green
 
-**Branch:** **`spa-totp-2fa`** — pbx3api **`321a12e`**, pbx3spa **`22b2990`**, pbx3 docs **`369edd3`** (+ handoff session-end commit). Not merged to **`main`** yet. Golden API tip rsynced + migrate. SBC TOTP still **`pbx3sbc-admin` `main`**.
+**Branch:** **`main`** — pbx3 **`7f1e369`**, pbx3spa **`1ec28fd`**, pbx3api Sanctum TOTP already **`321a12e`**. Control Gatekeeper rsynced. SPA **`npm run dev`**.
 
 ### Shipped
-- **Instance Sanctum TOTP** — opt-in; password → `requires_2fa` + challenge → verify; issuer **Aelintra PBX**; recovery codes; admin clear; portable_users schema **v2**.
-- **SPA** — LoginView challenge (both doors); Account Security enroll; Home **Enable 2FA** strip; topbar **2FA**; User edit Clear 2FA.
-- Specs/docs: **`TOTP_2FA_REQUIREMENTS.md`** C2–C5 · **`AUTH_PATTERNS.md`** · **pbx3api `docs/auth.md`**. Feature tests green.
-- WSS audio scare after tenant-A drop: both directions OK (transient).
+- **Fleet Gatekeeper TOTP G1–G4** — opt-in; password → `requires_2fa` + challenge → verify; issuer **Aelintra Fleet**; recovery codes; admin Clear 2FA on Fleet Users; break-glass exempt.
+- **SPA** — `FleetTokenGate` challenge; **Fleet → Fleet 2FA** enroll; Fleet Users 2FA column + Clear.
+- Spec: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (acceptance checked). Gatekeeper PHPUnit + SPA vitest green; **operator lab green**.
+- Earlier same day: **`spa-totp-2fa` merged** to **`main`** (instance Sanctum TOTP).
 
 ### Golden / ops
-- `/opt/pbx3api` has **no `.git`** — deploy via rsync tip (keep `.env` / `storage` / `vendor` then `composer install` + `migrate`).
-- Enroll: Home → Enable 2FA / topbar **2FA**; recovery codes after Confirm.
-- Fleet Gatekeeper MFA still **phase 3** (Rule 10 — separate plane).
+- Control: `/home/ubuntu/gatekeeper` tip + `composer install` (google2fa). Auth status includes `two_factor_verify`.
+- Enroll: Fleet console → **Fleet 2FA**; distinct issuer from **Aelintra PBX** / **Aelintra SBC**.
+- G5 (require 2FA for `fleet_admin`) still optional.
 
 ### Resume
-1. **Merge `spa-totp-2fa` → `main`** when scheduled; roll API to other nodes.  
-2. **First-out** — **`FIRST_OUT_CHECKLIST.md`** F1–F4.  
+1. **First-out** — **`FIRST_OUT_CHECKLIST.md`** F1–F4.  
+2. **Roll instance API tip** to other fleet nodes if needed (golden already has Sanctum TOTP).  
 3. Do not reopen provisioning / OSS org move before SARK extract.
+
+---
+
+## Next agent session notes (2026-08-07) — SPA Sanctum TOTP lab green (superseded)
+
+**Superseded for “read first”** by Fleet Gatekeeper TOTP block above. Instance Sanctum TOTP on **`main`** (`321a12e` / SPA merge).
 
 ---
 
