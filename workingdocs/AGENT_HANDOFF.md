@@ -74,24 +74,30 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-06) — fleet DNS/LE lock + tenant-A warn
+## Next agent session notes (2026-08-06) — first-out triage + Device lean + provisioning park
 
-**Branch:** **`main`** — pbx3 / pbx3api / pbx3spa / pbx3-docs (this session); packages already **pbx3 0.0.5-1** / **cagi 1.0.0-14** on `main` from earlier today.
+**Branch:** **`main`** — pbx3 / pbx3spa (this session). Packages still **pbx3 0.0.5-1** / **cagi 1.0.0-14** on `main` (fleet install deferred).
 
 ### Shipped
-- **SBC fleet DNS/TLS lock** — Tenant FQDN = SIP domain only (**no public A**). Node LE = **instance FQDN only**. SPA → instance DNS; WSS host ≠ tenant FQDN. Canonical **`TLS_AND_CERTIFICATES.md` §0**.
-- **pbx3api** — fleet `certificateFqdnList` / Setup+Sync instance-only (`FleetPostureService::isFleetNode()`); solo keeps Option A. Unit **`CertificateSanListTest`**.
-- **pbx3spa** — **Sync certificate** + fleet red banner **DO NOT create DNS A records for tenant domains**.
-- **Docs** — LE Option A bannered solo/direct; mobility §7; MkDocs tls overview/sync; ops runbooks scrubbed.
-- **Lab** — tenant As removed; golden/bzy LE instance-only; WSS phone test green.
+- **`PROVISIONING_SERVER_REQUIREMENTS.md`** — exploratory; lean **don’t build** (vendor/reseller RPS); §0.1 **M1–M5** management paths; S3 MAC inventory sketched; secrets dual-consumer open; **line in the sand**.
+- **`FIRST_OUT_CHECKLIST.md`** — must-fix **F1–F6** vs nice **N*** vs parked (incl. SARK→Aelintra **before** OSS org move).
+- **Device lean** — `sqlite_device_data.sql` **11** keepers; **`sqlite_device_lean_prune.sql`** for existing DBs; SPA **Devices** removed from System nav (routes remain break-glass).
+- **TODO / OSS docs** — SARK migration extract prerequisite on org transfer.
 
 ### Golden / ops
-- Deploy API tip + SPA tip for Certificates Sync behaviour. Packages **0.0.5-1** / **1.0.0-14** still not installed on all fleet nodes (operator deferred).
+- Run prune SQL on golden/bzy when convenient (**F6**). Deploy API/SPA tip + install **0.0.5-1** / **1.0.0-14** still open (**F1–F2**).
 - Dev: Gatekeeper **`control.pbx3.com`** · golden **`https://08jzwn.pbx3.com:44300/api`** · SPA `npm run dev`.
 
 ### Resume
-1. **New instance / install** packages + API/SPA tip when scheduled.  
-2. Product crumbs / parked items in **`TODO.md`**. Edge SIP-TLS product work still out of scope.
+1. **First-out cleanup** — **`FIRST_OUT_CHECKLIST.md`** F1–F4 (install + tip + smoke + DNS).  
+2. **F5** anonymize if external demo; **F6** Device prune on lab DBs.  
+3. Do **not** reopen provisioning server unless explicit; do **not** start OSS org move before SARK extract.
+
+---
+
+## Next agent session notes (2026-08-06) — fleet DNS/LE lock + tenant-A warn (superseded)
+
+**Superseded for “read first”** by first-out / Device lean block above. Fleet DNS/LE lock still on `main`.
 
 ---
 

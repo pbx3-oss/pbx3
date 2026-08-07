@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** all product repos. Site Groups **C0–C6 lab green**. Fleet DNS/LE lock + instance-only Sync on **`main`**. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`** for Site Groups + Certificates fleet warn.  
-**Last updated:** 2026-08-06 (session end — fleet DNS/LE lock + tenant-A warning)
+**Branch:** **`main`** all product repos. Site Groups **C0–C6 lab green**. Fleet DNS/LE lock on **`main`**. Device seed leaned (11 keepers); SPA Devices nav removed. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
+**Last updated:** 2026-08-06 (session end — first-out triage + Device lean + provisioning park)
 
 ### Suggested “what next?” order
 
