@@ -82,6 +82,8 @@ Do **not** block first out on these:
 - Control-plane HA / duplex  
 - Instance shadowing / S10.7 orchestrated rebuild  
 - Fleet cookie/SSO  
+- TOTP 2FA (SPA + SBC) — **`TOTP_2FA_REQUIREMENTS.md`**  
+
 - Number wire Phase 2 / SBC dialect habit  
 - Velocity standalone / AMI wallboard / Grafana / door-knock heat  
 - cagi Phase 4 / Ast generator deep refactor  

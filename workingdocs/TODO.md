@@ -16,19 +16,20 @@
 8. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
 9. **Control plane duplex / HA** (parked).  
 10. **Fleet auth cookie/SSO (blocked)**.  
-11. **S7+** attested PCI — customer ask.  
-12. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
-13. **Grafana / door-knock geo** (parked).  
-14. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
-15. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
-16. **Provisioning server** (parked — maybe don't build; see requirements §0).  
-17. **SPA list action icons component** (parked).  
-18. **Number wire Phase 2 / D2–D4** (parked).  
-19. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
-20. **Instance API digest deepen** (optional).  
-21. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
-22. **SARK migration → Aelintra repo** — before PBX3 OSS org move (not first-out critical).  
-23. **OSS org + repo transfer** — after SARK migration extract.  
+11. **TOTP 2FA SPA + SBC** (parked — **`TOTP_2FA_REQUIREMENTS.md`**).  
+12. **S7+** attested PCI — customer ask.  
+13. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
+14. **Grafana / door-knock geo** (parked).  
+15. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
+16. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
+17. **Provisioning server** (parked — maybe don't build; see requirements §0).  
+18. **SPA list action icons component** (parked).  
+19. **Number wire Phase 2 / D2–D4** (parked).  
+20. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
+21. **Instance API digest deepen** (optional).  
+22. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
+23. **SARK migration → Aelintra repo** — before PBX3 OSS org move (not first-out critical).  
+24. **OSS org + repo transfer** — after SARK migration extract.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -77,6 +78,8 @@
 - [ ] **Seed outbound US dialplan string (O4) (optional):** UK `_0. _00.` shipped with **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**. US seed string when wanted.
 
 - [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough without a big IdP. **SSO-agnostic:** we own `fleet` / `fleet_*` abilities; optional OIDC later maps groups → abilities. Cookies need same-site Fleet UI (or BFF). Soft step-up via Exit Fleet revoke. **Also later:** tighten CORS to SPA origin; login rate-limit. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
+
+- [ ] **TOTP 2FA — instance SPA + SBC (parked 2026-08-07; SBC slice in progress):** Authenticator-app MFA (no SMS). Separate enrollments for Sanctum (`pbx3api`/`pbx3spa`) and Filament (`pbx3sbc-admin`); distinct issuer labels; recovery codes; opt-in v1. **SBC:** Breezy on Filament 3 — **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`**. SPA/API still parked. Spec: **`TOTP_2FA_REQUIREMENTS.md`**.
 
 - [ ] **Phase S10 — remaining:** **S10.7**/S10.2b orchestrated IAM onboard/rebuild — **parked** (2026-07-15) pending cloud-adapter / portability discussion; Mode 4 + Mac scripts stay. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10.
 
