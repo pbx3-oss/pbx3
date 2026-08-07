@@ -75,30 +75,37 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-07) — SBC TOTP 2FA lab green
+## Next agent session notes (2026-08-07) — SPA Sanctum TOTP lab green
 
-**Branch:** **`main`** — pbx3sbc-admin **`ecd6b77`** (Magrathea on **`main`**). pbx3 / pbx3spa docs. Packages still **pbx3 0.0.5-1** / **cagi 1.0.0-14** (fleet install deferred).
+**Branch:** **`spa-totp-2fa`** — pbx3api **`321a12e`**, pbx3spa **`22b2990`**, pbx3 docs **`369edd3`** (+ handoff session-end commit). Not merged to **`main`** yet. Golden API tip rsynced + migrate. SBC TOTP still **`pbx3sbc-admin` `main`**.
 
 ### Shipped
-- **SBC Filament TOTP** — Breezy ^2.6; topbar **Profile** enroll; issuer **`PBX3_TOTP_ISSUER`** (default `Aelintra SBC`); recovery codes; Fleet Bearer untouched. Lab green Magrathea.
-- Specs: **`TOTP_2FA_REQUIREMENTS.md`** · **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`** · MkDocs **`fleet/install-sbc`** §4.
-- SPA/Sanctum 2FA still **parked**.
+- **Instance Sanctum TOTP** — opt-in; password → `requires_2fa` + challenge → verify; issuer **Aelintra PBX**; recovery codes; admin clear; portable_users schema **v2**.
+- **SPA** — LoginView challenge (both doors); Account Security enroll; Home **Enable 2FA** strip; topbar **2FA**; User edit Clear 2FA.
+- Specs/docs: **`TOTP_2FA_REQUIREMENTS.md`** C2–C5 · **`AUTH_PATTERNS.md`** · **pbx3api `docs/auth.md`**. Feature tests green.
+- WSS audio scare after tenant-A drop: both directions OK (transient).
 
 ### Golden / ops
-- Magrathea admin was dirty/~66 commits behind before tip — now git-only **`main`**; prefer pull over rsync.
-- Multi-edge: set distinct `PBX3_TOTP_ISSUER` **before** enroll on each box.
-- First-out F1–F4 / package install still open.
+- `/opt/pbx3api` has **no `.git`** — deploy via rsync tip (keep `.env` / `storage` / `vendor` then `composer install` + `migrate`).
+- Enroll: Home → Enable 2FA / topbar **2FA**; recovery codes after Confirm.
+- Fleet Gatekeeper MFA still **phase 3** (Rule 10 — separate plane).
 
 ### Resume
-1. **First-out** — **`FIRST_OUT_CHECKLIST.md`** F1–F4 when scheduled.  
-2. SPA Sanctum TOTP only if explicitly scheduled.  
+1. **Merge `spa-totp-2fa` → `main`** when scheduled; roll API to other nodes.  
+2. **First-out** — **`FIRST_OUT_CHECKLIST.md`** F1–F4.  
 3. Do not reopen provisioning / OSS org move before SARK extract.
+
+---
+
+## Next agent session notes (2026-08-07) — SBC TOTP 2FA lab green (superseded)
+
+**Superseded for “read first”** by SPA Sanctum TOTP block above. SBC TOTP still on `pbx3sbc-admin` **`main`**.
 
 ---
 
 ## Next agent session notes (2026-08-06) — first-out triage + Device lean + provisioning park (superseded)
 
-**Superseded for “read first”** by SBC TOTP block above. Device lean / first-out checklist still on `main`.
+**Superseded for “read first”** by SPA TOTP block above. Device lean / first-out checklist still on `main`.
 
 ---
 

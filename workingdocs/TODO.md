@@ -1,35 +1,36 @@
 # PBX3 ToDo list
 
-**Branch:** **`main`** all product repos. Site Groups **C0–C6 lab green**. Fleet DNS/LE lock on **`main`**. Device seed leaned (11 keepers). **SBC TOTP 2FA** on **`pbx3sbc-admin` `main`** (Magrathea lab green). Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-07 (session end — SBC TOTP 2FA)
+**Branch:** Instance Sanctum TOTP on **`spa-totp-2fa`** (pbx3api / pbx3spa / pbx3 docs) — **lab green** golden. **SBC TOTP** on **`pbx3sbc-admin` `main`**. Other product repos **`main`**. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
+**Last updated:** 2026-08-07 (session end — SPA Sanctum TOTP lab green)
 
 ### Suggested “what next?” order
 
 0. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
-1. **New instance / package install** — install **0.0.5-1** + **1.0.0-14** + API tip (instance-only LE Sync) when scheduled.  
-2. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
-3. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
-4. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
-5. **Velocity standalone** (parked).  
-6. **Instance shadowing** / S10.7 / S8.9 (parked).  
-7. **AMI wallboard** (parked).  
-8. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
-9. **Control plane duplex / HA** (parked).  
-10. **Fleet auth cookie/SSO (blocked)**.  
-11. **TOTP 2FA — instance SPA / Sanctum** (parked — SBC done; **`TOTP_2FA_REQUIREMENTS.md`**).  
-12. **S7+** attested PCI — customer ask.  
-13. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
-14. **Grafana / door-knock geo** (parked).  
-15. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
-16. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
-17. **Provisioning server** (parked — maybe don't build; see requirements §0).  
-18. **SPA list action icons component** (parked).  
-19. **Number wire Phase 2 / D2–D4** (parked).  
-20. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
-21. **Instance API digest deepen** (optional).  
-22. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
-23. **SARK migration → Aelintra repo** — before PBX3 OSS org move (not first-out critical).  
-24. **OSS org + repo transfer** — after SARK migration extract.  
+1. **Merge `spa-totp-2fa` → `main`** when ready (pbx3api + pbx3spa + pbx3 docs); roll API tip to other fleet nodes.  
+2. **New instance / package install** — install **0.0.5-1** + **1.0.0-14** + API tip (instance-only LE Sync) when scheduled.  
+3. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
+4. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
+5. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
+6. **Velocity standalone** (parked).  
+7. **Instance shadowing** / S10.7 / S8.9 (parked).  
+8. **AMI wallboard** (parked).  
+9. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
+10. **Control plane duplex / HA** (parked).  
+11. **Fleet auth cookie/SSO (blocked)**.  
+12. **TOTP 2FA — Fleet Gatekeeper** (parked — phase 3; separate plane; **`TOTP_2FA_REQUIREMENTS.md`**).  
+13. **S7+** attested PCI — customer ask.  
+14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
+15. **Grafana / door-knock geo** (parked).  
+16. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
+17. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
+18. **Provisioning server** (parked — maybe don't build; see requirements §0).  
+19. **SPA list action icons component** (parked).  
+20. **Number wire Phase 2 / D2–D4** (parked).  
+21. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
+22. **Instance API digest deepen** (optional).  
+23. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
+24. **SARK migration → Aelintra repo** — before PBX3 OSS org move (not first-out critical).  
+25. **OSS org + repo transfer** — after SARK migration extract.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -81,7 +82,9 @@
 
 - [x] **TOTP 2FA — SBC Filament (2026-08-07):** Breezy on Filament 3; Profile enroll; issuer **Aelintra SBC**; lab green Magrathea; **`main`** **`ecd6b77`**. Spec: **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`**.
 
-- [ ] **TOTP 2FA — instance SPA / Sanctum (parked 2026-08-07):** Authenticator-app MFA (no SMS) for `pbx3api`/`pbx3spa`; distinct issuer vs SBC; recovery codes; opt-in v1. Spec: **`TOTP_2FA_REQUIREMENTS.md`**.
+- [x] **TOTP 2FA — instance SPA / Sanctum (2026-08-07):** Opt-in authenticator MFA on **`spa-totp-2fa`** (pbx3api + pbx3spa); issuer **Aelintra PBX**; challenge before Bearer; recovery codes; admin clear; portable users schema v2; lab green golden (API rsynced + migrate). Spec: **`TOTP_2FA_REQUIREMENTS.md`**. Merge to **`main`** when scheduled. Fleet Gatekeeper MFA still parked (phase 3).
+
+- [ ] **TOTP 2FA — Fleet Gatekeeper (parked 2026-08-07):** Separate plane (Rule 10); do not share instance secrets. Schedule after SPA opt-in proven.
 
 - [ ] **Phase S10 — remaining:** **S10.7**/S10.2b orchestrated IAM onboard/rebuild — **parked** (2026-07-15) pending cloud-adapter / portability discussion; Mode 4 + Mac scripts stay. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10.
 
