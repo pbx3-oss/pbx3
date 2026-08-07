@@ -17,7 +17,7 @@
 9. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
 10. **Control plane duplex / HA** (parked).  
 11. **Fleet auth cookie/SSO (blocked)**.  
-12. **TOTP 2FA — Fleet Gatekeeper** (parked — requirements locked; **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`**).  
+12. **TOTP 2FA — Fleet Gatekeeper G5** (optional — require for `fleet_admin`; G1–G4 shipped).  
 13. **S7+** attested PCI — customer ask.  
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
@@ -84,7 +84,7 @@
 
 - [x] **TOTP 2FA — instance SPA / Sanctum (2026-08-07):** Opt-in authenticator MFA merged to **`main`** (pbx3api + pbx3spa + pbx3 docs); issuer **Aelintra PBX**; challenge before Bearer; recovery codes; admin clear; portable users schema v2; lab green golden (API rsynced + migrate). Spec: **`TOTP_2FA_REQUIREMENTS.md`**. Fleet Gatekeeper MFA: requirements in **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (not implemented).
 
-- [ ] **TOTP 2FA — Fleet Gatekeeper (parked 2026-08-07):** Requirements locked — **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (G0–G5). Separate plane (Rule 10); do not share instance secrets. Schedule after SPA opt-in proven.
+- [x] **TOTP 2FA — Fleet Gatekeeper G1–G4 (2026-08-07):** Opt-in Gatekeeper TOTP + SPA challenge/enroll/Clear 2FA. Spec: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`**. Deploy control Gatekeeper + SPA tip for lab. G5 require-for-admin optional later.
 
 - [ ] **Phase S10 — remaining:** **S10.7**/S10.2b orchestrated IAM onboard/rebuild — **parked** (2026-07-15) pending cloud-adapter / portability discussion; Mode 4 + Mac scripts stay. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10.
 

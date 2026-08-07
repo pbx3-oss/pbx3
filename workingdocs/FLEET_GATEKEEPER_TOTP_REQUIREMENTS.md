@@ -1,6 +1,6 @@
 # Fleet Gatekeeper TOTP (requirements)
 
-**Status:** Plan locked (requirements draft). **Not implemented.**  
+**Status:** **G1–G4 implemented** (Gatekeeper + SPA). Lab verify on control host when ready. G5 (require for `fleet_admin`) still optional later.  
 **Plane:** Control plane only — Gatekeeper SQLite users + SPA Fleet mode. Design Rule **10**.  
 **Sibling tracks:** Instance Sanctum + SBC Filament — **`TOTP_2FA_REQUIREMENTS.md`**. Do not share secrets across planes.  
 **Related:** **`FLEET_AUTH_COOKIE_SSO.md`** (Bearer try-it-out; cookies/SSO still deferred) · **`pbx3spa`**/workingdocs/**`AUTH_PATTERNS.md`** (instance patterns; Fleet mirrors gesture only).
@@ -140,11 +140,11 @@ PHPUnit under `gatekeeper/tests/`:
 
 | Order | Work | Notes |
 |------|------|--------|
-| **G0** | This doc accepted | Done when scheduled |
-| **G1** | Gatekeeper schema + login challenge + verify | No session token until verify |
-| **G2** | Enroll / disable / recovery / admin clear | Authenticated + ability-gated clear |
-| **G3** | SPA FleetTokenGate challenge + enroll UI + Fleet Users clear | Ship with G1–G2 |
-| **G4** | Tests + Gatekeeper README / ops note | Pack A auth tests extended |
+| **G0** | This doc accepted | Done |
+| **G1** | Gatekeeper schema + login challenge + verify | **Done** |
+| **G2** | Enroll / disable / recovery / admin clear | **Done** |
+| **G3** | SPA FleetTokenGate challenge + enroll UI + Fleet Users clear | **Done** |
+| **G4** | Tests + Gatekeeper README / ops note | **Done** |
 | **G5** | Optional: require 2FA for `fleet_admin` | After opt-in proven |
 
 Not on **`FIRST_OUT_CHECKLIST.md`** must-fix list. Schedule after instance `spa-totp-2fa` merge/lab confidence if desired; not blocked on cookies/SSO.
@@ -167,24 +167,23 @@ Not on **`FIRST_OUT_CHECKLIST.md`** must-fix list. Schedule after instance `spa-
 
 **Gatekeeper**
 
-- [ ] User can enroll TOTP with any authenticator; issuer **`Aelintra Fleet`** (distinct from PBX / SBC).
-- [ ] With 2FA on, password-only login does not grant a Fleet session Bearer.
-- [ ] TOTP and one recovery code complete login; recovery codes are single-use.
-- [ ] User can disable; admin can clear 2FA for a locked-out fleet user (sessions revoked).
-- [ ] Users without 2FA unchanged.
-- [ ] Break-glass token path unaffected by TOTP.
+- [x] User can enroll TOTP with any authenticator; issuer **`Aelintra Fleet`** (distinct from PBX / SBC).
+- [x] With 2FA on, password-only login does not grant a Fleet session Bearer.
+- [x] TOTP and one recovery code complete login; recovery codes are single-use.
+- [x] User can disable; admin can clear 2FA for a locked-out fleet user (sessions revoked).
+- [x] Users without 2FA unchanged.
+- [x] Break-glass token path unaffected by TOTP.
 
 **SPA**
 
-- [ ] `FleetTokenGate` challenges when `requires_2fa`; stores token only after verify.
-- [ ] Fleet-mode enroll/disable + recovery codes once after confirm.
-- [ ] Fleet Users **Clear 2FA** for lockout recovery.
+- [x] `FleetTokenGate` challenges when `requires_2fa`; stores token only after verify.
+- [x] Fleet-mode enroll/disable + recovery codes once after confirm.
+- [x] Fleet Users **Clear 2FA** for lockout recovery.
 
 ---
 
 ## Tip / TODO
 
-- Implement when scheduled (G0 accepted → G1–G4).
-- Pointer from instance/SBC doc: **`TOTP_2FA_REQUIREMENTS.md`** §D.
-- TODO item: **TOTP 2FA — Fleet Gatekeeper** (parked until scheduled).
-- Operator docs: Gatekeeper README + fleet auth page when packaging.
+- G1–G4 shipped in gatekeeper + pbx3spa; deploy control Gatekeeper tip + SPA tip for lab enroll.
+- G5 optional later.
+- Operator docs: Gatekeeper README updated; fleet auth page when packaging.

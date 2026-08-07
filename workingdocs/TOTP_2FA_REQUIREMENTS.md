@@ -147,7 +147,7 @@ Combined opt-in both surfaces: ~**1–1.5 weeks** calendar with review/lab — n
 
 | Item | Status |
 |------|--------|
-| Fleet Gatekeeper TOTP | Separate track — **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (G0–G5) |
+| Fleet Gatekeeper TOTP | **G1–G4 done** — **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (G5 optional) |
 | Cookie sessions for Fleet | Unrelated (`FLEET_AUTH_COOKIE_SSO.md`) |
 | SSO / OIDC MFA | IdP’s problem when SSO exists; local TOTP remains for non-SSO users |
 | Passkeys / WebAuthn | Nice later; not v1 |
@@ -176,6 +176,6 @@ Combined opt-in both surfaces: ~**1–1.5 weeks** calendar with review/lab — n
 ## Tip / TODO
 
 - Instance Sanctum + SPA: on **`main`** (was **`spa-totp-2fa`**).
-- Fleet Gatekeeper TOTP: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (requirements locked; not implemented).
+- Fleet Gatekeeper TOTP: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (G1–G4 implemented; G5 optional).
 - Not on **`FIRST_OUT_CHECKLIST.md`** must-fix list.
 - Operator docs: update pbx3-docs auth pages when packaging.

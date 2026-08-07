@@ -67,6 +67,13 @@ CREATE TABLE IF NOT EXISTS api_tokens (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS api_tokens_user_id ON api_tokens(user_id);
+CREATE TABLE IF NOT EXISTS two_factor_challenges (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    expires_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 SQL);
 
         $cols = $pdo->query('PRAGMA table_info(users)')->fetchAll();
@@ -80,17 +87,28 @@ SQL);
         if (! in_array('notify_failures', $names, true)) {
             $pdo->exec('ALTER TABLE users ADD COLUMN notify_failures INTEGER NOT NULL DEFAULT 0');
         }
+        if (! in_array('two_factor_secret', $names, true)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN two_factor_secret TEXT');
+        }
+        if (! in_array('two_factor_confirmed_at', $names, true)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN two_factor_confirmed_at TEXT');
+        }
+        if (! in_array('two_factor_recovery_codes', $names, true)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN two_factor_recovery_codes TEXT');
+        }
         InstanceHealthStore::migrate($pdo);
         OpsEventThrottle::migrate($pdo);
     }
 
     /**
-     * @return array{id:int,email:string,name:string,abilities:list<string>,disabled_at:?string,password_hash:string}|null
+     * @return array{id:int,email:string,name:string,abilities:list<string>,disabled_at:?string,password_hash:string,two_factor_secret:?string,two_factor_confirmed_at:?string,two_factor_recovery_codes:?string,two_factor_enabled:bool}|null
      */
     public static function findByEmail(string $email): ?array
     {
         $st = self::pdo()->prepare(
-            'SELECT id, email, name, password_hash, abilities, disabled_at FROM users WHERE email = ? COLLATE NOCASE LIMIT 1'
+            'SELECT id, email, name, password_hash, abilities, disabled_at,
+                    two_factor_secret, two_factor_confirmed_at, two_factor_recovery_codes
+             FROM users WHERE email = ? COLLATE NOCASE LIMIT 1'
         );
         $st->execute([trim($email)]);
         $row = $st->fetch();
@@ -108,6 +126,7 @@ SQL);
     {
         $st = self::pdo()->prepare(<<<'SQL'
 SELECT u.id, u.email, u.name, u.abilities, u.created_at, u.disabled_at, u.notify_failures,
+       u.two_factor_confirmed_at, u.two_factor_secret,
        (SELECT COUNT(*) FROM api_tokens t WHERE t.user_id = u.id) AS session_count
 FROM users u
 WHERE u.id = ?
@@ -134,6 +153,7 @@ SQL);
     {
         $rows = self::pdo()->query(<<<'SQL'
 SELECT u.id, u.email, u.name, u.abilities, u.created_at, u.disabled_at, u.notify_failures,
+       u.two_factor_confirmed_at, u.two_factor_secret,
        (SELECT COUNT(*) FROM api_tokens t WHERE t.user_id = u.id) AS session_count
 FROM users u
 ORDER BY u.email COLLATE NOCASE ASC
@@ -348,7 +368,7 @@ SQL)->fetchAll();
     }
 
     /**
-     * @return array{token:string,token_type:string,user:array{id:int,email:string,name:string,abilities:list<string>},expires_at:?string,abilities:list<string>}
+     * @return array{token?:string,token_type?:string,user?:array{id:int,email:string,name:string,abilities:list<string>,two_factor_enabled:bool},expires_at?:?string,abilities?:list<string>,requires_2fa?:bool,challenge_id?:string}
      */
     public static function login(string $email, string $password, int $ttlSeconds = 86400 * 7): array
     {
@@ -359,8 +379,236 @@ SQL)->fetchAll();
         if ($row['disabled_at'] !== null) {
             throw new \RuntimeException('Account disabled', 403);
         }
-        unset($row['password_hash']);
 
+        if (! empty($row['two_factor_enabled'])) {
+            return [
+                'requires_2fa' => true,
+                'challenge_id' => self::issueChallenge((int) $row['id']),
+            ];
+        }
+
+        return self::issueSessionForUser($row, $ttlSeconds);
+    }
+
+    /**
+     * Complete login after password challenge with TOTP or recovery code.
+     *
+     * @return array{token:string,token_type:string,user:array{id:int,email:string,name:string,abilities:list<string>,two_factor_enabled:bool},expires_at:?string,abilities:list<string>}
+     */
+    public static function verifyTwoFactor(string $challengeId, string $code, int $ttlSeconds = 86400 * 7): array
+    {
+        $challengeId = trim($challengeId);
+        $challenge = self::getChallenge($challengeId);
+        if ($challenge === null) {
+            throw new \RuntimeException('Invalid or expired challenge', 401);
+        }
+
+        $maxAttempts = max(1, (int) (getenv('GATEKEEPER_TOTP_MAX_ATTEMPTS') ?: 5));
+        if ((int) $challenge['attempts'] >= $maxAttempts) {
+            self::forgetChallenge($challengeId);
+            throw new \RuntimeException('Too many attempts', 429);
+        }
+
+        $user = self::findByIdWithSecrets((int) $challenge['user_id']);
+        if ($user === null || empty($user['two_factor_enabled'])) {
+            self::forgetChallenge($challengeId);
+            throw new \RuntimeException('Invalid or expired challenge', 401);
+        }
+
+        $totp = new TotpService;
+        $plainSecret = $totp->decryptSecret($user['two_factor_secret'] ?? null);
+        $ok = $plainSecret !== null && $totp->verify($plainSecret, $code);
+        if (! $ok) {
+            $ok = $totp->consumeRecoveryCode(
+                $user['two_factor_recovery_codes'] ?? null,
+                $code,
+                static function (string $json) use ($user): void {
+                    self::pdo()->prepare('UPDATE users SET two_factor_recovery_codes = ? WHERE id = ?')
+                        ->execute([$json, (int) $user['id']]);
+                }
+            );
+        }
+
+        if (! $ok) {
+            $attempts = self::bumpChallengeAttempts($challengeId);
+            if ($attempts >= $maxAttempts) {
+                self::forgetChallenge($challengeId);
+                throw new \RuntimeException('Too many attempts', 429);
+            }
+            throw new \RuntimeException('Invalid authentication code', 401);
+        }
+
+        self::forgetChallenge($challengeId);
+
+        return self::issueSessionForUser($user, $ttlSeconds);
+    }
+
+    /**
+     * @return array{secret:string,otpauth_url:string,qr_svg:string,issuer:string}
+     */
+    public static function setupTwoFactor(int $userId, string $password): array
+    {
+        $user = self::findByIdWithSecrets($userId);
+        if ($user === null) {
+            throw new \RuntimeException('Unauthorized', 401);
+        }
+        if (! password_verify($password, (string) ($user['password_hash'] ?? ''))) {
+            throw new \InvalidArgumentException('Password is incorrect.');
+        }
+        if (! empty($user['two_factor_enabled'])) {
+            throw new \RuntimeException('Two-factor authentication is already enabled. Disable it first to re-enroll.', 409);
+        }
+
+        $totp = new TotpService;
+        $plainSecret = $totp->generateSecret();
+        self::pdo()->prepare(
+            'UPDATE users SET two_factor_secret = ?, two_factor_confirmed_at = NULL, two_factor_recovery_codes = NULL WHERE id = ?'
+        )->execute([$totp->encryptSecret($plainSecret), $userId]);
+
+        $otpauth = $totp->otpauthUrl((string) $user['email'], $plainSecret);
+
+        return [
+            'secret' => $plainSecret,
+            'otpauth_url' => $otpauth,
+            'qr_svg' => $totp->qrDataUri($otpauth),
+            'issuer' => $totp->issuer(),
+        ];
+    }
+
+    /**
+     * @return array{message:string,recovery_codes:list<string>,two_factor_enabled:bool}
+     */
+    public static function confirmTwoFactor(int $userId, string $code): array
+    {
+        $user = self::findByIdWithSecrets($userId);
+        if ($user === null) {
+            throw new \RuntimeException('Unauthorized', 401);
+        }
+        if (! empty($user['two_factor_enabled'])) {
+            throw new \RuntimeException('Two-factor authentication is already enabled.', 409);
+        }
+
+        $totp = new TotpService;
+        $plainSecret = $totp->decryptSecret($user['two_factor_secret'] ?? null);
+        if ($plainSecret === null) {
+            throw new \InvalidArgumentException('Run setup first.');
+        }
+        if (! $totp->verify($plainSecret, $code)) {
+            throw new \InvalidArgumentException('Invalid authentication code.');
+        }
+
+        $recovery = $totp->generateRecoveryCodes();
+        self::pdo()->prepare(
+            'UPDATE users SET two_factor_recovery_codes = ?, two_factor_confirmed_at = ? WHERE id = ?'
+        )->execute([$totp->hashRecoveryCodes($recovery), gmdate('c'), $userId]);
+
+        return [
+            'message' => 'Two-factor authentication enabled',
+            'recovery_codes' => $recovery,
+            'two_factor_enabled' => true,
+        ];
+    }
+
+    /**
+     * @return array{message:string,two_factor_enabled:bool}
+     */
+    public static function disableTwoFactor(int $userId, string $password, string $code = ''): array
+    {
+        $user = self::findByIdWithSecrets($userId);
+        if ($user === null) {
+            throw new \RuntimeException('Unauthorized', 401);
+        }
+        if (! password_verify($password, (string) ($user['password_hash'] ?? ''))) {
+            throw new \InvalidArgumentException('Password is incorrect.');
+        }
+
+        if (! empty($user['two_factor_enabled'])) {
+            $totp = new TotpService;
+            $plainSecret = $totp->decryptSecret($user['two_factor_secret'] ?? null);
+            $ok = $plainSecret !== null && $totp->verify($plainSecret, $code);
+            if (! $ok) {
+                $ok = $totp->consumeRecoveryCode(
+                    $user['two_factor_recovery_codes'] ?? null,
+                    $code,
+                    static function (string $json) use ($userId): void {
+                        self::pdo()->prepare('UPDATE users SET two_factor_recovery_codes = ? WHERE id = ?')
+                            ->execute([$json, $userId]);
+                    }
+                );
+            }
+            if (! $ok) {
+                throw new \InvalidArgumentException('Authentication code is required to disable 2FA.');
+            }
+        }
+
+        self::clearTwoFactorColumns($userId);
+
+        return [
+            'message' => 'Two-factor authentication disabled',
+            'two_factor_enabled' => false,
+        ];
+    }
+
+    /**
+     * @return array{message:string,recovery_codes:list<string>}
+     */
+    public static function regenerateRecoveryCodes(int $userId, string $password, string $code): array
+    {
+        $user = self::findByIdWithSecrets($userId);
+        if ($user === null) {
+            throw new \RuntimeException('Unauthorized', 401);
+        }
+        if (empty($user['two_factor_enabled'])) {
+            throw new \InvalidArgumentException('Two-factor authentication is not enabled.');
+        }
+        if (! password_verify($password, (string) ($user['password_hash'] ?? ''))) {
+            throw new \InvalidArgumentException('Password is incorrect.');
+        }
+
+        $totp = new TotpService;
+        $plainSecret = $totp->decryptSecret($user['two_factor_secret'] ?? null);
+        if ($plainSecret === null || ! $totp->verify($plainSecret, $code)) {
+            throw new \InvalidArgumentException('Invalid authentication code.');
+        }
+
+        $recovery = $totp->generateRecoveryCodes();
+        self::pdo()->prepare('UPDATE users SET two_factor_recovery_codes = ? WHERE id = ?')
+            ->execute([$totp->hashRecoveryCodes($recovery), $userId]);
+
+        return [
+            'message' => 'Recovery codes regenerated',
+            'recovery_codes' => $recovery,
+        ];
+    }
+
+    /**
+     * Admin clear — lockout recovery. Revokes sessions.
+     *
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,notify_failures:bool,session_count:int,two_factor_enabled:bool,revoked:int}
+     */
+    public static function clearTwoFactorForUser(int $userId): array
+    {
+        $existing = self::findById($userId);
+        if ($existing === null) {
+            throw new \RuntimeException('User not found', 404);
+        }
+        self::clearTwoFactorColumns($userId);
+        $revoked = self::revokeAllTokensForUser($userId);
+        $updated = self::findById($userId);
+        if ($updated === null) {
+            throw new \RuntimeException('User not found', 404);
+        }
+        $updated['revoked'] = $revoked;
+
+        return $updated;
+    }
+
+    /**
+     * @param  array{id:int,email:string,name:string,abilities:list<string>,two_factor_enabled?:bool}  $row
+     * @return array{token:string,token_type:string,user:array{id:int,email:string,name:string,abilities:list<string>,two_factor_enabled:bool},expires_at:?string,abilities:list<string>}
+     */
+    private static function issueSessionForUser(array $row, int $ttlSeconds): array
+    {
         $plain = bin2hex(random_bytes(32));
         $hash = hash('sha256', $plain);
         $expires = $ttlSeconds > 0 ? gmdate('c', time() + $ttlSeconds) : null;
@@ -369,6 +617,8 @@ SQL)->fetchAll();
             'INSERT INTO api_tokens (user_id, token_hash, label, expires_at, created_at) VALUES (?, ?, ?, ?, ?)'
         );
         $st->execute([(int) $row['id'], $hash, 'session', $expires, $now]);
+
+        $enabled = ! empty($row['two_factor_enabled']);
 
         return [
             'token' => $plain,
@@ -379,9 +629,93 @@ SQL)->fetchAll();
                 'email' => (string) $row['email'],
                 'name' => (string) $row['name'],
                 'abilities' => $row['abilities'],
+                'two_factor_enabled' => $enabled,
             ],
             'abilities' => FleetAbilities::expand($row['abilities']),
         ];
+    }
+
+    private static function clearTwoFactorColumns(int $userId): void
+    {
+        self::pdo()->prepare(
+            'UPDATE users SET two_factor_secret = NULL, two_factor_confirmed_at = NULL, two_factor_recovery_codes = NULL WHERE id = ?'
+        )->execute([$userId]);
+    }
+
+    private static function issueChallenge(int $userId): string
+    {
+        $id = bin2hex(random_bytes(20));
+        $ttl = max(60, (int) (getenv('GATEKEEPER_TOTP_CHALLENGE_TTL') ?: 300));
+        $expires = gmdate('c', time() + $ttl);
+        self::pdo()->prepare(
+            'INSERT INTO two_factor_challenges (id, user_id, attempts, expires_at) VALUES (?, ?, 0, ?)'
+        )->execute([$id, $userId, $expires]);
+
+        return $id;
+    }
+
+    /**
+     * @return array{user_id:int,attempts:int}|null
+     */
+    private static function getChallenge(string $challengeId): ?array
+    {
+        if ($challengeId === '') {
+            return null;
+        }
+        $st = self::pdo()->prepare(
+            'SELECT user_id, attempts, expires_at FROM two_factor_challenges WHERE id = ? LIMIT 1'
+        );
+        $st->execute([$challengeId]);
+        $row = $st->fetch();
+        if (! is_array($row)) {
+            return null;
+        }
+        if (strtotime((string) $row['expires_at']) < time()) {
+            self::forgetChallenge($challengeId);
+
+            return null;
+        }
+
+        return [
+            'user_id' => (int) $row['user_id'],
+            'attempts' => (int) $row['attempts'],
+        ];
+    }
+
+    private static function bumpChallengeAttempts(string $challengeId): int
+    {
+        self::pdo()->prepare(
+            'UPDATE two_factor_challenges SET attempts = attempts + 1 WHERE id = ?'
+        )->execute([$challengeId]);
+        $st = self::pdo()->prepare('SELECT attempts FROM two_factor_challenges WHERE id = ?');
+        $st->execute([$challengeId]);
+        $attempts = $st->fetchColumn();
+
+        return (int) $attempts;
+    }
+
+    private static function forgetChallenge(string $challengeId): void
+    {
+        self::pdo()->prepare('DELETE FROM two_factor_challenges WHERE id = ?')->execute([$challengeId]);
+    }
+
+    /**
+     * @return array{id:int,email:string,name:string,abilities:list<string>,disabled_at:?string,password_hash:string,two_factor_secret:?string,two_factor_confirmed_at:?string,two_factor_recovery_codes:?string,two_factor_enabled:bool}|null
+     */
+    private static function findByIdWithSecrets(int $id): ?array
+    {
+        $st = self::pdo()->prepare(
+            'SELECT id, email, name, password_hash, abilities, disabled_at,
+                    two_factor_secret, two_factor_confirmed_at, two_factor_recovery_codes
+             FROM users WHERE id = ? LIMIT 1'
+        );
+        $st->execute([$id]);
+        $row = $st->fetch();
+        if (! is_array($row)) {
+            return null;
+        }
+
+        return self::mapUserRow($row, true);
     }
 
     /**
@@ -391,7 +725,8 @@ SQL)->fetchAll();
     {
         $hash = hash('sha256', $plainToken);
         $st = self::pdo()->prepare(<<<'SQL'
-SELECT u.id, u.email, u.name, u.abilities, u.disabled_at, t.id AS token_id, t.expires_at
+SELECT u.id, u.email, u.name, u.abilities, u.disabled_at, u.two_factor_confirmed_at, u.two_factor_secret,
+       t.id AS token_id, t.expires_at
 FROM api_tokens t
 JOIN users u ON u.id = t.user_id
 WHERE t.token_hash = ?
@@ -481,7 +816,7 @@ SQL;
 
     /**
      * @param  array<string,mixed>  $row
-     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,notify_failures:bool,session_count:int}
+     * @return array{id:int,email:string,name:string,abilities:list<string>,created_at:string,disabled_at:?string,notify_failures:bool,session_count:int,two_factor_enabled:bool}
      */
     private static function mapPublicUserRow(array $row): array
     {
@@ -490,6 +825,8 @@ SQL;
             $abilities = FleetAbilities::DEFAULT_BOOTSTRAP;
         }
         $disabled = $row['disabled_at'] ?? null;
+        $confirmed = $row['two_factor_confirmed_at'] ?? null;
+        $secret = $row['two_factor_secret'] ?? null;
 
         return [
             'id' => (int) $row['id'],
@@ -500,12 +837,14 @@ SQL;
             'disabled_at' => $disabled !== null && $disabled !== '' ? (string) $disabled : null,
             'notify_failures' => (bool) (int) ($row['notify_failures'] ?? 0),
             'session_count' => (int) ($row['session_count'] ?? 0),
+            'two_factor_enabled' => $confirmed !== null && $confirmed !== ''
+                && $secret !== null && $secret !== '',
         ];
     }
 
     /**
      * @param  array<string,mixed>  $row
-     * @return array{id:int,email:string,name:string,abilities:list<string>,disabled_at:?string,password_hash?:string}
+     * @return array{id:int,email:string,name:string,abilities:list<string>,disabled_at:?string,password_hash?:string,two_factor_secret?:?string,two_factor_confirmed_at?:?string,two_factor_recovery_codes?:?string,two_factor_enabled:bool}
      */
     private static function mapUserRow(array $row, bool $withPassword): array
     {
@@ -514,15 +853,25 @@ SQL;
             $abilities = FleetAbilities::DEFAULT_BOOTSTRAP;
         }
         $disabled = $row['disabled_at'] ?? null;
+        $confirmed = $row['two_factor_confirmed_at'] ?? null;
+        $secret = $row['two_factor_secret'] ?? null;
         $out = [
             'id' => (int) $row['id'],
             'email' => (string) $row['email'],
             'name' => (string) $row['name'],
             'abilities' => $abilities,
             'disabled_at' => $disabled !== null && $disabled !== '' ? (string) $disabled : null,
+            'two_factor_enabled' => $confirmed !== null && $confirmed !== ''
+                && $secret !== null && $secret !== '',
         ];
         if ($withPassword) {
             $out['password_hash'] = (string) $row['password_hash'];
+            $out['two_factor_secret'] = isset($row['two_factor_secret']) && $row['two_factor_secret'] !== ''
+                ? (string) $row['two_factor_secret'] : null;
+            $out['two_factor_confirmed_at'] = $confirmed !== null && $confirmed !== ''
+                ? (string) $confirmed : null;
+            $out['two_factor_recovery_codes'] = isset($row['two_factor_recovery_codes']) && $row['two_factor_recovery_codes'] !== ''
+                ? (string) $row['two_factor_recovery_codes'] : null;
         }
 
         return $out;

@@ -4,7 +4,9 @@
   "type": "project",
   "require": {
     "php": "^8.2",
-    "aws/aws-sdk-php": "^3.300"
+    "aws/aws-sdk-php": "^3.300",
+    "pragmarx/google2fa": "^8.0",
+    "bacon/bacon-qr-code": "^3.0"
   },
   "autoload": {
     "psr-4": {

@@ -62,11 +62,22 @@ try {
         JsonResponse::send(200, UserStore::login($email, $password));
     }
 
+    if ($method === 'POST' && $path === '/api/v1/auth/2fa/verify') {
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $challengeId = is_string($body['challenge_id'] ?? null) ? $body['challenge_id'] : '';
+        $code = is_string($body['code'] ?? null) ? $body['code'] : '';
+        if ($challengeId === '' || $code === '') {
+            throw new \InvalidArgumentException('challenge_id and code required', 422);
+        }
+        JsonResponse::send(200, UserStore::verifyTwoFactor($challengeId, $code));
+    }
+
     if ($method === 'GET' && $path === '/api/v1/auth/status') {
         JsonResponse::send(200, [
             'auth' => 'fleet-user-or-break-glass',
             'users_configured' => UserStore::userCount() > 0,
             'login' => '/api/v1/auth/login',
+            'two_factor_verify' => '/api/v1/auth/2fa/verify',
         ]);
     }
 
@@ -80,9 +91,13 @@ try {
                 'email' => $user['email'],
                 'name' => $user['name'],
                 'abilities' => $user['abilities'] ?? [],
+                'two_factor_enabled' => (bool) ($user['two_factor_enabled'] ?? false),
             ],
             'abilities' => Auth::effectiveAbilities(),
             'break_glass' => Auth::isBreakGlass(),
+            'two_factor_enabled' => Auth::isBreakGlass()
+                ? false
+                : (bool) ($user['two_factor_enabled'] ?? false),
         ]);
     }
 
@@ -91,6 +106,60 @@ try {
             UserStore::revokeToken(Auth::bearerToken());
         }
         JsonResponse::send(200, ['ok' => true]);
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/auth/2fa/setup') {
+        if (Auth::isBreakGlass()) {
+            throw new \RuntimeException('Break-glass cannot enroll TOTP', 422);
+        }
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $password = is_string($body['password'] ?? null) ? $body['password'] : '';
+        if ($password === '') {
+            throw new \InvalidArgumentException('password required', 422);
+        }
+        $user = Auth::user();
+        JsonResponse::send(200, UserStore::setupTwoFactor((int) ($user['id'] ?? 0), $password));
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/auth/2fa/confirm') {
+        if (Auth::isBreakGlass()) {
+            throw new \RuntimeException('Break-glass cannot enroll TOTP', 422);
+        }
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $code = is_string($body['code'] ?? null) ? $body['code'] : '';
+        if ($code === '') {
+            throw new \InvalidArgumentException('code required', 422);
+        }
+        $user = Auth::user();
+        JsonResponse::send(200, UserStore::confirmTwoFactor((int) ($user['id'] ?? 0), $code));
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/auth/2fa/disable') {
+        if (Auth::isBreakGlass()) {
+            throw new \RuntimeException('Break-glass cannot manage TOTP', 422);
+        }
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $password = is_string($body['password'] ?? null) ? $body['password'] : '';
+        $code = is_string($body['code'] ?? null) ? $body['code'] : '';
+        if ($password === '') {
+            throw new \InvalidArgumentException('password required', 422);
+        }
+        $user = Auth::user();
+        JsonResponse::send(200, UserStore::disableTwoFactor((int) ($user['id'] ?? 0), $password, $code));
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/auth/2fa/recovery') {
+        if (Auth::isBreakGlass()) {
+            throw new \RuntimeException('Break-glass cannot manage TOTP', 422);
+        }
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $password = is_string($body['password'] ?? null) ? $body['password'] : '';
+        $code = is_string($body['code'] ?? null) ? $body['code'] : '';
+        if ($password === '' || $code === '') {
+            throw new \InvalidArgumentException('password and code required', 422);
+        }
+        $user = Auth::user();
+        JsonResponse::send(200, UserStore::regenerateRecoveryCodes((int) ($user['id'] ?? 0), $password, $code));
     }
 
     // Edge settings (SBC admin API URL — SQLite overrides env)
@@ -309,6 +378,12 @@ try {
             throw new \RuntimeException('User not found', 404);
         }
         JsonResponse::send(200, ['ok' => true, 'revoked' => $revoked, 'user' => $user]);
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/v1/fleet-users/(\d+)/clear-2fa$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $cleared = UserStore::clearTwoFactorForUser((int) $m[1]);
+        JsonResponse::send(200, ['ok' => true, 'user' => $cleared, 'revoked' => $cleared['revoked'] ?? 0]);
     }
 
     $registrar = new S3Registrar();

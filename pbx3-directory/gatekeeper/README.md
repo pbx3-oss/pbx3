@@ -19,7 +19,7 @@ php -S 127.0.0.1:8090 -t public
 
 ```bash
 composer install   # pulls phpunit from require-dev
-composer test      # UserStore create / login / revoke / bad password
+composer test      # UserStore auth + TOTP 2FA + Pack A
 ```
 
 See **`pbx3/workingdocs/CRITICAL_PATH_TEST_PACK.md`**.
@@ -50,9 +50,21 @@ See **`docs/FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** · **`docs/CONTROL_HOST.md
 
 | Mode | How |
 |------|-----|
-| **Fleet user (preferred)** | `POST /api/v1/auth/login` with `{ "email", "password" }` → Bearer token (store hashed in SQLite). Bootstrap: `php bin/create-fleet-user.php --email … --password …` `[--abilities fleet_admin]` |
-| **Break-glass** | Static `GATEKEEPER_API_TOKEN` still accepted as Bearer (ops / emergency) — treated as **`fleet_admin`**. |
-| **SPA** | Login form on FleetTokenGate; optional break-glass paste. Abilities from login/`/me` gate UI (server still enforces). |
+| **Fleet user (preferred)** | `POST /api/v1/auth/login` with `{ "email", "password" }` → Bearer token (store hashed in SQLite). If TOTP enabled → `requires_2fa` + `challenge_id` (no token); complete with `POST /api/v1/auth/2fa/verify`. Bootstrap: `php bin/create-fleet-user.php --email … --password …` `[--abilities fleet_admin]` |
+| **Break-glass** | Static `GATEKEEPER_API_TOKEN` still accepted as Bearer (ops / emergency) — treated as **`fleet_admin`**. **Not** subject to TOTP. |
+| **SPA** | Login form on FleetTokenGate (+ challenge step); optional break-glass paste. Enroll at **Fleet → Fleet 2FA**. Abilities from login/`/me` gate UI (server still enforces). |
+
+### TOTP 2FA (opt-in)
+
+| Piece | Detail |
+|-------|--------|
+| Spec | `pbx3/workingdocs/FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md` |
+| Issuer | **`Aelintra Fleet`** (`GATEKEEPER_TOTP_ISSUER`); encrypt key `GATEKEEPER_TOTP_KEY` (falls back to `GATEKEEPER_API_TOKEN`) |
+| Enroll | Authenticated `POST /api/v1/auth/2fa/setup` → confirm → recovery codes once |
+| Admin clear | `POST /api/v1/fleet-users/{id}/clear-2fa` (`fleet_admin`) — clears secret + revokes sessions |
+| Create user | Password-only; enroll after login |
+
+Bearer **required** on every `/api/v1/*` **except** `/api/v1/auth/login`, `/api/v1/auth/2fa/verify`, and `/api/v1/auth/status`. `GET /health` stays open. `/api/v1/auth/me` and logout need Bearer only (no ability).
 
 ### Abilities (S10.1)
 
@@ -65,8 +77,6 @@ See **`docs/FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** · **`docs/CONTROL_HOST.md
 | `fleet_admin` | All of the above + recordings `presign-recordings` + fleet-user manage (S10.6) |
 
 `fleet_admin` grants every `fleet_*`. Existing auth DBs get an `abilities` column defaulting to `["fleet_admin"]` on migrate.
-
-Bearer **required** on every `/api/v1/*` **except** `/api/v1/auth/login` and `/api/v1/auth/status`. `GET /health` stays open. `/api/v1/auth/me` and logout need Bearer only (no ability).
 
 | Environment | How the SPA gets the token |
 |-------------|----------------------------|
