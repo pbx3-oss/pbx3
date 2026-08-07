@@ -63,8 +63,8 @@ Complete **all** before writing multi-SAN cert code. (Table from **`LETSENCRYPT_
 |---|------|---------|
 | 3.1 | **TenantDetailView** | Read-only **Tenant FQDN** (from API **`cluster.fqdn`** or derived display consistent with API). |
 | 3.2 | **TenantCreateView** | Hint: FQDN assigned on create; no edit field. |
-| 3.3 | **CertificatesView** | Show **“Cert covers: …”** from **`domains`**. Button **Sync with tenant list** → **POST `/certificates/letsencrypt/sync`**; toast + refetch. |
-| 3.4 | **Verify** | Browser: create tenant → FQDN visible → Certificates shows list + Sync → Sync succeeds (LE staging or real); nginx/Asterisk still load via **`apply-active-cert`**. |
+| 3.3 | **CertificatesView** | Show **“Cert covers: …”**. Button **Sync certificate** → **POST `/certificates/letsencrypt/sync`**. Fleet = instance FQDN only (**`TLS_AND_CERTIFICATES.md` §0**). |
+| 3.4 | **Verify** | Browser: Certificates Sync succeeds; nginx/Asterisk load via **`apply-active-cert`**. |
 
 ---
 
@@ -72,10 +72,10 @@ Complete **all** before writing multi-SAN cert code. (Table from **`LETSENCRYPT_
 
 | # | Task | Details |
 |---|------|---------|
-| 4.1 | **Cron** | Confirm **`le-renew-with-80.sh`** + cron still renew multi-SAN cert; deploy hook **`apply-active-cert.sh`**. |
-| 4.2 | **Tenant move runbook** | Destination: import tenant → **Sync** (or setup) so SANs include new FQDN; DNS cutover. Source: remove tenant → **Sync** to drop SAN. (See **`LETSENCRYPT_PER_TENANT_FQDN.md`** §8 / §4.2.) |
+| 4.1 | **Cron** | Confirm **`le-renew-with-80.sh`** + cron renews cert; deploy hook **`apply-active-cert.sh`**. |
+| 4.2 | **Tenant move runbook** | **SBC fleet:** setid + catalog; **no** tenant DNS/SAN. **Solo/direct:** dest Sync may add tenant SAN; source Sync after wipe. **`TENANT_MIGRATION_RUNBOOK.md`**. |
 | 4.3 | **TLS release pass** | HTTPS **44300**, trusted cert, CORS, Sanctum (**`TODO.md`**). |
-| 4.4 | **Handoff docs** | Update **SESSION_HANDOFF** / **AGENT_HANDOFF** when feature is **done**; point to **`TLS_AND_CERTIFICATES.md`** index. |
+| 4.4 | **Handoff docs** | Point to **`TLS_AND_CERTIFICATES.md`** (**§0**). |
 
 ---
 

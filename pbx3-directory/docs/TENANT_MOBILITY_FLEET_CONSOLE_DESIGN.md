@@ -564,11 +564,13 @@ Start **thin**; it can later merge with the S8.9 rebuild orchestrator (`SELF_SER
 
 ## 7. DNS & certs
 
-- **SBC fleet (target): DNS is a non-event.** Phone-facing DNS points at the SBC and never changes on a move; cutover is the SBC `domain.setid` repoint (§2.1). Public per-tenant A records are not required for phone routing.
+**Locked 2026-08-06** (lab green; see **`TLS_AND_CERTIFICATES.md` §0**):
+
+- **SBC fleet: DNS is a non-event for tenants.** Phone-facing DNS points at the **SBC** (and instance FQDNs for admin/API). Cutover is the SBC `domain.setid` repoint (§2.1). **No public per-tenant A records.** SPA homes via catalog → instance URL.
 - **Direct fleet (no SBC):** DNS cutover remains. **Phase D, optional:** Route53 integration to auto-apply the A record at `awaiting_dns`. Otherwise wizard shows the exact record + expected IP, offers a `dig` check, requires **"I've updated DNS"** confirmation.
 - **Certs:**
-  - *Direct fleet:* destination **Certificates → Sync** (tenant FQDN into SANs) at cutover; source Sync at cleanup. Node LE scripts unchanged (Option A already shipped).
-  - *SBC fleet:* phone-facing SIP TLS can terminate at the SBC (one cert surface), largely removing per-node per-tenant LE churn. Node↔SBC and API TLS still apply. **Not yet decided** — see open questions.
+  - *SBC fleet:* **Node LE = instance FQDN only** (Setup/Sync). Tenant names are not SANs. API/admin TLS stays per-node. Optional future: terminate phone SIP-TLS at the SBC (edge cert surface) — open for media/SIP-TLS product tracks, **not** required for the instance-only LE lock.
+  - *Direct / solo:* destination **Certificates → Sync** may include tenant FQDNs in SANs (**Option A** — **`LETSENCRYPT_PER_TENANT_FQDN.md`**); source Sync at cleanup.
 
 ---
 
@@ -610,7 +612,7 @@ If a single implementer must sequence: **Phase A first** (also improves daily ou
 
 1. **Cutover call-drain:** ~~force re-REGISTER vs wait~~ — **Settled (§11.1):** accept registration lag as fact; short reg interval (e.g. **5 min**) ameliorates; wizard documents drain + keep source until verified. Optional force re-REGISTER remains nice-to-have.
 3. **SBC HA topology:** DNS SRV vs round-robin vs anycast vs active-passive — document in pbx3sbc fleet guide; blocks production fleet label.
-4. **TLS at edge:** terminate phone SIP-TLS at the SBC (one cert surface) vs keep per-node per-tenant LE? Interacts with `LETSENCRYPT_PER_TENANT_FQDN.md` Option A already shipped. (Gotcha #9 — API/admin TLS stays per-node regardless.)
+4. **TLS at edge (phone SIP-TLS):** **Settled for node LE (2026-08-06):** SBC fleet nodes use **instance-only** LE — not per-tenant SANs (`TLS_AND_CERTIFICATES.md` §0). Still open: whether to terminate **phone SIP-TLS** at the SBC (one edge cert) vs UDP-only edge + node API TLS only. (Gotcha #9 — API/admin TLS stays per-node regardless.)
 5. **SBC vs node filter boundary:** node route denies by pattern (e.g. intl codes); SBC may apply additional carrier/LCR rules — document who wins on overlap.
 7. **Fleet service auth (mechanism):** trust tier is settled (§2.6 — org/fleet identity, separate from tenant/instance), but the **mechanism** by which the control plane authenticates to node APIs **and** the SBC admin API (dedicated service token vs admin bearer) is open. Must not break `AUTH_PATTERNS.md` whoami contract.
 8. **DID assignment/inventory authoring (§11.9):** tenant panel ("claim a DID") vs fleet DID-inventory panel (MSP number management) vs both. Delivery row is derived either way; this is *where ownership is entered*.

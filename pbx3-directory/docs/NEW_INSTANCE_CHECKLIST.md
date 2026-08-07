@@ -69,11 +69,18 @@ Do not run **`reloader.sh`** after restore.
 
 ---
 
-## C — Tenant DNS (multi-tenant LE)
+## C — DNS / LE
 
-- [ ] **C.1** Each tenant: **A** record `{shortuid}.pbx3.com` → node IP (or target after move)
-- [ ] **C.2** After add/remove/restore: **Certificates → Sync with tenant list** (not **Renew** alone)
-- [ ] **C.3** Package **≥ 0.0.3-17** for SAN replace on sync (`le-sync-cert-sans.sh` without `--expand`)
+**SBC fleet (default)** — **`TLS_AND_CERTIFICATES.md` §0**:
+
+- [ ] **C.1** Instance **A** record only (`{instance}.{apex}` → node IP/EIP). **No** tenant public A records.
+- [ ] **C.2** LE Setup / **Sync certificate** = **instance FQDN only** (not tenant SANs).
+- [ ] **C.3** Package with `le-sync-cert-sans.sh` (≥ **0.0.3-17** for replace-not-expand; current lab **0.0.5-1**).
+
+**Solo / direct-to-node only:**
+
+- [ ] **C.1′** Each tenant: **A** record `{shortuid}.{apex}` → node IP
+- [ ] **C.2′** After add/remove/restore: **Certificates → Sync certificate** (Option A multi-SAN)
 
 ---
 
@@ -92,4 +99,4 @@ Do not run **`reloader.sh`** after restore.
 
 ## Related (not instance create)
 
-**Tenant move** between nodes → **`TENANT_MIGRATION_RUNBOOK.md`** (Phase S8 — export/import + catalog + LE on both nodes).
+**Tenant move** between nodes → **`TENANT_MIGRATION_RUNBOOK.md`** (SBC: setid + catalog; not tenant DNS).

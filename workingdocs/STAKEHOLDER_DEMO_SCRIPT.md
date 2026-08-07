@@ -85,9 +85,9 @@ Check **Help OK?** during rehearsal: every labelled field on the screen should h
 
 | # | Action | Route | Show stakeholder | Help OK? |
 |---|--------|-------|----------------|----------|
-| 8.1 | Open certificates | `/certificates` | LE multi-SAN: node + tenant FQDNs | ☐ |
-| 8.2 | Show cert covers | **Cert covers** list | All hostnames on one cert | ☐ |
-| 8.3 | Sync with tenant list | **Sync** button | Add tenant → Sync expands SAN | ☐ |
+| 8.1 | Open certificates | `/certificates` | Fleet: instance FQDN cert; solo may be multi-SAN | ☐ |
+| 8.2 | Show cert covers | **Cert covers** list | Hostnames on the active cert | ☐ |
+| 8.3 | Sync certificate | **Sync** button | Re-issue intended SANs (fleet = instance only) | ☐ |
 
 ### 9. Instance settings (~3 min) — Tier 2
 

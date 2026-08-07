@@ -25,14 +25,14 @@ Merged to **`main`** in **pbx3**, **pbx3api**, **pbx3spa**. Remote **`certificat
 | **pbx3api** | `main` @ `bd1c2d4` (incl. fast `tls-active.json` read) |
 | **LE cert** | Multi-SAN: `08jzwn.pbx3.com`, `f34ck1.pbx3.com`, `5489nv.pbx3.com` |
 | **Renew** | `certbot renew --dry-run` succeeded |
-| **Panel** | Sync with tenant list works (after API + script fixes) |
+| **Panel** | Sync certificate works (after API + script fixes) |
 | **Dev pattern** | Mac **pbx3spa** + `https://<fqdn>:44300/api` — **no SPA on node** |
 
 ### Operator flow (validated)
 
 1. Create tenant → FQDN = `{shortuid}.{globals.domain}` (e.g. `5489nv.pbx3.com`).
 2. DNS A record for tenant FQDN → node public IP.
-3. **Certificates → Sync with tenant list** (not “Get certificate” if LE already exists).
+3. **Certificates → Sync certificate** (not “Get certificate” if LE already exists).
 4. Confirm `cat /opt/pbx3/etc/identity/tls-active.json` → `cert_sans` lists all names.
 5. Login from local SPA with `https://<tenant-fqdn>:44300/api`.
 

@@ -96,9 +96,11 @@ Pass:     ~/webrtc-1500.env on golden
 2. **Cross-AZ fleet lab** before treating multi-AZ media as proven.  
 3. Package rolls: ensure **pbx3** webrtc tmpl + **pbx3cagi 1.0.0-10** land on nodes beyond golden hot-fix (branches already **merged to main**).
 
-## SIP domain vs next hop (DNS) — product stance (2026-08-03)
+## SIP domain vs next hop (DNS) — product stance (2026-08-03; fleet lock 2026-08-06)
 
-Do **not** assume every tenant FQDN is in public DNS. Fleet desk path already works without that:
+Do **not** assume every tenant FQDN is in public DNS. **SBC fleet lock:** **`TLS_AND_CERTIFICATES.md` §0** — no tenant A records; node LE = instance only; WSS host ≠ tenant FQDN.
+
+Fleet desk path already works without tenant DNS:
 
 | Concept | Role |
 |---------|------|

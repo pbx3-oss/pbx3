@@ -2,7 +2,28 @@
 
 **AI:** Open work lives in **`../TODO.md`**. This file is archaeology only.
 
+Archived **2026-08-06** — reconcile pass (shipped Aug work + leftovers wrongly still “open”).  
 Archived **2026-08-03** — 157 checked-off entries from TODO.md.
+
+---
+
+## Closed items (2026-08-06 reconcile)
+
+- [x] **Dial cohort / Site Group — RELEASE STOPPER (lab green 2026-08-06):** C0–C6 on **`main`**. Spec **`DIAL_COHORT_REQUIREMENTS.md`**. MkDocs **`fleet/site-groups`**. Slice D shortuid usrloc repair kept as PAI-CLIP fallback.
+- [x] **Package roll 0.0.5-1 / cagi 1.0.0-14 (2026-08-06):** Debs + changelogs on **`main`** (pbx3 `0c171cb`, cagi `35c44c0`). Cohort postinst apply; GenAst Pres-Num CLIP; PrefixDial prefix+ext. Fleet install deferred (new instance / later apt).
+- [x] **Tenant short dial core + package + F migrate + E pack-gate + D Path 1 (2026-08-04…05):** Spec **`TENANT_SHORT_DIAL_REQUIREMENTS.md`**. Packages through **0.0.4-6** / **1.0.0-11**; later rolled into **0.0.5-1**.
+- [x] **Number wire — D1 = C + policy (2026-08-06):** **`NUMBER_WIRE_POLICY.md`**. Phase 2 / D2–D4 remain open in TODO.
+- [x] **L1 SIPp pack green (2026-08-04):** `run-pack.sh` 11/11 Peer.
+- [x] **Fleet naming lock + lab one-shot (2026-08-06):** **`FLEET_NAMING_LOCK.md`**. D6 FQDN rename cancelled.
+- [x] **Fleet Delete D0–D5 (2026-08-06):** Rule 14. Spec **`FLEET_TENANT_DELETE_REQUIREMENTS.md`**.
+- [x] **Time-based routing day-parts A–E + DOW ranges (2026-08-05):** Spec **`TIME_BASED_ROUTING_REQUIREMENTS.md`**. Was golden **0.0.4-8** / cagi **1.0.0-13**; now in **0.0.5-1** / **1.0.0-14**.
+- [x] **Schedule no-match default = open (Q1 locked 2026-08-04).**
+- [x] **Seed outbound OutRoute on tenant create (2026-08-06):** UK `_0. _00.`. O4 US string still open.
+- [x] **WebRTC package residual + SPA WSS line test (2026-08-03):** **`WEBRTC_WSS_LAB.md`**, **`WSS_LINE_TEST_REQUIREMENTS.md`**.
+- [x] **Instance user privileges P1–P4 + B′ login homing (2026-07-22…):** Spec **`INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md`**. Was wrongly still open in TODO.
+- [x] **Log retention Phases 1–6 + SBC data aging WS0–WS4 / Phase 7 purge-only (2026-07):** **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**, **`SBC_DATA_RETENTION_REQUIREMENTS.md`**. Phase 7 “open” pointer closed.
+- [x] **OpenSIPS `alias_db_lookup` — leave as-is (decided 2026-08-01).**
+- [x] **pbx3sbc multi-tenant dispatcher reverse lookup (live):** `source_ip` in dispatcher attrs; golden setid 2 / bzy setid 3. Optional hostname-row backfill only if needed later.
 
 ---
 

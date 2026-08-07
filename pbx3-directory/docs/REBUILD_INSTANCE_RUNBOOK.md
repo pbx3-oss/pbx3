@@ -176,10 +176,10 @@ Optional backup upload smoke if a local zip exists:
 ## Phase 5 — DNS / EIP, edge dispatcher, certificates, sign-off
 
 1. **Address cutover (pick one):**
-   - **Preferred:** Instance already has an **EIP** → point DNS A records (instance FQDN + tenant FQDNs that live on this node) at that EIP **once**. Later rebuilds: reassociate the same EIP; DNS unchanged.
-   - **Without EIP:** Point those A records at the new instance public IP (must repeat every rebuild).
+   - **Preferred:** Instance already has an **EIP** → point **instance** FQDN A record at that EIP **once**. Later rebuilds: reassociate the same EIP; DNS unchanged. **SBC fleet:** do **not** create tenant public A records (**`TLS_AND_CERTIFICATES.md` §0**).
+   - **Without EIP:** Point the **instance** A record at the new public IP (must repeat every rebuild).
 2. **Fleet SBC (Magrathea / OpenSIPS):** Update the dispatcher destination for this node's setid to `sip:{EIP_or_public_ip}:5060` (IP only — not a DNS name), then `ds_reload`. If the node already uses a stable EIP in dispatcher, **skip** when only the EIP moved onto the new EC2.
-3. **LE:** SPA **Certificates → Sync with tenant list** (not **Renew** alone), or first-issue via `le-first-cert-multi.sh` / `le-instance-bootstrap.sh` for FQDNs that already resolve here. Package **≥ 0.0.3-17** for Sync. Only include SANs whose A records point at this node.
+3. **LE (fleet):** SPA **Certificates → Sync certificate** (or first-issue) for the **instance FQDN only** — not tenant SANs. CLI: `le-sync-cert-sans.sh <email> <instance-fqdn>`. (**Solo/direct:** Option A multi-SAN — **`LETSENCRYPT_PER_TENANT_FQDN.md`**.)
 4. **Commit:** SPA **Commit** if Asterisk configs need regeneration (transport externip already refreshed at restore).
 5. **Fleet preflight** (on node):
 

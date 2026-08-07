@@ -2,13 +2,13 @@
 
 **Location:** **pbx3** repository, `workingdocs/CERTIFICATES_PANEL_AND_API.md` — all TLS documentation for the stack is consolidated under **pbx3/workingdocs/** (see **`TLS_AND_CERTIFICATES.md`** index).
 
-**Purpose:** Plan the **Certificates** admin panel (**pbx3spa**), **`/certificates/*`** API (**pbx3api**), and related **pbx3** backend paths. **Option A (LE multi-SAN)** — node + all tenant **`cluster.fqdn`** — is specified in **`LETSENCRYPT_PER_TENANT_FQDN.md`**; this file describes UI/API behaviour and code touch-points.
+**Purpose:** Plan the **Certificates** admin panel (**pbx3spa**), **`/certificates/*`** API (**pbx3api**), and related **pbx3** backend paths. **SBC fleet** uses **instance-only** LE (**`TLS_AND_CERTIFICATES.md` §0**). **Option A (multi-SAN)** — node + tenant **`cluster.fqdn`** — is **solo/direct only** (**`LETSENCRYPT_PER_TENANT_FQDN.md`**).
 
 **Out of scope for this panel:** **3rd-party cert bundles** (manufacturer CA certs for provisioning verification, e.g. Snom, Yealink) — separate panel.
 
 **References:**
-- **`TLS_AND_CERTIFICATES.md`** — Canonical TLS overview (custom → LE → snakeoil, scripts, **Option A** summary).
-- **`LETSENCRYPT_PER_TENANT_FQDN.md`** — Multi-SAN issuance, firewall **pbx3_inline_fqdn**, **§12** implementation phases.
+- **`TLS_AND_CERTIFICATES.md`** — Canonical TLS overview (**§0 fleet lock**, custom → LE → snakeoil).
+- **`LETSENCRYPT_PER_TENANT_FQDN.md`** — Solo/direct multi-SAN; firewall **pbx3_inline_fqdn**.
 - **`APACHE_CONFIG_TO_PBX3API.md`** §3 — HTTP/nginx split; TLS ownership summary.
 - **pbx3spa** `workingdocs/SINGLE_PANEL_SCREENS.md` — Certificates (#7), Certs 3rd Party (#8); routes `/certificates`, `/certificates/3rd-party`.
 
@@ -19,7 +19,7 @@
 **Users must be able to choose either:**
 
 - **Purchased (custom) certificate** — Some users will upload their own certificate (e.g. from a commercial CA). They install cert + key via the panel; nginx and Asterisk use it for TLS until they remove it.
-- **Let's Encrypt** — Automatic certs via **HTTP-01** (**`TLS_AND_CERTIFICATES.md`**). **Target (Option A):** one LE cert with **multiple SANs** (node FQDN + every tenant **`cluster.fqdn`**); **manual “Sync with tenant list”** re-issues when tenants change (**`LETSENCRYPT_PER_TENANT_FQDN.md`** §12). Until implemented, behaviour may still be a **single-hostname** cert. No DNS API in the adopted path.
+- **Let's Encrypt** — Automatic certs via **HTTP-01** (**`TLS_AND_CERTIFICATES.md`**). **Fleet:** one SAN = **instance FQDN**; **Sync certificate** re-issues that name only. **Solo/direct:** Option A may include tenant FQDNs (**`LETSENCRYPT_PER_TENANT_FQDN.md`**). No DNS API in the adopted path.
 
 Both are supported. The system must **handle both** and make it clear which source is currently in use. There is no “primary” or “secondary” path: either a user has set up Let's Encrypt (via the pbx3 installer) or they have uploaded a purchased cert (via the panel), or neither (snakeoil fallback). The panel should present both options neutrally and show **Currently in use: Purchased certificate** or **Currently in use: Let's Encrypt** (or **Snakeoil** when neither is active).
 
@@ -29,12 +29,12 @@ Both are supported. The system must **handle both** and make it clear which sour
 
 | Area | Owner | Purpose | Panel section |
 |------|--------|---------|----------------|
-| **Let's Encrypt** | pbx3 | **Target:** Multi-SAN cert (node + tenant FQDNs) via HTTP-01; material under `/etc/letsencrypt/live/<primary>/` where **primary** matches **`le-domain`**. Status, **Renew now**, **Sync with tenant list** (re-issue SANs). | **Status** + “Cert covers …”; **Renew now**; **Sync** (when LE configured). |
-| **Purchased / custom cert** | User, via API | User-supplied PEM + key (e.g. purchased cert). For users who prefer their own CA. Install = upload cert + key; remove = revert to LE or snakeoil. | **Install** (upload cert + key), **Remove**; show “Currently in use: Purchased certificate” when active. |
+| **Let's Encrypt** | pbx3 | Fleet: instance FQDN cert. Solo: optional multi-SAN. Status, **Renew now**, **Sync certificate**. | **Status** + “Cert covers …”; **Renew now**; **Sync**. |
+| **Purchased / custom cert** | User, via API | User-supplied PEM + key. | **Install** / **Remove**. |
 
 **Not in this panel:** 3rd-party cert bundles (manufacturer certs for provisioning verification — Snom, Yealink, etc.) are handled in a **separate panel**. See SINGLE_PANEL_SCREENS.md Certs 3rd Party (#8).
 
-**Panel type:** Single-screen with **two cascaded sections** (see **pbx3spa** `PANEL_PATTERN.md`). One view at `/certificates`: **Let's Encrypt** and **Purchased certificate**. LE copy should mention that **all tenant FQDNs** must resolve here for HTTP-01 when using **Option A** (see **`LETSENCRYPT_PER_TENANT_FQDN.md`**).
+**Panel type:** Single-screen with **two cascaded sections** (see **pbx3spa** `PANEL_PATTERN.md`). One view at `/certificates`: **Let's Encrypt** and **Purchased certificate**. Fleet copy must **not** tell operators to put tenant FQDNs on the node cert.
 
 ---
 
@@ -110,9 +110,10 @@ All cert endpoints require **auth:sanctum** and **abilities:admin** (same as oth
 **At the top:** One line showing **Currently in use: Purchased certificate** | **Let's Encrypt** | **Snakeoil** (from GET `/certificates/active`). Both purchased and LE are first-class.
 
 - **Section 1 — Let's Encrypt** (for users who prefer automatic certs):  
+  - **Fleet warning (prominent):** **DO NOT create DNS A records for tenant domains.** Tenant FQDNs are SIP domains only; A records for **instance** hostname only. Shown on the panel when posture is fleet. Canonical: **`TLS_AND_CERTIFICATES.md` §0**.  
   - **User-facing explanation:** "A certificate for this host's hostname (e.g. `myhost.mydomain.com`) is issued and renewed automatically via HTTP-01. Port 80 must be reachable from the internet only during issuance or renewal (a few minutes); you can leave it closed the rest of the time. No DNS API or wildcard — just an A record for this host's FQDN."  
-  - **DNS requirement:** User must create an **A record** (and optionally AAAA) for this host's FQDN pointing to this server's IP before getting the certificate.  
-  - **When configured:** Display primary hostname, **“Cert covers:”** list (from **`domains`** when present), Expires, Issuer. Buttons **Renew now** and **Sync with tenant list** (POST **`/certificates/letsencrypt/sync`**).  
+  - **DNS requirement:** User must create an **A record** (and optionally AAAA) for this host's **instance** FQDN pointing to this server's IP before getting the certificate. **Not** for tenant shortuids.
+  - **When configured:** Display primary hostname, **“Cert covers:”** list (from **`domains`** / **`cert_sans`**), Expires, Issuer. Buttons **Renew now** and **Sync certificate** (POST **`/certificates/letsencrypt/sync`**). Fleet intended list = instance FQDN only.  
   - **When not configured:** Setup form + **Get certificate** as today; implementation may use **multi-SAN** list from tenants (**`LETSENCRYPT_PER_TENANT_FQDN.md`**).
 - **Section 2 — Purchased certificate** (for users who prefer their own cert):  
   - Display: “Customer certificate: In use” or “Not installed.”  

@@ -218,12 +218,13 @@ Then **Commit** again (SPA) or `sudo asterisk -rx 'core reload'`. Verify e.g. `l
 
 ---
 
-## Phase 5 — DNS cutover
+## Phase 5 — DNS cutover (SBC fleet: skip)
 
-Point tenant FQDN **A** record to **bzy54n** public IP (unchanged hostname, new IP).
+**SBC fleet (default):** **No tenant A-record change.** Phones stay on the SBC; cutover is OpenSIPS `domain` setid → dest dispatcher. Instance DNS unchanged. Lock: **`TLS_AND_CERTIFICATES.md` §0**.
+
+**Solo / direct-to-node only:** Point tenant FQDN **A** record to the destination node public IP, then:
 
 ```bash
-# From Mac — after DNS propagates:
 dig +short {tenant}.pbx3.com
 ```
 
@@ -231,11 +232,12 @@ dig +short {tenant}.pbx3.com
 
 ## Phase 6 — TLS (both nodes)
 
-Per **`LETSENCRYPT_PER_TENANT_FQDN.md`** §4.2 / **`TLS_IMPLEMENTATION_STEPS.md`** §4.2:
+**SBC fleet:** Node LE stays **instance FQDN only**. After move, optional **Certificates → Sync certificate** on each node if the instance cert needs refresh — **do not** add the moved tenant as a SAN. Firewall `update-fqdn-inline` still lists tenant FQDNs for SIP STRING match (not LE).
 
-1. **bzy54n:** Certificates → **Sync with tenant list** (tenant FQDN must be in SANs)
-2. **08jzwn:** After tenant removed on source → **Sync** to drop moved tenant FQDN from cert
-3. **Commit** on both after cert sync (import/delete already refresh firewall inline FQDN rules)
+**Solo / direct:** Per **`LETSENCRYPT_PER_TENANT_FQDN.md`** — dest Sync may include tenant SAN; source Sync after wipe drops it.
+
+1. Dest / source: **Certificates → Sync certificate** only as above
+2. **Commit** on both if dialplan/firewall need refresh
 
 ---
 
@@ -257,12 +259,12 @@ Does **not** copy `tenants/{shortuid}/recordings/` on S3 (prefix unchanged; `ins
 
 ## Phase 8 — Remove tenant on source (A) — **required, not optional**
 
-**Preferred path (orchestrated):** after verifying, the move job reaches `awaiting_cleanup`. **Wait for drain** (phones re-register on dest) before wiping — you do **not** need to stay on the job page. Reopen anytime via Fleet → **Jobs** → **Open**. Operator confirms **Wipe tenant on source** — Gatekeeper calls source `DELETE /fleet/tenants/{shortuid}` (full cascade: all cluster-scoped rows + portable users), then source certificates sync + Commit. Do not mark the move complete without this gate.
+**Preferred path (orchestrated):** after verifying, the move job reaches `awaiting_cleanup`. **Wait for drain** (phones re-register on dest) before wiping — you do **not** need to stay on the job page. Reopen anytime via Fleet → **Jobs** → **Open**. Operator confirms **Wipe tenant on source** — Gatekeeper calls source `DELETE /fleet/tenants/{shortuid}` (full cascade: all cluster-scoped rows + portable users), then source certificates sync (instance-only on fleet) + Commit. Do not mark the move complete without this gate.
 
 **Manual / break-glass** (same outcome, if not using the job UI) on the **source** node after destination is validated:
 
 1. SPA → delete tenant (not **`default`**) — must remove **all** cluster-scoped rows **and** portable users for that shortuid (API wipe path; Eloquent-only cluster delete is insufficient)
-2. Certificates → **Sync**
+2. Certificates → **Sync certificate** (fleet = instance FQDN only)
 3. **Commit**
 4. Catalog already points at dest when the job ran `moveTenant` (or Mac: `move-tenant.sh`)
 
@@ -276,8 +278,9 @@ Does **not** copy `tenants/{shortuid}/recordings/` on S3 (prefix unchanged; `ins
 
 - [ ] `tenants/{shortuid}/meta.json` → `"instance_id": "3E3gAOVGBhvc6vEPTBIYCBPycIk"`
 - [ ] Login to **bzy54n** API; tenant data complete; **source** has **zero** rows for that shortuid (no orphan extensions showing shortuid as Tenant)
-- [ ] Inbound/outbound test call after DNS + LE
-- [ ] LE on **bzy54n** includes tenant FQDN; **08jzwn** cert no longer includes it
+- [ ] Inbound/outbound test call (SBC path; no tenant DNS required)
+- [ ] Instance LE still valid on both nodes (`https://{instance}:44300/up`)
+- [ ] Magrathea `domain` setid points at dest
 - [ ] `pbx3:fleet-preflight` green on both nodes
 
 ---
@@ -286,17 +289,17 @@ Does **not** copy `tenants/{shortuid}/recordings/` on S3 (prefix unchanged; `ins
 
 If cutover fails before source tenant delete:
 
-1. Revert DNS **A** to **08jzwn**
-2. LE **Sync** on **08jzwn**
-3. Catalog: `move-tenant.sh` back to `3DmAsxePTWQZgynBYXE8obIRqEE`
-4. Do **not** delete tenant on source until **bzy54n** is proven
+1. Revert SBC `domain` setid to source (not tenant DNS on fleet)
+2. Catalog: `move-tenant.sh` back to source instance id
+3. Do **not** delete tenant on source until dest is proven
 
 ---
 
 ## References
 
-- **`LETSENCRYPT_PER_TENANT_FQDN.md`** §4.2 / §8 — cert sync on move
-- **`TLS_IMPLEMENTATION_STEPS.md`** §4.2
+- **`TLS_AND_CERTIFICATES.md` §0** — SBC fleet DNS/LE lock
+- **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §7
+- **`LETSENCRYPT_PER_TENANT_FQDN.md`** — solo/direct Option A only
 - **`TRUNK_ROUTE_MULTITENANCY.md`** — trunks not in tenant miniDB
 - **`NEW_INSTANCE_CHECKLIST.md`** · **`INSTANCE_ONBOARDING.md`**
 - **`tools/move-tenant.sh`**, **`tools/README.md`**

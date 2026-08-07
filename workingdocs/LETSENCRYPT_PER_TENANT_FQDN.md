@@ -1,10 +1,12 @@
 # Let's Encrypt and per-tenant FQDN (Option A — full specification)
 
-**Purpose:** Plan how to support **per-tenant FQDNs** (`{tenant_shortuid}.{globals.domain}` — the instance apex, one DNS suffix such as `pbx3.com`, stored in the **`globals.domain`** column and returned as **`domain`** on GET sysglobals) with TLS certificates, so that tenant mobility (export/import between nodes) and phone/endpoint discovery work with valid certificates.
+**Status (2026-08-06):** **Not the SBC-fleet default.** Product/lab **SBC fleet** uses **no tenant public A records** and **instance-only** node LE — lock in **`TLS_AND_CERTIFICATES.md` §0**. This file remains the **solo / direct-to-node** path (phones resolve tenant FQDN → node; multi-SAN HTTP-01). Firewall **`pbx3_inline_fqdn`** / `fqdninspect` still apply on fleet for SIP STRING match (not LE/DNS).
 
-**Adopted strategy:** **Option A** (multi-SAN HTTP-01 — one cert: node + all tenant FQDNs). **Short overview:** **`TLS_AND_CERTIFICATES.md`**. **Certificates panel / API detail:** **`CERTIFICATES_PANEL_AND_API.md`**. **This file** is the **detailed** design: options comparison, firewall **pbx3_inline_fqdn**, prerequisites (**§11**), implementation phases (**§12**).
+**Purpose:** Plan how to support **per-tenant FQDNs** (`{tenant_shortuid}.{globals.domain}`) with TLS certificates when the node is the phone-facing hostname (solo/direct).
 
-**Context:** Read **`TLS_AND_CERTIFICATES.md`**, **`CERTIFICATES_PANEL_AND_API.md`**, and (tenant migration) **pbx3spa/workingdocs/TRUNK_ROUTE_MULTITENANCY.md**. The **cluster** table already has `fqdn` and `fqdninspect`; the API Tenant model exposes `fqdn`. Until Option A is fully implemented, behaviour may still be **one certificate per node** (instance FQDN in `le-domain`); nginx and Asterisk use a single active cert (custom → LE → snakeoil).
+**Adopted strategy (solo/direct only):** **Option A** (multi-SAN HTTP-01 — one cert: node + all tenant FQDNs). **Short overview:** **`TLS_AND_CERTIFICATES.md`**. **Certificates panel / API detail:** **`CERTIFICATES_PANEL_AND_API.md`**. **This file** is the **detailed** design: options comparison, firewall **pbx3_inline_fqdn**, prerequisites (**§11**), implementation phases (**§12**).
+
+**Context:** Read **`TLS_AND_CERTIFICATES.md`** (especially **§0**), **`CERTIFICATES_PANEL_AND_API.md`**, and mobility **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §7. The **cluster** table already has `fqdn` and `fqdninspect`; the API Tenant model exposes `fqdn`.
 
 ---
 
@@ -54,7 +56,7 @@ So today, if a phone connected to `abc12xyz.pbx3.com` (tenant FQDN) but the cert
 - **HTTP-01:** Each `-d` hostname must resolve to this server; port 80 is opened; certbot serves the challenge for each. So all tenant FQDNs must point to this node before issuance/renewal.
 - **Storage:** Keep a list of FQDNs (node + tenants) in a file or derive from DB (e.g. `globals.fqdn` + `SELECT fqdn FROM cluster WHERE fqdn IS NOT NULL`). Cert lives in one path, e.g. `/etc/letsencrypt/live/node1.pbx3.com/` (certbot uses the first `-d` as the live dir name).
 - **When to re-issue:** Whenever a tenant is **added** or **removed** (or their FQDN changes), the cert must be re-issued with the new SAN list. So: new tenant → set `cluster.fqdn` → run a script that requests a new cert with updated domain list → apply-active-cert.
-- **Renewal:** `certbot renew` (cron / **Renew now**) keeps the **same** SANs as the cert on disk; it does not read the DB. After tenant add/remove or backup restore, use **Sync with tenant list** (`le-sync-cert-sans.sh`) to replace the cert with the current FQDN list.
+- **Renewal:** `certbot renew` (cron / **Renew now**) keeps the **same** SANs as the cert on disk; it does not read the DB. After tenant add/remove or backup restore, use **Sync certificate** (`le-sync-cert-sans.sh`) to replace the cert with the current FQDN list.
 
 **Pros:**
 
@@ -167,7 +169,7 @@ The existing **selection order** (**CERTIFICATES_PANEL_AND_API.md** §3) is: **(
 
 **Single purchased multi-SAN cert:** Same: one cert with multiple SANs (e.g. from a commercial CA), installed via the same custom path. Covers all listed hostnames. **Fully accommodated.**
 
-**Set of individual purchased certs:** If a customer wants to use **multiple separate certs** (e.g. one cert per tenant, or different CAs per hostname), the current design has **one** custom path. To support that we would need: **(a)** a **per-FQDN (or per-tenant) custom cert store** (e.g. `/opt/pbx3/etc/ssl/custom/<fqdn>/fullchain.pem` and `privkey.pem`), and **(b)** nginx and Asterisk config that use **SNI** to select the cert by Host (similar to Option C for LE). That is a **future extension** — not part of the current LE multi-SAN + single custom path design. Until then, customers who need multiple individual certs could (i) use one purchased wildcard or multi-SAN cert that covers all their tenant FQDNs, or (ii) use LE multi-SAN (Sync with tenant list) and not install a custom cert. So the proposed structure **does not block** purchased certs; wildcard and single multi-SAN purchased certs remain fully supported. Multiple individual purchased certs would require a later enhancement (multi-path custom store + SNI).
+**Set of individual purchased certs:** If a customer wants to use **multiple separate certs** (e.g. one cert per tenant, or different CAs per hostname), the current design has **one** custom path. To support that we would need: **(a)** a **per-FQDN (or per-tenant) custom cert store** (e.g. `/opt/pbx3/etc/ssl/custom/<fqdn>/fullchain.pem` and `privkey.pem`), and **(b)** nginx and Asterisk config that use **SNI** to select the cert by Host (similar to Option C for LE). That is a **future extension** — not part of the current LE multi-SAN + single custom path design. Until then, customers who need multiple individual certs could (i) use one purchased wildcard or multi-SAN cert that covers all their tenant FQDNs, or (ii) use LE multi-SAN (**Sync certificate**) and not install a custom cert. So the proposed structure **does not block** purchased certs; wildcard and single multi-SAN purchased certs remain fully supported. Multiple individual purchased certs would require a later enhancement (multi-path custom store + SNI).
 
 ---
 
@@ -277,7 +279,7 @@ Below is the set of **panels, API controllers, backend scripts, and helpers** th
 | pbx3api | CertificateController | Setup/sync with domain list from DB; optionally return SAN list. |
 | pbx3api | TenantController | On create set cluster.fqdn; after save run update-fqdn-inline + auto Shorewall restart; no auto cert sync. |
 | pbx3api | SysglobalController / FirewallController | Expose **domain**, **fqdninspect**; after sysglobals PUT or firewall Restart run update-fqdn-inline + auto Shorewall restart. |
-| pbx3spa | CertificatesView | Show “Cert covers” list; optional “Sync with tenant list” action. |
+| pbx3spa | CertificatesView | Show “Cert covers” list; **Sync certificate** action. |
 | pbx3spa | TenantDetailView | Show **derived** tenant FQDN (shortuid.base_domain) as read-only. |
 
 ---
@@ -305,7 +307,7 @@ Ordered by dependency: pbx3 first (scripts and FQDN inline), then pbx3api (API a
 
 **Decisions (product):**
 
-- **4. Cert sync:** **Manual only** — re-issue only when admin clicks “Sync with tenant list” on Certificates panel (avoids LE rate limits).
+- **4. Cert sync:** **Manual only** — re-issue only when admin clicks **Sync certificate** on Certificates panel (avoids LE rate limits).
 - **5. Firewall restart:** **Automatic** — after updating the FQDN inline file (on tenant create/update/delete or when sysglobals **fqdninspect** / **`domain`** change), automatically run Shorewall restart so new rules apply immediately.
 - **6. Where FQDNs live:** **Globals** do **not** hold per-tenant FQDN; they hold **`domain`** (instance apex, e.g. `pbx3.com`, SQL **`globals.domain`**) and **fqdninspect**. **FQDNs** live in **tenants**: each tenant has **cluster.fqdn**. The **default tenant** (node-owned) holds the **node FQDN** (e.g. `node1.pbx3.com`); store it there. **Globals** own **fqdninspect** (check/don’t check SIP for FQDN); global for now.
 - **7. New tenant FQDN:** **Self-defining** = **`{shortuid}.{globals.domain}`**. Set **cluster.fqdn = shortuid + "." + globals.domain** on tenant create; **immutable** thereafter. Display in tenant views as read-only.
@@ -342,7 +344,7 @@ Ordered by dependency: pbx3 first (scripts and FQDN inline), then pbx3api (API a
 | **3.1** | TenantDetailView — FQDN (read-only, immutable) | Show **FQDN** in the tenant view (e.g. Identity or Settings) as **read-only**: **shortuid + "." + base_domain** (base_domain from sysglobals). No need to edit or save cluster.fqdn for now; the rule is derived. Label e.g. “Tenant FQDN” with hint “Derived from shortuid + base domain (for cert and firewall).” |
 | **3.2** | TenantCreateView | API sets **cluster.fqdn = shortuid + "." + globals.domain** on create. SPA may show hint: "FQDN will be **{shortuid}.{globals.domain}** (immutable)." No editable FQDN field. |
 | **3.3** | CertificatesView — show “Cert covers” | When GET certificates/letsencrypt returns **domains**, display a line or list: “Cert covers: domain1, domain2, …”. If API doesn’t return domains yet, skip or show primary domain only until Phase 2 is done. |
-| **3.4** | CertificatesView — “Sync with tenant list” | Add a button **Sync with tenant list** that calls **POST /certificates/letsencrypt/sync** (when configured). On success, toast and refetch status. Show brief copy: “Re-issue cert to include current node + all tenant FQDNs.” |
+| **3.4** | CertificatesView — **Sync certificate** | Button calls **POST /certificates/letsencrypt/sync**. Solo copy: re-issue for node + tenant FQDNs that resolve here. |
 | **3.5** | Verify Phase 3 | In browser: (1) Open a tenant; confirm FQDN (cluster.fqdn) is shown as read-only. (2) Create a tenant; confirm FQDN set. (3) Certificates panel: confirm “Cert covers” list and Sync button; run Sync (manual only) and confirm cert re-issued. |
 
 ### Phase 4 — Integration and docs

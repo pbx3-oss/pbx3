@@ -37,7 +37,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Install / deploy | INSTALL_SEQUENCE_UBUNTU.md (pbx3 then pbx3api on Ubuntu 24.04) |
 | Cleanup / installer | CLEANUP_PLAN.md, APACHE_CONFIG_TO_PBX3API.md, PBX3API_INSTALLER_NGINX_ADDITIONS.md |
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
-| TLS / certificates | **TLS_AND_CERTIFICATES.md** (index) → **TLS_IMPLEMENTATION_STEPS.md** (linear checklist) → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**Option A** spec + §11–§12). **pbx3spa**/workingdocs has stubs pointing here. |
+| TLS / certificates | **TLS_AND_CERTIFICATES.md** (**§0 fleet lock**) → **TLS_IMPLEMENTATION_STEPS.md** → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**solo/direct Option A only**) |
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
 | **Instance user privileges** | **pbx3spa**/workingdocs/**INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md** (P1–P4 + **B′ login homing** shipped) → **ADMIN_PANELS_AND_PERMISSIONS.md** → **AUTH_PATTERNS.md** |
 | Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **`LAB_FLEET_TENANTS.md`** (no node-only lab tenants) → **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** (EC2 → packages → onboard, step-by-step) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`reconcile-node-tenants.sh`**, **`fetch-latest-instance-backup.sh`** |
@@ -73,29 +73,36 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-06) — Site Groups C0–C6 lab green
+## Next agent session notes (2026-08-06) — fleet DNS/LE lock + tenant-A warn
 
-**Branch:** **`main`** — pbx3 `10e0ed0`, pbx3api `3ce29ce`, pbx3spa `8cb3a71`, pbx3cagi `a2005e3`, pbx3-docs `5ce247a` (pushed).
+**Branch:** **`main`** — pbx3 / pbx3api / pbx3spa / pbx3-docs (this session); packages already **pbx3 0.0.5-1** / **cagi 1.0.0-14** on `main` from earlier today.
 
 ### Shipped
-- **Site Groups (dial cohort) C1–C6** — Gatekeeper catalog + materialise jobs; node managed dialalias fleet API; SPA Fleet → Site Groups; dual-home lab (Golden+Labtest-B) + SIPp `841003` PASS; desk CLIP = `{routing_prefix}{ext}` + digit callback green; MkDocs **`fleet/site-groups`**. Spec **`DIAL_COHORT_REQUIREMENTS.md`**.
-- **CLIP** — PrefixDial sets prefix+ext when co-located managed mesh targets us; GenAst `SbcDomainRoute` prefers `X-PBX3-Pres-Num` (no PAI-on-ring when Pres present).
-- **Slice D** shortuid usrloc repair — **kept** (not on Site Group digit-callback path; insurance for PAI-CLIP fallback). Accepted this session.
+- **SBC fleet DNS/TLS lock** — Tenant FQDN = SIP domain only (**no public A**). Node LE = **instance FQDN only**. SPA → instance DNS; WSS host ≠ tenant FQDN. Canonical **`TLS_AND_CERTIFICATES.md` §0**.
+- **pbx3api** — fleet `certificateFqdnList` / Setup+Sync instance-only (`FleetPostureService::isFleetNode()`); solo keeps Option A. Unit **`CertificateSanListTest`**.
+- **pbx3spa** — **Sync certificate** + fleet red banner **DO NOT create DNS A records for tenant domains**.
+- **Docs** — LE Option A bannered solo/direct; mobility §7; MkDocs tls overview/sync; ops runbooks scrubbed.
+- **Lab** — tenant As removed; golden/bzy LE instance-only; WSS phone test green.
 
 ### Golden / ops
-- Hot: control Gatekeeper; API/schema/GenClass/cagi on **08jzwn**, **bzy54n**, **kildare**. SPA Site Groups = **`npm run dev`** only (not Pages). Package roll not done.
-- Lab cohort example: **C5 dual-home lab** `dc_9bce78a6…`; SITE_DIAL digits on Peer host often **`841003`** (duns prefix 84).
-- Dev: Gatekeeper **`control.pbx3.com`** · golden API **`https://08jzwn.pbx3.com:44300/api`** · SPA `npm run dev` · SIPp UAC `98.93.32.43` / UAS `98.82.58.59`.
+- Deploy API tip + SPA tip for Certificates Sync behaviour. Packages **0.0.5-1** / **1.0.0-14** still not installed on all fleet nodes (operator deferred).
+- Dev: Gatekeeper **`control.pbx3.com`** · golden **`https://08jzwn.pbx3.com:44300/api`** · SPA `npm run dev`.
 
 ### Resume
-1. Optional **package roll** (pbx3/cagi/api) so rebuilds aren’t hot-only.  
-2. Product crumbs / parked items in **`TODO.md`** (Site Group stopper closed).
+1. **New instance / install** packages + API/SPA tip when scheduled.  
+2. Product crumbs / parked items in **`TODO.md`**. Edge SIP-TLS product work still out of scope.
+
+---
+
+## Next agent session notes (2026-08-06) — Site Groups C0–C6 lab green (superseded)
+
+**Superseded for “read first”** by fleet DNS/LE lock block above. Site Groups C0–C6 still lab green on `main`.
 
 ---
 
 ## Next agent session notes (2026-08-06) — naming lock + dial cohort stopper (superseded)
 
-**Superseded for “read first”** by Site Groups C0–C6 block above. Naming lock still on `main`.
+**Superseded.** Naming lock still on `main`.
 
 ---
 
@@ -344,7 +351,7 @@ Older **Next agent session notes** (pre–2026-08-02 greenfield and earlier) liv
   - **generator:** Removed; Asterisk config generation scripts live in `php/utilities/` (runAstGen.php, etc.).
 - **genbashconfig.php** in installer is optional (run only if `php` is available).
 - **setip.php:** dpkg-query and `/etc/issue` use **CODENAME** (pbx3), not SYSPREFIX (/pbx3).
-- **Certificates:** **Let’s Encrypt** **Option A** (multi-SAN HTTP-01: node + tenant **`cluster.fqdn`**); **commercial/custom** → **custom → LE → snakeoil** via **`apply-active-cert.sh`**. **All TLS docs:** **`workingdocs/TLS_AND_CERTIFICATES.md`** (index), **`TLS_IMPLEMENTATION_STEPS.md`** (execution order), **`CERTIFICATES_PANEL_AND_API.md`**, **`LETSENCRYPT_PER_TENANT_FQDN.md`**. **pbx3spa** `CERTIFICATES_ADOPTION_PLAN.md` / `LETSENCRYPT_PER_TENANT_FQDN_OPTIONS.md` are **stubs** → read **pbx3** `workingdocs/` instead.
+- **Certificates:** **SBC fleet:** instance-only LE (**`TLS_AND_CERTIFICATES.md` §0**); Setup/Sync omit tenant SANs. **Solo/direct:** Option A multi-SAN (**`LETSENCRYPT_PER_TENANT_FQDN.md`**). **custom → LE → snakeoil** via **`apply-active-cert.sh`**. **pbx3spa** stubs → **pbx3** `workingdocs/`.
 - **Fleet / S3 (branch `directory`):** Shared org bucket + `catalog/instance-index.json`; per-node IAM; **`onboard-fleet-instance.sh`** / **`unregister-instance.sh`**; golden **08jzwn** + second node **bzy54n** validated in dev. **S6.2 Pages:** prep workflow OK; **defer public URL + CORS** until new OSS org + **`app.pbx.com`** (see **§ Next agent session notes**). See **`pbx3-directory/docs/IMPLEMENTATION_PLAN.md`**.
 
 ---
