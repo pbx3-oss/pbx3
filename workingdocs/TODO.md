@@ -5,6 +5,7 @@
 
 ### Suggested “what next?” order
 
+0. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
 1. **New instance / package install** — install **0.0.5-1** + **1.0.0-14** + API tip (instance-only LE Sync) when scheduled.  
 2. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
 3. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
@@ -12,15 +13,15 @@
 5. **Velocity standalone** (parked).  
 6. **Instance shadowing** / S10.7 / S8.9 (parked).  
 7. **AMI wallboard** (parked).  
-8. **Fleet node health ≠ Asterisk** (parked).  
+8. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
 9. **Control plane duplex / HA** (parked).  
 10. **Fleet auth cookie/SSO (blocked)**.  
 11. **S7+** attested PCI — customer ask.  
 12. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 13. **Grafana / door-knock geo** (parked).  
-14. **Pre-first-release — SPA bundle diet** (parked).  
-15. **Lab / demo DB anonymize** (parked).  
-16. **Provisioning server class** (exploratory).  
+14. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
+15. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
+16. **Provisioning server** (parked — maybe don't build; see requirements §0).  
 17. **SPA list action icons component** (parked).  
 18. **Number wire Phase 2 / D2–D4** (parked).  
 19. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
@@ -44,7 +45,7 @@
 
 - [ ] **Lab / demo SQLite anonymize (parked 2026-08-03):** Golden (and any other) test DB originated from a **real site** — still carries live **surnames**, **friendly tenant / sitename-style labels**, and similar PII-ish free text. **Do before** wider demos, third-party access, or public screenshots. Scope (at least): extension **`desc` / `description` / display names** → drop or fake surnames; **tenant / cluster friendly names** and any panel labels that identify the original org; scan for other human strings (callerid, greetings titles, mailbox labels, help/sysnotes if any). Prefer a **one-shot idempotent SQL + short runbook** (lab golden first; document how to re-apply after restore from production dump). Keep dial plans / shortuids functional for SIPp and WebRTC path tests. Not urgent for closed lab if access is operator-only; do not ship site-derived dump as “sample data” without this.
 
-- [ ] **Provisioning server class (exploratory 2026-08-03):** Future **product server type** (not bolted on home PBX or SBC call plane). Lift posture from **SARK 6.5** provisioning; early thought: **directory / fleet catalog** as phone inventory HoR — **undecided**. No requirements file yet; do not implement. When scheduled: thin **`PROVISIONING_SERVER_REQUIREMENTS.md`** (class sketch, inventory HoR, phone path to provision FQDN only, non-goals).
+- [ ] **Provisioning server class (parked 2026-08-06 — line in the sand):** Maybe don't build. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`** §0 / **§0.1** (M1–M5 management paths; near-term lean M1+M2, M3 if co-locate). SARK worked co-located with shared secrets. Resume only on explicit ask.
 
 - [ ] **SPA list action icons — shared component (parked 2026-08-03):** Pencil/trash stroke SVGs are copy-pasted across list views; Dial prefixes briefly used emoji. Extract small **`ListEditIcon` / `ListDeleteIcon`** (or combined row-actions) in **pbx3spa** and reuse everywhere. Optional busy/spin state for delete. Not urgent polish.
 

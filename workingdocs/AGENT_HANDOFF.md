@@ -30,6 +30,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | Task | Read (in order) |
 |------|------------------|
 | Any / first time | This file (**§ Next agent session notes**), then TODO.md |
+| **First out / cleanup triage** | **`FIRST_OUT_CHECKLIST.md`** (must-fix vs nice vs parked) → TODO.md |
 | **Session end** (user request) | **SESSION_END_CHECKLIST.md** → update TODO.md + this file + **pbx3spa/SESSION_HANDOFF.md** |
 | **New session** (user request) | This file § **Next agent session notes** → TODO.md → **pbx3spa/SESSION_HANDOFF.md** (top block); **`SESSION_END_CHECKLIST.md`** § new session |
 | **Track B — release hardening** | **TRACK_B_RELEASE_HARDENING.md** → **STAKEHOLDER_DEMO_SCRIPT.md** → TODO.md → TLS_IMPLEMENTATION_STEPS.md §4.3 |
