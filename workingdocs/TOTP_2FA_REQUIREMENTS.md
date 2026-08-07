@@ -1,6 +1,6 @@
 # TOTP 2FA — instance SPA + SBC admin (requirements)
 
-**Status:** Plan locked for scheduling (2026-08-07). **SBC Filament slice implemented** (`pbx3sbc-admin` branch `sbc-totp-2fa`). SPA/Sanctum still not first-out; implement when scheduled.  
+**Status:** Plan locked. **SBC Filament slice done** (`pbx3sbc-admin`). **Instance Sanctum + SPA** on branch **`spa-totp-2fa`** (C2–C5). Fleet Gatekeeper 2FA still deferred (phase 3).  
 **Planes:** (1) Instance Sanctum — `pbx3api` + `pbx3spa`. (2) SBC Filament — `pbx3sbc-admin`.  
 **Out of scope (this track):** Fleet Gatekeeper 2FA; SSO / IdP; SMS / email OTP; WebAuthn/passkeys (optional later).  
 **Related:** **`pbx3spa/workingdocs/AUTH_PATTERNS.md`** §2 · **`FLEET_AUTH_COOKIE_SSO.md`** (separate plane) · Design Rule **10** (do not merge fleet ↔ instance tokens).
@@ -133,10 +133,10 @@ Enroll on scratch/lab SBC → logout → password + authenticator code → Home.
 |------|------|--------|
 | **C0** | This doc accepted | Done when scheduled |
 | **C1** | **SBC first** | **Done** (Breezy + Profile link + issuer) — see `pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md` |
-| **C2** | **Instance API challenge + schema** | No SPA token until verify |
-| **C3** | **SPA challenge + enroll UI** | Ship with C2 |
-| **C4** | Recovery + admin clear | Lockout path |
-| **C5** | Docs / help | Operator MkDocs + SPA help crumb |
+| **C2** | **Instance API challenge + schema** | **Done** on `spa-totp-2fa` — no SPA token until verify |
+| **C3** | **SPA challenge + enroll UI** | **Done** with C2 — LoginView + Account Security |
+| **C4** | Recovery + admin clear | **Done** |
+| **C5** | Docs / help | API auth.md + AUTH_PATTERNS; MkDocs when packaged |
 | **C6** | Optional policy “require for admin” | After opt-in proven |
 
 Combined opt-in both surfaces: ~**1–1.5 weeks** calendar with review/lab — not a shared codebase, shared UX vocabulary only.
@@ -159,22 +159,23 @@ Combined opt-in both surfaces: ~**1–1.5 weeks** calendar with review/lab — n
 
 **Instance**
 
-- [ ] User can enroll TOTP with any authenticator; issuer distinguishable from SBC.
-- [ ] With 2FA on, password-only login does not grant panel API access.
-- [ ] TOTP and one recovery code complete login; recovery codes are single-use.
-- [ ] User can disable; admin can clear 2FA for a locked-out user.
-- [ ] Users without 2FA unchanged.
+- [x] User can enroll TOTP with any authenticator; issuer distinguishable from SBC.
+- [x] With 2FA on, password-only login does not grant panel API access.
+- [x] TOTP and one recovery code complete login; recovery codes are single-use.
+- [x] User can disable; admin can clear 2FA for a locked-out user.
+- [x] Users without 2FA unchanged.
 
 **SBC**
 
-- [ ] Filament admin can enroll/disable TOTP; login challenges when enabled.
-- [ ] Fleet API token path unaffected.
-- [ ] Issuer label distinct from instance SPA.
+- [x] Filament admin can enroll/disable TOTP; login challenges when enabled.
+- [x] Fleet API token path unaffected.
+- [x] Issuer label distinct from instance SPA.
 
 ---
 
 ## Tip / TODO
 
-- Parked open item: **`TODO.md`** — TOTP 2FA (SPA + SBC).
+- Instance Sanctum + SPA: branch **`spa-totp-2fa`** (merge when lab green).
+- Fleet Gatekeeper TOTP: phase 3 (separate track).
 - Not on **`FIRST_OUT_CHECKLIST.md`** must-fix list.
-- When implementing: update **`AUTH_PATTERNS.md`** with concrete endpoint names; operator docs in pbx3-docs auth pages.
+- Operator docs: update pbx3-docs auth pages when packaging.
