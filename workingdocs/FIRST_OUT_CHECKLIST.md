@@ -1,9 +1,9 @@
 # First out — checklist (must-fix vs nice)
 
-**Status:** Operator lean (**2026-08-06**) — product is **mostly there**; this is cleanup triage, not a new build plan.  
-**Related:** **`TODO.md`** · **`STAKEHOLDER_DEMO_SCRIPT.md`** · **`TRACK_B_RELEASE_HARDENING.md`** · **`PROVISIONING_SERVER_REQUIREMENTS.md`** (parked).
+**Status:** Operator lean (**2026-08-06**, refreshed same evening) — product is **mostly there**; this is cleanup triage, not a new build plan.  
+**Related:** **`TODO.md`** · **`STAKEHOLDER_DEMO_SCRIPT.md`** · **`TRACK_B_RELEASE_HARDENING.md`** · **`PROVISIONING_SERVER_REQUIREMENTS.md`** (parked, §0 / §0.1) · Device lean in **`sqlite_device_data.sql`** + **`sqlite_device_lean_prune.sql`**.
 
-**First out** here means: a credible fleet PBX you can show / soft-land with a friendly customer — not OSS org polish, not HA SKUs, not provisioning-server product.
+**First out** here means: a credible fleet PBX you can show / soft-land with a friendly customer — not OSS org polish, not HA SKUs, not a provisioning-server product.
 
 ---
 
@@ -22,6 +22,21 @@ Treat as **done on `main` / lab-proven** unless a regression appears:
 | Ops notify / log retention / SBC aging | Shipped tracks |
 | Packages | **pbx3 0.0.5-1** / **cagi 1.0.0-14** artefacts on `main` |
 | Privileges | Instance P1–P4 + B′ login homing |
+| Device templates (lean) | Seed **11** keepers only; SPA **Devices** nav removed (`main`) — create-time `sipiaxfriend` still via Device table |
+| Provisioning server | **Parked** — lean don’t build; vendor/reseller RPS (M1). Spec only |
+
+---
+
+## Cleanup landed this pass (not first-out blockers)
+
+| Item | Where |
+|------|--------|
+| Provisioning product question + M1–M5 options | **`PROVISIONING_SERVER_REQUIREMENTS.md`** |
+| First-out triage (this file) | **`FIRST_OUT_CHECKLIST.md`** |
+| SARK migration → Aelintra repo **before** OSS transfer | **`TODO.md`** · **`REPOS_AND_RELEASES.md`** · **`OPEN_SOURCE_GITHUB_SETUP.md`** |
+| Device seed lean + prune SQL; Devices off System nav | pbx3 `sqlite_device_*` · pbx3spa `AppLayout` |
+
+**Existing lab DBs** still hold fat Device rows until **`sqlite_device_lean_prune.sql`** is run (seed alone does not shrink them).
 
 ---
 
@@ -36,8 +51,9 @@ Ops and honesty gates — small list:
 | **F3** | Smoke the **stakeholder demo path** on HTTPS against current golden/bzy | Regressions only — **`STAKEHOLDER_DEMO_SCRIPT.md`** |
 | **F4** | Confirm **no tenant public A** leftovers; phones → SBC; SPA → instance | Fleet DNS lock is policy + lab; re-check before external eyes |
 | **F5** | **Lab / demo DB anonymize** if anyone outside the closed lab sees screens / dumps | Real-site surnames still on golden — do before wider demo |
+| **F6** | Optional but tidy: run **`sqlite_device_lean_prune.sql`** on golden/bzy | Align running DB with lean seed; drop SARK #INCLUDE fat |
 
-Not code features — **rollout + hygiene**.
+Not new product features — **rollout + hygiene**.
 
 ---
 
@@ -53,6 +69,7 @@ Worth doing if a soft-land or public-ish demo is soon; not architecture:
 | **N4** | **SPA session timeout** honour `globals.sessiontimout` | Small trust/UX gap |
 | **N5** | Magrathea gwid **dialect** / Twilio crumb if that carrier story is in the pitch | Only if demo script needs it |
 | **N6** | Quick pass: inbound **SWOCLIP** create/edit parity; Extension **Runtime** with a live phone | Panel honesty on demo path |
+| **N7** | Drop Devices **routes/views** entirely (nav already gone) | Finish hiding the unused admin surface |
 
 ---
 
@@ -60,7 +77,7 @@ Worth doing if a soft-land or public-ish demo is soon; not architecture:
 
 Do **not** block first out on these:
 
-- Provisioning **server** product (M1 lean — vendor/reseller RPS)  
+- Provisioning **server** product — **`PROVISIONING_SERVER_REQUIREMENTS.md`** §0 lean **M1** (vendor/reseller RPS); §0.1 M2–M5 if ever resumed  
 - Multi-AZ lab proof (production confidence later; same-AZ is enough for first out)  
 - Control-plane HA / duplex  
 - Instance shadowing / S10.7 orchestrated rebuild  
@@ -68,9 +85,9 @@ Do **not** block first out on these:
 - Number wire Phase 2 / SBC dialect habit  
 - Velocity standalone / AMI wallboard / Grafana / door-knock heat  
 - cagi Phase 4 / Ast generator deep refactor  
-- S7+ PCI / OSS org transfer  
-- **SARK migration extract to Aelintra repo** (required **before** OSS org move; not first-out)  
-- **Device templates** — seed leaned to 11 rows + nav removed; residual prune/routes/JSON optional  
+- S7+ PCI  
+- **OSS org transfer** — and **SARK migration extract to Aelintra repo** first (gate for org move; **not** first-out)  
+- Device → packaged JSON (optional later; keep lean SQLite for now)  
 - SPA list icon component / help-row prune (polish)  
 - `ipphone.desc` vs `description` rename  
 
@@ -79,9 +96,9 @@ Do **not** block first out on these:
 ## Suggested order when you pick up cleanup
 
 1. **F1–F4** (install + tip + smoke + DNS check)  
-2. **F5** if external demo  
+2. **F6** when touching golden DB anyway; **F5** if external demo  
 3. **N1–N2** if shipping Pages SPA  
-4. **N3–N6** as crumbs  
+4. **N3–N7** as crumbs  
 5. Everything in “not first out” stays parked  
 
 ---
