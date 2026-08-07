@@ -1,9 +1,9 @@
 # TOTP 2FA — instance SPA + SBC admin (requirements)
 
-**Status:** Plan locked. **SBC Filament slice done** (`pbx3sbc-admin`). **Instance Sanctum + SPA** on branch **`spa-totp-2fa`** (C2–C5). Fleet Gatekeeper 2FA still deferred (phase 3).  
+**Status:** Plan locked. **SBC Filament slice done** (`pbx3sbc-admin`). **Instance Sanctum + SPA** merged to **`main`** (C2–C5).  
 **Planes:** (1) Instance Sanctum — `pbx3api` + `pbx3spa`. (2) SBC Filament — `pbx3sbc-admin`.  
-**Out of scope (this track):** Fleet Gatekeeper 2FA; SSO / IdP; SMS / email OTP; WebAuthn/passkeys (optional later).  
-**Related:** **`pbx3spa/workingdocs/AUTH_PATTERNS.md`** §2 · **`FLEET_AUTH_COOKIE_SSO.md`** (separate plane) · Design Rule **10** (do not merge fleet ↔ instance tokens).
+**Out of scope (this track):** Fleet Gatekeeper 2FA (separate track — **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`**); SSO / IdP; SMS / email OTP; WebAuthn/passkeys (optional later).  
+**Related:** **`pbx3spa/workingdocs/AUTH_PATTERNS.md`** §2 · **`FLEET_AUTH_COOKIE_SSO.md`** (separate plane) · **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** · Design Rule **10** (do not merge fleet ↔ instance tokens).
 
 ---
 
@@ -33,7 +33,7 @@ Password-only admin login is weak for internet-facing instance API and SBC panel
 - One QR / one secret covering both SPA and SBC.
 - Mandating a specific authenticator vendor.
 - Replacing Sanctum abilities or Filament roles with IdP groups.
-- Gatekeeper / Fleet console MFA (schedule separately if wanted).
+- Gatekeeper / Fleet console MFA — see **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`**.
 - Reviving deprecated `globals.userotp` (unrelated; leave dead).
 
 ---
@@ -147,7 +147,7 @@ Combined opt-in both surfaces: ~**1–1.5 weeks** calendar with review/lab — n
 
 | Item | Status |
 |------|--------|
-| Fleet Gatekeeper TOTP | Separate track; same TOTP idea later |
+| Fleet Gatekeeper TOTP | Separate track — **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (G0–G5) |
 | Cookie sessions for Fleet | Unrelated (`FLEET_AUTH_COOKIE_SSO.md`) |
 | SSO / OIDC MFA | IdP’s problem when SSO exists; local TOTP remains for non-SSO users |
 | Passkeys / WebAuthn | Nice later; not v1 |
@@ -175,7 +175,7 @@ Combined opt-in both surfaces: ~**1–1.5 weeks** calendar with review/lab — n
 
 ## Tip / TODO
 
-- Instance Sanctum + SPA: branch **`spa-totp-2fa`** (merge when lab green).
-- Fleet Gatekeeper TOTP: phase 3 (separate track).
+- Instance Sanctum + SPA: on **`main`** (was **`spa-totp-2fa`**).
+- Fleet Gatekeeper TOTP: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (requirements locked; not implemented).
 - Not on **`FIRST_OUT_CHECKLIST.md`** must-fix list.
 - Operator docs: update pbx3-docs auth pages when packaging.

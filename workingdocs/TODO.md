@@ -1,12 +1,12 @@
 # PBX3 ToDo list
 
-**Branch:** Instance Sanctum TOTP on **`spa-totp-2fa`** (pbx3api / pbx3spa / pbx3 docs) — **lab green** golden. **SBC TOTP** on **`pbx3sbc-admin` `main`**. Other product repos **`main`**. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-07 (session end — SPA Sanctum TOTP lab green)
+**Branch:** Product repos **`main`**. Instance Sanctum TOTP merged (**pbx3api** / **pbx3spa** / **pbx3** docs). **SBC TOTP** on **`pbx3sbc-admin` `main`**. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
+**Last updated:** 2026-08-07 (merge spa-totp-2fa + Fleet Gatekeeper TOTP requirements)
 
 ### Suggested “what next?” order
 
 0. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
-1. **Merge `spa-totp-2fa` → `main`** when ready (pbx3api + pbx3spa + pbx3 docs); roll API tip to other fleet nodes.  
+1. **Roll API tip** — Sanctum TOTP tip to other fleet nodes (golden already rsynced).  
 2. **New instance / package install** — install **0.0.5-1** + **1.0.0-14** + API tip (instance-only LE Sync) when scheduled.  
 3. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
 4. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
@@ -17,7 +17,7 @@
 9. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
 10. **Control plane duplex / HA** (parked).  
 11. **Fleet auth cookie/SSO (blocked)**.  
-12. **TOTP 2FA — Fleet Gatekeeper** (parked — phase 3; separate plane; **`TOTP_2FA_REQUIREMENTS.md`**).  
+12. **TOTP 2FA — Fleet Gatekeeper** (parked — requirements locked; **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`**).  
 13. **S7+** attested PCI — customer ask.  
 14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
 15. **Grafana / door-knock geo** (parked).  
@@ -82,9 +82,9 @@
 
 - [x] **TOTP 2FA — SBC Filament (2026-08-07):** Breezy on Filament 3; Profile enroll; issuer **Aelintra SBC**; lab green Magrathea; **`main`** **`ecd6b77`**. Spec: **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`**.
 
-- [x] **TOTP 2FA — instance SPA / Sanctum (2026-08-07):** Opt-in authenticator MFA on **`spa-totp-2fa`** (pbx3api + pbx3spa); issuer **Aelintra PBX**; challenge before Bearer; recovery codes; admin clear; portable users schema v2; lab green golden (API rsynced + migrate). Spec: **`TOTP_2FA_REQUIREMENTS.md`**. Merge to **`main`** when scheduled. Fleet Gatekeeper MFA still parked (phase 3).
+- [x] **TOTP 2FA — instance SPA / Sanctum (2026-08-07):** Opt-in authenticator MFA merged to **`main`** (pbx3api + pbx3spa + pbx3 docs); issuer **Aelintra PBX**; challenge before Bearer; recovery codes; admin clear; portable users schema v2; lab green golden (API rsynced + migrate). Spec: **`TOTP_2FA_REQUIREMENTS.md`**. Fleet Gatekeeper MFA: requirements in **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (not implemented).
 
-- [ ] **TOTP 2FA — Fleet Gatekeeper (parked 2026-08-07):** Separate plane (Rule 10); do not share instance secrets. Schedule after SPA opt-in proven.
+- [ ] **TOTP 2FA — Fleet Gatekeeper (parked 2026-08-07):** Requirements locked — **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (G0–G5). Separate plane (Rule 10); do not share instance secrets. Schedule after SPA opt-in proven.
 
 - [ ] **Phase S10 — remaining:** **S10.7**/S10.2b orchestrated IAM onboard/rebuild — **parked** (2026-07-15) pending cloud-adapter / portability discussion; Mode 4 + Mac scripts stay. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10.
 
