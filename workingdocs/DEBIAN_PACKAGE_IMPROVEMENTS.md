@@ -87,7 +87,7 @@ This runs the symlink target as a command instead of removing the symlink.
 
 - Replace with a proper Debian copyright file:
   - Use [Format 1.0](https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/).
-  - `Files: *` with correct license (e.g. GPL) and upstream (e.g. Aelintra / PBX3).
+  - `Files: *` with correct license (Apache-2.0) and upstream (e.g. Aelintra / PBX3); call out third-party exceptions (e.g. `kwakeup` GPL-2).
   - Remove alien/RPM wording.
 
 ---
