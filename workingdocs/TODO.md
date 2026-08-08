@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** Product repos **`main`**. Instance Sanctum TOTP + **Fleet Gatekeeper TOTP G1–G4** lab green. **SBC TOTP** on **`pbx3sbc-admin` `main`**. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-07 (session end — Fleet Gatekeeper TOTP lab green)
+**Last updated:** 2026-08-07 (session end — Fleet SPA catalog UX polish)
 
 ### Suggested “what next?” order
 

@@ -75,25 +75,31 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-07) — Fleet Gatekeeper TOTP lab green
+## Next agent session notes (2026-08-07) — Fleet SPA catalog UX polish
 
-**Branch:** **`main`** — pbx3 **`7f1e369`**, pbx3spa **`1ec28fd`**, pbx3api Sanctum TOTP already **`321a12e`**. Control Gatekeeper rsynced. SPA **`npm run dev`**.
+**Branch:** **`main`** — pbx3spa **`e9ac778`** (Fleet tables + login TOTP layout); pbx3 Gatekeeper tip unchanged (**`7f1e369`**); pbx3api Sanctum TOTP **`321a12e`**. SPA **`npm run dev`**.
 
 ### Shipped
-- **Fleet Gatekeeper TOTP G1–G4** — opt-in; password → `requires_2fa` + challenge → verify; issuer **Aelintra Fleet**; recovery codes; admin Clear 2FA on Fleet Users; break-glass exempt.
-- **SPA** — `FleetTokenGate` challenge; **Fleet → Fleet 2FA** enroll; Fleet Users 2FA column + Clear.
-- Spec: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** (acceptance checked). Gatekeeper PHPUnit + SPA vitest green; **operator lab green**.
-- Earlier same day: **`spa-totp-2fa` merged** to **`main`** (instance Sanctum TOTP).
+- **Fleet Instances UX** — one status word (green/red/yellow/muted) + detail popup; **Actions ▾** menu; dropped always-visible KSUID and `sbc_backend_uri` under FQDN.
+- **Probe Warning ≠ RTT** — status uses freshest of `last_seen_at` / `health.last_ok_at`; popup shows “last ok … ago”.
+- **Tenants / Users** — Actions menus; Users hides **Disable** on self (API already blocked).
+- **Site Groups** — less squeeze; Open column; detail trash icon; Decommission = primary blue; button height align.
+- **Edge HA** — primary/secondary button border sizing.
+- **Login TOTP** — `.totp-section` stacks label above code input (was side-by-side).
 
 ### Golden / ops
-- Control: `/home/ubuntu/gatekeeper` tip + `composer install` (google2fa). Auth status includes `two_factor_verify`.
-- Enroll: Fleet console → **Fleet 2FA**; distinct issuer from **Aelintra PBX** / **Aelintra SBC**.
-- G5 (require 2FA for `fleet_admin`) still optional.
+- No Gatekeeper / API deploy this slice — SPA-only. Fleet TOTP still lab green on control.
 
 ### Resume
 1. **First-out** — **`FIRST_OUT_CHECKLIST.md`** F1–F4.  
-2. **Roll instance API tip** to other fleet nodes if needed (golden already has Sanctum TOTP).  
-3. Do not reopen provisioning / OSS org move before SARK extract.
+2. **Roll instance API tip** to other fleet nodes if needed.  
+3. Optional G5 (require Fleet 2FA for `fleet_admin`).
+
+---
+
+## Next agent session notes (2026-08-07) — Fleet Gatekeeper TOTP lab green (superseded)
+
+**Superseded for “read first”** by Fleet SPA catalog UX polish block above. Gatekeeper TOTP G1–G4 still on **`main`**.
 
 ---
 
