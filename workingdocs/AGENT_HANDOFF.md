@@ -42,7 +42,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
 | **Instance user privileges** | **pbx3spa**/workingdocs/**INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md** (P1–P4 + **B′ login homing** shipped) → **ADMIN_PANELS_AND_PERMISSIONS.md** → **AUTH_PATTERNS.md** |
 | **TOTP 2FA** (instance + SBC + Fleet) | **`TOTP_2FA_REQUIREMENTS.md`** → **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** → **pbx3spa**/workingdocs/**AUTH_PATTERNS.md** §2 · SBC **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`** |
-| Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **`LAB_FLEET_TENANTS.md`** (no node-only lab tenants) → **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** (EC2 → packages → onboard, step-by-step) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`reconcile-node-tenants.sh`**, **`fetch-latest-instance-backup.sh`** |
+| Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** (ease/cost; 1-box / 2-box try-it) → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **`LAB_FLEET_TENANTS.md`** (no node-only lab tenants) → **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** (EC2 → packages → onboard, step-by-step) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`reconcile-node-tenants.sh`**, **`fetch-latest-instance-backup.sh`** |
 | **Fleet naming** | **`FLEET_NAMING_LOCK.md`** (shortuid + Name + Description + FQDN=`{suid}.{apex}`; **D6 cancelled**) → instance sitename detail **pbx3spa**/workingdocs/**NETWORK_SYSGLOBALS_OVERLAP.md** · Delete **`FLEET_TENANT_DELETE_REQUIREMENTS.md`** |
 | **Asterisk after Egress / genAst** | **`OPS_ASTERISK_AFTER_EGRESS_GENAST.md`** — full restart vs pjsip reload |
 | **Ast config generator + CAGI cleanup** | **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (one track: staging/overlay + GenAst↔CAGI contract) → **pbx3cagi**/workingdocs/**`REFACTOR_PLAN.md`** → **`TEST_RECIPE.md`** |
@@ -75,25 +75,28 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-07) — Fleet SPA catalog UX polish
+## Next agent session notes (2026-08-08) — Fleet try-it deployment requirements
 
-**Branch:** **`main`** — pbx3spa **`e9ac778`** (Fleet tables + login TOTP layout); pbx3 Gatekeeper tip unchanged (**`7f1e369`**); pbx3api Sanctum TOTP **`321a12e`**. SPA **`npm run dev`**.
+**Branch:** **`main`** — pbx3 tip after this push (try-it reqs + TODO/SBC tracks); pbx3spa **`b26d1e2`** (prior catalog UX); pbx3api Sanctum TOTP **`321a12e`**. SPA **`npm run dev`**.
 
 ### Shipped
-- **Fleet Instances UX** — one status word (green/red/yellow/muted) + detail popup; **Actions ▾** menu; dropped always-visible KSUID and `sbc_backend_uri` under FQDN.
-- **Probe Warning ≠ RTT** — status uses freshest of `last_seen_at` / `health.last_ok_at`; popup shows “last ok … ago”.
-- **Tenants / Users** — Actions menus; Users hides **Disable** on self (API already blocked).
-- **Site Groups** — less squeeze; Open column; detail trash icon; Decommission = primary blue; button height align.
-- **Edge HA** — primary/secondary button border sizing.
-- **Login TOTP** — `.totp-section` stacks label above code input (was side-by-side).
+- **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** locked — primary goal **ease/cost of initial deploy**: **1-box** solo PBX or **2-box** fleet (Gatekeeper co-located on Magrathea); portable packages + tailor script; optional AWS AMI skin (Rule 9); Compose for GK±SBC only; **no** Asterisk-in-Docker.
+- **rtpengine / LAN-edge** parked (Appendix A) — not the adoption path; trigger only LAN-edge / Track A / Peer forbids bypass.
+- TODO suggested order + open item; **`SBC_PRODUCT_TRACKS.md`** gap #2 pointer; AGENT_HANDOFF read-order link.
 
 ### Golden / ops
-- No Gatekeeper / API deploy this slice — SPA-only. Fleet TOTP still lab green on control.
+- Docs only this slice — no Gatekeeper/AMI/tailor implementation yet (D1+ when scheduled).
 
 ### Resume
-1. **First-out** — **`FIRST_OUT_CHECKLIST.md`** F1–F4.  
-2. **Roll instance API tip** to other fleet nodes if needed.  
-3. Optional G5 (require Fleet 2FA for `fleet_admin`).
+1. **Implement try-it D1** when scheduled — tailor script + T1/T2 docs (`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`).  
+2. **First-out** — **`FIRST_OUT_CHECKLIST.md`** F1–F4.  
+3. Do **not** start rtpengine unless a real LAN-edge trigger appears.
+
+---
+
+## Next agent session notes (2026-08-07) — Fleet SPA catalog UX polish (superseded)
+
+**Superseded for “read first”** by Fleet try-it deployment requirements block above. SPA catalog UX still on **`main`**.
 
 ---
 

@@ -1,42 +1,46 @@
 # PBX3 ToDo list
 
 **Branch:** Product repos **`main`**. Instance Sanctum TOTP + **Fleet Gatekeeper TOTP G1–G4** lab green. **SBC TOTP** on **`pbx3sbc-admin` `main`**. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-07 (session end — Fleet SPA catalog UX polish)
+**Last updated:** 2026-08-08 (Fleet try-it deployment requirements locked)
 
 ### Suggested “what next?” order
 
 0. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
-1. **Roll API tip** — Sanctum TOTP tip to other fleet nodes (golden already rsynced).  
-2. **New instance / package install** — install **0.0.5-1** + **1.0.0-14** + API tip (instance-only LE Sync) when scheduled.  
-3. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
-4. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
-5. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
-6. **Velocity standalone** (parked).  
-7. **Instance shadowing** / S10.7 / S8.9 (parked).  
-8. **AMI wallboard** (parked).  
-9. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
-10. **Control plane duplex / HA** (parked).  
-11. **Fleet auth cookie/SSO (blocked)**.  
-12. **TOTP 2FA — Fleet Gatekeeper G5** (optional — require for `fleet_admin`; G1–G4 shipped).  
-13. **S7+** attested PCI — customer ask.  
-14. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
-15. **Grafana / door-knock geo** (parked).  
-16. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
-17. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
-18. **Provisioning server** (parked — maybe don't build; see requirements §0).  
-19. **SPA list action icons component** (parked).  
-20. **Number wire Phase 2 / D2–D4** (parked).  
-21. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
-22. **Instance API digest deepen** (optional).  
-23. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
-24. **SARK migration → Aelintra repo** — before PBX3 OSS org move (not first-out critical).  
-25. **OSS org + repo transfer** — after SARK migration extract.  
+1. **Fleet try-it deploy (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: tailor script + 1-box / 2-box topologies; optional AMI skin; rtpengine **not** in this track.  
+2. **Roll API tip** — Sanctum TOTP tip to other fleet nodes (golden already rsynced).  
+3. **New instance / package install** — install **0.0.5-1** + **1.0.0-14** + API tip (instance-only LE Sync) when scheduled.  
+4. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
+5. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
+6. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
+7. **Velocity standalone** (parked).  
+8. **Instance shadowing** / S10.7 / S8.9 (parked).  
+9. **AMI wallboard** (parked).  
+10. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
+11. **Control plane duplex / HA** (parked).  
+12. **Fleet auth cookie/SSO (blocked)**.  
+13. **TOTP 2FA — Fleet Gatekeeper G5** (optional — require for `fleet_admin`; G1–G4 shipped).  
+14. **S7+** attested PCI — customer ask.  
+15. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
+16. **Grafana / door-knock geo** (parked).  
+17. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
+18. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
+19. **Provisioning server** (parked — maybe don't build; see requirements §0).  
+20. **SPA list action icons component** (parked).  
+21. **Number wire Phase 2 / D2–D4** (parked).  
+22. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
+23. **Instance API digest deepen** (optional).  
+24. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
+25. **SARK migration → Aelintra repo** — before PBX3 OSS org move (not first-out critical).  
+26. **OSS org + repo transfer** — after SARK migration extract.  
+27. **Optional SBC media plane / rtpengine** (parked) — only on LAN-edge / Track A / Peer trigger; see try-it doc Appendix A.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
 ---
 
 ## Open items
+
+- [ ] **Fleet try-it deployment (requirements locked 2026-08-08):** Ease/cost of first spin-up — **1-box** solo PBX or **2-box** fleet (Gatekeeper co-located on Magrathea). Portable **packages + tailor script**; optional AWS AMI skin (Rule 9); Compose for GK+SBC only; **no** Asterisk-in-Docker; **no** rtpengine for try-it. Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. Implement D1+ when scheduled.
 
 - [x] **Tenant FQDN DNS + instance-only LE — SBC fleet (2026-08-06):** No tenant public **A** records; SPA → instance DNS; SIP domain → OpenSIPS setid. Lab removed tenant As; golden/bzy LE instance-only. **Lock:** **`TLS_AND_CERTIFICATES.md` §0** (+ big DO-NOT-A-record warn). **Code:** fleet `certificateFqdnList` / Setup+Sync instance-only; SPA **Sync certificate** + fleet warn banner. Option A multi-SAN remains solo/direct only.
 
