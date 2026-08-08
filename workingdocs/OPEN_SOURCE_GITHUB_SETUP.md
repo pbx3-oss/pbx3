@@ -46,7 +46,9 @@ On the default branch (usually `main`):
 
 ### Contributor-facing files (per repo)
 
-- `LICENSE` (choose early so contributions are unambiguous)
+- **`LICENSE` (decision locked 2026-08-08):** Product license is **Apache License 2.0** for all product repos (`pbx3`, `pbx3api`, `pbx3spa`, `pbx3cagi`, Magrathea/SBC admin as applicable). **Next (TODO suggested #1):** add the Apache-2.0 `LICENSE` file on each repo. Prefer a simple CLA or DCO once outside contributions start. Cross-link: Lab packaging § in **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** · **`TODO.md`**.
+- **Workingdocs (TODO #0):** Product/design docs stay in-repo (curated). Agent **session** handoffs → private ops — see **`TODO.md`** *Workingdocs hygiene*.
+- **SARK (TODO #2–#3):** Extract migration ETL to Aelintra-owned repo, then strip unused SARK leftovers from pbx3 — before public/org transfer.
 - `CONTRIBUTING.md` (how to run tests/lint, PR expectations)
 - `CODE_OF_CONDUCT.md` (Contributor Covenant is fine)
 - `CODEOWNERS` (optional but useful once multiple maintainers exist)

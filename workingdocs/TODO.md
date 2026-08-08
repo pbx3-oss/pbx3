@@ -1,38 +1,41 @@
 # PBX3 ToDo list
 
-**Branch:** Product repos **`main`**. Instance Sanctum TOTP + **Fleet Gatekeeper TOTP G1–G4** lab green. **SBC TOTP** on **`pbx3sbc-admin` `main`**. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-08 (Fleet try-it deployment requirements locked)
+**Branch:** Product repos **`main`**. Instance Sanctum TOTP on fleet nodes (**08jzwn**, **bzy54n**, **kildare** @ **pbx3api `321a12e`**). Fleet Gatekeeper TOTP G1–G4 lab green. **SBC TOTP** on **`pbx3sbc-admin` `main`**. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
+**Last updated:** 2026-08-08 (session end: Lab bound + OSS prep + API tip roll)
 
 ### Suggested “what next?” order
 
-0. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
-1. **Fleet try-it deploy (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: tailor script + 1-box / 2-box topologies; optional AMI skin; rtpengine **not** in this track.  
-2. **Roll API tip** — Sanctum TOTP tip to other fleet nodes (golden already rsynced).  
-3. **New instance / package install** — install **0.0.5-1** + **1.0.0-14** + API tip (instance-only LE Sync) when scheduled.  
-4. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
-5. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
-6. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
-7. **Velocity standalone** (parked).  
-8. **Instance shadowing** / S10.7 / S8.9 (parked).  
-9. **AMI wallboard** (parked).  
-10. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
-11. **Control plane duplex / HA** (parked).  
-12. **Fleet auth cookie/SSO (blocked)**.  
-13. **TOTP 2FA — Fleet Gatekeeper G5** (optional — require for `fleet_admin`; G1–G4 shipped).  
-14. **S7+** attested PCI — customer ask.  
-15. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
-16. **Grafana / door-knock geo** (parked).  
-17. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
-18. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
-19. **Provisioning server** (parked — maybe don't build; see requirements §0).  
-20. **SPA list action icons component** (parked).  
-21. **Number wire Phase 2 / D2–D4** (parked).  
-22. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
-23. **Instance API digest deepen** (optional).  
-24. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
-25. **SARK migration → Aelintra repo** — before PBX3 OSS org move (not first-out critical).  
-26. **OSS org + repo transfer** — after SARK migration extract.  
-27. **Optional SBC media plane / rtpengine** (parked) — only on LAN-edge / Track A / Peer trigger; see try-it doc Appendix A.  
+0. **Workingdocs hygiene (do soon)** — product/design stay in-repo; quarantine agent session handoffs to private ops. See open item.  
+1. **Apache-2.0 `LICENSE` files** — add Apache License 2.0 `LICENSE` on each product repo (`pbx3`, `pbx3api`, `pbx3spa`, `pbx3cagi`, Magrathea/SBC admin as applicable). License **chosen**; files still to land. See **`OPEN_SOURCE_GITHUB_SETUP.md`**.  
+2. **SARK migration ETL → Aelintra repo** — extract `db_legacy_sql` / `migrateLegacyDb` / fixRi / related into an **Aelintra-owned** repo (stays behind when PBX3 goes public).  
+3. **Strip redundant / unused SARK code from pbx3** — after extract (or same pass): remove dead legacy import paths, unused helpers, orphaned SQL/docs that no longer belong in the product tree. Keep only what PBX3 runtime still needs.  
+4. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
+5. **Lab deployment (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: LAN Lab T4; prefer after hygiene + LICENSE.  
+6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
+7. **New instance / package install** — install **0.0.5-1** + **1.0.0-14** + API tip (or API deb when ready) when scheduled.  
+8. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
+9. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
+10. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
+11. **Velocity standalone** (parked).  
+12. **Instance shadowing** / S10.7 / S8.9 (parked).  
+13. **AMI wallboard** (parked).  
+14. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
+15. **Control plane duplex / HA** (parked).  
+16. **Fleet auth cookie/SSO (blocked)**.  
+17. **TOTP 2FA — Fleet Gatekeeper G5** (optional — require for `fleet_admin`; G1–G4 shipped).  
+18. **S7+** attested PCI — customer ask.  
+19. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
+20. **Grafana / door-knock geo** (parked).  
+21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
+22. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
+23. **Provisioning server** (parked — maybe don't build; see requirements §0).  
+24. **SPA list action icons component** (parked).  
+25. **Number wire Phase 2 / D2–D4** (parked).  
+26. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
+27. **Instance API digest deepen** (optional).  
+28. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
+29. **OSS org + repo transfer** — after hygiene + Apache `LICENSE` + SARK extract/strip.  
+30. **Optional SBC media plane / rtpengine** (parked) — only on LAN-edge / Track A / Peer trigger; see try-it doc Appendix A.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -40,7 +43,19 @@
 
 ## Open items
 
-- [ ] **Fleet try-it deployment (requirements locked 2026-08-08):** Ease/cost of first spin-up — **1-box** solo PBX or **2-box** fleet (Gatekeeper co-located on Magrathea). Portable **packages + tailor script**; optional AWS AMI skin (Rule 9); Compose for GK+SBC only; **no** Asterisk-in-Docker; **no** rtpengine for try-it. Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. Implement D1+ when scheduled.
+- [ ] **Workingdocs hygiene — product vs agent session (do soon — before Lab package docs / public) (locked stance 2026-08-08):** Follow recommendation: **curate in-repo; quarantine session handoffs.** **Keep in product repos (public-ready):** design locks, Lab/requirements, install/MkDocs, schemas — human-stranger readable; no “Next agent session” blocks. **Private** (e.g. `aelintra/pbx3-ops` or local-only): `AGENT_HANDOFF` session notes, `SESSION_HANDOFF`, live lab inventories (EIPs/FQDNs/tokens). **TODO:** public = high-level roadmap; tip/rsync gossip stays private. Update Cursor/session-end rules to point agents at private ops for session state. **Order:** suggested **#0**. Cross-link: OSS item · **`OPEN_SOURCE_GITHUB_SETUP.md`**.
+
+- [ ] **Apache-2.0 `LICENSE` on product repos (suggested #1, open 2026-08-08):** License **chosen** (Apache License 2.0, all product repos). Add `LICENSE` file (and copyright notices as needed) to **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**, Magrathea/SBC admin as applicable. Gate before public / stranger Lab clone. See **`OPEN_SOURCE_GITHUB_SETUP.md`** · Lab packaging §.
+
+- [ ] **SARK migration ETL → separate Aelintra repo (suggested #2):** Break all **SARK V6 → pbx3** migration code/SQL out of the **pbx3** product tree into its **own repo that stays under `aelintra`**. Scope at least: **`db_legacy_sql`**, `migrateLegacyDb` / related scripts, fixRi / normalize helpers, any sail-coupled import docs. **Must** precede OSS org transfer. FreePBX→pbx3 ETL remains a separate future track. Then do **SARK strip** (#3). Cross-link: **`OPEN_SOURCE_GITHUB_SETUP.md`** / **`REPOS_AND_RELEASES.md`** · SARK V6 revisit item.
+
+- [ ] **Strip redundant / unused SARK code from pbx3 (suggested #3, open 2026-08-08):** After (or with) ETL extract: purge dead legacy import entrypoints, unused helpers, orphaned SQL/docs, and any SARK-only paths that are not required for PBX3 runtime. Goal: product tree has no leftover migration bridge. Inventory before delete; do not remove still-used schema/normalize repairs without a home in the Aelintra ETL repo. Repo: **pbx3**.
+
+- [ ] **Lab deployment — quick LAN fleet (requirements locked 2026-08-08):** Primary project: curious user + **VM manager** → few **Ubuntu/Debian** VMs → **T4** (Magrathea+GK, home PBX, **Garage**). Operator box may be **Linux/Windows/macOS** (no Mac assumption); SPA prefer **LAN static**. Tailor + Appendix B. Cloud **T2**/AMI = follow-on. Prefer **after** hygiene (#0) + Apache LICENSE (#1). Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. Implement D1+ when scheduled.
+
+- [ ] **pbx3api `.deb` (open 2026-08-08):** Versioned Debian package installing under **`/opt/pbx3api`**, preserving `.env` on upgrade, wiring nginx/php-fpm via existing installer semantics. Ubuntu/Debian long-haul; apt parity with **pbx3** / **pbx3cagi**. Until shipped: clone-at-tag (public org) or current tip deploy. Repo: **pbx3api**. See try-it packaging § **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**.
+
+- [x] **Roll API tip — Sanctum TOTP to fleet nodes (2026-08-08):** **`pbx3api` `321a12e`** on **bzy54n** + **kildare** (`git reset --hard origin/main`, composer TOTP deps, `migrate --path=…/add_two_factor_to_users.php`, php-fpm reload, `/up` 200). Golden already had tip + migration. Note: full `artisan migrate` fails on stock Laravel `create_users` pending rows — use path migrate for TOTP only (same pattern as golden).
 
 - [x] **Tenant FQDN DNS + instance-only LE — SBC fleet (2026-08-06):** No tenant public **A** records; SPA → instance DNS; SIP domain → OpenSIPS setid. Lab removed tenant As; golden/bzy LE instance-only. **Lock:** **`TLS_AND_CERTIFICATES.md` §0** (+ big DO-NOT-A-record warn). **Code:** fleet `certificateFqdnList` / Setup+Sync instance-only; SPA **Sync certificate** + fleet warn banner. Option A multi-SAN remains solo/direct only.
 
@@ -106,9 +121,7 @@
 
 - [ ] **S7+ — Attested PCI / scale (deferred):** KMS CMK; CloudTrail→WORM audit bucket; Security Hub; QSA; PSP handoff; Athena/manifests. Do not start without customer ask. Design §6.2 / §7 S7+.
 
-- [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**, **`pbx3-docs`**. Maintain **`REPOS_AND_RELEASES.md`**. Interim docs repo already on **`aelintra/pbx3-docs`**. Update local clone remotes; keep **`pbx3-master/`** holding-folder layout. **Prerequisite before transfer:** extract **SARK migration** out of pbx3 into an **Aelintra-owned** repo (see next item) so legacy ETL does not move with the OSS product.
-
-- [ ] **SARK migration → separate Aelintra repo (before PBX3 org move) (2026-08-06):** Break all **SARK V6 → pbx3** migration code/SQL out of the **pbx3** product tree into its **own repo that stays under `aelintra`** when PBX3 transfers to the new org. Scope at least: **`db_legacy_sql`**, `migrateLegacyDb` / related scripts, fixRi / normalize helpers, any sail-coupled import docs. Not critical for first out; **must be done before** OSS org transfer so product repos are clean and Aelintra keeps the legacy bridge. FreePBX→pbx3 ETL remains a separate future track. Cross-link: SARK V6 migration revisit item below · **`OPEN_SOURCE_GITHUB_SETUP.md`** / **`REPOS_AND_RELEASES.md`**.
+- [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`** (e.g. `github.com/pbx3`). **Stay multi-repo** — transfer **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**, **`pbx3-docs`**. Maintain **`REPOS_AND_RELEASES.md`**. Interim docs repo already on **`aelintra/pbx3-docs`**. Update local clone remotes; keep **`pbx3-master/`** holding-folder layout. **Prerequisites before public / transfer (order):** **#0** workingdocs hygiene → **#1** Apache-2.0 `LICENSE` files → **#2** SARK ETL extract → **#3** strip unused SARK from pbx3. Do not advertise stranger Lab `git clone` until those land.
 
 - [ ] **pbx3cagi refactor (under Ast config generator + cagi track):** Phase 0 harness **golden-signed-off** on **08jzwn**. Resume Phase **1.3 → 1.1 → 2.x** with generator work; run **`make test`** after each step. Contract: **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §5. Gate: **`REFACTOR_PLAN.md`**, **`TEST_HARNESS.md`**, **`TEST_RECIPE.md`**.
 
@@ -137,7 +150,7 @@
 
 - [ ] **SPA hygiene (deferred — after S8 / R1 / core panels):** No work until functionality complete; runs fine on golden/LAN today. Then: **(1)** route lazy-loading in **`router/index.js`**; **(2)** extract shared list/detail patterns when adding panels (avoid new 600+ line views). See **`pbx3spa/workingdocs/PROJECT_PLAN.md`** § Current state, **`PBX3SPA_CODEBASE_ANALYSIS.md`** § Phase H / H2.
 
-- [ ] **SARK V6 migration routines (revisit, low priority — end of list):** Golden demo data still had tenant-scoped **`cluster`** on pkey (e.g. `affcot`) because **`sqlite_fixRi.sql`** was never applied; new SPA/API writes use shortuid, which broke joins (CoS on extensions). Shipped interim repair: **`sqlite_normalize_cluster_to_shortuid.sql`** (idempotent; **pbx3 0.0.3-20**). **Later revisit:** full **`db_legacy_sql`** path (`sqlite_create_legacy.sql`, **`sqlite_fixRi.sql`**, lineio, etc.) — ensure import always runs fixRi (or the normalize script), document operator steps, cover tables fixRi omits (`dateseg`, `holiday`, `page`, `users`, CoS junctions), and decide whether fixRi stays one-shot-only with normalize as the supported repair. Do not run stock fixRi on mixed DBs (NULLs shortuid rows). **Repo destiny:** extract this bridge to an **Aelintra-owned** repo before PBX3 org move (see **SARK migration → separate Aelintra repo** above). **FreePBX→pbx3 migrate:** separate future ETL (no shared components with this SARK path); defer requirements until after FreePBX-behind-SBC lab.
+- [ ] **SARK V6 migration routines (revisit, low priority — end of list):** Golden demo data still had tenant-scoped **`cluster`** on pkey (e.g. `affcot`) because **`sqlite_fixRi.sql`** was never applied; new SPA/API writes use shortuid, which broke joins (CoS on extensions). Shipped interim repair: **`sqlite_normalize_cluster_to_shortuid.sql`** (idempotent; **pbx3 0.0.3-20**). **Later revisit:** full **`db_legacy_sql`** path (`sqlite_create_legacy.sql`, **`sqlite_fixRi.sql`**, lineio, etc.) — ensure import always runs fixRi (or the normalize script), document operator steps, cover tables fixRi omits (`dateseg`, `holiday`, `page`, `users`, CoS junctions), and decide whether fixRi stays one-shot-only with normalize as the supported repair. Do not run stock fixRi on mixed DBs (NULLs shortuid rows). **Repo destiny:** extract this bridge to an **Aelintra-owned** repo (**TODO suggested #2**), then strip leftovers from pbx3 (**#3**). **FreePBX→pbx3 migrate:** separate future ETL (no shared components with this SARK path); defer requirements until after FreePBX-behind-SBC lab.
 
 ---
 

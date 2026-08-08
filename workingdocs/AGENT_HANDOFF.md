@@ -75,22 +75,30 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-08) — Fleet try-it deployment requirements
+## Next agent session notes (2026-08-08) — Lab deployment bound + OSS prep + API tip roll
 
-**Branch:** **`main`** — pbx3 tip after this push (try-it reqs + TODO/SBC tracks); pbx3spa **`b26d1e2`** (prior catalog UX); pbx3api Sanctum TOTP **`321a12e`**. SPA **`npm run dev`**.
+**Branch:** **`main`** — pbx3 docs tip (this push); pbx3api **`321a12e`** live on **08jzwn** / **bzy54n** / **kildare**; pbx3spa prior tip. SPA **`npm run dev`**.
 
 ### Shipped
-- **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** locked — primary goal **ease/cost of initial deploy**: **1-box** solo PBX or **2-box** fleet (Gatekeeper co-located on Magrathea); portable packages + tailor script; optional AWS AMI skin (Rule 9); Compose for GK±SBC only; **no** Asterisk-in-Docker.
-- **rtpengine / LAN-edge** parked (Appendix A) — not the adoption path; trigger only LAN-edge / Track A / Peer forbids bypass.
-- TODO suggested order + open item; **`SBC_PRODUCT_TRACKS.md`** gap #2 pointer; AGENT_HANDOFF read-order link.
+- **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** expanded and re-bounded: primary project = **Lab deployment (T4)** — VM manager + Ubuntu/Debian LAN + **Garage**; SPA LAN-static (any OS); cloud T2/AMI follow-on; Appendix B bootstrap; rtpengine parked (Appendix A).
+- Product license **locked Apache-2.0** (files still to add). Public gate: LICENSE + workingdocs hygiene + SARK extract/strip.
+- TODO reordered: **#0** workingdocs hygiene → **#1** Apache LICENSE → **#2** SARK ETL → **#3** SARK strip → Lab later.
+- **Ops:** rolled **pbx3api `321a12e`** (Sanctum TOTP) to **bzy54n** + **kildare** (path-migrate TOTP only; `/up` 200).
 
 ### Golden / ops
-- Docs only this slice — no Gatekeeper/AMI/tailor implementation yet (D1+ when scheduled).
+- Fleet instance APIs aligned on TOTP tip. Packages **0.0.5-1** / cagi **1.0.0-14** still not necessarily installed on all nodes.
 
 ### Resume
-1. **Implement try-it D1** when scheduled — tailor script + T1/T2 docs (`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`).  
-2. **First-out** — **`FIRST_OUT_CHECKLIST.md`** F1–F4.  
-3. Do **not** start rtpengine unless a real LAN-edge trigger appears.
+1. **Workingdocs hygiene** (#0) — quarantine session handoffs before Lab advertise / public.  
+2. **Apache-2.0 `LICENSE` files** (#1) on product repos.  
+3. **SARK ETL extract** (#2) then **strip leftovers** (#3).  
+4. Lab D1 only after hygiene (+ LICENSE preferred). Do **not** start rtpengine without LAN-edge trigger.
+
+---
+
+## Next agent session notes (2026-08-08) — Fleet try-it deployment requirements (superseded)
+
+**Superseded for “read first”** by Lab deployment bound + OSS prep block above. Try-it/Lab requirements doc still on **`main`** (expanded same day).
 
 ---
 
