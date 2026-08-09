@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-09 (heritage scrub)
+**Last updated:** 2026-08-09 (phone-image-from-UA parked)
 
 ### Suggested “what next?” order
 
@@ -29,6 +29,7 @@
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
 23. **Provisioning server** (parked — maybe don't build; see requirements §0).  
+23a. **UA → `devicemodel` sidekick** (parked) — **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`** (implement A–D when scheduled; images = E).  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked).  
 26. **Seed outbound US dialplan string (O4)** — optional; UK `_0. _00.` shipped.  
@@ -70,6 +71,8 @@
 - [ ] **Lab / demo SQLite anonymize (parked 2026-08-03):** Lab test DBs may still carry site-derived surnames / friendly labels. Prefer a **one-shot idempotent SQL + short runbook** before wider demos. Keep dial plans / shortuids functional. Not urgent for closed lab.
 
 - [ ] **Device table — lean done in seed; residual (2026-08-06):** No in-house provisioner. Seed keepers + prune SQL landed; SPA **Devices** removed from System nav. **Still open:** drop Devices routes/views entirely; Snom/Grandstream pkey gap; optional later packaged JSON keepers.
+
+- [ ] **Extension phone image / UA model harvest (parked 2026-08-09):** Sidekick design locked — edge `GET /fleet/registrations` + home `harvest-devicemodel` soft-fills `ipphone.devicemodel`. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Images pack + SPA display = slice E after operator locates assets.
 
 - [ ] **SPA list action icons — shared component (parked 2026-08-03):** Extract small **`ListEditIcon` / `ListDeleteIcon`** (or combined row-actions) in **pbx3spa** and reuse everywhere. Not urgent polish.
 
