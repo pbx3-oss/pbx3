@@ -143,7 +143,7 @@ Same LAN IP on multiple AoRs is expected — join must be shortuid@domain.
 | DB | `ipphone.devicemodel` exists; guarded | Soft UPDATE from utility only |
 | pbx3api | Not in mass-assign | Expose read-only on extension show/list when useful |
 | SPA list | User=`desc`, Device=`device` (vendor) | Optional later: model column or icon from `devicemodel` |
-| Images | Pack TBD (`PBX3_PHONEIMAGES_URL`) | Map `devicemodel` → file under cache; edit panel image |
+| Images | Historic pack URL known (see §9); still opt-in via `PBX3_PHONEIMAGES_URL` | Map `devicemodel` → file under `/opt/pbx3/cache/phoneimages`; edit panel image |
 
 **List column reminder:** User ≠ model (migrate often stuffed model-ish strings into `desc`). Device = MAC **vendor**. Harvest fills **`devicemodel`** only.
 
@@ -168,7 +168,7 @@ Same LAN IP on multiple AoRs is expected — join must be shortuid@domain.
 | **B** | UA mapper unit tests (fixtures in §4.4) |
 | **C** | `harvest-devicemodel` on **pbx3** + optional cron (off by default) |
 | **D** | Lab: enable on golden/kildare against Magrathea; verify `devicemodel` |
-| **E** | SPA image / model display + phoneimages pack (after operator locates assets) |
+| **E** | SPA image / model display + durable phoneimages host (see §9) |
 
 ---
 
@@ -180,3 +180,24 @@ Same LAN IP on multiple AoRs is expected — join must be shortuid@domain.
 - Unmapped UA → no write.  
 - Edge down / 401 → exit 1; sqlite unchanged.  
 - No change to REGISTER / dial behaviour.
+
+---
+
+## 9. Phoneimages pack (ops)
+
+| Item | Value |
+|------|--------|
+| Historic URL | `http://sailpbx.com/phoneimages.zip` (pre-scrub `getimages.sh`; **dead** as of 2026-08-09 — 302 to sail6-docs HTML) |
+| Local unpack (lab) | **`~/GiT/nonGitStuff/phoneimages/`** — ~3.9M, 138 JPEGs, vendor dirs: aastra, cisco, fanvil, panasonic, polycom, snom, vtech, yealink |
+| Consume on node | Tree must land as `/opt/pbx3/cache/phoneimages/<vendor>/…` (same layout `getimages.sh` expects after unzip). Lab: rsync this tree, or zip it and set `PBX3_PHONEIMAGES_URL`. |
+| Package default | **Unset** — do not bake a third-party host into the product tree |
+
+**Filename conventions (slice E map from `devicemodel`):**
+
+| Harvested `devicemodel` | Likely asset |
+|-------------------------|--------------|
+| `Yealink T31P` / `Yealink T46U` | `yealink/T31.jpg`, `yealink/T46.jpg` (strip trailing letter variants) |
+| `Snom D717` | `snom/snomD717.jpg` |
+| `WebRTC` | none (skip image) |
+
+Yealink files are short model (`T31.jpg`) without P/G/U/W suffix — mapper must normalize.

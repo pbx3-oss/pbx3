@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-09 (phone-image-from-UA parked)
+**Last updated:** 2026-08-09 (session end: UA harvest design + phoneimages local)
 
 ### Suggested “what next?” order
 
@@ -72,7 +72,7 @@
 
 - [ ] **Device table — lean done in seed; residual (2026-08-06):** No in-house provisioner. Seed keepers + prune SQL landed; SPA **Devices** removed from System nav. **Still open:** drop Devices routes/views entirely; Snom/Grandstream pkey gap; optional later packaged JSON keepers.
 
-- [ ] **Extension phone image / UA model harvest (parked 2026-08-09):** Sidekick design locked — edge `GET /fleet/registrations` + home `harvest-devicemodel` soft-fills `ipphone.devicemodel`. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Images pack + SPA display = slice E after operator locates assets.
+- [ ] **Extension phone image / UA model harvest (parked 2026-08-09):** Sidekick design locked — edge `GET /fleet/registrations` + home `harvest-devicemodel` soft-fills `ipphone.devicemodel`. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Assets: **`~/GiT/nonGitStuff/phoneimages/`** (sailpbx zip URL dead); slice E = SPA + model→filename map.
 
 - [ ] **SPA list action icons — shared component (parked 2026-08-03):** Extract small **`ListEditIcon` / `ListDeleteIcon`** (or combined row-actions) in **pbx3spa** and reuse everywhere. Not urgent polish.
 
