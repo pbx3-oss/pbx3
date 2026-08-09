@@ -52,8 +52,9 @@ Ops and honesty gates — small list:
 | **F4** | Confirm **no tenant public A** leftovers; phones → SBC; SPA → instance | Fleet DNS lock is policy + lab; re-check before external eyes |
 | **F5** | **Lab / demo DB anonymize** if anyone outside the closed lab sees screens / dumps | Real-site surnames still on golden — do before wider demo |
 | **F6** | Optional but tidy: run **`sqlite_device_lean_prune.sql`** on golden/bzy | Align running DB with lean seed; drop surplus Device template fat |
+| **F7** | **Pre-release safety debt** — **`PRE_RELEASE_SAFETY_DEBT.md`** | Go/no-go before calling a release: cagi buffers, api tenant IDOR, dumper/appl, edge MI/SQL, Filament fleet-owned, spa secrets |
 
-Not new product features — **rollout + hygiene**.
+Not new product features — **rollout + hygiene + safety**.
 
 ---
 

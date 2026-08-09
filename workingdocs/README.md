@@ -16,6 +16,7 @@ Product stub: **`AGENT_HANDOFF.md`** (behavior + read-order + permanent referenc
 | **Research / audits (private)** | **`~/GiT/pbx3-ops/devdocs/`** | `*_RESEARCH.md`, audit prototypes, lab rollback |
 | **Session archaeology (private)** | **`~/GiT/pbx3-ops/archive/`** | handoff histories |
 | **Product roadmap** | `TODO.md` | Suggested order + open product items |
+| **Pre-release go/no-go** | `PRE_RELEASE_SAFETY_DEBT.md` | Fix-now safety cluster before release |
 | **Closed ledger** | **`archive/TODO_DONE_LOG.md`** | Checked-off items |
 | **Session end habit** | **`~/GiT/pbx3-ops/SESSION_END_CHECKLIST.md`** | Stub: `SESSION_END_CHECKLIST.md` |
 | **Locked product / fleet** | Prefer **`pbx3-directory/docs/`** when fleet-wide | DESIGN_RULES, runbooks, dialect reqs |

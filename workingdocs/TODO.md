@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-09 (session end: UA harvest design + phoneimages local)
+**Last updated:** 2026-08-09 (pre-release safety debt gate)
 
 ### Suggested “what next?” order
 
@@ -10,6 +10,7 @@
 2. ~~**Apache-2.0 `LICENSE` files**~~ — **done** (clean Apache-2.0 on product repos; see open-item note).  
 3. ~~**Strip customer-migrate tooling from pbx3**~~ — **done** (private ETL owns migrate; package keeps shortuid normalize only).  
 4. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
+4a. **Pre-release safety debt (go/no-go)** — **`PRE_RELEASE_SAFETY_DEBT.md`** (cagi buffers · api tenant scope · pbx3 dumper/appl · sbc MI/SQL · spa secrets). Before release go.  
 5. **Lab deployment (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: LAN Lab T4; OSS gates (LICENSE + migrate strip) cleared.  
 6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
 7. **New instance / package install** — install **0.0.5-1** + **1.0.0-14** + API tip (or API deb when ready) when scheduled.  
@@ -43,6 +44,8 @@
 ---
 
 ## Open items
+
+- [ ] **Pre-release safety debt — go/no-go (near-time 2026-08-09):** Fix-now cluster before release: cagi stack/buffers · pbx3api Cos/Destinations + secrets JSON · pbx3 dumper/appl · sbc MI bind + SQL concat · sbc-admin fleet-owned Filament + MI status · spa passwd mask + GK 401. Checklist: **`PRE_RELEASE_SAFETY_DEBT.md`**. Detail: Cursor canvases `tech-debt-rollup` + per-repo `*-tech-debt-pass`. Suggested order **#4a**. Not first-out soft-land polish — **release gate**.
 
 - [x] **Workingdocs hygiene — product vs agent session (done 2026-08-09):** Curate in-repo; quarantine session handoffs. Private **`aelintra/pbx3-ops`**. **Light peel same day:** research/audits/tippy lab → **`pbx3-ops/devdocs/`**; active requirements stay in product. Cross-link: **`OPEN_SOURCE_GITHUB_SETUP.md`** · **`workingdocs/README.md`**.
 
