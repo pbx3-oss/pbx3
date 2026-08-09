@@ -172,7 +172,7 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 
 **Still prefer versioned artifacts where they already exist** (pbx3/cagi debs). For API/GK/SBC: **documented release tag + install script** satisfies portable core until debs exist. Tip/`main` clone is for operators chasing HEAD, not the advertised Lab path.
 
-**License (gate before public):** Product license **chosen: Apache License 2.0** for all product repos (`pbx3`, `pbx3api`, `pbx3spa`, `pbx3cagi`, Magrathea/SBC admin as applicable). Same family everywhere. **Still a public gate:** add `LICENSE` (Apache-2.0 text) on each repo before flipping public or advertising stranger Lab `git clone`. Interim Lab work may stay private-clone / operator-only until those files land. Garage remains upstream AGPL (companion only). See **`OPEN_SOURCE_GITHUB_SETUP.md`**.
+**License (gate before public):** Product license **Apache License 2.0** on all product repos (`pbx3`, `pbx3api`, `pbx3spa`, `pbx3cagi`, Magrathea/SBC admin) — root `LICENSE` landed 2026-08-09 (clean Apache-2.0 text). Remaining public/org-transfer gates: SARK strip from pbx3 (**TODO #3**), then OSS org transfer. Garage remains upstream AGPL (companion only). See **`OPEN_SOURCE_GITHUB_SETUP.md`**.
 
 ### AWS AMI skin (optional, phase after script)
 
@@ -318,3 +318,4 @@ Covered by **A7** / **A8** above. Point MkDocs / install docs at the script; kee
 | 2026-08-08 | Lab operator workstation = Linux/Windows/macOS; prefer LAN static SPA; no Mac-only happy path. |
 | 2026-08-08 | **LICENSE TBD** — gate before public repos / stranger Lab clone docs. |
 | 2026-08-08 | Product license **locked: Apache-2.0** (all product repos); add `LICENSE` files before public. |
+| 2026-08-09 | Apache-2.0 root `LICENSE` on product repos (clean text; httpd composite removed). Public gate moves to SARK strip + org transfer. |

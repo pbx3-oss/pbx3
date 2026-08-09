@@ -47,7 +47,7 @@ On the default branch (usually `main`):
 ### Contributor-facing files (per repo)
 
 - **Workingdocs (TODO suggested #1 — done; light peel 2026-08-09):** Product/design **locks and active requirements** stay in-repo (agent locality). Agent **session** handoffs + **research/audits/tippy lab** → private **`aelintra/pbx3-ops`** (`~/GiT/pbx3-ops`, including **`devdocs/`**). See **`TODO.md`** · **`workingdocs/README.md`**.
-- **`LICENSE` (decision locked 2026-08-08):** Product license is **Apache License 2.0** for all product repos (`pbx3`, `pbx3api`, `pbx3spa`, `pbx3cagi`, Magrathea/SBC admin as applicable). **Next (TODO suggested #2):** add the Apache-2.0 `LICENSE` file on each repo if gaps remain. Prefer a simple CLA or DCO once outside contributions start. Cross-link: Lab packaging § in **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** · **`TODO.md`**.
+- **`LICENSE` (landed 2026-08-09):** Product license is **Apache License 2.0** for all product repos (`pbx3`, `pbx3api`, `pbx3spa`, `pbx3cagi`, Magrathea/SBC admin). Root `LICENSE` is the clean Apache-2.0 text (not the httpd composite). Packaging copyright: **Aelintra Telecom Limited** (`debian/copyright` where present; composer/`package.json` `license` fields). Prefer a simple CLA or DCO once outside contributions start. Cross-link: Lab packaging § in **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** · **`TODO.md`**.
 - **SARK (TODO #3):** Strip unused SARK leftovers from pbx3 — ETL already in **`aelintra/sark-to-pbx3`** — before public/org transfer.
 - `CONTRIBUTING.md` (how to run tests/lint, PR expectations)
 - `CODE_OF_CONDUCT.md` (Contributor Covenant is fine)
