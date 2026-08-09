@@ -50,6 +50,8 @@ pending → preflight
 - Sync one-shot POST (violates Rule 14)  
 - FQDN rename (D6 — **cancelled**; not a Delete non-goal forever, just not a product)
 
+**Follow-on integrity (2026-08-09):** App cascade already wipes tenant tables — see **`TENANT_DELETE_DATA_INTEGRITY.md`** (sibling dialaliases, park parity, orphan audit, optional FK later). Do **not** gate Delete on “no dependents.”
+
 ## Implementation map
 
 | Slice | Repo | Status |
