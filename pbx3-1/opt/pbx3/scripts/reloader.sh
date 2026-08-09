@@ -29,6 +29,16 @@ while getopts ":hsL" option; do
 	esac
 done
 
+# Fail closed before any dump/delete when -L prerequisites are missing.
+if [ "$legacy" = "true" ]; then
+	if [ ! -f "$LEGACY_DB" ]; then
+		echo "ERROR: reloader -L needs $LEGACY_DB"
+		echo "Legacy create schema is not shipped in the pbx3 package."
+		echo "Private migrate tooling may stage it under db_legacy_sql when needed."
+		exit 3
+	fi
+fi
+
 mkdir -p "$DBDUMPS"
 if [ -e "$SYSDB" ] ; then
 	echo "Saving existing database $SYSDB as $LASTDB"
@@ -60,12 +70,6 @@ sqlite3 $SYSDB 'PRAGMA synchronous=0;'
 sqlite3 $SYSDB 'PRAGMA journal_mode=MEMORY;' >/dev/null 2>&1
 
 if [ "$legacy" = "true" ]; then
-	if [ ! -f "$LEGACY_DB" ]; then
-		echo "ERROR: reloader -L needs $LEGACY_DB"
-		echo "Legacy create schema is not shipped in the pbx3 package."
-		echo "Private migrate tooling may stage it under db_legacy_sql when needed."
-		exit 3
-	fi
 	echo "L parameter given, creating $SYSDB from $LEGACY_DB"
 	sqlite3 $SYSDB < $LEGACY_DB
 else
