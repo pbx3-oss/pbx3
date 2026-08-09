@@ -172,7 +172,7 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 
 **Still prefer versioned artifacts where they already exist** (pbx3/cagi debs). For API/GK/SBC: **documented release tag + install script** satisfies portable core until debs exist. Tip/`main` clone is for operators chasing HEAD, not the advertised Lab path.
 
-**License (gate before public):** Product license **Apache License 2.0** on all product repos — root `LICENSE` landed. SARK migrate stripped from pbx3 (2026-08-09). Remaining public/org-transfer work: create OSS org + transfer. Garage remains upstream AGPL (companion only). See **`OPEN_SOURCE_GITHUB_SETUP.md`**.
+**License (gate before public):** Product license **Apache License 2.0** on all product repos — root `LICENSE` landed. Migrate tooling stripped from pbx3 (2026-08-09). Remaining public/org-transfer work: create OSS org + transfer. Garage remains upstream AGPL (companion only). See **`OPEN_SOURCE_GITHUB_SETUP.md`**.
 
 ### AWS AMI skin (optional, phase after script)
 
@@ -318,5 +318,5 @@ Covered by **A7** / **A8** above. Point MkDocs / install docs at the script; kee
 | 2026-08-08 | Lab operator workstation = Linux/Windows/macOS; prefer LAN static SPA; no Mac-only happy path. |
 | 2026-08-08 | **LICENSE TBD** — gate before public repos / stranger Lab clone docs. |
 | 2026-08-08 | Product license **locked: Apache-2.0** (all product repos); add `LICENSE` files before public. |
-| 2026-08-09 | Apache-2.0 root `LICENSE` on product repos (clean text; httpd composite removed). Public gate moves to SARK strip + org transfer. |
-| 2026-08-09 | SARK migrate stripped from pbx3 package; ETL-only in **aelintra/sark-to-pbx3**. Public gate = org transfer when scheduled. |
+| 2026-08-09 | Apache-2.0 root `LICENSE` on product repos (clean text; httpd composite removed). |
+| 2026-08-09 | Customer migrate stripped from pbx3 package; private ETL under Aelintra. Public gate = org transfer when scheduled. |

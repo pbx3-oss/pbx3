@@ -22,7 +22,7 @@
 Hand-entered prefixes on the **calling** tenant:
 
 - Join cost for a full bidirectional mesh ≈ **\(2k\)** new rows when adding the \((k+1)\)-th member.
-- At ~**50** sisters (real SARK-scale clients) → ~**2 450** rows; codes invented independently per sender.
+- At ~**50** sisters (large multi-site clients) → ~**2 450** rows; codes invented independently per sender.
 - Fixing that model after customers rely on it is painful.
 
 ### 1.2 Fleet shape that forces an explicit cohort
@@ -263,7 +263,7 @@ Adding member \(k+1\) with routing prefix already set:
 | Reverse | Manual second row | Automatic via mesh project |
 | Wild ship | **No** | **Yes** (this) |
 
-Legacy InterSARK migrate recipe ([`DIAL_PREFIX_LEGACY_MIGRATE.md`](DIAL_PREFIX_LEGACY_MIGRATE.md)) stays separate (SARK → prefixes). **No** product migrate from hand-invented wild meshes — that model is not shipping; nothing to convert. **Deferred:** any SARK→Site Group import/assist when a real migration customer needs it — not in C1–C6.
+Legacy InterSARK migrate recipe ([`DIAL_PREFIX_LEGACY_MIGRATE.md`](DIAL_PREFIX_LEGACY_MIGRATE.md)) stays separate. **No** product migrate from hand-invented wild meshes — that model is not shipping; nothing to convert. **Deferred:** any Site Group import/assist when a real migration customer needs it — not in C1–C6.
 
 ---
 

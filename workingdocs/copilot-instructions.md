@@ -18,7 +18,7 @@ pbx3-1/opt/pbx3/scripts/bashconfig      # Generated from config.php via genbashc
 pbx3-1/opt/pbx3/scripts/installer.sh    # Post-install setup (run manually, not from postinst)
 pbx3-1/opt/pbx3/scripts/reloader.sh     # Rebuild SQLite DB from SQL files
 pbx3-1/opt/pbx3/db/db_sql/               # Current schema: sqlite_create_{instance,tenant,laravel}.sql, sqlite_message.sql
-pbx3-1/opt/pbx3/db/db_legacy_sql/        # Fleet repair: sqlite_normalize_cluster_to_shortuid.sql (SARK migrate SQL/PHP → aelintra/sark-to-pbx3)
+pbx3-1/opt/pbx3/db/db_legacy_sql/        # Fleet repair: sqlite_normalize_cluster_to_shortuid.sql
 pbx3-1/opt/pbx3/db/db_mysql/             # MySQL schema: mysql_create_catalog.sql
 pbx3-1/opt/pbx3/php/classes/             # DbClass, GenClass, NetHelperClass, etc.
 pbx3-1/opt/pbx3/php/utilities/            # Asterisk config generation (runAstGen.php, etc.) and other scripts

@@ -33,7 +33,7 @@ Treat as **done on `main` / lab-proven** unless a regression appears:
 |------|--------|
 | Provisioning product question + M1–M5 options | **`PROVISIONING_SERVER_REQUIREMENTS.md`** |
 | First-out triage (this file) | **`FIRST_OUT_CHECKLIST.md`** |
-| SARK migration → Aelintra repo **before** OSS transfer | **`TODO.md`** · **`REPOS_AND_RELEASES.md`** · **`OPEN_SOURCE_GITHUB_SETUP.md`** |
+| Private migrate ETL stays under Aelintra (**done**) | **`TODO.md`** · **`REPOS_AND_RELEASES.md`** · **`OPEN_SOURCE_GITHUB_SETUP.md`** |
 | Device seed lean + prune SQL; Devices off System nav | pbx3 `sqlite_device_*` · pbx3spa `AppLayout` |
 
 **Existing lab DBs** still hold fat Device rows until **`sqlite_device_lean_prune.sql`** is run (seed alone does not shrink them).
@@ -51,7 +51,7 @@ Ops and honesty gates — small list:
 | **F3** | Smoke the **stakeholder demo path** on HTTPS against current golden/bzy | Regressions only — **`STAKEHOLDER_DEMO_SCRIPT.md`** |
 | **F4** | Confirm **no tenant public A** leftovers; phones → SBC; SPA → instance | Fleet DNS lock is policy + lab; re-check before external eyes |
 | **F5** | **Lab / demo DB anonymize** if anyone outside the closed lab sees screens / dumps | Real-site surnames still on golden — do before wider demo |
-| **F6** | Optional but tidy: run **`sqlite_device_lean_prune.sql`** on golden/bzy | Align running DB with lean seed; drop SARK #INCLUDE fat |
+| **F6** | Optional but tidy: run **`sqlite_device_lean_prune.sql`** on golden/bzy | Align running DB with lean seed; drop surplus Device template fat |
 
 Not new product features — **rollout + hygiene**.
 
@@ -88,7 +88,7 @@ Do **not** block first out on these:
 - Velocity standalone / AMI wallboard / Grafana / door-knock heat  
 - cagi Phase 4 / Ast generator deep refactor  
 - S7+ PCI  
-- **OSS org transfer** — and **SARK migration extract to Aelintra repo** first (gate for org move; **not** first-out)  
+- **OSS org transfer** — private migrate ETL already extracted (**not** first-out)  
 - Device → packaged JSON (optional later; keep lean SQLite for now)  
 - SPA list icon component / help-row prune (polish)  
 - `ipphone.desc` vs `description` rename  

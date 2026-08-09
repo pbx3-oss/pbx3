@@ -22,7 +22,7 @@ The pbx3 package **Depends** on **php-cli** and **php-sqlite3** (see debian/cont
 | **php/utilities/sanitize-firewall.php** | reloader.sh (currently dead code after `exit`) | Format shorewall rules | core only |
 | **php/utilities/sipiaxfix.php** | commented out in reloader | SIP/IAX fixup | unknown |
 
-**SARK migrate** (legacy dump `-L`, refactor*, create_legacy / fixRi / lineio) is **not** in this package. Use private **`aelintra/sark-to-pbx3`** (offline v2 preferred; on-host v1 stages its own SQL/PHP). Fleet repair only: **`db/db_legacy_sql/sqlite_normalize_cluster_to_shortuid.sql`**.
+**Customer DB migrate** tooling is **not** in this package (private Aelintra ETL). Fleet repair only: **`db/db_legacy_sql/sqlite_normalize_cluster_to_shortuid.sql`**. `reloader -L` / `dumper -L` are hooks when migrate stages files.
 
 ## Shortuid and password generation (idpwgen)
 

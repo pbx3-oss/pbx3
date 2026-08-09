@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS tt_help_core (
 "z_updater" TEXT DEFAULT 'system'
 );
 
-/* Device table: provisioning templates (schema/data lifted from sail65/sark db_v4_* as-is) */
+/* Device table: provisioning templates (vendor XML / PJSIP friend stubs) */
 CREATE TABLE IF NOT EXISTS device (
 "pkey" TEXT PRIMARY KEY,
 "blfkeyname" TEXT,

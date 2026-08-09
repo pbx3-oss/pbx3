@@ -1,5 +1,5 @@
 -- Device seed (lean) — PJSIP create-time templates only.
--- Dropped SARK #INCLUDE / Fkey / common / y000000… rows (no in-house HTTP provisioner).
+-- No in-house HTTP provisioner templates (#INCLUDE / Fkey / common fat rows).
 -- Keepers: General SIP, WebRTC, MAILBOX + vendor bases used by ExtensionController MAC path.
 -- Existing DBs: run sqlite_device_lean_prune.sql (or equivalent) to delete surplus rows.
 BEGIN TRANSACTION;
@@ -565,7 +565,7 @@ INSERT OR IGNORE INTO Device(pkey,desc,legacy,owner,provision,sipiaxfriend,techn
 <Provider>
 
 <MAC_ADDRESS value="7C:2F:80:57:EE:64" />
-<PROFILE_NAME class="string" value="SARK"/>
+<PROFILE_NAME class="string" value="PBX3"/>
 <S_SIP_SERVER class="string" value="$localip" />
 <SYMB_ITEM ID="BS_AE_Subscriber.stMtDat[0].aucTlnName" class="symb_item" value=$quotedDesc />
 <S_SIP_USER_ID class="string" value="$ext" />

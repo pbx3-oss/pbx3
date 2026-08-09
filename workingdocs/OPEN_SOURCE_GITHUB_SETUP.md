@@ -12,7 +12,7 @@ Use this when creating a **new GitHub organization** for PBX3 and preparing for 
 
 Inventory and version coupling: **`workingdocs/REPOS_AND_RELEASES.md`**. **Policy: multi-repo** (not one amalgamated monorepo).
 
-**Before transferring repos out of `aelintra`:** extract SARK migration code into an **Aelintra-owned** repo (stays behind). See **`TODO.md`** *SARK migration → separate Aelintra repo*.
+**Before transferring repos out of `aelintra`:** keep private migrate ETL under Aelintra (already extracted). See **`TODO.md`**.
 
 - `pbx3` — backend package + installer + workingdocs + **`pbx3-directory/`**
 - `pbx3api` — API (Laravel) + nginx installer
@@ -48,7 +48,7 @@ On the default branch (usually `main`):
 
 - **Workingdocs (TODO suggested #1 — done; light peel 2026-08-09):** Product/design **locks and active requirements** stay in-repo (agent locality). Agent **session** handoffs + **research/audits/tippy lab** → private **`aelintra/pbx3-ops`** (`~/GiT/pbx3-ops`, including **`devdocs/`**). See **`TODO.md`** · **`workingdocs/README.md`**.
 - **`LICENSE` (landed 2026-08-09):** Product license is **Apache License 2.0** for all product repos (`pbx3`, `pbx3api`, `pbx3spa`, `pbx3cagi`, Magrathea/SBC admin). Root `LICENSE` is the clean Apache-2.0 text (not the httpd composite). Packaging copyright: **Aelintra Telecom Limited** (`debian/copyright` where present; composer/`package.json` `license` fields). Prefer a simple CLA or DCO once outside contributions start. Cross-link: Lab packaging § in **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** · **`TODO.md`**.
-- **SARK (TODO #3 — done 2026-08-09):** Unused SARK migrate entrypoints stripped from pbx3; ETL remains in **`aelintra/sark-to-pbx3`**. Product keeps shortuid normalize repair only.
+- **Customer migrate (TODO #3 — done 2026-08-09):** Migrate entrypoints stripped from pbx3; private ETL remains under Aelintra. Product keeps shortuid normalize repair only.
 - `CONTRIBUTING.md` (how to run tests/lint, PR expectations)
 - `CODE_OF_CONDUCT.md` (Contributor Covenant is fine)
 - `CODEOWNERS` (optional but useful once multiple maintainers exist)

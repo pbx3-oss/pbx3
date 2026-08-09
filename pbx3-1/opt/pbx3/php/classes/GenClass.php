@@ -2,7 +2,7 @@
 // Generator class
 // Developed by CoCo
 //
-// Copyright (C) 2024 CoCoKraft info@CoCokraft.com
+// Copyright (c) Aelintra Telecom Limited
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

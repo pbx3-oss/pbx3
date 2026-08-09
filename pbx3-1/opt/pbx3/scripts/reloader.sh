@@ -62,8 +62,8 @@ sqlite3 $SYSDB 'PRAGMA journal_mode=MEMORY;' >/dev/null 2>&1
 if [ "$legacy" = "true" ]; then
 	if [ ! -f "$LEGACY_DB" ]; then
 		echo "ERROR: reloader -L needs $LEGACY_DB"
-		echo "SARK migrate schemas are not shipped in the pbx3 package."
-		echo "Use aelintra/sark-to-pbx3 (it stages sqlite_create_legacy.sql into db_legacy_sql)."
+		echo "Legacy create schema is not shipped in the pbx3 package."
+		echo "Private migrate tooling may stage it under db_legacy_sql when needed."
 		exit 3
 	fi
 	echo "L parameter given, creating $SYSDB from $LEGACY_DB"

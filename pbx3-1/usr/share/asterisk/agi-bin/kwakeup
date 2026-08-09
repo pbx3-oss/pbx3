@@ -8,7 +8,7 @@
 #
 # Jonas Arndt <jonas_arndt@comcast.net>
 #
-# Modified for PBX3 by KoKo (admin@akokokraft.com) 
+# Modified for PBX3 
 # - name changed to kwakeup so it doesn't conflict with other installs
 # - some of the logic changed (see notes).
 # - removed delete request when there are no alarms set

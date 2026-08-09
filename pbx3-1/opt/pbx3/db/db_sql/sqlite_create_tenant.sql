@@ -198,7 +198,7 @@ CREATE TABLE IF NOT EXISTS holiday (
     "cluster" TEXT DEFAULT 'default',			-- tenant
     "cname" TEXT,
     "description" TEXT,								-- Description						
-    "route" TEXT,								      -- Legacy force dest (SARK/pbx3timer routeoverride path)
+    "route" TEXT,								      -- Legacy force dest (pbx3timer routeoverride path)
     "force_mode" TEXT,							      -- day-parts: mode when active (optional)
     "force_dest" TEXT,							      -- day-parts: dest override when active (optional)
     "stime" INTEGER,							      -- Epoch start (legacy import; product prefers calendar+TZ)

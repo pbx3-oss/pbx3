@@ -195,9 +195,9 @@ The existing **selection order** (**CERTIFICATES_PANEL_AND_API.md** §3) is: **(
 
 When **fqdninspect** is enabled, the firewall uses **iptables string matching** on inbound SIP (port 5060) so that only packets that contain the expected FQDN in the SIP payload (e.g. in Via or Contact, as `sip:<fqdn>`) are accepted. This reduces robo‑dialler / brute‑force attempts that don’t know the correct hostname. This only applies to **unencrypted** SIP (TCP/UDP 5060); TLS SIP is separate.
 
-### 9.1 Sail65 reference (single FQDN)
+### 9.1 Shorewall INLINE FQDN format (single FQDN)
 
-In sail65 the rule is in **sail65/sail-6/opt/sark/etc/shorewall/sark_inline_fqdn**:
+Historical Shorewall INLINE FQDN form (single FQDN):
 
 ```
 INLINE(ACCEPT) net $FW tcp 5060 ; -m string --algo bm --to 1000 --string "sip:$FQDN"
@@ -211,7 +211,7 @@ INLINE(ACCEPT) net $FW udp 5060 ; -m string --algo bm --to 1000 --string "sip:$F
 ### 9.2 Current pbx3 behaviour (single FQDN)
 
 - **pbx3** ships **pbx3_inline_fqdn** as comment-only; when **globals.fqdninspect** is YES, **NetHelperClass::copyFirewallTemplates()** overwrites it.
-- NetHelper reads **globals** (fqdn, fqdninspect, bindport) and writes **two** INLINE rules (TCP and UDP) using **bindport** and the **fqdn** string. Note: current pbx3 code uses the raw FQDN string **without** the `"sip:"` prefix (sail65 uses `"sip:$FQDN"`); for consistency with sail65 and correct matching of SIP headers, the string should be **`sip:<fqdn>`**.
+- NetHelper reads **globals** (fqdn, fqdninspect, bindport) and writes **two** INLINE rules (TCP and UDP) using **bindport** and the **fqdn** string. Note: current pbx3 code uses the raw FQDN string **without** the `"sip:"` prefix (some older rules used `"sip:$FQDN"`); for correct matching of SIP headers, the string should be **`sip:<fqdn>`**.
 - File is written under `/etc/shorewall/pbx3_inline_fqdn` (or the configured Shorewall dir); **rules** includes `INCLUDE pbx3_inline_fqdn`.
 
 ### 9.3 What’s needed for multiple tenant FQDNs
@@ -320,7 +320,7 @@ Ordered by dependency: pbx3 first (scripts and FQDN inline), then pbx3api (API a
 | Step | Task | Details |
 |------|------|---------|
 | **1.1** | Multi-domain first-cert script | Add **le-first-cert-multi.sh** (or extend **le-first-cert.sh**) that accepts multiple FQDNs (e.g. from args or a file) plus email. Run `certbot certonly --standalone -d fqdn1 -d fqdn2 ... -m email` (open 80, certbot, write **first** FQDN to `le-domain`, apply-active-cert, close 80). Ensure certbot creates renewal config with all SANs so `certbot renew` later renews the same cert. |
-| **1.2** | NetHelperClass::copyFirewallTemplates | Change to: read **globals** (fqdninspect, bindport); if fqdninspect enabled, query **cluster** for all **fqdn** (non-null); build list = all tenant FQDNs (default tenant’s fqdn = node FQDN); write **pbx3_inline_fqdn** with two lines per FQDN (TCP, UDP), string **`sip:<fqdn>`**, port from **globals.bindport**, `--to 1000`. If fqdninspect disabled, write `#` only. Use sail65 format. |
+| **1.2** | NetHelperClass::copyFirewallTemplates | Change to: read **globals** (fqdninspect, bindport); if fqdninspect enabled, query **cluster** for all **fqdn** (non-null); build list = all tenant FQDNs (default tenant’s fqdn = node FQDN); write **pbx3_inline_fqdn** with two lines per FQDN (TCP, UDP), string **`sip:<fqdn>`**, port from **globals.bindport**, `--to 1000`. If fqdninspect disabled, write `#` only. Use the INLINE FQDN format above. |
 | **1.3** | FQDN inline update script | Add script (e.g. **update-fqdn-inline.sh**) that invokes the logic in step 1.2. After writing the file, **restart Shorewall** (automatic firewall restart per decision 5). Script callable as root or via sudo. Install under `/opt/pbx3/scripts/`. |
 | **1.4** | Verify Phase 1 | On a dev node: (1) Set default tenant’s fqdn (node FQDN) and one other tenant’s fqdn; set globals.fqdninspect YES; run the update script; confirm pbx3_inline_fqdn contains two INLINE rules per FQDN with `sip:<fqdn>` and Shorewall restarted. (2) Run le-first-cert-multi with those FQDNs; confirm cert shows both SANs. |
 
@@ -392,6 +392,6 @@ Ordered by dependency: pbx3 first (scripts and FQDN inline), then pbx3api (API a
 | **TRUNK_ROUTE_MULTITENANCY.md** | **pbx3spa** `workingdocs/` | Tenant migration (export/import). |
 | **full_schema.sql** | **pbx3** | `cluster.fqdn`; **`globals.domain`**, **globals.fqdninspect**. |
 | **Tenant.php** | **pbx3api** | `fqdn` in `$fillable`. |
-| **sail65** `sail-6/opt/sark/etc/shorewall/sark_inline_fqdn` | reference | INLINE rule with `sip:$FQDN`. |
+| Historical INLINE FQDN rule | reference | INLINE rule with `sip:$FQDN`. |
 | **NetHelperClass** | **pbx3** `pbx3-1/opt/pbx3/php/classes/` | `copyFirewallTemplates()`. |
 | **pbx3_inline_fqdn** | **pbx3** `pbx3-1/opt/pbx3/etc/shorewall/` | shipped template. |

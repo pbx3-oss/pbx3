@@ -89,7 +89,7 @@ So: pbx3 = "host" cert layer (acquire, renew, reload both services); pbx3api = n
   - `opt/pbx3/etc/apache2/sites-available/snakeoil-certs.conf` (if present and only used by this site)
   - Any `opt/pbx3/etc/apache2/` include or fragment used only for this site (e.g. `pbx3_includes/pbx3ServerName.conf` if unused elsewhere).
 - **Installer (installer.sh)**
-  - Entire "deal with Apache" block: a2dissite default sites, rm sark/pbx3 site links, mkdir/ownership/stub for `/opt/pbx3api/public`, symlink pbx3.conf, a2ensite pbx3, ports.conf Listen 44300, systemctl enable/start apache2.
+  - Entire "deal with Apache" block: a2dissite default sites, rm old/pbx3 site links, mkdir/ownership/stub for `/opt/pbx3api/public`, symlink pbx3.conf, a2ensite pbx3, ports.conf Listen 44300, systemctl enable/start apache2.
 - **Debian package**
   - **prerm:** Remove steps that delete `/etc/apache2/sites-enabled/pbx3*` and `sites-available/pbx3*` (pbx3api's package will own that cleanup, or leave site in place if only pbx3 is removed).
   - **control:** Revisit whether `apache2`, `libapache2-mod-php`, and PHP extensions remain as direct dependencies of pbx3. If pbx3api depends on them, pbx3 might drop them so a "pbx3-only" host doesn't require nginx until pbx3api is installed. *(Decision point.)*

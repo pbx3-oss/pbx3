@@ -265,7 +265,7 @@ public function restartFirewall() {
 	 * @param string $fqdn tenant / node FQDN (Host-Only)
 	 */
 	private function shorewallFqdnInlineRuleLine($proto, $bindport, $fqdn) {
-		// Match sail65 / sark_inline_fqdn: "5060;;" then double-quoted FQDN (no sip: prefix).
+		// Shorewall FQDN INLINE: "5060;;" then double-quoted FQDN (no sip: prefix).
 		$fqdnEsc = str_replace(['\\', '"'], ['\\\\', '\\"'], $fqdn);
 		return 'INLINE(ACCEPT) net $FW ' . $proto . ' ' . $bindport
 			. ';; -m string --algo bm --to 1000 --string "' . $fqdnEsc . '"';

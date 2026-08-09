@@ -1,5 +1,5 @@
 <?php
-// Copyright (c) KoKoKraft 2024
+// Copyright (c) Aelintra Telecom Limited
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,8 +59,8 @@ $options = getopt($shortopts, $longopts);
 	if (isset($options["L"])) {	
 		$legacyIgnores = __DIR__ . "/ignoresAndDropsLegacy.php";
 		if (!file_exists($legacyIgnores)) {
-			fwrite(STDERR, "dumper -L: SARK legacy migrate tooling is not in the pbx3 package.\n");
-			fwrite(STDERR, "Use aelintra/sark-to-pbx3 (on-host v1 overlays its utilities; prefer offline v2).\n");
+			fwrite(STDERR, "dumper -L: legacy migrate ignores are not in the pbx3 package.\n");
+			fwrite(STDERR, "Use private migrate tooling (stages its own utilities) or omit -L.\n");
 			exit(2);
 		}
 		require_once $legacyIgnores;

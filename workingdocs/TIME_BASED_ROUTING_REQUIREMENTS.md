@@ -3,7 +3,7 @@
 **Status:** **TRACK COMPLETE 2026-08-04** on **`time-based-routing`**. Slices **A–E** delivered (dual-read retained). Golden: lunch profile + force modes lab green; packages **pbx3 0.0.4-7** + **pbx3cagi 1.0.0-13**; day-parts help applied. SPA profiles primary; open/close demoted. BLF *30/*31 AUTO/CLOSED; multi-mode force via AstDB. **Not** pushed/merged. **Kildare** untouched.  
 **Scope:** Instance / tenant inbound schedule → destination selection (`dateseg`, `holiday`, `pbx3timer.php`, `CheckState` / `CheckTime`, `inroutes`, SPA Day/Holiday timers + Inbound + route profiles).  
 **Not:** Fleet control plane, **SBC / Magrathea product code** (unchanged path edge), FreePBX-style time-condition chains (deferred — §6), trunk legacy open/close fields.  
-**Related:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 4 parked — this track changes CheckState contract first) · `CALL_TEST_STRATEGY.md` / CAGI **`TEST_RECIPE.md`** · canvas study [time-based routing review](file:///Users/jeffstokoe/.cursor/projects/Users-jeffstokoe-GiT-pbx3-master/canvases/time-based-routing-review.canvas.tsx) · SARK convert: `db_legacy_sql/`.
+**Related:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 4 parked — this track changes CheckState contract first) · `CALL_TEST_STRATEGY.md` / CAGI **`TEST_RECIPE.md`** · canvas study [time-based routing review](file:///Users/jeffstokoe/.cursor/projects/Users-jeffstokoe-GiT-pbx3-master/canvases/time-based-routing-review.canvas.tsx) · Existing-DB convert: shortuid normalize + private migrate tooling.
 
 **Lab hosts (2026-08-04):**
 
@@ -70,7 +70,7 @@ GenAst emits MASTER / per-tenant BLF and `*30*`–`*34*` style throws that toggl
 2. Remove the special **open/close dropdown pair** as the primary DID routing UI.  
 3. Keep **tenant-wide current mode** (BLF / “are we open?” / master force still make sense).  
 4. Keep **cron precompute** + thin CAGI lookup.  
-5. **Forward-convert** SARK / existing pbx3 DBs without silent behaviour change **for open/close destinations** (holidays = redesigned; convert is best-effort — §8 Q4).  
+5. **Forward-convert** existing pbx3 DBs without silent behaviour change **for open/close destinations** (holidays = redesigned; convert is best-effort — §8 Q4).  
 6. Leave **custom apps** as the escape hatch for exotic logic.  
 7. Defer FreePBX **time-condition chains** (optional later).  
 8. **Test with the code** — offline unit/L0 every slice; lab L1 where call path changes (§14).
@@ -87,7 +87,7 @@ GenAst emits MASTER / per-tenant BLF and `*30*`–`*34*` style throws that toggl
 | **Day timer (`dateseg`)** | Calendar window that, when matched, sets the tenant to a **mode** (not only CLOSED). |
 | **Route profile** | Named map **mode → destination** (IVR, queue, extension, app, …). **Tenant-scoped only** (Q6). Reusable across that tenant’s DIDs. |
 | **DID / inbound** | Thin: **which profile** (or single entry dest). Not a binary open/close state machine. |
-| **Holiday** | **Redesigned** calendar override: primarily **force mode**; optional **force dest**. Not SARK’s early absolute-time route subversion. |
+| **Holiday** | **Redesigned** calendar override: primarily **force mode**; optional **force dest**. Not absolute-time route subversion from older holiday models. |
 | **Custom app** | Unchanged escape hatch. |
 
 **Not v1 default:** FreePBX time-condition objects (match → A, fail → B chains) or per-call `GotoIfTime`. Those remain a possible **later** advanced layer sharing the same calendar tables.
@@ -173,7 +173,7 @@ Exact “closed-like” set and fallbacks locked at implement **with tests**.
 
 ### 5.7 Holiday redesign (Q4)
 
-SARK holiday was a brutal early subversion via absolute epochs + `routeoverride`; OK for UK national days, weak product foundation.
+Older holiday models used early absolute-epoch + `routeoverride` subversion; OK for UK national days, weak product foundation.
 
 **v1 model:**
 
@@ -181,7 +181,7 @@ SARK holiday was a brutal early subversion via absolute epochs + `routeoverride`
 - Primary action: set / force a **mode**.  
 - Optional **force dest** when a day must leave profile lookup entirely.  
 - Precedence: under operator hard-force (Q5), above day timers.  
-- Convert of old rows: best-effort (preserve dest where possible); **do not** promise every SARK evaluation quirk. Import notes: “review holiday windows after upgrade.”  
+- Convert of old rows: best-effort (preserve dest where possible); **do not** promise every historical evaluation quirk. Import notes: “review holiday windows after upgrade.”  
 - Recurring national holiday packs / FreePBX-style libraries: not v1 unless scheduled separately.
 
 ### 5.8 Calendar UX — no-match default (Q1 / Q7) — **default open locked**
@@ -192,7 +192,7 @@ SARK holiday was a brutal early subversion via absolute epochs + `routeoverride`
 
 Many shops run **with no day timers at all**. They use an **open/closed throw on a BLF**: lamp on → forced closed; lamp off → **open** (follow / clear force). That only works if the natural baseline is **open**. Default-closed would make “no timers + BLF off” answer as closed — wrong for that (large) population.
 
-Also aligns with SARK convert (closed windows on an open day) and zero-config / 24/7 sites.
+Also aligns with closed-window convert (closed windows on an open day) and zero-config / 24/7 sites.
 
 **Office calendar verbosity** (paint overnight + weekend closed) is real — fix with **day ranges (§5.9)** and Every day overnight patterns, **not** by flipping the default.
 
@@ -200,7 +200,7 @@ Also aligns with SARK convert (closed windows on an open day) and zero-config / 
 
 | Option | Notes |
 |--------|--------|
-| **A — Default open** | **Locked.** BLF-only shops; SARK heritage; no-timer = open. |
+| **A — Default open** | **Locked.** BLF-only shops; no-timer = open. |
 | **B — Default closed** | Rejected as product default — breaks BLF-only / no-timer mental model. |
 | **C — Tenant setting** | Optional later if a rare site needs fail-closed; **not** required; new-tenant default must stay **open** if ever added. |
 | **D — Sugar / templates** | Optional emit overnight+weekend closed; engine stays A. |
@@ -209,7 +209,7 @@ Also aligns with SARK convert (closed windows on an open day) and zero-config / 
 
 ### 5.8.1 Related: closed-window vs open-hours mental model
 
-- **Product baseline:** default **open**; day timers (and holidays / force) assert other modes — SARK + BLF heritage.  
+- **Product baseline:** default **open**; day timers (and holidays / force) assert other modes — BLF-only / no-timer shops.  
 - **Open-hours invert (default closed):** considered and **rejected** as the fleet default (§5.8). Engine can still express open-like windows; gaps stay open unless painted closed.
 
 ### 5.9 Day-of-week ranges — UX must-have residual
@@ -218,11 +218,11 @@ Also aligns with SARK convert (closed windows on an open day) and zero-config / 
 
 **Not optional polish.** Without multi-day spans, day-parts UX is slavish under default-open — weekday clones for each open-like window.
 
-#### What SARK actually did (sail-6 `sarktimer/view.php`)
+#### Binary closed-window reference (prior timer UIs)
 
 Edit popup weekday choices: **`Every Day` | mon…sun** → stored `*` or one weekday. Matcher (`srktimer.php`) exact-matches `dayofweek` (no `mon-fri` range in this UI). Help text describes single day or every day.
 
-#### Canonical SARK office shape (sample)
+#### Canonical binary office shape (sample)
 
 Three rows only — **closed windows** on default-open:
 
@@ -234,26 +234,26 @@ Three rows only — **closed windows** on default-open:
 
 Why it works: overnight uses **Every Day**, not Mon–Fri clones. Weekend *days* need sat/sun all-day rules (overnight `*` alone does not cover Sat/Sun daytime). No `mon-fri` required for this binary open/closed site.
 
-**Day-parts caveat:** if lunch/evening are also `*` (every day), they can win over weekend closed unless weekend rows have **higher priority** (or lunch/evening are weekday-only / `mon-fri` once ranges exist). SARK never had that conflict — windows only meant closed.
+**Day-parts caveat:** if lunch/evening are also `*` (every day), they can win over weekend closed unless weekend rows have **higher priority** (or lunch/evening are weekday-only / `mon-fri` once ranges exist). Binary closed-window systems never had that conflict — windows only meant closed.
 
 **pbx3 takeaway:** expose **Every day** clearly (done); teach operators this 3-row closed pattern under Q1 default-open **when the site is binary open/closed**. Still add `mon-fri` for open-like day-parts that must not fire on weekends without priority gymnastics.
 
-#### SARK simplicity vs pbx3 day-parts (not a pure win)
+#### Binary hours vs pbx3 day-parts (not a pure win)
 
-SARK’s 3-row shape is **simpler to specify**, not inherently better product:
+A 3-row closed-window shape is **simpler to specify**, not inherently better product:
 
-| | SARK | pbx3 day-parts (now) |
+| | Binary closed-window | pbx3 day-parts (now) |
 |--|------|----------------------|
 | Calendar model | Closed windows; unmatched → open | Timers assert **modes**; profile maps mode → dest |
 | Destinations | **One** openroute + **one** closeroute per DID | N modes (open / lunch / evening / …) → different dests |
 | Spec burden | Tiny (overnight `*` + sat/sun) | Heavier until `mon-fri` ranges |
 | What operators gain | Easy binary hours | True day-parts (lunch IVR ≠ evening queue ≠ closed VM) |
 
-So: keep the SARK sample as the **binary-hours** teaching pattern; do **not** collapse product ambition back to open/closed-only. Day-parts + profiles are the point — **§5.9 ranges** (primary) make that power easier to specify. **Default stays open** (§5.8) for BLF-only / no-timer shops.
+So: keep the sample above as the **binary-hours** teaching pattern; do **not** collapse product ambition back to open/closed-only. Day-parts + profiles are the point — **§5.9 ranges** (primary) make that power easier to specify. **Default stays open** (§5.8) for BLF-only / no-timer shops.
 
-**Where SARK was still better UX** (worth stealing):
+**SPA UX worth adopting** (from simpler timer UIs):
 
-| SARK | Why better than current SPA |
+| Pattern | Why better than current SPA |
 |------|------------------------------|
 | Clear **Every Day** label (not bare `*`) | Operators see the escape hatch |
 | List columns **start close** / **end close** (split `timespan`) | Scannable; operators think in two clock times |
@@ -262,11 +262,11 @@ So: keep the SARK sample as the **binary-hours** teaching pattern; do **not** co
 | Create = desc + tenant; times on edit | Light create (we already do similar) |
 | `*INUSE*` row highlight | Instant “which rule is live now” |
 
-SARK framed windows as **closed periods** (sclose/eclose) on default-open — matches Q1 heritage, not open-hours framing.
+Those UIs framed windows as **closed periods** (sclose/eclose) on default-open — matches Q1, not open-hours framing.
 
-**Asterisk `mon-fri`:** native date matching supports dow ranges; **SARK timers UI did not expose ranges** (only Every Day / one day). **Shipped:** pbx3 keeps Every Day, and accepts Asterisk-style forward ranges (`mon-fri`, `mon-thu`, `tue-fri`, `sat-sun`, or any `start-end` on Mon→Sun). Wrap-around (`tue-mon`) is rejected. Do **not** invent a parallel grammar.
+**Asterisk `mon-fri`:** native date matching supports dow ranges; simpler timer UIs often exposed only Every Day / one day. **Shipped:** pbx3 keeps Every Day, and accepts Asterisk-style forward ranges (`mon-fri`, `mon-thu`, `tue-fri`, `sat-sun`, or any `start-end` on Mon→Sun). Wrap-around (`tue-mon`) is rejected. Do **not** invent a parallel grammar.
 
-**Also lift from SARK when touching SPA:** start/end columns + timepicker (and optional live-state highlight). Ranges + visible Every Day = usable office UX.
+**Also when touching SPA:** start/end columns + timepicker (and optional live-state highlight). Ranges + visible Every Day = usable office UX.
 
 **With ranges under default open:** typical office → ~3–5 rows (open/lunch/evening on `mon-fri`, overnight `*` or `mon-fri`, sat/sun closed) — not 22.
 
@@ -283,24 +283,24 @@ SARK framed windows as **closed periods** (sclose/eclose) on default-open — ma
 - Instance-shared profile library (Q6).  
 - Open-hours / **default-closed** as fleet default — **rejected** (§5.8; BLF-only shops).  
 - Day-of-week ranges (`mon-fri`) — **shipped 2026-08-05** (§5.9).  
-- Faithful preservation of SARK holiday absolute-time subversion (Q4).
+- Faithful preservation of older holiday absolute-time subversion (Q4).
 
 ---
 
-## 7. SARK / existing DB conversion (first-class for **open/close + timers**)
+## 7. Existing DB conversion (first-class for **open/close + timers**)
 
-SARK already has `dateseg`, `Holiday`, `openroute`/`closeroute`, `oclo`, `routeoverride`. Conversion is **transform-in-place** where possible.
+Existing DBs already have `dateseg`, `Holiday`, `openroute`/`closeroute`, `oclo`, `routeoverride`. Conversion is **transform-in-place** where possible.
 
-**Idempotent migrate** (postinst / `aelintra/sark-to-pbx3` follow-on / one-shot SQL+PHP), after cluster shortuid normalize where needed:
+**Idempotent migrate** (postinst / private migrate tooling follow-on / one-shot SQL+PHP), after cluster shortuid normalize where needed:
 
 1. `dateseg.mode = 'closed'` where null/empty; priority default.  
 2. Build route profiles from distinct `(openroute, closeroute)` **per tenant** (share when pairs match).  
 3. Point each DID at the matching profile; **leave** open/close columns filled.  
 4. Map `oclo` OPEN/CLOSED → `sched_mode`.  
 5. Holidays: best-effort map to redesigned shape (force dest / mode / local windows); document “review after upgrade.” **Not** a guarantee of identical holiday call paths if the old model was ambiguous.  
-6. Operator notes next to SARK ETL / `sqlite_normalize_cluster_to_shortuid.sql`.
+6. Operator notes next to `sqlite_normalize_cluster_to_shortuid.sql` / private migrate runbooks.
 
-**Acceptance (open/close):** A golden/SARK-like fixture DB after convert: same destinations for open and closed **schedule** periods as before, without SPA profile edits. Covered by **unit convert fixtures** (§14).
+**Acceptance (open/close):** A golden fixture DB after convert: same destinations for open and closed **schedule** periods as before, without SPA profile edits. Covered by **unit convert fixtures** (§14).
 
 ---
 
@@ -311,7 +311,7 @@ SARK already has `dateseg`, `Holiday`, `openroute`/`closeroute`, `oclo`, `routeo
 | **Q1** | Default when **no** day-timer matches: **`open`**. **Reaffirmed 2026-08-04:** BLF-only / no-timer shops (lamp = closed throw); do **not** flip to default-closed. Office verbosity → §5.9 ranges. |
 | **Q2** | **Hybrid:** always `open`/`closed`; SPA presets (`lunch`, `evening`, `night`, …); modes as plain strings for free labels later. No catchall `custom`. |
 | **Q3** | Overlaps: **integer priority**, higher wins; stable tie-break; SPA may soft-warn; no hard-forbid in v1. |
-| **Q4** | **Holiday redesign** — mode-first, optional force dest; TZ-aware calendar; not SARK early absolute-time subversion. Convert best-effort. |
+| **Q4** | **Holiday redesign** — mode-first, optional force dest; TZ-aware calendar; not early absolute-time subversion. Convert best-effort. |
 | **Q5** | Operator **hard-force wins over holiday** (force was intentional). |
 | **Q6** | Profiles **tenant-scoped only**. No live instance-shared “standard day” (sites differ enough). Copy/duplicate OK. |
 | **Q7** | **Closed-window** framing + **default open** (Q1). Open-hours / default-closed invert **rejected** as fleet default — §5.8. |
@@ -354,7 +354,7 @@ Do **not** interleave with other dial-locus / GenAst contract changes. **§8 loc
 ## 11. Sequencing vs other work
 
 - **Own track** — not CAGI Phase 4 and not a drive-by on inbound SPA.  
-- **Before** FreePBX TC chains, CAGI Phase 4 domain splits, or a full SARK V6 rewrite (this convert is the schedule piece those should assume).  
+- **Before** FreePBX TC chains, CAGI Phase 4 domain splits, or a full legacy rewrite (this convert is the schedule piece those should assume).  
 - Independent of short-dial residual D; do not mix dial-locus contracts.  
 - §8 locked — implement when operator schedules.
 
@@ -468,9 +468,9 @@ Gate: **`make test` PASS** on every CAGI PR in this track.
 
 | Date | Note |
 |------|------|
-| 2026-07-26 | Initial draft: day-parts + profiles; cron kept; FreePBX deferred; SARK convert first-class; Phase 4 cagi parked. |
+| 2026-07-26 | Initial draft: day-parts + profiles; cron kept; FreePBX deferred; existing-DB convert first-class; Phase 4 cagi parked. |
 | 2026-08-04 | Slice **A** lab-gated on golden (packages 0.0.4-7 / cagi 1.0.0-12; convert fix; PSTN DID green). Slice **B** timer multi-mode + unit tests (`pbx3-schedule.php`). |
 | 2026-08-04 | Schedule wall clock = **instance site TZ** (`/etc/timezone` / Network panel); timer must not use bare PHP UTC. |
 | 2026-08-04 | Timespan half-open `[start, end)`. §5.8 expanded: no-match default alternatives (A–D) + preferred tenant setting residual. |
-| 2026-08-04 | §5.9: SARK had **Every Day** (`*`) — pbx3 stored it but SPA edit showed bare `*`; label fixed to Every day. Ranges still the surpass target. |
+| 2026-08-04 | §5.9: Prior timer UIs had **Every Day** (`*`) — pbx3 stored it but SPA edit showed bare `*`; label fixed to Every day. Ranges still the surpass target. |
 | 2026-08-04 | §5.8: **default open reaffirmed** (BLF-only / no-timer shops); default-closed rejected as fleet default. Day ranges remain primary UX residual. |

@@ -15,7 +15,7 @@
 - **Stock:** always read `pjsip_phone.tmpl` on Commit (`get`).
 - **Thin overlay:** fragment matched by `type=`; keys **replace** if present on that object, **add** if absent (Fail2ban-`.local` mental model). Not a second appended stanza (Asterisk keeps the first duplicate key).
 - **Home of record:** `ipphone.pjsip_overlay` (TEXT). Commit prefers DB; optional file `ASTENDPOINTS/{shortuid}_phone.overlay.conf` only when DB empty.
-- **Not:** full frozen `*_phone.conf` copy-once; **not** full PJSIP stanza in DB as sole source of truth (SARK-old freeze).
+- **Not:** full frozen `*_phone.conf` copy-once; **not** full PJSIP stanza in DB as sole source of truth (legacy freeze model).
 - **`create*`:** ensure `endpoints/` only; **`set*`:** write overlay **file** path (ops mirror / hand edit); SPA/API write the DB column.
 - **Legacy cleanup:** one-time lab `rm endpoints/*_phone.conf` after deploy — do **not** auto-delete in genAst.
 - **API:** extension delete removes `*_phone.overlay.conf` (pbx3api); DB column goes with the row.

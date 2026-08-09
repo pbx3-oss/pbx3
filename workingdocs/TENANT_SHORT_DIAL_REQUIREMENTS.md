@@ -3,8 +3,8 @@
 **Status:** Requirements locked 2026-07-27. **A–D + E pack-gate lab green** (2026-08-05) and **merged to `main`**. **D** Path 1 Magrathea + desk matrix; **E** sipplab pack **12/12** ×2. **F** migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**. Local shortcut **rejected** (§15).  
 **Wild / release operator model (2026-08-06):** Hand-invented per-sender prefixes are **lab / interim only**. Production = destination **routing prefix** + **dial cohort** (UI Site Group) + Rule 14 materialise — **[`DIAL_COHORT_REQUIREMENTS.md`](DIAL_COHORT_REQUIREMENTS.md)** (**release stopper** until done). Call path here stays; config HoR moves.  
 **Scope:** Allow an extension on tenant A to call an extension on tenant B **when allowed**, using a **dial prefix** that is **local to the calling tenant**, plus the target’s normal extension (`pkey`). Same call recipe whether B is on **this node or another** (fleet).  
-**Not:** Globally unique extension numbers (SARK model — rejected). Not directory/gatekeeper in the call path (**Rule 1**). Not replacing PSTN OutRoute / Egress.  
-**Related:** Fleet AoR dial (`sip:shortuid@tenant.fqdn`) · L1 `in-multi-tenant-a-b` (usrloc domain discrimination only) · legacy InterSARK / SailToSail / `DUNS_INTERSITE` OutRoute · **`CALL_TYPE_INVENTORY.md`** · **`DESIGN_RULES.md` Rule 1** · **`DIAL_COHORT_REQUIREMENTS.md`**.
+**Not:** Globally unique extension numbers (rejected). Not directory/gatekeeper in the call path (**Rule 1**). Not replacing PSTN OutRoute / Egress.  
+**Related:** Fleet AoR dial (`sip:shortuid@tenant.fqdn`) · L1 `in-multi-tenant-a-b` (usrloc domain discrimination only) · legacy InterSARK / SailToSail / `DUNS_INTERSITE` OutRoute (historical trunk techs) · **`CALL_TYPE_INVENTORY.md`** · **`DESIGN_RULES.md` Rule 1** · **`DIAL_COHORT_REQUIREMENTS.md`**.
 
 **Naming (locked 2026-08-03):** Product term is **dial prefix** (or **prefix**). Historical workingdocs / some code may still say *alias* — same concept. Prefer **prefix** in UI, help, and new docs. Schema/API resource names (`dialalias`, `dialaliases`) may lag as implementation identifiers until a rename pass.
 
@@ -12,7 +12,7 @@
 
 ## 1. Problem
 
-PBX3 tenants are **namespaces**. Extension `1000` may exist on many tenants. SARK-style “dial the other site’s extension bare” worked only because extensions were **globally unique**. That mandate is gone.
+PBX3 tenants are **namespaces**. Extension `1000` may exist on many tenants. “Dial the other site’s extension bare” only worked when extensions were **globally unique**. That mandate is gone.
 
 Operators still need **short, memorable dialling** between related tenants (sister companies, campus buildings, MSP multi-tenant on one or many nodes) **without** caring whether the target tenant is local or remote.
 
@@ -86,7 +86,7 @@ Tenant T:  inbound / internal path → LepDial(ext) → phone
 
 - Collides with multi-tenant density and convert-from-diverse DBs.  
 - Breaks the moment two tenants both want `1000`.  
-- Dial prefixes restore SARK *UX* (short digits) without SARK *constraint*.
+- Dial prefixes restore short-digit *UX* without a globally unique extension *constraint*.
 
 ### 3.3 Why not shortuid-as-dial-prefix
 
@@ -161,7 +161,7 @@ Same-node “hairpin” back to the same Asterisk via dispatcher is **correct** 
 
 ### 3.9 CallerID and return-call (locked 2026-07-27)
 
-Bare extension as CallerID **num** is not a reliable cross-tenant redial (Alice’s `1000` on Bob’s phone redials *Bob’s* `1000`). InterSARK extension CLIP assumed globally unique exts — gone.
+Bare extension as CallerID **num** is not a reliable cross-tenant redial (Alice’s `1000` on Bob’s phone redials *Bob’s* `1000`). Legacy InterSARK extension CLIP assumed globally unique exts — gone.
 
 | Layer | Value | Role |
 |-------|--------|------|
@@ -325,7 +325,7 @@ INVITE `sip:{ext}@{fqdn}` arrives via SBC → Asterisk tenant context. Must:
 
 ---
 
-## 7. Legacy / SARK conversion notes
+## 7. Legacy conversion notes
 
 | Legacy | Guidance |
 |--------|----------|

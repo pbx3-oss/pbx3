@@ -1,7 +1,7 @@
-# Dial prefixes — convert from InterSARK / INTERSITE
+# Dial prefixes — convert from InterSARK / INTERSITE (legacy trunks)
 
 **Status:** Operator migrate recipe complete (short-dial slice **F**, 2026-08-04).  
-**Audience:** Instance admins converting SARK-style sister-site digit maps to pbx3 **Dial prefixes**.  
+**Audience:** Instance admins converting sister-site digit maps to pbx3 **Dial prefixes**.  
 **Not:** Automatic DB rewrite; silent OutRoute/trunk deletion; product change that forces unique extensions.  
 **Product requirements:** **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** (this recipe owns §7 operational detail).
 
@@ -81,7 +81,7 @@ ORDER BY pkey;
 "
 
 # Trunks often used by those paths (instance / default owned — still list for dual-run)
-# technology may be InterSARK or SailToSail on converted SARK DBs
+# technology may be InterSARK or SailToSail on converted DBs
 sqlite3 /opt/pbx3/db/sqlite.db "
 SELECT cluster, pkey, active, technology, cname, description
 FROM trunks
@@ -192,7 +192,7 @@ Sister sites almost always live on **different** instances.
 | Expect unique-ext bare dial forever | Model rejected |
 | Feature codes after prefix (`81*…`) | Digits-only remainder (locked) |
 | Gatekeeper lookup at dial | Rule 1 |
-| Convert FreePBX site dial with this doc alone | Separate ETL; this recipe is **SARK / InterSARK / INTERSITE → dial prefixes** on pbx3 |
+| Convert FreePBX site dial with this doc alone | Separate ETL; this recipe is **InterSARK / INTERSITE → dial prefixes** on pbx3 |
 
 ---
 

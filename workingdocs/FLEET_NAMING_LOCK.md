@@ -32,7 +32,7 @@ Schema may differ by class; **operator language** should not. Prefer UI **Name**
 | **Description** | Catalog **`notes`** (free form). **Not** Name. | `test` |
 | FQDN | `globals.fqdn` = `{shortuid}.{apex}` | `08jzwn.pbx3.com` |
 
-- **No instance `pkey` column.** Tenant/SARK `cluster.pkey` only. Instance **Name** is sitename≡label (product “pkey-like” role without that DB name).
+- **No instance `pkey` column.** Tenant `cluster.pkey` only. Instance **Name** is sitename≡label (product “pkey-like” role without that DB name).
 - **Name** is the short recogniser (chooser, Home). **Description** elaborates; never promote notes into Name.
 - **Edit surface (locked 2026-08-06):**
   - **Fleet node:** **Fleet → Instances** only. Gatekeeper PATCHes catalog `label` after **`PUT /api/fleet/sitename`** on the node (fail whole save if node push fails). **Network → Site Name is read-only.**
