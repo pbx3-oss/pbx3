@@ -1,6 +1,6 @@
 # PHP scripts in pbx3 and minimal requirements
 
-The pbx3 package **Depends** on **php-cli** and **php-sqlite3** (see debian/control). The installer and setip require PHP; Asterisk config generation and migrations use the same stack.
+The pbx3 package **Depends** on **php-cli** and **php-sqlite3** (see debian/control). The installer and setip require PHP; Asterisk config generation uses the same stack.
 
 ## Installer
 
@@ -14,15 +14,15 @@ The pbx3 package **Depends** on **php-cli** and **php-sqlite3** (see debian/cont
 
 | Script | Used by | Purpose | PHP modules (minimal) |
 |--------|---------|---------|------------------------|
-| **php/utilities/setip.php** | systemd debsetlan.service | Network detection, shorewall/fail2ban/Asterisk/localnet, /etc/issue | php-cli, php-sqlite3 (NetHelper → DbClass) |
+| **php/utilities/setip.php** | installer | Network detection, shorewall/fail2ban/Asterisk/localnet, /etc/issue | php-cli, php-sqlite3 (NetHelper → DbClass) |
 | **php/utilities/genbashconfig.php** | installer (optional), manual | Rebuild `scripts/bashconfig` from `config.php` | none (core only) |
 | **php/config.php** | genbashconfig, other PHP | Source of truth for paths; only `define()` | none |
 | **php/utilities/runAstGen.php** | genAst.sh | Generate Asterisk config from DB | likely DbClass, GenClass → need **php-sqlite3** (and whatever the classes use) |
-| **php/utilities/dumper.php** | migrateLegacyDb.sh | DB dump/restore | **php-sqlite3** |
-| **php/utilities/refactorGreetings.php** | migrateLegacyDb.sh | Migration | as per dumper + dependencies |
-| **php/utilities/refactorOldDB.php** | migrateLegacyDb.sh | Migration | as per dumper |
+| **php/utilities/dumper.php** | reloader.sh | DB dump before schema rebuild | **php-sqlite3** |
 | **php/utilities/sanitize-firewall.php** | reloader.sh (currently dead code after `exit`) | Format shorewall rules | core only |
 | **php/utilities/sipiaxfix.php** | commented out in reloader | SIP/IAX fixup | unknown |
+
+**SARK migrate** (legacy dump `-L`, refactor*, create_legacy / fixRi / lineio) is **not** in this package. Use private **`aelintra/sark-to-pbx3`** (offline v2 preferred; on-host v1 stages its own SQL/PHP). Fleet repair only: **`db/db_legacy_sql/sqlite_normalize_cluster_to_shortuid.sql`**.
 
 ## Shortuid and password generation (idpwgen)
 
@@ -32,7 +32,7 @@ The pbx3 package **Depends** on **php-cli** and **php-sqlite3** (see debian/cont
   - **Phone passwords** (12 chars, mixed charset): **pbx3api** **Helper::ret_password()** only.
 - Path in pbx3: **config.php** constant **`IDPWGEN`**. Path in pbx3api: env **`IDPWGEN_PATH`** (default `/opt/pbx3/golang/idpwgen`).
 
-## Minimal PHP for “run generator / migrations”
+## Minimal PHP for “run generator”
 
 - **php-cli**
 - **php-sqlite3** (DbClass and DB access)
@@ -41,4 +41,4 @@ The pbx3 package **Depends** on **php-cli** and **php-sqlite3** (see debian/cont
 ## Summary
 
 - **Package Depends:** php-cli, php-sqlite3 (installer and setip require them).
-- **With php-cli + php-sqlite3:** Can run genbashconfig, setip, genAst.sh, and migrateLegacyDb.sh; add other extensions if classes need them.
+- **With php-cli + php-sqlite3:** Can run genbashconfig, setip, genAst.sh, and reloader/dumper; add other extensions if classes need them.

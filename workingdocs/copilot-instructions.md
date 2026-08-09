@@ -5,7 +5,7 @@
 PBX3 is a **backend-only** Asterisk PBX configurator that generates configs from a SQLite database. It's designed for Ubuntu 24.04 LTS and works with a separate `pbx3api` package (nginx + PHP-FPM) that provides the HTTP API.
 
 **Core Architecture:**
-- **SQLite Database**: Multi-schema design (`instance`, `tenant`, `legacy`) in `/opt/pbx3/db/sqlite.db`
+- **SQLite Database**: Multi-schema design (`instance`, `tenant`) in `/opt/pbx3/db/sqlite.db`
 - **Asterisk Config Generation**: PHP classes generate configs from DB data via `genAst.sh` → `runAstGen.php`
 - **Network Management**: `setip.php` handles IP detection, shorewall, fail2ban, and Asterisk localnet
 - **Package Structure**: All runtime files are under `pbx3-1/` (what gets installed to `/opt/pbx3`, `/etc`, etc.)
@@ -18,7 +18,7 @@ pbx3-1/opt/pbx3/scripts/bashconfig      # Generated from config.php via genbashc
 pbx3-1/opt/pbx3/scripts/installer.sh    # Post-install setup (run manually, not from postinst)
 pbx3-1/opt/pbx3/scripts/reloader.sh     # Rebuild SQLite DB from SQL files
 pbx3-1/opt/pbx3/db/db_sql/               # Current schema: sqlite_create_{instance,tenant,laravel}.sql, sqlite_message.sql
-pbx3-1/opt/pbx3/db/db_legacy_sql/        # Legacy schema: sqlite_create_legacy.sql, sqlite_fix_*.sql
+pbx3-1/opt/pbx3/db/db_legacy_sql/        # Fleet repair: sqlite_normalize_cluster_to_shortuid.sql (SARK migrate SQL/PHP → aelintra/sark-to-pbx3)
 pbx3-1/opt/pbx3/db/db_mysql/             # MySQL schema: mysql_create_catalog.sql
 pbx3-1/opt/pbx3/php/classes/             # DbClass, GenClass, NetHelperClass, etc.
 pbx3-1/opt/pbx3/php/utilities/            # Asterisk config generation (runAstGen.php, etc.) and other scripts

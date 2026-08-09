@@ -23,7 +23,6 @@ DBSQL=/opt/pbx3/db/db_sql
 DBLEGACYSQLDIR=/opt/pbx3/db/db_legacy_sql
 DBINSTANCESQL=/opt/pbx3/db/db_sql/sqlite_create_instance.sql
 DBTENANTSQL=/opt/pbx3/db/db_sql/sqlite_create_tenant.sql
-DBLEGACYSQL=/opt/pbx3/db/db_legacy_sql/sqlite_create_legacy.sql
 DBMESSAGE=/opt/pbx3/db/db_sql/sqlite_message.sql
 READONLY_DB=/opt/pbx3/db/sqlite.rdonly.db
 COPY_DB=/opt/pbx3/db/sqlite.copy.db

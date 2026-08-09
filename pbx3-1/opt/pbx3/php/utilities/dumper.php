@@ -57,7 +57,13 @@ $options = getopt($shortopts, $longopts);
 		}
 	}
 	if (isset($options["L"])) {	
-		require_once __DIR__ . "/ignoresAndDropsLegacy.php";
+		$legacyIgnores = __DIR__ . "/ignoresAndDropsLegacy.php";
+		if (!file_exists($legacyIgnores)) {
+			fwrite(STDERR, "dumper -L: SARK legacy migrate tooling is not in the pbx3 package.\n");
+			fwrite(STDERR, "Use aelintra/sark-to-pbx3 (on-host v1 overlays its utilities; prefer offline v2).\n");
+			exit(2);
+		}
+		require_once $legacyIgnores;
 		echo "Using Legacy Ignores and Drops \n";
 	}
 	else {

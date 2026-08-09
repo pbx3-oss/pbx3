@@ -1,16 +1,16 @@
 # PBX3 ToDo list
 
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-09 (Apache-2.0 LICENSE verify/clean)
+**Last updated:** 2026-08-09 (SARK strip from pbx3)
 
 ### Suggested “what next?” order
 
 0. **SARK ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (**`aelintra/sark-to-pbx3`** `docs/CDR_SIPP_VERIFY_REQUIREMENTS.md`). Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
 1. ~~**Workingdocs hygiene**~~ — **done** (session handoffs in **`aelintra/pbx3-ops`**; product stubs remain).  
 2. ~~**Apache-2.0 `LICENSE` files**~~ — **done** (clean Apache-2.0 on product repos; see open-item note).  
-3. **Strip redundant / unused SARK code from pbx3** — ETL lives in **`aelintra/sark-to-pbx3`**; purge dead legacy import paths from product tree.  
+3. ~~**Strip redundant / unused SARK code from pbx3**~~ — **done** (ETL owns migrate; package keeps shortuid normalize only).  
 4. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
-5. **Lab deployment (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: LAN Lab T4; prefer after SARK strip.  
+5. **Lab deployment (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: LAN Lab T4; OSS gates (LICENSE + SARK strip) cleared.  
 6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
 7. **New instance / package install** — install **0.0.5-1** + **1.0.0-14** + API tip (or API deb when ready) when scheduled.  
 8. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
@@ -49,9 +49,9 @@
 
 - [x] **SARK migration ETL → separate Aelintra repo (2026-08-08/09):** Private **`aelintra/sark-to-pbx3`**. **v2 offline** (`bin/migrate-offline.py`) is primary; v1 on-host for parity. Fixtures: `~/GiT/nonGitStuff/sark-backups/<site>/`. **Next:** more v2 fixture tests; then product **strip** (#3). Lab/tip detail: **`~/GiT/pbx3-ops/TODO_OPS.md`**.
 
-- [ ] **Strip redundant / unused SARK code from pbx3 (suggested #3, open 2026-08-08):** ETL is in **`aelintra/sark-to-pbx3`**; purge dead legacy import entrypoints, unused helpers, orphaned SQL/docs from **pbx3** product tree. Inventory before delete; keep runtime schema/normalize repairs that product still needs.
+- [x] **Strip redundant / unused SARK code from pbx3 (suggested #3, done 2026-08-09):** Removed stock migrate entrypoints (`migrateLegacyDb.sh`, `split_db.py`, refactor*, `ignoresAndDropsLegacy`, create_legacy/fixRi/lineio). Kept idempotent **`sqlite_normalize_cluster_to_shortuid.sql`**. **`reloader -L` / `dumper -L`** remain as hooks only when ETL stages files. Private **`aelintra/sark-to-pbx3`** owns migrate SQL/PHP (on-host v1 uses `SARK2PBX3_ROOT`).
 
-- [ ] **Lab deployment — quick LAN fleet (requirements locked 2026-08-08):** Primary project: curious user + **VM manager** → few **Ubuntu/Debian** VMs → **T4** (Magrathea+GK, home PBX, **Garage**). Operator box may be **Linux/Windows/macOS** (no Mac assumption); SPA prefer **LAN static**. Tailor + Appendix B. Cloud **T2**/AMI = follow-on. Prefer **after** SARK strip (#3) / before stranger Lab docs. Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. Implement D1+ when scheduled.
+- [ ] **Lab deployment — quick LAN fleet (requirements locked 2026-08-08):** Primary project: curious user + **VM manager** → few **Ubuntu/Debian** VMs → **T4** (Magrathea+GK, home PBX, **Garage**). Operator box may be **Linux/Windows/macOS** (no Mac assumption); SPA prefer **LAN static**. Tailor + Appendix B. Cloud **T2**/AMI = follow-on. Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. Implement D1+ when scheduled.
 
 - [ ] **pbx3api `.deb` (open 2026-08-08):** Versioned Debian package installing under **`/opt/pbx3api`**, preserving `.env` on upgrade, wiring nginx/php-fpm via existing installer semantics. Ubuntu/Debian long-haul; apt parity with **pbx3** / **pbx3cagi**. Until shipped: clone-at-tag (public org) or current tip deploy. Repo: **pbx3api**. See try-it packaging § **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**.
 
@@ -121,7 +121,7 @@
 
 - [ ] **S7+ — Attested PCI / scale (deferred):** Do not start without customer ask.
 
-- [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`**. **Prerequisites:** hygiene (**done**) → Apache-2.0 `LICENSE` (**done**) → SARK extract (**done**) → strip unused SARK from pbx3. Do not advertise stranger Lab `git clone` until SARK strip lands.
+- [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`**. **Prerequisites:** hygiene (**done**) → Apache-2.0 `LICENSE` (**done**) → SARK extract (**done**) → strip unused SARK from pbx3 (**done**). Ready for org transfer when scheduled.
 
 - [ ] **pbx3cagi refactor (under Ast config generator + cagi track):** Resume Phase **1.3 → 1.1 → 2.x**; **`make test`**. Contract: **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §5.
 
@@ -147,7 +147,7 @@
 
 - [ ] **SPA hygiene (deferred — after S8 / R1 / core panels):** Route lazy-loading + shared list/detail patterns later.
 
-- [ ] **SARK V6 migration routines (revisit, low priority — end of list):** Normalize/repair remains until fleets clean; ETL destiny is **`aelintra/sark-to-pbx3`**; strip leftovers from pbx3 (**#3**). FreePBX migrate separate later.
+- [ ] **SARK V6 migration routines (revisit, low priority — end of list):** Normalize/repair remains in pbx3 (`sqlite_normalize_cluster_to_shortuid.sql`); ETL destiny is **`aelintra/sark-to-pbx3`** (strip from pbx3 **done**). FreePBX migrate separate later.
 
 ---
 

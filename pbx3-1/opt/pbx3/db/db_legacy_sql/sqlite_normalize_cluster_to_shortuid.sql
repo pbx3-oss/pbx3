@@ -1,17 +1,15 @@
 -- Normalize tenant-scoped `cluster` columns to cluster.shortuid.
 --
--- Use when:
---   - A SARK V6 import skipped sqlite_fixRi.sql, or
---   - A restored/mixed DB has some rows on tenant pkey (or KSUID) and some on shortuid.
+-- Use when a restored/mixed DB has some rows on tenant pkey (or KSUID) and some on shortuid
+-- (including fleets that previously had a partial SARK V6 import).
 --
 -- Safe to re-run (idempotent):
 --   - Only updates rows whose cluster value matches a known cluster pkey, shortuid, or id.
 --   - Rows already on shortuid are set to the same shortuid (no-op).
 --   - Unknown / orphan cluster values are left unchanged.
 --
--- Unlike sqlite_fixRi.sql this does NOT rewrite cname/name fields (those are one-shot
--- V6 migration concerns). Prefer this script for repair; keep fixRi for first-time
--- V6 imports only (fixRi is NOT idempotent and will NULL out rows already on shortuid).
+-- One-shot SARK V6 import (fixRi / create_legacy / lineio / refactor*) lives in
+-- aelintra/sark-to-pbx3 — not in this package. Prefer offline v2 there.
 --
 -- Apply:
 --   sudo sqlite3 /opt/pbx3/db/sqlite.db < /opt/pbx3/db/db_legacy_sql/sqlite_normalize_cluster_to_shortuid.sql
@@ -19,7 +17,6 @@
 -- Optional pre-check (expect pkey_form > 0 before, 0 after):
 --   SELECT 'ipphone' AS tbl, cluster, COUNT(*) FROM ipphone GROUP BY cluster;
 --
-
 BEGIN TRANSACTION;
 
 UPDATE agent

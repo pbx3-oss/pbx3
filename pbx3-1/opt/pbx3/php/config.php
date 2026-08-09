@@ -41,10 +41,9 @@ define('SYSDB',						    DBPATH .  "/" . DBNAME);
 define('DBDUMPS',						DBPATH .  '/db_database_dumps');
 define('DBTABLEDUMPS',					DBPATH .  '/db_table_dumps');
 define('DBSQL',						    DBPATH .  '/db_sql');
-define('DBLEGACYSQLDIR',				DBPATH .  '/db_legacy_sql');
+define('DBLEGACYSQLDIR',				DBPATH .  '/db_legacy_sql'); // repair SQL (normalize); SARK migrate schemas live in aelintra/sark-to-pbx3
 define('DBINSTANCESQL',				    DBSQL .  '/sqlite_create_instance.sql');
 define('DBTENANTSQL',				    DBSQL .  '/sqlite_create_tenant.sql');
-define('DBLEGACYSQL',				    DBLEGACYSQLDIR .  '/sqlite_create_legacy.sql');
 define('DBMESSAGE',					    DBSQL .  '/sqlite_message.sql');
 
 define('READONLY_DB',				    DBPATH .  '/sqlite.rdonly.db');
@@ -158,7 +157,7 @@ define('FW_RULES',                      '/etc/shorewall/pbx3_rules');
 
 define('LASTDB',                        DBDUMPS . '/last.db');               //pbx3 db previous iteration
 define('CLEANDB',                       DBSQL . '/sqlite_clean.db');	    //factory reset copy of the db (created on first install, not in repo) 
-define('LEGACY_DB',                     DBLEGACYSQLDIR . '/sqlite_create_legacy.sql');	    //old db create
+define('LEGACY_DB',                     DBLEGACYSQLDIR . '/sqlite_create_legacy.sql');	    // supplied by aelintra/sark-to-pbx3 for on-host migrate only (not packaged)
 define('INSTANCE_DB',                   DBSQL . '/sqlite_create_instance.sql');	    //installed db create
 define('TENANT_DB',                     DBSQL . '/sqlite_create_tenant.sql');	    //installed db create
 define('LARAVEL_DB',                    DBSQL . '/sqlite_create_laravel.sql');	    //installed db create

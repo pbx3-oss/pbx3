@@ -6,4 +6,4 @@ Used by bash scripts and PHP (via shell_exec) to generate 27-char base62 IDs for
 - **This directory:** Optional Go source for local build if the system package is not available. From here: `go build -o ../../opt/pbx3/bin/ksuid .` (requires Go).
 - **Library:** [github.com/segmentio/ksuid](https://github.com/segmentio/ksuid)
 
-PHP uses `tuupola/ksuid` (Composer) in the API; the system ksuid CLI is for bash and for PHP utilities (dumper.php, dumpInstances.php).
+PHP uses `tuupola/ksuid` (Composer) in the API; the system ksuid CLI is for bash and for PHP utilities (e.g. dumper.php).

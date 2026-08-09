@@ -291,14 +291,14 @@ SARK framed windows as **closed periods** (sclose/eclose) on default-open — ma
 
 SARK already has `dateseg`, `Holiday`, `openroute`/`closeroute`, `oclo`, `routeoverride`. Conversion is **transform-in-place** where possible.
 
-**Idempotent migrate** (postinst / `migrateLegacyDb` follow-on / one-shot SQL+PHP), after cluster shortuid normalize where needed:
+**Idempotent migrate** (postinst / `aelintra/sark-to-pbx3` follow-on / one-shot SQL+PHP), after cluster shortuid normalize where needed:
 
 1. `dateseg.mode = 'closed'` where null/empty; priority default.  
 2. Build route profiles from distinct `(openroute, closeroute)` **per tenant** (share when pairs match).  
 3. Point each DID at the matching profile; **leave** open/close columns filled.  
 4. Map `oclo` OPEN/CLOSED → `sched_mode`.  
 5. Holidays: best-effort map to redesigned shape (force dest / mode / local windows); document “review after upgrade.” **Not** a guarantee of identical holiday call paths if the old model was ambiguous.  
-6. Operator notes next to SARK V6 / fixRi / `sqlite_normalize_cluster_to_shortuid.sql`.
+6. Operator notes next to SARK ETL / `sqlite_normalize_cluster_to_shortuid.sql`.
 
 **Acceptance (open/close):** A golden/SARK-like fixture DB after convert: same destinations for open and closed **schedule** periods as before, without SPA profile edits. Covered by **unit convert fixtures** (§14).
 
