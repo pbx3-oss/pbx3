@@ -4,6 +4,8 @@
 
 Product stub: **`AGENT_HANDOFF.md`** (behavior + read-order + permanent reference). Do not put tip/host gossip in public **`TODO.md`**.
 
+**Stance (2026-08-09):** Keep **active requirements / locks / install** in product (agent locality). Move **research, audits, tippy lab, stale plans** to **`~/GiT/pbx3-ops/devdocs/`** (public-clone cleanliness). Thin stubs remain where links were heavy.
+
 **User guides (operators):** MkDocs / **`pbx3-docs`** — map: **USER_GUIDES_MKDOCS_CONTENT_MAP.md**. This folder is **developer + AI** only.
 
 ## Map (keep this short)
@@ -11,11 +13,11 @@ Product stub: **`AGENT_HANDOFF.md`** (behavior + read-order + permanent referenc
 | Kind | Where | Examples |
 |------|--------|----------|
 | **Live session (private)** | **`~/GiT/pbx3-ops/`** | `AGENT_HANDOFF.md`, `SESSION_HANDOFF.md`, `TODO_OPS.md` |
+| **Research / audits (private)** | **`~/GiT/pbx3-ops/devdocs/`** | `*_RESEARCH.md`, audit prototypes, lab rollback |
 | **Session archaeology (private)** | **`~/GiT/pbx3-ops/archive/`** | handoff histories |
 | **Product roadmap** | `TODO.md` | Suggested order + open product items |
 | **Closed ledger** | **`archive/TODO_DONE_LOG.md`** | Checked-off items |
 | **Session end habit** | **`~/GiT/pbx3-ops/SESSION_END_CHECKLIST.md`** | Stub: `SESSION_END_CHECKLIST.md` |
-| **Research (not locked)** | living `*_RESEARCH.md` / `*_DRAFT.md` | `CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md` |
 | **Locked product / fleet** | Prefer **`pbx3-directory/docs/`** when fleet-wide | DESIGN_RULES, runbooks, dialect reqs |
 | **Feature plans (instance)** | This folder | TLS, short dial, time-based routing, test packs |
 | **Repos / releases** | **REPOS_AND_RELEASES.md** | Multi-repo policy |

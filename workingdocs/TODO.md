@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-09 (session end: hygiene stubs + ops quarantine)
+**Last updated:** 2026-08-09 (session end: light workingdocs peel → ops/devdocs)
 
 ### Suggested “what next?” order
 
@@ -43,7 +43,7 @@
 
 ## Open items
 
-- [x] **Workingdocs hygiene — product vs agent session (done 2026-08-09):** Curate in-repo; quarantine session handoffs. Private **`aelintra/pbx3-ops`** (`~/GiT/pbx3-ops`): `AGENT_HANDOFF` session notes, `SESSION_HANDOFF`, `TODO_OPS`, archives. Product stubs remain. Cursor session-end rules retargeted. Cross-link: **`OPEN_SOURCE_GITHUB_SETUP.md`**.
+- [x] **Workingdocs hygiene — product vs agent session (done 2026-08-09):** Curate in-repo; quarantine session handoffs. Private **`aelintra/pbx3-ops`**. **Light peel same day:** research/audits/tippy lab → **`pbx3-ops/devdocs/`**; active requirements stay in product. Cross-link: **`OPEN_SOURCE_GITHUB_SETUP.md`** · **`workingdocs/README.md`**.
 
 - [ ] **Apache-2.0 `LICENSE` on product repos (suggested #2, open 2026-08-08):** License **chosen** (Apache License 2.0, all product repos). Add `LICENSE` file (and copyright notices as needed) to **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**, Magrathea/SBC admin as applicable. Gate before public / stranger Lab clone. See **`OPEN_SOURCE_GITHUB_SETUP.md`** · Lab packaging §.
 

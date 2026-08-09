@@ -33,10 +33,10 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **First out / cleanup triage** | **`FIRST_OUT_CHECKLIST.md`** (must-fix vs nice vs parked) → TODO.md |
 | **Session end** (user request) | **`~/GiT/pbx3-ops/SESSION_END_CHECKLIST.md`** (product roadmap **`TODO.md`** + private ops handoffs) |
 | **New session** (user request) | **`~/GiT/pbx3-ops/AGENT_HANDOFF.md`** § Next agent session notes → **`TODO.md`** → **`~/GiT/pbx3-ops/TODO_OPS.md`** → **`~/GiT/pbx3-ops/SESSION_HANDOFF.md`** (top block) |
-| **Track B — release hardening** | **TRACK_B_RELEASE_HARDENING.md** → **STAKEHOLDER_DEMO_SCRIPT.md** → TODO.md → TLS_IMPLEMENTATION_STEPS.md §4.3 |
+| **Track B — release hardening** | **`~/GiT/pbx3-ops/devdocs/pbx3/workingdocs/TRACK_B_RELEASE_HARDENING.md`** (stub) → **STAKEHOLDER_DEMO_SCRIPT.md** → TODO.md → TLS_IMPLEMENTATION_STEPS.md §4.3 |
 | New GitHub org / OSS | **OPEN_SOURCE_GITHUB_SETUP.md** → **REPOS_AND_RELEASES.md** |
 | Install / deploy | INSTALL_SEQUENCE_UBUNTU.md (pbx3 then pbx3api on Ubuntu 24.04) |
-| Cleanup / installer | CLEANUP_PLAN.md, APACHE_CONFIG_TO_PBX3API.md, PBX3API_INSTALLER_NGINX_ADDITIONS.md |
+| Cleanup / installer | APACHE_CONFIG_TO_PBX3API.md, PBX3API_INSTALLER_NGINX_ADDITIONS.md (cleanup plan → ops `devdocs`) |
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (**§0 fleet lock**) → **TLS_IMPLEMENTATION_STEPS.md** → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**solo/direct Option A only**) |
 | SPA admin (Vue shell, layout) | **`~/GiT/pbx3-ops/SESSION_HANDOFF.md`** (Quick start) → **pbx3spa**/workingdocs/**SPA_SHELL_ROADMAP.md** |
@@ -52,7 +52,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Call / SIP testing (SIPp)** | **`CALL_TYPE_INVENTORY.md`** → **`CALL_TEST_STRATEGY.md`** → recipes **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** (`AGENTS.md` / `workingdocs/TODO.md`) · **site-dial pack gate plan** sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** · **`TEST_CADENCE.md`** · **`CRITICAL_PATH_TEST_PACK.md`** Pack B · CAGI L0 **`TEST_RECIPE.md`** · pbx3 stub **`call-tests/README.md`** only |
 | **Fleet mode UX** (future) | **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5, §4 — one SPA, two modes; separate control-plane API; lab peer-nav → mode swap |
 | **Failover + shadowing** (parked) | Edge HA: **`SBC_HA_FAILOVER_REQUIREMENTS.md`**. Instance shadow SKU framing: **`INSTANCE_SHADOWING_REQUIREMENTS.md`** (same mechanics, paid twin) |
-| **Fleet egress lab rollback** (2026-07-09) | **`FLEET_EGRESS_LAB_ROLLBACK.md`** — git tags, revert steps, SBC/golden/SPA recovery |
+| **Fleet egress lab rollback** (2026-07-09) | **`~/GiT/pbx3-ops/devdocs/pbx3/workingdocs/FLEET_EGRESS_LAB_ROLLBACK.md`** (stub in product) — git tags, revert steps |
 | **SBC HA (VIP/EIP promote)** | **`SBC_HA_FAILOVER_REQUIREMENTS.md`** — requirements locked; implement later |
 | **Edge portability (Rule 7 debt)** | **`EDGE_PORTABILITY_SCORECARD.md`** — adapter vs OpenSIPS vocabulary leaks |
 | **SBC product tracks & roadmap** | **`SBC_PRODUCT_TRACKS.md`** — A/B/C posture + capability gaps (SIP TLS, media mode, registration-edge, …); WebRTC committed |
@@ -61,14 +61,14 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 | **Toll fraud / velocity** | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** — V1–V5 fleshed (fixture-first, batch CDR, `active=NO` act); competitive notes |
 | **WebRTC / WSS (demo)** | **`WEBRTC_WSS_LAB.md`** (golden `:8089` baseline) → **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 → **`SBC_PRODUCT_TRACKS.md`** · IMPLEMENTATION_PLAN **W1** |
 | **PSTN number dialects / wire** | **`NUMBER_WIRE_POLICY.md`** (who does what) → **`NUMBER_DIALECT_REQUIREMENTS.md`** → MkDocs **`fleet/number-dialect`** → Peer dialect + OpenSIPS `DIALECT_*`; Phase 1 node Egress = DNID/`+CC` by serving country (**D1 = C**) |
-| **Number wire policy / D1** | **`NUMBER_WIRE_POLICY.md`** (who does what) → **`NUMBER_WIRE_STANDARD_DRAFT.md`** + **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`** — **D1 = C** locked; Phase 2 not scheduled |
+| **Number wire policy / D1** | **`NUMBER_WIRE_POLICY.md`** → draft research in **`~/GiT/pbx3-ops/devdocs/.../NUMBER_WIRE_STANDARD_DRAFT.md`** + carrier research stub — **D1 = C** locked; Phase 2 not scheduled |
 
 | **Log retention / SIP capture** | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** — Phases 1–6 done; **`SBC_DATA_RETENTION_REQUIREMENTS.md`** — aging WS0–WS4 **done** (lab); **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** — SBC DR **v1 done** (scripts + scratch drill + MkDocs) |
 | **Downstream peer REGISTER (future)** | **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`** — separate registration-edge instance class; no shared OpenSIPS image; interim Asterisk-proxied workaround only |
 | **Agent-assisted fleet rebuild** | **`REBUILD_INSTANCE_RUNBOOK.md`** (kickoff prompt) → **`SELF_SERVICE_REBUILD_DESIGN.md`** § Mode 4 → **`OPERATOR_MAC_SETUP.md`** |
 | Call recordings | **`RECORDINGS_STORAGE_DESIGN.md`** → **`IMPLEMENTATION_PLAN.md`** § **R1** (done) / **R1.5** / **S7** |
 | **CDR timezone / Home “today”** | **`CDR_TIMEZONE_POLICY.md`** — local CDR vs Laravel UTC; near-term day buckets = node local; end-state UTC CDR + site TZ |
-| **pbx3 0.0.4-1 + cagi + golden rebuild** | **`BUILD_PLAN_0.0.4.md`** → Mode 4 **`REBUILD_INSTANCE_RUNBOOK.md`** |
+| **pbx3 0.0.4-1 + cagi + golden rebuild** | **`~/GiT/pbx3-ops/devdocs/.../BUILD_PLAN_0.0.4.md`** (stub) → Mode 4 **`REBUILD_INSTANCE_RUNBOOK.md`** |
 | SPA GitHub Pages (S6.2) | **pbx3-directory/docs/OPS_S3_RUNBOOK.md** § 9; **pbx3spa** `.env.production` / CI; verify S3 + **each node API CORS** for Pages origin |
 
 **Source of truth:** Schema and code. Verify against pbx3 db_sql and code when changing behaviour; workingdocs may be outdated.
