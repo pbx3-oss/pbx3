@@ -1,8 +1,8 @@
 # Agent handoff – pbx3 (backend)
 
-**AI: read this first.**
+**AI:** Session state lives in private **`~/GiT/pbx3-ops`**. This file is the **public-ready stub** (behavior + read-order + permanent reference).
 
-**Purpose:** Get a new agent up to speed on the pbx3 repo and recent work. Read this first, then dive into specific workingdocs as needed.
+**Purpose:** Orient agents on product docs. For **Next agent session notes**, read **`~/GiT/pbx3-ops/AGENT_HANDOFF.md`**.
 
 ---
 
@@ -19,27 +19,27 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 - **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, **`pbx3spa/`**, **`pbx3cagi/`**, or **`pbx3sbc/`** (SBC edge, moved into holding folder 2026-07-07) as appropriate.
 - **Fleet / S3 / directory:** on **`main`**. **Track B** Phases 0–4 Tier 1–2 + **panelfixes** panel QA merged to **`main`** (2026-07-02). Branches **`helptext`**, **`panelfixes`**, **`directory`** deleted.
 - **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
+- **Private ops:** clone **`aelintra/pbx3-ops`** to **`~/GiT/pbx3-ops`** and add it to the Cursor workspace.
 
-**Session end:** When the user says **`session end`**, **`end session`**, or **`update handoff`**, follow **`SESSION_END_CHECKLIST.md`** (update **`TODO.md`**, this file’s **Next agent session notes**, and **`pbx3spa/workingdocs/SESSION_HANDOFF.md`** only).
+**Session end:** When the user says **`session end`**, **`end session`**, or **`update handoff`**, follow **`~/GiT/pbx3-ops/SESSION_END_CHECKLIST.md`**.
 
 ---
-
 
 ## Read order by task
 
 | Task | Read (in order) |
 |------|------------------|
-| Any / first time | This file (**§ Next agent session notes**), then TODO.md |
+| Any / first time | **`~/GiT/pbx3-ops/AGENT_HANDOFF.md`** (§ Next agent session notes) → this repo **`TODO.md`** → **`~/GiT/pbx3-ops/TODO_OPS.md`** → **`~/GiT/pbx3-ops/SESSION_HANDOFF.md`** (top block) |
 | **First out / cleanup triage** | **`FIRST_OUT_CHECKLIST.md`** (must-fix vs nice vs parked) → TODO.md |
-| **Session end** (user request) | **SESSION_END_CHECKLIST.md** → update TODO.md + this file + **pbx3spa/SESSION_HANDOFF.md** |
-| **New session** (user request) | This file § **Next agent session notes** → TODO.md → **pbx3spa/SESSION_HANDOFF.md** (top block); **`SESSION_END_CHECKLIST.md`** § new session |
+| **Session end** (user request) | **`~/GiT/pbx3-ops/SESSION_END_CHECKLIST.md`** (product roadmap **`TODO.md`** + private ops handoffs) |
+| **New session** (user request) | **`~/GiT/pbx3-ops/AGENT_HANDOFF.md`** § Next agent session notes → **`TODO.md`** → **`~/GiT/pbx3-ops/TODO_OPS.md`** → **`~/GiT/pbx3-ops/SESSION_HANDOFF.md`** (top block) |
 | **Track B — release hardening** | **TRACK_B_RELEASE_HARDENING.md** → **STAKEHOLDER_DEMO_SCRIPT.md** → TODO.md → TLS_IMPLEMENTATION_STEPS.md §4.3 |
 | New GitHub org / OSS | **OPEN_SOURCE_GITHUB_SETUP.md** → **REPOS_AND_RELEASES.md** |
 | Install / deploy | INSTALL_SEQUENCE_UBUNTU.md (pbx3 then pbx3api on Ubuntu 24.04) |
 | Cleanup / installer | CLEANUP_PLAN.md, APACHE_CONFIG_TO_PBX3API.md, PBX3API_INSTALLER_NGINX_ADDITIONS.md |
 | Schema / DB | DB_PBX3_VS_PBX3API_VARIANCE.md; for API alignment see pbx3api/workingdocs/PLAN_MODELS_AND_VALIDATION_HARMONISATION.md |
 | TLS / certificates | **TLS_AND_CERTIFICATES.md** (**§0 fleet lock**) → **TLS_IMPLEMENTATION_STEPS.md** → **CERTIFICATES_PANEL_AND_API.md** → **LETSENCRYPT_PER_TENANT_FQDN.md** (**solo/direct Option A only**) |
-| SPA admin (Vue shell, layout) | **pbx3spa**/workingdocs/**SESSION_HANDOFF.md** (Quick start), **SPA_SHELL_ROADMAP.md** |
+| SPA admin (Vue shell, layout) | **`~/GiT/pbx3-ops/SESSION_HANDOFF.md`** (Quick start) → **pbx3spa**/workingdocs/**SPA_SHELL_ROADMAP.md** |
 | **Instance user privileges** | **pbx3spa**/workingdocs/**INSTANCE_USER_PRIVILEGES_REQUIREMENTS.md** (P1–P4 + **B′ login homing** shipped) → **ADMIN_PANELS_AND_PERMISSIONS.md** → **AUTH_PATTERNS.md** |
 | **TOTP 2FA** (instance + SBC + Fleet) | **`TOTP_2FA_REQUIREMENTS.md`** → **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`** → **pbx3spa**/workingdocs/**AUTH_PATTERNS.md** §2 · SBC **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`** |
 | Fleet / S3 catalog / onboard | **pbx3-directory/docs/FLEET_SYSTEM_OVERVIEW.md** (stakeholder intro) → **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (S8.10, §2.5 one SPA / two modes + control plane, §13 implementer map) → **IMPLEMENTATION_PLAN.md** § **S8** → **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** (ease/cost; 1-box / 2-box try-it) → **`OPERATOR_MAC_SETUP.md`** (Mac SSH + AWS CLI) → **REBUILD_INSTANCE_RUNBOOK.md** → **`SELF_SERVICE_REBUILD_DESIGN.md`** (S8.9 + **Mode 4 agent-assisted**) → **`LAB_FLEET_TENANTS.md`** (no node-only lab tenants) → **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** (EC2 → packages → onboard, step-by-step) → **NEW_INSTANCE_CHECKLIST.md** → **INSTANCE_ONBOARDING.md** → **OPS_S3_RUNBOOK.md**; tools **`onboard-fleet-instance.sh`**, **`reconcile-node-tenants.sh`**, **`fetch-latest-instance-backup.sh`** |
@@ -75,298 +75,16 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-08) — SARK ETL v2 + bzy restore
+## Session state (private)
 
-**Branch:** **`main`** — product: **pbx3api `42b7865`** (Home pulse AMI); private **`aelintra/sark-to-pbx3` `8a1c614`**. SPA **`npm run dev`**.
+Live **Next agent session notes**, SPA **Session end** blocks, tip gossip, and handoff archives:
 
-### Shipped
-- **`aelintra/sark-to-pbx3`:** offline **v2** primary (Python). Tenant-from-folder, blank-tech DiDs/trunks, orphan cluster FK coerce, trunks `active=NO`, day-timer `desc`→description, on-host user restore, MkDocs step flows, **`docs/CDR_SIPP_VERIFY_REQUIREMENTS.md`** (Egress remap before SIPp).
-- Lab transforms: **duncanrogers**, **mastersuk** (oldest zip); v2 outperformed v1 on blank-tech DIDs.
-- **bzy54n** restored to pre-SARK DB (`pre-sark-migrate-20260809T000920Z.db`); admin **`pbx3-lab-reset`**. Mastersuk snapshot kept as `pre-restore-*.db` on host.
-- **pbx3api:** Home pulse cold path ~3s → ~0.1s via `amiQueryUntilBlankLine` (**`42b7865`**); hot-fixed on bzy; golden/kildare wait next sync.
-- bzy 2FA: routes present, **not enrolled** (not a restore byproduct).
+- **`~/GiT/pbx3-ops/AGENT_HANDOFF.md`**
+- **`~/GiT/pbx3-ops/SESSION_HANDOFF.md`**
+- **`~/GiT/pbx3-ops/TODO_OPS.md`**
+- **`~/GiT/pbx3-ops/archive/`**
 
-### Golden / ops
-- bzy = restored multi-tenant lab (cluster1 / willand / sandycroft), not a SARK migrate. Do not leave customer migrate DBs on shared lab without intent.
-
-### Resume
-1. **More ETL v2 fixture tests** (`~/GiT/nonGitStuff/sark-backups/<site>/`) — load/compare; optional CDR→sipplabs after Egress prep.  
-2. **MkDocs:** `cd sark-to-pbx3/mkdocs && mkdocs serve`.  
-3. Product OSS track: hygiene → LICENSE (if gaps) → **SARK strip from pbx3** (#3).  
-4. Sync **pbx3api `42b7865`** to golden/kildare when convenient.
-
----
-
-## Next agent session notes (2026-08-08) — Lab deployment bound + OSS prep + API tip roll (superseded)
-
-**Superseded for “read first”** by SARK ETL v2 block above. Lab try-it / Apache / hygiene still on **`main`**.
-
----
-
-## Next agent session notes (2026-08-08) — Fleet try-it deployment requirements (superseded)
-
-**Superseded for “read first”** by Lab deployment bound block (then ETL block). Try-it/Lab requirements doc still on **`main`**.
-
----
-
-## Next agent session notes (2026-08-07) — Fleet SPA catalog UX polish (superseded)
-
-**Superseded for “read first”** by Fleet try-it deployment requirements block above. SPA catalog UX still on **`main`**.
-
----
-
-## Next agent session notes (2026-08-07) — Fleet Gatekeeper TOTP lab green (superseded)
-
-**Superseded for “read first”** by Fleet SPA catalog UX polish block above. Gatekeeper TOTP G1–G4 still on **`main`**.
-
----
-
-## Next agent session notes (2026-08-07) — SPA Sanctum TOTP lab green (superseded)
-
-**Superseded for “read first”** by Fleet Gatekeeper TOTP block above. Instance Sanctum TOTP on **`main`** (`321a12e` / SPA merge).
-
----
-
-## Next agent session notes (2026-08-07) — SBC TOTP 2FA lab green (superseded)
-
-**Superseded for “read first”** by SPA Sanctum TOTP block above. SBC TOTP still on `pbx3sbc-admin` **`main`**.
-
----
-
-## Next agent session notes (2026-08-06) — first-out triage + Device lean + provisioning park (superseded)
-
-**Superseded for “read first”** by SPA TOTP block above. Device lean / first-out checklist still on `main`.
-
----
-
-## Next agent session notes (2026-08-06) — fleet DNS/LE lock + tenant-A warn (superseded)
-
-**Superseded for “read first”** by first-out / Device lean block above. Fleet DNS/LE lock still on `main`.
-
----
-
-## Next agent session notes (2026-08-06) — Site Groups C0–C6 lab green (superseded)
-
-**Superseded for “read first”** by fleet DNS/LE lock block above. Site Groups C0–C6 still lab green on `main`.
-
----
-
-## Next agent session notes (2026-08-06) — naming lock + dial cohort stopper (superseded)
-
-**Superseded.** Naming lock still on `main`.
-
----
-
-## Next agent session notes (2026-08-06) — Fleet Delete lab green (superseded)
-
-**Superseded for “read first”** by naming + dial cohort block above. Fleet Delete D0–D5 still lab green on `main`.
-
----
-
-## Next agent session notes (2026-08-06) — number wire (superseded)
-
-**Superseded.** Number wire D1=C + seed MainOut shipped earlier same day.
-
----
-
-## Next agent session notes (2026-08-05)
-
-**Superseded for “read first”** by **2026-08-06** Fleet Delete block above. Short dial D+E closed; number wire was open then.
-
----
-
-## Next agent session notes (2026-08-05 — short dial D desk lab)
-
-**Superseded for “read first”** by block above. Desk findings → Path 1 shipped Magrathea; product-lock A done.
-
----
-
-## Next agent session notes (2026-08-05 — day-parts close-out + DID open-seed)
-
-**Superseded.** Day-parts + DID open-seed on `main`; golden **0.0.4-8** / cagi **1.0.0-13**.
-
----
-
-
-## Next agent session notes (2026-08-04 — day-parts play-test + timer harden + UX residuals)
-
-**Superseded for “read first”** by **2026-08-05** block above.
-
-**Branch:** **`time-based-routing`** (push this session): pbx3 / pbx3spa (+ api/cagi still on branch from A–E). **`main`** still short-dial packages fleet-wide except golden day-parts lab packages.
-
-### Shipped (this session)
-- **Golden Aelintra lab timers:** open / lunch / evening Mon–Fri + overnight closed + sat/sun closed (22 rows — clone pain drove residuals).
-- **Timer harden:** site TZ from Network `/etc/timezone` (not PHP UTC); timespan **half-open `[start, end)`**; readonly DB copy fix (`SYSDB`/`COPY_DB` constants). Live on golden; unit tests extended.
-- **SPA:** Day timer **Every day** label for `*` (was bare asterisk).
-- **Product locks / docs (`TIME_BASED_ROUTING_REQUIREMENTS.md` §5.8–5.9):** **default open** reaffirmed (BLF-only / no-timer shops); default-closed **rejected**; **day-of-week ranges (`mon-fri`)** = primary UX residual (likely solves most clone pain); SARK 3-row binary sample vs day-parts+profiles tradeoff documented.
-
-### Resume (flip)
-1. **Daytimer `mon-fri` / ranges** — matcher + API + SPA (§5.9); then collapse Aelintra lab toward fewer rows.  
-2. Push/PR/merge **`time-based-routing`** four repos when ready (api/cagi may already be pushed from prior session — verify).  
-3. Optional: SARK-like list start/end columns, timepicker, `*INUSE*` highlight.
-
-### Golden / ops
-- Magrathea **`3.93.26.82`** · golden EIP **`44.196.98.191`** · DID **`01924910444`** · tenant **Aelintra** / `s07zmy`. Timer evaluates **America/New_York**. Packages still **0.0.4-7** / cagi **1.0.0-13** on golden (timer PHP hot-patched — package bump when rolling).
-
----
-
-## Next agent session notes (2026-08-04 — time-based routing A–E complete)
-
-**Superseded for “read first”** by play-test / timer harden block above.
-
-**Branch:** **`time-based-routing`**: pbx3 **`e314ba0`**, pbx3api **`09f8349`**, pbx3spa **`d3d6a95`**, pbx3cagi **`e34dd40`** (pre this session).
-
-### Shipped (historical)
-- Day-parts A–E track complete; golden packages **0.0.4-7** / **1.0.0-13**.
-
-### Resume
-See current block.
-
-### Golden / ops
-- See current block.
-
----
-
-## Next agent session notes (2026-08-04 — short dial package roll + residual docs)
-
-**Superseded for “read first”** by **time-based routing** block above.
-
-**Branch:** **`main`** pbx3 **`b697384`**, pbx3cagi **`97ca501`**. Fleet short dial: **0.0.4-6** / **1.0.0-11** on **08jzwn**, **bzy54n**, **kildare**.
-
-### Shipped (historical)
-- Package roll short dial; **F** migrate; **E** pack-gate plan only; **D** residual framed.
-
-### Resume
-See current block (day-parts close-out) + **TODO** short dial **D**.
-
-### Golden / ops
-- Packages on non-golden still short-dial baselines until day-parts roll.
-
----
-
-## Next agent session notes (2026-08-04 — SIPp pack green + DID lab)
-
-**Superseded for “read first”** by **time-based routing** block above.
-
-**Branch:** **`main`** all product repos + **sipplab**. Lab packages later rolled to **0.0.4-6** / **1.0.0-11**.
-
-### Shipped (lab)
-- **L1 pack 11/11** on Peer SIPp host `98.82.58.59` (PEM `pbx3test`). `out-egress-ok` required digit-E.164 **`OUT_DIGITS=441924910444`**.
-- **Site-dial** dual-host re-proven green (UAC `98.93.32.43` / UAS `98.82.58.59`).
-- **Magrathea DID `01924910444`:** `dr_rules` prefix **`441924910444`** → gwid 10 golden. Office **01924** DIDs → **Kildare**; **910444** lab golden until move.
-
-### Resume
-See current block (package roll / D residual).
-
-### Golden / ops
-- Magrathea VIP **`3.93.26.82`** · golden EIP **`44.196.98.191`** · Kildare **`3.93.253.1`**.
-
----
-
-## Next agent session notes (2026-08-04 — tenant short dial merge)
-
-**Superseded for “read first”** by **package roll** block above.
-
-**Branch:** **`main`** in **pbx3**, **pbx3api**, **pbx3spa**, **pbx3cagi**, **pbx3sbc**, **sipplab**. Package roll completed later same calendar day.
-
-### Shipped
-- **A–E** short dial product + dual-host L1 green; **D partial** desk redial OEM-open.
-
-### Resume
-See current block.
-
-### Golden / ops
-- Golden EIP **`44.196.98.191`** · Magrathea VIP **`3.93.26.82`**.
-
----
-
-## Next agent session notes (2026-08-03 — SPA line test shipped)
-
-**Superseded for “read first”** by **2026-08-04** short dial merge / DID lab blocks above.
-
-**Branch:** **`main`** (**pbx3spa** product; **pbx3** docs/TODO). Earlier package/W1 work still on fleet nodes.
-
-### Shipped
-- **SPA WSS line test (lab green):** JsSIP diagnostic dialler on **WebRTC** extension detail (violet **Line test**, right-aligned). Edge WSS default `wss://sbc.pbx3.com:8089/ws`; SIP domain = tenant FQDN; shortuid auth. Actions: Register · Dial · Answer · Hangup + status log; **getStats** sampling → post-call report (loss/jitter/RTT/bitrate/ICE/timeline + copy summary). Inbound fix: keep Answer after auto-180/progress. Click press/flash feedback. Hide **MAC** on WebRTC edit.
-- **pbx3spa `main`:** e.g. `070736a` feat … through `9837e12` UX/MAC (see log).
-- **TODO parks:** pre-first-release SPA **bundle diet** (lazy JsSIP / route split); **lab DB anonymize** (real-site surnames); **provisioning server class** exploratory (SARK 6.5–style; directory inventory undecided).
-
-### Lab notes
-- Proven path: golden WebRTC **`8af9ee`** / **`dhbm8x.pbx3.com`** via Magrathea WSS; outbound + inbound + report OK.
-- Password still session/paste (regen shows once).
-
-### Resume
-- See current block (short dial).
-
----
-
-## Next agent session notes (2026-08-03 — package roll + bzy Magrathea)
-
-**Superseded for “read first”** by SPA line test block above.
-
-**Branch:** **`main`** (pbx3, pbx3cagi, pbx3sbc, pbx3spa).
-
-### Shipped (this continuous session arc)
-- **Magrathea W1 lab green** (earlier): WSS on edge only; SIP UDP to homes; RTP bypass; desk↔WebRTC both ways; golden instance **8089 closed**.
-- **Packages:** **pbx3 0.0.4-5** + **pbx3cagi 1.0.0-10** installed on **08jzwn**, **bzy54n** (`54.158.236.215`), **kildare**. Debs on `main` (`pbx3_0.0.4-5_all.deb`, `pbx3cagi_1.0.0-10_all.deb`).
-- **bzy Magrathea ops:** Fail2Ban had banned new public IP — unbanned; **whitelist** `54.158.236.215/32`; **dispatcher setid 3** updated from stale `98.82.174.36` → `sip:54.158.236.215:5060` + `source_ip=…`; **ds_reload** OK.
-- **SPA line test:** was locked-not-implemented; **superseded — shipped this evening**.
-
-### Lab notes
-- Edge WebRTC: `wss://sbc.pbx3.com:8089/ws` · shortuid **`8af9ee`** · tenant **`dhbm8x.pbx3.com`** · golden `~/webrtc-1500.env`.
-- Open item still: domain setid drift for some name.com tenants (0ggybk/vqcwd4 setid=3 vs DNS→golden) — see TODO.
-- Optional: golden dispatcher row still has no `source_ip` in attrs (setid 2 works by destination).
-
-### Resume
-- See current block (line test session).
-
----
-
-## Next agent session notes (2026-08-03 — docs garden)
-
-**Superseded for “read first”** by WebRTC WSS block above.
-
-**Branches:** **pbx3** + **pbx3spa** docs only — **`main`**.
-
-### Shipped
-- **Handoff slim:** older session blocks → **`workingdocs/archive/AGENT_HANDOFF_HISTORY.md`** (pbx3) and **`pbx3spa/workingdocs/archive/SESSION_HANDOFF_HISTORY.md`**. Live files keep current block + permanent reference / Quick start.
-- **TODO slim:** open items only in **`TODO.md`**; 157 closed rows → **`archive/TODO_DONE_LOG.md`**.
-- **Maps:** pbx3 + SPA **workingdocs/README.md**; **SESSION_END_CHECKLIST** notes archive pointer (do not re-append history every session).
-
-### Resume
-- Product from TODO / number-wire D1 / etc. Wait for task.
-
----
-
-## Next agent session notes (2026-08-02 — Kildare PSTN + Mangle + wire draft) — recent
-
-**Superseded for “read first”** by 2026-08-03 WebRTC block; still the latest PSTN/Kildare product arc.
-
-**Branches:** **pbx3cagi** **`502596e`** (Mangle fix **1.0.0-9** changelog), **pbx3** seed/docs + this handoff, **pbx3-docs** number-dialect seed order — **`main`**. Earlier same day: greenfield/route **`eb8961d`** / install tips.
-
-**Lab:** golden **`08jzwn`** / EIP **`44.196.98.191`**. Magrathea VIP **`3.93.26.82`**. **Kildare:** `3.93.253.1` / `kildare.pbx3.com` / shortuid **`kildare`** / **`aelsip.pem`**. Tenant **`18c8z3`**. MainOut → Egress. DID **`+441924918076`** (inroute) / national **`01924918076`** on Brindley.
-
-### Shipped
-- **Mangle:** `sizeof(char*)` strlcat bug truncated UK transform to e.g. `+441924`. Fix = sized buffer. Changelog **1.0.0-9**; **hot binary on Kildare** (deb not rebuilt/packaged fleet-wide yet). Tips **pbx3cagi `502596e`**.
-- **Egress seed:** transform **`00:+ 0:+44`** (00 before 0); re-seed rewrites inverted `0:+44 00:+`. **pbx3 `35a6c50`**.
-- **Lab PSTN (ops, not all git):** Brindley peer host fixed (was EIP-hairpin); gwid1 **strip=2 / pri_prefix=0** for national face; Twilio off default gwlist (`1,20`); DID rule **21** prefix **`441924918076`** → gwid **100**; Kildare inroute pkey **`+441924918076`**; Brindley CPE context fixed by operator. **In+out OK on Kildare.**
-- **Research / open design (not locked):** **`NUMBER_WIRE_STANDARD_DRAFT.md`**; **`CARRIER_NUMBERING_EXPECTATIONS_RESEARCH.md`** (PTT: PBX sends dialled digits; upstream owns network shape; Model A vs B). Operator leaning Model B / maybe.
-
-### Golden / operator follow-up
-- Package/deploy cagi **1.0.0-9** to golden when convenient (Kildare has hot binary; golden transform still often NULL → may not hit Mangle).
-- Magrathea: prefer **named Brindley dialect** over long-term strip/prefix; Magrathea **407** if failover beyond Brindley.
-- **Wire standard D1 open** — do not implement Model B without lock.
-- WebRTC far-end blocked; clamp SG **8089** when done.
-
-### Resume
-- Product TODO (Fleet Delete / dial alias) or continue number-wire decision. Wait for task. Do not invent fleet token (**`INSTALL_NODE_SIMPLE` Act 2**).
-
-
----
-
-## Session history (archived)
-
-Older **Next agent session notes** (pre–2026-08-02 greenfield and earlier) live in **`archive/AGENT_HANDOFF_HISTORY.md`**. Do not re-append full history here — session end prepends a new **current** block only; optional move of superseded blocks into that archive when the live file grows again.
+Do **not** reintroduce session blocks into this product file.
 
 ---
 

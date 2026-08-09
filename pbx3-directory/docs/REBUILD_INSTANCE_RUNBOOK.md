@@ -21,7 +21,7 @@ Ask before: terminating EC2, DNS cutover, IAM-impacting changes on production.
 After restore: pbx3:fleet-preflight must be all green before we call it done.
 ```
 
-Read first: **`pbx3/workingdocs/AGENT_HANDOFF.md`** § Next agent session notes → this file → **`OPERATOR_MAC_SETUP.md`**.
+Read first: **`~/GiT/pbx3-ops/AGENT_HANDOFF.md`** § Next agent session notes → this file → **`OPERATOR_MAC_SETUP.md`**.
 
 ---
 

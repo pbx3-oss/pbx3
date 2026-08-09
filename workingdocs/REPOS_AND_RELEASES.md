@@ -18,12 +18,13 @@
 | **pbx3cagi** | `github.com/aelintra/pbx3cagi` | Asterisk AGI (C) | **Each instance** (with Asterisk) | `pbx3cagi/workingdocs/` |
 | **pbx3-directory** | *inside **pbx3** repo* (`pbx3-directory/`) | Fleet catalog, S3 ops scripts, registrar | **Org S3** + Mac ops; not on call path | `pbx3/pbx3-directory/docs/` |
 | **pbx3-docs** | *planned* | Operator/installer MkDocs site | **GitHub Pages** (`docs.pbx.com` TBD) | N/A — see **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** |
+| **pbx3-ops** | `github.com/aelintra/pbx3-ops` (**private**) | Agent session handoffs, tip/lab gossip | Local clone **`~/GiT/pbx3-ops`**; not shipped | This repo |
 
-**Target org (OSS):** e.g. `github.com/pbx3/{pbx3,pbx3api,pbx3spa,pbx3cagi,pbx3-docs}` — transfer from `aelintra` when org exists; update remotes in local clones.
+**Target org (OSS):** e.g. `github.com/pbx3/{pbx3,pbx3api,pbx3spa,pbx3cagi,pbx3-docs}` — transfer from `aelintra` when org exists; update remotes in local clones. **`pbx3-ops`** and **`sark-to-pbx3`** stay under **Aelintra** (private).
 
-**Before transfer:** extract **SARK V6 → pbx3 migration** (`db_legacy_sql`, migrate helpers, etc.) into a **separate repo that remains under `aelintra`** — see **`TODO.md`** *SARK migration → separate Aelintra repo*. Do not move that bridge with the OSS product tree.
+**Before transfer:** strip unused **SARK** leftovers from pbx3 (ETL already in **`aelintra/sark-to-pbx3`**) — see **`TODO.md`**. Do not move private bridges with the OSS product tree.
 
-**Not in git:** `pbx3-master/` workspace root; transient exports (e.g. `tt_help_core.json` at workspace root).
+**Not in git (holding folder):** `pbx3-master/` workspace root; transient exports (e.g. `tt_help_core.json` at workspace root).
 
 ---
 
@@ -73,10 +74,12 @@ git clone https://github.com/aelintra/pbx3.git
 git clone https://github.com/aelintra/pbx3api.git
 git clone https://github.com/aelintra/pbx3spa.git
 git clone https://github.com/aelintra/pbx3cagi.git
+# Private ops (session handoffs) — sibling of holding folder, not inside it:
+# git clone https://github.com/aelintra/pbx3-ops.git ~/GiT/pbx3-ops
 # pbx3-directory is already under pbx3/pbx3-directory/
 ```
 
-After org move: replace `aelintra` with `pbx3` (or chosen org slug).
+After org move: replace `aelintra` with `pbx3` (or chosen org slug) for **product** repos only.
 
 ---
 
@@ -86,5 +89,5 @@ After org move: replace `aelintra` with `pbx3` (or chosen org slug).
 |-----|----------|
 | **OPEN_SOURCE_GITHUB_SETUP.md** | Org creation, teams, branch protection, Pages/CORS |
 | **USER_GUIDES_MKDOCS_CONTENT_MAP.md** | Future **pbx3-docs** repo |
-| **AGENT_HANDOFF.md** | Agent entry; git layout reminder |
-| **SESSION_END_CHECKLIST.md** | End-of-session handoff updates |
+| **AGENT_HANDOFF.md** | Product stub (behavior + read-order); live session → **`~/GiT/pbx3-ops`** |
+| **SESSION_END_CHECKLIST.md** | Stub → **`~/GiT/pbx3-ops/SESSION_END_CHECKLIST.md`** |
