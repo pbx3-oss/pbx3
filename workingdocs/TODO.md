@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-09 (session end: light workingdocs peel → ops/devdocs)
+**Last updated:** 2026-08-09 (session end: ops quarantine + thin-handoff rules)
 
 ### Suggested “what next?” order
 
