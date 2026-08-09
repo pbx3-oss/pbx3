@@ -75,30 +75,37 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 
 ---
 
-## Next agent session notes (2026-08-08) — Lab deployment bound + OSS prep + API tip roll
+## Next agent session notes (2026-08-08) — SARK ETL v2 + bzy restore
 
-**Branch:** **`main`** — pbx3 docs tip (this push); pbx3api **`321a12e`** live on **08jzwn** / **bzy54n** / **kildare**; pbx3spa prior tip. SPA **`npm run dev`**.
+**Branch:** **`main`** — product: **pbx3api `42b7865`** (Home pulse AMI); private **`aelintra/sark-to-pbx3` `8a1c614`**. SPA **`npm run dev`**.
 
 ### Shipped
-- **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** expanded and re-bounded: primary project = **Lab deployment (T4)** — VM manager + Ubuntu/Debian LAN + **Garage**; SPA LAN-static (any OS); cloud T2/AMI follow-on; Appendix B bootstrap; rtpengine parked (Appendix A).
-- Product license **locked Apache-2.0** (files still to add). Public gate: LICENSE + workingdocs hygiene + SARK extract/strip.
-- TODO reordered: **#0** workingdocs hygiene → **#1** Apache LICENSE → **#2** SARK ETL → **#3** SARK strip → Lab later.
-- **Ops:** rolled **pbx3api `321a12e`** (Sanctum TOTP) to **bzy54n** + **kildare** (path-migrate TOTP only; `/up` 200).
+- **`aelintra/sark-to-pbx3`:** offline **v2** primary (Python). Tenant-from-folder, blank-tech DiDs/trunks, orphan cluster FK coerce, trunks `active=NO`, day-timer `desc`→description, on-host user restore, MkDocs step flows, **`docs/CDR_SIPP_VERIFY_REQUIREMENTS.md`** (Egress remap before SIPp).
+- Lab transforms: **duncanrogers**, **mastersuk** (oldest zip); v2 outperformed v1 on blank-tech DIDs.
+- **bzy54n** restored to pre-SARK DB (`pre-sark-migrate-20260809T000920Z.db`); admin **`pbx3-lab-reset`**. Mastersuk snapshot kept as `pre-restore-*.db` on host.
+- **pbx3api:** Home pulse cold path ~3s → ~0.1s via `amiQueryUntilBlankLine` (**`42b7865`**); hot-fixed on bzy; golden/kildare wait next sync.
+- bzy 2FA: routes present, **not enrolled** (not a restore byproduct).
 
 ### Golden / ops
-- Fleet instance APIs aligned on TOTP tip. Packages **0.0.5-1** / cagi **1.0.0-14** still not necessarily installed on all nodes.
+- bzy = restored multi-tenant lab (cluster1 / willand / sandycroft), not a SARK migrate. Do not leave customer migrate DBs on shared lab without intent.
 
 ### Resume
-1. **Workingdocs hygiene** (#0) — quarantine session handoffs before Lab advertise / public.  
-2. **Apache-2.0 `LICENSE` files** (#1) on product repos.  
-3. **SARK ETL extract** (#2) then **strip leftovers** (#3).  
-4. Lab D1 only after hygiene (+ LICENSE preferred). Do **not** start rtpengine without LAN-edge trigger.
+1. **More ETL v2 fixture tests** (`~/GiT/nonGitStuff/sark-backups/<site>/`) — load/compare; optional CDR→sipplabs after Egress prep.  
+2. **MkDocs:** `cd sark-to-pbx3/mkdocs && mkdocs serve`.  
+3. Product OSS track: hygiene → LICENSE (if gaps) → **SARK strip from pbx3** (#3).  
+4. Sync **pbx3api `42b7865`** to golden/kildare when convenient.
+
+---
+
+## Next agent session notes (2026-08-08) — Lab deployment bound + OSS prep + API tip roll (superseded)
+
+**Superseded for “read first”** by SARK ETL v2 block above. Lab try-it / Apache / hygiene still on **`main`**.
 
 ---
 
 ## Next agent session notes (2026-08-08) — Fleet try-it deployment requirements (superseded)
 
-**Superseded for “read first”** by Lab deployment bound + OSS prep block above. Try-it/Lab requirements doc still on **`main`** (expanded same day).
+**Superseded for “read first”** by Lab deployment bound block (then ETL block). Try-it/Lab requirements doc still on **`main`**.
 
 ---
 

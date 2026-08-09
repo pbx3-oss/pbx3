@@ -1,14 +1,14 @@
 # PBX3 ToDo list
 
-**Branch:** Product repos **`main`**. Instance Sanctum TOTP on fleet nodes (**08jzwn**, **bzy54n**, **kildare** @ **pbx3api `321a12e`**). Fleet Gatekeeper TOTP G1–G4 lab green. **SBC TOTP** on **`pbx3sbc-admin` `main`**. Packages **pbx3 0.0.5-1** / **pbx3cagi 1.0.0-14** artefacts pushed; fleet nodes still on older debs until install / new instance. SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-08 (session end: Lab bound + OSS prep + API tip roll)
+**Branch:** Product repos **`main`**. Instance Sanctum TOTP on fleet nodes (**08jzwn**, **bzy54n**, **kildare**). **pbx3api** tip includes Home-pulse AMI fix **`42b7865`** (hot on bzy; golden/kildare on next sync). Private ETL **`aelintra/sark-to-pbx3`** v2 primary. SPA via **`npm run dev`**.  
+**Last updated:** 2026-08-08 (session end: SARK ETL v2 + bzy restore)
 
 ### Suggested “what next?” order
 
-0. **Workingdocs hygiene (do soon)** — product/design stay in-repo; quarantine agent session handoffs to private ops. See open item.  
-1. **Apache-2.0 `LICENSE` files** — add Apache License 2.0 `LICENSE` on each product repo (`pbx3`, `pbx3api`, `pbx3spa`, `pbx3cagi`, Magrathea/SBC admin as applicable). License **chosen**; files still to land. See **`OPEN_SOURCE_GITHUB_SETUP.md`**.  
-2. **SARK migration ETL → Aelintra repo** — extract `db_legacy_sql` / `migrateLegacyDb` / fixRi / related into an **Aelintra-owned** repo (stays behind when PBX3 goes public).  
-3. **Strip redundant / unused SARK code from pbx3** — after extract (or same pass): remove dead legacy import paths, unused helpers, orphaned SQL/docs that no longer belong in the product tree. Keep only what PBX3 runtime still needs.  
+0. **SARK ETL v2 — more fixture tests** — continue offline migrate + lab load (next session); CDR→sipplabs verify when ready (**`aelintra/sark-to-pbx3`** `docs/CDR_SIPP_VERIFY_REQUIREMENTS.md`).  
+1. **Workingdocs hygiene (do soon)** — product/design stay in-repo; quarantine agent session handoffs to private ops. See open item.  
+2. **Apache-2.0 `LICENSE` files** — add Apache License 2.0 `LICENSE` on each product repo (if not already landed every repo). See **`OPEN_SOURCE_GITHUB_SETUP.md`**.  
+3. **Strip redundant / unused SARK code from pbx3** — ETL lives in **`aelintra/sark-to-pbx3`**; purge dead legacy import paths from product tree.  
 4. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
 5. **Lab deployment (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: LAN Lab T4; prefer after hygiene + LICENSE.  
 6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
@@ -47,9 +47,9 @@
 
 - [ ] **Apache-2.0 `LICENSE` on product repos (suggested #1, open 2026-08-08):** License **chosen** (Apache License 2.0, all product repos). Add `LICENSE` file (and copyright notices as needed) to **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**, Magrathea/SBC admin as applicable. Gate before public / stranger Lab clone. See **`OPEN_SOURCE_GITHUB_SETUP.md`** · Lab packaging §.
 
-- [ ] **SARK migration ETL → separate Aelintra repo (suggested #2):** Break all **SARK V6 → pbx3** migration code/SQL out of the **pbx3** product tree into its **own repo that stays under `aelintra`**. Scope at least: **`db_legacy_sql`**, `migrateLegacyDb` / related scripts, fixRi / normalize helpers, any sail-coupled import docs. **Must** precede OSS org transfer. FreePBX→pbx3 ETL remains a separate future track. Then do **SARK strip** (#3). Cross-link: **`OPEN_SOURCE_GITHUB_SETUP.md`** / **`REPOS_AND_RELEASES.md`** · SARK V6 revisit item.
+- [x] **SARK migration ETL → separate Aelintra repo (2026-08-08/09):** Private **`aelintra/sark-to-pbx3`**. **v2 offline** (`bin/migrate-offline.py`) is primary; v1 on-host for parity. Lab: duncanrogers + mastersuk; blank-tech DiDs, tenant-from-folder, inactive trunks, orphan cluster FKs, MkDocs flows, CDR→sipplabs verify requirements. **Next:** more v2 fixture tests; then product **strip** (#3). Fixtures: `~/GiT/nonGitStuff/sark-backups/<site>/`.
 
-- [ ] **Strip redundant / unused SARK code from pbx3 (suggested #3, open 2026-08-08):** After (or with) ETL extract: purge dead legacy import entrypoints, unused helpers, orphaned SQL/docs, and any SARK-only paths that are not required for PBX3 runtime. Goal: product tree has no leftover migration bridge. Inventory before delete; do not remove still-used schema/normalize repairs without a home in the Aelintra ETL repo. Repo: **pbx3**.
+- [ ] **Strip redundant / unused SARK code from pbx3 (suggested #3, open 2026-08-08):** ETL is in **`aelintra/sark-to-pbx3`**; purge dead legacy import entrypoints, unused helpers, orphaned SQL/docs from **pbx3** product tree. Inventory before delete; keep runtime schema/normalize repairs that product still needs.
 
 - [ ] **Lab deployment — quick LAN fleet (requirements locked 2026-08-08):** Primary project: curious user + **VM manager** → few **Ubuntu/Debian** VMs → **T4** (Magrathea+GK, home PBX, **Garage**). Operator box may be **Linux/Windows/macOS** (no Mac assumption); SPA prefer **LAN static**. Tailor + Appendix B. Cloud **T2**/AMI = follow-on. Prefer **after** hygiene (#0) + Apache LICENSE (#1). Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. Implement D1+ when scheduled.
 
