@@ -1,3 +1,12 @@
+pbx3 (0.0.5-2) noble; urgency=medium
+
+  * #4a safety: dumper SQL escape + include falsy columns; GenClass
+    appl.cluster lookup by shortuid; unit tests under scripts/tests/.
+  * Reloader -L fails before deleting the live DB.
+  * Heritage scrub / migrate strip already on main (packaging catch-up).
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Sun, 09 Aug 2026 22:45:00 -0400
+
 pbx3 (0.0.5-1) noble; urgency=medium
 
   * Minor after Site Groups (dial cohort) lab green + naming / seed outbound.
