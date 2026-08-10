@@ -100,16 +100,28 @@ flowchart TB
 
 | Box | Role |
 |-----|------|
-| **VM A** | Magrathea + Gatekeeper (same as T2 Host A) |
-| **VM B** | Home PBX (Asterisk + API) |
-| **Garage** | Org directory / HoR — Compose on VM A, or a tiny third guest / LXC |
+| **VM A** | Magrathea + Gatekeeper (same as T2 Host A) + **Garage** Compose (default) |
+| **VM B** | Home PBX 1 (Asterisk + API) |
+| **VM C** | Home PBX 2 (optional — preferred when proving multi-home / Site Groups) |
 
-- All SIP, RTP, catalog, and SPA↔API traffic stays **on the LAN** (or VPN). SPA: prefer a **LAN-hosted static build** (any browser on the operator machine); optional local Vite for contributors who have Node. Catalog URL points at Garage (HTTP on LAN is fine for lab).
+**Locked box count (2026-08-10):** Prefer **three** guests for a two-home Lab — **do not** split Gatekeeper onto a fourth box for T4. Garage stays on VM A (or a tiny LXC) unless ops wants isolation. One-home Lab = VM A + VM B only.
+
+- All SIP, RTP, catalog, and SPA↔API traffic stays **on the LAN** (or VPN) for the core Lab story. SPA: prefer a **LAN-hosted static build** (any browser on the operator machine); optional local Vite for contributors who have Node. Catalog URL points at Garage (HTTP on LAN is fine for lab).
 - **No cloud bill** beyond electricity / existing hypervisor.
-- Tailor env uses private DNS or `/etc/hosts` names (`sbc.lab`, `control.lab`, `home.lab`, Garage endpoint). Topology flag: `lab` (alias `fleet_lan`).
-- RTP **bypass** still applies; phones/webphones on the same LAN talk to home Asterisk. This is **not** Appendix A (LAN-behind-edge + public remotes / rtpengine).
-- Onboard still registers the home instance into the Garage-backed catalog; no EC2 instance profiles — static keys from bootstrap.
+- Tailor env uses private DNS or `/etc/hosts` names (`sbc.lab`, `control.lab`, `home1.lab`, `home2.lab`, Garage endpoint). Topology flag: `lab` (alias `fleet_lan`).
+- RTP **bypass** still applies on-LAN; phones/webphones on the same LAN talk to home Asterisk. This is **not** Appendix A (rtpengine).
+- Onboard still registers each home into the Garage-backed catalog; no EC2 instance profiles — static keys from bootstrap.
 - **Positioning:** lab / evaluation only in copy; production fleets may still prefer a durable cloud or multi-site object store.
+
+#### Optional — public carrier into a NATed Lab (ops pilot)
+
+**Not** part of D1 acceptance. When a Lab needs an **external carrier** while homes stay private:
+
+1. **First try — chunked RTP port-forwards** (2026-08-10 stance): partition public RTP ranges per home (e.g. `10000–10099` → Ast1, `11000–11099` → Ast2); WAN DNAT each chunk; set each Asterisk `rtpstart`/`rtpend` to its chunk; SDP **`externip`** = public WAN IP. SIP may still terminate on Magrathea (DID → home). Outbound from NATed Asterisk usually works via hole-punch without relying on the forwards.
+2. Magrathea adds little for **carrier media** in that pattern (one Peer face + DID fan-out still useful for fleet practice). Solo **T1** is enough if the goal is only “one PBX + carrier.”
+3. If chunked NAT does not scale or is too brittle → unpark **Appendix A** (rtpengine) for a single public media face.
+
+Do **not** invent product RTP-slot allocation UI for this pilot — router + `rtp.conf` / externip is enough.
 
 #### SPA in Lab deployment
 
@@ -230,13 +242,14 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 
 **Not part of try-it.** RTP **bypass** remains product default: endpoint ↔ **home Asterisk** (Asterisk always in media path); SIP via Magrathea.
 
-**rtpengine** only if a real trigger appears: LAN home + public remote, explicit relay mode, or legacy WebRTC↔non-WebRTC gateway. Selective engage; no PBX product mods; HA media deferred.
+**rtpengine** only if a real trigger appears: LAN home + public remote where **chunked RTP DNAT** is insufficient, explicit relay mode, or legacy WebRTC↔non-WebRTC gateway. Selective engage; no PBX product mods; HA media deferred.
 
-- Spec trigger: Track A / Peer forbids bypass / LAN-edge pilot.
+- Spec trigger: Track A / Peer forbids bypass / LAN-edge pilot after chunked-NAT pilot fails or is rejected for ops.
+- Prefer **chunked RTP port-forwards** first for small-N Lab (see T4 optional carrier subsection).
 - Effort if built: ~1–2 weeks SBC MVP (see prior design discussion).
 - Gap pointer: **`SBC_PRODUCT_TRACKS.md`** #2 · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1.
 
-**Do not** implement media plane to reduce instance count or simplify first deploy.
+**Do not** implement media plane to reduce instance count or simplify first deploy (D1).
 
 ---
 
@@ -320,3 +333,4 @@ Covered by **A7** / **A8** above. Point MkDocs / install docs at the script; kee
 | 2026-08-08 | Product license **locked: Apache-2.0** (all product repos); add `LICENSE` files before public. |
 | 2026-08-09 | Apache-2.0 root `LICENSE` on product repos (clean text; httpd composite removed). |
 | 2026-08-09 | Customer migrate stripped from pbx3 package; private ETL under Aelintra. Public gate = org transfer when scheduled. |
+| 2026-08-10 | T4 prefer **3 boxes** for two homes (GK co-located on Magrathea+Garage). Optional LAN+carrier: **chunked RTP DNAT** before rtpengine. |

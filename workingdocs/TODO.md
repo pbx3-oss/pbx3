@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-10 (#4c ext_len enforce)  
+**Last updated:** 2026-08-10 (#4b/#4c lab green; T4 3-box + chunked RTP stance)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -11,9 +11,9 @@
 3. ~~**Strip customer-migrate tooling from pbx3**~~ — **done** (private ETL owns migrate; package keeps shortuid normalize only).  
 4. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
 4a. ~~**Pre-release safety debt (go/no-go)**~~ — **code + tests + golden go-smoke done** (`PRE_RELEASE_SAFETY_DEBT.md` 1–16). ChanSpy desk + sipplab feature pack **U**; golden dial + SPA login + DID `441924910444` green (2026-08-09). Bzy smoke optional.  
-4b. ~~**Tenant delete data integrity**~~ — **T1–T5 done** (`TENANT_DELETE_DATA_INTEGRITY.md`). Remaining optional: T6 DID policy, T7 Class B, T8 FK. Lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1.  
-4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2.  
-5. **Lab deployment (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: LAN Lab T4; OSS gates (LICENSE + migrate strip) cleared.  
+4b. ~~**Tenant delete data integrity**~~ — **T1–T5 done** (`TENANT_DELETE_DATA_INTEGRITY.md`). Lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1 (2026-08-10). Remaining optional: T6 DID policy, T7 Class B, T8 FK.  
+4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 (2026-08-10).  
+5. **Lab deployment (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: LAN Lab T4; prefer **3 VMs** for two homes (Mag+GK+Garage / Ast1 / Ast2); optional public-carrier pilot = **chunked RTP DNAT** before rtpengine. OSS gates cleared.  
 6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
 7. **New instance / package install** — fleet packages **pbx3 `0.0.5-3`** / **pbx3cagi `1.0.0-17`** (#4c); tip-deploy **pbx3api** + **pbx3sbc**/**sbc-admin**. Ops: **`TODO_OPS.md`**.  
 8. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
@@ -62,7 +62,9 @@
 
 - [x] **Strip customer-migrate tooling from pbx3 (suggested #3, done 2026-08-09):** Removed stock migrate entrypoints; kept idempotent **`sqlite_normalize_cluster_to_shortuid.sql`**. Private ETL owns migrate SQL/PHP. Heritage strings scrubbed 2026-08-09.
 
-- [ ] **Lab deployment — quick LAN fleet (requirements locked 2026-08-08):** Primary project: curious user + **VM manager** → few **Ubuntu/Debian** VMs → **T4** (Magrathea+GK, home PBX, **Garage**). Operator box may be **Linux/Windows/macOS** (no Mac assumption); SPA prefer **LAN static**. Tailor + Appendix B. Cloud **T2**/AMI = follow-on. Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. Implement D1+ when scheduled.
+- [ ] **Lab deployment — quick LAN fleet (requirements locked 2026-08-08; box/RTP stance 2026-08-10):** Primary project: curious user + **VM manager** → **Ubuntu/Debian** VMs → **T4**. Prefer **3 boxes** for two homes (Magrathea+GK+Garage / Ast1 / Ast2). Optional LAN+public carrier: **chunked RTP port-forwards** before Appendix A rtpengine. SPA prefer **LAN static**. Tailor + Appendix B. Cloud **T2**/AMI = follow-on. Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. Implement D1+ when scheduled.
+
+- [x] **#4b/#4c lab procedures on golden (2026-08-10):** **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1–§2 green (same-home prune; ext_len API + GenAst `_81XXX`).
 
 - [ ] **pbx3api `.deb` (open 2026-08-08):** Versioned Debian package installing under **`/opt/pbx3api`**, preserving `.env` on upgrade, wiring nginx/php-fpm via existing installer semantics. Ubuntu/Debian long-haul; apt parity with **pbx3** / **pbx3cagi**. Until shipped: clone-at-tag (public org) or current tip deploy. Repo: **pbx3api**. See try-it packaging § **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**.
 

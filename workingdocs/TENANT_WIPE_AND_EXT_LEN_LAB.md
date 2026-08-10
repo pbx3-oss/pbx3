@@ -1,6 +1,6 @@
 # Lab procedures — #4b tenant wipe integrity + #4c ext_len
 
-**Status:** Procedures written **2026-08-10**. Run after tip-deploy of #4b/#4c (not yet on golden as of handoff).  
+**Status:** Procedures written **2026-08-10**. **Lab green on golden** same day (same-home prune §1.4; §2.1–2.5; disposable LabWipeA/B wiped).  
 **Specs:** [`TENANT_DELETE_DATA_INTEGRITY.md`](TENANT_DELETE_DATA_INTEGRITY.md) (T1–T5) · [`TENANT_SHORT_DIAL_REQUIREMENTS.md`](TENANT_SHORT_DIAL_REQUIREMENTS.md) §3.8 / Q15 · UK seed [`SEED_OUTBOUND_ON_TENANT_CREATE.md`](SEED_OUTBOUND_ON_TENANT_CREATE.md) L7a.  
 **Ops tips/hosts:** `~/GiT/pbx3-ops/TODO_OPS.md` (do not put SHAs here).
 
