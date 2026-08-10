@@ -1,6 +1,6 @@
 # Seed outbound OutRoutes on tenant create — requirements (stub)
 
-**Status:** **Implemented 2026-08-06** (API + SPA + schema apply). UK default string `_0. _00.`; US string still operator-set (O4).  
+**Status:** **Implemented 2026-08-06** (API + SPA + schema apply); **UK seed amended 2026-08-10 (#4c / L7a)** to `_0XXX. _00XX.`. US string still operator-set (O4).  
 **Spec / behaviour:** Instance `globals.default_outbound_dialplan` → copy to tenant `MainOut` OutRoute on create (`path1=Egress` when fleet/Egress exists). Time saver; editable after.  
 **Related:** [`FLEET_TENANT_CREATE_REQUIREMENTS.md`](FLEET_TENANT_CREATE_REQUIREMENTS.md) · [`NUMBER_WIRE_POLICY.md`](../pbx3-directory/docs/NUMBER_WIRE_POLICY.md) · [`EGRESS_PLUS_E164_WIRE.md`](EGRESS_PLUS_E164_WIRE.md) · code `SeedOutboundRouteOnTenantCreate` · apply `apply-sqlite-add-default-outbound-dialplan.sh`
 
@@ -24,7 +24,7 @@ Same product instinct as **DID open-seed**: create should leave the tenant **usa
 | L4 | **One tenant does not span locales** | No per-tenant locale picker at create. |
 | L5 | **Instance owns the default dialplan string** | One character string on **instance `globals`** (same shape as OutRoute `dialplan`). Not a multi-row template system. |
 | L6 | **Tenant create copies that string** into a tenant OutRoute | Snapshot into `route` with `path1=Egress` on fleet. **Time saver only** — operator may edit/add/remove routes after; nothing stops post-create changes. |
-| L7 | **Reject iron-PBX-only shunt** as the product default | “Longer than `ext_len` → Egress” alone is not the seed string. Seed stays locale patterns (`_0. _00.` / US pack). |
+| L7 | **Reject iron-PBX-only shunt** as the product default | “Longer than `ext_len` → Egress” alone is not the seed string. Seed stays locale patterns (`_0XXX. _00XX.` / US pack). |
 | L7a | **Length namespaces (2026-08-10)** | OutRoute patterns must have minimum match length **> tenant `ext_len`**. Compatible seize digit (e.g. long `_9…` + mangle strip) OK. Bare short seize (`_9.`) forbidden under this rule. See **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8. |
 | L8 | Carrier face stays on the SBC | Aligns with number wire policy; node Mangle (Phase 1) still turns habit → `+E.164` on Egress. |
 | L9 | **Product framing** | Negates defining an OutRoute **by hand for every new tenant**. Not a live-linked policy; not multi-locale; not carrier dialect. |
@@ -87,8 +87,8 @@ Commit / GenAst → OutRoute → Egress → SBC → Peer dialect
 | # | Question | Options / lean |
 |---|----------|----------------|
 | O1 | **Where does the default string live?** | **Locked + shipped:** `globals.default_outbound_dialplan` |
-| O2 | **How is instance locale / initial string chosen?** | UK install/upgrade seed `_0. _00.`; operator edits in Instance Globals for US/etc. |
-| O3 | **UK pack v1 contents** | **Locked:** `_0. _00.` (national + IDD) |
+| O2 | **How is instance locale / initial string chosen?** | UK install/upgrade seed `_0XXX. _00XX.`; operator edits in Instance Globals for US/etc. |
+| O3 | **UK pack v1 contents** | **Locked (amended #4c):** `_0XXX. _00XX.` (national + IDD; L7a-safe for default `ext_len=3`). Was `_0. _00.` pre-#4c. |
 | O4 | **US / other packs** | Operator sets globals string (no US auto-seed yet) |
 | O5 | **Empty globals / re-provision** | **Locked:** skip if empty; skip if tenant already has any OutRoute |
 | O6 | **Solo vs fleet** | Same copy; `path1=Egress` when fleet or Egress trunk exists |

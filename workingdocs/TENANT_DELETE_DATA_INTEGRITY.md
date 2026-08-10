@@ -119,6 +119,8 @@ DiDs **on the node** (`inroutes` with matching `cluster`) **are** in the wipe li
 - Orphan audit returns 0 on golden after delete lab.  
 - Adding a new `cluster`-keyed table without list update fails CI.
 
+**Lab procedure (tip-deploy):** [`TENANT_WIPE_AND_EXT_LEN_LAB.md`](TENANT_WIPE_AND_EXT_LEN_LAB.md) §1.
+
 ---
 
 ## 6. Explicit non-goals

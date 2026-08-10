@@ -721,6 +721,48 @@ class genAsteriskObjects
 	}
 
 	/**
+	 * Destination tenant ext_len for PrefixDial pattern (local cluster only; else $fallback).
+	 */
+	private function resolveDialTargetExtLen(array $aliasrow, int $fallback): int
+	{
+		$fallback = ($fallback >= 2 && $fallback <= 5) ? $fallback : 3;
+		$pin = isset($aliasrow['target_cluster']) ? trim((string) $aliasrow['target_cluster']) : '';
+		if ($pin !== '') {
+			try {
+				$st = $this->dbh->prepare('SELECT ext_len FROM cluster WHERE shortuid = ? OR pkey = ? OR id = ? LIMIT 1');
+				$st->execute([$pin, $pin, $pin]);
+				$r = $st->fetch(PDO::FETCH_ASSOC);
+				if ($r && isset($r['ext_len']) && is_numeric($r['ext_len'])) {
+					$n = (int) $r['ext_len'];
+					if ($n >= 2 && $n <= 5) {
+						return $n;
+					}
+				}
+			} catch (PDOException $e) {
+				// fall through
+			}
+		}
+		$fqdn = isset($aliasrow['target_fqdn']) ? strtolower(trim((string) $aliasrow['target_fqdn'])) : '';
+		if ($fqdn !== '') {
+			try {
+				$st = $this->dbh->prepare('SELECT ext_len FROM cluster WHERE lower(trim(fqdn)) = ? LIMIT 1');
+				$st->execute([$fqdn]);
+				$r = $st->fetch(PDO::FETCH_ASSOC);
+				if ($r && isset($r['ext_len']) && is_numeric($r['ext_len'])) {
+					$n = (int) $r['ext_len'];
+					if ($n >= 2 && $n <= 5) {
+						return $n;
+					}
+				}
+			} catch (PDOException $e) {
+				// fall through
+			}
+		}
+
+		return $fallback;
+	}
+
+	/**
 	 * Stable SBC SIP host for phone outbound_proxy (Phase F).
 	 * Same env as fleet egress seed (PBX3_SBC_EGRESS_HOST); default lab/prod VIP name.
 	 */
@@ -1289,8 +1331,9 @@ HERE;
             }
         }
         /*
-         * Tenant short dial (fleet): fixed-width dial prefix + digit remainder → PrefixDial.
-         * Pattern _81X. so * / # do not match. CAGI resolves target_fqdn from dialalias (Rule 1).
+         * Tenant short dial (fleet): fixed-width dial prefix + fixed remainder = dest ext_len → PrefixDial.
+         * Pattern _81XXXX (not open _81X.). Skip if prefix+dest_len ≤ caller ext_len (length namespace).
+         * Dest ext_len from local cluster (target_cluster / target_fqdn); else caller ext_len.
          */
         if ($this->isFleetMode()) {
             $this->OUT .= <<<HERE
@@ -1299,8 +1342,15 @@ HERE;
 ;	
 HERE;
             $this->OUT .= "\n";
+            $callerExtLen = 3;
+            if (isset($row['ext_len']) && is_numeric($row['ext_len'])) {
+                $n = (int) $row['ext_len'];
+                if ($n >= 2 && $n <= 5) {
+                    $callerExtLen = $n;
+                }
+            }
             try {
-                $sql = "SELECT pkey FROM dialalias WHERE cluster='" . $row['shortuid'] . "' AND active='YES' ORDER BY pkey";
+                $sql = "SELECT pkey, target_fqdn, target_cluster FROM dialalias WHERE cluster='" . $row['shortuid'] . "' AND active='YES' ORDER BY pkey";
                 $qRes = $this->dbh->query($sql);
                 $aliases = $qRes ? $qRes->fetchAll() : [];
                 $qRes = NULL;
@@ -1309,7 +1359,12 @@ HERE;
                     if ($prefix === '' || !preg_match('/^\d{2,4}$/', $prefix)) {
                         continue;
                     }
-                    $this->OUT .= "\texten => _" . $prefix . "X.,1,agi(" . SYSAGI . ",PrefixDial," . $prefix . "," . $row['shortuid'] . ",,,)\n";
+                    $destExtLen = $this->resolveDialTargetExtLen($aliasrow, $callerExtLen);
+                    if ((strlen($prefix) + $destExtLen) <= $callerExtLen) {
+                        continue;
+                    }
+                    $mask = str_repeat('X', $destExtLen);
+                    $this->OUT .= "\texten => _" . $prefix . $mask . ",1,agi(" . SYSAGI . ",PrefixDial," . $prefix . "," . $row['shortuid'] . ",,,)\n";
                 }
             } catch (PDOException $e) {
                 if (stripos($e->getMessage(), 'no such table') === false) {

@@ -161,7 +161,9 @@ Same-node “hairpin” back to the same Asterisk via dispatcher is **correct** 
 | **Deny** | Missing/inactive prefix, wrong-length remainder, **or non-digit remainder** → **congestion + hangup** (no attendant / custom playback v1). |
 | **CoS** | **Tenant-wide:** active prefix row ⇒ allowed for all CoS classes. Per-class grant later if needed. |
 
-**Deferred implement** (stance locked; code when scheduled): API/SPA enforce `ext_len` on extension create/update; GenAst length-bounded PrefixDial patterns; OutRoute save validates min match length `> ext_len`.
+**Deferred implement** ~~(stance locked; code when scheduled)~~ **Implemented 2026-08-10 (#4c):** API/SPA enforce `ext_len` on extension create/update; GenAst length-bounded PrefixDial patterns; OutRoute save validates min match length `> ext_len`; CAGI rejects wrong-length remainder when dest is local. UK seed dialplan → `_0XXX. _00XX.` (L7a).
+
+**Lab procedure (tip-deploy):** [`TENANT_WIPE_AND_EXT_LEN_LAB.md`](TENANT_WIPE_AND_EXT_LEN_LAB.md) §2.
 
 ### 3.9 CallerID and return-call (locked 2026-07-27)
 
@@ -462,6 +464,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | 2026-08-04 | **D residual:** lab → **least-ugly *guaranteed* return** recipe (SUID / DID / PAI / hybrid candidates); no implement until findings. |
 | 2026-08-05 | **§15 Local shortcut rejected** — dual-path debt not worth same-node SBC bounce; Path 1 desk return lab green. |
 | 2026-08-10 | **§3.8 / Q2 / Q15:** enforce tenant `ext_len` (default 3, max 5, allowed 2–5, no mixed length); short-dial + OutRoute min match **> `ext_len`**; GenAst length-bounded remainder; drop “operator collision hygiene.” |
+| 2026-08-10 | **#4c implement:** ExtLenPolicy + API/SPA/GenAst/CAGI; UK seed `_0XXX. _00XX.` (L7a). |
 
 ---
 

@@ -31,7 +31,7 @@ Work in roughly this order; stop when go/no-go criteria below are met.
 | 15 | **pbx3spa** | Mask SIP password in extension UI | **Done** — password input + reveal after regen; `maskSipPassword.test.js` |
 | 16 | **pbx3spa** | Fleet GK 401 clears stale token | **Done** — `gkFetch`/`parseJsonResponse` clears token; fleetGatekeeper tests |
 
-**Also near-time (data integrity):** Tenant wipe already cascades in app code — harden gaps in **`TENANT_DELETE_DATA_INTEGRITY.md`** (T2–T5: sibling dialaliases, park parity, orphan audit, schema↔wipe-list CI). Do **not** gate Delete on empty dependents.
+**Also near-time (data integrity):** Tenant wipe T1–T5 + `ext_len` (#4c) — lab after tip: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`**. Do **not** gate Delete on empty dependents.
 
 **Shared:** AMI password out of source (`pbx3` + `pbx3api`) — schedule with secret rotation (same week if time).
 

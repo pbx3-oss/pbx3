@@ -16,6 +16,8 @@ Status legend: **done** · **partial** · **todo** · **lab-only** (keep as reci
 | Gatekeeper user + session token lifecycle | **pbx3** / gatekeeper | **done** | `tests/UserStoreAuthTest.php` |
 | Gatekeeper break-glass env token still accepted | **pbx3** / gatekeeper | **done** | `tests/AuthBreakGlassTest.php` |
 | Snapshot retention math / max-count | **pbx3api** | **done** | `SnapshotRetention::planPrune` + `tests/Unit/SnapshotRetentionTest.php` |
+| ExtLenPolicy / seed length namespace | **pbx3api** | **done** | `tests/Unit/ExtLenPolicyTest.php` · `SeedOutboundRouteOnTenantCreateTest.php` |
+| Tenant wipe-list / orphan integrity | **pbx3api** | **done** | `tests/Unit/TenantWipeIntegrityTest.php` |
 | Recordings list/stream contract (happy + 404) | **pbx3api** | **done** | `tests/Feature/RecordingHttpTest.php` (mocked index; Sanctum admin) |
 | Fleet gatekeeper list API shape | **pbx3** gatekeeper | **done** | `tests/FleetListContractTest.php` + fixtures (no live S3) |
 | SPA fleet token gate (login → storage → Authorization) | **pbx3spa** | **done** | `src/config/fleetGatekeeper.test.js` (Vitest) |
@@ -56,6 +58,7 @@ Repo-root `make test-critical` deferred until CI wiring is desired.
 | Peering inbound DID / alias | PEERING-PLAN + QUICK-START | **lab-only** |
 | S8 rebuild drill | IMPLEMENTATION_PLAN / prior drill notes | **lab-only** |
 | SBC install script smoke | `pbx3sbc` TESTING.md | **lab-only** |
+| #4b wipe + #4c ext_len tip lab | **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** | **todo** (run after tip-deploy) |
 
 ---
 

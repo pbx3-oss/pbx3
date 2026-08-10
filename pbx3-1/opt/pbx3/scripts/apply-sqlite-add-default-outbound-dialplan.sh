@@ -31,12 +31,12 @@ if ! has_table globals; then
 fi
 
 if ! has_col globals default_outbound_dialplan; then
-	sqlite3 "$DB" "ALTER TABLE globals ADD COLUMN default_outbound_dialplan TEXT DEFAULT '_0. _00.';"
+	sqlite3 "$DB" "ALTER TABLE globals ADD COLUMN default_outbound_dialplan TEXT DEFAULT '_0XXX. _00XX.';"
 	echo "added globals.default_outbound_dialplan"
 fi
 
-# Seed empty/NULL on existing rows (UK lab default; US nodes should set NANP string in SPA).
-sqlite3 "$DB" "UPDATE globals SET default_outbound_dialplan = '_0. _00.' WHERE default_outbound_dialplan IS NULL OR trim(default_outbound_dialplan) = '';"
+# Seed empty/NULL; migrate pre-#4c UK seed to L7a-safe patterns (do not rewrite custom strings).
+sqlite3 "$DB" "UPDATE globals SET default_outbound_dialplan = '_0XXX. _00XX.' WHERE default_outbound_dialplan IS NULL OR trim(default_outbound_dialplan) = '' OR trim(default_outbound_dialplan) = '_0. _00.';"
 
 HELP_SQL="$SQL_DIR/sqlite_update_default_outbound_dialplan_help.sql"
 if [ -f "$HELP_SQL" ] && has_table tt_help_core; then

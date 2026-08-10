@@ -53,7 +53,8 @@ Ops and honesty gates — small list:
 | **F5** | **Lab / demo DB anonymize** if anyone outside the closed lab sees screens / dumps | Real-site surnames still on golden — do before wider demo |
 | **F6** | Optional but tidy: run **`sqlite_device_lean_prune.sql`** on golden/bzy | Align running DB with lean seed; drop surplus Device template fat |
 | **F7** | **Pre-release safety debt** — **`PRE_RELEASE_SAFETY_DEBT.md`** | Go/no-go before calling a release: cagi buffers, api tenant IDOR, dumper/appl, edge MI/SQL, Filament fleet-owned, spa secrets |
-| **F8** | **Tenant delete integrity** — **`TENANT_DELETE_DATA_INTEGRITY.md`** | Wipe already cascades; close sibling dialalias / park / orphan gaps before release honesty |
+| **F8** | **Tenant delete integrity** — **`TENANT_DELETE_DATA_INTEGRITY.md`** · lab **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1 | Wipe already cascades; close sibling dialalias / park / orphan gaps before release honesty |
+| **F9** | **`ext_len` enforce** — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 · lab **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 | Digit-plan length namespaces; tip-deploy then run §2 |
 
 Not new product features — **rollout + hygiene + safety**.
 
@@ -100,10 +101,11 @@ Do **not** block first out on these:
 ## Suggested order when you pick up cleanup
 
 1. **F1–F4** (install + tip + smoke + DNS check)  
-2. **F6** when touching golden DB anyway; **F5** if external demo  
-3. **N1–N2** if shipping Pages SPA  
-4. **N3–N7** as crumbs  
-5. Everything in “not first out” stays parked  
+2. **F7–F9** tip-deploy safety / wipe / ext_len lab (**`TENANT_WIPE_AND_EXT_LEN_LAB.md`**) when rolling those tips  
+3. **F6** when touching golden DB anyway; **F5** if external demo  
+4. **N1–N2** if shipping Pages SPA  
+5. **N3–N7** as crumbs  
+6. Everything in “not first out” stays parked  
 
 ---
 
