@@ -1,3 +1,12 @@
+pbx3 (0.0.5-3) noble; urgency=medium
+
+  * #4c: GenAst PrefixDial fixed-width remainder from dest ext_len
+    (not open _X.); skip when prefix+dest ≤ caller ext_len.
+  * UK default outbound dialplan seed → _0XXX. _00XX. (L7a length namespaces).
+  * Lab procedures: TENANT_WIPE_AND_EXT_LEN_LAB.md (#4b/#4c tip-deploy).
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Mon, 10 Aug 2026 13:25:00 -0400
+
 pbx3 (0.0.5-2) noble; urgency=medium
 
   * #4a safety: dumper SQL escape + include falsy columns; GenClass

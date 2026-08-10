@@ -15,7 +15,7 @@
 4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2.  
 5. **Lab deployment (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: LAN Lab T4; OSS gates (LICENSE + migrate strip) cleared.  
 6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
-7. **New instance / package install** — fleet packages with **#4a**: **pbx3 `0.0.5-2`** / **pbx3cagi `1.0.0-16`** (on golden); tip-deploy **pbx3api** + **pbx3sbc**/**sbc-admin**. Roll **kildare/bzy** when scheduled. Ops: **`TODO_OPS.md`**.  
+7. **New instance / package install** — fleet packages **pbx3 `0.0.5-3`** / **pbx3cagi `1.0.0-17`** (#4c); tip-deploy **pbx3api** + **pbx3sbc**/**sbc-admin**. Ops: **`TODO_OPS.md`**.  
 8. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
 9. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
 10. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
