@@ -142,9 +142,9 @@ CREATE TABLE IF NOT EXISTS cluster (
     "recused" TEXT DEFAULT '0',			   -- Recording storage used by this tenant (updated according to cron freq)						
     "ringdelay" INTEGER DEFAULT 20,       -- voip artificial ring timeout (seconds)
     "routeoverride" TEXT,					   -- Holiday scheduler route override
-    "spy_pass" TEXT DEFAULT '3333',       -- spy password
+    "spy_pass" TEXT DEFAULT '',           -- spy password (empty = ChanSpy denied)
     "sysop" INTEGER,                      -- real operator extension
-    "syspass" TEXT DEFAULT '4444',        -- password for sysops
+    "syspass" TEXT DEFAULT '',            -- password for sysops (empty = privileged keys denied)
     "usemohcustom" TEXT,
     "VDELAY" INTEGER DEFAULT 0,           -- artificial ring on inbound SIP
     "vmail_age" INTEGER DEFAULT 60,       -- vmail age

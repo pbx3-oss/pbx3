@@ -1146,7 +1146,7 @@ private function genExtensionsEndpoints()
         $this->OUT .= "\n";
 		
 		try {
-			$sql = "SELECT * FROM appl WHERE cluster='" . $row['id'] . "' ORDER BY pkey";
+			$sql = "SELECT * FROM appl WHERE cluster='" . $row['shortuid'] . "' ORDER BY pkey";
 			$qRes = $this->dbh->query($sql);
 			$this->appl = $qRes->fetchAll();
 			$qRes = NULL;

@@ -99,6 +99,55 @@ $tablesdirectory=DBTABLEDUMPS . $prefix .'tabledumps';
 		return false;
 	}
 
+	/**
+	 * sql_escape
+	 * Escapes single quotes for safe interpolation into a single-quoted
+	 * SQL literal (' -> ''). Does not touch the surrounding quotes.
+	 *
+	 * @param string $value
+	 * @return string
+	 */
+	function sql_escape($value) {
+		return str_replace("'", "''", (string) $value);
+	}
+
+	/**
+	 * build_row_insert_parts
+	 * Builds the comma-separated column list and value list SQL fragments
+	 * for one data row, honoring the drops table and skipping z_ timestamp
+	 * columns.
+	 *
+	 * A column is included whenever its value is set (i.e. not NULL/unset) —
+	 * falsy-but-meaningful values like 0, '' and false are NOT skipped, only
+	 * a true NULL/unset value is. Values are single-quote escaped via
+	 * sql_escape() before being wrapped in quotes.
+	 *
+	 * @param array  $colrows PRAGMA table_info() rows for the table
+	 * @param array  $row     one data row (assoc, keyed by column name)
+	 * @param string $tabname table name (for drops lookup)
+	 * @param array  $dropstab drops table (tablename => array of column names)
+	 * @return array [$colsSql, $valsSql] trimmed, comma-separated fragments
+	 */
+	function build_row_insert_parts($colrows, $row, $tabname, $dropstab) {
+		$colData = '';
+		$valData = '';
+		foreach ($colrows as $col) {
+			$myCol = $col['name'];
+			if (find_col($myCol, $tabname, $dropstab)) {
+				continue;
+			}
+			$myData = array_key_exists($myCol, $row) ? $row[$myCol] : null;
+			if ($myData !== null) {
+// don't carry forward the create/update time stamps.  They'll cause interlocks on the DB.
+				if (!preg_match(" /^z_/", $myCol)) {
+					$colData .= $myCol . ",";
+					$valData .= "'" . sql_escape($myData) . "',";
+				}
+			}
+		}
+		return array(rtrim($colData, ','), rtrim($valData, ','));
+	}
+
 	$tables=array();
 	$colrows=array();
 	$datarows=array();
@@ -212,23 +261,13 @@ $tablesdirectory=DBTABLEDUMPS . $prefix .'tabledumps';
 						}
 						$row[$col['name']] = $sv;
 				} 
-				$myData = $row[$col['name']];
-				$myCol = $col['name'];
-				if 	( find_col($myCol,$tabname,$drops))	{				
+				if (find_col($col['name'],$tabname,$drops)) {
 					echo "dropped column " . $col['name'] . 
 					" from table " . $table['name'] . "\n";
-					continue;
-				}
-				if ($myData) {
-// don't carry forward the create/update time stamps.  They'll cause interlocks on the DB.
-					if ( !preg_match (" /^z_/", $col['name'] )) {				
-							$COLDATA .= $col['name'] . ",";
-							$VALDATA .= "'" . $myData . "',";
-					}
 				}
 			}
-			$COLDATA = rtrim($COLDATA, ',');
-			$VALDATA = rtrim($VALDATA, ',');
+
+			list($COLDATA, $VALDATA) = build_row_insert_parts($colrows, $row, $tabname, $drops);
 			
 
 // dump the customer data 

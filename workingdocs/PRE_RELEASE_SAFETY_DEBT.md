@@ -14,22 +14,22 @@ Work in roughly this order; stop when go/no-go criteria below are met.
 
 | # | Repo | Item | Notes |
 |---|------|------|--------|
-| 1 | **pbx3cagi** | `GetExt` / `Mangle` return stack pointers (UB) | Caller buffers or clear lifetime |
-| 2 | **pbx3cagi** | `outboundClip` / `CFCheck` / Voicemail buffer overflows | `snprintf` / sized scratch |
-| 3 | **pbx3cagi** | Fail closed on default sys/spy pass (`4444`/`3333`) | No authenticate with defaults |
-| 4 | **pbx3api** | CosClose / CosOpen cluster scope | Tenant IDOR |
-| 5 | **pbx3api** | Destinations require cluster + clamp | No full-instance leak |
-| 6 | **pbx3api** | Hide secrets in JSON (`Trunk`/`Tenant`/`Agent`) | `$hidden` / write-only |
-| 7 | **pbx3api** | Restrict twin AstDB AMI writes | Ability + key ACL |
-| 8 | **pbx3** | Dumper SQL escape + falsy column skip | Reloader data integrity |
-| 9 | **pbx3** | GenClass `appl.cluster` use shortuid | Dialplan gap after normalize |
-| 10 | **pbx3sbc** | Bind MI/metrics to localhost (not `0.0.0.0:8888`) | |
-| 11 | **pbx3sbc** | Escape / parameterize SIP→SQL concat | Slice D / door-knock |
-| 12 | **pbx3sbc-admin** | Lock Filament edits on fleet-owned `dr_rules` | Rule 13 |
-| 13 | **pbx3sbc-admin** | Surface MI reload failure (don’t claim ok) | |
-| 14 | **pbx3sbc-admin** | DB password off sudo argv | Whitelist sync |
-| 15 | **pbx3spa** | Mask SIP password in extension UI | |
-| 16 | **pbx3spa** | Fleet GK 401 clears stale token | |
+| 1 | **pbx3cagi** | `GetExt` / `Mangle` return stack pointers (UB) | **Done** — caller buffers + `agi_helpers` unit tests |
+| 2 | **pbx3cagi** | `outboundClip` / `CFCheck` / Voicemail buffer overflows | **Done** — `strlcpy`/`snprintf`/`strlcat` sized scratch |
+| 3 | **pbx3cagi** | Fail closed on default sys/spy pass (`4444`/`3333`) | **Done** — AGI + golden desk (`CHANSPY_LAB.md`); ChanSpy shortuid fix |
+| 4 | **pbx3api** | CosClose / CosOpen cluster scope | **Done** — EnforcesClusterScope + Feature tests |
+| 5 | **pbx3api** | Destinations require cluster + clamp | **Done** — require `?cluster=` + scope assert |
+| 6 | **pbx3api** | Hide secrets in JSON (`Trunk`/`Tenant`/`Agent`) | **Done** — `$hidden`; SPA tenant spy/sys = password inputs |
+| 7 | **pbx3api** | Restrict twin AstDB AMI writes | **Done** — `dbputTwin`/`dbdelTwin` + ability ACL |
+| 8 | **pbx3** | Dumper SQL escape + falsy column skip | **Done** — `sql_escape` + include `0`/`''`; `dumper-escape-test.php` |
+| 9 | **pbx3** | GenClass `appl.cluster` use shortuid | **Done** — query by shortuid; `genclass-appl-cluster-test.php` |
+| 10 | **pbx3sbc** | Bind MI/metrics to localhost (not `0.0.0.0:8888`) | **Done** — `httpd` ip `127.0.0.1`; UFW 8888 rule removed; `mi-localhost-bind-test.sh` |
+| 11 | **pbx3sbc** | Escape / parameterize SIP→SQL concat | **Done** — `{s.escape.common}` on free-form fields (door-knock/Slice D/failed_registrations); shortuid charset gate kept; `sql-escape-contract-test.sh` |
+| 12 | **pbx3sbc-admin** | Lock Filament edits on fleet-owned `dr_rules` | **Done** — `DrRulePolicy` (update/delete deny when `FleetDidProjector::isFleetOwned`) + table row actions gated; `DrRulePolicyTest` |
+| 13 | **pbx3sbc-admin** | Surface MI reload failure (don’t claim ok) | **Done** — `OpenSIPSMIService` reload methods return bool; Filament afterSave/delete + fleet API (`FleetSbcController`) surface warning/`ok:false`/502 on MI failure; `OpenSIPSMIServiceReloadTest` |
+| 14 | **pbx3sbc-admin** | DB password off sudo argv | **Done** — `WhitelistSyncService::sync` writes a private mode-0600 MySQL `--defaults-extra-file` instead of argv; paired `pbx3sbc/scripts/sync-fail2ban-whitelist.sh` updated; `WhitelistSyncServiceTest` |
+| 15 | **pbx3spa** | Mask SIP password in extension UI | **Done** — password input + reveal after regen; `maskSipPassword.test.js` |
+| 16 | **pbx3spa** | Fleet GK 401 clears stale token | **Done** — `gkFetch`/`parseJsonResponse` clears token; fleetGatekeeper tests |
 
 **Also near-time (data integrity):** Tenant wipe already cascades in app code — harden gaps in **`TENANT_DELETE_DATA_INTEGRITY.md`** (T2–T5: sibling dialaliases, park parity, orphan audit, schema↔wipe-list CI). Do **not** gate Delete on empty dependents.
 

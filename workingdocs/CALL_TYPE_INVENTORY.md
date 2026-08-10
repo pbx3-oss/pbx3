@@ -69,27 +69,27 @@ These are the “big” call types operators care about.
 
 ## 2. Feature shortcodes (`*NN*` / patterns)
 
-**Attendance:** every shortcode row below is **H** today (dial from a registered phone, hear playback / confirm BLF or AstDB by eye).  
-**Unattended path:** add **L0** fixtures that drive the same CAGI handler with mock AstDB (no phone) — none of these have L0 yet except where CFIM/DND behaviour is covered indirectly by CFIM LepDial scenarios.
+**Attendance:** v1 unattended pack in **sipplab** `./run-feature-pack.sh` (AstDB + ChanSpy fingerprints) — see `sipplab/workingdocs/FEATURE_SHORTCODE_PACK.md`. Remaining codes stay **H** until a recipe exists.  
+**L0 complement:** CAGI `make test` for handler logic; L1 pack proves presets → SYSAGI → side effect on a live home.
 
 ### 2.1 RCS / CAGI feature codes (`extensions_presets.conf` → SYSAGI)
 
 | Code | Pattern | Behaviour | CAGI | Attend |
 |------|---------|-----------|------|--------|
-| DND on | `_*18*` | CF to VM / DND on | `CFVMailSet` (18) | **H** |
-| DND off | `_*19*` | DND off | `CFVMailSet` (19) | **H** |
+| DND on | `_*18*` | CF to VM / DND on | `CFVMailSet` (18) | **U** (2026-08-09 sipplab feature pack) |
+| DND off | `_*19*` | DND off | `CFVMailSet` (19) | **U** (2026-08-09 sipplab feature pack) |
 | DND toggle | `_*20*` | Toggle DND | `CFVMailToggle` (20) | **H** |
-| CFIM on | `_*21*XX.` | Set CFIM dest | `CFToggle` (21) | **H** |
-| CFIM off | `_*21*` | Clear CFIM | `CFToggle` (21) | **H** |
-| CFBS on | `_*22*XX.` | Set CFBS dest | `CFToggle` (22) | **H** |
-| CFBS off | `_*22*` | Clear CFBS | `CFToggle` (22) | **H** |
-| CF clear | `_*23*` | Clear forwards | `CFOff` (23) | **H** |
-| Ring delay | `_*26[*]…` | Set ring delay | `SetRingDelay` (26) | **H** |
+| CFIM on | `_*21*XX.` | Set CFIM dest | `CFToggle` (21) | **U** (2026-08-09 sipplab feature pack) |
+| CFIM off | `_*21*` | Clear CFIM | `CFToggle` (21) | **U** (2026-08-09 sipplab feature pack) |
+| CFBS on | `_*22*XX.` | Set CFBS dest | `CFToggle` (22) | **U** (2026-08-09 sipplab feature pack) |
+| CFBS off | `_*22*` | Clear CFBS | `CFToggle` (22) | **U** (2026-08-09 sipplab feature pack) |
+| CF clear | `_*23*` | Clear forwards | `CFOff` (23) | **U** (2026-08-09 sipplab feature pack) |
+| Ring delay | `_*26[*]…` | Set ring delay | `SetRingDelay` (26) | **U** (2026-08-09 sipplab feature pack) |
 | Follow-me | (CAGI 27) | FollowMe | `FollowMe` (27) | **H** |
 | Rec greeting | `_*60*XXXX` | Record greeting | `RecGreet` (60) | **H** |
 | Agent pause/unpause | `_*63*` / `_*64*` | Pause / unpause | 63 / 64 | **H** |
 | Agent login/out | `_*65*` / `_*66*` | Login / logout | 65 / 66 | **H** |
-| ChanSpy (whisper) | `_*67*` / `_*68*` | Spy | 67 / 68 | **H** *(multi-tenant debt)* |
+| ChanSpy (whisper) | `_*67*` / `_*68*` | Spy | 67 / 68 | **U** (2026-08-09 sipplab feature pack; multi-tenant isolation still **H** debt) |
 
 ### 2.2 Dialplan-only utilities
 
@@ -142,7 +142,7 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 |------|-----|
 | L1 without auto-answer on the ringing dest | SIPp waits for **200** |
 | L1 with CFIM / CLOSED / queue | Plus **H-setup** of AstDB / day state / agents |
-| All `*NN*` feature codes, BLF open/close | Dial + hear prompt / confirm state on device |
+| Remaining `*NN*` (agents/greetings/UX/`*20*`/open-close), BLF | Dial + hear prompt / confirm; CF/DND/ringdelay/spy now **U** via sipplab feature pack |
 | IVR, page, park, pickup, conf, VM retrieve | Interactive or multi-party |
 | PSTN L3 / Magrathea-Twilio matrix | Carrier + human |
 | Ext↔ext / multi-tenant AoR | Two endpoints (until dual-SIPp / dual auto-answer) |
@@ -177,3 +177,4 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 | 2026-07-27 | Pack grow: `feat-master-closed`, `in-cfim-external`, `out-egress-ok` + catcher `SIPP_MAIN`. |
 | 2026-07-27 | Clarify `out-egress-ok` = Local originate (not SIPp phone UAC); strategy status → L1 9/9. |
 | 2026-07-27 | + `in-queue-cancel-vm`, `out-busy-or-reject` (catcher uas-486). |
+| 2026-08-09 | §2.1 Attend **U** for DND/CF/ringdelay/ChanSpy via sipplab `./run-feature-pack.sh` (10/10 ×2 golden). Multi-tenant spy isolation remains debt. |
