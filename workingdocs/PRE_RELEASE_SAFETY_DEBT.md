@@ -41,6 +41,8 @@ Work in roughly this order; stop when go/no-go criteria below are met.
 
 **Go** when: items **1–16** landed (or explicit accepted risk noted per row) + smoke on golden/bzy (dial + SPA login + one fleet DID path).
 
+**Golden smoke (2026-08-09):** **green** — SPA login/whoami/tenants/pulse; Local dial `1000@dhbm8x` → `fkdd5d` ring; Peer SIPp DID `441924910444` Successful call. Bzy not required for this gate close.
+
 **No-go** if: open Critical/High from the table without accepted risk, especially cagi UB/overflows or api tenant IDOR.
 
 ---
