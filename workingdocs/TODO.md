@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
-**Last updated:** 2026-08-09 (session end: #4a golden roll + go-smoke + Magrathea Fit)
+**Last updated:** 2026-08-10 (#4b T1–T5; ext_len digit-plan lock #4c)
 
 ### Suggested “what next?” order
 
@@ -11,7 +11,8 @@
 3. ~~**Strip customer-migrate tooling from pbx3**~~ — **done** (private ETL owns migrate; package keeps shortuid normalize only).  
 4. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
 4a. ~~**Pre-release safety debt (go/no-go)**~~ — **code + tests + golden go-smoke done** (`PRE_RELEASE_SAFETY_DEBT.md` 1–16). ChanSpy desk + sipplab feature pack **U**; golden dial + SPA login + DID `441924910444` green (2026-08-09). Bzy smoke optional.  
-4b. **Tenant delete data integrity** — **`TENANT_DELETE_DATA_INTEGRITY.md`** (wipe already cascades; harden sibling dialaliases / park parity / orphan audit — do **not** gate on dependents).  
+4b. ~~**Tenant delete data integrity**~~ — **T1–T5 done** (`TENANT_DELETE_DATA_INTEGRITY.md`). Remaining optional: T6 DID policy, T7 Class B, T8 FK.  
+4c. **Enforce tenant `ext_len`** — stance locked **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 / Q15 (default 3, max 5, allowed 2–5, no mixed length; OutRoute/short-dial min match `> ext_len`). Implement when scheduled.  
 5. **Lab deployment (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: LAN Lab T4; OSS gates (LICENSE + migrate strip) cleared.  
 6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
 7. **New instance / package install** — fleet packages with **#4a**: **pbx3 `0.0.5-2`** / **pbx3cagi `1.0.0-16`** (on golden); tip-deploy **pbx3api** + **pbx3sbc**/**sbc-admin**. Roll **kildare/bzy** when scheduled. Ops: **`TODO_OPS.md`**.  
@@ -49,7 +50,9 @@
 - [x] **Pre-release safety debt 1–16 (2026-08-09):** Code + tests in product repos. ChanSpy desk + unattended shortcode pack green. Checklist: **`PRE_RELEASE_SAFETY_DEBT.md`**.
 
 - [x] **Pre-release go smoke — golden (2026-08-09):** Dial + SPA login + fleet DID `441924910444` (Peer SIPp → Magrathea → `dhbm8x`/`1000`). Bzy optional.
-- [ ] **Tenant delete data integrity (near-time 2026-08-09):** App wipe already cascades Class A config. **Class B** (recordings / CDR) = **retain by default**, explicit purge only — today’s half-wipe of `recordings` index is wrong. Hybrid RI: FK CASCADE for Class A later; jobs for S3/edge. Spec: **`TENANT_DELETE_DATA_INTEGRITY.md`** (§2.2). Suggested **#4b**.
+- [x] **Tenant delete data integrity T1–T5 (2026-08-10):** Wipe-preflight; mesh prune; park cleanup; `pbx3:tenant-orphan-audit`; `pbx3:tenant-wipe-list-check`. Spec: **`TENANT_DELETE_DATA_INTEGRITY.md`**. Open later: **T6** DID policy, **T7** Class B, **T8** FK.
+
+- [ ] **Enforce tenant `ext_len` (locked 2026-08-10):** Default **3**, max **5**, allowed **2–5**; no mixed-length extension pkeys in one tenant. GenAst PrefixDial = fixed remainder from dest `ext_len`; OutRoute min match `> ext_len` (long `9…`+mangle OK). Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 / Q15. Suggested **#4c**.
 
 - [x] **Workingdocs hygiene — product vs agent session (done 2026-08-09):** Curate in-repo; quarantine session handoffs. Private **`aelintra/pbx3-ops`**. **Light peel same day:** research/audits/tippy lab → **`pbx3-ops/devdocs/`**; active requirements stay in product. Cross-link: **`OPEN_SOURCE_GITHUB_SETUP.md`** · **`workingdocs/README.md`**.
 

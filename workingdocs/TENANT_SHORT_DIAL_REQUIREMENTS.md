@@ -146,18 +146,22 @@ Same-node “hairpin” back to the same Asterisk via dispatcher is **correct** 
 | Reverse | Not automatic; B configures its own prefix to call A back |
 | SBC | **usrloc miss → dispatcher** for `ext@tenant.fqdn` from Asterisk |
 
-### 3.8 Digit plan and policy (locked 2026-07-27)
+### 3.8 Digit plan and policy (locked 2026-07-27; **ext_len** amended 2026-08-10)
 
 | Topic | Lock |
 |-------|------|
-| **Digit plan** | **Fixed-width prefix** (2–4 digits, length chosen per prefix row) + **variable extension remainder** (`_X.`). No delimiter. Dial = `{prefix}{ext}` (e.g. prefix `81` + `1000` → `811000`). |
-| **Remainder charset** | **Digits only** (`0–9`). Remainder is a target **extension** (`pkey`-shaped). **No** star/hash feature shortcodes through the prefix path (e.g. `81*50*1000` is **deny**). Local feature codes stay on the calling tenant (dial without prefix). Reopen only on an explicit product ask (e.g. remote park as a **named** feature — not free R-URI passthrough). |
-| **GenAst** | One dialplan pattern per active prefix; remainder is digit-only target extension. Prefer `_81X.` (or length-bounded) so `*`/`#` do not match. CAGI must also reject non-digit remainder if dialled outside pattern. |
-| **Collision hygiene** | Operator owns not colliding with local exts / PSTN OutRoute. Admin help + validation guidance; no auto-steal of bare LepDial or OutRoute. |
+| **Digit plan** | **Fixed-width prefix** (2–4 digits) + **fixed-width extension remainder** = destination tenant’s `ext_len`. No delimiter. Dial = `{prefix}{ext}` (e.g. prefix `81` + `1000` with `ext_len=4` → `811000`). |
+| **Tenant `ext_len`** | **Enforced.** Field already on `cluster`. **Default 3**, **maximum 5**, allowed **2–5**. **No mixed lengths** within a single tenant — every extension `pkey` is exactly `ext_len` digits. |
+| **Remainder charset** | **Digits only** (`0–9`). Remainder is a target **extension** (`pkey`-shaped). **No** star/hash feature shortcodes through the prefix path (e.g. `81*50*1000` is **deny**). Local feature codes stay on the calling tenant (dial without prefix; always begin `*`). Reopen only on an explicit product ask. |
+| **GenAst** | One dialplan pattern per active prefix; remainder length = **destination** `ext_len` (e.g. `_81XXXX` for prefix `81` + dest `ext_len=4`). **Not** open `_81X.`. CAGI rejects wrong-length / non-digit remainder. |
+| **Length namespaces** | Local exts own length `ext_len`. OutRoute and short-dial patterns must only match dial strings **strictly longer than** the calling tenant’s `ext_len`. Machine gates — not “operator be careful.” |
+| **OutRoute / seize** | Patterns whose minimum match length is **≤ `ext_len`** are **forbidden**. Compatible “dial 9” = long pattern (e.g. `_9` + enough digits) + strip/mangle leading seize digit — classic iron PBX / PSTN practice. Bare `_9.` is not allowed under this rule. |
 | **Fleet gate** | Feature **fleet-gated** in v1. Requires SBC path. |
 | **Singleton** | Multi-tenant singleton **without SBC** cannot inter-tenant prefix dial — accepted. Local shortcut **rejected** (§15). |
-| **Deny** | Missing/inactive prefix **or non-digit remainder** → **congestion + hangup** (no attendant / custom playback v1). |
+| **Deny** | Missing/inactive prefix, wrong-length remainder, **or non-digit remainder** → **congestion + hangup** (no attendant / custom playback v1). |
 | **CoS** | **Tenant-wide:** active prefix row ⇒ allowed for all CoS classes. Per-class grant later if needed. |
+
+**Deferred implement** (stance locked; code when scheduled): API/SPA enforce `ext_len` on extension create/update; GenAst length-bounded PrefixDial patterns; OutRoute save validates min match length `> ext_len`.
 
 ### 3.9 CallerID and return-call (locked 2026-07-27)
 
@@ -357,7 +361,8 @@ Summary:
 | Id | Decision | Lock |
 |----|----------|------|
 | **Q1** | Digit plan shape | **Fixed-width prefix** (2–4 digits per row); no delimiter. |
-| **Q2** | Extension after prefix | **Variable remainder** (`_X.`); **digits only** (no feature shortcodes / `*` / `#`); operator collision hygiene. |
+| **Q2** | Extension after prefix | **Fixed remainder** = destination `ext_len` (not open `_X.`); **digits only**; length namespaces §3.8 (2026-08-10). |
+| **Q15** | Tenant `ext_len` | **Enforced** (2026-08-10): default **3**, max **5**, allowed **2–5**; **no mixed lengths** in one tenant. |
 | **Q3** | Prefix uniqueness | Unique per **calling tenant** only. |
 | **Q4** | Table ownership | Per calling tenant prefix rows (not instance/org shared directory). |
 | **Q5** | Singleton / non-fleet | **Fleet-gated**; SBC required. Singleton multi-tenant without SBC = no prefix dial. Local shortcut **rejected** (§15). |
@@ -456,6 +461,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | 2026-08-03 | **Q14:** target is **tenant FQDN** (not instance). Always full FQDN; move preserves FQDN → no prefix rewrite; rename re-save/reconcile; no dial-time expand. |
 | 2026-08-04 | **D residual:** lab → **least-ugly *guaranteed* return** recipe (SUID / DID / PAI / hybrid candidates); no implement until findings. |
 | 2026-08-05 | **§15 Local shortcut rejected** — dual-path debt not worth same-node SBC bounce; Path 1 desk return lab green. |
+| 2026-08-10 | **§3.8 / Q2 / Q15:** enforce tenant `ext_len` (default 3, max 5, allowed 2–5, no mixed length); short-dial + OutRoute min match **> `ext_len`**; GenAst length-bounded remainder; drop “operator collision hygiene.” |
 
 ---
 

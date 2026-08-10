@@ -391,7 +391,12 @@ try {
     $jobs = new TenantMoveJobStore();
     $runner = new TenantMoveRunner($jobs, $presign, $registrar);
     $deleteJobs = new TenantDeleteJobStore();
-    $deleteRunner = new TenantDeleteRunner($deleteJobs, $registrar, new SbcFleetClient());
+
+    // C1/C3 — dial cohorts (UI: Site Groups) + materialise jobs (needed by Fleet Delete mesh prune).
+    $dialCohorts = new DialCohortStore($registrar);
+    $dialJobs = new DialCohortJobStore($registrar);
+    $dialRunner = new DialCohortMaterialiseRunner($dialJobs, $registrar, new NodeFleetDialClient());
+    $deleteRunner = new TenantDeleteRunner($deleteJobs, $registrar, new SbcFleetClient(), $dialCohorts, $dialRunner);
 
     if ($method === 'GET' && $path === '/api/v1/catalog') {
         Auth::requireAbility(FleetAbilities::READ);
@@ -409,9 +414,7 @@ try {
     }
 
     // C1/C3 — dial cohorts (UI: Site Groups) + materialise jobs.
-    $dialCohorts = new DialCohortStore($registrar);
-    $dialJobs = new DialCohortJobStore($registrar);
-    $dialRunner = new DialCohortMaterialiseRunner($dialJobs, $registrar, new NodeFleetDialClient());
+    // ($dialCohorts / $dialRunner constructed above for Fleet Delete T2 mesh prune)
 
     if ($method === 'GET' && $path === '/api/v1/dial-cohorts') {
         Auth::requireAbility(FleetAbilities::READ);

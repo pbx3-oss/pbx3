@@ -20,6 +20,7 @@
 ```text
 pending → preflight
        → awaiting_confirm   (HUMAN: type shortuid; irreversible)
+       → pruning_mesh       (Site Group detach + peer dialalias prune)
        → removing_edge      (SBC DELETE domain)
        → wiping_node        (DELETE /fleet/tenants/{shortuid} + cert sync + commit best-effort)
        → catalog            (soft-decommission tenant meta)
@@ -28,10 +29,11 @@ pending → preflight
 
 | State | Notes |
 |-------|--------|
-| `preflight` | Resolve home instance, FQDN, node reachable; warn if catalog DIDs still attached (no auto-unassign v1) |
-| `awaiting_confirm` | Operator must send typed `shortuid` match + `confirm: true` |
+| `preflight` | Resolve home instance, FQDN, node reachable; warn if catalog DIDs still attached (no auto-unassign v1); **T1** wipe row counts |
+| `awaiting_confirm` | Typed shortuid + `confirm: true` |
+| `pruning_mesh` | **T2 / I7** — detach Site Group; prune peer dialaliases on reachable homes; unreachable → warn (retry / Sync now) |
 | `removing_edge` | Idempotent if domain already absent |
-| `wiping_node` | Existing wipe primitive; **media trees not deleted** (known gap) |
+| `wiping_node` | Node wipe (+ same-home inbound dialalias prune); **media trees not deleted** (known Class B gap) |
 | `catalog` | `status=decommissioned`; hidden from Fleet Tenants list |
 | `failed` / `aborted` | Terminal; notify like move jobs |
 

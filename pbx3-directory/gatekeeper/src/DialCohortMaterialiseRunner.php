@@ -192,6 +192,102 @@ final class DialCohortMaterialiseRunner
     }
 
     /**
+     * T2 / I7 — after catalog removeMember: delete peer dialaliases targeting the removed
+     * tenant on remaining members' homes. Soft per-home: failures → warnings (not throw).
+     *
+     * @param  list<string>  $remainingMembers  shortuids still in the cohort
+     * @return array{ok: bool, deletes: int, homes_ok: list<string>, warnings: list<string>}
+     */
+    public function pruneInboundTargetingTenant(
+        string $removedShortuid,
+        string $removedFqdn,
+        array $remainingMembers,
+    ): array {
+        $removedShortuid = strtolower(trim($removedShortuid));
+        $removedFqdn = strtolower(trim($removedFqdn));
+        $warnings = [];
+        $deletes = 0;
+        $homesOk = [];
+
+        if ($remainingMembers === [] || ($removedShortuid === '' && $removedFqdn === '')) {
+            return ['ok' => true, 'deletes' => 0, 'homes_ok' => [], 'warnings' => []];
+        }
+
+        $snapshots = $this->loadMemberSnapshotsSoft($remainingMembers, $warnings);
+
+        $byHome = [];
+        foreach ($snapshots as $m) {
+            $api = rtrim((string) ($m['api_base_url'] ?? ''), '/');
+            $suid = (string) ($m['shortuid'] ?? '');
+            if ($api === '' || $suid === '') {
+                continue;
+            }
+            $byHome[$api][] = $suid;
+        }
+
+        foreach ($byHome as $api => $callers) {
+            try {
+                $homeDeletes = 0;
+                foreach (array_unique($callers) as $caller) {
+                    foreach ($this->nodes->listDialAliases($api, $caller) as $row) {
+                        if (! self::rowTargetsTenant($row, $removedShortuid, $removedFqdn)) {
+                            continue;
+                        }
+                        $pkey = (string) ($row['pkey'] ?? '');
+                        if ($pkey === '') {
+                            continue;
+                        }
+                        $this->nodes->deleteDialAlias($api, [
+                            'cluster' => $caller,
+                            'pkey' => $pkey,
+                            'managed_only' => false,
+                        ]);
+                        $homeDeletes++;
+                        $deletes++;
+                    }
+                }
+                if ($homeDeletes > 0 || $callers !== []) {
+                    $this->nodes->commit($api);
+                }
+                $homesOk[] = $api;
+            } catch (\Throwable $e) {
+                $warnings[] = 'Peer home unreachable or prune failed ('.$api.'): '.$e->getMessage()
+                    .' — use Site Group Sync now or delete-job retry when the node is back.';
+            }
+        }
+
+        return [
+            'ok' => $warnings === [],
+            'deletes' => $deletes,
+            'homes_ok' => $homesOk,
+            'warnings' => $warnings,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    public static function rowTargetsTenant(array $row, string $removedShortuid, string $removedFqdn): bool
+    {
+        $tf = strtolower(trim((string) ($row['target_fqdn'] ?? '')));
+        $tc = strtolower(trim((string) ($row['target_cluster'] ?? '')));
+        $removedShortuid = strtolower(trim($removedShortuid));
+        $removedFqdn = strtolower(trim($removedFqdn));
+
+        if ($removedFqdn !== '' && $tf === $removedFqdn) {
+            return true;
+        }
+        if ($removedShortuid !== '' && $tc === $removedShortuid) {
+            return true;
+        }
+        if ($removedShortuid !== '' && $tf !== '' && str_starts_with($tf, $removedShortuid.'.')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Retry a failed job (re-run full reconcile).
      *
      * @return array<string, mixed>
@@ -319,6 +415,56 @@ final class DialCohortMaterialiseRunner
     }
 
     // ── private ───────────────────────────────────────────────────────
+
+    /**
+     * @param  list<string>  $shortuids
+     * @param  list<string>  $warnings
+     * @return list<array{shortuid: string, routing_prefix: string, fqdn: string, instance_id: string, api_base_url: string}>
+     */
+    private function loadMemberSnapshotsSoft(array $shortuids, array &$warnings): array
+    {
+        $catalog = $this->registrar->getCatalog();
+        $apiByInstance = [];
+        foreach ($catalog['instances'] ?? [] as $inst) {
+            if (! is_array($inst) || empty($inst['id'])) {
+                continue;
+            }
+            $apiByInstance[(string) $inst['id']] = rtrim((string) ($inst['api_base_url'] ?? ''), '/');
+        }
+
+        $out = [];
+        foreach ($shortuids as $suid) {
+            $suid = strtolower(trim((string) $suid));
+            if ($suid === '') {
+                continue;
+            }
+            try {
+                $meta = $this->registrar->getTenantMeta($suid);
+                if ($meta === []) {
+                    $warnings[] = "Tenant meta missing for peer {$suid} — skip mesh prune for that member.";
+                    continue;
+                }
+                $instanceId = trim((string) ($meta['instance_id'] ?? ''));
+                $api = $apiByInstance[$instanceId] ?? '';
+                if ($api === '') {
+                    $warnings[] = "No api_base_url for peer {$suid} (instance {$instanceId}) — Sync now when known.";
+                    continue;
+                }
+                $fqdn = strtolower(trim((string) ($meta['fqdn'] ?? $meta['cname'] ?? '')));
+                $out[] = [
+                    'shortuid' => $suid,
+                    'routing_prefix' => (string) ($meta['routing_prefix'] ?? ''),
+                    'fqdn' => $fqdn,
+                    'instance_id' => $instanceId,
+                    'api_base_url' => $api,
+                ];
+            } catch (\Throwable $e) {
+                $warnings[] = "Peer {$suid} snapshot failed: ".$e->getMessage();
+            }
+        }
+
+        return $out;
+    }
 
     /**
      * @param  list<string>  $shortuids

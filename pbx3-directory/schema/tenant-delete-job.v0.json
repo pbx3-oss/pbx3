@@ -28,6 +28,7 @@
         "pending",
         "preflight",
         "awaiting_confirm",
+        "pruning_mesh",
         "removing_edge",
         "wiping_node",
         "catalog",
@@ -39,6 +40,29 @@
     "warnings": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "wipe_counts": {
+      "description": "T1 — node TENANT_DATA_TABLES row counts before wipe (informational)",
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "tenant": { "type": "object", "additionalProperties": true },
+        "aliases": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "tables": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "total_rows": { "type": "integer" },
+        "cluster": { "type": "integer" }
+      }
+    },
+    "mesh_prune": {
+      "description": "T2 — Site Group peer dialalias prune summary",
+      "type": ["object", "null"],
+      "additionalProperties": true
     },
     "phases": {
       "type": "object",

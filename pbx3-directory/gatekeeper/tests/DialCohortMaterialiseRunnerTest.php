@@ -97,4 +97,28 @@ final class DialCohortMaterialiseRunnerTest extends TestCase
         $this->assertTrue(isset($desired['82']));
         $this->assertFalse(isset($desired['81']));
     }
+
+    public function test_row_targets_tenant_matchers(): void
+    {
+        $this->assertTrue(DialCohortMaterialiseRunner::rowTargetsTenant(
+            ['target_fqdn' => 'vqcwd4.pbx3.com', 'target_cluster' => ''],
+            'vqcwd4',
+            'vqcwd4.pbx3.com'
+        ));
+        $this->assertTrue(DialCohortMaterialiseRunner::rowTargetsTenant(
+            ['target_fqdn' => '', 'target_cluster' => 'vqcwd4'],
+            'vqcwd4',
+            'vqcwd4.pbx3.com'
+        ));
+        $this->assertTrue(DialCohortMaterialiseRunner::rowTargetsTenant(
+            ['target_fqdn' => 'vqcwd4.pbx3.com', 'target_cluster' => 'x'],
+            'vqcwd4',
+            ''
+        ));
+        $this->assertFalse(DialCohortMaterialiseRunner::rowTargetsTenant(
+            ['target_fqdn' => 'other.pbx3.com', 'target_cluster' => 'other'],
+            'vqcwd4',
+            'vqcwd4.pbx3.com'
+        ));
+    }
 }

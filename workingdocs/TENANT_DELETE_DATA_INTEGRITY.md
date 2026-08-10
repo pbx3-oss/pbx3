@@ -1,6 +1,6 @@
 # Tenant delete — data integrity
 
-**Status:** Stance locked **2026-08-09** (investigation). Implement slices when scheduled (near-time / pre-release).  
+**Status:** Stance locked **2026-08-09** (investigation). **T1–T5 done** (2026-08-10). Remaining: T6–T8 when scheduled.  
 **Related:** [`FLEET_TENANT_DELETE_REQUIREMENTS.md`](FLEET_TENANT_DELETE_REQUIREMENTS.md) · [`PRE_RELEASE_SAFETY_DEBT.md`](PRE_RELEASE_SAFETY_DEBT.md) · `pbx3api` `TenantMobilityService::destroyTenantData` · Rule **14**.
 
 ---
@@ -33,6 +33,7 @@ SQLite schema has **no `FOREIGN KEY`** constraints on `cluster` → child tables
 | I4 | Trunks remain **instance-owned** (not in tenant wipe) — intentional. |
 | I5 | App wipe does **not** go away when FKs land — it shrinks to: resolve aliases → delete `cluster` (children cascade) → run **extra-plane** steps (S3/edge/media/peers). |
 | I6 | **Data classes on wipe (locked 2026-08-09).** Not everything under a tenant is equal. See §2.2. |
+| I7 | **Site Group dialalias projections on delete (locked 2026-08-10).** Sender-local prefix rows are required (Rule 1 / PrefixDial). **Fleet Delete must prune them** on reachable peer homes — same intent as Site Group **remove member**. Operators must **not** be expected to log into each peer tenant SPA to delete prefixes. **Unreachable peer:** **warn** on the delete job; home wipe may continue. Finishing that peer’s prune is **operator responsibility** via existing delete **retry** and/or Site Group **Sync now** when the node is back — product warns and provides the tools; it does not babysit every offline home to green. |
 
 ---
 
@@ -79,14 +80,14 @@ When SQLite FKs land (T8): Class A tables get `ON DELETE CASCADE`; Class B table
 
 | Gap | Risk | Notes |
 |-----|------|--------|
-| **G1** Cross-tenant `dialalias` rows **targeting** this tenant | Peers on *other* tenants still dial a dead FQDN | Cohort remove-tenant job cleans mesh; **solo wipe / Fleet wipe path does not** prune `target_fqdn` / `target_cluster` on siblings |
+| **G1** Cross-tenant `dialalias` rows **targeting** this tenant | Peers still dial a dead FQDN; **N-tenant manual cleanup is unacceptable** | Site Group remove already prunes mesh; **Fleet Delete must do the same** (I7 / T2) — Gatekeeper fan-out, not Sanctum hand edits |
 | **G2** Catalog DIDs still attached | Fleet preflight **warns only**; no auto-unassign v1 | Locked in Fleet Delete “Not in v1” — still an integrity smell for go/no-go honesty |
 | **G3** Greeting/recording **media trees** | Files left on disk; index rows wiped | Class B — see §2.2; default should **retain** evidence, not half-wipe |
 | **G3b** `recordings` in default `TENANT_DATA_TABLES` | Index gone, files remain / compliance surprise | Align with I6 — opt-in purge only |
 | **G3c** CDR plane | Not in tenant sqlite wipe today (good) | Keep out of CASCADE; explicit purge only if ever offered |
-| **G4** Fleet wipe vs Sanctum wipe parity | Sanctum calls `pbx3_delete_park_asterisk_instances`; fleet `destroyTenant` does **not** | Orphan park/Asterisk instances after fleet delete |
-| **G5** Orphans if `cluster` column holds a value **outside** aliases | Rare after normalize; possible on hand-edited DBs | Audit SQL needed |
-| **G6** New tenant table added without `TENANT_DATA_TABLES` | Silent orphans on next delete | Need schema↔list check in CI or package test |
+| **G4** Fleet wipe vs Sanctum wipe parity | Sanctum calls `pbx3_delete_park_asterisk_instances`; fleet did not | **T3 done** — Fleet `destroyTenant` calls the same helper |
+| **G5** Orphans if `cluster` column holds a value **outside** aliases | Rare after normalize; possible on hand-edited DBs | **T4 done** — `pbx3:tenant-orphan-audit` |
+| **G6** New tenant table added without `TENANT_DATA_TABLES` | Silent orphans on next delete | **T5 done** — `pbx3:tenant-wipe-list-check` + unit test |
 | **G7** No DB RI | Manual SQL / buggy path can delete `cluster` alone | Defense in depth later |
 
 DiDs **on the node** (`inroutes` with matching `cluster`) **are** in the wipe list — suspicion that DiDs are skipped is wrong for the happy path; catalog/SBC DiDs are the separate gap (G2).
@@ -97,11 +98,11 @@ DiDs **on the node** (`inroutes` with matching `cluster`) **are** in the wipe li
 
 | Slice | Deliverable |
 |-------|-------------|
-| **T1** | Preflight counts API (optional UX): per-table row counts for aliases before wipe — still allow wipe with confirm |
-| **T2** | Expand wipe: delete **inbound** dialaliases on other tenants where `target_fqdn` / `target_cluster` points at this tenant (same intent as cohort remove) |
-| **T3** | Fleet wipe calls park cleanup (parity with Sanctum) |
-| **T4** | Orphan audit script/SQL: child rows whose `cluster` not in `cluster.shortuid|pkey|id` |
-| **T5** | CI/unit: `TENANT_DATA_TABLES` ⊇ tenant schema tables with `cluster` column |
+| **T1** | **Done** — Preflight counts API: `GET /fleet/tenants/{t}/wipe-preflight` (+ Sanctum solo twin); Gatekeeper stores `wipe_counts`; SPA confirm lists non-zero tables. Still allow wipe with confirm. |
+| **T2** | **Done** — Fleet-orchestrated mesh prune (I7): `pruning_mesh` phase detaches Site Group + prunes peer dialaliases on reachable homes (warn if unreachable; retry / Sync now). Same-home inbound prune inside `destroyTenantData`. |
+| **T3** | **Done** — Fleet wipe calls `pbx3_delete_park_asterisk_instances` (parity with Sanctum) |
+| **T4** | **Done** — `php artisan pbx3:tenant-orphan-audit` (+ unit tests); reports child rows whose `cluster` ∉ live `cluster.id\|shortuid\|pkey` |
+| **T5** | **Done** — `php artisan pbx3:tenant-wipe-list-check` (+ unit test); `TENANT_DATA_TABLES` ⊇ tenant-schema tables with a `cluster` column |
 | **T6** | Catalog DID policy: block Fleet Delete confirm while DIDs attached **or** auto-unassign (product pick — today warn-only) |
 | **T7** | Class B policy: default **retain** recordings index + media + CDR; optional `purge_recordings` / `purge_cdr` on Delete job with typed confirm; remove `recordings` from automatic wipe |
 | **T8** | SQLite FK + `ON DELETE CASCADE` on **Class A** only — after T4/T5 + shortuid normalize; Class B **no** cascade FK; shrink app wipe to “delete cluster + Class A extras + optional Class B purge.” ETL/`-L`/dumper need FK-safe windows. |
@@ -113,7 +114,7 @@ DiDs **on the node** (`inroutes` with matching `cluster`) **are** in the wipe li
 ## 5. Acceptance (T1–T5)
 
 - Wipe still removes cluster + all listed child rows for aliases.  
-- Sibling dialaliases targeting deleted tenant FQDN/shortuid gone after wipe.  
+- Sibling dialaliases targeting deleted tenant FQDN/shortuid gone after wipe **on all reachable peer homes** (Fleet fan-out; retry covers the rest).  
 - Fleet wipe removes park instances like Sanctum.  
 - Orphan audit returns 0 on golden after delete lab.  
 - Adding a new `cluster`-keyed table without list update fails CI.
@@ -126,4 +127,5 @@ DiDs **on the node** (`inroutes` with matching `cluster`) **are** in the wipe li
 - Cascading **instance** trunks with the tenant.  
 - Believing SQLite FK will cascade **S3 / Magrathea / sibling peers** — it will not.  
 - **Silent** wipe of call recordings or CDR as part of ordinary tenant Delete (Class B = opt-in only).  
-- Full S3 catalog hard-purge (Fleet Delete catalog soft-decommission stays until a later product pick).
+- Full S3 catalog hard-purge (Fleet Delete catalog soft-decommission stays until a later product pick).  
+- **Leaving Site Group prefix projections stale** after Fleet Delete for operators to clean by hand (I7 — prune is Fleet’s job).

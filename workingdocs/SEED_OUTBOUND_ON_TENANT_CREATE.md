@@ -24,7 +24,8 @@ Same product instinct as **DID open-seed**: create should leave the tenant **usa
 | L4 | **One tenant does not span locales** | No per-tenant locale picker at create. |
 | L5 | **Instance owns the default dialplan string** | One character string on **instance `globals`** (same shape as OutRoute `dialplan`). Not a multi-row template system. |
 | L6 | **Tenant create copies that string** into a tenant OutRoute | Snapshot into `route` with `path1=Egress` on fleet. **Time saver only** — operator may edit/add/remove routes after; nothing stops post-create changes. |
-| L7 | **Reject iron-PBX-only shunt** as the product default | “Longer than `ext_len` → Egress” alone collides with short-dial, feature codes, emergency, variable ext lengths. May remain an *optional* advanced pattern later — not the seed. |
+| L7 | **Reject iron-PBX-only shunt** as the product default | “Longer than `ext_len` → Egress” alone is not the seed string. Seed stays locale patterns (`_0. _00.` / US pack). |
+| L7a | **Length namespaces (2026-08-10)** | OutRoute patterns must have minimum match length **> tenant `ext_len`**. Compatible seize digit (e.g. long `_9…` + mangle strip) OK. Bare short seize (`_9.`) forbidden under this rule. See **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8. |
 | L8 | Carrier face stays on the SBC | Aligns with number wire policy; node Mangle (Phase 1) still turns habit → `+E.164` on Egress. |
 | L9 | **Product framing** | Negates defining an OutRoute **by hand for every new tenant**. Not a live-linked policy; not multi-locale; not carrier dialect. |
 

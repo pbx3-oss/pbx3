@@ -23,6 +23,8 @@ final class TenantDeleteRunner
         private readonly TenantDeleteJobStore $jobs,
         private readonly S3Registrar $registrar,
         private readonly SbcFleetClient $sbc,
+        private readonly ?DialCohortStore $dialCohorts = null,
+        private readonly ?DialCohortMaterialiseRunner $dialRunner = null,
     ) {
         $this->fleetToken = getenv('PBX3_FLEET_SERVICE_TOKEN') ?: '';
         $this->http = new Client([
@@ -77,9 +79,9 @@ final class TenantDeleteRunner
 
         $job = $this->stampActor($job, $actor);
         $job = $this->markPhase($job, 'awaiting_confirm', 'ok', 'operator confirmed');
-        $job = $this->setState($job, 'removing_edge');
+        $job = $this->setState($job, 'pruning_mesh');
         $job['rollback']['safe_to_abort'] = true;
-        $job['rollback']['hint'] = 'Edge domain may already be removed — Register on SBC can repair until wipe.';
+        $job['rollback']['hint'] = 'Mesh prune / edge domain may already be in progress — Register on SBC can repair until wipe.';
         $this->jobs->writePublic($job);
 
         return $this->runDestructive($job);
@@ -140,7 +142,7 @@ final class TenantDeleteRunner
         $job['updated_at'] = gmdate('Y-m-d\TH:i:s\Z');
         $this->jobs->writePublic($job);
 
-        if (in_array($job['state'], ['removing_edge', 'wiping_node', 'catalog'], true)) {
+        if (in_array($job['state'], ['pruning_mesh', 'removing_edge', 'wiping_node', 'catalog'], true)) {
             return $this->runDestructive($job);
         }
 
@@ -185,6 +187,12 @@ final class TenantDeleteRunner
             }
             try {
                 $job = match ($state) {
+                    'pruning_mesh' => $this->after(
+                        $job,
+                        'pruning_mesh',
+                        fn () => $this->phasePruningMesh($job),
+                        'removing_edge'
+                    ),
                     'removing_edge' => $this->after(
                         $job,
                         'removing_edge',
@@ -258,7 +266,127 @@ final class TenantDeleteRunner
             $warnings[] = 'Node preflight check failed: '.$e->getMessage();
         }
 
+        // T1 — node wipe blast-radius counts (informational; never blocks confirm).
+        try {
+            $wipe = $this->nodeGet(
+                rtrim($api, '/'),
+                '/fleet/tenants/'.rawurlencode($shortuid).'/wipe-preflight'
+            );
+            $job['wipe_counts'] = is_array($wipe['wipe'] ?? null) ? $wipe['wipe'] : $wipe;
+            $total = (int) ($job['wipe_counts']['total_rows'] ?? 0);
+            $phaseMsg = "node wipe would remove {$total} child row(s) + cluster";
+        } catch (\Throwable $e) {
+            $job['wipe_counts'] = null;
+            $warnings[] = 'Node wipe-preflight failed: '.$e->getMessage();
+            $phaseMsg = 'wipe counts unavailable';
+        }
+
         $job['warnings'] = $warnings;
+        $job = $this->markPhase($job, 'preflight', 'ok', $phaseMsg);
+        $this->jobs->writePublic($job);
+
+        return $job;
+    }
+
+    /**
+     * T2 / I7 — detach from Site Group + prune peer dialaliases on reachable homes.
+     *
+     * @param  array<string, mixed>  $job
+     * @return array<string, mixed>
+     */
+    private function phasePruningMesh(array $job): array
+    {
+        $shortuid = strtolower(trim((string) ($job['tenant_shortuid'] ?? '')));
+        $fqdn = strtolower(trim((string) ($job['tenant_fqdn'] ?? '')));
+        $warnings = is_array($job['warnings'] ?? null) ? $job['warnings'] : [];
+        $actor = is_string($job['last_action_by'] ?? null) ? $job['last_action_by'] : null;
+
+        if ($this->dialCohorts === null || $this->dialRunner === null) {
+            $job = $this->markPhase($job, 'pruning_mesh', 'skipped', 'dial cohort services not wired');
+            $this->jobs->writePublic($job);
+
+            return $job;
+        }
+
+        $meta = [];
+        try {
+            $meta = $this->registrar->getTenantMeta($shortuid);
+        } catch (\Throwable) {
+            // fall through
+        }
+        if ($meta === []) {
+            try {
+                $meta = $this->registrar->getTenant($shortuid);
+            } catch (\Throwable) {
+                $meta = [];
+            }
+        }
+        if ($fqdn === '') {
+            $fqdn = strtolower(trim((string) ($meta['fqdn'] ?? '')));
+        }
+        $cohortId = trim((string) ($meta['dial_cohort_id'] ?? ''));
+
+        if ($cohortId === '') {
+            $job = $this->markPhase($job, 'pruning_mesh', 'ok', 'no Site Group membership — same-home prune via node wipe only');
+            $this->jobs->writePublic($job);
+
+            return $job;
+        }
+
+        $remaining = [];
+        try {
+            $removed = $this->dialCohorts->removeMember($cohortId, $shortuid, $actor);
+            $remaining = DialCohortStore::normalizeMembers($removed['cohort']['members'] ?? []);
+        } catch (\Throwable $e) {
+            $code = (int) $e->getCode();
+            // Already removed from cohort (retry) — continue prune against current members.
+            if ($code === 404) {
+                try {
+                    $doc = $this->dialCohorts->get($cohortId);
+                    $remaining = DialCohortStore::normalizeMembers($doc['members'] ?? []);
+                    $remaining = array_values(array_filter(
+                        $remaining,
+                        static fn (string $s): bool => $s !== $shortuid
+                    ));
+                } catch (\Throwable $e2) {
+                    $warnings[] = 'Site Group detach skipped: '.$e->getMessage().'; then '.$e2->getMessage();
+                    $job['warnings'] = $warnings;
+                    $job = $this->markPhase($job, 'pruning_mesh', 'ok', 'detach skipped; see warnings');
+                    $this->jobs->writePublic($job);
+
+                    return $job;
+                }
+            } else {
+                $warnings[] = 'Site Group detach failed: '.$e->getMessage()
+                    .' — fix catalog membership then Sync now / retry.';
+                $job['warnings'] = $warnings;
+                $job = $this->markPhase($job, 'pruning_mesh', 'ok', 'detach failed; see warnings');
+                $this->jobs->writePublic($job);
+
+                return $job;
+            }
+        }
+
+        $prune = $this->dialRunner->pruneInboundTargetingTenant($shortuid, $fqdn, $remaining);
+        foreach ($prune['warnings'] ?? [] as $w) {
+            if (is_string($w) && $w !== '') {
+                $warnings[] = $w;
+            }
+        }
+        $deleted = (int) ($prune['deletes'] ?? 0);
+        $homes = count($prune['homes_ok'] ?? []);
+        $msg = "Site Group {$cohortId}: pruned {$deleted} peer dialalias row(s) on {$homes} home(s)";
+        if ($warnings !== []) {
+            $msg .= '; '.count($warnings).' warning(s) — operator: retry / Sync now';
+        }
+
+        $job['warnings'] = $warnings;
+        $job['mesh_prune'] = [
+            'cohort_id' => $cohortId,
+            'deletes' => $deleted,
+            'homes_ok' => $prune['homes_ok'] ?? [],
+        ];
+        $job = $this->markPhase($job, 'pruning_mesh', 'ok', $msg);
         $this->jobs->writePublic($job);
 
         return $job;

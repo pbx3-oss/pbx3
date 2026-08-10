@@ -910,6 +910,8 @@ Orchestrator calls **source** and **dest** `api_base_url` with fleet credentials
 |--------|------|---------|
 | `POST` | `/api/fleet/tenants/{tenant}/export` | `tenant:export` → S3 staging key (or presigned PUT) |
 | `POST` | `/api/fleet/tenants/import` | `tenant:import` ← staging zip |
+| `GET` | `/api/fleet/tenants/{tenant}/wipe-preflight` | T1 — per-table wipe blast-radius counts (informational) |
+| `DELETE` | `/api/fleet/tenants/{tenant}` | Full tenant wipe on node |
 | `POST` | `/api/fleet/commit` | Asterisk regen + reload |
 | `POST` | `/api/fleet/certificates/sync` | LE SAN sync for tenant FQDN |
 | `GET` | `/api/fleet/preflight` | `pbx3:fleet-preflight` |

@@ -81,6 +81,8 @@ final class TenantDeleteJobStore
             'api_base_url' => $apiBase !== '' ? $apiBase : null,
             'state' => 'pending',
             'warnings' => [],
+            'wipe_counts' => null,
+            'mesh_prune' => null,
             'phases' => [],
             'error' => null,
             'rollback' => [
