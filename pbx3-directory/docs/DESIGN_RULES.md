@@ -322,7 +322,7 @@ When the control plane (gatekeeper), org bucket, or orchestrator is down:
 | Calls, REGISTER, local admin on nodes | Tenant move, catalog onboard/decommission, DID assign, rebuild jobs |
 | Node backup upload via **tight prefix IAM** (or cached presigns) where already configured | New catalog publishes that need gatekeeper write |
 
-**Implication:** Console can be red while phones are green. Same spirit as Rule 1 applied to **ops**. Do not make telephony wait on job queues.
+**Implication:** Console can be red while phones are green. Same spirit as Rule 1 applied to **ops**. Do not make telephony wait on job queues. **Duplex / active-active Gatekeeper is won't-do** (2026-08-11) — management binary; ops = single control host + rebuild (**`CONTROL_HOST.md`**). Edge HA remains a separate call-path track.
 
 ---
 
@@ -573,7 +573,7 @@ Do **not** elevate these to numbered Rules. They are preferences, workspace fact
 **Part D — Fleet control plane**
 
 10. **Fleet plane ≠ instance/tenant plane; `fleet_*` only for catalog/move/onboard.**  
-11. **Control plane down → calls continue; mutations may wait.**  
+11. **Control plane down → calls continue; mutations may wait.** (Duplex Gatekeeper won't-do — **`CONTROL_HOST.md`**.)  
 12. **Browser never holds ops IAM/SSH; SPA drives jobs.**  
 13. **Directory is HoR for fleet facts; edge DBs are projections; standalone SBC authors at the edge; one author per fact.**  
 14. **Destructive fleet steps are gated, durable jobs with audit.**  

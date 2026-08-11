@@ -174,15 +174,18 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 
 **Assumption:** When the project moves to the **PBX3** GitHub org/account, product repos are **public** (no deploy keys / private-clone friction on new VMs). On-node `git clone` + tag/checkout becomes a valid Lab/try-it path (GREENFIELD’s “scp debs because private” rationale drops).
 
-| Artifact | Stance with public repos |
-|----------|---------------------------|
-| **pbx3 / pbx3cagi** | Keep **`.deb`s** — already the product install; apt deps, postinst, version pin. |
-| **pbx3api** | **Clone-at-tag is acceptable** for Lab/try-it once public. Product target OS is **Ubuntu/Debian for the long haul** — a **`.deb`** is the natural artifact (apt parity with pbx3/cagi, AMI bake, less ad-hoc composer on boxes). Not a try-it **blocker** if docs pin a release tag first; build the deb when packaging time is scheduled. |
-| **Gatekeeper** | Same — public clone at tag + install script / Compose is enough; thin deb later for polish. |
+**Packaging posture (locked 2026-08-11) — pragmatic middle:**
+
+| Artifact | Stance |
+|----------|--------|
+| **pbx3cagi** | **Deb-first.** Historically AGI changed rarely once stable; apt version pins are the right shape. Prefer shipping fixes as a new cagi floor when the binary actually moves. |
+| **pbx3** | Keep **release/AMI/try-it `.deb`s** as **stable floors** (known-good pin + Depends). Between floors, **tip / rsync of `/opt/pbx3` is first-class** for lab and hotfixes — do **not** force every biggish patch through a new main deb version (historical pain). Deb = floor artifact, not the only way code lands on a box. |
+| **pbx3api** | **Clone-at-tag / tip** — no deb required for Lab or current fleet. Optional `.deb` later for long-haul apt parity (D6); not a try-it blocker. |
+| **Gatekeeper** | Public clone at tag + install script / Compose; thin deb later for polish. |
 | **Magrathea / SBC** | Overlay install from public tag (plus distro OpenSIPS packages); meta-deb when packaging effort allows. |
 | **SPA** | LAN static build (Lab default) or Pages / local Vite; not an on-node package. |
 
-**Still prefer versioned artifacts where they already exist** (pbx3/cagi debs). For API/GK/SBC: **documented release tag + install script** satisfies portable core until debs exist. Tip/`main` clone is for operators chasing HEAD, not the advertised Lab path.
+**Still prefer versioned floor artifacts where they already help** (cagi always; pbx3 for AMI / advertised Lab pin). Tip/`main` between floors is for operators chasing HEAD or lab hotfix — record tip SHAs in ops (**`TODO_OPS.md`**), not by inventing a new `0.0.x-N` for every patch.
 
 **License (gate before public):** Product license **Apache License 2.0** on all product repos — root `LICENSE` landed. Migrate tooling stripped from pbx3 (2026-08-09). Remaining public/org-transfer work: create OSS org + transfer. Garage remains upstream AGPL (companion only). See **`OPEN_SOURCE_GITHUB_SETUP.md`**.
 
@@ -234,7 +237,7 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 | **D3** | Cloud **T2** doc path + optional AWS AMI skin | Later |
 | **D4** | Packer multi-cloud | Later |
 | **D5** | Gatekeeper “create fleet” wrapping bootstrap | Later |
-| **D6** | **pbx3api `.deb`** (Ubuntu/Debian long-haul) — parallel/anytime; not Lab blocker if clone-at-tag works | When scheduled |
+| **D6** | **pbx3api `.deb`** — optional long-haul polish; **deferred** (clone-at-tag / tip is enough). See packaging posture above. | When packaging week |
 
 ---
 
@@ -334,3 +337,4 @@ Covered by **A7** / **A8** above. Point MkDocs / install docs at the script; kee
 | 2026-08-09 | Apache-2.0 root `LICENSE` on product repos (clean text; httpd composite removed). |
 | 2026-08-09 | Customer migrate stripped from pbx3 package; private ETL under Aelintra. Public gate = org transfer when scheduled. |
 | 2026-08-10 | T4 prefer **3 boxes** for two homes (GK co-located on Magrathea+Garage). Optional LAN+carrier: **chunked RTP DNAT** before rtpengine. |
+| 2026-08-11 | Packaging posture: **cagi deb-first**; **pbx3** release floors + tip between; **api** clone/tip (D6 deferred). |

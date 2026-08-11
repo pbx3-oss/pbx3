@@ -20,6 +20,7 @@ Run it after `apt install pbx3` (required before production use). On **first** r
 |-----------|------------|
 | **New server** (no `/opt/pbx3/db/sqlite.db`) | `apt install ./pbx3_*.deb` then **`installer.sh`** once |
 | **Upgrade pbx3 package** (new `.deb`, same server) | `apt install ./pbx3_*.deb` — postinst runs identity normalize automatically |
+| **Between pbx3 floors (lab / hotfix)** | Tip or rsync into `/opt/pbx3` is **first-class** — do not wait for a new main deb for every biggish patch. Record tip in ops. Full cadence: **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture. |
 | **Upgrade scripts from git** on a live box | `git pull` in `/opt/pbx3` (and `/opt/pbx3api`), then **`sudo /opt/pbx3/scripts/normalize-globals-identity.sh`** only if the panel still shows empty UID/KSUID |
 | **Configured system** (`sqlite.db` already exists) | **`installer.sh` does not call `reloader.sh`** — the DB is **not** recreated; **`globals`** FQDN / domain / **`shortuid`** are **preserved** unless you opt in with **`PBX3_APPLY_INSTANCE_IDENTITY=1`** and **`INSTANCE_FQDN=node.example.com`**. Re-runs still execute setip, Shorewall/service steps, etc., so prefer **normalize** or package upgrade for narrow fixes—not every re-run is a no-op. |
 | **Full DB reload from SQL** (disaster / schema bake-off) | Run **`/opt/pbx3/scripts/reloader.sh`** deliberately (backs up current DB under `db_database_dumps/`). Not part of routine install. Customer migrate tooling is private (not packaged). |

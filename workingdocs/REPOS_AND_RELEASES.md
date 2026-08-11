@@ -66,6 +66,20 @@
 
 ---
 
+## Packaging cadence (locked 2026-08-11)
+
+Historical pain: bumping a fat **main** `.deb` for every biggish patch. Forerunner AGI changed rarely once stable — that cadence still fits **cagi**.
+
+| Component | Cadence |
+|-----------|---------|
+| **pbx3cagi** | **Deb-first** — new floor when the binary moves; rare is good. |
+| **pbx3** | **Release / AMI / try-it floors** as `.deb` (pin + Depends). **Between floors:** tip / rsync under `/opt/pbx3` is first-class (lab + hotfix). Do not invent `0.0.x-N` for every patch. Tip SHAs → ops **`TODO_OPS.md`**. |
+| **pbx3api** | Clone-at-tag / tip; optional `.deb` deferred (**TODO #6** / try-it D6). |
+
+Detail: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** § Public GitHub org vs packages.
+
+---
+
 ## Local clone layout
 
 ```bash

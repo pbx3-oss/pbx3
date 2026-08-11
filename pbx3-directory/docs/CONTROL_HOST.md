@@ -5,6 +5,14 @@
 **SSH:** `ubuntu@control.pbx3.com` with `~/Documents/pemfiles/pbx3test.pem`  
 **IP:** dynamic public (set A record when it changes; prefer Elastic IP when available)
 
+## Posture — no duplex / HA (locked 2026-08-11)
+
+**Won't-do:** second Gatekeeper, active-active control plane, or duplex SKU.
+
+Management is **binary** — up or down. While down: no Fleet Console / catalog mutate / move / onboard / DID assign; **calls and REGISTER continue** (**`DESIGN_RULES.md`** Rule 11). Ops answer = single host + rebuild/restore + DNS/EIP discipline. Do **not** confuse with **SBC edge HA** (VIP/EIP promote — call path; see § SBC edge HA below).
+
+Revisit only if a customer RTO for *fleet mutate* (not telephony) forces it.
+
 ## Fleet auth (infra 2026-07-14)
 
 | Piece | Detail |
@@ -88,7 +96,7 @@ Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 �
 
 **Egress Unavail (node):** On each fleet node set `PBX3_OPS_EGRESS_UNAVAIL_NOTIFY=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Scheduler runs `pbx3:ops-egress-qualify` every minute — AMI qualify via posture; after 2 consecutive Unavail → `egress_unavail` ops-event (`transition=down`); Avail again → `cleared`. First run seeds without mail. Spec: **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
 
-**Velocity IRSF (node):** On each fleet node set `PBX3_OPS_VELOCITY_ENABLED=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Scheduler runs `pbx3:ops-velocity` every minute — batch CDR scan of Phase 6 `master.db` for high-cost prefix surge → `velocity_irsf` ops-event (`down` / `cleared`). Lab: fixture via `pbx3:cdr-fixture --path=… --probe --force`, then enable scanner. Knobs: `PBX3_OPS_VELOCITY_N` / `_T` / `_Q` / `_PREFIXES` (lab default prefix `00900`). **Auto-block (V5):** also set `PBX3_OPS_VELOCITY_ACT=true` — attributed phone → `active=NO` + clear CFIM/CFBS/Follow-me + hangup matching channels + genAst/reload; uncertain attribution = notify-only. Optional `PBX3_OPS_VELOCITY_ALLOWLIST`. Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.
+**Velocity IRSF (node):** On each fleet node set `PBX3_OPS_VELOCITY_ENABLED=true` (reuses `PBX3_GATEKEEPER_URL` / `TOKEN`). Scheduler runs `pbx3:ops-velocity` every minute — batch CDR scan of Phase 6 `master.db` for high-cost prefix surge → `velocity_irsf` ops-event (`down` / `cleared`). Lab: fixture via `pbx3:cdr-fixture --path=… --probe --force`, then enable scanner. Knobs: `PBX3_OPS_VELOCITY_N` / `_T` / `_Q` / `_PREFIXES` (lab default prefix `00900`). **Production starters:** UK / US packs in **`VELOCITY_PREFIX_SEEDS.md`** (`config/velocity/prefixes-*-starter.txt` — UK includes **`070`** personal). **Auto-block (V5):** also set `PBX3_OPS_VELOCITY_ACT=true` — attributed phone → `active=NO` + clear CFIM/CFBS/Follow-me + hangup matching channels + genAst/reload; uncertain attribution = notify-only. Optional `PBX3_OPS_VELOCITY_ALLOWLIST`. Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.
 
 ## Log retention (Phase 4)
 

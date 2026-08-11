@@ -1,8 +1,8 @@
 # Fleet toll fraud & call-pattern velocity (requirements)
 
-**Status:** **V0 framing done** (2026-07-22); **V1–V2 build plan fleshed** (2026-07-23); **auto-block required** (Fail2ban inside→out — 2026-07-23). **V1–V2 + V5 auto-block** shipped (2026-07-24) in **pbx3api** + Gatekeeper. V3/V4 later.  
-**Lab testing:** CDR fixture first; SIPp optional E2E.  
-**Related:** **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite (Phase 6 `master.db` shipped); instance **CoS** / dial policy (prevention + **act**); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only** — outside→in; velocity is the **inside→out** cousin); living research **`TELEPHONE_FRAUD_RESEARCH.md`** (fleet vs carrier ownership).
+**Status:** **V0 framing done** (2026-07-22); **V1–V2 + V5 auto-block** shipped (2026-07-24). **IRSF product close (2026-08-11):** SPA velocity inactive honesty + reactivate clears `z_updater`; **CDR pack v1** (`pbx3:cdr-velocity-pack` / **`VELOCITY_CDR_PACK.md`**). **V3/V4 / extra detectors** still later.  
+**Lab testing:** CDR fixture pack first; SIPp optional E2E.  
+**Related:** **`VELOCITY_CDR_PACK.md`** · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite (Phase 6 `master.db` shipped); instance **CoS** / dial policy (prevention + **act**); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only** — outside→in; velocity is the **inside→out** cousin); living research **`TELEPHONE_FRAUD_RESEARCH.md`** (fleet vs carrier ownership).
 
 ---
 
@@ -77,7 +77,7 @@ CDR fixture or live calls
 | 4 | Audience | **Fleet ops only** (`notify_failures`) for V2; tenant admins later (V4) |
 | 5 | V1 prerequisite | **Use existing `master.db`** (Phase 6) — no Master.csv interim; lab fixture writes SQLite-shaped rows |
 
-**Residuals (tune in lab, not blockers):** exact **N / T / Q** after first golden run; production high-cost prefix list ownership (ops vs fleet template in V3). **Act gaps above are requirements, not residuals** (attribution, clear CF, hangup-or-bleed).
+**Residuals (tune in lab, not blockers):** exact **N / T / Q** after first golden run; production prefixes — **starter packs** **`VELOCITY_PREFIX_SEEDS.md`** (UK incl. **`070`**; US NANP Caribbean); research §7 / Uboss; lab stays **`00900`**. V3 fleet template still later. **Act gaps above are requirements, not residuals** (attribution, clear CF, hangup-or-bleed).
 
 ---
 
@@ -207,6 +207,8 @@ Gatekeeper: handle `velocity_irsf` like other ops-events → SMTP to `notify_fai
 | **VM outdial / DISA** | **Not** CDR-deck tests — prevention audits |
 
 **Flow:** fixture → pointed `PBX3_CDR_SQLITE_PATH` → `pbx3:ops-velocity` (+ later rule packs) → mail / `active=NO`. No REGISTER, media, or live trunks for day-to-day.
+
+**Pack (v1):** **`VELOCITY_CDR_PACK.md`** — `php artisan pbx3:cdr-velocity-pack` (or Pest). Asserts IRSF query contract across fixture decks.
 
 **Optional E2E:** **SIPp** on golden when you want INVITE → real CDR → scanner confidence. Reuse **`pbx3sbc/attackTests`**; do not build a fleet call-generator. Edge SIPp flood ≠ toll-velocity HoR.
 
@@ -345,27 +347,21 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 2. **V1** — confirm `master.db` query surface + **CDR fixture** (path-safe). **Done** (2026-07-24).  
 3. **V2** — `pbx3:ops-velocity` + Gatekeeper `velocity_irsf` + mail (fixture-first; SIPp optional). **Done** (2026-07-24).  
 4. **V5** — **auto-block** via existing **`ipphone.active=NO`** (+ genAst) — required next; do not defer. **Done** (2026-07-24).  
-5. **V3** — fleet-wide tunable rules (shrink N control surfaces).  
-6. **V4** — tenant audience if still wanted (digit hygiene already in V2).
+5. **IRSF product close** — SPA “disabled by velocity” + reactivate clears stamp; **CDR pack v1**. **Done** (2026-08-11) — **`VELOCITY_CDR_PACK.md`**.  
+6. **V3** — fleet-wide tunable rules (shrink N control surfaces) — later.  
+7. **V4** — tenant audience if still wanted (digit hygiene already in V2) — later.
 
 ---
 
-## Future — discrete product (parked 2026-07-24)
+## Future — discrete product — **won't-do** (2026-08-11)
 
-**Observation:** detect + notify is mostly **generic Asterisk** (CDR SQLite / Master.csv + batch scan + mail/webhook). The pbx3-specific sticky bit is the **act** (`ipphone.active=NO`, AstDB CF clear, genAst).
+**Observation (historical):** detect + notify is mostly **generic Asterisk** (CDR SQLite / Master.csv + batch scan + mail/webhook). The pbx3-specific sticky bit is the **act** (`ipphone.active=NO`, AstDB CF clear, genAst).
 
-**Stance (just in case):** may later stand up as its **own repo + installer** — not a fork of pbx3api this week.
+**Locked won't-do:** do **not** stand up a separate velocity **repo + installer** (Go extract / portable “any Asterisk” SKU). Effort ≫ return; product path stays **in-tree** (`pbx3:ops-velocity` + Gatekeeper `velocity_irsf`). Finish V3+ in-fleet when designed (#8) — not a second product.
 
-**Runtime sketch:** standalone **scanner in Go** is an attractive extract (single static binary, cron/systemd-friendly, no PHP runtime on “any old Asterisk”). pbx3 keeps the PHP reference path in-tree; Go would be the portable SKU, not a rewrite of fleet Gatekeeper.
+**Historical sketch (not a build plan):** standalone Go scanner + notify without Gatekeeper + per-distro act adapters was considered 2026-07-24; cancelled.
 
-| Layer | Standalone SKU | Stays in pbx3 |
-|-------|----------------|---------------|
-| HoR | Asterisk `cdr_sqlite3_custom` and/or classic `Master.csv` | Same |
-| Detect | N/T/Q + prefix list; fixture/CSV lab — **Go binary candidate** | PHP `pbx3:ops-velocity` reference |
-| Notify | SMTP / webhook (no Gatekeeper required) | Gatekeeper `velocity_irsf` remains fleet path |
-| Act | Optional **adapters** per distro (pbx3, FreePBX, …) | pbx3 adapter = current V5 |
-
-**Do not:** claim “every Asterisk” until act is pluggable. **Do:** keep pbx3 as the reference act and extract detect/notify when product timing forces a repo. Pretty ops graphs / dashboards = later (notify is HoR; charts are garnish).
+**Do not:** claim “every Asterisk” or market a discrete velocity SKU. **Do:** keep pbx3 as the only fraud-velocity product surface.
 
 ---
 
@@ -373,6 +369,9 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 
 | Doc | Role |
 |-----|------|
+| **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`** | CoS prevention vs velocity vs SBC floor |
+| **`VELOCITY_PREFIX_SEEDS.md`** | UK / US starter `PBX3_OPS_VELOCITY_PREFIXES` packs |
+| **`VELOCITY_CDR_PACK.md`** | Fixture pack runner + case table |
 | **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** | Delivery plane; add `velocity_irsf` when implementing |
 | **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** | Instance SQLite CDR HoR (Phase 6) |
 | **`CONTROL_HOST.md`** | Gatekeeper env / ops-events ops |
@@ -382,8 +381,8 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 | pbx3api `CdrFixtureService` / `VelocityCdrQuery` / `pbx3:cdr-fixture` | V1 fixture + scanner input |
 | `pbx3sbc/attackTests` SIPp notes | Optional E2E only |
 | SBC Fail2ban | Outside→in analogue — not the implementation |
-| Competitive scan (2026-07-23) | FreePBX/3CX prevention+F2b; SecAst add-on; PBXDom CDR alerts; carrier spend caps — see **Competitive notes** |
+| Research: **`TELEPHONE_FRAUD_RESEARCH.md`** (§7 prefix seed) | Class A vs B; high-risk dial prefixes for production seed |
 
 ---
 
-*Last updated: 2026-07-24 — V1–V2+V5 live on golden; discrete-product repo/installer parked (detect/notify first).*
+*Last updated: 2026-08-11 — IRSF product close + CDR pack v1; standalone SKU won't-do; V3/V4 later.*

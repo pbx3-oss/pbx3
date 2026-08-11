@@ -235,7 +235,7 @@ Until a trigger fires: **invest in pbx3sbc** (HA doc, peering Phase 0, adapter A
 
 **Settled:** control plane is **not** on the SBC (`pbx3sbc-admin` stays edge-only; §2.5). **Open:** which **host** runs the separate service — an ops choice, not an architectural gate.
 
-**Either suffices:** a **small EC2** in the fleet VPC **or** a **local VM** (dev Mac / lab hypervisor). The service is **low-traffic management** (infrequent catalog writes, move jobs, presigns) and **fail-safe** — calls continue if it is down; worst case is no move/onboard until it returns. HA (second instance, queue failover) can wait.
+**Either suffices:** a **small EC2** in the fleet VPC **or** a **local VM** (dev Mac / lab hypervisor). The service is **low-traffic management** (infrequent catalog writes, move jobs, presigns) and **fail-safe** — calls continue if it is down; worst case is no move/onboard until it returns. **Duplex / HA — won't-do (2026-08-11):** management is binary (up/down); single host + rebuild/restore. See **`CONTROL_HOST.md`** · Rule 11.
 
 | Requirement | Implication |
 |-------------|-------------|

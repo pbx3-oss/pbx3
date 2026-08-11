@@ -1,6 +1,6 @@
 # First out — checklist (must-fix vs nice)
 
-**Status:** Operator lean (**2026-08-06**, refreshed same evening) — product is **mostly there**; this is cleanup triage, not a new build plan.  
+**Status:** Operator lean (**2026-08-06**; duplex won't-do **2026-08-11**) — product is **mostly there**; this is cleanup triage, not a new build plan.  
 **Related:** **`TODO.md`** · **`STAKEHOLDER_DEMO_SCRIPT.md`** · **`TRACK_B_RELEASE_HARDENING.md`** · **`PROVISIONING_SERVER_REQUIREMENTS.md`** (parked, §0 / §0.1) · Device lean in **`sqlite_device_data.sql`** + **`sqlite_device_lean_prune.sql`**.
 
 **First out** here means: a credible fleet PBX you can show / soft-land with a friendly customer — not OSS org polish, not HA SKUs, not a provisioning-server product.
@@ -82,13 +82,13 @@ Do **not** block first out on these:
 
 - Provisioning **server** product — **`PROVISIONING_SERVER_REQUIREMENTS.md`** §0 lean **M1** (vendor/reseller RPS); §0.1 M2–M5 if ever resumed  
 - Multi-AZ lab proof (production confidence later; same-AZ is enough for first out)  
-- Control-plane HA / duplex  
+- ~~Control-plane HA / duplex~~ — **won't-do** (2026-08-11): management binary; Rule 11 — **`CONTROL_HOST.md`**  
 - Instance shadowing / S10.7 orchestrated rebuild  
 - Fleet cookie/SSO  
 - TOTP 2FA (SPA + SBC) — **`TOTP_2FA_REQUIREMENTS.md`**  
 
 - Number wire Phase 2 / SBC dialect habit  
-- Velocity standalone / AMI wallboard / Grafana / door-knock heat  
+- ~~Velocity standalone~~ — **won't-do** (2026-08-11) — in-tree only · AMI wallboard / Grafana / door-knock heat  
 - cagi Phase 4 / Ast generator deep refactor  
 - S7+ PCI  
 - **OSS org transfer** — private migrate ETL already extracted (**not** first-out)  

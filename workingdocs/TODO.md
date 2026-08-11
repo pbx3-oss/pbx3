@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-11 (#34 Fleet domain→setid Magrathea lock)  
+**Last updated:** 2026-08-11 (velocity IRSF close + CDR pack; packaging cadence; #15/#11 won't-do)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -17,17 +17,17 @@
 5. **Lab deployment (when scheduled)** — **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**: LAN Lab T4; prefer **3 VMs** for two homes (Mag+GK+Garage / Ast1 / Ast2); optional public-carrier pilot = **chunked RTP DNAT** before rtpengine. OSS gates cleared.  
 5a. **Toliman vanity shortuid (`kildare`)** — hold; preferred path delete/recreate (opaque suid) after tenant move exercise — see **TODO_OPS**.  
 5b. **Instance Name → SBC Peer label sync** (optional) — Fleet Name PATCH does not update Magrathea Peer description today.  
-6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
-7. **New instance / package install** — fleet packages **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** (SIP debug + SITE_DIAL hairpin; rolled 2026-08-11). Tip-deploy **pbx3api** SIP debug + TrunkController lab-wide; optional full API checkout align. Ops: **`TODO_OPS.md`**.  
-8. **Toll fraud / velocity — remainder** — V1/V2/V5 shipped (env-only IRSF burst + notify + optional act); finish product: **V3** fleet rule template, **V4** audience, SPA surface, more detectors. Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Design still thin for V3+ — lock before build.  
+6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
+7. **New instance / package install** — fleet floors **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** (+ tips between — see **TODO_OPS**).  
+8. **Toll fraud / velocity** — **IRSF close + CDR pack v1** (2026-08-11); **CoS high-risk seed** posture locked (**`HIGH_RISK_DIAL_BLOCK_POSTURE.md`** — PBX CoS primary, SBC thin floor later). V3 fleet template / more detectors **later**.  
 8a. ~~**Paid Twilio inbound/outbound**~~ — **lab green** (Toliman↔Twilio both ways; SBC Route-strip + public From/PAI; Egress CLIP). Optional crumbs remain: named Peer recipe / drain / custom-dialect UI.  
 9. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
 10. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
-11. **Velocity standalone SKU** (parked — after in-tree remainder or instead) — own repo/installer; see requirements § Future.  
+11. ~~**Velocity standalone SKU**~~ — **won't-do** (2026-08-11): separate repo/installer not viable enough for the effort; stay in-tree (#8). Lock: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** § Future.  
 12. **Instance shadowing** / S10.7 / S8.9 (parked).  
 13. **AMI wallboard** (parked).  
 14. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
-15. **Control plane duplex / HA** (parked).  
+15. ~~**Control plane duplex / HA**~~ — **won't-do** (2026-08-11): management binary (up/down); Rule 11. Single host + rebuild/restore — not a duplex SKU. Lock: **`CONTROL_HOST.md`**.  
 16. **Fleet auth cookie/SSO (blocked)**.  
 17. **TOTP 2FA — Fleet Gatekeeper G5** (optional — require for `fleet_admin`; G1–G4 shipped).  
 18. **S7+** attested PCI — customer ask.  
@@ -77,7 +77,7 @@
 
 - [x] **#4b/#4c lab procedures on golden (2026-08-10):** **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1–§2 green (same-home prune; ext_len API + GenAst `_81XXX`).
 
-- [ ] **pbx3api `.deb` (open 2026-08-08):** Versioned Debian package installing under **`/opt/pbx3api`**, preserving `.env` on upgrade, wiring nginx/php-fpm via existing installer semantics. Ubuntu/Debian long-haul; apt parity with **pbx3** / **pbx3cagi**. Until shipped: clone-at-tag (public org) or current tip deploy. Repo: **pbx3api**. See try-it packaging § **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**.
+- [ ] **pbx3api `.deb` (deferred 2026-08-11):** Optional long-haul apt polish — **not** scheduled. Clone-at-tag / tip is enough. Packaging cadence lock: **cagi** deb-first; **pbx3** release floors + tip between (no new main deb for every biggish patch); **api** stays tip. Spec: **`REPOS_AND_RELEASES.md`** § Packaging cadence · **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** packaging posture · D6.
 
 - [x] **Roll API tip — Sanctum TOTP to fleet nodes (2026-08-08):** Done on lab fleet. Tip/host detail: **`~/GiT/pbx3-ops/TODO_OPS.md`**.
 
@@ -109,7 +109,7 @@
 
 - [ ] **pbx3cagi Phase 4 — domain file splits (parked 2026-07-26):** Day-parts / CheckState **merged to `main`** — Phase 4 unblocked when scheduled. Spec: **`REFACTOR_PLAN.md`**.
 
-- [ ] **Control plane duplex / HA (parked, pre-live 2026-07-27):** Gatekeeper is a single host — ops SPOF. Call plane fail-safe by design. Do **not** home on SBC. Spec seed: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5 fail-safe.
+- [x] **Control plane duplex / HA — won't-do (2026-08-11):** Management layer is binary (up/down). Gatekeeper stays a **single host**; calls continue per Rule 11 while Fleet mutate waits. Do **not** build duplex/active-active Gatekeeper. Ops: rebuild/restore + DNS/EIP discipline. Edge HA (Magrathea) remains a separate call-path track. Lock: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.1 · **`DESIGN_RULES.md`** Rule 11.
 
 - [ ] **Fleet instance health includes Asterisk (parked, pre-live 2026-07-27):** Gatekeeper node badge uses HTTP **`/up`** only. Extend probe for call-plane liveness before production. Do not block dial-alias.
 
@@ -117,9 +117,11 @@
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** Not built. Best-effort AMI overlay on move jobs.
 
-- [ ] **Toll fraud / velocity — remainder (promoted 2026-08-10):** **Shipped:** V1 CDR fixture/query, V2 IRSF burst → Gatekeeper `velocity_irsf`, V5 `active=NO` act (`pbx3:ops-velocity`; env flags; not SPA; off on golden today). **Still to do (requirements-thin — design before build):** **V3** fleet-wide rule template (N/T/Q/prefixes without per-node `.env`); **V4** tenant-admin audience if wanted; SPA enable/status + “disabled by velocity” badge; more detectors (CFIM, off-hours, short-call, dormant, concurrency, …); ops enable + `schedule:run` when ready. Spec: **`pbx3-directory/docs/FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Research: **`TELEPHONE_FRAUD_RESEARCH.md`**.
+- [x] **Toll fraud / velocity — IRSF product close + CDR pack (2026-08-11):** SPA inactive hint + list title when `z_updater=velocity`; reactivate clears stamp; **`VelocityCdrPack`** / `pbx3:cdr-velocity-pack` (6 cases). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** · **`VELOCITY_CDR_PACK.md`**. **Still later:** V3 fleet rule template, V4 tenant audience, more detectors (CFIM, off-hours, …); ops enable ACT on a chosen lab phone when proving end-to-end.
 
-- [ ] **Toll fraud / velocity — standalone SKU (parked 2026-07-24):** Own **repo + installer** later (Go extract sketch). Spec § Future — same requirements doc. Do not block in-tree remainder (#8).
+- [x] **High-risk dial block posture + CoS seed (2026-08-11):** Prevention = **PBX CoS** (`HR_UK070` / `HR_OFFSHORE`); velocity = detect/act; SBC = optional thin never-route later. Packs: `config/cos/highrisk-*-starter.dialplan`. Artisan **`pbx3:cos-highrisk-seed`**. Lock: **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`**.
+
+- [x] **Toll fraud / velocity — standalone SKU — won't-do (2026-08-11):** Own repo + Go extract / installer cancelled — effort ≫ return. Fraud velocity stays **in-tree** (finish #8 remainder when designed). Spec § Future: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.
 
 - [x] **Number dialect — paid Twilio inbound/outbound (2026-08-11):** Toliman↔Twilio both ways lab green (SBC Route-strip + public From/PAI host; Egress CLIP update without `default` tenant). Optional later: named Twilio Peer recipe; custom-dialect UI. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · wire: **`EGRESS_PLUS_E164_WIRE.md`**. CLI stays as-stored (no CLIP mangle).
 
