@@ -20,6 +20,14 @@ if ! [[ "$ttl" =~ ^[0-9]+$ ]] || [[ "$ttl" -lt 15 ]] || [[ "$ttl" -gt 60 ]]; the
 fi
 
 sip_debug_ensure_logger_channel
+# Fresh clean text for this session (move any prior content aside).
+if [[ -f "$SIP_TEXT" ]] && [[ -s "$SIP_TEXT" ]]; then
+	stamp=$(date -u +%Y%m%dT%H%M%SZ)
+	mv "$SIP_TEXT" "${SIP_TEXT}.${stamp}" 2>/dev/null || : >"$SIP_TEXT"
+fi
+sip_debug_touch_logs
+: >"$SIP_TEXT_RAW" 2>/dev/null || truncate -s 0 "$SIP_TEXT_RAW" 2>/dev/null || true
+sip_debug_start_filter
 "$ASTERISK" -rx "pjsip set logger on" >/dev/null 2>&1 || echo "warn: pjsip set logger on failed" >&2
 
 if [[ "$want_pcap" -eq 1 ]]; then

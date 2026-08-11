@@ -1,3 +1,10 @@
+pbx3 (0.0.5-5) noble; urgency=medium
+
+  * SIP debug text: filter res_pjsip_logger into sip-debug (verbose →
+    sip-debug-raw); stop writing raw Asterisk verbose into the live SIP file.
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Tue, 11 Aug 2026 14:00:00 -0400
+
 pbx3 (0.0.5-4) noble; urgency=medium
 
   * Home SIP debug: session-armed PJSIP text + optional pcap scripts

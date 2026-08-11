@@ -13,7 +13,8 @@
 	create 640 asterisk asterisk
 }
 
-/var/log/asterisk/sip-debug {
+/var/log/asterisk/sip-debug
+/var/log/asterisk/sip-debug-raw {
 	daily
 	rotate 7
 	missingok

@@ -57,7 +57,9 @@ def flush():
     cid = (m_cid.group(1).strip() if m_cid else "")
     if call_id and cid and call_id not in cid:
         return
-    m_ts = re.search(r'^\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\]', text, re.M)
+    m_ts = re.search(r'^---\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\b', text, re.M) or re.search(
+        r'^\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\]', text, re.M
+    )
     m_dir = re.search(r'(Received|Transmitting)\s+SIP', text, re.I)
     direction = None
     if m_dir:
@@ -85,6 +87,11 @@ def flush():
 
 with open(path, errors="replace") as f:
     for line in f:
+        # Clean filter format: --- ts Transmitting/Received ... ---
+        if re.match(r'^---\s+\d{4}-\d{2}-\d{2}', line) and buf:
+            flush()
+            buf.append(line.rstrip("\n"))
+            continue
         if line.strip() == "" and buf:
             flush()
         else:
