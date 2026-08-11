@@ -148,6 +148,7 @@ Toll-fraud / call-pattern **detection** runs **on the instance** next to SQLite 
 
 - **Singleton / solo:** useful — instance is the edge; keep existing dumpcap carousel (`port 5060`, `-b filesize` / `-b files`). Enable: **`/opt/pbx3/scripts/siplog-set-mode.sh solo`**.
 - **Fleet:** **disabled by default** — pcaps will not show phone REGISTER/INVITE and waste disk. Package ships with service **`down`**; postinst/onboard do **not** `sv u`. Disable on existing nodes: **`siplog-set-mode.sh fleet`**. Optional trunk-side override later (not v1).
+- **Session debug (fleet homes):** R3 stands for *always-on*. Opt-in **TTL session** home SIP **text** (+ optional pcap companion) for SBC↔Asterisk debug is specified in **`pbx3/workingdocs/HOME_SIP_LOGGING_REQUIREMENTS.md`** (AI-first; SPA arm/disarm; S3 classes `sip-text` / `sip-pcap` when fleet log-ship is configured — not implemented as of 2026-08-11). Does not replace SBC archive.
 
 Reference: `pbx3-1/opt/pbx3/service/sys-ua-siplog/run` (runit today); globals `logsipnumfiles`, `logsipfilesize`.
 
