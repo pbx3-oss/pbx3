@@ -29,6 +29,8 @@ Same authorship class as hop-1 DID delivery: sticky Magrathea edit without catal
 
 **Still allowed on Magrathea for fleet rows:** read / View (including read-only destination list if deep-linked).
 
+**Emergency (control plane down):** Filament stays locked. Break-glass = **SSH/SQL/MI** on the SBC, then after recovery **catalog wins** (Fleet reconcile / project). Not a sticky product path.
+
 **Forbidden:** Magrathea → catalog sync as product path; treating Filament setid flip or destination edit as sticky under fleet.
 
 ---
@@ -36,4 +38,4 @@ Same authorship class as hop-1 DID delivery: sticky Magrathea edit without catal
 ## Enforcement
 
 - **Shipped (2026-08-11):** `Domain` save merges attrs (no longer wipes to `setid=` only); `FleetDomainOwnership::stamp` on `registerDomain` / `repoint` / `rollback-repoint`; `DomainPolicy` + Domain Routes Filament lock badge / no-offer / Edit redirect; `GET /fleet/domains` returns `fleet_owned`; Gatekeeper reconcile `missing_fleet_tag` (warning) projectable via registerDomain.
-- **Shipped (2026-08-11):** Hide Manage destinations for `fleet=domain`; `DispatcherPolicy` + create/edit redirect when `setidIsFleetLocked` / `fleet=node`.
+- **Shipped (2026-08-11):** Hide Manage destinations for `fleet=domain`; `DispatcherPolicy` + create/edit redirect when `setidIsFleetLocked` / `fleet=node`; bulk-select hidden for fleet-owned Domain Routes.
