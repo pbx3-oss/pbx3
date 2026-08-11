@@ -1,6 +1,6 @@
 # Home SIP logging — requirements (AI-first)
 
-**Status:** Direction locked **2026-08-11** (SPA arm/disarm; S3 **`sip-text` / `sip-pcap`**). **Implemented on `main`** (pbx3 scripts + pbx3api + SPA); golden tip-smoked. **Package roll `0.0.5-4`** + other-home tip still open.  
+**Status:** Direction locked **2026-08-11** (SPA arm/disarm; S3 **`sip-text` / `sip-pcap`**). **Shipped** — A–G on **`main`**; package **`0.0.5-5`** on golden/bzy/Toliman; API tip; S3 **`sip-text`** ship confirmed.  
 **Related:** [`pbx3-directory/docs/FLEET_LOG_RETENTION_REQUIREMENTS.md`](../pbx3-directory/docs/FLEET_LOG_RETENTION_REQUIREMENTS.md) (fleet always-on SIP archive = **SBC**; R3 unchanged) · instance `sys-ua-siplog` · `siplog-set-mode.sh` · pbx3api `LogController` + syscommands · SPA Logs / SIP debug controls · parked Homer/Grafana (TODO #20).  
 **Repos when built:** **pbx3** (logger channel + arm/disarm/extract scripts) · **pbx3api** (LogController + sip-debug status/arm/disarm) · **pbx3spa** (start/stop + status + list/download). No Gatekeeper change for v1. No SBC capture model change.
 
