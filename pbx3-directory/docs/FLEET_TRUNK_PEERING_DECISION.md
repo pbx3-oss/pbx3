@@ -129,12 +129,20 @@ Phase A ships **before** SBC peering Phases 1–4. Goal: every fleet node dials 
 
 Fleet vs solo behaviour is gated by instance posture (e.g. directory / fleet flag in instance meta, or presence of `Egress` trunk template). Solo installs keep today’s trunk picker and real carrier trunks on the node.
 
-### 4.3.1 Two postures — trunk panel visibility (2026-07-13)
+### 4.3.1 Two postures — trunk panel visibility (2026-07-13; create lock 2026-08-10)
 
 | Posture | Node trunks panel | Carrier / PJSIP peers |
 |---------|-------------------|------------------------|
 | **Solo** (no SBC) | **Show** real carrier trunks (old behaviour) — the node *is* the PSTN edge | On the node |
 | **Fleet** | Show **`Egress`** (+ later **EgressFailover**) as the node’s PSTN face — status/SBC host — **not** Magrathea/Twilio peers | On **SBC admin** (Peers / Registrations / Number routes / DID aliases) |
+
+**Fleet Create vs Edit (locked 2026-08-10):**
+
+| Action | Fleet | Solo |
+|--------|-------|------|
+| **Create** trunk | **Hidden / API 403** — carriers are SBC-side | Allowed |
+| **Edit** trunk | **Allowed** — needed for **Egress** (mangle/transform, qualify, host, etc.) | Allowed |
+| **Delete** | Still available (ops cleanup); do not delete seeded Egress casually | Allowed |
 
 Hiding carrier trunks on a fleet node is **correct** (carrier peering is SBC-side). Hiding *everything* with no Egress stand-in is a UX gap — operators lose “see the wire” confidence. Do **not** put carrier Peers back on the golden trunks list under fleet posture.
 
