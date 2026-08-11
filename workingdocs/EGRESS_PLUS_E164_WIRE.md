@@ -30,7 +30,20 @@ Longer prefix first (`00` before `0`) so overseas IDD is not mis-written as `+44
 | UK national | `01924918076` | `+441924918076` |
 | UK IDD overseas | `0015139266349` | `+15139266349` |
 
-US / NANP nodes need a different seed (e.g. `011:+` for overseas; do **not** use UK `0:+44`). Example US→UK: `011441924918076` → `+441924918076`.
+## Seed transform (US / NANP lab)
+
+US / NANP nodes need a different seed — do **not** use UK `0:+44`. Longer IDD first:
+
+```text
+011:+ 1:+
+```
+
+| Habit | Example | After transform |
+|-------|---------|-----------------|
+| NANP national / 1+ | `15139266359` | `+15139266359` |
+| US IDD overseas | `011441924918076` | `+441924918076` |
+
+Product seed for new US tenants remains TODO **O4** (`SEED_OUTBOUND_ON_TENANT_CREATE.md`); set transform on existing Egress rows for lab (Commit / GenAst after).
 
 Re-seed or set the transform on existing Egress rows after upgrade; run commit / GenAst.
 
