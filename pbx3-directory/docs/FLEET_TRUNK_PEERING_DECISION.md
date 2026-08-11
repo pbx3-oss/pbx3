@@ -210,7 +210,7 @@ without a separate “singleton vs block” data model on Asterisk. That flexibi
 
 - **Source of truth for behaviour:** tenant `inroutes` (regex `pkey` + `openroute`/`closeroute`/CLIP/transform).
 - **Source of truth for homing:** S3 directory (`tenant → node` in `meta.json`; optional **`dids.json`** for reseller/trunker — see **`DID_ASSIGNMENT_DESIGN.md`**).
-- **SBC rows are derived:** `DID → tenant → node → setid` — regenerated on **move**, never independently edited.
+- **SBC rows are derived:** `DID → tenant → node → setid` — regenerated on **move** / Fleet reassign, never independently edited under fleet. Magrathea must **not** offer edit/delete of `fleet=did` rows — **`FLEET_DID_HOP1_LOCK.md`**.
 
 **Default SBC projection:** one `dr_rules` row per active inbound DID (full E.164 as prefix → tenant’s current `setid`). Longest-prefix with a full number is effectively exact match — works for scattered singletons without `alias_db`.
 

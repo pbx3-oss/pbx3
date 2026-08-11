@@ -43,7 +43,7 @@ US / NANP nodes need a different seed — do **not** use UK `0:+44`. Longer IDD 
 | NANP 1+10 | `15139266359` | `+15139266359` (`1:+1` strips `1`, adds `+1`) |
 | US IDD overseas | `011441924918076` | `+441924918076` |
 
-Product seed for new US tenants remains TODO **O4** (`SEED_OUTBOUND_ON_TENANT_CREATE.md`); set transform on existing Egress rows for lab (Commit / GenAst after).
+Product US `globals.default_outbound_dialplan` auto-seed pack remains optional (**O4** product residual). **Lab call chain (2026-08-11):** Toliman Egress `011:+ 1:+1` + Twilio in/out **green** — treat US wire recipe as proven for that path.
 
 Re-seed or set the transform on existing Egress rows after upgrade; run commit / GenAst.
 

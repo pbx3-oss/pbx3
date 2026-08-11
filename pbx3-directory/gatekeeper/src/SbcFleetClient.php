@@ -108,6 +108,40 @@ final class SbcFleetClient
     }
 
     /**
+     * @return list<array{prefix: string, tenant_shortuid: string, e164_key: string, gwid: ?string, setid: ?int, ruleid: int}>
+     */
+    public function listDidRules(): array
+    {
+        $payload = $this->get('/fleet/did-rules');
+        $raw = $payload['rules'] ?? null;
+        if (! is_array($raw)) {
+            throw new \RuntimeException('SBC /fleet/did-rules missing rules array', 502);
+        }
+
+        $out = [];
+        foreach ($raw as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $prefix = isset($row['prefix']) ? (string) $row['prefix'] : '';
+            $out[] = [
+                'prefix' => $prefix,
+                'tenant_shortuid' => (string) ($row['tenant_shortuid'] ?? ''),
+                'e164_key' => (string) ($row['e164_key'] ?? ''),
+                'gwid' => isset($row['gwid']) && $row['gwid'] !== null && $row['gwid'] !== ''
+                    ? (string) $row['gwid']
+                    : null,
+                'setid' => isset($row['setid']) && $row['setid'] !== null && $row['setid'] !== ''
+                    ? (int) $row['setid']
+                    : null,
+                'ruleid' => (int) ($row['ruleid'] ?? 0),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * S10.5 — project catalog DID rows onto SBC inbound dr_rules.
      *
      * @param  list<array<string, mixed>>  $dids

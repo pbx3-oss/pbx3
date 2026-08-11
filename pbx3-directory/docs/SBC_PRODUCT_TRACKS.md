@@ -7,7 +7,7 @@
 | Track | Decision |
 |-------|----------|
 | **C — Teams** | **Do not** build or certify Direct Routing on pbx3sbc. Customer ask → **C1** answer (rent/peer Microsoft-approved SBC ahead, or Operator Connect). No C2/C3 investment. |
-| **B — STIR/SHAKEN** | **Pragmatic / Peer-shaped.** Near-term: continue **Twilio** lab (shape **A** — low cost, low obligation). Escalate to Bandwidth Hosted Signing (B) or OpenSIPS AS (C) only when circumstance requires. Append vendors over time. |
+| **B — STIR/SHAKEN** | **Pragmatic / Peer-shaped.** Twilio shape **A** lab **observed** (attestation **A** after ID checks, **2026-08-11**). Escalate to Bandwidth Hosted Signing (B) or OpenSIPS AS (C) only when circumstance requires. Append vendors over time. |
 | **A — General SBC** | Still valid SKU intent. **Lab next:** stand up a **SARK** box (and optionally **FreePBX**) behind Magrathea / scratch SBC — domain, dispatcher, phone registrar = SBC, one DID path — prove proxy-registrar without GenAst. |
 | **WebRTC / WSS (S8.11 / W1)** | **#1 near-term — Magrathea lab green 2026-08-03.** Browser **WSS only on SBC** (`wss://sbc.pbx3.com:8089/ws`); SBC → home is **ordinary SIP UDP**; RTP bypass; **home instance TCP 8089 not required** (golden closed 8089, calls OK). Home WebRTC PJSIP = UDP + `outbound_proxy` + `webrtc=yes`. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · **`WEBRTC_WSS_LAB.md`** · checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**. |
 
@@ -157,6 +157,8 @@ flowchart TB
 
 Lab Twilio egress Peer remains useful as an **observer** for shape A before STI-PA spend.
 
+**Lab observation (2026-08-11):** Paid Twilio trunk after Twilio **ID / KYC checks** — outbound calls rated attestation **A**. Confirms shape **A** (carrier signs as SP) works for this lab path without OpenSIPS AS / STI-PA. Does **not** satisfy US own-VSP / own-cert product (still need shape **B** or **C** when obligated).
+
 ### DIDWW outbound STIR/SHAKEN
 
 Source: [DIDWW outbound STIR/SHAKEN](https://doc.didww.com/voice/outbound-trunks/technical-data/stir-shaken.html) (thin; outbound trunks).
@@ -194,7 +196,7 @@ Source: Bandwidth *STIR/SHAKEN Implementation Checklist* (fact sheet; US-focused
 
 **Escape hatch:** shape **A** (Twilio / DIDWW default) when you are not the obligated originator and the carrier signs under *their* obligation — but do **not** plan the US *own-TN / own-VSP* product on borrowed Identity. For own-VSP US, prefer shape **B** (Bandwidth) or **C** (OpenSIPS), never “Peer’s cert pretending to be ours.”
 
-**Rank / near-term:** Continue **Twilio** testing (shape **A**). Do **not** start Filament / STI-PA / OpenSIPS AS unless a Peer or legal circumstance requires B or C. Bandwidth shape **B** still means compliance steps **1–3** gate production own-cert US signing when that path is chosen.
+**Rank / near-term:** Twilio shape **A** lab **observed** (attestation **A** after ID checks, 2026-08-11). Do **not** start Filament / STI-PA / OpenSIPS AS unless a Peer or legal circumstance requires B or C. Bandwidth shape **B** still means compliance steps **1–3** gate production own-cert US signing when that path is chosen.
 
 **ClearIP / Sansay bolt-on:** Effort/cost/value captured in **`TELEPHONE_FRAUD_RESEARCH.md` §6** — do not schedule while on shape **A**; if own-cert forced prefer Bandwidth **B** before ClearIP/Sansay/OpenSIPS **C**; Sansay Express = alternate SBC SKU, not Magrathea plugin.
 
@@ -244,7 +246,7 @@ Teams Phone  ↔  Microsoft-certified SBC  ↔  pbx3sbc  ↔  PBX / carrier Peer
 
 1. Keep **tenant dial-alias** (and other call-path TODO #1) as the *call-path* priority  
 2. **A — SARK (± FreePBX) behind SBC** — operator lab prove; document gaps  
-3. **B — continue Twilio STIR lab** (shape A); escalate B/C only on circumstance; append vendors over time  
+3. **B — Twilio STIR shape A observed** (attestation A, 2026-08-11); escalate B/C only on circumstance; append vendors over time  
 4. **C — parked**; customer Teams ask → **C1** commercial answer only  
 5. **Capability roadmap** (above) — WebRTC committed; then SIP TLS / optional media / Fail2ban whitelist / registration-edge on demand  
 

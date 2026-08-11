@@ -116,9 +116,10 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `POST` | `/api/v1/catalog/dial-cohort-index/rebuild` | Rebuild Site Groups index from cohort docs (`fleet_dial_cohorts`) |
 | `POST` | `/api/v1/tenants/provision` | Fleet-first create: node `/fleet/tenants` → catalog meta → SBC domain (`fleet_instances`). Body: `instance_id`, `pkey`, `description`; optional `clusterclid`/`localarea`; resume after catalog fail: `resume`+`shortuid`+`fqdn` |
 | `GET` | `/api/v1/dids` | S10.5 catalog DID ownership flat list (`fleet_read`) |
-| `POST` | `/api/v1/dids/assign` | Assign/reassign DID → tenant; writes `dids.json` + `did-index`; projects SBC unless `project:false` (`fleet_edge`) |
+| `GET` | `/api/v1/dids/reconcile` | Catalog active/porting ↔ SBC `fleet=did` rules (prefix/tenant/setid drift) (`fleet_edge`) |
+| `POST` | `/api/v1/dids/assign` | Assign/reassign DID or hop-1 block → tenant (`delivery`: `singleton`\|`block`, optional `sip_prefix`); writes `dids.json` + `did-index`; projects SBC unless `project:false` (`fleet_edge`) |
 | `POST` | `/api/v1/dids/release` | Soft-release DID in catalog (+ project) (`fleet_edge`) |
-| `POST` | `/api/v1/dids/project` | Force-project catalog DIDs → SBC inbound `dr_rules` (`fleet_edge`) |
+| `POST` | `/api/v1/dids/project` | Force-project catalog DIDs → SBC inbound `dr_rules` — Apply for DID drift (`fleet_edge`) |
 | `POST` | `/api/v1/tenants/{shortuid}/register-domain` | Ensure SBC `domain` row for tenant fqdn + catalog setid (`fleet_edge`) |
 | `POST` | `/api/v1/instances/{id}/provision-edge` | S10.5: allocate/update dispatcher set + Asterisk Peer; write catalog `sbc_dispatcher_setid` + `sbc_backend_uri` (`fleet_edge`). Body: optional `backend_uri`, `confirm` (required to update existing setid), `source_ip`, `dry_run` |
 | `GET` | `/api/v1/sbc/dispatcher-sets` | Live SBC dispatcher setids (`fleet_read`) — catalog setid must be one of these |
@@ -141,7 +142,7 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 - Project to a setid with **no dispatcher destinations** fails (422); mismatches remain until catalog is corrected or the set exists.
 - **Catalog `sbc_dispatcher_setid`:** register/PATCH must name a **live** SBC dispatcher set (`GET /api/v1/sbc/dispatcher-sets`). Invented values (e.g. `99`) are rejected. SPA: no free-typed number — pick from live sets only.
 
-DID / missing domain rows: **S10.5**, not this endpoint.
+DID / missing domain rows: **S10.5**. DID delivery drift: **`GET /api/v1/dids/reconcile`**; Apply = **`POST /api/v1/dids/project`** (catalog → edge). Domain setid drift stays on **`/reconcile`**.
 | `POST` | `/api/v1/instances` | Register/upsert instance (`verify_up` optional; stamps `updated_by`) |
 | `PATCH` | `/api/v1/instances/{id}` | Update label/notes/environment/status/… (`fleet_instances`) |
 | `POST` | `/api/v1/instances/{id}/decommission` | Soft decommission (`confirm: true`, optional `notes`) |

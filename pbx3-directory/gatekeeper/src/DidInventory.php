@@ -58,6 +58,8 @@ final class DidInventory
                     'e164' => (string) ($did['e164'] ?? ''),
                     'e164_key' => self::e164Key((string) ($did['e164'] ?? '')),
                     'sip_prefix' => isset($did['sip_prefix']) ? (string) $did['sip_prefix'] : null,
+                    'delivery' => self::deliveryKind($did),
+                    'match_prefix' => self::matchPrefix($did),
                     'tenant_shortuid' => $shortuid,
                     'tenant_label' => (string) ($meta['pkey'] ?? $meta['label'] ?? $shortuid),
                     'tenant_fqdn' => (string) ($meta['fqdn'] ?? ''),
@@ -124,10 +126,64 @@ final class DidInventory
             );
         }
 
+        $delivery = strtolower(trim((string) ($body['delivery'] ?? 'singleton')));
+        if (! in_array($delivery, ['singleton', 'block'], true)) {
+            throw new \InvalidArgumentException('delivery must be singleton or block', 422);
+        }
+
+        $sipPrefix = null;
+        if (isset($body['sip_prefix']) && is_string($body['sip_prefix']) && trim($body['sip_prefix']) !== '') {
+            $sipPrefix = preg_replace('/\D+/', '', trim($body['sip_prefix'])) ?? '';
+            if ($sipPrefix === '') {
+                throw new \InvalidArgumentException('sip_prefix must be digits', 422);
+            }
+        }
+        if ($delivery === 'block') {
+            if ($sipPrefix === null || $sipPrefix === '') {
+                throw new \InvalidArgumentException(
+                    'block delivery requires sip_prefix (OpenSIPS match digits, e.g. 019249264)',
+                    422
+                );
+            }
+            $e164Digits = self::e164Key($e164);
+            if (strlen($sipPrefix) >= strlen($e164Digits)) {
+                throw new \InvalidArgumentException(
+                    'block sip_prefix must be shorter than the E.164 digits (block vs singleton)',
+                    422
+                );
+            }
+        }
+
+        if ($sipPrefix !== null) {
+            $prefixOwner = $this->findOwnerByMatchPrefix($sipPrefix);
+            if ($prefixOwner !== null
+                && self::e164Key((string) ($prefixOwner['e164'] ?? '')) !== self::e164Key($e164)
+                && in_array($prefixOwner['status'], self::OWNING_STATUSES, true)
+                && ! $reassign
+            ) {
+                throw new \RuntimeException(
+                    "Match prefix {$sipPrefix} already owned by tenant {$prefixOwner['tenant_shortuid']} "
+                    ."({$prefixOwner['e164']}) — pass reassign: true",
+                    409
+                );
+            }
+            if ($prefixOwner !== null
+                && self::e164Key((string) ($prefixOwner['e164'] ?? '')) !== self::e164Key($e164)
+                && $reassign
+                && in_array($prefixOwner['status'], self::OWNING_STATUSES, true)
+            ) {
+                $this->removeDidFromTenant(
+                    (string) $prefixOwner['tenant_shortuid'],
+                    (string) $prefixOwner['e164']
+                );
+            }
+        }
+
         $now = $this->registrar->nowIso();
         $record = [
             'e164' => $e164,
             'status' => $status,
+            'delivery' => $delivery,
             'updated_at' => $now,
         ];
         foreach (['carrier', 'label', 'notes'] as $opt) {
@@ -135,11 +191,7 @@ final class DidInventory
                 $record[$opt] = trim($body[$opt]);
             }
         }
-        if (isset($body['sip_prefix']) && is_string($body['sip_prefix']) && trim($body['sip_prefix']) !== '') {
-            $sipPrefix = preg_replace('/\D+/', '', trim($body['sip_prefix'])) ?? '';
-            if ($sipPrefix === '') {
-                throw new \InvalidArgumentException('sip_prefix must be digits', 422);
-            }
+        if ($sipPrefix !== null) {
             $record['sip_prefix'] = $sipPrefix;
         }
         if ($existing === null || $existing['tenant_shortuid'] !== $tenant) {
@@ -374,7 +426,7 @@ final class DidInventory
     }
 
     /**
-     * @return array{tenant_shortuid: string, status: string, assigned_at?: string}|null
+     * @return array{tenant_shortuid: string, status: string, e164: string, assigned_at?: string}|null
      */
     private function findOwner(string $e164): ?array
     {
@@ -392,6 +444,7 @@ final class DidInventory
                 if (self::e164Key((string) ($did['e164'] ?? '')) === $key) {
                     return [
                         'tenant_shortuid' => $shortuid,
+                        'e164' => (string) ($did['e164'] ?? ''),
                         'status' => (string) ($did['status'] ?? ''),
                         'assigned_at' => isset($did['assigned_at']) ? (string) $did['assigned_at'] : null,
                     ];
@@ -400,6 +453,221 @@ final class DidInventory
         }
 
         return null;
+    }
+
+    /**
+     * Owning DID that projects to this OpenSIPS match prefix (sip_prefix or e164 digits).
+     *
+     * @return array{tenant_shortuid: string, status: string, e164: string}|null
+     */
+    private function findOwnerByMatchPrefix(string $prefix): ?array
+    {
+        $prefix = preg_replace('/\D+/', '', $prefix) ?? '';
+        if ($prefix === '') {
+            return null;
+        }
+        foreach ($this->listAll()['dids'] as $row) {
+            if (! in_array((string) ($row['status'] ?? ''), self::OWNING_STATUSES, true)) {
+                continue;
+            }
+            if ((string) ($row['match_prefix'] ?? '') === $prefix) {
+                return [
+                    'tenant_shortuid' => (string) $row['tenant_shortuid'],
+                    'e164' => (string) $row['e164'],
+                    'status' => (string) $row['status'],
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $did
+     */
+    public static function matchPrefix(array $did): string
+    {
+        if (isset($did['sip_prefix']) && is_string($did['sip_prefix']) && trim($did['sip_prefix']) !== '') {
+            return preg_replace('/\D+/', '', $did['sip_prefix']) ?? '';
+        }
+
+        return self::e164Key((string) ($did['e164'] ?? ''));
+    }
+
+    /**
+     * @param  array<string, mixed>  $did
+     */
+    public static function deliveryKind(array $did): string
+    {
+        $explicit = strtolower(trim((string) ($did['delivery'] ?? '')));
+        if ($explicit === 'block' || $explicit === 'singleton') {
+            return $explicit;
+        }
+        $prefix = self::matchPrefix($did);
+        $e164Digits = self::e164Key((string) ($did['e164'] ?? ''));
+        if ($prefix !== '' && $e164Digits !== '' && strlen($prefix) < strlen($e164Digits)) {
+            return 'block';
+        }
+
+        return 'singleton';
+    }
+
+    /**
+     * Catalog (HoR) ↔ SBC fleet=did inbound rules (Rule 13).
+     *
+     * @return array<string, mixed>
+     */
+    public function reconcile(SbcFleetClient $sbc): array
+    {
+        $list = $this->listAll();
+        $live = $sbc->listDidRules();
+
+        return self::compareDidProjection($list['dids'], $live);
+    }
+
+    /**
+     * Pure compare — unit-tested.
+     *
+     * @param  list<array<string, mixed>>  $catalogDids  flat listAll rows
+     * @param  list<array<string, mixed>>  $sbcRules
+     * @return array<string, mixed>
+     */
+    public static function compareDidProjection(array $catalogDids, array $sbcRules): array
+    {
+        $expected = [];
+        foreach ($catalogDids as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $status = (string) ($row['status'] ?? '');
+            if (! in_array($status, ['active', 'porting'], true)) {
+                continue;
+            }
+            $prefix = (string) ($row['match_prefix'] ?? self::matchPrefix($row));
+            if ($prefix === '') {
+                continue;
+            }
+            $expected[$prefix] = [
+                'prefix' => $prefix,
+                'e164' => (string) ($row['e164'] ?? ''),
+                'tenant_shortuid' => (string) ($row['tenant_shortuid'] ?? ''),
+                'expected_setid' => isset($row['sbc_dispatcher_setid']) && $row['sbc_dispatcher_setid'] !== null
+                    ? (int) $row['sbc_dispatcher_setid']
+                    : null,
+                'delivery' => (string) ($row['delivery'] ?? self::deliveryKind($row)),
+            ];
+        }
+
+        $actual = [];
+        foreach ($sbcRules as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $prefix = (string) ($row['prefix'] ?? '');
+            $actual[$prefix] = [
+                'prefix' => $prefix,
+                'tenant_shortuid' => (string) ($row['tenant_shortuid'] ?? ''),
+                'e164_key' => (string) ($row['e164_key'] ?? ''),
+                'actual_setid' => isset($row['setid']) && $row['setid'] !== null ? (int) $row['setid'] : null,
+                'ruleid' => (int) ($row['ruleid'] ?? 0),
+            ];
+        }
+
+        $drifts = [];
+        foreach ($expected as $prefix => $exp) {
+            if (! isset($actual[$prefix])) {
+                $drifts[] = [
+                    'severity' => 'error',
+                    'kind' => 'missing_on_sbc',
+                    'prefix' => $prefix,
+                    'e164' => $exp['e164'],
+                    'tenant_shortuid' => $exp['tenant_shortuid'],
+                    'expected_setid' => $exp['expected_setid'],
+                    'actual_setid' => null,
+                    'detail' => 'Catalog active/porting — no fleet=did rule on SBC',
+                ];
+                continue;
+            }
+            $act = $actual[$prefix];
+            if ($act['tenant_shortuid'] !== '' && $act['tenant_shortuid'] !== $exp['tenant_shortuid']) {
+                $drifts[] = [
+                    'severity' => 'error',
+                    'kind' => 'tenant_mismatch',
+                    'prefix' => $prefix,
+                    'e164' => $exp['e164'],
+                    'tenant_shortuid' => $exp['tenant_shortuid'],
+                    'expected_setid' => $exp['expected_setid'],
+                    'actual_setid' => $act['actual_setid'],
+                    'detail' => "SBC attrs tenant={$act['tenant_shortuid']} ≠ catalog {$exp['tenant_shortuid']}",
+                ];
+            }
+            if ($exp['expected_setid'] !== null
+                && $act['actual_setid'] !== null
+                && (int) $exp['expected_setid'] !== (int) $act['actual_setid']
+            ) {
+                $drifts[] = [
+                    'severity' => 'error',
+                    'kind' => 'setid_mismatch',
+                    'prefix' => $prefix,
+                    'e164' => $exp['e164'],
+                    'tenant_shortuid' => $exp['tenant_shortuid'],
+                    'expected_setid' => $exp['expected_setid'],
+                    'actual_setid' => $act['actual_setid'],
+                    'detail' => 'SBC rule gwlist resolves to different dispatcher setid than catalog',
+                ];
+            }
+            if ($exp['expected_setid'] !== null && $act['actual_setid'] === null) {
+                $drifts[] = [
+                    'severity' => 'warning',
+                    'kind' => 'setid_unresolved',
+                    'prefix' => $prefix,
+                    'e164' => $exp['e164'],
+                    'tenant_shortuid' => $exp['tenant_shortuid'],
+                    'expected_setid' => $exp['expected_setid'],
+                    'actual_setid' => null,
+                    'detail' => 'Could not resolve setid from SBC gwlist/gwid',
+                ];
+            }
+        }
+
+        foreach ($actual as $prefix => $act) {
+            if (isset($expected[$prefix])) {
+                continue;
+            }
+            $drifts[] = [
+                'severity' => 'warning',
+                'kind' => 'orphan_on_sbc',
+                'prefix' => $prefix,
+                'e164' => $act['e164_key'] !== '' ? '+'.$act['e164_key'] : '',
+                'tenant_shortuid' => $act['tenant_shortuid'],
+                'expected_setid' => null,
+                'actual_setid' => $act['actual_setid'],
+                'detail' => 'fleet=did rule on SBC with no active/porting catalog row — Project may purge',
+            ];
+        }
+
+        $errors = 0;
+        $warnings = 0;
+        foreach ($drifts as $d) {
+            if (($d['severity'] ?? '') === 'error') {
+                $errors++;
+            } else {
+                $warnings++;
+            }
+        }
+
+        return [
+            'ok' => $drifts === [],
+            'checked_at' => gmdate('c'),
+            'summary' => [
+                'catalog_deliverable' => count($expected),
+                'sbc_fleet_rules' => count($actual),
+                'drifts' => count($drifts),
+                'errors' => $errors,
+                'warnings' => $warnings,
+            ],
+            'drifts' => $drifts,
+        ];
     }
 
     /** @param array<string, mixed> $record */

@@ -1,6 +1,6 @@
 # Seed outbound OutRoutes on tenant create — requirements (stub)
 
-**Status:** **Implemented 2026-08-06** (API + SPA + schema apply); **UK seed amended 2026-08-10 (#4c / L7a)** to `_0XXX. _00XX.`. US string still operator-set (O4).  
+**Status:** **Implemented 2026-08-06** (API + SPA + schema apply); **UK seed amended 2026-08-10 (#4c / L7a)** to `_0XXX. _00XX.`. **O4 US lab wire green 2026-08-11** (Toliman); product US globals auto-seed still optional.  
 **Spec / behaviour:** Instance `globals.default_outbound_dialplan` → copy to tenant `MainOut` OutRoute on create (`path1=Egress` when fleet/Egress exists). Time saver; editable after.  
 **Related:** [`FLEET_TENANT_CREATE_REQUIREMENTS.md`](FLEET_TENANT_CREATE_REQUIREMENTS.md) · [`NUMBER_WIRE_POLICY.md`](../pbx3-directory/docs/NUMBER_WIRE_POLICY.md) · [`EGRESS_PLUS_E164_WIRE.md`](EGRESS_PLUS_E164_WIRE.md) · code `SeedOutboundRouteOnTenantCreate` · apply `apply-sqlite-add-default-outbound-dialplan.sh`
 
@@ -89,7 +89,7 @@ Commit / GenAst → OutRoute → Egress → SBC → Peer dialect
 | O1 | **Where does the default string live?** | **Locked + shipped:** `globals.default_outbound_dialplan` |
 | O2 | **How is instance locale / initial string chosen?** | UK install/upgrade seed `_0XXX. _00XX.`; operator edits in Instance Globals for US/etc. |
 | O3 | **UK pack v1 contents** | **Locked (amended #4c):** `_0XXX. _00XX.` (national + IDD; L7a-safe for default `ext_len=3`). Was `_0. _00.` pre-#4c. |
-| O4 | **US / other packs** | Operator sets globals string (no US auto-seed yet) |
+| O4 | **US / other packs** | **Lab green 2026-08-11** for Toliman call chain (Egress `011:+ 1:+1` + Twilio). Product US globals auto-seed string still operator-set (no US install default yet) |
 | O5 | **Empty globals / re-provision** | **Locked:** skip if empty; skip if tenant already has any OutRoute |
 | O6 | **Solo vs fleet** | Same copy; `path1=Egress` when fleet or Egress trunk exists |
 | O7 | **SPA** | **Shipped:** Instance Globals → Outbound field |
@@ -112,7 +112,7 @@ Commit / GenAst → OutRoute → Egress → SBC → Peer dialect
 2. ~~Schema + apply script + postinst~~ **done** (`apply-sqlite-add-default-outbound-dialplan.sh`)  
 3. ~~Tenant create hook~~ **done** (`SeedOutboundRouteOnTenantCreate` from `TenantController::save` / fleet store)  
 4. ~~SPA globals field~~ **done**  
-5. US string pack later (O4) — optional  
+5. US string pack — **lab wire proven**; product globals auto-seed still optional  
 
 **Lab apply without new deb:**  
 `sudo /opt/pbx3/scripts/apply-sqlite-add-default-outbound-dialplan.sh`  

@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-11 (pbx3 `0.0.5-5` SIP debug rolled fleet-wide)  
+**Last updated:** 2026-08-11 (#33 Fleet hop-1 block assign + DID reconcile)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -20,7 +20,7 @@
 6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
 7. **New instance / package install** — fleet packages **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** (SIP debug + SITE_DIAL hairpin; rolled 2026-08-11). Tip-deploy **pbx3api** SIP debug + TrunkController lab-wide; optional full API checkout align. Ops: **`TODO_OPS.md`**.  
 8. **Toll fraud / velocity — remainder** — V1/V2/V5 shipped (env-only IRSF burst + notify + optional act); finish product: **V3** fleet rule template, **V4** audience, SPA surface, more detectors. Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Design still thin for V3+ — lock before build.  
-8a. **Product crumbs** (optional) — paid Twilio **lab green** (inbound+outbound); remaining: named Peer recipe / O4 US seed / drain / custom-dialect UI.  
+8a. ~~**Paid Twilio inbound/outbound**~~ — **lab green** (Toliman↔Twilio both ways; SBC Route-strip + public From/PAI; Egress CLIP). Optional crumbs remain: named Peer recipe / drain / custom-dialect UI.  
 9. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
 10. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
 11. **Velocity standalone SKU** (parked — after in-tree remainder or instead) — own repo/installer; see requirements § Future.  
@@ -31,7 +31,8 @@
 16. **Fleet auth cookie/SSO (blocked)**.  
 17. **TOTP 2FA — Fleet Gatekeeper G5** (optional — require for `fleet_admin`; G1–G4 shipped).  
 18. **S7+** attested PCI — customer ask.  
-19. **SBC Track A / STIR Twilio lab** — **`SBC_PRODUCT_TRACKS.md`**.  
+19. **SBC Track A lab** — third-party PBX (± FreePBX/SARK) behind SBC — still open. **`SBC_PRODUCT_TRACKS.md`** Track A.  
+19a. ~~**STIR Twilio shape A lab**~~ — **observed green** (2026-08-11): after Twilio ID checks, outbound rated attestation **A** (carrier signs as SP). Own-cert shapes B/C not started. Spec: **`SBC_PRODUCT_TRACKS.md`** Track B.  
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
@@ -39,13 +40,14 @@
 23a. **UA → `devicemodel` sidekick** (parked) — **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`** (implement A–D when scheduled; images = E).  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked).  
-26. **Seed outbound US dialplan string (O4)** — optional; UK `_0XXX. _00XX.` shipped (#4c).  
+26. ~~**Seed outbound US dialplan / wire (O4)**~~ — **lab green** for Toliman call chain (Egress `011:+ 1:+1` + Twilio). Product US globals auto-seed pack still optional. Spec: **`EGRESS_PLUS_E164_WIRE.md`** · **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.  
 27. **Instance API digest deepen** (optional).  
 28. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
 29. **OSS org + repo transfer** — after Apache `LICENSE` + migrate extract/strip (**done**).  
 30. **Optional SBC media plane / rtpengine** (parked) — only on LAN-edge / Track A / Peer trigger; see try-it doc Appendix A.  
 31. **Incident notify (parked)** — tenant callout teams → ConfBridge + optional SMS; SARK `mcstcaller` heritage. Spec: **`INCIDENT_NOTIFY_REQUIREMENTS.md`**. Est. **~5–7 d** v1 (voice MVP **~4–5 d**). Not first-out.  
 32. ~~**Instance SIP logging**~~ — **done** (A–G on **`main`**; **pbx3 `0.0.5-5`** on golden/bzy/Toliman; API tip; S3 **`sip-text`** ship confirmed). Spec: **`HOME_SIP_LOGGING_REQUIREMENTS.md`**.  
+33. ~~**Fleet hop-1 DID — block assign + reconcile**~~ — **done** (Allocate `delivery` singleton|block; `GET /dids/reconcile` + Apply via project; SPA DIDs drift check). Lock: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -118,15 +120,17 @@
 
 - [ ] **Toll fraud / velocity — standalone SKU (parked 2026-07-24):** Own **repo + installer** later (Go extract sketch). Spec § Future — same requirements doc. Do not block in-tree remainder (#8).
 
-- [ ] **Number dialect — paid Twilio + follow-ons:** Paid Elastic SIP **lab green** (Toliman↔Twilio both ways; SBC Route-strip + public From/PAI host; Egress CLIP update without `default` tenant). Still open: named Twilio Peer recipe; product **O4** US seed; custom-dialect UI. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · wire: **`EGRESS_PLUS_E164_WIRE.md`**. CLI stays as-stored (no CLIP mangle).
+- [x] **Number dialect — paid Twilio inbound/outbound (2026-08-11):** Toliman↔Twilio both ways lab green (SBC Route-strip + public From/PAI host; Egress CLIP update without `default` tenant). Optional later: named Twilio Peer recipe; custom-dialect UI. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · wire: **`EGRESS_PLUS_E164_WIRE.md`**. CLI stays as-stored (no CLIP mangle).
 
 - [ ] **Number wire Phase 2 / D2–D4 (parked 2026-08-06):** Phase 1 = node Mangle (**D1 = C** locked). Do not strip node Mangle until Phase-2 gate. Specs: **`NUMBER_WIRE_POLICY.md`**, **`NUMBER_WIRE_STANDARD_DRAFT.md`**.
 
-- [ ] **Seed outbound US dialplan string (O4) (optional):** UK `_0XXX. _00XX.` shipped with **`SEED_OUTBOUND_ON_TENANT_CREATE.md`** (#4c). US seed string when wanted.
+- [x] **Seed outbound US dialplan / wire (O4) — lab (2026-08-11):** Toliman US call chain green (Egress transform `011:+ 1:+1`; Twilio in/out). UK `_0XXX. _00XX.` already shipped (#4c). Product US `globals.default_outbound_dialplan` auto-seed pack still optional. Specs: **`EGRESS_PLUS_E164_WIRE.md`**, **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.
 
 - [ ] **Incident notify (parked 2026-08-11):** Tenant callout → ConfBridge + optional SMS. Spec: **`INCIDENT_NOTIFY_REQUIREMENTS.md`**. Est. ~5–7 d v1.
 
 - [x] **Instance SIP logging (2026-08-11):** Session-armed SIP text (PJSIP-filtered) + JSONL; SPA arm/disarm; S3 **`sip-text` / `sip-pcap`**. Package **`0.0.5-5`** rolled golden/bzy/Toliman; API tip; S3 sip-text ship green. Spec: **`HOME_SIP_LOGGING_REQUIREMENTS.md`**.
+
+- [x] **Fleet hop-1 DID authorship lock (2026-08-11):** Retarget only via Fleet Allocate/reassign → project. Spec: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**. Magrathea deny + Fleet badge/redirect; SPA catalog-intent + **Repair SBC domain**. **#33 done:** block allocate + DID reconcile drift / Apply.
 
 - [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
 

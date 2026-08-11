@@ -585,6 +585,11 @@ try {
         JsonResponse::send(200, (new DidInventory($registrar))->listAll());
     }
 
+    if ($method === 'GET' && $path === '/api/v1/dids/reconcile') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        JsonResponse::send(200, (new DidInventory($registrar))->reconcile(new SbcFleetClient()));
+    }
+
     if ($method === 'POST' && $path === '/api/v1/dids/assign') {
         Auth::requireAbility(FleetAbilities::EDGE);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
