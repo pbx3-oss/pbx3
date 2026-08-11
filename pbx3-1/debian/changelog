@@ -1,3 +1,12 @@
+pbx3 (0.0.5-4) noble; urgency=medium
+
+  * Home SIP debug: session-armed PJSIP text + optional pcap scripts
+    (sip-debug-arm/disarm/status/extract); sip-debug logrotate.
+  * Spec: HOME_SIP_LOGGING_REQUIREMENTS.md (AI-first; SPA/API follow in
+    pbx3api/pbx3spa).
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Tue, 11 Aug 2026 13:20:00 -0400
+
 pbx3 (0.0.5-3) noble; urgency=medium
 
   * #4c: GenAst PrefixDial fixed-width remainder from dest ext_len

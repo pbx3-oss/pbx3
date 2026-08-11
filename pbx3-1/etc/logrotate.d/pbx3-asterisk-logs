@@ -13,6 +13,17 @@
 	create 640 asterisk asterisk
 }
 
+/var/log/asterisk/sip-debug {
+	daily
+	rotate 7
+	missingok
+	notifempty
+	compress
+	delaycompress
+	copytruncate
+	create 640 asterisk asterisk
+}
+
 /var/log/asterisk/cdr-csv/Master.csv {
 	daily
 	rotate 7
