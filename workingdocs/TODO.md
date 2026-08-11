@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-10 (session end — SBC backup spinner; provision proxy direction; velocity TODO)  
+**Last updated:** 2026-08-11 (paid Twilio outbound lab green; SITE_DIAL hairpin; Egress CLIP)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -18,9 +18,9 @@
 5a. **Toliman vanity shortuid (`kildare`)** — hold; preferred path delete/recreate (opaque suid) after tenant move exercise — see **TODO_OPS**.  
 5b. **Instance Name → SBC Peer label sync** (optional) — Fleet Name PATCH does not update Magrathea Peer description today.  
 6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
-7. **New instance / package install** — fleet packages **pbx3 `0.0.5-3`** / **pbx3cagi `1.0.0-17`** (#4c); tip-deploy **pbx3api** + **pbx3sbc**/**sbc-admin**. Ops: **`TODO_OPS.md`**.  
+7. **New instance / package install** — fleet packages **pbx3 `0.0.5-3`** / **pbx3cagi `1.0.0-17`** (#4c); **cagi `1.0.0-18`** (SITE_DIAL hairpin) tip/hot — rebuild/roll when scheduled. Tip-deploy **pbx3api** + **pbx3sbc**. Ops: **`TODO_OPS.md`**.  
 8. **Toll fraud / velocity — remainder** — V1/V2/V5 shipped (env-only IRSF burst + notify + optional act); finish product: **V3** fleet rule template, **V4** audience, SPA surface, more detectors. Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Design still thin for V3+ — lock before build.  
-8a. **Product crumbs** (optional) — paid Twilio / drain; day-parts optional smokes beyond golden.  
+8a. **Product crumbs** (optional) — paid Twilio **lab green** (inbound+outbound); remaining: named Peer recipe / O4 US seed / drain / custom-dialect UI.  
 9. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
 10. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
 11. **Velocity standalone SKU** (parked — after in-tree remainder or instead) — own repo/installer; see requirements § Future.  
@@ -44,6 +44,7 @@
 28. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
 29. **OSS org + repo transfer** — after Apache `LICENSE` + migrate extract/strip (**done**).  
 30. **Optional SBC media plane / rtpengine** (parked) — only on LAN-edge / Track A / Peer trigger; see try-it doc Appendix A.  
+31. **Incident notify (parked)** — tenant callout teams → ConfBridge + optional SMS; SARK `mcstcaller` heritage. Spec: **`INCIDENT_NOTIFY_REQUIREMENTS.md`**. Est. **~5–7 d** v1 (voice MVP **~4–5 d**). Not first-out.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -116,11 +117,13 @@
 
 - [ ] **Toll fraud / velocity — standalone SKU (parked 2026-07-24):** Own **repo + installer** later (Go extract sketch). Spec § Future — same requirements doc. Do not block in-tree remainder (#8).
 
-- [ ] **Number dialect — paid Twilio + follow-ons:** Named Twilio Peer recipe; US Egress seed; Magrathea dialect; custom-dialect UI. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`**.
+- [ ] **Number dialect — paid Twilio + follow-ons:** Paid Elastic SIP **lab green** (Toliman↔Twilio both ways; SBC Route-strip + public From/PAI host; Egress CLIP update without `default` tenant). Still open: named Twilio Peer recipe; product **O4** US seed; custom-dialect UI. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · wire: **`EGRESS_PLUS_E164_WIRE.md`**. CLI stays as-stored (no CLIP mangle).
 
 - [ ] **Number wire Phase 2 / D2–D4 (parked 2026-08-06):** Phase 1 = node Mangle (**D1 = C** locked). Do not strip node Mangle until Phase-2 gate. Specs: **`NUMBER_WIRE_POLICY.md`**, **`NUMBER_WIRE_STANDARD_DRAFT.md`**.
 
 - [ ] **Seed outbound US dialplan string (O4) (optional):** UK `_0XXX. _00XX.` shipped with **`SEED_OUTBOUND_ON_TENANT_CREATE.md`** (#4c). US seed string when wanted.
+
+- [ ] **Incident notify (parked 2026-08-11):** Tenant callout → ConfBridge + optional SMS. Spec: **`INCIDENT_NOTIFY_REQUIREMENTS.md`**. Est. ~5–7 d v1.
 
 - [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
 
