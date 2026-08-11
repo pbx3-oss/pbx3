@@ -363,9 +363,9 @@ The SPA must not hold SSH, cloud root, registrar Mac IAM, or long-lived break-gl
 
 **One author of record per fact** (not “lock the whole SBC”):
 
-- If the directory owns it (tenant domain setid, fleet DID delivery, fleet-provisioned node dispatcher / linked Asterisk Peer, …), the product path is **catalog → project**. **Hop 1** (SBC DID/block → tenant home) under fleet is **Fleet-only** — Magrathea Number routes must **not** offer retarget/edit/delete for `fleet=did` rows (**`FLEET_DID_HOP1_LOCK.md`**, 2026-08-11). Hop 2 (tenant `inroutes` → endpoint) stays on the home PBX.
+- If the directory owns it (tenant domain setid, fleet DID delivery, fleet-provisioned node dispatcher / linked Asterisk Peer, …), the product path is **catalog → project**. **Hop 1** (SBC DID/block → tenant home) under fleet is **Fleet-only** — Magrathea Number routes must **not** offer retarget/edit/delete for `fleet=did` rows (**`FLEET_DID_HOP1_LOCK.md`**, 2026-08-11). **Tenant domain → setid** under fleet is the same class — Magrathea Domain Routes must **not** offer rename/setid/delete for `fleet=domain` rows (**`FLEET_DOMAIN_SETID_LOCK.md`**, 2026-08-11). Hop 2 (tenant `inroutes` → endpoint) stays on the home PBX.
 - Facts **not** yet in the directory (typical: carrier Peers, Fail2ban, LE, one-off edge tuning) stay **edge-authored** for everyone until product deliberately moves them into HoR.
-- Prefer tagging fleet-owned rows (e.g. `fleet=did` attrs) so projectors purge/upsert **their** namespace and do **not** clobber hand-authored peers or foreign `dr_rules`.
+- Prefer tagging fleet-owned rows (e.g. `fleet=did`, `fleet=domain` attrs) so projectors purge/upsert **their** namespace and do **not** clobber hand-authored peers or foreign `dr_rules`.
 
 **Anti-patterns:** Making Filament second-class or read-only for standalone users; co-hosting fleet console inside `pbx3sbc-admin` (Rule 7); inventing a second HoR in OpenSIPS tables; treating “fleet user opened Filament” as equal authorship for catalog-owned rows; Magrathea→catalog sync as product path.
 

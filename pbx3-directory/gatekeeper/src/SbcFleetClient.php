@@ -32,7 +32,7 @@ final class SbcFleetClient
     }
 
     /**
-     * @return list<array{domain: string, setid: int}>
+     * @return list<array{domain: string, setid: int, fleet_owned?: bool}>
      */
     public function listDomains(): array
     {
@@ -51,10 +51,14 @@ final class SbcFleetClient
             if ($domain === '') {
                 continue;
             }
-            $out[] = [
+            $item = [
                 'domain' => $domain,
                 'setid' => (int) ($row['setid'] ?? 0),
             ];
+            if (array_key_exists('fleet_owned', $row)) {
+                $item['fleet_owned'] = (bool) $row['fleet_owned'];
+            }
+            $out[] = $item;
         }
 
         return $out;

@@ -36,6 +36,61 @@ final class CatalogReconcileTest extends TestCase
         $this->assertSame([], $report['drifts']);
     }
 
+    public function test_missing_fleet_tag_is_warning_and_projectable(): void
+    {
+        $report = CatalogReconcile::compare(
+            [
+                'instances' => [
+                    ['id' => '08jzwn', 'fqdn' => '08jzwn.pbx3.com', 'sbc_dispatcher_setid' => 2],
+                ],
+            ],
+            [
+                [
+                    'shortuid' => '9wvvnb',
+                    'instance_id' => '08jzwn',
+                    'fqdn' => 'affcot.pbx3.com',
+                ],
+            ],
+            [
+                ['domain' => 'affcot.pbx3.com', 'setid' => 2, 'fleet_owned' => false],
+                ['domain' => '08jzwn.pbx3.com', 'setid' => 2, 'fleet_owned' => true],
+            ]
+        );
+
+        $this->assertFalse($report['ok']);
+        $this->assertSame('missing_fleet_tag', $report['drifts'][0]['kind']);
+        $this->assertSame('warning', $report['drifts'][0]['severity']);
+
+        $plan = CatalogReconcile::planProject($report);
+        $this->assertCount(1, $plan['actions']);
+        $this->assertSame('missing_fleet_tag', $plan['actions'][0]['kind']);
+        $this->assertSame(2, $plan['actions'][0]['to_setid']);
+    }
+
+    public function test_absent_fleet_owned_key_does_not_false_flag(): void
+    {
+        $report = CatalogReconcile::compare(
+            [
+                'instances' => [
+                    ['id' => '08jzwn', 'sbc_dispatcher_setid' => 2],
+                ],
+            ],
+            [
+                [
+                    'shortuid' => '9wvvnb',
+                    'instance_id' => '08jzwn',
+                    'fqdn' => 'affcot.pbx3.com',
+                ],
+            ],
+            [
+                ['domain' => 'affcot.pbx3.com', 'setid' => 2],
+            ]
+        );
+
+        $this->assertTrue($report['ok']);
+        $this->assertSame(1, $report['summary']['matched']);
+    }
+
     public function test_setid_mismatch(): void
     {
         $report = CatalogReconcile::compare(

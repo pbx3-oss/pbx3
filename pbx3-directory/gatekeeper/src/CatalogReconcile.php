@@ -7,7 +7,7 @@ namespace Pbx3\Gatekeeper;
 /**
  * S10.4 — catalog (HoR) ↔ SBC domain.setid reconcile.
  * Direction: catalog expected; SBC is projection (Rule 13).
- * Force-project only fixes setid_mismatch via SbcFleetAdapter.repointTenant.
+ * Force-project fixes setid_mismatch via repointTenant and missing_fleet_tag via registerDomain.
  * missing_on_sbc / DID → S10.5.
  */
 final class CatalogReconcile
@@ -28,7 +28,8 @@ final class CatalogReconcile
     }
 
     /**
-     * Project catalog expected setids onto SBC for setid_mismatch drifts.
+     * Project catalog expected setids onto SBC for setid_mismatch drifts;
+     * stamp fleet=domain for missing_fleet_tag.
      *
      * Body:
      * - confirm (bool) required unless dry_run
@@ -77,6 +78,7 @@ final class CatalogReconcile
         $projected = [];
         foreach ($plan['actions'] as $action) {
             $domain = (string) $action['domain'];
+            $kind = (string) ($action['kind'] ?? '');
             $to = (int) $action['to_setid'];
             try {
                 $live = [];
@@ -84,13 +86,23 @@ final class CatalogReconcile
                     $live[] = (int) $row['setid'];
                 }
                 SbcSetidGuard::assertLive($to, $live);
-                $sbcResult = $this->sbc->repointTenant($domain, $to);
-                $projected[] = [
-                    ...$action,
-                    'ok' => true,
-                    'previous_setid' => $sbcResult['previous_setid'] ?? $action['from_setid'],
-                    'dest_setid' => $sbcResult['dest_setid'] ?? $to,
-                ];
+                if ($kind === 'missing_fleet_tag') {
+                    $sbcResult = $this->sbc->registerDomain($domain, $to);
+                    $projected[] = [
+                        ...$action,
+                        'ok' => true,
+                        'stamped' => true,
+                        'dest_setid' => $sbcResult['setid'] ?? $to,
+                    ];
+                } else {
+                    $sbcResult = $this->sbc->repointTenant($domain, $to);
+                    $projected[] = [
+                        ...$action,
+                        'ok' => true,
+                        'previous_setid' => $sbcResult['previous_setid'] ?? $action['from_setid'],
+                        'dest_setid' => $sbcResult['dest_setid'] ?? $to,
+                    ];
+                }
             } catch (\Throwable $e) {
                 $projected[] = [
                     ...$action,
@@ -138,7 +150,7 @@ final class CatalogReconcile
                 continue;
             }
 
-            if ($kind === 'setid_mismatch') {
+            if ($kind === 'setid_mismatch' || $kind === 'missing_fleet_tag') {
                 $to = $drift['expected_setid'] ?? null;
                 if (! is_int($to) && ! (is_string($to) && ctype_digit($to))) {
                     $skipped[] = [
@@ -193,7 +205,7 @@ final class CatalogReconcile
      *
      * @param  array<string, mixed>  $catalog
      * @param  list<array<string, mixed>>  $tenants
-     * @param  list<array{domain: string, setid: int}>  $sbcDomains
+     * @param  list<array{domain: string, setid: int, fleet_owned?: bool}>  $sbcDomains
      * @return array<string, mixed>
      */
     public static function compare(array $catalog, array $tenants, array $sbcDomains): array
@@ -223,7 +235,14 @@ final class CatalogReconcile
             if ($domain === '') {
                 continue;
             }
-            $sbcByDomain[$domain] = (int) ($row['setid'] ?? 0);
+            // Absent fleet_owned (older SBC) → treat as tagged to avoid false drift until tip-deploy.
+            $fleetOwned = array_key_exists('fleet_owned', $row)
+                ? (bool) $row['fleet_owned']
+                : true;
+            $sbcByDomain[$domain] = [
+                'setid' => (int) ($row['setid'] ?? 0),
+                'fleet_owned' => $fleetOwned,
+            ];
         }
 
         $drifts = [];
@@ -265,7 +284,8 @@ final class CatalogReconcile
                 continue;
             }
 
-            $actualSetid = $sbcByDomain[$domainKey];
+            $actualSetid = $sbcByDomain[$domainKey]['setid'];
+            $fleetOwned = $sbcByDomain[$domainKey]['fleet_owned'];
 
             if ($expectedSetid === null) {
                 $drifts[] = [
@@ -299,10 +319,25 @@ final class CatalogReconcile
                 continue;
             }
 
+            if (! $fleetOwned) {
+                $drifts[] = [
+                    'kind' => 'missing_fleet_tag',
+                    'severity' => 'warning',
+                    'shortuid' => $shortuid !== '' ? $shortuid : null,
+                    'domain' => $domain,
+                    'instance_id' => $instanceId !== '' ? $instanceId : null,
+                    'expected_setid' => $expectedSetid,
+                    'actual_setid' => $actualSetid,
+                    'detail' => "SBC domain {$domain} matches setid but lacks fleet=domain — Magrathea may co-author",
+                ];
+                continue;
+            }
+
             $matched++;
         }
 
-        foreach ($sbcByDomain as $domainKey => $setid) {
+        foreach ($sbcByDomain as $domainKey => $row) {
+            $setid = $row['setid'];
             if (isset($tenantDomains[$domainKey])) {
                 continue;
             }

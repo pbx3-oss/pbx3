@@ -25,7 +25,7 @@ Work in roughly this order; stop when go/no-go criteria below are met.
 | 9 | **pbx3** | GenClass `appl.cluster` use shortuid | **Done** — query by shortuid; `genclass-appl-cluster-test.php` |
 | 10 | **pbx3sbc** | Bind MI/metrics to localhost (not `0.0.0.0:8888`) | **Done** — `httpd` ip `127.0.0.1`; UFW 8888 rule removed; `mi-localhost-bind-test.sh` |
 | 11 | **pbx3sbc** | Escape / parameterize SIP→SQL concat | **Done** — `{s.escape.common}` on free-form fields (door-knock/Slice D/failed_registrations); shortuid charset gate kept; `sql-escape-contract-test.sh` |
-| 12 | **pbx3sbc-admin** | Lock Filament edits on fleet-owned `dr_rules` | **Done** — `DrRulePolicy` (update/delete deny when `FleetDidProjector::isFleetOwned`) + table row actions gated; `DrRulePolicyTest` |
+| 12 | **pbx3sbc-admin** | Lock Filament edits on fleet-owned `dr_rules` | **Done** — `DrRulePolicy` (update/delete deny when `FleetDidProjector::isFleetOwned`) + table row actions gated; `DrRulePolicyTest`. **Follow-on (2026-08-11):** same for `domain` / `fleet=domain` — **`FLEET_DOMAIN_SETID_LOCK.md`** |
 | 13 | **pbx3sbc-admin** | Surface MI reload failure (don’t claim ok) | **Done** — `OpenSIPSMIService` reload methods return bool; Filament afterSave/delete + fleet API (`FleetSbcController`) surface warning/`ok:false`/502 on MI failure; `OpenSIPSMIServiceReloadTest` |
 | 14 | **pbx3sbc-admin** | DB password off sudo argv | **Done** — `WhitelistSyncService::sync` writes a private mode-0600 MySQL `--defaults-extra-file` instead of argv; paired `pbx3sbc/scripts/sync-fail2ban-whitelist.sh` updated; `WhitelistSyncServiceTest` |
 | 15 | **pbx3spa** | Mask SIP password in extension UI | **Done** — password input + reveal after regen; `maskSipPassword.test.js` |
