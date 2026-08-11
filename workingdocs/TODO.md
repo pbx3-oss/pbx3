@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-10 (fleet trunk Create lock; lab Names Sirius/Toliman)  
+**Last updated:** 2026-08-10 (provisioning edge-proxy direction; velocity TODO)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -19,10 +19,11 @@
 5b. **Instance Name → SBC Peer label sync** (optional) — Fleet Name PATCH does not update Magrathea Peer description today.  
 6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
 7. **New instance / package install** — fleet packages **pbx3 `0.0.5-3`** / **pbx3cagi `1.0.0-17`** (#4c); tip-deploy **pbx3api** + **pbx3sbc**/**sbc-admin**. Ops: **`TODO_OPS.md`**.  
-8. **Product crumbs** (optional) — paid Twilio / drain / velocity V3; day-parts optional smokes beyond golden.  
+8. **Toll fraud / velocity — remainder** — V1/V2/V5 shipped (env-only IRSF burst + notify + optional act); finish product: **V3** fleet rule template, **V4** audience, SPA surface, more detectors. Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Design still thin for V3+ — lock before build.  
+8a. **Product crumbs** (optional) — paid Twilio / drain; day-parts optional smokes beyond golden.  
 9. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
 10. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
-11. **Velocity standalone** (parked).  
+11. **Velocity standalone SKU** (parked — after in-tree remainder or instead) — own repo/installer; see requirements § Future.  
 12. **Instance shadowing** / S10.7 / S8.9 (parked).  
 13. **AMI wallboard** (parked).  
 14. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
@@ -34,7 +35,7 @@
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
-23. **Provisioning server** (parked — maybe don't build; see requirements §0).  
+23. **Provisioning (home listener + edge proxy)** — direction **2026-08-10**: SARK lift on home + nginx Host→home proxy (stable A; no DNS on move). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Schedule when prioritized; TLS §0 cross-link when shipping.  
 23a. **UA → `devicemodel` sidekick** (parked) — **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`** (implement A–D when scheduled; images = E).  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked).  
@@ -87,7 +88,9 @@
 
 - [ ] **Lab / demo SQLite anonymize (parked 2026-08-03):** Lab test DBs may still carry site-derived surnames / friendly labels. Prefer a **one-shot idempotent SQL + short runbook** before wider demos. Keep dial plans / shortuids functional. Not urgent for closed lab.
 
-- [ ] **Device table — lean done in seed; residual (2026-08-06):** No in-house provisioner. Seed keepers + prune SQL landed; SPA **Devices** removed from System nav. **Still open:** drop Devices routes/views entirely; Snom/Grandstream pkey gap; optional later packaged JSON keepers.
+- [ ] **Provisioning — home listener + edge proxy (direction 2026-08-10):** Preferred: lift/polish SARK provision routines on the **home**; fleet **nginx** routes by tenant Host/SNI to current home; proxy has stable **A**; tenant move = remap only (no DNS). Secrets stay on `ipphone`. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Not scheduled to build yet; update **`TLS_AND_CERTIFICATES.md` §0** (provision A→proxy exception) when shipping.
+
+- [ ] **Device table — lean done in seed; residual (2026-08-06):** Seed keepers + prune SQL landed; SPA **Devices** removed from System nav. **Still open:** drop Devices routes/views entirely; Snom/Grandstream pkey gap; optional later packaged JSON keepers. Provision templates still relevant when **#23** builds.
 
 - [ ] **Extension phone image / UA model harvest (parked 2026-08-09):** Sidekick design locked — edge `GET /fleet/registrations` + home `harvest-devicemodel` soft-fills `ipphone.devicemodel`. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Assets: **`~/GiT/nonGitStuff/phoneimages/`** (sailpbx zip URL dead); slice E = SPA + model→filename map.
 
@@ -109,7 +112,9 @@
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** Not built. Best-effort AMI overlay on move jobs.
 
-- [ ] **Toll fraud / velocity — standalone product (parked 2026-07-24):** Own **repo + installer** later. Spec § Future — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.
+- [ ] **Toll fraud / velocity — remainder (promoted 2026-08-10):** **Shipped:** V1 CDR fixture/query, V2 IRSF burst → Gatekeeper `velocity_irsf`, V5 `active=NO` act (`pbx3:ops-velocity`; env flags; not SPA; off on golden today). **Still to do (requirements-thin — design before build):** **V3** fleet-wide rule template (N/T/Q/prefixes without per-node `.env`); **V4** tenant-admin audience if wanted; SPA enable/status + “disabled by velocity” badge; more detectors (CFIM, off-hours, short-call, dormant, concurrency, …); ops enable + `schedule:run` when ready. Spec: **`pbx3-directory/docs/FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Research: **`TELEPHONE_FRAUD_RESEARCH.md`**.
+
+- [ ] **Toll fraud / velocity — standalone SKU (parked 2026-07-24):** Own **repo + installer** later (Go extract sketch). Spec § Future — same requirements doc. Do not block in-tree remainder (#8).
 
 - [ ] **Number dialect — paid Twilio + follow-ons:** Named Twilio Peer recipe; US Egress seed; Magrathea dialect; custom-dialect UI. Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`**.
 
