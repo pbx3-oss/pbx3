@@ -64,6 +64,7 @@ final class DidInventory
                     'tenant_label' => (string) ($meta['pkey'] ?? $meta['label'] ?? $shortuid),
                     'tenant_fqdn' => (string) ($meta['fqdn'] ?? ''),
                     'instance_id' => $instanceId,
+                    'instance_label' => (string) ($instance['label'] ?? $instance['fqdn'] ?? $instanceId),
                     'sbc_dispatcher_setid' => $instance['sbc_dispatcher_setid'] ?? null,
                     'status' => (string) ($did['status'] ?? ''),
                     'carrier' => $did['carrier'] ?? null,

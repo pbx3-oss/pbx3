@@ -39,3 +39,4 @@ Fleet DIDs panel shows **catalog intent** (ownership / status), not a live scrap
 - **Shipped:** `DrRulePolicy` + Filament `canEdit`/`canDelete` (2026-08-09); Fleet lock badge + Edit-page redirect message (2026-08-11).
 - Fleet SPA: DIDs = catalog intent; tenant action **Repair SBC domain** (not a routine post-create step).
 - **Shipped (2026-08-11 #33):** Fleet Allocate `delivery=singleton|block` + `sip_prefix`; `GET /api/v1/dids/reconcile` (catalog ↔ `fleet=did`); Apply = `POST /api/v1/dids/project`. Schema: optional `delivery` on `did-record.v0.json`.
+- **Shipped (2026-08-11):** Magrathea inbound Number-route **create/update** hard-rejects prefixes that **nest under or above** a `fleet=did` rule (longest-prefix subdivision / shadow). Same “use Fleet DIDs” message. Outbound unaffected.
