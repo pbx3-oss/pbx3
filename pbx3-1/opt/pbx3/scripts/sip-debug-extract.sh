@@ -49,14 +49,28 @@ def flush():
     m_ruri = re.search(r'(?i)^(?:INVITE|ACK|BYE|CANCEL|REGISTER|OPTIONS|SUBSCRIBE|NOTIFY|REFER|UPDATE|PRACK|INFO|MESSAGE|PUBLISH)\s+(\S+)', text, re.M)
     m_cseq = re.search(r'(?i)^CSeq:\s*(.+)$', text, re.M)
     m_via = re.search(r'(?i)^Via:[^\n]*branch=([^;\s]+)', text, re.M)
+    method = m_method.group(1) if m_method else None
+    status = int(m_status.group(1)) if m_status else None
+    # Skip logger noise (reload / queue / UNIX connection) — require a SIP start-line.
+    if not method and status is None:
+        return
     cid = (m_cid.group(1).strip() if m_cid else "")
     if call_id and cid and call_id not in cid:
         return
+    m_ts = re.search(r'^\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\]', text, re.M)
+    m_dir = re.search(r'(Received|Transmitting)\s+SIP', text, re.I)
+    direction = None
+    if m_dir:
+        direction = "in" if m_dir.group(1).lower().startswith("receiv") else "out"
+    t_iso = None
+    if m_ts:
+        # Asterisk logger stamps are node-local wall clock (no TZ in bracket).
+        t_iso = m_ts.group(1).replace(" ", "T")
     obj = {
-        "t": None,
-        "dir": None,
-        "method": m_method.group(1) if m_method else None,
-        "status": int(m_status.group(1)) if m_status else None,
+        "t": t_iso,
+        "dir": direction,
+        "method": method,
+        "status": status,
         "call_id": cid or None,
         "from": m_from.group(1).strip() if m_from else None,
         "to": m_to.group(1).strip() if m_to else None,

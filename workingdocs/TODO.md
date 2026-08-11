@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-11 (home SIP logging requirements locked; AI-first)  
+**Last updated:** 2026-08-11 (home SIP logging A–G tip on golden; package roll pending)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -45,7 +45,7 @@
 29. **OSS org + repo transfer** — after Apache `LICENSE` + migrate extract/strip (**done**).  
 30. **Optional SBC media plane / rtpengine** (parked) — only on LAN-edge / Track A / Peer trigger; see try-it doc Appendix A.  
 31. **Incident notify (parked)** — tenant callout teams → ConfBridge + optional SMS; SARK `mcstcaller` heritage. Spec: **`INCIDENT_NOTIFY_REQUIREMENTS.md`**. Est. **~5–7 d** v1 (voice MVP **~4–5 d**). Not first-out.  
-32. **Home SIP logging (parked — reqs locked)** — session-armed SIP **text** + JSONL; **SPA Start/Stop**; S3 classes **`sip-text` / `sip-pcap`**; pcap secondary; SBC remains fleet always-on archive (R3). Spec: **`HOME_SIP_LOGGING_REQUIREMENTS.md`**. Est. **~3–5 d** A–G.  
+32. **Home SIP logging (tip on golden — package roll pending)** — A–G on **`main`** (scripts + API + SPA); golden tip-smoked arm/status/disarm. Remaining: **pbx3 `0.0.5-4` package roll**; tip API/SPA to bzy/Toliman; call-with-capture extract smoke. Spec: **`HOME_SIP_LOGGING_REQUIREMENTS.md`**.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -126,7 +126,7 @@
 
 - [ ] **Incident notify (parked 2026-08-11):** Tenant callout → ConfBridge + optional SMS. Spec: **`INCIDENT_NOTIFY_REQUIREMENTS.md`**. Est. ~5–7 d v1.
 
-- [ ] **Home SIP logging (reqs locked 2026-08-11):** Session-armed SIP text + JSONL; **SPA arm/disarm**; S3 **`sip-text` / `sip-pcap`** like other instance logs; SBC remains fleet always-on archive. Spec: **`HOME_SIP_LOGGING_REQUIREMENTS.md`**. Est. ~3–5 d A–G.
+- [ ] **Home SIP logging (code on `main` 2026-08-11):** Session-armed SIP text + JSONL; SPA arm/disarm; S3 **`sip-text` / `sip-pcap`**. Golden tip-smoked; **package `0.0.5-4` + other homes** still open. Spec: **`HOME_SIP_LOGGING_REQUIREMENTS.md`**.
 
 - [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
 
