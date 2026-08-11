@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-10 (provisioning edge-proxy direction; velocity TODO)  
+**Last updated:** 2026-08-10 (session end — SBC backup spinner; provision proxy direction; velocity TODO)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
