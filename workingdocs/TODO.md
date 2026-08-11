@@ -18,7 +18,7 @@
 5a. **Toliman vanity shortuid (`kildare`)** — hold; preferred path delete/recreate (opaque suid) after tenant move exercise — see **TODO_OPS**.  
 5b. **Instance Name → SBC Peer label sync** (optional) — Fleet Name PATCH does not update Magrathea Peer description today.  
 6. **pbx3api `.deb`** — versioned package for `/opt/pbx3api` (Ubuntu/Debian long-haul; apt parity with pbx3/cagi). Clone-at-tag OK until then.  
-7. **New instance / package install** — fleet packages **pbx3 `0.0.5-3`** / **pbx3cagi `1.0.0-17`** (#4c); **cagi `1.0.0-18`** (SITE_DIAL hairpin) tip/hot — rebuild/roll when scheduled. Tip-deploy **pbx3api** + **pbx3sbc**. Ops: **`TODO_OPS.md`**.  
+7. **New instance / package install** — fleet packages **pbx3 `0.0.5-3`** / **pbx3cagi `1.0.0-18`** (SITE_DIAL hairpin; rolled 2026-08-11). Tip-deploy **pbx3api** TrunkController done lab-wide; optional full API checkout align. Ops: **`TODO_OPS.md`**.  
 8. **Toll fraud / velocity — remainder** — V1/V2/V5 shipped (env-only IRSF burst + notify + optional act); finish product: **V3** fleet rule template, **V4** audience, SPA surface, more detectors. Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**. Design still thin for V3+ — lock before build.  
 8a. **Product crumbs** (optional) — paid Twilio **lab green** (inbound+outbound); remaining: named Peer recipe / O4 US seed / drain / custom-dialect UI.  
 9. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
