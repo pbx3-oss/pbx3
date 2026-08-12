@@ -203,7 +203,7 @@ final class OpsEventNotifyTest extends TestCase
             'accountcode' => 'labtenant',
             'count' => 12,
             'window_minutes' => 5,
-            'masked_prefixes' => ['00900***'],
+            'masked_prefixes' => ['0900***'],
             'first_calldate' => '2026-07-24 12:00:00',
             'last_calldate' => '2026-07-24 12:02:00',
             'auto_block' => true,
@@ -223,8 +223,8 @@ final class OpsEventNotifyTest extends TestCase
         $this->assertCount(2, $sent);
         $this->assertStringContainsString('Velocity IRSF', $sent[0]['subject']);
         $this->assertStringContainsString('1001', $sent[0]['subject']);
-        $this->assertStringContainsString('00900***', $sent[0]['body']);
-        $this->assertStringNotContainsString('009001234567', $sent[0]['body']);
+        $this->assertStringContainsString('0900***', $sent[0]['body']);
+        $this->assertStringNotContainsString('09001234567', $sent[0]['body']);
         $this->assertStringContainsString('labtenant', $sent[0]['body']);
         $this->assertStringContainsString('active=NO', $sent[0]['body']);
         $this->assertStringContainsString('Live channels hung up: 2', $sent[0]['body']);

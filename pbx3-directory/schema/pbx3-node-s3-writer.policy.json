@@ -27,6 +27,14 @@
       "Resource": [
         "arn:aws:s3:::08jzwn-pbx3/instances/3DmAsxePTWQZgynBYXE8obIRqEE/*"
       ]
+    },
+    {
+      "Sid": "ReadFleetVelocityPolicy",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": [
+        "arn:aws:s3:::08jzwn-pbx3/catalog/velocity-policy.json"
+      ]
     }
   ]
 }

@@ -561,6 +561,20 @@ final class S3Registrar
         $this->writeJson(self::DIAL_COHORT_INDEX_KEY, $index);
     }
 
+    private const VELOCITY_POLICY_KEY = 'catalog/velocity-policy.json';
+
+    /** @return array<string, mixed> empty when missing */
+    public function getVelocityPolicy(): array
+    {
+        return $this->readJson(self::VELOCITY_POLICY_KEY, []);
+    }
+
+    /** @param array<string, mixed> $doc */
+    public function putVelocityPolicy(array $doc): void
+    {
+        $this->writeJson(self::VELOCITY_POLICY_KEY, $doc);
+    }
+
     /**
      * List cohort document ids under catalog/dial-cohorts/*.json (excludes jobs/).
      *

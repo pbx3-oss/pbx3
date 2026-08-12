@@ -1,8 +1,8 @@
 # Fleet toll fraud & call-pattern velocity (requirements)
 
-**Status:** **V0 framing done** (2026-07-22); **V1–V2 + V5 auto-block** shipped (2026-07-24). **IRSF product close (2026-08-11):** SPA velocity inactive honesty + reactivate clears `z_updater`; **CDR pack v1** (`pbx3:cdr-velocity-pack` / **`VELOCITY_CDR_PACK.md`**). **V3/V4 / extra detectors** still later.  
+**Status:** **V0 framing done** (2026-07-22); **V1–V2 + V5 auto-block** shipped (2026-07-24). **IRSF product close (2026-08-11):** SPA velocity inactive honesty + reactivate clears `z_updater`; **CDR pack v1**. **V3 fleet policy** shipped (2026-08-11) — S3 `catalog/velocity-policy.json`. **WP1 off-hours** next; V4 deferred; CFIM/failed/Wangiri not separate (see implementation plan).  
 **Lab testing:** CDR fixture pack first; SIPp optional E2E.  
-**Related:** **`VELOCITY_CDR_PACK.md`** · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite (Phase 6 `master.db` shipped); instance **CoS** / dial policy (prevention + **act**); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only** — outside→in; velocity is the **inside→out** cousin); living research **`TELEPHONE_FRAUD_RESEARCH.md`** (fleet vs carrier ownership).
+**Related:** **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`** · **`VELOCITY_CDR_PACK.md`** · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite (Phase 6 `master.db` shipped); instance **CoS** / dial policy (prevention + **act**); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only** — outside→in; velocity is the **inside→out** cousin); living research **`TELEPHONE_FRAUD_RESEARCH.md`** (fleet vs carrier ownership).
 
 ---
 
@@ -20,7 +20,7 @@ Fraudsters compromise a business PBX or SIP path and drive **high volumes of out
 | **CFIM / Follow-me abuse** | Compromised phone: set forward to a bad number; spend without a “hot dialer” | **High priority later** — often *what they do* after compromise; detect config change and/or forward legs; same act (`active=NO` and/or clear CF) |
 | **Saturday-night blitz** | Off-hours / weekend outbound surge (ops have seen this) | **Later rule** after IRSF burst — off-hours window signal (was deferred; now named) |
 | **Failed-attempt scanning** | Many short/failed tries across premium ranges (recon) | **Later rule** — disposition/failed-heavy window; ops have seen this |
-| **Wangiri** | One-ring missed call → employee redials premium | Later / noisy; inbound+outbound correlation |
+| **Wangiri** | One-ring missed call → employee redials premium | Later; prefer **warn before callback** (human-dependent) over noisy post-redial correlation — see implementation plan WP5 sketch |
 | **Traffic pumping** | Manufactured calls into toll-free | Carrier / toll-free side — not instance HoR |
 | **Low-and-slow premium** | Few calls, long billsec to expensive dest | **Hard without a strict high-value CoS policy** — lean on **prevention (CoS)**; velocity is a poor sole detector |
 | **DISA / remote outdial** | Classic PBX hack path | **We can support DISA technically but we don’t ship it** — keep it that way; not a detection target |
@@ -77,7 +77,7 @@ CDR fixture or live calls
 | 4 | Audience | **Fleet ops only** (`notify_failures`) for V2; tenant admins later (V4) |
 | 5 | V1 prerequisite | **Use existing `master.db`** (Phase 6) — no Master.csv interim; lab fixture writes SQLite-shaped rows |
 
-**Residuals (tune in lab, not blockers):** exact **N / T / Q** after first golden run; production prefixes — **starter packs** **`VELOCITY_PREFIX_SEEDS.md`** (UK incl. **`070`**; US NANP Caribbean); research §7 / Uboss; lab stays **`00900`**. V3 fleet template still later. **Act gaps above are requirements, not residuals** (attribution, clear CF, hangup-or-bleed).
+**Residuals (tune in lab, not blockers):** exact **N / T / Q** after first golden run; production prefixes — **starter packs** **`VELOCITY_PREFIX_SEEDS.md`** (UK incl. **`070`**; US NANP Caribbean); research §7 / Uboss; lab stays **`0900` / `+44900` / `0044900`**. V3 fleet template still later. **Act gaps above are requirements, not residuals** (attribution, clear CF, hangup-or-bleed).
 
 ---
 
@@ -129,7 +129,7 @@ From packaged `cdr_sqlite3_custom.conf` table `cdr`:
 - **Purpose:** seed velocity-shaped rows without SIPp / live trunks.
 - **Shape:** artisan **`pbx3:cdr-fixture`** in **pbx3api** (`CdrFixtureService`); env-gated (`PBX3_CDR_FIXTURE=1` / `--force`) and **refuses** live `/var/log/asterisk/master.db` unless `--allow-live`.
 - **Path safety:** default write target = **`PBX3_CDR_SQLITE_PATH`** override pointing at a **lab copy** of `master.db` (or empty SQLite with `cdr` schema via `--path=`) — **do not** casually INSERT into live golden `master.db` without an explicit flag.
-- **Decks:** `irsf` (default), `failed-scan`, `internal-noise`, `mixed`. Lab premium prefix **`00900`** (matches `PBX3_OPS_VELOCITY_PREFIXES` default).
+- **Decks:** `irsf` (default), `failed-scan`, `internal-noise`, `mixed`. Lab premium prefix **`0900` / `+44900` / `0044900`** (matches `PBX3_OPS_VELOCITY_PREFIXES` default).
 - **CSV import (lab):** artisan **`pbx3:cdr-import-csv`** — classic Asterisk `Master.csv` / `accountcode.csv` / `.gz` (golden `/var/log/asterisk/cdr-csv/`) → lab SQLite; same path safety as fixture.
 - **Query helper:** **`VelocityCdrQuery`** + artisan **`pbx3:cdr-velocity-query`** (also `--probe` on fixture). Window **T** + prefix list; excludes empty/`isInternalDst` shapes.
 - Insert N rows with recent `calldate`, lab `dst` prefixes, `src` / `accountcode` filled.
@@ -221,8 +221,9 @@ Gatekeeper: handle `velocity_irsf` like other ops-events → SMTP to `notify_fai
 | Item | Detail |
 |------|--------|
 | **Goal** | Operators tune thresholds / prefixes without redeploy |
-| **Direction** | **Fleet-wide template first** (control → nodes or shared config); per-tenant later |
-| **Done when** | Change N/T/prefixes on control (or documented fleet config) → next scan uses it; greenfield defaults documented |
+| **Direction** | **Fleet-wide** S3 `catalog/velocity-policy.json` — Gatekeeper sole writer; nodes read S3 (cache → env). SPA Fleet → Velocity. Per-tenant later |
+| **Done when** | Change N/T/prefixes via Gatekeeper → next scan uses it; greenfield defaults documented |
+| **Status** | **Done** (2026-08-11) — WP3 in **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**; `GET`/`PUT` `/api/v1/velocity-policy`; `VelocityPolicyResolver` on node |
 
 ---
 
@@ -288,7 +289,7 @@ Gatekeeper: handle `velocity_irsf` like other ops-events → SMTP to `notify_fai
 | **Concurrency above normal** | Overlapping outbound above trailing peak (esp. off-hours) — autodialer grabbing channels | Published CDR fraud patterns |
 | **Forward chain ending off-net** | Inbound → paired outbound external/international within seconds (redirect / divert legs) | Published CDR fraud patterns; pairs with CFIM |
 | **Premium / high-fraud country watchlist** | First-call or low-N alert to known IRSF-prone country/premium prefixes (beyond burst count) | Industry watchlists; SecAst-class fraud number DBs (we start with env list, not a paid DB) |
-| **Wangiri** | Inbound short + outbound redial correlation | Industry; noisy |
+| **Wangiri** | Prefer short inbound from suspect CLI → **notify before human callback**; post-redial correlation secondary / noisy | Industry; human-dependent scam |
 
 **Prevention audits (not velocity scanners):**
 
@@ -348,8 +349,7 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 3. **V2** — `pbx3:ops-velocity` + Gatekeeper `velocity_irsf` + mail (fixture-first; SIPp optional). **Done** (2026-07-24).  
 4. **V5** — **auto-block** via existing **`ipphone.active=NO`** (+ genAst) — required next; do not defer. **Done** (2026-07-24).  
 5. **IRSF product close** — SPA “disabled by velocity” + reactivate clears stamp; **CDR pack v1**. **Done** (2026-08-11) — **`VELOCITY_CDR_PACK.md`**.  
-6. **V3** — fleet-wide tunable rules (shrink N control surfaces) — later.  
-7. **V4** — tenant audience if still wanted (digit hygiene already in V2) — later.
+6. **V3+ remainder** — see **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`** (WP0 ACT prove, V3 S3 policy, off-hours; V4/SBC/separate Wangiri deferred).
 
 ---
 
@@ -369,6 +369,7 @@ Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weeken
 
 | Doc | Role |
 |-----|------|
+| **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`** | Remainder build plan (V3/V4/detectors/SBC/lab) — draft until review locks |
 | **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`** | CoS prevention vs velocity vs SBC floor |
 | **`VELOCITY_PREFIX_SEEDS.md`** | UK / US starter `PBX3_OPS_VELOCITY_PREFIXES` packs |
 | **`VELOCITY_CDR_PACK.md`** | Fixture pack runner + case table |

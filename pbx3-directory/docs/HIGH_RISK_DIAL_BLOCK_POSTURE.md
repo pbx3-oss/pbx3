@@ -9,18 +9,19 @@
 |-------|------|--------|
 | **PBX CoS** | **Prevention HoR** — deny Asterisk patterns → congestion/Hangup | Per tenant; `defaultopen`/`defaultclosed=YES` so new phones inherit; SPA editable / removable |
 | **Velocity** | **Detection + act** — CDR prefix surge → notify / `active=NO` | Same destination *set*, literal CDR prefixes (not `_` patterns) |
-| **SBC** | **Optional thin never-route floor** only | Fleet-wide sat / junk CCs — **not** the full offshore pack |
+| **SBC** | **No never-route floor in current plan** (deferred) | Sat/high-risk stay on **tenant CoS** so ops can open a paying satphone (etc.) per customer |
 | **Carrier** | Backstop geo-bar / fraud desk | Not our HoR |
 
-**Do not** put the full UK/US starter pack only on Magrathea — tenant exceptions, solo sites, and UK **`070`** (looks like mobile) belong on the **home**.
+**Do not** put the full UK/US starter pack only on Magrathea — tenant exceptions, solo sites, and UK **`070`** (looks like mobile) belong on the **home**. Evolve packs (S3 / seeds) and **adopt per tenant** so one customer can be relaxed without a fleet SBC bite.
 
 ```text
-Prevention (CoS deny patterns, seeded)
+Prevention (CoS deny patterns, seeded; per-tenant exceptions)
     → Detection (velocity on aligned prefixes)
         → Act (active=NO)
-            ↔ Optional SBC hard refuse (tiny never-route tier)
-                ↔ Carrier fraud desk
+            ↔ Carrier fraud desk
 ```
+
+(SBC hard refuse = deferred — see L4 in **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.)
 
 ## What “seeded CoS” looks like
 
@@ -46,9 +47,9 @@ SPA: **Class of Service** list shows these like any other rule. Operator can cle
 
 Pattern sources: `pbx3api/config/cos/highrisk-*-starter.dialplan` (keep aligned with velocity prefix seeds).
 
-## SBC never-route (optional later)
+## SBC never-route (optional — **deferred 2026-08-11**)
 
-Hard refuse only a **short** list, e.g. satellite `870`/`881`/`882`/`883`, Ascension `247`, when product wants a fleet floor no tenant can CoS-open. Full Caribbean/Africa stays **CoS**. Implement when scheduled — not blocking CoS seed.
+Previously floated as a hard refuse for a **short** list (e.g. satellite `870`/`881`/`882`/`883`, Ascension `247`). **Not building now:** customers may need satphone (and will pay); blocking at **tenant CoS** lets ops **open that tenant** on request. Fleet-wide SBC refuse is a poor exception model. Velocity/CoS policy can still use S3 store-and-forward without duplicating a refuse list on the edge. Revisit only for a true no-exception fleet floor. See **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`** L4.
 
 ## Lab
 

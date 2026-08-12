@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/velocity-policy.v0.json",
+  "title": "PBX3 fleet velocity policy (v0)",
+  "description": "catalog/velocity-policy.json — fleet-wide IRSF / off-hours knobs. Gatekeeper sole writer; nodes read S3 (cache + env fallback). Spec: FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md L1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "updated_at", "irsf", "detectors"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "updated_by": { "type": ["string", "null"] },
+    "irsf": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "t_minutes", "q_minutes", "prefixes", "act_enabled"],
+      "properties": {
+        "n": { "type": "integer", "minimum": 1 },
+        "t_minutes": { "type": "integer", "minimum": 1 },
+        "q_minutes": { "type": "integer", "minimum": 1 },
+        "prefixes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "act_enabled": { "type": "boolean" }
+      }
+    },
+    "detectors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["irsf", "off_hours"],
+      "properties": {
+        "irsf": { "type": "boolean" },
+        "off_hours": { "type": "boolean" }
+      }
+    },
+    "off_hours": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tz": { "type": "string", "minLength": 1 },
+        "windows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dow", "start", "end"],
+            "properties": {
+              "dow": {
+                "type": "array",
+                "items": { "type": "integer", "minimum": 0, "maximum": 6 },
+                "minItems": 1
+              },
+              "start": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" },
+              "end": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" }
+            }
+          }
+        },
+        "n": { "type": "integer", "minimum": 1 },
+        "t_minutes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "allowlist_extensions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

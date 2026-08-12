@@ -27,6 +27,14 @@
       "Resource": [
         "arn:aws:s3:::__BUCKET__/instances/__INSTANCE_KSUID__/*"
       ]
+    },
+    {
+      "Sid": "ReadFleetVelocityPolicy",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": [
+        "arn:aws:s3:::__BUCKET__/catalog/velocity-policy.json"
+      ]
     }
   ]
 }

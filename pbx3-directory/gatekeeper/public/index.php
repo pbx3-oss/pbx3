@@ -34,6 +34,7 @@ use Pbx3\Gatekeeper\TenantMoveJobStore;
 use Pbx3\Gatekeeper\TenantMoveRunner;
 use Pbx3\Gatekeeper\TenantProvisioner;
 use Pbx3\Gatekeeper\UserStore;
+use Pbx3\Gatekeeper\VelocityPolicyStore;
 
 Env::load(dirname(__DIR__).'/.env');
 
@@ -44,7 +45,7 @@ $path = rtrim($path, '/') ?: '/';
 if ($method === 'OPTIONS') {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept');
-    header('Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
     http_response_code(204);
     exit;
 }
@@ -397,6 +398,22 @@ try {
     $dialJobs = new DialCohortJobStore($registrar);
     $dialRunner = new DialCohortMaterialiseRunner($dialJobs, $registrar, new NodeFleetDialClient());
     $deleteRunner = new TenantDeleteRunner($deleteJobs, $registrar, new SbcFleetClient(), $dialCohorts, $dialRunner);
+    $velocityPolicy = new VelocityPolicyStore($registrar);
+
+    if ($method === 'GET' && $path === '/api/v1/velocity-policy') {
+        Auth::requireAbility(FleetAbilities::READ);
+        JsonResponse::send(200, $velocityPolicy->get());
+    }
+
+    if ($method === 'PUT' && $path === '/api/v1/velocity-policy') {
+        Auth::requireAbility(FleetAbilities::ADMIN);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $velocityPolicy->put(
+            is_array($body) ? $body : [],
+            is_string($actor) ? $actor : null
+        ));
+    }
 
     if ($method === 'GET' && $path === '/api/v1/catalog') {
         Auth::requireAbility(FleetAbilities::READ);

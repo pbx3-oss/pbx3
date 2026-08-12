@@ -17,7 +17,7 @@ php artisan pbx3:cdr-velocity-pack
 ./vendor/bin/pest tests/Unit/VelocityCdrPackTest.php
 ```
 
-Exit **0** = all PASS. Lab default premium prefix **`00900`**; threshold **N=10**, window **T=5**.
+Exit **0** = all PASS. Lab default premium prefix **`0900` / `+44900` / `0044900`**; threshold **N=10**, window **T=5**.
 
 ## Cases (v1)
 
