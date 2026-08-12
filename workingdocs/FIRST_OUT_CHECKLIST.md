@@ -50,7 +50,7 @@ Ops and honesty gates — small list:
 | **F2** | Deploy **API + SPA tip** (Certificates Sync instance-only + fleet DNS warn) | Avoid operator recreating tenant A / wrong Sync |
 | **F3** | Smoke the **stakeholder demo path** on HTTPS against current golden/bzy | Regressions only — **`STAKEHOLDER_DEMO_SCRIPT.md`** |
 | **F4** | Confirm **no tenant public A** leftovers; phones → SBC; SPA → instance | Fleet DNS lock is policy + lab; re-check before external eyes |
-| **F5** | **Lab / demo DB anonymize** if anyone outside the closed lab sees screens / dumps | Real-site surnames still on golden — do before wider demo |
+| **F5** | **Lab / demo DB anonymize** if anyone outside the closed lab sees screens / dumps | **Done 2026-08-12** — Sirius + golden duns/affcot `ipphone.desc` given-names; other golden tenants may still have labels |
 | **F6** | Optional but tidy: run **`sqlite_device_lean_prune.sql`** on golden/bzy | Align running DB with lean seed; drop surplus Device template fat |
 | **F7** | **Pre-release safety debt** — **`PRE_RELEASE_SAFETY_DEBT.md`** | Go/no-go before calling a release: cagi buffers, api tenant IDOR, dumper/appl, edge MI/SQL, Filament fleet-owned, spa secrets |
 | **F8** | **Tenant delete integrity** — **`TENANT_DELETE_DATA_INTEGRITY.md`** · lab **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1 | Wipe already cascades; close sibling dialalias / park / orphan gaps before release honesty |

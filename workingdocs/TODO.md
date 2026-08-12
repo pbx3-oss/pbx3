@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-12 (SBC site TZ install parked)  
+**Last updated:** 2026-08-12 (lab anonymize F5 done)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -36,7 +36,7 @@
 19a. ~~**STIR Twilio shape A lab**~~ — **observed green** (2026-08-11): after Twilio ID checks, outbound rated attestation **A** (carrier signs as SP). Own-cert shapes B/C not started. Spec: **`SBC_PRODUCT_TRACKS.md`** Track B.  
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
-22. **Lab / demo DB anonymize** (parked — **F5** if external demo).  
+22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
 23. **Provisioning (home listener + edge proxy)** — direction **2026-08-10**: SARK lift on home + nginx Host→home proxy (stable A; no DNS on move). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Schedule when prioritized; TLS §0 cross-link when shipping.  
 23a. **UA → `devicemodel` sidekick** (parked) — **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`** (implement A–D when scheduled; images = E).  
 24. **SPA list action icons component** (parked).  
@@ -93,7 +93,7 @@
 
 - [ ] **Pre-first-release — SPA production bundle diet (parked 2026-08-03):** Do **before first product release**, not now. Prefer: (1) **dynamic `import()` of line-test + JsSIP** only when Line test opens; (2) **route-level code-split** for heavy views; (3) optional split of `marked`/`dompurify` off the critical path. Repo: **pbx3spa**.
 
-- [ ] **Lab / demo SQLite anonymize (parked 2026-08-03):** Lab test DBs may still carry site-derived surnames / friendly labels. Prefer a **one-shot idempotent SQL + short runbook** before wider demos. Keep dial plans / shortuids functional. Not urgent for closed lab.
+- [x] **Lab / demo SQLite anonymize (2026-08-12):** Stripped surnames from `ipphone.desc` — **Sirius** (all person-named exts); **golden** tenants **duns** / **affcot** only. Non-person labels left (MeetingRoom, fax, WebRTC, SIPp). Host backups under `db_database_dumps/pre-anonymize-*`. No product runbook yet.
 
 - [ ] **Provisioning — home listener + edge proxy (direction 2026-08-10):** Preferred: lift/polish SARK provision routines on the **home**; fleet **nginx** routes by tenant Host/SNI to current home; proxy has stable **A**; tenant move = remap only (no DNS). Secrets stay on `ipphone`. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Not scheduled to build yet; update **`TLS_AND_CERTIFICATES.md` §0** (provision A→proxy exception) when shipping.
 
