@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-11 (Home CDR dest pie live)  
+**Last updated:** 2026-08-12 (SBC site TZ install parked)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -50,6 +50,7 @@
 32. ~~**Instance SIP logging**~~ — **done** (A–G on **`main`**; **pbx3 `0.0.5-5`** on golden/bzy/Toliman; API tip; S3 **`sip-text`** ship confirmed). Spec: **`HOME_SIP_LOGGING_REQUIREMENTS.md`**.  
 33. ~~**Fleet hop-1 DID — block assign + reconcile**~~ — **done** (Allocate `delivery` singleton|block; `GET /dids/reconcile` + Apply via project; SPA DIDs drift check). Lock: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**.  
 34. ~~**Fleet domain→setid Magrathea lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
+35. **SBC site timezone at install (should-do)** — **`pbx3sbc-admin/install.sh`**: prompt or `--site-timezone` → write `PBX3_SBC_SITE_TIMEZONE` (Home/CDR day buckets). Default = host `/etc/timezone`. Optional later: Filament change-later; optional `timedatectl` OS set with clear warning. No UI today.  
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -140,6 +141,8 @@
 - [x] **Fleet hop-1 DID authorship lock (2026-08-11):** Retarget only via Fleet Allocate/reassign → project. Spec: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**. Magrathea deny + Fleet badge/redirect; SPA catalog-intent + **Repair SBC domain**. **#33 done:** block allocate + DID reconcile drift / Apply.
 
 - [x] **Fleet domain→setid Magrathea lock (2026-08-11 #34):** `fleet=domain` stamp on register/repoint; DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`. Spec: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.
+
+- [ ] **SBC site timezone at install (parked 2026-08-12 — should-do):** `pbx3sbc-admin/install.sh` prompt or `--site-timezone` → `PBX3_SBC_SITE_TIMEZONE` in `.env` (Home/CDR day buckets via `SiteTimezone`). Default host `/etc/timezone`. Optional later: Filament change-later; optional OS `timedatectl` with warning. No UI today.
 
 - [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
 
