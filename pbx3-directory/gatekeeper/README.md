@@ -94,6 +94,7 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `GET` | `/api/v1/catalog` | Read instance index |
 | `GET` | `/api/v1/velocity-policy` | Read fleet velocity policy (`catalog/velocity-policy.json`; defaults if missing) (`fleet_read`) |
 | `PUT` | `/api/v1/velocity-policy` | Replace velocity policy (Gatekeeper sole S3 writer) (`fleet_admin`) |
+| Ops-events | `velocity_irsf`, `velocity_off_hours` | Node CDR detectors → fleet SMTP |
 | `POST` | `/api/v1/catalog/tenant-home/rebuild` | Rebuild `catalog/tenant-home.json` from tenant metas (`fleet_instances`) — also runs automatically on tenant register/move |
 | `GET` | `/api/v1/fleet-users` | S10.6 list fleet users + ability vocab (`fleet_admin`) |
 | `POST` | `/api/v1/fleet-users` | Create user `{email,password,name?,abilities?}` |

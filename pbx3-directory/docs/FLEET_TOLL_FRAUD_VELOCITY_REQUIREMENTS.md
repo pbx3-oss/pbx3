@@ -1,6 +1,6 @@
 # Fleet toll fraud & call-pattern velocity (requirements)
 
-**Status:** **V0 framing done** (2026-07-22); **V1–V2 + V5 auto-block** shipped (2026-07-24). **IRSF product close (2026-08-11):** SPA velocity inactive honesty + reactivate clears `z_updater`; **CDR pack v1**. **V3 fleet policy** shipped (2026-08-11) — S3 `catalog/velocity-policy.json`. **WP1 off-hours** next; V4 deferred; CFIM/failed/Wangiri not separate (see implementation plan).  
+**Status:** **V0 framing done** (2026-07-22); **V1–V2 + V5 auto-block** shipped (2026-07-24). **IRSF product close (2026-08-11):** SPA velocity inactive honesty + reactivate clears `z_updater`; **CDR pack v1**. **V3 fleet policy** shipped (2026-08-11) — S3 `catalog/velocity-policy.json`. **WP1 off-hours** shipped (2026-08-11). V4 deferred; CFIM/failed/Wangiri not separate (see implementation plan).  
 **Lab testing:** CDR fixture pack first; SIPp optional E2E.  
 **Related:** **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`** · **`VELOCITY_CDR_PACK.md`** · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** (Gatekeeper notify delivery); **`FLEET_LOG_RETENTION_REQUIREMENTS.md`** § CDR / SQLite (Phase 6 `master.db` shipped); instance **CoS** / dial policy (prevention + **act**); **`DESIGN_RULES.md`** Rule 1 (directory out of call path), Rule 5 (notify ≠ call-path SLA); SBC Fail2ban / pike (**SIP abuse only** — outside→in; velocity is the **inside→out** cousin); living research **`TELEPHONE_FRAUD_RESEARCH.md`** (fleet vs carrier ownership).
 

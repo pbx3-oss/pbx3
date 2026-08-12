@@ -900,8 +900,62 @@ try {
             JsonResponse::send(200, ['accepted' => true, 'notified' => true]);
         }
 
+        if ($type === 'velocity_off_hours') {
+            $instanceId = trim((string) ($body['instance_id'] ?? ''));
+            if ($instanceId === '') {
+                throw new \InvalidArgumentException('instance_id required', 422);
+            }
+            $transition = trim((string) ($body['transition'] ?? ''));
+            if ($transition !== 'down' && $transition !== 'cleared') {
+                throw new \InvalidArgumentException('transition must be down or cleared', 422);
+            }
+            $extension = trim((string) ($body['extension'] ?? ''));
+            if ($extension === '') {
+                $extension = '(unknown)';
+            }
+            $count = (int) ($body['count'] ?? 0);
+            if ($transition === 'down' && $count < 1) {
+                throw new \InvalidArgumentException('count must be >= 1 for down', 422);
+            }
+            if ($transition === 'down') {
+                $key = 'velocity_off_hours:'.$instanceId.':'.$extension;
+                if (! OpsEventThrottle::allow($key, $cooldown)) {
+                    JsonResponse::send(200, ['accepted' => true, 'notified' => false, 'reason' => 'throttled']);
+                }
+            }
+            $masked = $body['masked_prefixes'] ?? [];
+            if (! is_array($masked)) {
+                $masked = [];
+            }
+            $masked = array_values(array_filter(array_map(
+                static fn ($v) => is_string($v) ? trim($v) : '',
+                $masked
+            ), static fn ($v) => $v !== ''));
+
+            NotifyDispatcher::fromEnv()->notifyVelocityOffHours([
+                'instance_id' => $instanceId,
+                'instance_label' => is_string($body['instance_label'] ?? null) ? $body['instance_label'] : '',
+                'fqdn' => is_string($body['fqdn'] ?? null) ? $body['fqdn'] : '',
+                'extension' => $extension,
+                'accountcode' => is_string($body['accountcode'] ?? null) ? trim($body['accountcode']) : '',
+                'count' => $count,
+                'window_minutes' => (int) ($body['window_minutes'] ?? 60),
+                'masked_prefixes' => $masked,
+                'first_calldate' => is_string($body['first_calldate'] ?? null) ? $body['first_calldate'] : '',
+                'last_calldate' => is_string($body['last_calldate'] ?? null) ? $body['last_calldate'] : '',
+                'rule' => is_string($body['rule'] ?? null) ? $body['rule'] : 'off_hours',
+                'auto_block' => ! empty($body['auto_block']),
+                'forwards_cleared' => ! empty($body['forwards_cleared']),
+                'hung_up_count' => (int) ($body['hung_up_count'] ?? 0),
+                'act_skipped_reason' => is_string($body['act_skipped_reason'] ?? null) ? trim($body['act_skipped_reason']) : '',
+                'attribution_reason' => is_string($body['attribution_reason'] ?? null) ? trim($body['attribution_reason']) : '',
+                'extension_shortuid' => is_string($body['extension_shortuid'] ?? null) ? trim($body['extension_shortuid']) : '',
+            ], $transition);
+            JsonResponse::send(200, ['accepted' => true, 'notified' => true]);
+        }
+
         throw new \InvalidArgumentException(
-            'Unsupported ops-event type (expected misconfig_register, fail2ban_ban, egress_unavail, or velocity_irsf)',
+            'Unsupported ops-event type (expected misconfig_register, fail2ban_ban, egress_unavail, velocity_irsf, or velocity_off_hours)',
             422
         );
     }

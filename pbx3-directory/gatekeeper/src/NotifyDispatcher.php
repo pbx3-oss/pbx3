@@ -501,6 +501,97 @@ final class NotifyDispatcher
     }
 
     /**
+     * Off-hours / weekend high-cost surge (same payload shape as IRSF).
+     *
+     * @param  array<string, mixed>  $event
+     * @param  'down'|'cleared'  $transition
+     */
+    public function notifyVelocityOffHours(array $event, string $transition): void
+    {
+        if ($transition !== 'down' && $transition !== 'cleared') {
+            return;
+        }
+
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            error_log('[gatekeeper-notify] no subscribers for velocity_off_hours '.$transition.' — skip');
+
+            return;
+        }
+
+        $label = (string) ($event['instance_label'] ?? $event['instance_id'] ?? 'instance');
+        $id = (string) ($event['instance_id'] ?? '');
+        $fqdn = (string) ($event['fqdn'] ?? '');
+        $ext = (string) ($event['extension'] ?? '(unknown)');
+        $uid = trim((string) ($event['extension_shortuid'] ?? ''));
+        $account = trim((string) ($event['accountcode'] ?? ''));
+        $count = (int) ($event['count'] ?? 0);
+        $window = (int) ($event['window_minutes'] ?? 60);
+        $masked = $event['masked_prefixes'] ?? [];
+        if (! is_array($masked)) {
+            $masked = [];
+        }
+        $masked = array_values(array_filter(array_map('strval', $masked)));
+        $first = trim((string) ($event['first_calldate'] ?? ''));
+        $last = trim((string) ($event['last_calldate'] ?? ''));
+        $autoBlock = ! empty($event['auto_block']);
+        $forwardsCleared = ! empty($event['forwards_cleared']);
+        $hungUp = (int) ($event['hung_up_count'] ?? 0);
+        $actSkip = trim((string) ($event['act_skipped_reason'] ?? ''));
+        $attrReason = trim((string) ($event['attribution_reason'] ?? ''));
+
+        $extDisplay = $ext;
+        if ($uid !== '' && strcasecmp($uid, $ext) !== 0) {
+            $extDisplay = "{$ext} ({$uid})";
+        }
+
+        if ($transition === 'down') {
+            $subject = "[PBX3 fleet] Velocity off-hours: ext {$ext} on {$label}";
+            $body = "High-cost outbound surge during off-hours / weekend window (CDR).\n";
+            if ($autoBlock) {
+                $body .= "Auto-block applied: phone set active=NO (Fail2ban inside→out).\n";
+            } else {
+                $body .= "Notify-only (auto-block not applied";
+                if ($actSkip !== '') {
+                    $body .= ": {$actSkip}";
+                }
+                $body .= ").\n";
+            }
+            $body .= "\n";
+        } else {
+            $subject = "[PBX3 fleet] Velocity off-hours cleared: ext {$ext} on {$label}";
+            $body = "Off-hours high-cost surge has been quiet under threshold.\n"
+                ."Re-enable the phone (active=YES + Commit) if it was auto-blocked.\n\n";
+        }
+
+        $body .= "Label: {$label}\n"
+            ."Id: {$id}\n"
+            ."FQDN: {$fqdn}\n"
+            ."Extension: {$extDisplay}\n";
+        if ($account !== '') {
+            $body .= "Accountcode: {$account}\n";
+        }
+        $body .= "Count: {$count} in {$window}m (off-hours filter)\n";
+        if ($masked !== []) {
+            $body .= 'Masked dest prefixes: '.implode(', ', array_slice($masked, 0, 12))."\n";
+        }
+        if ($first !== '' || $last !== '') {
+            $body .= 'Burst window: '.($first !== '' ? $first : '?').' → '.($last !== '' ? $last : '?')."\n";
+        }
+        if ($transition === 'down') {
+            if ($autoBlock) {
+                $body .= 'Forwards cleared (CFIM/CFBS/Follow-me): '.($forwardsCleared ? 'yes' : 'attempted')."\n";
+                $body .= "Live channels hung up: {$hungUp}\n";
+            }
+            if ($attrReason !== '') {
+                $body .= "Attribution: {$attrReason}\n";
+            }
+        }
+
+        $this->send($recipients, $subject, $this->withUiLink($body));
+    }
+
+    /**
      * @param  array<string, mixed>  $pair
      * @param  array<string, mixed>  $result
      */

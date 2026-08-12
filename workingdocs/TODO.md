@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-11 (WP0 velocity ACT prove; plan Accepted)  
+**Last updated:** 2026-08-11 (WP1 velocity off-hours)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -19,7 +19,7 @@
 5b. **Instance Name → SBC Peer label sync** (optional) — Fleet Name PATCH does not update Magrathea Peer description today.  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
 7. **New instance / package install** — fleet floors **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** (+ tips between — see **TODO_OPS**).  
-8. **Toll fraud / velocity** — plan **Accepted**; **WP0** + **WP3** done (2026-08-11). Next **WP1** off-hours. Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
+8. **Toll fraud / velocity** — plan **Accepted**; **WP0 + WP3 + WP1** done (2026-08-11). Remainder deferred (V4 / SBC floor / Wangiri). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
 8a. ~~**Paid Twilio inbound/outbound**~~ — **lab green** (Toliman↔Twilio both ways; SBC Route-strip + public From/PAI; Egress CLIP). Optional crumbs remain: named Peer recipe / drain / custom-dialect UI.  
 9. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
 10. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
@@ -119,7 +119,8 @@
 
 - [x] **Toll fraud / velocity — IRSF product close + CDR pack (2026-08-11):** SPA inactive hint + list title when `z_updater=velocity`; reactivate clears stamp; **`VelocityCdrPack`** / `pbx3:cdr-velocity-pack` (6 cases). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** · **`VELOCITY_CDR_PACK.md`**.
 
-- [x] **Toll fraud / velocity — WP0 ACT prove + WP3 fleet policy (2026-08-11):** Lab ACT green on golden **1199**; S3 `catalog/velocity-policy.json` + Gatekeeper `GET`/`PUT` + node pull/cache + SPA Fleet Velocity. Next: **WP1** off-hours. Plan: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.
+- [x] **Toll fraud / velocity — WP0 ACT prove + WP3 fleet policy (2026-08-11):** Lab ACT green on golden **1199**; S3 `catalog/velocity-policy.json` + Gatekeeper `GET`/`PUT` + node pull/cache + SPA Fleet Velocity. Plan: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.
+- [x] **Toll fraud / velocity — WP1 off-hours (2026-08-11):** `VelocityOrchestrator` + `VelocityOffHoursScanner` / clock; Gatekeeper `velocity_off_hours` mail; enable via fleet `detectors.off_hours` or `PBX3_OPS_VELOCITY_OFF_HOURS`.
 
 - [x] **High-risk dial block posture + CoS seed (2026-08-11):** Prevention = **PBX CoS** (`HR_UK070` / `HR_OFFSHORE`); velocity = detect/act; SBC = optional thin never-route later. Packs: `config/cos/highrisk-*-starter.dialplan`. Artisan **`pbx3:cos-highrisk-seed`**. Lock: **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`**.
 

@@ -231,6 +231,39 @@ final class OpsEventNotifyTest extends TestCase
         $this->assertStringContainsString('cleared', $sent[1]['subject']);
     }
 
+    public function test_velocity_off_hours_mail(): void
+    {
+        $sent = [];
+        $mailer = new class($sent) implements Mailer {
+            /** @param list<array{to:list<string>,subject:string,body:string}> $sent */
+            public function __construct(private array &$sent)
+            {
+            }
+
+            public function send(array $to, string $subject, string $bodyText): void
+            {
+                $this->sent[] = ['to' => $to, 'subject' => $subject, 'body' => $bodyText];
+            }
+        };
+
+        $notify = new NotifyDispatcher($mailer);
+        $notify->notifyVelocityOffHours([
+            'instance_id' => 'abc',
+            'instance_label' => '08jzwn',
+            'fqdn' => '08jzwn.pbx3.com',
+            'extension' => '1001',
+            'count' => 20,
+            'window_minutes' => 60,
+            'masked_prefixes' => ['0900***'],
+            'auto_block' => false,
+        ], 'down');
+
+        $this->assertCount(1, $sent);
+        $this->assertStringContainsString('Velocity off-hours', $sent[0]['subject']);
+        $this->assertStringContainsString('off-hours', $sent[0]['body']);
+        $this->assertStringContainsString('0900***', $sent[0]['body']);
+    }
+
     public function test_ops_event_throttle(): void
     {
         $this->assertTrue(OpsEventThrottle::allow('k1', 60));

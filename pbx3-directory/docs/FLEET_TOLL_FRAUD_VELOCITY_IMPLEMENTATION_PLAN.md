@@ -1,6 +1,6 @@
 # Fleet toll fraud / velocity — implementation plan (remainder)
 
-**Status:** **Accepted** (2026-08-11) — **WP0 + WP3 done**; next **WP1** off-hours.  
+**Status:** **Accepted** (2026-08-11) — **WP0 + WP3 done**; **WP1** off-hours coded (orchestrator + detector + Gatekeeper mail).  
 **Parent requirements:** **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** · posture **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`** · seeds **`VELOCITY_PREFIX_SEEDS.md`** · CDR pack **`VELOCITY_CDR_PACK.md`** · notify delivery **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.  
 **Design rules:** Rule **1** (directory/Gatekeeper out of call path), **5** (notify ≠ SLA), **6** (solo still works on env), **10** (fleet ≠ instance Sanctum), **12** (browser never holds ops IAM), **13** (SBC = projection, not HoR for policy authorship where catalog owns it).
 
@@ -153,20 +153,20 @@ Ops prove of **already-shipped** V5 act on golden. Green before stacking V3/off-
 
 **Done when:** met. Next: **WP3**.
 
-### WP1 — Detector framework + off-hours
+### WP1 — Detector framework + off-hours — **DONE** (2026-08-11)
 
 **Repos:** `pbx3api`, Gatekeeper notify, tests, CDR pack extensions.
 
 | Task | Detail |
 |------|--------|
-| 1.1 | Refactor scanner entry: `VelocityOrchestrator` runs enabled detectors; IRSF becomes one detector class |
-| 1.2 | **Off-hours detector:** outbound (propose **high-risk prefixes first**) inside policy windows; same N/T/Q pattern; emit `velocity_off_hours` |
-| 1.3 | Gatekeeper mail template + hysteresis key `(off_hours, extension)` |
-| 1.4 | Act path: reuse existing V5 actuator |
-| 1.5 | Fixtures + Pest; extend **`VELOCITY_CDR_PACK.md`** / pack for off-hours case |
-| 1.6 | Document clock (node TZ / policy `off_hours.tz`); tenant-local deferred |
+| 1.1 | `VelocityOrchestrator` runs IRSF + optional off-hours |
+| 1.2 | `VelocityOffHoursScanner` + `VelocityOffHoursClock` — high-risk prefixes inside policy windows; emit `velocity_off_hours` |
+| 1.3 | Gatekeeper mail + throttle key `(off_hours, extension)` |
+| 1.4 | Act path: reuse V5 actuator |
+| 1.5 | Pest: clock + emit/hysteresis + outside-window + orchestrator dual emit |
+| 1.6 | Clock: node TZ / policy `off_hours.tz`; enable via `detectors.off_hours` or `PBX3_OPS_VELOCITY_OFF_HOURS` |
 
-**Done when:** fixture weekend/off-hours burst → one mail + optional ACT; no spam inside Q; unit tests green.
+**Done when:** unit tests green; tip Gatekeeper + node when enabling lab off-hours.
 
 ### WP2 — (removed)
 
