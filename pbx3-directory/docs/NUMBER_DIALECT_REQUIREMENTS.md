@@ -1,6 +1,7 @@
 # Number dialect requirements (PSTN)
 
 **Status:** Requirements locked for UK-first implementation (Magrathea + Gamma).  
+**Taxonomy lock (2026-08-12):** presets are **format recipes** parameterized by country (`default_cc` / trunk / IDD) — **not** a per-carrier or per-country vendor catalog. See §5.3.  
 **Related:** [`NUMBER_WIRE_POLICY.md`](NUMBER_WIRE_POLICY.md) (who does what) · [`DID_ASSIGNMENT_DESIGN.md`](DID_ASSIGNMENT_DESIGN.md) · [`FLEET_TRUNK_PEERING_DECISION.md`](FLEET_TRUNK_PEERING_DECISION.md) §3 · [`DESIGN_RULES.md`](DESIGN_RULES.md) Rule 13 · [`pbx3sbc/workingdocs/PEERING-PLAN.md`](../../../pbx3sbc/workingdocs/PEERING-PLAN.md)
 
 ## 1. Problem
@@ -90,6 +91,23 @@ Stored on Peer as `dialect=<preset>` in `dr_gateways.attrs` (with `carrier=` / `
 
 Custom: set `dialect=custom` later; v1 ships presets only.
 
+### 5.3 Taxonomy lock — recipes × country, not a vendor catalog
+
+**Locked 2026-08-12.** Softphone-style “gazillion trunk/vendor types” is an explicit anti-goal.
+
+| Do | Do not |
+|----|--------|
+| Treat a preset as a **format recipe** (which inbound faces, outbound dial render, CLI headers/privacy) | Mint one preset per carrier logo or per country flag |
+| Parameterize national/IDD with **`default_cc`** (and later trunk / IDD access codes as Peer or serving-country data) | Encode Magrathea / Gamma / Brindley / “Germany” as separate dialect ids when the transform matrix is the same |
+| Add a **new recipe** only when the accept/render/CLI **matrix** differs (e.g. strict-plus vs national+IDD+PAID/RPID vs NANP habit shapes) | Grow the Filament dropdown toward an ITSP provider list |
+| Keep Magrathea / Gamma as **published carrier anchors** (§6) that *use* a recipe | Rename every new Peer into the taxonomy |
+
+**Scale model (world):** a handful of dialing-plan **families** (strict `+E.164`; digit E.164; national+trunk; IDD; NANP specials) × country parameters — not ~250 presets. Most countries share SIP faces and differ mainly by CC / trunk / IDD. Node **serving country** owns phone habit → `+CC…` (Phase 1); Peer dialect owns carrier wire face.
+
+**v1 names:** `uk-magrathea` / `uk-gamma` are lab convenience labels for two CLI-header variants of the same UK multi-accept family. When dialects are next revised, prefer recipe-oriented ids/labels; keep carrier names in docs and `carrier=` attrs, not as the preset taxonomy.
+
+**Peer still carries** host, auth, and `carrier=` / `role=` — those are not dialects.
+
 ## 6. Carrier matrices (published anchors)
 
 ### 6.1 Magrathea
@@ -170,7 +188,8 @@ Unit tests in **pbx3sbc-admin** cover preset parse/render matrices offline.
 - Full Ofcom LI compliance / number-portability validation  
 - CNAM  
 - Per-tenant dialect overrides  
-- NANP / non-UK presets until UK presets proven (schema must stay country-pluggable via `default_cc` + parsers)
+- NANP / non-UK **recipes** until UK recipes proven (schema stays country-pluggable via `default_cc` + parsers — §5.3)  
+- Softphone-style per-ITSP / per-country preset catalogs (§5.3)
 
 ## 11. Implementation map
 

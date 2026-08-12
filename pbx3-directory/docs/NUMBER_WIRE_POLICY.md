@@ -25,8 +25,8 @@
 | Habit → unambiguous form (Phase 2 **later**) | **SBC** using instance `serving_cc` | Only when SBC advertises habit-accept; then node Mangle may empty |
 | Fleet wire node ↔ SBC / Asterisk inbound | **`+E.164`** | Canonical after normalize |
 | Inventory / DID / drouting key | **Digit E.164** (no `+`) | Catalog + SBC `dr_rules.prefix` |
-| How dialled + CLI look to a **carrier** | **SBC Peer dialect** | Rule 13 — Magrathea, Gamma, Twilio, … |
-| Ad hoc strip/prefix on a gateway | **Emergency only** | Prefer a named dialect preset |
+| How dialled + CLI look to a **carrier** | **SBC Peer dialect** | Rule 13 — format **recipe** on the Peer (not one preset per ITSP/country; see dialect §5.3) |
+| Ad hoc strip/prefix on a gateway | **Emergency only** | Prefer a named dialect recipe |
 
 ```text
 Phase 1 (now):
@@ -55,7 +55,7 @@ Phase 2 (gated):
 |----------------|---------|
 | Seeding a **UK** fleet node | Keep Egress transform for UK habit → `+44…` (see Egress wire doc). |
 | Seeding a **US** fleet node | Use a US/NANP transform — not UK `0:+44`. |
-| Adding a **carrier Peer** | Configure **dialect** on the SBC Peer — not a node mask. |
+| Adding a **carrier Peer** | Configure a **format recipe** (dialect) on the Peer — not a node mask and not a new id per ITSP logo. |
 | Creating a **DID** | Catalog / drouting = digit E.164; node inroute = `+E.164`. |
 | Wondering if the PBX should “speak Brindley” | **No.** Lab adapters (if any) are SBC Peer presets. |
 | Stripping node Mangle because “the SBC should do it” | **Not yet.** Phase 2 only after `serving_cc` + habit-accept advertise. |
