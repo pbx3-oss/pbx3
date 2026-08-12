@@ -53,13 +53,46 @@ final class DidInventoryTest extends TestCase
         $this->assertSame('reserved', $match['status']);
     }
 
+    public function test_upsert_clears_sip_prefix_when_null(): void
+    {
+        $dids = [
+            [
+                'e164' => '+441924918076',
+                'status' => 'active',
+                'sip_prefix' => '01924918076',
+                'notes' => 'keep me',
+            ],
+        ];
+        $dids = DidInventory::upsertDidRow($dids, [
+            'e164' => '+441924918076',
+            'status' => 'active',
+            'delivery' => 'singleton',
+            'sip_prefix' => null,
+        ]);
+        $this->assertCount(1, $dids);
+        $this->assertArrayNotHasKey('sip_prefix', $dids[0]);
+        $this->assertSame('keep me', $dids[0]['notes']);
+    }
+
+    public function test_uk_national_zero_to_e164_digits(): void
+    {
+        $this->assertSame('441924918076', DidInventory::ukNationalZeroToE164Digits('01924918076'));
+        $this->assertNull(DidInventory::ukNationalZeroToE164Digits('441924918076'));
+    }
+
+    public function test_assert_hop1_rejects_uk_national_prefix(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        DidInventory::assertHop1PrefixNotNationalAlias('01924918076', '441924918076');
+    }
+
     public function test_match_prefix_prefers_sip_prefix(): void
     {
         $this->assertSame(
-            '019249264',
+            '4419249264',
             DidInventory::matchPrefix([
                 'e164' => '+441924918076',
-                'sip_prefix' => '019249264',
+                'sip_prefix' => '4419249264',
             ])
         );
         $this->assertSame(
@@ -72,7 +105,7 @@ final class DidInventoryTest extends TestCase
     {
         $this->assertSame('block', DidInventory::deliveryKind([
             'e164' => '+441924918076',
-            'sip_prefix' => '019249264',
+            'sip_prefix' => '4419249264',
             'delivery' => 'block',
         ]));
         $this->assertSame('singleton', DidInventory::deliveryKind([
@@ -81,12 +114,11 @@ final class DidInventoryTest extends TestCase
         ]));
         $this->assertSame('singleton', DidInventory::deliveryKind([
             'e164' => '+441924918076',
-            'sip_prefix' => '01924918076',
             'delivery' => 'singleton',
         ]));
         $this->assertSame('block', DidInventory::deliveryKind([
             'e164' => '+441924918076',
-            'sip_prefix' => '019249264',
+            'sip_prefix' => '4419249264',
         ]));
     }
 
@@ -95,7 +127,7 @@ final class DidInventoryTest extends TestCase
         $catalog = [
             [
                 'e164' => '+441924918076',
-                'match_prefix' => '01924918076',
+                'match_prefix' => '441924918076',
                 'tenant_shortuid' => 'aaa111',
                 'sbc_dispatcher_setid' => 2,
                 'status' => 'active',
@@ -103,7 +135,7 @@ final class DidInventoryTest extends TestCase
             ],
             [
                 'e164' => '+441111111111',
-                'match_prefix' => '019249264',
+                'match_prefix' => '4419249264',
                 'tenant_shortuid' => 'bbb222',
                 'sbc_dispatcher_setid' => 3,
                 'status' => 'active',
@@ -112,7 +144,7 @@ final class DidInventoryTest extends TestCase
         ];
         $sbc = [
             [
-                'prefix' => '01924918076',
+                'prefix' => '441924918076',
                 'tenant_shortuid' => 'aaa111',
                 'e164_key' => '441924918076',
                 'setid' => 9,
@@ -132,7 +164,7 @@ final class DidInventoryTest extends TestCase
     {
         $report = DidInventory::compareDidProjection([], [
             [
-                'prefix' => '01924918076',
+                'prefix' => '441924918076',
                 'tenant_shortuid' => 'ghost',
                 'e164_key' => '441924918076',
                 'setid' => 2,

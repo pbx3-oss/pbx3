@@ -120,7 +120,7 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `POST` | `/api/v1/tenants/provision` | Fleet-first create: node `/fleet/tenants` → catalog meta → SBC domain (`fleet_instances`). Body: `instance_id`, `pkey`, `description`; optional `clusterclid`/`localarea`; resume after catalog fail: `resume`+`shortuid`+`fqdn` |
 | `GET` | `/api/v1/dids` | S10.5 catalog DID ownership flat list (`fleet_read`) |
 | `GET` | `/api/v1/dids/reconcile` | Catalog active/porting ↔ SBC `fleet=did` rules (prefix/tenant/setid drift) (`fleet_edge`) |
-| `POST` | `/api/v1/dids/assign` | Assign/reassign DID or hop-1 block → tenant (`delivery`: `singleton`\|`block`, optional `sip_prefix`); writes `dids.json` + `did-index`; projects SBC unless `project:false` (`fleet_edge`) |
+| `POST` | `/api/v1/dids/assign` | Assign/reassign DID or hop-1 block → tenant (`delivery`: `singleton`\|`block`, optional `sip_prefix`); writes `dids.json` + `did-index`; projects SBC unless `project:false` (`fleet_edge`). **Singleton:** omit `sip_prefix` (digit E.164); clears stale prefix on re-assign. **Block:** digit-E.164 `sip_prefix` (no UK national `0…`) |
 | `POST` | `/api/v1/dids/release` | Soft-release DID in catalog (+ project) (`fleet_edge`) |
 | `POST` | `/api/v1/dids/project` | Force-project catalog DIDs → SBC inbound `dr_rules` — Apply for DID drift (`fleet_edge`) |
 | `POST` | `/api/v1/tenants/{shortuid}/register-domain` | Ensure SBC `domain` row for tenant fqdn + catalog setid (`fleet_edge`) |

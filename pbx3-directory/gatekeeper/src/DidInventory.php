@@ -132,6 +132,7 @@ final class DidInventory
             throw new \InvalidArgumentException('delivery must be singleton or block', 422);
         }
 
+        $e164Digits = self::e164Key($e164);
         $sipPrefix = null;
         if (isset($body['sip_prefix']) && is_string($body['sip_prefix']) && trim($body['sip_prefix']) !== '') {
             $sipPrefix = preg_replace('/\D+/', '', trim($body['sip_prefix'])) ?? '';
@@ -142,17 +143,30 @@ final class DidInventory
         if ($delivery === 'block') {
             if ($sipPrefix === null || $sipPrefix === '') {
                 throw new \InvalidArgumentException(
-                    'block delivery requires sip_prefix (OpenSIPS match digits, e.g. 019249264)',
+                    'block delivery requires sip_prefix (OpenSIPS match digits after dialect normalize, '
+                    .'e.g. 4419249264 — not UK national 0… face)',
                     422
                 );
             }
-            $e164Digits = self::e164Key($e164);
             if (strlen($sipPrefix) >= strlen($e164Digits)) {
                 throw new \InvalidArgumentException(
                     'block sip_prefix must be shorter than the E.164 digits (block vs singleton)',
                     422
                 );
             }
+            self::assertHop1PrefixNotNationalAlias($sipPrefix, $e164Digits);
+        } else {
+            // singleton: hop-1 always matches digit E.164 after DIALECT_INBOUND_NORMALIZE.
+            // Omit sip_prefix (or send e164 digits). Never keep a stale national face across reassign.
+            if ($sipPrefix !== null && $sipPrefix !== '' && $sipPrefix !== $e164Digits) {
+                self::assertHop1PrefixNotNationalAlias($sipPrefix, $e164Digits);
+                throw new \InvalidArgumentException(
+                    'singleton hop-1 must omit sip_prefix (or set it to digit E.164 '
+                    .$e164Digits.'). Use delivery=block for a shorter match prefix.',
+                    422
+                );
+            }
+            $sipPrefix = null;
         }
 
         if ($sipPrefix !== null) {
@@ -192,8 +206,11 @@ final class DidInventory
                 $record[$opt] = trim($body[$opt]);
             }
         }
-        if ($sipPrefix !== null) {
+        if ($delivery === 'block' && $sipPrefix !== null) {
             $record['sip_prefix'] = $sipPrefix;
+        } else {
+            // Explicit null → upsertDidRow drops a prior sip_prefix (array_merge would keep it).
+            $record['sip_prefix'] = null;
         }
         if ($existing === null || $existing['tenant_shortuid'] !== $tenant) {
             $record['assigned_at'] = $now;
@@ -385,6 +402,7 @@ final class DidInventory
     public static function upsertDidRow(array $dids, array $record): array
     {
         $key = self::e164Key((string) ($record['e164'] ?? ''));
+        $clearSipPrefix = array_key_exists('sip_prefix', $record) && $record['sip_prefix'] === null;
         $out = [];
         $found = false;
         foreach ($dids as $did) {
@@ -392,17 +410,58 @@ final class DidInventory
                 continue;
             }
             if (self::e164Key((string) ($did['e164'] ?? '')) === $key) {
-                $out[] = array_merge($did, $record);
+                $merged = array_merge($did, $record);
+                if ($clearSipPrefix) {
+                    unset($merged['sip_prefix']);
+                }
+                $out[] = $merged;
                 $found = true;
             } else {
                 $out[] = $did;
             }
         }
         if (! $found) {
-            $out[] = $record;
+            $row = $record;
+            if ($clearSipPrefix) {
+                unset($row['sip_prefix']);
+            }
+            $out[] = $row;
         }
 
         return array_values($out);
+    }
+
+    /**
+     * UK national 0… → digit E.164 after OpenSIPS DIALECT_INBOUND_NORMALIZE (0 + NSN → 44 + NSN).
+     */
+    public static function ukNationalZeroToE164Digits(string $prefix): ?string
+    {
+        $prefix = preg_replace('/\D+/', '', $prefix) ?? '';
+        if ($prefix === '' || $prefix[0] !== '0' || strlen($prefix) < 2) {
+            return null;
+        }
+
+        return '44'.substr($prefix, 1);
+    }
+
+    /**
+     * Reject hop-1 prefixes that are UK national 0… face (miss after OpenSIPS DIALECT_INBOUND_NORMALIZE).
+     */
+    public static function assertHop1PrefixNotNationalAlias(string $prefix, string $e164Digits): void
+    {
+        $prefix = preg_replace('/\D+/', '', $prefix) ?? '';
+        if ($prefix === '' || $prefix[0] !== '0') {
+            return;
+        }
+        $hint = self::ukNationalZeroToE164Digits($prefix) ?? ('44'.substr($prefix, 1));
+        $sameDid = ($hint === $e164Digits);
+        throw new \InvalidArgumentException(
+            "sip_prefix {$prefix} is UK national (leading 0). "
+            .'OpenSIPS normalizes 0… → 44… before drouting — use digit E.164'
+            .($sameDid ? " (omit sip_prefix for singleton → {$e164Digits})" : " form {$hint}")
+            .'.',
+            422
+        );
     }
 
     public static function normalizeE164(string $raw): string
