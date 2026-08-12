@@ -1,6 +1,6 @@
 # Fleet Gatekeeper TOTP (requirements)
 
-**Status:** **G1–G4 implemented** (Gatekeeper + SPA). Lab verify on control host when ready. G5 (require for `fleet_admin`) still optional later.  
+**Status:** **G1–G4 implemented** (Gatekeeper + SPA). **G5** (require 2FA for `fleet_admin`) — **won't-do for now** (2026-08-12): single day-to-day fleet admin + break-glass; opt-in enroll is enough. Revisit if multi-user fleet logins need a harder admin bar.  
 **Plane:** Control plane only — Gatekeeper SQLite users + SPA Fleet mode. Design Rule **10**.  
 **Sibling tracks:** Instance Sanctum + SBC Filament — **`TOTP_2FA_REQUIREMENTS.md`**. Do not share secrets across planes.  
 **Related:** **`FLEET_AUTH_COOKIE_SSO.md`** (Bearer try-it-out; cookies/SSO still deferred) · **`pbx3spa`**/workingdocs/**`AUTH_PATTERNS.md`** (instance patterns; Fleet mirrors gesture only).
@@ -12,7 +12,7 @@
 | Topic | Outcome |
 |-------|---------|
 | **Factor** | **TOTP only** (authenticator app) + one-time **recovery codes**. No SMS / email OTP. |
-| **Policy v1** | **Opt-in per Gatekeeper user**. Optional later: require for `fleet_admin` (G5). |
+| **Policy v1** | **Opt-in per Gatekeeper user**. **G5** (require for `fleet_admin`) deferred — not needed while fleet ops is one admin (+ break-glass). |
 | **Secrets** | Gatekeeper `auth.sqlite` only — never instance Sanctum or SBC Filament. |
 | **Issuer** | **`Aelintra Fleet`** (env override OK). Distinct from **`Aelintra PBX`** / **`Aelintra SBC`**. |
 | **Login contract** | Password OK + 2FA on → `requires_2fa` + short-lived `challenge_id`; **no** session Bearer until verify. |
@@ -145,7 +145,7 @@ PHPUnit under `gatekeeper/tests/`:
 | **G2** | Enroll / disable / recovery / admin clear | **Done** |
 | **G3** | SPA FleetTokenGate challenge + enroll UI + Fleet Users clear | **Done** |
 | **G4** | Tests + Gatekeeper README / ops note | **Done** |
-| **G5** | Optional: require 2FA for `fleet_admin` | After opt-in proven |
+| **G5** | Require 2FA for `fleet_admin` | **Won't-do for now** (2026-08-12) — revisit if multi-user fleet ops |
 
 Not on **`FIRST_OUT_CHECKLIST.md`** must-fix list. Schedule after instance `spa-totp-2fa` merge/lab confidence if desired; not blocked on cookies/SSO.
 
@@ -159,7 +159,8 @@ Not on **`FIRST_OUT_CHECKLIST.md`** must-fix list. Schedule after instance `spa-
 | SSO / OIDC MFA | IdP when SSO exists; keep local TOTP for non-SSO |
 | Passkeys / WebAuthn | Nice later; not v1 |
 | SMS | Out |
-| Force 2FA for all fleet abilities | G5 optional for `fleet_admin` only |
+| Force 2FA for all fleet abilities | Out |
+| Require 2FA for `fleet_admin` (G5) | **Won't-do for now** — single-admin ops; tighten later if needed |
 
 ---
 
@@ -185,5 +186,5 @@ Not on **`FIRST_OUT_CHECKLIST.md`** must-fix list. Schedule after instance `spa-
 ## Tip / TODO
 
 - G1–G4 shipped in gatekeeper + pbx3spa; deploy control Gatekeeper tip + SPA tip for lab enroll.
-- G5 optional later.
+- **G5** won't-do for now (single fleet admin); revisit if multi-user.
 - Operator docs: Gatekeeper README updated; fleet auth page when packaging.

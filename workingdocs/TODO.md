@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-12 (lab anonymize F5 done)  
+**Last updated:** 2026-08-12 (G5 won't-do for now)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -30,7 +30,7 @@
 14. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
 15. ~~**Control plane duplex / HA**~~ — **won't-do** (2026-08-11): management binary (up/down); Rule 11. Single host + rebuild/restore — not a duplex SKU. Lock: **`CONTROL_HOST.md`**.  
 16. **Fleet auth cookie/SSO (blocked)**.  
-17. **TOTP 2FA — Fleet Gatekeeper G5** (optional — require for `fleet_admin`; G1–G4 shipped).  
+17. ~~**TOTP 2FA — Fleet Gatekeeper G5**~~ — **won't-do for now** (2026-08-12): opt-in is enough for single fleet-admin ops; revisit if multi-user fleet logins need “admins must enroll.” Spec: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`**.  
 18. **S7+** attested PCI — customer ask.  
 19. **SBC Track A lab** — third-party PBX (± FreePBX/SARK) behind SBC — still open. **`SBC_PRODUCT_TRACKS.md`** Track A.  
 19a. ~~**STIR Twilio shape A lab**~~ — **observed green** (2026-08-11): after Twilio ID checks, outbound rated attestation **A** (carrier signs as SP). Own-cert shapes B/C not started. Spec: **`SBC_PRODUCT_TRACKS.md`** Track B.  
@@ -150,7 +150,7 @@
 
 - [x] **TOTP 2FA — instance SPA / Sanctum (2026-08-07):** Opt-in MFA on **`main`**. Spec: **`TOTP_2FA_REQUIREMENTS.md`**.
 
-- [x] **TOTP 2FA — Fleet Gatekeeper G1–G4 (2026-08-07):** Lab green. Spec: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`**. G5 optional later.
+- [x] **TOTP 2FA — Fleet Gatekeeper G1–G4 (2026-08-07):** Lab green. Spec: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`**. **G5** won't-do for now (2026-08-12) — single fleet-admin ops; tighten later if multi-user.
 
 - [ ] **Phase S10 — remaining:** **S10.7**/S10.2b orchestrated IAM onboard/rebuild — **parked**. Mode 4 + Mac scripts stay. Plan: **`IMPLEMENTATION_PLAN.md`** § Phase S10.
 
