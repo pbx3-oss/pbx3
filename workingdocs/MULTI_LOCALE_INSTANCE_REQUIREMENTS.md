@@ -1,6 +1,6 @@
 # Multi-locale instance (cross-border desk) — requirements stub
 
-**Status:** Stub **2026-08-12** — **§3.A preferred lean** (nationally homed instance + phone multi-identity); confirm as lock when ready.  
+**Status:** Stub **2026-08-12** — **§3.A preferred lean** (nationally homed instance + phone multi-identity); confirm as lock when ready. **§9** open problem: global outbound `do_routing(0)` vs per-home groups (design next).  
 **Lab persona / host:** operator lives in the **USA**, business / DIDs in the **UK** → US home **Toliman**; UK home = second identity/instance (lab L5).  
 **Related:** [`NUMBER_WIRE_POLICY.md`](../pbx3-directory/docs/NUMBER_WIRE_POLICY.md) · [`NUMBER_DIALECT_REQUIREMENTS.md`](../pbx3-directory/docs/NUMBER_DIALECT_REQUIREMENTS.md) (§5.1 face grammar, §5.3–5.4 recipes) · [`EGRESS_PLUS_E164_WIRE.md`](EGRESS_PLUS_E164_WIRE.md)
 
@@ -92,7 +92,8 @@ Still valid for “one PBX, many countries,” but fights the simple mangle and 
 2. Org/billing: one customer → N nationally homed instances; shared directory?  
 3. If §3.B remains supported: primary locale + IDD-other + multi-CLIP — or refuse multi-country DIDs on one instance?  
 4. Softphone/`+` directory as convenience on top of either model.  
-5. Phase 2 `serving_cc` on SBC — still one CC per instance under §3.A.
+5. Phase 2 `serving_cc` on SBC — still one CC per instance under §3.A.  
+6. **Outbound drouting group per home** — see **§9** (parked problem; design tomorrow).
 
 ## 6. Lab checklist
 
@@ -117,6 +118,7 @@ Still valid for “one PBX, many countries,” but fights the simple mangle and 
 
 - Confirm **§3.A** as product lock (or reject and keep §3.B).  
 - Lab **L5:** same handset dual identity → UK-homed instance + Toliman.  
+- Design **§9** — per-home outbound drouting group (Twilio `1` scoped to US homes).  
 - MkDocs: “instance is nationally homed; cross-border = second line on the phone.”  
 - Do **not** productize stuffing `0:+44` into a US Egress transform.
 
@@ -138,3 +140,32 @@ Play space if we ever want **one** box to feel multi-country without §3.A’s s
 **Note on 5:** Multiple mangles without multiple homes; cost is route table complexity and “which trunk did I seize?” support burden. Closer to “two homes in one Asterisk” than true unhomed.
 
 **Note on 5b:** Preferred engineering shape if exploring unhomed on today’s stack — trunk stays dumb; routes (or route-attached profiles) apply locale-scoped transform + CLIP. National patterns only where a route **explicitly** opts in; default routes stay CC+NSN (§2).
+
+## 9. Problem issue — outbound Peer group is global (not per home)
+
+**Status:** Open problem **2026-08-12** — design tomorrow; no Magrathea rule change yet.  
+**TODO:** product **#5d**.  
+**Lab symptom (Toliman / Magrathea):** From Asterisk, OpenSIPS always `do_routing(0, …)`. Group **0** includes rule **`prefix=1` → Twilio**. Longest-prefix therefore sends **every** NANP (`1…` / `+1…`) home’s outbound to Twilio — including a **UK-homed** (or UK-CLIP) instance such as Toliman. CLIP then fails carrier auth (e.g. Twilio **403** on UK CLI). Parking rule 26 is a lab band-aid, not a product answer.
+
+### What we need
+
+Scope carrier prefix rules (e.g. Twilio’s `1`) to **US-homed PBXs only**, not every home that dials NANP.
+
+### Candidate (not locked)
+
+| Piece | Direction |
+|-------|-----------|
+| **One drouting `groupid` per outbound policy** | e.g. UK-homed → group without `1`→Twilio; US-homed → group with Twilio NANP |
+| **Select group on `FROM_ASTERISK`** | Already know source home (dispatcher `setid` / source IP); stop hardcoding `do_routing(0)` |
+| **Catalog → attrs** | Instance `serving_cc` or `outbound_dr_group` projected onto Peer / dispatcher attrs; cfg reads attr → `$var(out_group)` |
+| **PBX** | Stays one dumb Egress; no Peer-awareness |
+
+### Weak / non-goals for this issue
+
+- CLIP-only Peer pick as the sole scope (helps A-number vs carrier; does not replace home policy).  
+- Multiple Egress trunks on one instance to “pick Twilio vs Magrathea.”  
+- Hope that one global group 0 can serve mixed nationally homed fleets.
+
+### Twin of §3.A
+
+Nationally homed instance → **mangle on the node** *and* **outbound rule group on the SBC**. Destination prefix stays **inside** the home’s group.
