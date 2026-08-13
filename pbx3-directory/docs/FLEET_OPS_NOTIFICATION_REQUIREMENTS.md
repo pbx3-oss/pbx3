@@ -2,7 +2,7 @@
 
 **Status:** **v1 + lifecycle + misconfig REGISTER + move-job + Fail2ban ban→email + Egress Unavail + velocity_irsf (V2)** (2026-07-24) — catalog `/up` probe + SMTP; maintenance/decommission mail; node REGISTER-loop → Gatekeeper; **move job failed/aborted** mail; **SBC Fail2ban ban → Gatekeeper**; **Egress Unavail/cleared**; **velocity IRSF** from instance CDR. SPA badges = later.  
 **MVP:** Notify interested operators of **failure conditions**.  
-**Later (same notify plane, different detection):** Peer Fail2ban auto-whitelist on next carrier onboard; velocity **V5 auto-block** still on velocity track.  
+**Later (same notify plane, different detection):** Peer Fail2ban auto-whitelist on next carrier onboard; **fleet home Fail2ban auto-whitelist** (TODO **#5e** — lab gap); velocity **V5 auto-block** still on velocity track.  
 **Related:** **`IMPLEMENTATION_PLAN.md`** § Fleet & monitoring (`last_seen_at` probe); **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** (trunk health → alerts); **`DESIGN_RULES.md`** Rule 5 (directory outage ≠ instance SLA); Fleet users / abilities (Gatekeeper); instance **CoS** / dial policy (prevention cousin of velocity).
 
 ---
@@ -136,7 +136,7 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 | **S7+ Security Hub** | Compliance / attested audit — not ops failure mail |
 | **Prometheus / Grafana (optional later)** | Pretty metrics / quality time series — **not** this notify leg |
 | **Toll fraud / velocity** | Odd outbound call patterns → same notify delivery; detection on instance — **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** |
-| **Fail2ban (SBC)** | Auto-whitelist **inbound Peers**; **manual** site IPs; **ban → email** — § below |
+| **Fail2ban (SBC)** | Auto-whitelist **fleet homes** + **inbound Peers**; **manual** site IPs; **ban → email** — § below |
 
 ---
 
@@ -148,6 +148,7 @@ Gatekeeper probe → catalog state → subscribed **email** sits in the **CloudW
 
 | Source | Requirement |
 |--------|-------------|
+| **Fleet Asterisk / home IPs** | **Automate (required):** on node register / dispatcher membership / Peer `role=asterisk` save, add/remove Fail2ban whitelist + sync. Homes must never be banned for edge SIP. **Open — TODO #5e** (Toliman banned 2026-08-12; manual `/32` only). |
 | **Carrier inbound Peer IPs** | **Automate:** on Peer create/update/delete for inbound signaling rows (`role=inbound` / literal source IPs), add/remove Fail2ban whitelist + sync. **Deferred** until next carrier onboard. |
 | **Customer site IPs** | **Manual only** (existing Fail2Ban whitelist UI is enough). **Operator discipline:** whitelist known site/office NAT CIDRs **before phones go live** — no site CRM, no auto-discovery. Without this, one misconfigured phone can ban the whole site. |
 
@@ -197,7 +198,8 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 7. Later (notify plane): webhooks / Slack. **Fail2ban ban→email — Done.**  
 8. **Separate track:** optional Prometheus + Grafana for metrics dashboards.  
 9. **Toll fraud / velocity track:** **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (instance detect → Gatekeeper deliver).  
-10. **Fail2ban Peer auto-whitelist** (next carrier onboard).
+10. **Fail2ban fleet-home auto-whitelist** — **TODO #5e** (required; lab gap).  
+11. **Fail2ban Peer auto-whitelist** (next carrier onboard).
 
 ---
 
@@ -227,7 +229,7 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** | R2 preflight / alerts |
 | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** | Toll fraud / call-pattern velocity (own track) |
 | **`ARCHITECTURE_PEER_REVIEW.md`** | Competitive fleet shape (not notify-specific) |
-| **`pbx3sbc/workingdocs/PEERING-PLAN.md`** | §0.1 Fail2ban — auto carrier inbound; manual site IPs |
+| **`pbx3sbc/workingdocs/PEERING-PLAN.md`** | §0.1 Fail2ban — auto fleet homes + carrier inbound; manual site IPs |
 | **`CENTRAL_ADMIN_DIRECTION.md`** | Central monitoring (direction) |
 
 ---
