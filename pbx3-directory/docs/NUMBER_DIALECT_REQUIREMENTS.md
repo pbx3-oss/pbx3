@@ -2,6 +2,8 @@
 
 **Status:** Requirements locked for UK-first implementation (Magrathea + Gamma).  
 **Taxonomy lock (2026-08-12):** presets are **format recipes** parameterized by country (`default_cc` / trunk / IDD) — **not** a per-carrier or per-country vendor catalog. See §5.3.  
+**Ops profile lock (2026-08-12):** composing a new recipe from shipped primitives must **not** require a code tip. See §5.4.  
+**Face grammar lock (2026-08-12):** `[+]? [IDD]? (CC | seize) NSN` — CC and seize are **OR’d**, never stacked. See §5.1.  
 **Related:** [`NUMBER_WIRE_POLICY.md`](NUMBER_WIRE_POLICY.md) (who does what) · [`DID_ASSIGNMENT_DESIGN.md`](DID_ASSIGNMENT_DESIGN.md) · [`FLEET_TRUNK_PEERING_DECISION.md`](FLEET_TRUNK_PEERING_DECISION.md) §3 · [`DESIGN_RULES.md`](DESIGN_RULES.md) Rule 13 · [`pbx3sbc/workingdocs/PEERING-PLAN.md`](../../../pbx3sbc/workingdocs/PEERING-PLAN.md)
 
 ## 1. Problem
@@ -73,12 +75,38 @@ Stored on Peer as `dialect=<preset>` in `dr_gateways.attrs` (with `carrier=` / `
 
 ### 5.1 Parsers / renderers
 
+**v1 ids (shipped):** named helpers used by today’s presets.
+
 | Id | Parse | Render |
 |----|-------|--------|
 | `plus_e164` | `^\+[1-9]\d{1,14}$` | ensure leading `+` |
 | `e164_digits` | `^[1-9]\d{1,14}$` | digits only (no `+`) |
 | `uk_national` | `^0\d{9,10}$` → `44` + NSN | `0` + NSN (strip CC `44`) |
 | `uk_idd` | `^0044\d+$` → `44…` | `00` + CC + NSN |
+
+**Target primitive (locked 2026-08-12 — engine direction for §5.4):** one face grammar, not a zoo of country-named parsers:
+
+```text
+[+]?  [IDD]?  ( CC  |  seize )  NSN
+```
+
+| Slot | Meaning | Ops param examples |
+|------|---------|-------------------|
+| `+` | optional international indicator | accept / require / forbid |
+| `IDD` | international access prefix (only with **CC**) | `00`, `011`, empty |
+| `CC` **or** `seize` | **mutually exclusive** ways to introduce NSN | `CC=44` vs `seize=0` |
+| `NSN` | national significant number (area+subscriber as one blob on SIP) | length checks optional later |
+
+**OR rule (locked):** on a single face, **CC and national seize are alternatives — never both.**  
+- National habit/wire: `seize + NSN` (no CC) — e.g. UK `01924918076`  
+- International / E.164: `[+]? [IDD]? CC + NSN` (no seize) — e.g. `+441924918076`, `441924918076`, `00441924918076`  
+
+Wrong face to invent: `0` + `44` + NSN as a first-class accept (seize and CC stacked).
+
+**Normalize →** digit E.164 key = `CC + NSN`. **Fleet wire →** `+` + key. **Render →** emit one allowed mask from the same params.  
+Do not split area vs subscriber on the SIP path unless a carrier forces it.
+
+UK multi-accept / strict-plus become **mask sets** over `(CC, seize, IDD)`, not separate permanent parser species. v1 `uk_*` ids remain until the OpenSIPS/admin engine speaks this grammar.
 
 ### 5.2 Built-in presets
 
@@ -89,7 +117,7 @@ Stored on Peer as `dialect=<preset>` in `dr_gateways.attrs` (with `carrier=` / `
 | `strict-plus-e164` | plus_e164 only | plus_e164 | plus_e164 → paid | same | privacy_id |
 | `none` / unset | best-effort UK multi-accept | leave / strip+ for routing only | unchanged | unchanged | — |
 
-Custom: set `dialect=custom` later; v1 ships presets only.
+Custom: **§5.4** — ops-authored profiles / slot composition without a tip; v1 still ships named presets only (see gap note in §5.4).
 
 ### 5.3 Taxonomy lock — recipes × country, not a vendor catalog
 
@@ -107,6 +135,27 @@ Custom: set `dialect=custom` later; v1 ships presets only.
 **v1 names:** `uk-magrathea` / `uk-gamma` are lab convenience labels for two CLI-header variants of the same UK multi-accept family. When dialects are next revised, prefer recipe-oriented ids/labels; keep carrier names in docs and `carrier=` attrs, not as the preset taxonomy.
 
 **Peer still carries** host, auth, and `carrier=` / `role=` — those are not dialects.
+
+### 5.4 Ops-authored profiles — no tip for composition surprises
+
+**Locked 2026-08-12.** A “surprise” carrier that still speaks known faces must be solvable by **creating or editing a profile / Peer composition in SBC Admin (or equivalent data)** — **without** a pbx3sbc / pbx3sbc-admin / OpenSIPS tip.
+
+| Layer | Who changes it | When |
+|-------|----------------|------|
+| **Primitives** (parsers / renderers / header targets in §5.1, plus trunk/IDD parameterisation) | Code tip | Only when a face or render is **not** expressible with the shipped primitive set |
+| **Profile / recipe** (`inbound_accept` order, outbound dial/CLI slots, `default_cc`, trunk/IDD, privacy) | Ops data (Filament / Peer attrs / named profile store) | New carrier, new country CC, different PAID vs RPID mix, stricter accept list |
+| **Peer binding** | Ops | Point Peer at a built-in recipe **or** a named ops profile; override `default_cc` (etc.) on the Peer when needed |
+
+**Implications (target; v1 not there yet):**
+
+1. Built-in recipes (`uk-magrathea`, …) become **seed rows** (or save-time expansions) of the same schema — not a closed `if ($dialect == …)` catalog that requires cfg edits for each new id.  
+2. OpenSIPS (and `NumberDialect`) must **interpret the slot fields** (or an expanded attrs encoding), not only a hard-coded preset name.  
+3. Filament must allow **compose / save named profile** (or full slot edit on Peer) from the primitive dropdowns — not only pick from a fixed enum.  
+4. **Honest boundary:** inventing e.g. a new national trunk digit family or NANP-specific parser that is not yet a primitive **does** need a tip. Goal of the primitive set is to make that rare; goal of this lock is that **recombination never does**.
+
+**Anti-goal:** “Add Brindley support” = engineer tips a new `uk-brindley` branch. **Goal:** ops clones “UK multi-accept + PAID” (or edits slots), sets `default_cc=44`, binds Peer.
+
+**v1 gap:** today presets live in `NumberDialect::PRESETS` and OpenSIPS branches on `dialect=` ids (§11). Closing this gap is the next dialect engineering slice — not optional forever.
 
 ## 6. Carrier matrices (published anchors)
 
@@ -190,6 +239,7 @@ Unit tests in **pbx3sbc-admin** cover preset parse/render matrices offline.
 - Per-tenant dialect overrides  
 - NANP / non-UK **recipes** until UK recipes proven (schema stays country-pluggable via `default_cc` + parsers — §5.3)  
 - Softphone-style per-ITSP / per-country preset catalogs (§5.3)
+- Requiring a code tip to recombine existing primitives into a new Peer profile (§5.4)
 
 ## 11. Implementation map
 

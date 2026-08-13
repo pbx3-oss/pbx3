@@ -21,11 +21,11 @@
 | What the user dials (national / IDD / `+`) | **Phone / PBX dial plan** | Habit of the country that PBX serves |
 | Which CLI *number* to send | **PBX** (extension / cluster / route) | Value only — not carrier header shape |
 | Dial plan, CoS, routing on-node | **PBX** | Unchanged |
-| Habit → unambiguous form (Phase 1 **now**) | **PBX** Egress transform (`Mangle`) | Seed per serving country (e.g. UK `00:+ 0:+44`) |
+| Habit → unambiguous form (Phase 1 **now**) | **PBX** Egress transform (`Mangle`) | Seed per **primary** serving country (e.g. UK `00:+ 0:+44`). Cross-border other countries → IDD, not a second national seize — **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`** |
 | Habit → unambiguous form (Phase 2 **later**) | **SBC** using instance `serving_cc` | Only when SBC advertises habit-accept; then node Mangle may empty |
 | Fleet wire node ↔ SBC / Asterisk inbound | **`+E.164`** | Canonical after normalize |
 | Inventory / DID / drouting key | **Digit E.164** (no `+`) | Catalog + SBC `dr_rules.prefix` |
-| How dialled + CLI look to a **carrier** | **SBC Peer dialect** | Rule 13 — format **recipe** on the Peer (not one preset per ITSP/country; see dialect §5.3) |
+| How dialled + CLI look to a **carrier** | **SBC Peer dialect** | Rule 13 — format **recipe** on the Peer (not one preset per ITSP/country; §5.3). Compose new recipes from primitives **without a tip** (§5.4). |
 | Ad hoc strip/prefix on a gateway | **Emergency only** | Prefer a named dialect recipe |
 
 ```text
