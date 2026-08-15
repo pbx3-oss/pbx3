@@ -8,6 +8,7 @@ namespace Pbx3\Gatekeeper;
  * S10.4 — catalog (HoR) ↔ SBC domain.setid reconcile.
  * Direction: catalog expected; SBC is projection (Rule 13).
  * Force-project fixes setid_mismatch via repointTenant and missing_fleet_tag via registerDomain.
+ * Soft-decommissioned tenants (Fleet Delete audit metas) are omitted — SBC domain removal is expected.
  * missing_on_sbc / DID → S10.5.
  */
 final class CatalogReconcile
@@ -248,11 +249,17 @@ final class CatalogReconcile
         $drifts = [];
         $matched = 0;
         $tenantDomains = [];
+        $considered = 0;
 
         foreach ($tenants as $tenant) {
             if (! is_array($tenant)) {
                 continue;
             }
+            // Fleet Delete soft-decommissions meta for audit; domain gone on SBC is correct.
+            if (strtolower((string) ($tenant['status'] ?? 'active')) === 'decommissioned') {
+                continue;
+            }
+            $considered++;
             $shortuid = (string) ($tenant['shortuid'] ?? '');
             $domain = self::tenantDomain($tenant);
             if ($domain === '') {
@@ -370,7 +377,7 @@ final class CatalogReconcile
             'ok' => $errorCount === 0 && $warningCount === 0,
             'checked_at' => gmdate('Y-m-d\TH:i:s\Z'),
             'summary' => [
-                'tenants' => count($tenants),
+                'tenants' => $considered,
                 'sbc_domains' => count($sbcByDomain),
                 'matched' => $matched,
                 'drifts' => count($drifts),

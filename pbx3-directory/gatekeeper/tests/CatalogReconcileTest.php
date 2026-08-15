@@ -140,6 +140,67 @@ final class CatalogReconcileTest extends TestCase
         $this->assertSame('missing_on_sbc', $report['drifts'][0]['kind']);
     }
 
+    public function test_decommissioned_tenant_skipped_even_if_missing_on_sbc(): void
+    {
+        $report = CatalogReconcile::compare(
+            [
+                'instances' => [
+                    ['id' => '08jzwn', 'sbc_dispatcher_setid' => 2],
+                ],
+            ],
+            [
+                [
+                    'shortuid' => 's07zmy',
+                    'instance_id' => '08jzwn',
+                    'fqdn' => 's07zmy.pbx3.com',
+                    'status' => 'decommissioned',
+                ],
+                [
+                    'shortuid' => '9wvvnb',
+                    'instance_id' => '08jzwn',
+                    'fqdn' => 'affcot.pbx3.com',
+                    'status' => 'active',
+                ],
+            ],
+            [
+                ['domain' => 'affcot.pbx3.com', 'setid' => 2],
+            ]
+        );
+
+        $this->assertTrue($report['ok']);
+        $this->assertSame(1, $report['summary']['tenants']);
+        $this->assertSame(1, $report['summary']['matched']);
+        $this->assertSame([], $report['drifts']);
+    }
+
+    public function test_decommissioned_leftover_sbc_domain_is_orphan(): void
+    {
+        $report = CatalogReconcile::compare(
+            [
+                'instances' => [
+                    ['id' => '08jzwn', 'fqdn' => '08jzwn.pbx3.com', 'sbc_dispatcher_setid' => 2],
+                ],
+            ],
+            [
+                [
+                    'shortuid' => 's07zmy',
+                    'instance_id' => '08jzwn',
+                    'fqdn' => 's07zmy.pbx3.com',
+                    'status' => 'decommissioned',
+                ],
+            ],
+            [
+                ['domain' => 's07zmy.pbx3.com', 'setid' => 2],
+            ]
+        );
+
+        $this->assertFalse($report['ok']);
+        $this->assertSame(0, $report['summary']['tenants']);
+        $this->assertCount(1, $report['drifts']);
+        $this->assertSame('orphan_on_sbc', $report['drifts'][0]['kind']);
+        $this->assertSame('s07zmy.pbx3.com', $report['drifts'][0]['domain']);
+    }
+
     public function test_orphan_on_sbc_skips_instance_fqdn(): void
     {
         $report = CatalogReconcile::compare(
