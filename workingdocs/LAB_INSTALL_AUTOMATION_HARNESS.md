@@ -127,3 +127,4 @@ No separate “Garage dialect” — same S3 key layout; endpoint + path-style +
 | 2026-08-17 | D1 home VM: pbx3 `0.0.5-5` + pbx3api (no cagi, no LE) lab green on harness home VM; MkDocs **`installation/install-lab-home.md`**. |
 | 2026-08-17 | One home installer **`pbx3/scripts/install-home-host.sh`**. Fleet `/up` probe timer lab green on control VM. |
 | 2026-08-17 | **D1 accept:** reverted clean snapshots (SSH key + NOPASSWD sudo) + MkDocs re-walk — control + home wrapper + catalog + Sanctum + Fleet **lab green**. |
+| 2026-08-17 | **Lab SIP:** amd64 SBC `.85` + Provision edge (setid 1) + home Egress + egress qualify Avail. arm64 control/home unchanged; OpenSIPS requires amd64 guest. |
