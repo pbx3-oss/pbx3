@@ -1,6 +1,6 @@
 # Fleet try-it deployment (requirements)
 
-**Status:** **Requirements locked** (2026-08-08). **D1 control installer lab green:** `pbx3-directory/tools/install-control-host.sh` (Garage + catalog seed + Gatekeeper). Next A9a: home VM + Fleet adopt.  
+**Status:** **Requirements locked** (2026-08-08). **D1 / A9a install path lab green** (control + home + catalog pick + Sanctum + Fleet). **Next:** snapshot revert + MkDocs re-walk when asked; SIP is later.  
 **Project bound (primary):** **Quick-deploy LAN Lab** — a curious user with a **VM manager** stands up a few **Ubuntu or Debian** guests and gets a working fleet evaluation stack (near-zero cloud bill). Topology **T4**; advertise as **Lab deployment**. Operator workstation may be **Linux, Windows, or macOS** — do **not** assume a Mac or any particular host OS for docs/scripts.  
 **Primary goal:** **Ease and cost of initial deployment** — fewer boxes, fewer steps.  
 **Audience bar (locked 2026-08-17):** A **Windows-shop tech** who can create VMs and paste a few Linux commands — **not** an AWS/CLI operator. Happy path = **one prompted installer per box**, then **browser panels**. Hide Garage keys, AWS CLI, and Mac onboard scripts.  
@@ -362,5 +362,5 @@ Covered by **A7** / **A8** above. Point MkDocs / install docs at the script; kee
 | 2026-08-10 | T4 prefer **3 boxes** for two homes (GK co-located on Magrathea+Garage). Optional LAN+carrier: **chunked RTP DNAT** before rtpengine. |
 | 2026-08-17 | **A9a** install harness: local VM snapshots test automation without calls; see **`LAB_INSTALL_AUTOMATION_HARNESS.md`**. Sequencing: automation before LAN carrier. |
 | 2026-08-17 | **UX bar:** Windows tech, basic CLI, **panels after one installer per box**. Garage/bootstrap inside control installer; no AWS CLI happy path. |
-| 2026-08-17 | **D1** control installer **lab green**: **`pbx3-directory/tools/install-control-host.sh`**. Next A9a: home VM + Fleet adopt. |
+| 2026-08-17 | **D1 / A9a** install path **lab green**: control + home + catalog pick + Sanctum + Fleet. One home wrapper **`pbx3/scripts/install-home-host.sh`**. Probe timer on Lab control. Next: snapshot revert + MkDocs re-walk when asked. |
 | 2026-08-11 | Packaging posture: **cagi deb-first**; **pbx3** release floors + tip between; **api** clone/tip (D6 deferred). |

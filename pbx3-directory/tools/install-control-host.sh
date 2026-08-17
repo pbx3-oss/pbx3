@@ -174,7 +174,7 @@ AWS_ACCESS_KEY_ID=${GARAGE_DEFAULT_ACCESS_KEY}
 AWS_SECRET_ACCESS_KEY=${GARAGE_DEFAULT_SECRET_KEY}
 PBX3_FLEET_SERVICE_TOKEN=$(control_rand_token)
 PBX3_SBC_ADMIN_API_URL=
-PBX3_FLEET_HTTP_VERIFY=true
+PBX3_FLEET_HTTP_VERIFY=false
 GATEKEEPER_AUTH_DB=${AUTH_DB}
 GATEKEEPER_FLEET_UI_URL=${catalog_url%catalog/*}
 EOF
@@ -278,11 +278,67 @@ create_admin() {
   return "$rc"
 }
 
+# Lab units (cloud control still uses /home/ubuntu/gatekeeper + php8.4 in deploy/*.service).
+install_fleet_probe() {
+  local php_bin timer_src
+  php_bin="$(command -v php || true)"
+  if [[ -z "$php_bin" ]]; then
+    control_err "php not on PATH — skip fleet probe timer"
+    return 0
+  fi
+  if [[ ! -f "${INSTALL_DIR}/bin/probe-fleet-instances.php" ]]; then
+    control_err "missing ${INSTALL_DIR}/bin/probe-fleet-instances.php — skip probe timer"
+    return 0
+  fi
+  cat >/etc/systemd/system/pbx3-fleet-probe.service <<EOF
+[Unit]
+Description=PBX3 Gatekeeper fleet instance /up probe
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=${INSTALL_DIR}
+EnvironmentFile=-/etc/pbx3-gatekeeper/.env
+ExecStart=${php_bin} ${INSTALL_DIR}/bin/probe-fleet-instances.php
+Nice=10
+EOF
+  timer_src="${INSTALL_DIR}/deploy/pbx3-fleet-probe.timer"
+  if [[ ! -f "$timer_src" ]]; then
+    timer_src="${GK_SRC}/deploy/pbx3-fleet-probe.timer"
+  fi
+  if [[ -f "$timer_src" ]]; then
+    cp "$timer_src" /etc/systemd/system/pbx3-fleet-probe.timer
+  else
+    cat >/etc/systemd/system/pbx3-fleet-probe.timer <<'EOF'
+[Unit]
+Description=PBX3 Gatekeeper fleet instance probe every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=60s
+AccuracySec=5s
+Persistent=true
+Unit=pbx3-fleet-probe.service
+
+[Install]
+WantedBy=timers.target
+EOF
+  fi
+  systemctl daemon-reload
+  systemctl enable --now pbx3-fleet-probe.timer
+  systemctl start pbx3-fleet-probe.service || control_log "probe oneshot returned non-zero (will retry on timer)"
+  control_log "fleet /up probe timer enabled (every 60s)"
+}
+
 print_banner() {
   local ip="$1" catalog_url="$2"
   cat <<EOF
 
-Control host ready (Lab). Next: browser, then the home VM installer.
+Control host ready (Lab). Next: browser, then the home VM installer
+(sudo ./install-home-host.sh on the home box).
 
   Health:   http://${ip}/health
   Catalog:  ${catalog_url}
@@ -330,6 +386,7 @@ write_gatekeeper_env "$BUCKET" "$(garage_s3_endpoint)" "$CATALOG_URL"
 bootstrap_catalog "$SLUG" "$CATALOG_URL"
 write_nginx "_" "$(garage_web_host "$BUCKET")"
 create_admin
+install_fleet_probe
 
 check_health
 

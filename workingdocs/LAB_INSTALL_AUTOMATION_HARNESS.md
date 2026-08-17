@@ -70,13 +70,13 @@ Reset both VMs to the clean snapshot, then exercise the **product** path (instal
 
 ### 2 — Home box (`pbx3inst`) — one installer
 
-- [ ] pbx3 + pbx3api prompted install (skip cagi on arm64); `/up` 200
-- [ ] SPA admin login on `:44300`
+- [x] pbx3 + pbx3api prompted install (skip cagi on arm64); `/up` 200 — lab green 2026-08-17. **One installer:** **`pbx3/scripts/install-home-host.sh`**. MkDocs **`installation/install-lab-home.md`**. Floor deb `0.0.5-5` still calls bootstrap with `/bin/sh` — wrapper always re-runs `bootstrap-admin-user.sh` with bash.
+- [x] SPA admin login on `:44300` (Sanctum `/api/auth/login` 200; snakeoil)
 
 ### 3 — Adopt (panel first)
 
-- [ ] Fleet panel registers/adopts the home (fallback CLI until panel exists)
-- [ ] Catalog row shows LAN `api_base_url`; pick instance → Sanctum → a panel
+- [x] Fleet **Instances → Register instance** (fallback: Gatekeeper `POST /api/v1/instances`) — Lab Home in catalog, LAN `api_base_url` — lab green 2026-08-17. MkDocs **`installation/install-lab-adopt.md`**. No Provision edge (no SIP). Control `PBX3_FLEET_HTTP_VERIFY=false` for snakeoil.
+- [ ] Catalog pick instance → Sanctum → a panel (operator: refresh login picker)
 
 **Pass** = control health + home `/up` + catalog pick + login. Then revert snapshots.
 
@@ -100,8 +100,9 @@ Those stay optional later under try-it T4 “public carrier into NATed Lab” �
 |-----|-------------------------------------|
 | **Control installer** starts Garage, seeds catalog, writes Gatekeeper `.env` | **Lab green** (`tools/install-control-host.sh` on harness control VM). |
 | **Gatekeeper S3Client `endpoint` + path-style** | Invisible seam so Garage works; pbx3api already has the env knobs |
-| **Fleet panel adopt** (fallback: static-key onboard) | Tech must not run Mac `onboard-fleet-instance.sh` |
-| **Home installer** prompts for Lab names / skip cagi / skip LE | Copy-paste MkDocs, not a worksheet of exports |
+| **Fleet panel adopt** (fallback: static-key onboard) | **Lab green** via Gatekeeper register (SPA Register instance). Catalog row LAN `https://192.168.1.31:44300/api`. |
+| **Home installer** prompts for Lab names / skip cagi / skip LE | **One installer:** **`pbx3/scripts/install-home-host.sh`**. MkDocs **`installation/install-lab-home.md`**. Script exists; **not** yet proven on a reverted clean home VM. |
+| **Fleet `/up` probe timer** so Lab Home does not go **Degraded** | **Lab green** on harness control VM (`pbx3-fleet-probe.timer`). Installer writes Lab units (`/opt/pbx3-gatekeeper` + `php` on PATH). Probe skips egress-qualify when catalog has no setid (no SIP). |
 
 No separate “Garage dialect” — same S3 key layout; endpoint + path-style + static keys only (Rule **9**). Keys stay on the control host.
 
@@ -123,3 +124,5 @@ No separate “Garage dialect” — same S3 key layout; endpoint + path-style +
 | 2026-08-17 | Operator Parallels pair snapshot+IP-pin done; inventory in pbx3-ops. |
 | 2026-08-17 | **UX bar:** Windows tech, one installer per box, then panels. Harness tests that path. |
 | 2026-08-17 | D1 control installer: **`pbx3-directory/tools/install-control-host.sh`**. Lab green on harness control VM. |
+| 2026-08-17 | D1 home VM: pbx3 `0.0.5-5` + pbx3api (no cagi, no LE) lab green on harness home VM; MkDocs **`installation/install-lab-home.md`**. |
+| 2026-08-17 | One home installer **`pbx3/scripts/install-home-host.sh`**. Fleet `/up` probe timer lab green on control VM. |

@@ -77,21 +77,25 @@ final class FleetInstanceProbe
                 } catch (\Throwable $e) {
                     $errors[] = "{$id}: last_seen_at: ".$e->getMessage();
                 }
-                try {
-                    $egress = InstanceEgressQualifyProbe::probe($api, $this->timeoutSeconds);
-                    InstanceHealthStore::recordEgress($id, $egress['state'], $egress['rtt_ms']);
-                    if ($egress['error'] !== null) {
-                        $errors[] = "{$id}: egress: ".$egress['error'];
-                    }
-                } catch (\Throwable $e) {
-                    $errors[] = "{$id}: egress: ".$e->getMessage();
+                // No dispatcher setid = not Provisioned onto an edge; skip trunk qualify
+                // (Lab A9a / SIP-later homes). Do not fail the /up timer on HTTP 503.
+                if ($this->hasEdgeSetid($row)) {
                     try {
-                        InstanceHealthStore::recordEgress($id, 'Unknown', null);
-                    } catch (\Throwable) {
-                        // ignore
+                        $egress = InstanceEgressQualifyProbe::probe($api, $this->timeoutSeconds);
+                        InstanceHealthStore::recordEgress($id, $egress['state'], $egress['rtt_ms']);
+                        if ($egress['error'] !== null) {
+                            $errors[] = "{$id}: egress: ".$egress['error'];
+                        }
+                    } catch (\Throwable $e) {
+                        $errors[] = "{$id}: egress: ".$e->getMessage();
+                        try {
+                            InstanceHealthStore::recordEgress($id, 'Unknown', null);
+                        } catch (\Throwable) {
+                            // ignore
+                        }
                     }
                 }
-            } else {
+            } elseif ($this->hasEdgeSetid($row)) {
                 try {
                     InstanceHealthStore::recordEgress($id, 'Unknown', null);
                 } catch (\Throwable $e) {
@@ -120,5 +124,16 @@ final class FleetInstanceProbe
             'cleared' => $cleared,
             'errors' => $errors,
         ];
+    }
+
+    /** @param array<string, mixed> $row */
+    private function hasEdgeSetid(array $row): bool
+    {
+        $setid = $row['sbc_dispatcher_setid'] ?? null;
+        if ($setid === null || $setid === '') {
+            return false;
+        }
+
+        return (int) $setid > 0;
     }
 }

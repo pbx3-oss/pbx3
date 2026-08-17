@@ -1,6 +1,6 @@
 # pbx3-directory tools
 
-**Lab / try-it (D1):** on the control VM run **`./tools/install-control-host.sh`** (Garage + catalog + Gatekeeper). MkDocs: **`pbx3-docs`** `installation/install-lab-control.md`. Mac AWS onboard below is **not** the Lab happy path.
+**Lab / try-it (D1):** on the control VM run **`./tools/install-control-host.sh`** (Garage + catalog + Gatekeeper). Home VM: **`pbx3/scripts/install-home-host.sh`**. MkDocs: **`pbx3-docs`** `installation/install-lab-control.md` · `installation/install-lab-home.md`. Mac AWS onboard below is **not** the Lab happy path.
 
 ## install-control-host.sh (Lab D1)
 
