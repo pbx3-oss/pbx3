@@ -449,3 +449,50 @@ if [ ! -d $SYSPATH/recmnt ]; then
     chown www-data:www-data $SYSPATH/recmnt
     chmod 755 $SYSPATH/recmnt
 fi
+
+# Always print identity at the end — operators need these for DNS / LE / fleet worksheet.
+# Mid-script "Set globals…" is easy to miss; KSUID was never shown before.
+if [ -f "$SYSDB" ] && command -v sqlite3 >/dev/null 2>&1; then
+    _sum_id=$(sqlite3 "$SYSDB" "SELECT id FROM globals WHERE pkey='global' LIMIT 1;" 2>/dev/null)
+    _sum_su=$(sqlite3 "$SYSDB" "SELECT shortuid FROM globals WHERE pkey='global' LIMIT 1;" 2>/dev/null)
+    _sum_fq=$(sqlite3 "$SYSDB" "SELECT fqdn FROM globals WHERE pkey='global' LIMIT 1;" 2>/dev/null)
+    _sum_sn=$(sqlite3 "$SYSDB" "SELECT sitename FROM globals WHERE pkey='global' LIMIT 1;" 2>/dev/null)
+    if [ -z "$_sum_id" ]; then
+        _sum_id=$(sqlite3 "$SYSDB" "SELECT id FROM globals LIMIT 1;" 2>/dev/null)
+        _sum_su=$(sqlite3 "$SYSDB" "SELECT shortuid FROM globals LIMIT 1;" 2>/dev/null)
+        _sum_fq=$(sqlite3 "$SYSDB" "SELECT fqdn FROM globals LIMIT 1;" 2>/dev/null)
+        _sum_sn=$(sqlite3 "$SYSDB" "SELECT sitename FROM globals LIMIT 1;" 2>/dev/null)
+    fi
+    _sum_ip=$(curl -4 -sS --connect-timeout 3 https://checkip.amazonaws.com 2>/dev/null | tr -d '[:space:]')
+    [ -z "$_sum_ip" ] && _sum_ip=$(curl -4 -sS --connect-timeout 3 https://ifconfig.me 2>/dev/null | tr -d '[:space:]')
+    [ -z "$_sum_ip" ] && _sum_ip='(this node public IP / EIP)'
+
+    echo ""
+    echo "======== Instance identity (copy to worksheet) ========"
+    echo "  KSUID (id)  ${_sum_id}"
+    echo "  shortuid    ${_sum_su}"
+    echo "  fqdn        ${_sum_fq}"
+    echo "  sitename    ${_sum_sn}   (friendly Name only — NOT a DNS name)"
+    echo ""
+    echo "  Worksheet exports:"
+    echo "    export KSUID=${_sum_id}"
+    echo "    export SHORTUID=${_sum_su}"
+    echo "    export INSTANCE_FQDN=${_sum_fq}"
+    echo ""
+    echo "-------- DNS (required before Let's Encrypt) --------"
+    echo "  Create ONE public A record:"
+    echo "    Name:  ${_sum_fq}"
+    echo "    Type:  A"
+    echo "    Value: ${_sum_ip}"
+    echo ""
+    echo "  That fqdn is the only instance hostname for TLS and the API."
+    echo "  Do NOT point Let's Encrypt at a vanity SSH nickname"
+    echo "  (e.g. virginia1.pbx3.com) unless it equals fqdn above."
+    echo "  sitename is a label in the Admin UI — it is not DNS."
+    echo ""
+    echo "  After the A record propagates:"
+    echo "    dig +short ${_sum_fq}"
+    echo "    # must print: ${_sum_ip}"
+    echo "    sudo /opt/pbx3/scripts/le-instance-bootstrap.sh your@email.com"
+    echo "======================================================="
+fi
