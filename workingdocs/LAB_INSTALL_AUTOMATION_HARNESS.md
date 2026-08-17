@@ -64,8 +64,8 @@ Reset both VMs to the clean snapshot, then exercise the **product** path (instal
 
 ### 1 — Control box (`pbx3sbc`) — one installer
 
-- [ ] Prompted control install: Garage + catalog seed + Gatekeeper env **on the box**
-- [ ] Browser: Gatekeeper health + Fleet login
+- [x] Prompted control install: **`sudo ./tools/install-control-host.sh`** (Garage + catalog seed + Gatekeeper env **on the box**) — lab green 2026-08-17
+- [x] Browser: Gatekeeper health (`GET /health` 200)
 - [ ] (Debug only) `aws --endpoint-url … s3 ls` from ops — not in Lab docs
 
 ### 2 — Home box (`pbx3inst`) — one installer
@@ -98,7 +98,7 @@ Those stay optional later under try-it T4 “public carrier into NATed Lab” �
 
 | Gap | Why it blocks the Windows-tech path |
 |-----|-------------------------------------|
-| **Control installer** starts Garage, seeds catalog, writes Gatekeeper `.env` | Tech must not run Compose/`aws s3`/`bootstrap-org-bucket` by hand |
+| **Control installer** starts Garage, seeds catalog, writes Gatekeeper `.env` | **Lab green** (`tools/install-control-host.sh` on harness control VM). |
 | **Gatekeeper S3Client `endpoint` + path-style** | Invisible seam so Garage works; pbx3api already has the env knobs |
 | **Fleet panel adopt** (fallback: static-key onboard) | Tech must not run Mac `onboard-fleet-instance.sh` |
 | **Home installer** prompts for Lab names / skip cagi / skip LE | Copy-paste MkDocs, not a worksheet of exports |
@@ -121,4 +121,5 @@ No separate “Garage dialect” — same S3 key layout; endpoint + path-style +
 |------|------|
 | 2026-08-17 | Locked: local VM snapshots = install automation harness; no calls; 2-VM minimum; Garage = S3 analog; Gatekeeper endpoint gap called out. |
 | 2026-08-17 | Operator Parallels pair snapshot+IP-pin done; inventory in pbx3-ops. |
-| 2026-08-17 | UX bar: Windows tech, one installer per box, then panels. Harness tests that path. |
+| 2026-08-17 | **UX bar:** Windows tech, one installer per box, then panels. Harness tests that path. |
+| 2026-08-17 | D1 control installer: **`pbx3-directory/tools/install-control-host.sh`**. Lab green on harness control VM. |

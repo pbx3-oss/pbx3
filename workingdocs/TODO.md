@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-17 (session end — Lab D1 UX bar + Gatekeeper S3 endpoint)  
+**Last updated:** 2026-08-17 (session end — D1 control installer lab green)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -14,7 +14,7 @@
 4b. ~~**Tenant delete data integrity**~~ — **T1–T5 done** (`TENANT_DELETE_DATA_INTEGRITY.md`). Lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1 (2026-08-10). Remaining optional: T6 DID policy, T7 Class B, T8 FK.  
 4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 (2026-08-10).  
 4d. ~~**Fleet trunk Create vs Edit**~~ — **done** (`FLEET_TRUNK_PEERING_DECISION.md` §4.3.1): hide/403 Create on fleet; keep Edit for Egress mangle.  
-5. **Lab / install automation (scheduled)** — Windows-tech bar: **one installer per VM, then panels**. Prove D1 on local snapshots (**no calls**): **`LAB_INSTALL_AUTOMATION_HARNESS.md`**. Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** § UX bar.  
+5. **Lab / install automation** — Windows-tech bar: **one installer per VM, then panels**. **Control installer lab green** (`pbx3-directory/tools/install-control-host.sh` — Garage + catalog + Gatekeeper). **Next:** home VM (skip cagi on arm64) + Fleet-panel adopt. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**. Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** § UX bar. MkDocs: **`installation/install-lab-control.md`**.  
 5a. ~~**Toliman vanity shortuid (`kildare`)**~~ — **superseded** (2026-08-15): instance teardown / greenfield replace instead of in-place vanity. Operator: MkDocs **`fleet/decommission-instance`**.  
 5b. **Instance Name → SBC Peer label sync** (optional) — Fleet Name PATCH does not update SBC Peer description today.  
 5c. **Multi-locale / cross-border desk** — stub **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`**. **Lean §3.A:** instance nationally homed; cross-border = phone multi-identity across UK+US instances (Toliman lab). Confirm lock when ready.  
@@ -79,7 +79,7 @@
 
 - [x] **Strip customer-migrate tooling from pbx3 (suggested #3, done 2026-08-09):** Removed stock migrate entrypoints; kept idempotent **`sqlite_normalize_cluster_to_shortuid.sql`**. Private ETL owns migrate SQL/PHP. Heritage strings scrubbed 2026-08-09.
 
-- [ ] **Lab / install automation — D1 (2026-08-17):** Windows-tech bar — **one installer per VM, then panels**. Snapshots: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**. Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** § UX bar. Garage/bootstrap **inside** control installer; Fleet-panel adopt; Gatekeeper S3 endpoint. No AWS CLI happy path.
+- [ ] **Lab / install automation — D1 (2026-08-17):** Control installer **lab green** (`tools/install-control-host.sh`). **Next:** home VM install + Fleet-panel adopt (A9a). Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** § UX bar. No AWS CLI happy path.
 
 - [x] **#4b/#4c lab procedures on golden (2026-08-10):** **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1–§2 green (same-home prune; ext_len API + GenAst `_81XXX`).
 

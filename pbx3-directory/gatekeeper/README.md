@@ -4,12 +4,15 @@ Minimal **registrar-as-a-service** — sole writer for `catalog/instance-index.j
 
 Replaces direct `aws s3 cp` from Mac scripts for catalog mutations (calls still fail-safe if gatekeeper is down).
 
+**Lab control host (D1):** **`../tools/install-control-host.sh`** — Garage + catalog seed + nginx. Do not paste keys.
+
 ## Setup
 
 ```bash
 cd pbx3-directory/gatekeeper
 cp .env.example .env
 # Set PBX3_ORG_BUCKET, GATEKEEPER_API_TOKEN, AWS_DEFAULT_REGION
+# Lab: prefer the control installer (writes /etc/pbx3-gatekeeper/.env)
 # For S7 recordings presigns also set PBX3_RECORDINGS_BUCKET (dedicated; not org bucket)
 composer install
 php -S 127.0.0.1:8090 -t public

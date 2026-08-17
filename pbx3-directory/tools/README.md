@@ -1,5 +1,17 @@
 # pbx3-directory tools
 
+**Lab / try-it (D1):** on the control VM run **`./tools/install-control-host.sh`** (Garage + catalog + Gatekeeper). MkDocs: **`pbx3-docs`** `installation/install-lab-control.md`. Mac AWS onboard below is **not** the Lab happy path.
+
+## install-control-host.sh (Lab D1)
+
+Prompted installer on the **control guest**: Garage + `bootstrap-org-bucket` + Gatekeeper nginx + first fleet user. Keys stay in `/etc/pbx3-gatekeeper/.env`.
+
+```bash
+sudo ./tools/install-control-host.sh
+```
+
+Unattended: `PBX3_FLEET_SLUG`, `PBX3_CONTROL_IP`, `GATEKEEPER_ADMIN_EMAIL`, `GATEKEEPER_ADMIN_PASSWORD` (min 10 chars).
+
 **Mac SSH + AWS CLI:** **`../docs/OPERATOR_MAC_SETUP.md`** — read before running scripts (golden key, `aws sts`, agent pitfalls).
 
 **Rebuild a failed EC2 (same KSUID):** start with **`../docs/REBUILD_INSTANCE_RUNBOOK.md`** — `fetch-latest-instance-backup.sh` → node `restore-backup-zip.sh` → `onboard-fleet-instance.sh`.

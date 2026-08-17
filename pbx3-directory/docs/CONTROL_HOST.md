@@ -1,5 +1,7 @@
 # Control host — `control.pbx3.com`
 
+**Lab / try-it:** do **not** copy this EC2 recipe. Use **`tools/install-control-host.sh`** on the guest (Garage + Gatekeeper). MkDocs **`installation/install-lab-control.md`**.
+
 **Stood up:** 2026-07-14 (lab)  
 **Instance:** `i-01fc97d42ac15286d` · **AZ** us-east-1f · **type** `t4g.small` · **AMI** Ubuntu 24.04 arm64  
 **SSH:** `ubuntu@control.pbx3.com` with `~/Documents/pemfiles/pbx3test.pem`  
