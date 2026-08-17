@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-17 (session end — virginia1 commission + #5e F2B reconfirm)  
+**Last updated:** 2026-08-17 (Toliman left Decom; #5f Remove SPA)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -20,6 +20,7 @@
 5c. **Multi-locale / cross-border desk** — stub **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`**. **Lean §3.A:** instance nationally homed; cross-border = phone multi-identity across UK+US instances (Toliman lab). Confirm lock when ready.  
 5d. **Outbound drouting group per home (problem)** — SBC `do_routing(0)` is global; Twilio `prefix=1` hits every home (UK CLIP → Twilio 403). Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**. Design next; no SBC park as product answer.  
 5e. **SBC Fail2ban — fleet home auto-whitelist (required)** — homes banned on edge after **Provision edge** / Egress qualify OPTIONS (manual unban + `/32`); stale/wrong IPs linger on `ignoreip`. Automate: dispatcher / `role=asterisk` Peer IPs → whitelist + **unban on provision/IP change** + sync (drop retired homes). Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban. Lab reconfirmed 2026-08-17 (new home setid OK, Egress Unavail until manual F2B). (Carrier Peer auto-WL still deferred to next carrier onboard.)  
+5f. **Fleet Instances — Remove after Decom (required UX)** — SPA **Decom** soft-hides only; hard drop (`unregister-instance.sh --remove`) is CLI-only. Need Fleet SPA action (and/or Gatekeeper API) on `decommissioned` rows to remove catalog entry (keep S3 `instances/{id}/` meta/backups). Prefer later fold into decommission automation / S10.7; interim SPA Remove is enough. Lab: Toliman left **Decom** on purpose (2026-08-17). Docs: MkDocs **`fleet/decommission-instance`** Step 2 · **`INSTANCE_ONBOARDING.md`** hard remove.  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
 7. **New instance / package install** — fleet floors **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** (+ tips between — see **TODO_OPS**).  
 8. **Toll fraud / velocity** — plan **Accepted**; **WP0 + WP3 + WP1** done (2026-08-11). Remainder deferred (V4 / SBC floor / Wangiri). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
@@ -162,6 +163,8 @@
 - [ ] **S10.7 — Orchestrated onboard / rebuild (parked 2026-07-15):** Interim: agent-assisted Mode 4. Design: **`SELF_SERVICE_REBUILD_DESIGN.md`**.
 
 - [ ] **SBC Fail2ban — fleet home auto-whitelist (#5e — required 2026-08-12):** Automate dispatcher / `role=asterisk` Peer IPs → Fail2ban whitelist + unban on provision/IP change + sync (retire stale). Lab: Toliman; reconfirmed **2026-08-17** (Provision edge → OPTIONS ban → Egress Unavail until manual WL). Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.
+
+- [ ] **Fleet Instances — Remove after Decom (#5f — 2026-08-17):** Gatekeeper + SPA action to hard-drop catalog row for `decommissioned` instances (`unregister --remove` today). Keep S3 meta/backups. Optional later: part of decommission automation / S10.7. Lab: Toliman stays Decom until this ships.
 
 - [ ] **SBC Fail2ban — carrier inbound Peer auto-whitelist (deferred until next carrier onboard):** Edge-authored (Rule 13). Ban→email already shipped. Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.
 
