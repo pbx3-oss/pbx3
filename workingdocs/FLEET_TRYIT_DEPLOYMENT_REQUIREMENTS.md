@@ -1,6 +1,6 @@
 # Fleet try-it deployment (requirements)
 
-**Status:** **Requirements locked** (2026-08-08). **D1 / A9a install path lab green** (control + home + catalog pick + Sanctum + Fleet). **Next:** snapshot revert + MkDocs re-walk when asked; SIP is later.  
+**Status:** **Requirements locked** (2026-08-08). **D1 / A9a install path lab green** on reverted snapshots (control + home wrapper + catalog pick + Sanctum + Fleet). **Next:** OpenSIPS / Provision edge when asked.  
 **Project bound (primary):** **Quick-deploy LAN Lab** — a curious user with a **VM manager** stands up a few **Ubuntu or Debian** guests and gets a working fleet evaluation stack (near-zero cloud bill). Topology **T4**; advertise as **Lab deployment**. Operator workstation may be **Linux, Windows, or macOS** — do **not** assume a Mac or any particular host OS for docs/scripts.  
 **Primary goal:** **Ease and cost of initial deployment** — fewer boxes, fewer steps.  
 **Audience bar (locked 2026-08-17):** A **Windows-shop tech** who can create VMs and paste a few Linux commands — **not** an AWS/CLI operator. Happy path = **one prompted installer per box**, then **browser panels**. Hide Garage keys, AWS CLI, and Mac onboard scripts.  
