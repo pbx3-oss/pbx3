@@ -22,11 +22,7 @@ final class TenantDeleteJobStore
             throw new \RuntimeException('PBX3_ORG_BUCKET not configured', 503);
         }
         $this->bucket = $bucket;
-        $region = getenv('AWS_DEFAULT_REGION') ?: 'us-east-1';
-        $this->s3 = new S3Client([
-            'version' => 'latest',
-            'region' => $region,
-        ]);
+        $this->s3 = S3ClientFactory::make();
     }
 
     /**

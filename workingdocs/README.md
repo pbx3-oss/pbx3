@@ -18,6 +18,7 @@ Product stub: **`AGENT_HANDOFF.md`** (behavior + read-order + permanent referenc
 | **Product roadmap** | `TODO.md` | Suggested order + open product items |
 | **Pre-release go/no-go** | `PRE_RELEASE_SAFETY_DEBT.md` | Fix-now safety cluster before release |
 | **#4b / #4c lab** | `TENANT_WIPE_AND_EXT_LEN_LAB.md` | Tip-deploy wipe integrity + ext_len procedures |
+| **Lab install harness** | `LAB_INSTALL_AUTOMATION_HARNESS.md` | Local VM snapshots — install/onboard only (no calls); parent try-it T4 |
 | **Closed ledger** | **`archive/TODO_DONE_LOG.md`** | Checked-off items |
 | **Session end habit** | **`~/GiT/pbx3-ops/SESSION_END_CHECKLIST.md`** | Stub: `SESSION_END_CHECKLIST.md` |
 | **Locked product / fleet** | Prefer **`pbx3-directory/docs/`** when fleet-wide | DESIGN_RULES, runbooks, dialect reqs |

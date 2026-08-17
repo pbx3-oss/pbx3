@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-use Aws\S3\S3Client;
+use Pbx3\Gatekeeper\S3ClientFactory;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -47,7 +47,6 @@ $bucket = getenv('PBX3_ORG_BUCKET') ?: '';
 $ctrlId = getenv('PBX3_CONTROL_ID') ?: 'control';
 $enabled = filter_var(getenv('PBX3_LOG_UPLOAD_ENABLED') ?: 'true', FILTER_VALIDATE_BOOL);
 $statePath = getenv('PBX3_LOG_SHIP_STATE') ?: '/var/lib/pbx3-gatekeeper/log-ship-state.json';
-$region = getenv('AWS_DEFAULT_REGION') ?: 'us-east-1';
 
 if (! $enabled) {
     echo "upload disabled\n";
@@ -85,10 +84,7 @@ if (is_file($statePath)) {
 
 $s3 = null;
 if (! $dryRun) {
-    $s3 = new S3Client([
-        'version' => 'latest',
-        'region' => $region,
-    ]);
+    $s3 = S3ClientFactory::make();
     $policyKey = "control/{$ctrlId}/logs/policy.json";
     try {
         $s3->headObject(['Bucket' => $bucket, 'Key' => $policyKey]);

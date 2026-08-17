@@ -2,12 +2,34 @@
 
 **Status:** **Requirements locked** (2026-08-08). Implementation not started.  
 **Project bound (primary):** **Quick-deploy LAN Lab** — a curious user with a **VM manager** stands up a few **Ubuntu or Debian** guests and gets a working fleet evaluation stack (near-zero cloud bill). Topology **T4**; advertise as **Lab deployment**. Operator workstation may be **Linux, Windows, or macOS** — do **not** assume a Mac or any particular host OS for docs/scripts.  
-**Primary goal:** **Ease and cost of initial deployment** — fewer boxes, fewer steps, documented packages + tailor.  
+**Primary goal:** **Ease and cost of initial deployment** — fewer boxes, fewer steps.  
+**Audience bar (locked 2026-08-17):** A **Windows-shop tech** who can create VMs and paste a few Linux commands — **not** an AWS/CLI operator. Happy path = **one prompted installer per box**, then **browser panels**. Hide Garage keys, AWS CLI, and Mac onboard scripts.  
 **Also this track:** Org-bucket / directory spin-up (**Appendix B**, Garage on LAN for Lab).  
 **Follow-on (same artifacts, not the first milestone):** Cloud 2-box (**T2**), optional AMI skin, Packer.  
 **Not this track:** LAN-behind-edge media anchoring (rtpengine) — **Appendix A** (parked).
 
-**Related:** **`DESIGN_RULES.md`** Rules **6**, **7**, **9**, **13** · **`OPS_S3_RUNBOOK.md`** · **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** · **`INSTALL_NODE_SIMPLE.md`** · **`SBC_PRODUCT_TRACKS.md`** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (RTP bypass default).
+**Related:** **`DESIGN_RULES.md`** Rules **6**, **7**, **9**, **13** · **`OPS_S3_RUNBOOK.md`** · **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** · **`INSTALL_NODE_SIMPLE.md`** · **`SBC_PRODUCT_TRACKS.md`** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (RTP bypass default) · **`LAB_INSTALL_AUTOMATION_HARNESS.md`** (local VM snapshot loop — install only, no calls).
+
+**Operator sequencing (2026-08-17):** Prefer finishing **install automation** (installers that absorb Garage/bootstrap; Gatekeeper S3 endpoint; Fleet-panel adopt) and proving it on **local VM snapshots** before LAN carrier / SIP. Cloud AWS lab keeps call proof until install is boring.
+
+---
+
+## UX bar — Windows tech, panels first (locked 2026-08-17)
+
+**Persona:** MS Windows desktop, hypervisor GUI (Hyper-V / VirtualBox / VMware / Parallels), **basic** Linux CLI (SSH, paste a command, answer prompts). No AWS console, no `aws s3`, no Mac, no Homebrew.
+
+| They do | They never do (happy path) |
+|---------|----------------------------|
+| Create 2 Ubuntu VMs; note LAN IPs | Write netplan, IAM, or Garage `rpc_secret` |
+| SSH in; run **one** `sudo ./install.sh` (or copy-paste from MkDocs) and answer prompts | Chain Mac registrar scripts / `onboard-fleet-instance.sh` |
+| Open **SPA / Fleet / SBC admin** in a browser for names, adopt home, tokens, health | Paste S3 keys, catalog JSON, or `--endpoint-url` |
+| Optional: hosts file **or** just use IPs the installer printed | Become an S3 dialect expert |
+
+**CLI budget (Lab T4):** two SSH sessions, one installer each, then browsers. A third “bootstrap-org-bucket” command on the laptop is a **fail** for this persona — that work belongs **inside** the control-host installer (start Garage, mint keys, seed catalog, write Gatekeeper `.env`).
+
+**Aelintra ops** may keep Mac AWS CLI + `onboard-fleet-instance.sh` for EC2 greenfield. That is **not** the Lab/try-it story and must not leak into Lab MkDocs.
+
+**Panels own after first boot:** Fleet adopt / instance register (when shipped), sitename, tokens, health. Installers only do what a panel cannot yet (packages, Garage process, first admin user).
 
 ---
 
@@ -19,7 +41,7 @@
 | **Try PBX only** | **T1** — **1** VM, Asterisk + API (singleton-direct). No Magrathea, no Gatekeeper, no catalog (Rule **6**). |
 | **Try fleet (cloud)** | **T2** — same packages as Lab; Host A Magrathea+GK, Host B home; org bucket on AWS/R2/etc. **Follow-on** after Lab path works. |
 | **Prod split (optional)** | **T3** — same packages; GK and Magrathea on separate hosts when blast radius matters. |
-| **Portable core** | Versioned **debs** / release tags + **one tailor script** (env file) on Ubuntu/Debian. |
+| **Portable core** | Versioned **debs** / release tags + **prompted installers on the guests** (control installer starts Garage + seeds catalog). |
 | **AWS AMI** | Optional **skin** later — preinstalled packages; **same** tailor. Not required for Lab. |
 | **Docker** | Optional for **Gatekeeper ± Magrathea ± Garage** only. **Never** Asterisk-in-Docker. |
 | **Org directory (Lab / T2+)** | **`bootstrap-org-bucket`** — Lab default = **Garage**; cloud = S3/R2/etc. **Appendix B**. |
@@ -40,7 +62,8 @@ Fleet bring-up today is still too complex for a prospect: typically **three** cl
 - Solving deploy ease via **rtpengine** / media through the SBC (**Appendix A**).
 - **Asterisk in Docker** as a recommended path.
 - Baking **SPA** into instance or edge images (operator browser → LAN SPA or optional local Vite — see T4 SPA subsection).
-- Assuming a **Mac** (or any single OS) for the operator workstation — Lab docs must work for **Linux / Windows / macOS** users.
+- Assuming a **Mac** (or any single OS) for the operator workstation — Lab docs must work for **Linux / Windows / macOS** users; **Windows + hypervisor + browser** is the design persona.
+- Asking the Lab user to run **AWS CLI**, paste Garage keys, or use **`onboard-fleet-instance.sh`** from a laptop.
 - Merging Gatekeeper and Magrathea into one codebase or one HoR (Rule 13).
 - Requiring **cloud** or **AMI** for the first Lab milestone.
 - Multi-cloud Packer on day one.
@@ -160,8 +183,8 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 ### Portable core (required)
 
 1. **Packages / release tags** — instance **pbx3** + **pbx3cagi** debs; Magrathea/SBC and Gatekeeper via public release tag + install script (or package when available); **pbx3api** clone-at-tag OK once repos are public (deb still nice-to-have — see below).
-2. **`bootstrap-org-bucket`** (Appendix B) — one-shot before T2 tailor when no org bucket exists yet (fleet slug → layout + print env).
-3. **Tailor script** (name TBD, e.g. `pbx3-firstboot` / `tailor-fleet-tryit`) reading a small env/file:
+2. **`bootstrap-org-bucket`** (Appendix B) — **library used by the control installer**, not a laptop ritual. Fleet slug → layout; writes Gatekeeper env on the box.
+3. **Prompted guest installers** (control + home). Optional env/file for unattended / AMI later:
    - Topology: `solo` | `fleet_colocated` | `fleet_split` | `lab` (T4 Lab deployment — private names + Garage; alias `fleet_lan`)
    - FQDNs / public IPs **or** LAN names / private IPs
    - Org bucket endpoint + credentials (S3-compatible) — from Appendix B output when greenfield
@@ -215,7 +238,8 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 
 | # | Check |
 |---|--------|
-| A9 | **Lab:** Doc’d path — VM manager → few Ubuntu/Debian guests → Garage + GK+Magrathea + home → Fleet login + catalog + lab SIP; SPA = **LAN static** (any OS browser) or optional local Vite; **no Mac assumption**. Marketing: **Lab deployment**. |
+| A9 | **Lab:** Doc’d path — VM manager → few Ubuntu/Debian guests → Garage + GK+SBC + home → Fleet login + catalog + lab SIP; SPA = **LAN static** (any OS browser) or optional local Vite; **no Mac assumption**. Marketing: **Lab deployment**. |
+| A9a | **Install harness (subset of A9):** Local VM **snapshots** + checklist in **`LAB_INSTALL_AUTOMATION_HARNESS.md`** — Garage + GK+SBC + home + catalog + SPA login; **no SIP/calls** required to accept D1. |
 | A1 | Doc’d **T1**: one Ubuntu/Debian VM → packages/tailor → SPA hits instance API (solo; no Garage). |
 | A2 | Doc’d **T2** (follow-on): two cloud VMs + cloud bucket → Fleet + SIP (RTP bypass). |
 | A3 | Tailor script runs from a **checked-in** Lab env example; no undocumented AMI-only steps for Lab. |
@@ -232,7 +256,7 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 | Phase | Scope | Effort |
 |-------|--------|--------|
 | **D0** | This requirements doc + TODO link | Done when committed |
-| **D1** | **Lab milestone:** tailor + Lab env example + Garage Compose/bootstrap + install doc for T4 (T1 as thin sibling) | ~3–7 days |
+| **D1** | **Lab milestone:** control installer absorbs Garage + catalog seed; home installer stays prompted; Gatekeeper S3 endpoint; Lab MkDocs = copy-paste + panels. Prove on **A9a**. Mac onboard scripts stay ops-only. | ~3–7 days |
 | **D2** | Polish Compose for GK+Magrathea+Garage; SPA Lab CORS/.env examples | ~2–3 days |
 | **D3** | Cloud **T2** doc path + optional AWS AMI skin | Later |
 | **D4** | Packer multi-cloud | Later |
@@ -266,8 +290,8 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 
 | Topic | Outcome |
 |-------|---------|
-| **Greenfield fleet catalog** | Ops runs **`bootstrap-org-bucket`** once with a **neutral fleet slug** (e.g. `acme` → `acme-pbx3`). |
-| **What it does** | Create org bucket; allow public GET on **`catalog/*` only**; apply CORS for SPA origins; seed minimal `catalog/instance-index.json`; print `PBX3_ORG_BUCKET`, catalog HTTPS URL, Gatekeeper/SPA env lines. |
+| **Greenfield fleet catalog** | **Control installer** (Lab) or cloud bootstrap library runs **`bootstrap-org-bucket`** with a **neutral fleet slug** (e.g. `acme` → `acme-pbx3`). Tech never pastes keys. |
+| **What it does** | Create org bucket; allow GET on **`catalog/*`**; CORS for SPA; seed `catalog/instance-index.json`; **write** Gatekeeper/SPA env on the control host (print is debug-only). |
 | **Portability** | S3-compatible API (AWS CLI / `rclone` / etc.). AWS is one backend; self-hosted default **Garage** (**Lab / T4** natural fit); also R2/B2/Wasabi-class (Rule **9**). |
 | **What it does *not* do** | Per-node IAM / instance profiles, recordings bucket lifecycle, backup lifecycle — those stay on **`onboard-fleet-instance.sh`** / later ops. |
 | **HoR** | Org object store remains home of record (Rule **13**). Do not invent a Gatekeeper-DB catalog as substitute HoR. |
@@ -276,11 +300,10 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 
 ```text
 1. Choose fleet slug (not first-instance shortuid — see OPS_S3_RUNBOOK design note)
-2. Lab (T4): start Garage (Compose on VM A or tiny guest) — then bootstrap against its endpoint
-   Cloud (T2): bootstrap against AWS/R2/etc.
-3. bootstrap-org-bucket → paste printed env into tailor / Gatekeeper / SPA
-4. Tailor Host A + Host B (main body; Lab uses private names)
-5. Onboard home instance (Lab: static keys, no EC2 instance profile)
+2. Lab (T4): control installer on VM A starts Garage, bootstraps bucket, writes Gatekeeper env
+   Cloud (T2): same library against AWS/R2/etc. (ops may still use AWS console once)
+3. Home installer on VM B (prompts)
+4. Adopt home from **Fleet panel** (fallback CLI until that panel exists). Lab: static keys written by installer/panel — not the tech.
 ```
 
 ### Garage “directory in a box” (preferred self-host; **Lab / T4** default)
@@ -337,4 +360,6 @@ Covered by **A7** / **A8** above. Point MkDocs / install docs at the script; kee
 | 2026-08-09 | Apache-2.0 root `LICENSE` on product repos (clean text; httpd composite removed). |
 | 2026-08-09 | Customer migrate stripped from pbx3 package; private ETL under Aelintra. Public gate = org transfer when scheduled. |
 | 2026-08-10 | T4 prefer **3 boxes** for two homes (GK co-located on Magrathea+Garage). Optional LAN+carrier: **chunked RTP DNAT** before rtpengine. |
+| 2026-08-17 | **A9a** install harness: local VM snapshots test automation without calls; see **`LAB_INSTALL_AUTOMATION_HARNESS.md`**. Sequencing: automation before LAN carrier. |
+| 2026-08-17 | **UX bar:** Windows tech, basic CLI, **panels after one installer per box**. Garage/bootstrap inside control installer; no AWS CLI happy path. |
 | 2026-08-11 | Packaging posture: **cagi deb-first**; **pbx3** release floors + tip between; **api** clone/tip (D6 deferred). |
