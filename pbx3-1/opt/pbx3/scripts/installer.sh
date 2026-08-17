@@ -335,8 +335,9 @@ fi
 # First SPA admin (no seeded password). Skip if users already exist.
 # Interactive prompts on TTY; non-interactive: PBX3_ADMIN_EMAIL + PBX3_ADMIN_PASSWORD.
 # Existing nodes with unknown seeded admin@pbx3.com: bootstrap-admin-user.sh --reset
+# Must use bash (script uses [[ ]] / pipefail). /bin/sh (dash) fails before any prompt.
 if [ -f "$SYSDB" ] && [ -x "$SCRIPTS/bootstrap-admin-user.sh" ]; then
-    /bin/sh "$SCRIPTS/bootstrap-admin-user.sh" "$SYSDB" || {
+    /bin/bash "$SCRIPTS/bootstrap-admin-user.sh" "$SYSDB" || {
         echo "WARNING: Admin SPA user bootstrap failed or skipped. On TTY re-run:" >&2
         echo "  sudo $SCRIPTS/bootstrap-admin-user.sh" >&2
         echo "  or: sudo PBX3_ADMIN_EMAIL=… PBX3_ADMIN_PASSWORD=… $SCRIPTS/bootstrap-admin-user.sh" >&2
@@ -494,5 +495,16 @@ if [ -f "$SYSDB" ] && command -v sqlite3 >/dev/null 2>&1; then
     echo "    dig +short ${_sum_fq}"
     echo "    # must print: ${_sum_ip}"
     echo "    sudo /opt/pbx3/scripts/le-instance-bootstrap.sh your@email.com"
+    _sum_uc=$(sqlite3 "$SYSDB" "SELECT COUNT(*) FROM users;" 2>/dev/null || echo 0)
+    echo ""
+    if [ "${_sum_uc:-0}" -ge 1 ]; then
+        echo "  SPA admin users: ${_sum_uc} (OK)"
+    else
+        echo "  SPA admin users: 0 — NO LOGIN YET"
+        echo "  Create one now:"
+        echo "    sudo PBX3_ADMIN_EMAIL=you@example.com PBX3_ADMIN_PASSWORD='…' \\"
+        echo "      /opt/pbx3/scripts/bootstrap-admin-user.sh"
+        echo "    or interactive: sudo /opt/pbx3/scripts/bootstrap-admin-user.sh"
+    fi
     echo "======================================================="
 fi
