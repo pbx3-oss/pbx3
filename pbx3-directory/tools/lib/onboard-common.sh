@@ -182,11 +182,22 @@ onboard_iam_provision() {
     onboard_log "creating instance profile $profile"
     onboard_aws_write iam create-instance-profile --instance-profile-name "$profile"
   fi
-  onboard_aws_write iam add-role-to-instance-profile \
+  # Already-has-role is ok; other add-role failures must not be silent.
+  if ! onboard_aws_write iam add-role-to-instance-profile \
     --instance-profile-name "$profile" \
-    --role-name "$role" 2>/dev/null || true
+    --role-name "$role" 2>/dev/null; then
+    local have_role
+    have_role="$(onboard_aws_read iam get-instance-profile \
+      --instance-profile-name "$profile" \
+      --query 'InstanceProfile.Roles[0].RoleName' --output text 2>/dev/null || true)"
+    if [[ "$have_role" != "$role" ]]; then
+      onboard_log "ERROR: instance profile $profile has no role $role (got ${have_role:-none})"
+      rm -rf "$workdir"
+      exit 1
+    fi
+  fi
 
-  local profile_arn assoc_id assoc_profile state i
+  local profile_arn assoc_id assoc_profile state i assoc_ok
   profile_arn="$(onboard_aws_read iam get-instance-profile \
     --instance-profile-name "$profile" \
     --query 'InstanceProfile.Arn' --output text)"
@@ -205,10 +216,25 @@ onboard_iam_provision() {
       onboard_log "replacing existing instance profile on $instance_id"
       onboard_aws_write ec2 disassociate-iam-instance-profile --association-id "$assoc_id"
     fi
-    onboard_log "associating $profile with $instance_id"
-    onboard_aws_write ec2 associate-iam-instance-profile \
-      --instance-id "$instance_id" \
-      --iam-instance-profile "Arn=${profile_arn}"
+    # EC2 cannot see a brand-new instance profile for several seconds
+    # (InvalidParameterValue / Invalid IAM Instance Profile ARN).
+    onboard_log "associating $profile with $instance_id (IAM may need a few seconds)"
+    assoc_ok=0
+    for i in $(seq 1 12); do
+      if onboard_aws_write ec2 associate-iam-instance-profile \
+        --instance-id "$instance_id" \
+        --iam-instance-profile "Arn=${profile_arn}"; then
+        assoc_ok=1
+        break
+      fi
+      onboard_log "associate not ready yet (try $i/12); waiting 5s"
+      sleep 5
+    done
+    if [[ "$assoc_ok" != "1" ]]; then
+      onboard_log "ERROR: could not associate instance profile $profile with $instance_id"
+      rm -rf "$workdir"
+      exit 1
+    fi
     state=""
     for i in $(seq 1 12); do
       state="$(onboard_aws_read ec2 describe-iam-instance-profile-associations \
