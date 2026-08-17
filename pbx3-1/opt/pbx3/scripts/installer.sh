@@ -342,6 +342,11 @@ if [ -f "$SYSDB" ] && [ -x "$SCRIPTS/bootstrap-admin-user.sh" ]; then
         echo "  sudo $SCRIPTS/bootstrap-admin-user.sh" >&2
         echo "  or: sudo PBX3_ADMIN_EMAIL=… PBX3_ADMIN_PASSWORD=… $SCRIPTS/bootstrap-admin-user.sh" >&2
     }
+    _boot_uc=$(sqlite3 "$SYSDB" "SELECT COUNT(*) FROM users;" 2>/dev/null || echo 0)
+    if [ "${_boot_uc:-0}" -lt 1 ]; then
+        echo "WARNING: No SPA admin in users table after bootstrap." >&2
+        echo "  Installer continues, but login will fail until you create one." >&2
+    fi
 fi
 
 # Run setip once (network detection, shorewall/fail2ban/Asterisk localnet, /etc/issue)
@@ -501,9 +506,10 @@ if [ -f "$SYSDB" ] && command -v sqlite3 >/dev/null 2>&1; then
         echo "  SPA admin users: ${_sum_uc} (OK)"
     else
         echo "  SPA admin users: 0 — NO LOGIN YET"
-        echo "  Create one now:"
-        echo "    sudo PBX3_ADMIN_EMAIL=you@example.com PBX3_ADMIN_PASSWORD='…' \\"
+        echo "  Create one now (use YOUR real email — not a docs placeholder):"
+        echo "    sudo PBX3_ADMIN_EMAIL='you@example.com' PBX3_ADMIN_PASSWORD='…' \\"
         echo "      /opt/pbx3/scripts/bootstrap-admin-user.sh"
+        echo "    # replace you@example.com — bootstrap refuses common placeholder addresses"
         echo "    or interactive: sudo /opt/pbx3/scripts/bootstrap-admin-user.sh"
     fi
     echo "======================================================="

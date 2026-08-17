@@ -105,6 +105,14 @@ if ! echo "$email" | grep -Eq '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$';
   echo "bootstrap-admin-user: invalid email: $email" >&2
   exit 1
 fi
+# Refuse common docs placeholders that operators copy-paste as-is
+case "$(echo "$email" | tr '[:upper:]' '[:lower:]')" in
+  you@yourdomain.com|you@example.com|ops@example.com|admin@example.com|user@example.com)
+    echo "bootstrap-admin-user: refusing docs placeholder email ($email)" >&2
+    echo "  Set PBX3_ADMIN_EMAIL to your real address (or run interactively)." >&2
+    exit 1
+    ;;
+esac
 if [[ ${#pass} -lt 8 ]]; then
   echo "bootstrap-admin-user: password must be at least 8 characters" >&2
   exit 1
@@ -131,10 +139,14 @@ has_col() {
 if [[ "$RESET" == "1" ]]; then
   target_id=$(sqlite3 "$DB" "SELECT id FROM users WHERE email='$_e' LIMIT 1;")
   if [[ -z "$target_id" ]]; then
-    # sole user fallback when email not found
+    # sole user fallback when email not found — also adopt the requested email
     if [[ "$ucount" -eq 1 ]]; then
       target_id=$(sqlite3 "$DB" "SELECT id FROM users LIMIT 1;")
-      echo "bootstrap-admin-user: email not found; resetting sole user id=$target_id" >&2
+      old_email=$(sqlite3 "$DB" "SELECT email FROM users WHERE id=$target_id;")
+      echo "bootstrap-admin-user: email not found; resetting sole user id=$target_id ($old_email → $email)" >&2
+      sqlite3 "$DB" "UPDATE users SET email='$_e', password='$_h', updated_at='$_now' WHERE id=$target_id;"
+      echo "bootstrap-admin-user: password reset for $email (id=$target_id)"
+      exit 0
     else
       echo "bootstrap-admin-user: no user with email $email (and not sole-user)" >&2
       exit 1
