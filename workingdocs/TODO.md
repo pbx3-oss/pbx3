@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-18 (D1 MkDocs re-walk + Lab SBC + ARM CAGI compile)  
+**Last updated:** 2026-08-18 (Lab MkDocs sequence: Gatekeeper → SBC → home → phones)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -14,7 +14,7 @@
 4b. ~~**Tenant delete data integrity**~~ — **T1–T5 done** (`TENANT_DELETE_DATA_INTEGRITY.md`). Lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1 (2026-08-10). Remaining optional: T6 DID policy, T7 Class B, T8 FK.  
 4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 (2026-08-10).  
 4d. ~~**Fleet trunk Create vs Edit**~~ — **done** (`FLEET_TRUNK_PEERING_DECISION.md` §4.3.1): hide/403 Create on fleet; keep Edit for Egress mangle.  
-5. **Lab / install automation** — **D1 / A9a lab green**. **MkDocs re-walk 2026-08-18** (control → home → SPA Vite → adopt) **lab green** — home was a clean snapshot; **pbx3** still private so the walk **rsync’d the local tree** (MkDocs now note that fallback). Control installer: empty SBC URL is skip (TTY Enter or non-interactive unset). SPA is **`installation/install-lab-spa.md`** (Vite). Cloud **`install-pbx3-pbx3api.md`** left stale. **Lab SIP** re-walked 2026-08-18 (amd64 SBC + Provision edge + Egress). **ARM home CAGI** is compile-on-guest (not the `_all.deb`). Desks 101↔102 not yet on this tenant. **Next:** desks · make **`aelintra/pbx3` public** (then a true HTTPS-clone walk) · **#5f** · phone soak. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**.  
+5. **Lab / install automation** — **D1 / A9a lab green**. **MkDocs happy path locked 2026-08-18:** two phones and a call. Sequence **Gatekeeper → SBC → home → SPA → adopt → Provision edge**. Home installer takes fleet token + Egress in one pass; ARM CAGI is compile-on-guest. **pbx3** still private (rsync/copy fallback). Cloud **`install-pbx3-pbx3api.md`** left stale. **Next:** make **`aelintra/pbx3` public** · **#5f** · phone soak. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**.  
 5a. ~~**Toliman vanity shortuid (`kildare`)**~~ — **superseded** (2026-08-15): instance teardown / greenfield replace instead of in-place vanity. Operator: MkDocs **`fleet/decommission-instance`**.  
 5b. **Instance Name → SBC Peer label sync** (optional) — Fleet Name PATCH does not update SBC Peer description today.  
 5c. **Multi-locale / cross-border desk** — stub **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`**. **Lean §3.A:** instance nationally homed; cross-border = phone multi-identity across UK+US instances (Toliman lab). Confirm lock when ready.  

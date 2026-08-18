@@ -10,7 +10,9 @@
 
 **Related:** **`DESIGN_RULES.md`** Rules **6**, **7**, **9**, **13** · **`OPS_S3_RUNBOOK.md`** · **`GREENFIELD_FLEET_INSTANCE_INSTALL.md`** · **`INSTALL_NODE_SIMPLE.md`** · **`SBC_PRODUCT_TRACKS.md`** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (RTP bypass default) · **`LAB_INSTALL_AUTOMATION_HARNESS.md`** (local VM snapshot loop — install only, no calls).
 
-**Operator sequencing (2026-08-17):** Prefer finishing **install automation** (installers that absorb Garage/bootstrap; Gatekeeper S3 endpoint; Fleet-panel adopt) and proving it on **local VM snapshots** before LAN carrier / SIP. Cloud AWS lab keeps call proof until install is boring.
+**Lab MkDocs sequence (locked 2026-08-18):** **Gatekeeper → SBC → home PBX → SPA → adopt → Provision edge**. Goal is two phones and a call (not a no-SIP stop after adopt). D1/A9a “install without SIP” remains historically green; the published Lab pack is the phone path.
+
+**Operator sequencing (2026-08-17):** Prefer finishing **install automation** (installers that absorb Garage/bootstrap; Gatekeeper S3 endpoint; Fleet-panel adopt) and proving it on **local VM snapshots**. Cloud AWS lab keeps carrier proof separate.
 
 ---
 
