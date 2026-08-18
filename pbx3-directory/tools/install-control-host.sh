@@ -375,7 +375,12 @@ fi
 control_prompt CONTROL_IP "This VM LAN IP (browser will use it)" "${CONTROL_IP:-192.168.1.33}"
 control_prompt ADMIN_EMAIL "Fleet admin email" "fleet@example.com"
 control_prompt_secret ADMIN_PASSWORD "Fleet admin password (min 10 chars)"
-control_prompt SBC_ADMIN_API_URL "SBC admin API URL (http://IP/api — Enter if no SIP yet)" ""
+# Optional: TTY Enter or non-interactive unset both mean "no SIP yet".
+if [[ -z "$SBC_ADMIN_API_URL" && ! -t 0 ]]; then
+  SBC_ADMIN_API_URL=""
+else
+  control_prompt SBC_ADMIN_API_URL "SBC admin API URL (http://IP/api — Enter if no SIP yet)" ""
+fi
 
 CATALOG_URL="http://${CONTROL_IP}/catalog/instance-index.json"
 
