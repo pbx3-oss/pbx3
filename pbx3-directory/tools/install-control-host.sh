@@ -41,6 +41,7 @@ RECONFIGURE_NGINX=0
 
 SLUG="${PBX3_FLEET_SLUG:-}"
 CONTROL_IP="${PBX3_CONTROL_IP:-}"
+SBC_ADMIN_API_URL="${PBX3_SBC_ADMIN_API_URL:-}"
 ADMIN_EMAIL="${GATEKEEPER_ADMIN_EMAIL:-}"
 ADMIN_PASSWORD="${GATEKEEPER_ADMIN_PASSWORD:-}"
 ADMIN_NAME="${GATEKEEPER_ADMIN_NAME:-Fleet Admin}"
@@ -173,7 +174,7 @@ AWS_USE_PATH_STYLE_ENDPOINT=true
 AWS_ACCESS_KEY_ID=${GARAGE_DEFAULT_ACCESS_KEY}
 AWS_SECRET_ACCESS_KEY=${GARAGE_DEFAULT_SECRET_KEY}
 PBX3_FLEET_SERVICE_TOKEN=$(control_rand_token)
-PBX3_SBC_ADMIN_API_URL=
+PBX3_SBC_ADMIN_API_URL=${SBC_ADMIN_API_URL}
 PBX3_FLEET_HTTP_VERIFY=false
 GATEKEEPER_AUTH_DB=${AUTH_DB}
 GATEKEEPER_FLEET_UI_URL=${catalog_url%catalog/*}
@@ -334,7 +335,7 @@ EOF
 }
 
 print_banner() {
-  local ip="$1" catalog_url="$2"
+  local ip="$1" catalog_url="$2" fleet_tok="$3" sbc_url="$4"
   cat <<EOF
 
 Control host ready (Lab). Next: browser, then the home VM installer
@@ -344,6 +345,21 @@ Control host ready (Lab). Next: browser, then the home VM installer
   Catalog:  ${catalog_url}
   Fleet:    SPA Fleet mode → http://${ip}
   Login:    ${ADMIN_EMAIL}
+
+Copy for home / SBC installers (do not commit):
+  PBX3_FLEET_SERVICE_TOKEN from ${ENV_FILE}
+  PBX3_ORG_BUCKET=${BUCKET}
+EOF
+  if [[ -n "$sbc_url" ]]; then
+    cat <<EOF
+  PBX3_SBC_ADMIN_API_URL=${sbc_url}
+EOF
+  else
+    cat <<EOF
+  PBX3_SBC_ADMIN_API_URL=(unset — set after SBC admin install, then Provision edge)
+EOF
+  fi
+  cat <<EOF
 
 Garage keys stay in ${ENV_FILE}. Do not paste them into docs.
 
@@ -359,6 +375,7 @@ fi
 control_prompt CONTROL_IP "This VM LAN IP (browser will use it)" "${CONTROL_IP:-192.168.1.33}"
 control_prompt ADMIN_EMAIL "Fleet admin email" "fleet@example.com"
 control_prompt_secret ADMIN_PASSWORD "Fleet admin password (min 10 chars)"
+control_prompt SBC_ADMIN_API_URL "SBC admin API URL (http://IP/api — Enter if no SIP yet)" ""
 
 CATALOG_URL="http://${CONTROL_IP}/catalog/instance-index.json"
 
@@ -383,6 +400,10 @@ fi
 sync_gatekeeper_tree
 composer_install
 write_gatekeeper_env "$BUCKET" "$(garage_s3_endpoint)" "$CATALOG_URL"
+if [[ -n "$SBC_ADMIN_API_URL" && -f "$ENV_FILE" ]]; then
+  control_set_env_kv "$ENV_FILE" PBX3_SBC_ADMIN_API_URL "$SBC_ADMIN_API_URL"
+  control_log "Set PBX3_SBC_ADMIN_API_URL in $ENV_FILE"
+fi
 bootstrap_catalog "$SLUG" "$CATALOG_URL"
 write_nginx "_" "$(garage_web_host "$BUCKET")"
 create_admin
@@ -390,4 +411,6 @@ install_fleet_probe
 
 check_health
 
-print_banner "$CONTROL_IP" "$CATALOG_URL"
+FLEET_TOKEN="$(grep '^PBX3_FLEET_SERVICE_TOKEN=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)"
+SBC_URL="$(grep '^PBX3_SBC_ADMIN_API_URL=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)"
+print_banner "$CONTROL_IP" "$CATALOG_URL" "$FLEET_TOKEN" "$SBC_URL"

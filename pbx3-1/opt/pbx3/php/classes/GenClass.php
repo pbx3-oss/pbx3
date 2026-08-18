@@ -772,6 +772,16 @@ class genAsteriskObjects
 		if ($h !== false && trim($h) !== '') {
 			return trim($h);
 		}
+		try {
+			$q = $this->dbh->query("SELECT host FROM trunks WHERE pkey='Egress' AND active='YES' LIMIT 1");
+			$row = $q ? $q->fetch(PDO::FETCH_ASSOC) : false;
+			$host = trim((string) ($row['host'] ?? ''));
+			if ($host !== '') {
+				return $host;
+			}
+		} catch (PDOException $e) {
+			// fall through to historic default
+		}
 		return 'sbc.pbx3.com';
 	}
 

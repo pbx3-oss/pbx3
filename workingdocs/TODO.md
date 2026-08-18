@@ -14,12 +14,12 @@
 4b. ~~**Tenant delete data integrity**~~ — **T1–T5 done** (`TENANT_DELETE_DATA_INTEGRITY.md`). Lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1 (2026-08-10). Remaining optional: T6 DID policy, T7 Class B, T8 FK.  
 4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 (2026-08-10).  
 4d. ~~**Fleet trunk Create vs Edit**~~ — **done** (`FLEET_TRUNK_PEERING_DECISION.md` §4.3.1): hide/403 Create on fleet; keep Edit for Egress mangle.  
-5. **Lab / install automation** — **D1 / A9a lab green** on reverted snapshots. **Lab SIP edge green** (amd64 `.85` + Provision edge setid 1 + Egress Avail). **Next:** installer gaps (fleet token on home, SBC URL on control); call smoke. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**. MkDocs: **`installation/install-lab-*.md`** · **`fleet/install-sbc.md`**.  
+5. **Lab / install automation** — **D1 / A9a lab green** on reverted snapshots. **Lab SIP edge green** (amd64 SBC + Provision edge + Egress Avail + F2B). **Installers updated (2026-08-17):** fleet token on home, SBC URL on control, F2B jail in `pbx3sbc/install.sh`, auto-whitelist on Provision edge (#5e). **Next:** call smoke on clean re-walk. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**. MkDocs: **`installation/install-lab-*.md`** · **`fleet/install-sbc.md`**.  
 5a. ~~**Toliman vanity shortuid (`kildare`)**~~ — **superseded** (2026-08-15): instance teardown / greenfield replace instead of in-place vanity. Operator: MkDocs **`fleet/decommission-instance`**.  
 5b. **Instance Name → SBC Peer label sync** (optional) — Fleet Name PATCH does not update SBC Peer description today.  
 5c. **Multi-locale / cross-border desk** — stub **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`**. **Lean §3.A:** instance nationally homed; cross-border = phone multi-identity across UK+US instances (Toliman lab). Confirm lock when ready.  
 5d. **Outbound drouting group per home (problem)** — SBC `do_routing(0)` is global; Twilio `prefix=1` hits every home (UK CLIP → Twilio 403). Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**. Design next; no SBC park as product answer.  
-5e. **SBC Fail2ban — fleet home auto-whitelist (required)** — homes banned on edge after **Provision edge** / Egress qualify OPTIONS (manual unban + `/32`); stale/wrong IPs linger on `ignoreip`. Automate: dispatcher / `role=asterisk` Peer IPs → whitelist + **unban on provision/IP change** + sync (drop retired homes). Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban. Lab reconfirmed 2026-08-17 (new home setid OK, Egress Unavail until manual F2B). (Carrier Peer auto-WL still deferred to next carrier onboard.)  
+5e. **SBC Fail2ban — fleet home auto-whitelist** — **done (2026-08-17):** Provision edge upserts whitelist DB + unban + sync via `FleetNodeProvisioner`. Retire stale IPs on decommission still open. Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.  
 5f. **Fleet Instances — Remove after Decom (required UX)** — SPA **Decom** soft-hides only; hard drop (`unregister-instance.sh --remove`) is CLI-only. Need Fleet SPA action (and/or Gatekeeper API) on `decommissioned` rows to remove catalog entry (keep S3 `instances/{id}/` meta/backups). Prefer later fold into decommission automation / S10.7; interim SPA Remove is enough. Lab: Toliman left **Decom** on purpose (2026-08-17). Docs: MkDocs **`fleet/decommission-instance`** Step 2 · **`INSTANCE_ONBOARDING.md`** hard remove.  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
 7. **New instance / package install** — fleet floors **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** (+ tips between — see **TODO_OPS**).  
@@ -80,7 +80,7 @@
 - [x] **Strip customer-migrate tooling from pbx3 (suggested #3, done 2026-08-09):** Removed stock migrate entrypoints; kept idempotent **`sqlite_normalize_cluster_to_shortuid.sql`**. Private ETL owns migrate SQL/PHP. Heritage strings scrubbed 2026-08-09.
 
 - [x] **Lab / install automation — D1 (2026-08-17):** Control + home wrapper + catalog pick + Sanctum + Fleet **lab green** on reverted snapshots (`install-home-host.sh` proven). Spec: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** § UX bar. MkDocs: **`installation/install-lab-*.md`**.
-- [x] **Lab SIP / Provision edge (2026-08-17):** amd64 SBC **192.168.1.85** + Gatekeeper provision → setid **1**; home Egress seeded; egress qualify **Avail**. Gaps: fleet token on home installer; F2B jail install step in `pbx3sbc/install.sh`.
+- [x] **Lab SIP / Provision edge (2026-08-17):** amd64 SBC + Gatekeeper provision → setid; home Egress seeded; egress qualify **Avail**; F2B jail + auto-whitelist on provision; **registerDomain** on provision-edge (Domain Routes).
 
 - [x] **#4b/#4c lab procedures on golden (2026-08-10):** **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1–§2 green (same-home prune; ext_len API + GenAst `_81XXX`).
 
@@ -163,7 +163,7 @@
 
 - [ ] **S10.7 — Orchestrated onboard / rebuild (parked 2026-07-15):** Interim: agent-assisted Mode 4. Design: **`SELF_SERVICE_REBUILD_DESIGN.md`**.
 
-- [ ] **SBC Fail2ban — fleet home auto-whitelist (#5e — required 2026-08-12):** Automate dispatcher / `role=asterisk` Peer IPs → Fail2ban whitelist + unban on provision/IP change + sync (retire stale). Lab: Toliman; reconfirmed **2026-08-17** (Provision edge → OPTIONS ban → Egress Unavail until manual WL). Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.
+- [x] **SBC Fail2ban — fleet home auto-whitelist (#5e — 2026-08-17):** `FleetNodeProvisioner` upserts whitelist DB + unban + sync on Provision edge. Lab manual path retired for new installs.
 
 - [ ] **Fleet Instances — Remove after Decom (#5f — 2026-08-17):** Gatekeeper + SPA action to hard-drop catalog row for `decommissioned` instances (`unregister --remove` today). Keep S3 meta/backups. Optional later: part of decommission automation / S10.7. Lab: Toliman stays Decom until this ships.
 

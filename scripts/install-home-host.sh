@@ -11,6 +11,8 @@
 #   sudo ./install-home-host.sh
 #   sudo DOMAIN_TLD=pbx3.com INSTANCE_SITENAME='Lab Home' \
 #        PBX3_ADMIN_EMAIL=you@example.com PBX3_ADMIN_PASSWORD='…' \
+#        PBX3_FLEET_SERVICE_TOKEN='…' PBX3_ORG_BUCKET=lab-pbx3 \
+#        PBX3_SBC_EGRESS_HOST=192.168.1.85 \
 #        ./install-home-host.sh
 #
 # Spec: FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md § UX bar
@@ -31,6 +33,10 @@ PBX3_ADMIN_PASSWORD="${PBX3_ADMIN_PASSWORD:-}"
 PBX3_DEB="${PBX3_DEB:-}"
 PBX3API_SRC="${PBX3API_SRC:-}"
 INSTALL_CAGI="${PBX3_INSTALL_CAGI:-0}"
+PBX3_FLEET_SERVICE_TOKEN="${PBX3_FLEET_SERVICE_TOKEN:-}"
+PBX3_ORG_BUCKET="${PBX3_ORG_BUCKET:-}"
+PBX3_SBC_EGRESS_HOST="${PBX3_SBC_EGRESS_HOST:-}"
+SEED_EGRESS_SCRIPT="${SEED_EGRESS_SCRIPT:-}"
 
 if [[ "$(id -u)" -ne 0 ]]; then
   home_err "run as root (sudo $0)"
@@ -119,6 +125,91 @@ find_api_src() {
   return 1
 }
 
+home_set_env_kv() {
+  local file="$1" key="$2" val="$3"
+  touch "$file"
+  if grep -q "^${key}=" "$file" 2>/dev/null; then
+    sed -i "s|^${key}=.*|${key}=${val}|" "$file"
+  else
+    echo "${key}=${val}" >>"$file"
+  fi
+}
+
+find_seed_egress_script() {
+  local f
+  if [[ -n "$SEED_EGRESS_SCRIPT" && -f "$SEED_EGRESS_SCRIPT" ]]; then
+    printf '%s' "$SEED_EGRESS_SCRIPT"
+    return 0
+  fi
+  for f in \
+    "${SCRIPT_DIR}/seed-fleet-egress-trunk.sh" \
+    "${SCRIPT_DIR}/../pbx3-directory/tools/seed-fleet-egress-trunk.sh" \
+    /tmp/seed-fleet-egress-trunk.sh; do
+    if [[ -f "$f" ]]; then
+      printf '%s' "$f"
+      return 0
+    fi
+  done
+  return 1
+}
+
+home_configure_fleet_api() {
+  local env_file="/opt/pbx3api/.env"
+  local bucket_default="${PBX3_ORG_BUCKET:-}"
+
+  if [[ -z "$PBX3_FLEET_SERVICE_TOKEN" ]]; then
+    if [[ -t 0 ]]; then
+      read -r -p "Fleet service token (from control /etc/pbx3-gatekeeper/.env — Enter to skip fleet API): " PBX3_FLEET_SERVICE_TOKEN || true
+    fi
+  fi
+  if [[ -z "$PBX3_FLEET_SERVICE_TOKEN" ]]; then
+    home_log "Skipping fleet API env (no PBX3_FLEET_SERVICE_TOKEN)"
+    return 0
+  fi
+
+  if [[ -z "$bucket_default" ]]; then
+    home_prompt PBX3_ORG_BUCKET "Org bucket (same as control host)" "lab-pbx3"
+    bucket_default="$PBX3_ORG_BUCKET"
+  fi
+
+  home_log "Writing fleet API settings to $env_file"
+  home_set_env_kv "$env_file" PBX3_FLEET_MODE true
+  home_set_env_kv "$env_file" PBX3_FLEET_SERVICE_TOKEN "$PBX3_FLEET_SERVICE_TOKEN"
+  home_set_env_kv "$env_file" PBX3_ORG_BUCKET "$bucket_default"
+  home_set_env_kv "$env_file" PBX3_DIRECTORY_BACKUP_UPLOAD true
+  if [[ -n "$PBX3_SBC_EGRESS_HOST" ]]; then
+    home_set_env_kv "$env_file" PBX3_SBC_EGRESS_HOST "$PBX3_SBC_EGRESS_HOST"
+  fi
+  (cd /opt/pbx3api && php artisan config:clear) || true
+}
+
+home_seed_fleet_egress() {
+  local seed sbc_host="${PBX3_SBC_EGRESS_HOST:-}"
+
+  if [[ -z "$sbc_host" ]]; then
+    if [[ -t 0 ]]; then
+      read -r -p "SBC egress host/IP for Egress trunk (Enter to skip until after Provision edge): " sbc_host || true
+    fi
+  fi
+  if [[ -z "$sbc_host" ]]; then
+    home_log "Skipping Egress trunk seed (no PBX3_SBC_EGRESS_HOST)"
+    return 0
+  fi
+  PBX3_SBC_EGRESS_HOST="$sbc_host"
+  home_set_env_kv "/opt/pbx3api/.env" PBX3_SBC_EGRESS_HOST "$sbc_host"
+
+  if ! seed="$(find_seed_egress_script)"; then
+    home_err "seed-fleet-egress-trunk.sh not found (set SEED_EGRESS_SCRIPT or copy from pbx3-directory/tools/)"
+    return 1
+  fi
+  home_log "Seeding Egress trunk → ${sbc_host} ($seed)"
+  PBX3_SBC_EGRESS_HOST="$sbc_host" bash "$seed" /opt/pbx3/db/sqlite.db
+  /opt/pbx3/scripts/genAst.sh
+  php /opt/pbx3/php/utilities/runLinker.php >/dev/null
+  systemctl restart asterisk
+  home_log "Egress trunk seeded; Asterisk restarted"
+}
+
 arch="$(dpkg --print-architecture 2>/dev/null || echo unknown)"
 if [[ "$arch" != "amd64" ]]; then
   INSTALL_CAGI=0
@@ -187,6 +278,9 @@ rm -f /etc/nginx/sites-enabled/default
 home_log "Running pbx3api installer.sh (snakeoil :44300, no Let's Encrypt)"
 /opt/pbx3api/scripts/installer.sh
 
+home_configure_fleet_api
+home_seed_fleet_egress
+
 ip="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i <= NF; i++) if ($i == "src") { print $(i + 1); exit }}')"
 ip="${ip:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
 ident="$(sqlite3 /opt/pbx3/db/sqlite.db "SELECT id, shortuid, fqdn, sitename FROM globals WHERE pkey='global';" 2>/dev/null || true)"
@@ -200,6 +294,8 @@ Home PBX ready (Lab). No Let's Encrypt; API is snakeoil on :44300.
   SPA API:  https://${ip:-127.0.0.1}:44300/api
   Login:    ${PBX3_ADMIN_EMAIL}
 
-Next: Adopt from Fleet (Instances → Register instance). Skip Provision edge (no SIP).
+Next: Adopt from Fleet (Instances → Register instance).
+If SIP lab: install SBC on amd64 VM, set PBX3_SBC_ADMIN_API_URL on control, Provision edge
+(home IP is auto-whitelisted on the SBC). Re-run with PBX3_SBC_EGRESS_HOST if Egress was skipped.
 
 EOF

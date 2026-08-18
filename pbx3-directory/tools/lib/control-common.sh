@@ -127,3 +127,17 @@ control_rand_hex() {
 control_rand_token() {
   openssl rand -hex 32
 }
+
+# Upsert KEY=value in a dotenv file (safe for re-runs).
+control_set_env_kv() {
+  local file="$1" key="$2" val="$3"
+  if [[ ! -f "$file" ]]; then
+    control_err "env file missing: $file"
+    return 1
+  fi
+  if grep -q "^${key}=" "$file" 2>/dev/null; then
+    sed -i "s|^${key}=.*|${key}=${val}|" "$file"
+  else
+    echo "${key}=${val}" >>"$file"
+  fi
+}

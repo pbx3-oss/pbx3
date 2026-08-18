@@ -126,6 +126,16 @@ final class InstanceEdgeProvision
             ];
         }
 
+        $fqdn = strtolower(trim((string) ($instance['fqdn'] ?? '')));
+        $domainResult = null;
+        if ($fqdn !== '') {
+            $domainResult = $sbc->registerDomain($fqdn, $setid);
+            if (empty($domainResult['ok'])) {
+                $msg = (string) ($domainResult['message'] ?? 'SBC registerDomain failed');
+                throw new \RuntimeException("registerDomain {$fqdn}: {$msg}", 502);
+            }
+        }
+
         $actor = isset($body['updated_by']) && is_string($body['updated_by'])
             ? $body['updated_by']
             : null;
@@ -141,6 +151,7 @@ final class InstanceEdgeProvision
             'backend_uri' => $uri,
             'sbc_dispatcher_setid' => $setid,
             'edge' => $edge,
+            'domain' => $domainResult,
             'instance' => $patched['instance'] ?? null,
         ];
     }
