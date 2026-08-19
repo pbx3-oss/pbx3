@@ -70,7 +70,7 @@ home_prompt() {
 
 home_prompt_secret() {
   local var="$1" question="$2"
-  local cur ans
+  local cur ans confirm attempts=0
   cur="${!var:-}"
   if [[ -n "$cur" ]]; then
     return 0
@@ -79,13 +79,24 @@ home_prompt_secret() {
     home_err "non-interactive: set $var"
     return 1
   fi
-  read -r -s -p "$question: " ans || true
-  echo
-  if [[ -z "$ans" ]]; then
-    home_err "password cannot be empty"
-    return 1
-  fi
-  printf -v "$var" '%s' "$ans"
+  while (( attempts < 3 )); do
+    read -r -s -p "$question: " ans || true
+    echo
+    if [[ -z "$ans" ]]; then
+      home_err "password cannot be empty"
+      return 1
+    fi
+    read -r -s -p "Confirm password: " confirm || true
+    echo
+    if [[ "$ans" == "$confirm" ]]; then
+      printf -v "$var" '%s' "$ans"
+      return 0
+    fi
+    attempts=$((attempts + 1))
+    echo "Passwords do not match. Try again." >&2
+  done
+  home_err "password confirmation failed"
+  return 1
 }
 
 find_deb() {

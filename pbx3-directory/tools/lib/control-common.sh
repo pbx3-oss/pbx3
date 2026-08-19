@@ -102,7 +102,7 @@ control_prompt() {
 
 control_prompt_secret() {
   local var="$1" question="$2"
-  local cur ans
+  local cur ans confirm attempts=0
   cur="${!var:-}"
   if [[ -n "$cur" ]]; then
     return 0
@@ -111,13 +111,24 @@ control_prompt_secret() {
     control_err "non-interactive: set $var"
     return 1
   fi
-  read -r -s -p "$question: " ans || true
-  echo
-  if [[ -z "$ans" ]]; then
-    control_err "password cannot be empty"
-    return 1
-  fi
-  printf -v "$var" '%s' "$ans"
+  while (( attempts < 3 )); do
+    read -r -s -p "$question: " ans || true
+    echo
+    if [[ -z "$ans" ]]; then
+      control_err "password cannot be empty"
+      return 1
+    fi
+    read -r -s -p "Confirm password: " confirm || true
+    echo
+    if [[ "$ans" == "$confirm" ]]; then
+      printf -v "$var" '%s' "$ans"
+      return 0
+    fi
+    attempts=$((attempts + 1))
+    echo "Passwords do not match. Try again." >&2
+  done
+  control_err "password confirmation failed"
+  return 1
 }
 
 control_rand_hex() {
