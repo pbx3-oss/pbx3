@@ -300,9 +300,11 @@ final class SbcFleetClient
             $msg = is_array($decoded)
                 ? ($decoded['message'] ?? $decoded['error'] ?? json_encode($decoded))
                 : (string) $res->getBody();
+            // Never bounce SBC adapter 401/403 as the operator's Gatekeeper session.
+            $outCode = ($code === 401 || $code === 403) ? 502 : ($code >= 400 && $code < 600 ? $code : 502);
             throw new \RuntimeException(
                 "HTTP {$method} {$url} → {$code}: {$msg}",
-                $code >= 400 && $code < 600 ? $code : 502
+                $outCode
             );
         }
 

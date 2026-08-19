@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-18 (Lab MkDocs sequence: Gatekeeper → SBC → home → phones)  
+**Last updated:** 2026-08-18 (Lab walk: Provision edge 401 → fleet token paste; **#5g**)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -21,6 +21,7 @@
 5d. **Outbound drouting group per home (problem)** — SBC `do_routing(0)` is global; Twilio `prefix=1` hits every home (UK CLIP → Twilio 403). Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**. Design next; no SBC park as product answer.  
 5e. **SBC Fail2ban — fleet home auto-whitelist** — **done (2026-08-17):** Provision edge upserts whitelist DB + unban + sync via `FleetNodeProvisioner`. Retire stale IPs on decommission still open. Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.  
 5f. **Fleet Instances — Remove after Decom (required UX)** — SPA **Decom** soft-hides only; hard drop (`unregister-instance.sh --remove`) is CLI-only. Need Fleet SPA action (and/or Gatekeeper API) on `decommissioned` rows to remove catalog entry (keep S3 `instances/{id}/` meta/backups). Prefer later fold into decommission automation / S10.7; interim SPA Remove is enough. Lab: Toliman left **Decom** on purpose (2026-08-17). Docs: MkDocs **`fleet/decommission-instance`** Step 2 · **`INSTANCE_ONBOARDING.md`** hard remove.  
+5g. **Fleet service token — mint once, never re-type (next session)** — Control already mints `PBX3_FLEET_SERVICE_TOKEN`. Lab walk 2026-08-18: home matched control; Filament had a different paste → Provision edge `401` on `/api/fleet/provision-node`. Do **not** ask the operator to type/paste that long secret on home **and** Filament (skip-on-Enter is a footgun). Prefer: home + SBC admin **pull** from Gatekeeper (control LAN IP is already known), **or** one paste total. Never mint a second token. MkDocs **`installation/install-lab-sbc.md`**.  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
 7. **New instance / package install** — fleet floors **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** (+ tips between — see **TODO_OPS**).  
 8. **Toll fraud / velocity** — plan **Accepted**; **WP0 + WP3 + WP1** done (2026-08-11). Remainder deferred (V4 / SBC floor / Wangiri). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
@@ -83,6 +84,8 @@
 - [x] **D1 MkDocs re-walk (2026-08-18):** control re-run + clean home install + Vite catalog + Fleet register + Sanctum + probe **lab green**. **pbx3** still private — rsync fallback in Lab MkDocs. Empty SBC URL skip on control installer.
 - [x] **Lab SBC + ARM CAGI (2026-08-18):** amd64 edge reinstall + Provision edge + Egress; ARM home compiles CAGI on-guest (`pbx3cagi.arm64`).
 - [x] **Lab SIP / Provision edge (2026-08-17):** amd64 SBC + Gatekeeper provision → setid; home Egress seeded; egress qualify **Avail**; F2B jail + auto-whitelist on provision; **registerDomain** on provision-edge (Domain Routes).
+
+- [ ] **Fleet service token — mint once, never re-type (#5g, next session 2026-08-18):** Control mints `PBX3_FLEET_SERVICE_TOKEN`. Home + Filament must not each prompt for the same long secret (lab: Filament ≠ control → Provision edge 401). Engineer pull-from-Gatekeeper or one paste total; drop Filament Enter-to-skip. Never mint a second token.
 
 - [x] **#4b/#4c lab procedures on golden (2026-08-10):** **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1–§2 green (same-home prune; ext_len API + GenAst `_81XXX`).
 

@@ -197,7 +197,7 @@ if [ -z "$DOMAIN_TLD" ] && [ -e "$SYSDB" ]; then
     DOMAIN_TLD=$(normalize_fqdn "$(sqlite3 "$SYSDB" "SELECT domain FROM globals WHERE domain IS NOT NULL AND domain != '' LIMIT 1" 2>/dev/null)")
 fi
 if [ -z "$DOMAIN_TLD" ] && [ -t 0 ]; then
-    printf "Domain apex / TLD (e.g. pbx3.com) [pbx3.com]: " >&2
+    printf "Domain apex — press Enter for pbx3.com: " >&2
     read -r _tld_in
     _tld_in=$(normalize_fqdn "$_tld_in")
     if [ -z "$_tld_in" ]; then

@@ -100,21 +100,49 @@ home_prompt_secret() {
 }
 
 find_deb() {
-  local f
+  local f best="" bestver="" ver
   if [[ -n "$PBX3_DEB" && -f "$PBX3_DEB" ]]; then
     printf '%s' "$PBX3_DEB"
     return 0
   fi
-  for f in \
-    "${SCRIPT_DIR}"/pbx3_*.deb \
-    /tmp/pbx3_*.deb \
-    "${PWD}"/pbx3_*.deb; do
-    if [[ -f "$f" ]]; then
-      printf '%s' "$f"
-      return 0
+  shopt -s nullglob
+  for f in "${SCRIPT_DIR}"/pbx3_*.deb /tmp/pbx3_*.deb "${PWD}"/pbx3_*.deb; do
+    [[ -f "$f" ]] || continue
+    ver="$(basename "$f")"
+    ver="${ver#pbx3_}"
+    ver="${ver%_all.deb}"
+    ver="${ver%.deb}"
+    if [[ -z "$best" ]] || dpkg --compare-versions "$ver" gt "$bestver"; then
+      best="$f"
+      bestver="$ver"
     fi
   done
-  return 1
+  shopt -u nullglob
+  if [[ -z "$best" ]]; then
+    return 1
+  fi
+  printf '%s' "$best"
+}
+
+deb_version() {
+  local base ver
+  base="$(basename "$1")"
+  ver="${base#pbx3_}"
+  ver="${ver%_all.deb}"
+  printf '%s' "${ver%.deb}"
+}
+
+overlay_floor_installer() {
+  local src="${SCRIPT_DIR}/../pbx3-1/opt/pbx3/scripts/installer.sh"
+  if [[ -f "$src" ]]; then
+    cp -a "$src" /opt/pbx3/scripts/installer.sh
+    chmod 755 /opt/pbx3/scripts/installer.sh
+    home_log "Overlaid git installer.sh (FQDN is minted {shortuid}.{apex}; not prompted)"
+  fi
+  if grep -q 'node1.pbx3.com' /opt/pbx3/scripts/installer.sh 2>/dev/null; then
+    home_err "installer.sh still asks for Instance FQDN (node1.pbx3.com). Install floor pbx3_0.0.5-5 or newer, or overlay from pbx3-1."
+    return 1
+  fi
 }
 
 find_api_src() {
@@ -226,7 +254,7 @@ if [[ "$arch" != "amd64" ]]; then
   INSTALL_CAGI=0
 fi
 
-home_prompt DOMAIN_TLD "Domain apex (FQDN becomes {shortuid}.apex)" "pbx3.com"
+home_prompt DOMAIN_TLD "Domain apex — press Enter for pbx3.com" "pbx3.com"
 home_prompt INSTANCE_SITENAME "Site name (friendly Name)" "Lab Home"
 home_prompt PBX3_ADMIN_EMAIL "Admin SPA email (not a docs placeholder)"
 home_prompt_secret PBX3_ADMIN_PASSWORD "Admin SPA password (min 8 chars)"
@@ -237,21 +265,27 @@ if [[ ${#PBX3_ADMIN_PASSWORD} -lt 8 ]]; then
 fi
 
 deb=""
+if ! deb="$(find_deb)"; then
+  home_err "pbx3_*.deb not found (set PBX3_DEB or copy next to this script / into /tmp)"
+  exit 1
+fi
+debver="$(deb_version "$deb")"
+inst=""
 if dpkg-query -W pbx3 >/dev/null 2>&1; then
-  home_log "pbx3 already installed ($(dpkg-query -W -f '${Version}' pbx3))"
-else
-  if ! deb="$(find_deb)"; then
-    home_err "pbx3_*.deb not found (set PBX3_DEB or copy next to this script / into /tmp)"
-    exit 1
-  fi
-  home_log "Installing $deb"
+  inst="$(dpkg-query -W -f '${Version}' pbx3)"
+fi
+if [[ -z "$inst" ]] || dpkg --compare-versions "$inst" lt "$debver"; then
+  home_log "Installing $deb (have ${inst:-none}, want $debver)"
   export DEBIAN_FRONTEND=noninteractive
   echo 'slapd slapd/no_configuration boolean true' | debconf-set-selections
   apt-get update -qq
   apt-get install -y ssmtp sqlite3 curl ca-certificates git
   chmod +x /etc/ssmtp 2>/dev/null || true
   apt-get install -y "$deb"
+else
+  home_log "pbx3 already $inst (>= $debver)"
 fi
+overlay_floor_installer || exit 1
 
 if [[ "$INSTALL_CAGI" == "1" ]]; then
   home_log "CAGI requested — install pbx3cagi_*.deb yourself (not this Lab default)"
@@ -260,7 +294,15 @@ else
 fi
 
 export DOMAIN_TLD INSTANCE_SITENAME PBX3_ADMIN_EMAIL PBX3_ADMIN_PASSWORD
-home_log "Running pbx3 installer.sh"
+home_log "Running pbx3 installer.sh (mints FQDN={shortuid}.${DOMAIN_TLD}; does not ask for FQDN)"
+if [[ -f /opt/pbx3/db/sqlite.db ]]; then
+  _oldfq="$(sqlite3 /opt/pbx3/db/sqlite.db "SELECT fqdn FROM globals LIMIT 1;" 2>/dev/null || true)"
+  _oldlab="${_oldfq%%.*}"
+  if [[ -n "$_oldfq" && ! "$_oldlab" =~ ^[0-9bcdfghjkmnpqrstvwxyz]{6}$ ]]; then
+    home_err "existing globals.fqdn=${_oldfq} is not {shortuid}.{apex}. Remove /opt/pbx3/db/sqlite.db and re-run (do not type node1.pbx3.com)."
+    exit 1
+  fi
+fi
 /opt/pbx3/scripts/installer.sh
 
 # Floor deb 0.0.5-5 calls bootstrap with /bin/sh; git tip uses bash.
