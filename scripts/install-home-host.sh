@@ -36,6 +36,7 @@ PBX3API_SRC="${PBX3API_SRC:-}"
 INSTALL_CAGI="${PBX3_INSTALL_CAGI:-0}"
 PBX3_FLEET_SERVICE_TOKEN="${PBX3_FLEET_SERVICE_TOKEN:-}"
 PBX3_ORG_BUCKET="${PBX3_ORG_BUCKET:-}"
+PBX3_SKIP_FLEET="${PBX3_SKIP_FLEET:-0}"
 PBX3_SBC_EGRESS_HOST="${PBX3_SBC_EGRESS_HOST:-}"
 SEED_EGRESS_SCRIPT="${SEED_EGRESS_SCRIPT:-}"
 PBX3_CLEAN_INSTALL="${PBX3_CLEAN_INSTALL:-0}"
@@ -218,10 +219,13 @@ home_configure_fleet_api() {
   local env_file="/opt/pbx3api/.env"
   local bucket_default="${PBX3_ORG_BUCKET:-}"
 
-  if [[ -z "$PBX3_FLEET_SERVICE_TOKEN" ]]; then
-    if [[ -t 0 ]]; then
-      read -r -p "Fleet service token (from control /etc/pbx3-gatekeeper/.env — Enter to skip fleet API): " PBX3_FLEET_SERVICE_TOKEN || true
-    fi
+  if [[ "$PBX3_SKIP_FLEET" == "1" ]]; then
+    home_log "Skipping fleet API env (PBX3_SKIP_FLEET=1)"
+    return 0
+  fi
+
+  if [[ -z "$PBX3_FLEET_SERVICE_TOKEN" && -t 0 ]]; then
+    read -r -p "Fleet service token (same value as control/SBC — Enter to skip fleet): " PBX3_FLEET_SERVICE_TOKEN || true
   fi
   if [[ -z "$PBX3_FLEET_SERVICE_TOKEN" ]]; then
     home_log "Skipping fleet API env (no PBX3_FLEET_SERVICE_TOKEN)"

@@ -280,6 +280,83 @@ final class S3Registrar
         return $this->patchInstance($id, $patch, $updatedBy);
     }
 
+    /**
+     * Hard remove from catalog — decommissioned instances only (SPA / ops; mirrors unregister-instance.sh --remove).
+     * Keeps instances/{id}/meta.json and S3 backups; drops catalog row.
+     *
+     * @param  array<string, mixed>  $body  confirm: true required; optional notes
+     * @return array{catalog: array<string, mixed>, removed_id: string, instance_meta: array<string, mixed>}
+     */
+    public function removeInstanceFromCatalog(string $id, array $body, ?string $updatedBy = null): array
+    {
+        if (empty($body['confirm'])) {
+            throw new \InvalidArgumentException('confirm: true required to remove instance from catalog', 422);
+        }
+
+        $id = trim($id);
+        if ($id === '') {
+            throw new \InvalidArgumentException('Instance id required', 422);
+        }
+
+        $catalog = $this->getCatalog();
+        $instances = $catalog['instances'] ?? [];
+        $index = null;
+        $record = null;
+        foreach ($instances as $i => $row) {
+            if (($row['id'] ?? '') === $id) {
+                $index = $i;
+                $record = $row;
+                break;
+            }
+        }
+        if ($index === null || ! is_array($record)) {
+            throw new \RuntimeException("Instance not found: {$id}", 404);
+        }
+
+        self::assertDecommissionedForCatalogRemove($record);
+
+        $notes = isset($body['notes']) && is_string($body['notes']) ? trim($body['notes']) : '';
+        if ($notes === '') {
+            $notes = 'Removed from fleet catalog '.$this->nowIso();
+        }
+
+        $now = $this->nowIso();
+        array_splice($instances, $index, 1);
+        $catalog['version'] = 1;
+        $catalog['updated_at'] = $now;
+        $catalog['instances'] = array_values($instances);
+        $this->writeJson(self::CATALOG_KEY, $catalog);
+
+        $metaKey = "instances/{$id}/meta.json";
+        $meta = $this->readJson($metaKey, []);
+        if ($meta !== []) {
+            $meta['status'] = 'decommissioned';
+            $meta['updated_at'] = $now;
+            $meta['notes'] = $notes;
+            $meta['removed_from_catalog_at'] = $now;
+            if ($updatedBy !== null && $updatedBy !== '') {
+                $meta['updated_by'] = $updatedBy;
+            }
+            $this->writeJson($metaKey, $meta);
+        }
+
+        return ['catalog' => $catalog, 'removed_id' => $id, 'instance_meta' => $meta];
+    }
+
+    /**
+     * @param  array<string, mixed>  $record
+     */
+    public static function assertDecommissionedForCatalogRemove(array $record): void
+    {
+        $status = strtolower((string) ($record['status'] ?? 'active'));
+        if ($status !== 'decommissioned') {
+            throw new \InvalidArgumentException(
+                'Instance must be decommissioned before remove from catalog (Decom first)',
+                422
+            );
+        }
+    }
+
     /** @param array<string, mixed> $record */
     public function registerTenant(array $record): array
     {

@@ -62,4 +62,12 @@ final class InstanceLifecycleTest extends TestCase
     {
         $this->assertSame(['active', 'maintenance', 'decommissioned'], S3Registrar::STATUSES);
     }
+
+    public function test_assert_decommissioned_for_catalog_remove(): void
+    {
+        S3Registrar::assertDecommissionedForCatalogRemove(['id' => 'x', 'status' => 'decommissioned']);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionCode(422);
+        S3Registrar::assertDecommissionedForCatalogRemove(['id' => 'x', 'status' => 'active']);
+    }
 }

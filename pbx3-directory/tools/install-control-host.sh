@@ -346,9 +346,10 @@ Control host ready (Lab). Next: browser, then the home VM installer
   Fleet:    SPA Fleet mode → http://${ip}
   Login:    ${ADMIN_EMAIL}
 
-Copy for home / SBC installers (do not commit):
-  PBX3_FLEET_SERVICE_TOKEN from ${ENV_FILE}
+Copy once for SBC + home installers (same path as cloud — do not commit):
+  sudo grep '^PBX3_FLEET_SERVICE_TOKEN=' ${ENV_FILE}
   PBX3_ORG_BUCKET=${BUCKET}
+  Reuse that exact token on SBC admin and home install. Never mint a second token.
 EOF
   if [[ -n "$sbc_url" ]]; then
     cat <<EOF

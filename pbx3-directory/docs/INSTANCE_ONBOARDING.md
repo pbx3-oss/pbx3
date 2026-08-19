@@ -545,6 +545,10 @@ Dry-run: add `--dry-run` (prints intended S3 updates without uploading).
 
 Removes the row from `catalog/instance-index.json`. Updates `meta.json` to `decommissioned` for audit; does **not** delete backup objects.
 
+**Fleet SPA:** **Instances** → row menu → **Remove** (only when lifecycle is **Decom** / `status=decommissioned`).
+
+**CLI:**
+
 ```bash
 ./unregister-instance.sh --id 3E3gAOVGBhvc6vEPTBIYCBPycIk --remove \
   --notes 'Removed from fleet catalog'

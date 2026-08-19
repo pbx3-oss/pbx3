@@ -703,6 +703,17 @@ try {
         ));
     }
 
+    if ($method === 'POST' && preg_match('#^/api/v1/instances/([A-Za-z0-9_-]+)/remove$#', $path, $m)) {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $actor = Auth::user()['email'] ?? null;
+        JsonResponse::send(200, $registrar->removeInstanceFromCatalog(
+            $m[1],
+            $body,
+            is_string($actor) ? $actor : null
+        ));
+    }
+
     if ($method === 'POST' && preg_match('#^/api/v1/instances/([A-Za-z0-9_-]+)/provision-edge$#', $path, $m)) {
         Auth::requireAbility(FleetAbilities::EDGE);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
