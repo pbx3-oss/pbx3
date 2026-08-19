@@ -147,7 +147,9 @@ if [[ -f /opt/pbx3/db/sqlite.db ]] && [[ -x /opt/pbx3/scripts/genAst.sh ]]; then
 fi
 
 # Link /etc/asterisk → ASTLOCALCONF when possible (same as postinst), then fix externip.
-if command -v php >/dev/null 2>&1 && [[ -f /opt/pbx3/php/utilities/runLinker.php ]]; then
+if [[ -x /opt/pbx3/scripts/link-asterisk-configs.sh ]]; then
+  /opt/pbx3/scripts/link-asterisk-configs.sh >/dev/null 2>&1 || true
+elif command -v php >/dev/null 2>&1 && [[ -f /opt/pbx3/php/utilities/runLinker.php ]]; then
   php /opt/pbx3/php/utilities/runLinker.php >/dev/null 2>&1 || true
 fi
 

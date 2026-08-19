@@ -677,14 +677,13 @@ class genAsteriskObjects
 		$targetFile = PJSIP_READY_TRUNKS;
 		$this->checkFileIsWriteable($targetFile);
 
-/*
- * Now write the trunk definitions to it (if there are any)
- */
-		if ($pjsipReadyTrunks) {
-			$fh = fopen($targetFile, 'w') or die("Could not open file $targetFile!");
-			fwrite($fh, $pjsipReadyTrunks) or die("Could not write to file $targetFile !");
-			fclose($fh);
+		if (empty($pjsipReadyTrunks)) {
+			$pjsipReadyTrunks = ";";
 		}
+
+		$fh = fopen($targetFile, 'w') or die("Could not open file $targetFile!");
+		fwrite($fh, $pjsipReadyTrunks) or die("Could not write to file $targetFile !");
+		fclose($fh);
 	}
 
 /**

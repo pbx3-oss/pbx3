@@ -410,7 +410,11 @@ rm -f /tmp/seed-fleet-egress-trunk.sh
 # Publish PJSIP Egress into ASTLOCALCONF, link into /etc/asterisk, then full Asterisk restart
 # (pjsip reload alone is not enough after egress seed — OPS_ASTERISK_AFTER_EGRESS_GENAST.md).
 sudo /opt/pbx3/scripts/genAst.sh
-sudo php /opt/pbx3/php/utilities/runLinker.php >/dev/null
+if [[ -x /opt/pbx3/scripts/link-asterisk-configs.sh ]]; then
+  sudo /opt/pbx3/scripts/link-asterisk-configs.sh
+else
+  sudo php /opt/pbx3/php/utilities/runLinker.php >/dev/null
+fi
 sudo systemctl restart asterisk
 echo "egress_seed_ok host=${sbc_host}"
 REMOTE

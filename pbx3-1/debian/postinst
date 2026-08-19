@@ -40,12 +40,10 @@ if [ -x "$NORM" ] && [ -f /opt/pbx3/db/sqlite.db ]; then
 	"$NORM" || true
 fi
 
-# Ensure /etc/asterisk/*.conf symlinks point at /opt/pbx3/etc/asterisk/configs/ (installer.sh does this on first provision; apt upgrade alone does not re-run installer).
-# IMPORTANT: GenAst ready files live under ASTLOCALCONF (/opt/pbx3/.../configs). Restore/Mode-4
-# may leave good copies only under /etc/asterisk; setLinks renames those to *_installed and
-# symlinks to ASTLOCALCONF — which can be empty/stale until we regenerate below.
-if command -v php >/dev/null 2>&1 && [ -f "$SYSPATH/php/utilities/runLinker.php" ]; then
-	php "$SYSPATH/php/utilities/runLinker.php" >/dev/null 2>&1 || true
+# Symlink /etc/asterisk → ASTLOCALCONF (static + GenAst stub/ready files). Shipped stubs
+# ensure pjsip_ready_*.conf exist before runLinker; genAst below overwrites content in place.
+if [ -x "$SYSPATH/scripts/link-asterisk-configs.sh" ]; then
+	"$SYSPATH/scripts/link-asterisk-configs.sh" || true
 fi
 
 # Phase R1.5: ensure the recordings catalog table exists on an already-provisioned
@@ -104,6 +102,9 @@ fi
 # Then rewrite external_* to this node's public IP/EIP and restart Asterisk.
 if [ -f /opt/pbx3/db/sqlite.db ] && [ -x "$SYSPATH/scripts/genAst.sh" ]; then
 	"$SYSPATH/scripts/genAst.sh" >/dev/null 2>&1 || true
+	if [ -x "$SYSPATH/scripts/link-asterisk-configs.sh" ]; then
+		"$SYSPATH/scripts/link-asterisk-configs.sh" || true
+	fi
 	if [ -x "$SYSPATH/scripts/refresh-pjsip-externip.sh" ]; then
 		"$SYSPATH/scripts/refresh-pjsip-externip.sh" >/dev/null 2>&1 || true
 	fi

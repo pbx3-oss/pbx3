@@ -1,3 +1,13 @@
+pbx3 (0.0.5-6) noble; urgency=medium
+
+  * Lab install harden (#5h): link-asterisk-configs.sh + shipped GenAst stub
+    configs so /etc/asterisk symlinks exist at install; seed-fleet-egress-trunk.sh
+    in package; install-home-host fleet verify + PBX3_CLEAN_INSTALL.
+  * postinst/installer/onboard/restore: link-asterisk-configs after genAst.
+  * GenClass: always write pjsip_ready_trunks.conf (match phones).
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Wed, 19 Aug 2026 12:00:00 -0400
+
 pbx3 (0.0.5-5) noble; urgency=medium
 
   * SIP debug text: filter res_pjsip_logger into sip-debug (verbose →

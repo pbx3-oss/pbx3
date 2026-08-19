@@ -250,8 +250,6 @@ fi
 # Regenerate bashconfig from config.php when PHP is available (package ships bashconfig so install works without PHP)
 if command -v php >/dev/null 2>&1; then
     php $SYSPATH/php/utilities/genbashconfig.php 2>/dev/null || true
-    # Ensure Asterisk config files in ASTLOCALCONF are symlinked into ASTPATH (manager.conf, pjsip.conf, etc.)
-    php $SYSPATH/php/utilities/runLinker.php 2>/dev/null || true
 fi
 
 _DB_ALREADY=0
@@ -513,4 +511,9 @@ if [ -f "$SYSDB" ] && command -v sqlite3 >/dev/null 2>&1; then
         echo "    or interactive: sudo /opt/pbx3/scripts/bootstrap-admin-user.sh"
     fi
     echo "======================================================="
+fi
+
+# GenAst stubs + /etc/asterisk symlinks (pjsip_ready_*.conf etc.) — once per provision.
+if [ -x "$SCRIPTS/link-asterisk-configs.sh" ]; then
+    /bin/sh "$SCRIPTS/link-asterisk-configs.sh" 2>/dev/null || true
 fi

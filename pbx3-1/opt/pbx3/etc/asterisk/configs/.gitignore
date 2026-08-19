@@ -1,5 +1,3 @@
-*ready*
-ready*
+# GenAst overwrites these shipped stubs in ASTLOCALCONF on Commit.
+# Do not add *ready* here — runLinker needs the stub files at first install.
 *extra.conf
-extensions.conf
-voicemail.conf

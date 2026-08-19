@@ -13,6 +13,7 @@
 #        PBX3_ADMIN_EMAIL=you@example.com PBX3_ADMIN_PASSWORD='…' \
 #        PBX3_FLEET_SERVICE_TOKEN='…' PBX3_ORG_BUCKET=lab-pbx3 \
 #        PBX3_SBC_EGRESS_HOST=192.168.1.85 \
+#        PBX3_CLEAN_INSTALL=1 \
 #        ./install-home-host.sh
 #
 # Spec: FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md § UX bar
@@ -37,6 +38,8 @@ PBX3_FLEET_SERVICE_TOKEN="${PBX3_FLEET_SERVICE_TOKEN:-}"
 PBX3_ORG_BUCKET="${PBX3_ORG_BUCKET:-}"
 PBX3_SBC_EGRESS_HOST="${PBX3_SBC_EGRESS_HOST:-}"
 SEED_EGRESS_SCRIPT="${SEED_EGRESS_SCRIPT:-}"
+PBX3_CLEAN_INSTALL="${PBX3_CLEAN_INSTALL:-0}"
+FLEET_CONFIGURED=0
 
 if [[ "$(id -u)" -ne 0 ]]; then
   home_err "run as root (sudo $0)"
@@ -133,11 +136,21 @@ deb_version() {
 }
 
 overlay_floor_installer() {
-  local src="${SCRIPT_DIR}/../pbx3-1/opt/pbx3/scripts/installer.sh"
-  if [[ -f "$src" ]]; then
-    cp -a "$src" /opt/pbx3/scripts/installer.sh
-    chmod 755 /opt/pbx3/scripts/installer.sh
-    home_log "Overlaid git installer.sh (FQDN is minted {shortuid}.{apex}; not prompted)"
+  local src s
+  for s in installer.sh link-asterisk-configs.sh seed-fleet-egress-trunk.sh; do
+    if [[ -f "${SCRIPT_DIR}/../pbx3-1/opt/pbx3/scripts/${s}" ]]; then
+      src="${SCRIPT_DIR}/../pbx3-1/opt/pbx3/scripts/${s}"
+    elif [[ -f "${SCRIPT_DIR}/${s}" ]]; then
+      src="${SCRIPT_DIR}/${s}"
+    else
+      continue
+    fi
+    cp -a "$src" "/opt/pbx3/scripts/${s}"
+    chmod 755 "/opt/pbx3/scripts/${s}"
+    home_log "Overlaid ${s} → /opt/pbx3/scripts/"
+  done
+  if [[ -f "${SCRIPT_DIR}/../pbx3-1/opt/pbx3/scripts/installer.sh" ]]; then
+    home_log "Installer: FQDN minted {shortuid}.{apex}; not prompted"
   fi
   if grep -q 'node1.pbx3.com' /opt/pbx3/scripts/installer.sh 2>/dev/null; then
     home_err "installer.sh still asks for Instance FQDN (node1.pbx3.com). Install floor pbx3_0.0.5-5 or newer, or overlay from pbx3-1."
@@ -170,6 +183,14 @@ home_set_env_kv() {
   if grep -q "^${key}=" "$file" 2>/dev/null; then
     sed -i "s|^${key}=.*|${key}=${val}|" "$file"
   else
+    # Ensure append starts on its own line (.env.example may lack a trailing newline).
+    if [[ -s "$file" ]]; then
+      local lastbyte
+      lastbyte="$(tail -c 1 "$file" 2>/dev/null || true)"
+      if [[ -n "$lastbyte" && "$lastbyte" != $'\n' ]]; then
+        printf '\n' >>"$file"
+      fi
+    fi
     echo "${key}=${val}" >>"$file"
   fi
 }
@@ -182,6 +203,7 @@ find_seed_egress_script() {
   fi
   for f in \
     "${SCRIPT_DIR}/seed-fleet-egress-trunk.sh" \
+    /opt/pbx3/scripts/seed-fleet-egress-trunk.sh \
     "${SCRIPT_DIR}/../pbx3-directory/tools/seed-fleet-egress-trunk.sh" \
     /tmp/seed-fleet-egress-trunk.sh; do
     if [[ -f "$f" ]]; then
@@ -206,6 +228,14 @@ home_configure_fleet_api() {
     return 0
   fi
 
+  if [[ -z "$PBX3_SBC_EGRESS_HOST" ]]; then
+    home_prompt PBX3_SBC_EGRESS_HOST "SBC egress host/IP (required for fleet lab)" ""
+  fi
+  if [[ -z "$PBX3_SBC_EGRESS_HOST" ]]; then
+    home_err "PBX3_SBC_EGRESS_HOST required when PBX3_FLEET_SERVICE_TOKEN is set"
+    exit 1
+  fi
+
   if [[ -z "$bucket_default" ]]; then
     home_prompt PBX3_ORG_BUCKET "Org bucket (same as control host)" "lab-pbx3"
     bucket_default="$PBX3_ORG_BUCKET"
@@ -216,37 +246,86 @@ home_configure_fleet_api() {
   home_set_env_kv "$env_file" PBX3_FLEET_SERVICE_TOKEN "$PBX3_FLEET_SERVICE_TOKEN"
   home_set_env_kv "$env_file" PBX3_ORG_BUCKET "$bucket_default"
   home_set_env_kv "$env_file" PBX3_DIRECTORY_BACKUP_UPLOAD true
-  if [[ -n "$PBX3_SBC_EGRESS_HOST" ]]; then
-    home_set_env_kv "$env_file" PBX3_SBC_EGRESS_HOST "$PBX3_SBC_EGRESS_HOST"
-  fi
+  home_set_env_kv "$env_file" PBX3_SBC_EGRESS_HOST "$PBX3_SBC_EGRESS_HOST"
   (cd /opt/pbx3api && php artisan config:clear) || true
+  FLEET_CONFIGURED=1
+}
+
+home_link_asterisk_configs() {
+  if [[ -x /opt/pbx3/scripts/link-asterisk-configs.sh ]]; then
+    home_log "Linking /etc/asterisk → GenAst configs (stubs + runLinker)"
+    /opt/pbx3/scripts/link-asterisk-configs.sh
+  elif command -v php >/dev/null 2>&1 && [[ -f /opt/pbx3/php/utilities/runLinker.php ]]; then
+    home_log "Linking /etc/asterisk (legacy runLinker only)"
+    php /opt/pbx3/php/utilities/runLinker.php >/dev/null
+  fi
 }
 
 home_seed_fleet_egress() {
   local seed sbc_host="${PBX3_SBC_EGRESS_HOST:-}"
 
-  if [[ -z "$sbc_host" ]]; then
-    if [[ -t 0 ]]; then
-      read -r -p "SBC egress host/IP for Egress trunk (Enter to skip until after Provision edge): " sbc_host || true
+  if [[ "$FLEET_CONFIGURED" -ne 1 ]]; then
+    if [[ -z "$sbc_host" ]]; then
+      return 0
     fi
   fi
+
   if [[ -z "$sbc_host" ]]; then
-    home_log "Skipping Egress trunk seed (no PBX3_SBC_EGRESS_HOST)"
-    return 0
+    home_err "PBX3_SBC_EGRESS_HOST required for fleet install"
+    exit 1
   fi
+
   PBX3_SBC_EGRESS_HOST="$sbc_host"
   home_set_env_kv "/opt/pbx3api/.env" PBX3_SBC_EGRESS_HOST "$sbc_host"
 
   if ! seed="$(find_seed_egress_script)"; then
-    home_err "seed-fleet-egress-trunk.sh not found (set SEED_EGRESS_SCRIPT or copy from pbx3-directory/tools/)"
-    return 1
+    home_err "seed-fleet-egress-trunk.sh not found (expected pbx3/scripts/ or /opt/pbx3/scripts/)"
+    exit 1
   fi
   home_log "Seeding Egress trunk → ${sbc_host} ($seed)"
   PBX3_SBC_EGRESS_HOST="$sbc_host" bash "$seed" /opt/pbx3/db/sqlite.db
   /opt/pbx3/scripts/genAst.sh
-  php /opt/pbx3/php/utilities/runLinker.php >/dev/null
+  home_link_asterisk_configs
   systemctl restart asterisk
   home_log "Egress trunk seeded; Asterisk restarted"
+}
+
+home_verify_fleet_install() {
+  [[ "$FLEET_CONFIGURED" -eq 1 ]] || return 0
+
+  local fail=0 row active host
+  home_log "Verifying fleet install (posture + Egress + Asterisk symlinks)..."
+
+  if ! grep -qE '^PBX3_FLEET_MODE=(true|1|yes)' /opt/pbx3api/.env 2>/dev/null; then
+    home_err "PBX3_FLEET_MODE not set correctly in /opt/pbx3api/.env"
+    fail=1
+  fi
+  if ! grep -qE '^PBX3_SBC_EGRESS_HOST=' /opt/pbx3api/.env 2>/dev/null; then
+    home_err "PBX3_SBC_EGRESS_HOST missing in /opt/pbx3api/.env"
+    fail=1
+  fi
+
+  row="$(sqlite3 /opt/pbx3/db/sqlite.db "SELECT active, host FROM trunks WHERE pkey='Egress' LIMIT 1;" 2>/dev/null || true)"
+  active="${row%%|*}"
+  host="${row#*|}"
+  if [[ "$active" != "YES" || -z "$host" ]]; then
+    home_err "Egress trunk missing or inactive in sqlite (got: ${row:-none})"
+    fail=1
+  fi
+
+  local f
+  for f in pjsip_ready_trunks.conf pjsip_ready_phones.conf pjsip_ready_webrtc.conf; do
+    if [[ ! -L "/etc/asterisk/$f" ]]; then
+      home_err "missing symlink /etc/asterisk/$f (run link-asterisk-configs.sh)"
+      fail=1
+    fi
+  done
+
+  if [[ "$fail" -ne 0 ]]; then
+    home_err "Fleet install verification failed — fix above before adopt/phones"
+    exit 1
+  fi
+  home_log "Fleet install verification OK (Egress → ${host})"
 }
 
 arch="$(dpkg --print-architecture 2>/dev/null || echo unknown)"
@@ -294,6 +373,11 @@ else
 fi
 
 export DOMAIN_TLD INSTANCE_SITENAME PBX3_ADMIN_EMAIL PBX3_ADMIN_PASSWORD
+if [[ "$PBX3_CLEAN_INSTALL" == "1" && -f /opt/pbx3/db/sqlite.db ]]; then
+  home_log "PBX3_CLEAN_INSTALL=1 — removing existing sqlite.db for fresh provision"
+  systemctl stop asterisk 2>/dev/null || true
+  rm -f /opt/pbx3/db/sqlite.db /opt/pbx3/db/sqlite.rdonly.db /opt/pbx3/db/sqlite.copy.db
+fi
 home_log "Running pbx3 installer.sh (mints FQDN={shortuid}.${DOMAIN_TLD}; does not ask for FQDN)"
 if [[ -f /opt/pbx3/db/sqlite.db ]]; then
   _oldfq="$(sqlite3 /opt/pbx3/db/sqlite.db "SELECT fqdn FROM globals LIMIT 1;" 2>/dev/null || true)"
@@ -333,6 +417,8 @@ home_log "Running pbx3api installer.sh (snakeoil :44300, no Let's Encrypt)"
 
 home_configure_fleet_api
 home_seed_fleet_egress
+home_link_asterisk_configs
+home_verify_fleet_install
 
 ip="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i <= NF; i++) if ($i == "src") { print $(i + 1); exit }}')"
 ip="${ip:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
@@ -349,6 +435,8 @@ Home PBX ready (Lab). No Let's Encrypt; API is snakeoil on :44300.
 
 Next: Adopt from Fleet (Instances → Register instance).
 If SIP lab: install SBC on amd64 VM, set PBX3_SBC_ADMIN_API_URL on control, Provision edge
-(home IP is auto-whitelisted on the SBC). Re-run with PBX3_SBC_EGRESS_HOST if Egress was skipped.
+(home IP is auto-whitelisted on the SBC).
+
+Fleet lab: fleet-posture + Egress + pjsip_ready symlinks were verified at end of install.
 
 EOF
