@@ -9,7 +9,7 @@
 
 | Change | What to run |
 |--------|-------------|
-| SPA **Commit** (normal tenant dialplan / extensions / inroutes) | Panel Commit is enough — it runs **`genAst.sh`** and reloads as designed. |
+| SPA **Commit** (normal tenant dialplan / extensions / inroutes) | Panel Commit is enough — it runs **`genAst.sh`** and **`core reload`**. **Fleet lab 2026-08-19:** active calls and registered phones **survive** Commit; see **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`**. |
 | **`genAst.sh`** by hand (or after DB restore / rollback) | Prefer **`sudo /opt/pbx3/scripts/genAst.sh`**, then confirm calls. If PJSIP trunks look stale, restart Asterisk (below). |
 | Edit **Egress** template / packaged `pjsip_trunk_egress.tmpl` / seed-fleet-egress | **`sudo systemctl restart asterisk`** — do **not** rely on **`pjsip reload` alone**. |
 | **Mode 4 / backup restore** of `/etc/asterisk` | **`refresh-pjsip-externip.sh`** (runs from `restore-backup-zip.sh`) — rewrites donor `external_*` to this node's public IP/EIP, then full restart. |
