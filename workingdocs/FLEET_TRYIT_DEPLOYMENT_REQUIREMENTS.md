@@ -271,7 +271,7 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 
 **Not part of try-it.** RTP **bypass** remains product default: endpoint ↔ **home Asterisk** (Asterisk always in media path); SIP via Magrathea.
 
-**rtpengine** only if a real trigger appears: LAN home + public remote where **chunked RTP DNAT** is insufficient, explicit relay mode, or legacy WebRTC↔non-WebRTC gateway. Selective engage; no PBX product mods; HA media deferred.
+**rtpengine** only if a real trigger appears: LAN home + public remote where **chunked RTP DNAT** is insufficient, explicit relay mode, or legacy WebRTC↔non-WebRTC gateway. Selective engage; no PBX product mods; HA media deferred. Design research: **`pbx3-directory/docs/RTPENGINE_SELECTIVE_ENGAGE.md`** (load model, engage matrix — not locked).
 
 - Spec trigger: Track A / Peer forbids bypass / LAN-edge pilot after chunked-NAT pilot fails or is rejected for ops.
 - Prefer **chunked RTP port-forwards** first for small-N Lab (see T4 optional carrier subsection).

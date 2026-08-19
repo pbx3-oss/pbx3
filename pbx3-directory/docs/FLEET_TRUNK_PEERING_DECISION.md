@@ -302,7 +302,7 @@ Browser WebRTC **always** has a media path (ICE → DTLS-SRTP). **SIP-over-WSS**
 
 #### RTP at the edge
 
-**Default remains RTP bypass** (signaling only at SBC). Do not anchor media for capacity or “because SBCs do media.” Revisit media anchoring only for a concrete need (e.g. WebRTC↔legacy non-WebRTC protocol translation, topology hiding). That is a **separate project** from active–passive HA and from WSS signaling normalization.
+**Default remains RTP bypass** (signaling only at SBC). Do not anchor media for capacity or “because SBCs do media.” Revisit media anchoring only for a concrete need (e.g. WebRTC↔legacy non-WebRTC protocol translation, topology hiding). That is a **separate project** from active–passive HA and from WSS signaling normalization. Research: **`RTPENGINE_SELECTIVE_ENGAGE.md`** (selective engage, load model — not locked).
 
 #### Today (lab / product)
 

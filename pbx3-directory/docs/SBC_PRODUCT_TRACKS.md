@@ -45,7 +45,7 @@
 |---|-----|--------|---------|
 | **0** | **WebRTC / WSS** (W1) | Near-term: **golden `:8089`** (no Magrathea UDP impact). Later: SBC `proto_wss` + TLS; domain→dispatcher; **RTP bypass**. | **Demo / now (golden)** |
 | **1** | **SIP TLS** (and SRTP when media is touched) | Admin HTTPS done; phone/carrier path still largely UDP + RTP bypass. Sibling to WebRTC TLS/WSS. | WebRTC work; enterprise / cloud Peer demand |
-| **2** | **Optional media plane** (rtpengine-class) | RTP bypass stays default. **Parked** — not for try-it/adoption. Trigger only: LAN-edge, Track A legacy, Peer forbids bypass. Try-it ease/cost is a **separate** track: **`../../workingdocs/FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. | LAN-edge / Track A / Peer forbids bypass |
+| **2** | **Optional media plane** (rtpengine-class) | RTP bypass stays default. **Parked** — not for try-it/adoption. Trigger only: LAN-edge, Track A legacy, Peer forbids bypass. Design research: **`RTPENGINE_SELECTIVE_ENGAGE.md`**. Try-it ease/cost is a **separate** track: **`../../workingdocs/FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. | LAN-edge / Track A / Peer forbids bypass |
 | **3** | **Downstream trunk REGISTER** | IP-trusted Peers + outbound `uac_registrant` exist. Dynamic inbound trunks that REGISTER → **separate registration-edge** instance class (not bolt-on). Spec: **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**. | Customer ITSP that only REGISTERs |
 | **4** | **Fail2ban Peer auto-whitelist** | Auto-sync carrier inbound Peer IPs on save/delete; site NATs stay manual. TODO already. | Next carrier onboard |
 | **5** | **Standalone SKU polish** | Installer/docs without Gatekeeper; SARK/FreePBX-behind-SBC recipe (Track A lab). Capability exists; packaging lags. | Track A lab |
