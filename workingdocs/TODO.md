@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-19 (**#5g** + **#5f** done; lab worksheet)  
+**Last updated:** 2026-08-19 (**#5i** Decom RESTRICT + **#5g** + **#5f** done; lab worksheet)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
-0. **#5i Instance Decom — block while active tenants** — discuss lock, then Gatekeeper **422** + SPA. Spec **`TODO.md` §5i`**.  
+0. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
 0a. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0b. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
 0b. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
@@ -26,7 +26,7 @@
 5f. ~~**Fleet Instances — Remove after Decom (required UX)**~~ — **done (2026-08-19):** Gatekeeper **`POST /api/v1/instances/{id}/remove`** (decommissioned only); Fleet SPA **Remove** on row menu; keeps S3 meta/backups. CLI **`unregister-instance.sh --remove`** unchanged. Docs: MkDocs **`fleet/decommission-instance`**, **`INSTANCE_ONBOARDING.md`**.  
 5g. ~~**Fleet service token — mint once, never re-type**~~ — **done (2026-08-19):** Control mints once; lab + cloud use the **same** path — `grep` / export **`PBX3_FLEET_SERVICE_TOKEN`**, reuse on SBC admin + home (or onboard in cloud). Removed LAN-only bootstrap pull. SBC admin: required token, no Enter-to-skip (`--skip-fleet-token` standalone). MkDocs lab install pages.  
 5h. ~~**Lab home installer — fleet `.env` + Egress seed harden**~~ — **done (2026-08-19):** `home_set_env_kv` newline-safe append; **`seed-fleet-egress-trunk.sh`** in **`pbx3/scripts/`** + deb **`/opt/pbx3/scripts/`**; **`link-asterisk-configs.sh`** + GenAst stubs; fleet token requires **`PBX3_SBC_EGRESS_HOST`**; post-install verify (Egress + symlinks); **`PBX3_CLEAN_INSTALL=1`**; MkDocs **`install-lab-home.md`**.  
-5i. **Fleet Instances — catalog referential integrity (block Decom while active tenants remain)** — Same relationship as `tenant.instance_id → instance.id`, but today **Decom** patches only the instance row (no child check) → signpost drift. **Discuss lock before implement** (2026-08-19): **(1) RESTRICT not cascade** — block Decom until tenants Move or Delete; never auto-wipe tenants on Decom. **(2) “Child” = active tenants only** (`status != decommissioned`); soft-decommissioned tenant meta may still point at a Decom instance (audit OK). **(3) Enforce on Gatekeeper write**; SPA mirrors (disable Decom + list blockers). **(4) Rebuild ≠ Decom** — new KSUID / `PBX3_CLEAN_INSTALL` is a new instance after catalog intent cleared; not “delete parent with children.” **(5) Catalog-level only** — node SQLite + SBC domains are projections; guard prevents catalog drift, not “Asterisk still has rows.” Ship: Gatekeeper **422** + SPA · MkDocs **`fleet/decommission-instance`** Step 1 · **`pbx3-directory/gatekeeper`**, **pbx3spa** `FleetInstancesView`.  
+5i. ~~**Fleet Instances — catalog referential integrity (block Decom while active tenants remain)**~~ — **done (2026-08-19):** **`CatalogIntegrityException`** + **`S3Registrar::assertCanDecommissionInstance`** on Decom + PATCH `status=decommissioned`; SPA **Decom** disabled with blocker tooltip; **`blocking_tenants`** on **422**. MkDocs **`fleet/decommission-instance`** Step 1.  
 5j. ~~**Fleet home Commit reload / Egress REGISTER log**~~ — **closed (2026-08-19):** **#5j-b** post-Commit reload **OK** on lab (active call + new ext). **#5j-a** `AOR '' not found for endpoint 'Egress'` = unknown shortuid or pre–first-Commit REGISTER (expected). Wrong password → **`Failed to authenticate`** on correct endpoint. Docs: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · **`install-lab-adopt.md`**. No **`pbx3api`** reload change.  
 5k. ~~**SBC orphan domain rows after lab reinstall**~~ — **done (2026-08-19):** **`CatalogReconcile::pruneOrphans`** + **`POST /reconcile/prune-orphans`**; auto on **Provision edge**; Fleet **Catalog reconcile** UI. Decommissioned instance FQDNs now flagged as orphans. MkDocs **`installation/install-lab-adopt.md`**. Rule 13 catalog-driven prune (fleet-owned only).  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
@@ -181,13 +181,7 @@
 
 - [x] **Fleet Instances — Remove after Decom (#5f, 2026-08-19):** Gatekeeper `POST …/remove` + Fleet SPA **Remove** on decommissioned rows; S3 meta/backups kept.
 
-- [ ] **Fleet Instances — catalog referential integrity (#5i — 2026-08-19):** **Discuss lock before ship.** Framing: S3 catalog `tenant.instance_id → instance.id` with **ON DELETE RESTRICT** semantics (not enforced today).
-  - **RESTRICT not cascade** — Decom blocked until each tenant Move or Delete; never auto-wipe tenants on Decom.
-  - **Child = active tenants only** (`status != decommissioned`); decommissioned tenant meta pointing at Decom instance is audit residue (OK).
-  - **Gatekeeper on write** (422 + tenant list); SPA disable Decom + show blockers.
-  - **Rebuild ≠ Decom** — new KSUID / clean install after catalog cleared; different workflow from retiring same catalog row.
-  - **Catalog-level only** — node SQLite + SBC are projections; guard is signpost integrity, not “empty Asterisk.”
-  - MkDocs **`fleet/decommission-instance`** Step 1.
+- [x] **Fleet Instances — catalog referential integrity (#5i — 2026-08-19):** Gatekeeper blocks Decom / `status=decommissioned` while active tenants remain (`blocking_tenants` on **422**); SPA mirrors. RESTRICT not cascade; decommissioned tenant meta = audit OK. MkDocs **`fleet/decommission-instance`** Step 1.
 
 - [x] **Fleet home Commit reload / Egress REGISTER (#5j — closed 2026-08-19):** Lab **`.31`**: Commit with active **101↔102** call **OK**; **#5j-b** not repro’d. **#5j-a** Egress log = REGISTER before phone endpoint in Asterisk (pre–first-Commit / bad username). Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`**. Adopt doc: Commit before aim phones at SBC.
 

@@ -152,7 +152,7 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 DID / missing domain rows: **S10.5**. DID delivery drift: **`GET /api/v1/dids/reconcile`**; Apply = **`POST /api/v1/dids/project`** (catalog → edge). Domain setid drift stays on **`/reconcile`**.
 | `POST` | `/api/v1/instances` | Register/upsert instance (`verify_up` optional; stamps `updated_by`) |
 | `PATCH` | `/api/v1/instances/{id}` | Update label/notes/environment/status/… (`fleet_instances`) |
-| `POST` | `/api/v1/instances/{id}/decommission` | Soft decommission (`confirm: true`, optional `notes`) |
+| `POST` | `/api/v1/instances/{id}/decommission` | Soft decommission (`confirm: true`, optional `notes`); **422** if active tenants still home on instance |
 | `POST` | `/api/v1/instances/{id}/remove` | Hard drop catalog row (`confirm: true`; **decommissioned** only; keeps S3 meta/backups) |
 | `POST` | `/api/v1/tenants` | Register tenant meta only (legacy / CLI repair — prefer `/tenants/provision`) |
 | `POST` | `/api/v1/tenants/{shortuid}/move` | Move tenant homing |

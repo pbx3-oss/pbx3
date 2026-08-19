@@ -11,6 +11,7 @@ require_once dirname(__DIR__).'/vendor/autoload.php';
 
 use Pbx3\Gatekeeper\Auth;
 use Pbx3\Gatekeeper\CatalogHealthOverlay;
+use Pbx3\Gatekeeper\CatalogIntegrityException;
 use Pbx3\Gatekeeper\CatalogReconcile;
 use Pbx3\Gatekeeper\DialCohortJobStore;
 use Pbx3\Gatekeeper\DialCohortMaterialiseRunner;
@@ -1153,5 +1154,9 @@ try {
     if ($code < 400 || $code > 599) {
         $code = 500;
     }
-    JsonResponse::send($code, ['error' => $e->getMessage()]);
+    $payload = ['error' => $e->getMessage()];
+    if ($e instanceof CatalogIntegrityException) {
+        $payload['blocking_tenants'] = $e->blockingTenants;
+    }
+    JsonResponse::send($code, $payload);
 }

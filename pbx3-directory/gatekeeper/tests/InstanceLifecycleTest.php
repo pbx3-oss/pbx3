@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pbx3\Gatekeeper\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Pbx3\Gatekeeper\CatalogIntegrityException;
 use Pbx3\Gatekeeper\InstanceUpProbe;
 use Pbx3\Gatekeeper\S3Registrar;
 
@@ -69,5 +70,44 @@ final class InstanceLifecycleTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionCode(422);
         S3Registrar::assertDecommissionedForCatalogRemove(['id' => 'x', 'status' => 'active']);
+    }
+
+    public function test_active_tenants_for_instance_omits_decommissioned_and_other_homes(): void
+    {
+        $metas = [
+            ['shortuid' => 'bbb', 'instance_id' => 'inst1', 'status' => 'decommissioned', 'fqdn' => 'b.pbx3.com'],
+            ['shortuid' => 'aaa', 'instance_id' => 'inst1', 'status' => 'active', 'fqdn' => 'a.pbx3.com', 'pkey' => 'Alpha'],
+            ['shortuid' => 'ccc', 'instance_id' => 'inst2', 'status' => 'active', 'fqdn' => 'c.pbx3.com'],
+        ];
+
+        $this->assertSame(
+            [
+                [
+                    'shortuid' => 'aaa',
+                    'fqdn' => 'a.pbx3.com',
+                    'pkey' => 'Alpha',
+                    'cname' => '',
+                ],
+            ],
+            S3Registrar::activeTenantsForInstance('inst1', $metas)
+        );
+    }
+
+    public function test_assert_can_decommission_instance_throws_with_blockers(): void
+    {
+        $this->expectException(CatalogIntegrityException::class);
+        $this->expectExceptionCode(422);
+        S3Registrar::assertCanDecommissionInstanceWithMetas('kid123', [
+            ['shortuid' => 'site1', 'instance_id' => 'kid123', 'status' => 'active', 'pkey' => 'LabOne'],
+        ]);
+    }
+
+    public function test_assert_can_decommission_instance_allows_when_clear(): void
+    {
+        S3Registrar::assertCanDecommissionInstanceWithMetas('kid123', [
+            ['shortuid' => 'site1', 'instance_id' => 'kid123', 'status' => 'decommissioned'],
+            ['shortuid' => 'site2', 'instance_id' => 'other', 'status' => 'active'],
+        ]);
+        $this->addToAssertionCount(1);
     }
 }

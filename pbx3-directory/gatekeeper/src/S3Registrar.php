@@ -177,6 +177,13 @@ final class S3Registrar
         if (isset($apply['status'])) {
             $this->assertValidStatus((string) $apply['status']);
         }
+        if (
+            isset($apply['status'])
+            && (string) $apply['status'] === 'decommissioned'
+            && $previousStatus !== 'decommissioned'
+        ) {
+            $this->assertCanDecommissionInstance($id);
+        }
         if (array_key_exists('sbc_dispatcher_setid', $apply) && $apply['sbc_dispatcher_setid'] !== null) {
             $apply['sbc_dispatcher_setid'] = (int) $apply['sbc_dispatcher_setid'];
         }
@@ -277,6 +284,8 @@ final class S3Registrar
             $patch['notes'] = 'Decommissioned '.$this->nowIso();
         }
 
+        $this->assertCanDecommissionInstance($id);
+
         return $this->patchInstance($id, $patch, $updatedBy);
     }
 
@@ -355,6 +364,88 @@ final class S3Registrar
                 422
             );
         }
+    }
+
+    /**
+     * Active (non-decommissioned) tenants homed on this instance — RESTRICT gate for Decom (#5i).
+     *
+     * @param  list<array<string, mixed>>  $tenantMetas
+     * @return list<array{shortuid: string, fqdn: string, pkey: string, cname: string}>
+     */
+    public static function activeTenantsForInstance(string $instanceId, array $tenantMetas): array
+    {
+        $instanceId = trim($instanceId);
+        if ($instanceId === '') {
+            return [];
+        }
+
+        $rows = [];
+        foreach ($tenantMetas as $meta) {
+            if (! is_array($meta)) {
+                continue;
+            }
+            $status = strtolower((string) ($meta['status'] ?? 'active'));
+            if ($status === 'decommissioned') {
+                continue;
+            }
+            if (trim((string) ($meta['instance_id'] ?? '')) !== $instanceId) {
+                continue;
+            }
+            $shortuid = strtolower(trim((string) ($meta['shortuid'] ?? $meta['tenant_shortuid'] ?? '')));
+            if ($shortuid === '') {
+                continue;
+            }
+            $fqdn = trim((string) ($meta['fqdn'] ?? $meta['cname'] ?? ''));
+            $rows[] = [
+                'shortuid' => $shortuid,
+                'fqdn' => $fqdn !== '' ? $fqdn : $shortuid,
+                'pkey' => trim((string) ($meta['pkey'] ?? '')),
+                'cname' => trim((string) ($meta['cname'] ?? '')),
+            ];
+        }
+        usort($rows, static fn (array $a, array $b): int => strcmp($a['shortuid'], $b['shortuid']));
+
+        return $rows;
+    }
+
+    /**
+     * Block instance Decom / status→decommissioned while active tenants still home here.
+     *
+     * @param  list<array<string, mixed>>|null  $tenantMetas
+     */
+    public function assertCanDecommissionInstance(string $instanceId, ?array $tenantMetas = null): void
+    {
+        self::assertCanDecommissionInstanceWithMetas($instanceId, $tenantMetas ?? $this->listTenants());
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $tenantMetas
+     */
+    public static function assertCanDecommissionInstanceWithMetas(string $instanceId, array $tenantMetas): void
+    {
+        $blocking = self::activeTenantsForInstance($instanceId, $tenantMetas);
+        if ($blocking === []) {
+            return;
+        }
+
+        $labels = array_map(
+            static function (array $tenant): string {
+                $shortuid = (string) $tenant['shortuid'];
+                $pkey = (string) ($tenant['pkey'] ?? '');
+                if ($pkey !== '' && $pkey !== $shortuid) {
+                    return $shortuid.' ('.$pkey.')';
+                }
+
+                return $shortuid;
+            },
+            $blocking
+        );
+
+        throw new CatalogIntegrityException(
+            'Cannot decommission instance while active tenants remain (move or delete each tenant first): '
+            .implode(', ', $labels),
+            $blocking
+        );
     }
 
     /** @param array<string, mixed> $record */
