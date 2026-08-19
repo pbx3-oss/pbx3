@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-19 (Lab home: fleet `.env` + Egress gaps → **#5h** docs)  
+**Last updated:** 2026-08-19 (#5i catalog FK / RESTRICT lock points; **#5h** done)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -23,6 +23,7 @@
 5f. **Fleet Instances — Remove after Decom (required UX)** — SPA **Decom** soft-hides only; hard drop (`unregister-instance.sh --remove`) is CLI-only. Need Fleet SPA action (and/or Gatekeeper API) on `decommissioned` rows to remove catalog entry (keep S3 `instances/{id}/` meta/backups). Prefer later fold into decommission automation / S10.7; interim SPA Remove is enough. Lab: Toliman left **Decom** on purpose (2026-08-17). Docs: MkDocs **`fleet/decommission-instance`** Step 2 · **`INSTANCE_ONBOARDING.md`** hard remove.  
 5g. **Fleet service token — mint once, never re-type (next session)** — Control already mints `PBX3_FLEET_SERVICE_TOKEN`. Lab walk 2026-08-18: home matched control; Filament had a different paste → Provision edge `401` on `/api/fleet/provision-node`. Do **not** ask the operator to type/paste that long secret on home **and** Filament (skip-on-Enter is a footgun). Prefer: home + SBC admin **pull** from Gatekeeper (control LAN IP is already known), **or** one paste total. Never mint a second token. MkDocs **`installation/install-lab-sbc.md`**.  
 5h. ~~**Lab home installer — fleet `.env` + Egress seed harden**~~ — **done (2026-08-19):** `home_set_env_kv` newline-safe append; **`seed-fleet-egress-trunk.sh`** in **`pbx3/scripts/`** + deb **`/opt/pbx3/scripts/`**; **`link-asterisk-configs.sh`** + GenAst stubs; fleet token requires **`PBX3_SBC_EGRESS_HOST`**; post-install verify (Egress + symlinks); **`PBX3_CLEAN_INSTALL=1`**; MkDocs **`install-lab-home.md`**.  
+5i. **Fleet Instances — catalog referential integrity (block Decom while active tenants remain)** — Same relationship as `tenant.instance_id → instance.id`, but today **Decom** patches only the instance row (no child check) → signpost drift. **Discuss lock before implement** (2026-08-19): **(1) RESTRICT not cascade** — block Decom until tenants Move or Delete; never auto-wipe tenants on Decom. **(2) “Child” = active tenants only** (`status != decommissioned`); soft-decommissioned tenant meta may still point at a Decom instance (audit OK). **(3) Enforce on Gatekeeper write**; SPA mirrors (disable Decom + list blockers). **(4) Rebuild ≠ Decom** — new KSUID / `PBX3_CLEAN_INSTALL` is a new instance after catalog intent cleared; not “delete parent with children.” **(5) Catalog-level only** — node SQLite + SBC domains are projections; guard prevents catalog drift, not “Asterisk still has rows.” Ship: Gatekeeper **422** + SPA · MkDocs **`fleet/decommission-instance`** Step 1 · **`pbx3-directory/gatekeeper`**, **pbx3spa** `FleetInstancesView`.  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
 7. **New instance / package install** — fleet floors **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** (+ tips between — see **TODO_OPS**).  
 8. **Toll fraud / velocity** — plan **Accepted**; **WP0 + WP3 + WP1** done (2026-08-11). Remainder deferred (V4 / SBC floor / Wangiri). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
@@ -174,6 +175,14 @@
 - [x] **SBC Fail2ban — fleet home auto-whitelist (#5e — 2026-08-17):** `FleetNodeProvisioner` upserts whitelist DB + unban + sync on Provision edge. Lab manual path retired for new installs.
 
 - [ ] **Fleet Instances — Remove after Decom (#5f — 2026-08-17):** Gatekeeper + SPA action to hard-drop catalog row for `decommissioned` instances (`unregister --remove` today). Keep S3 meta/backups. Optional later: part of decommission automation / S10.7. Lab: Toliman stays Decom until this ships.
+
+- [ ] **Fleet Instances — catalog referential integrity (#5i — 2026-08-19):** **Discuss lock before ship.** Framing: S3 catalog `tenant.instance_id → instance.id` with **ON DELETE RESTRICT** semantics (not enforced today).
+  - **RESTRICT not cascade** — Decom blocked until each tenant Move or Delete; never auto-wipe tenants on Decom.
+  - **Child = active tenants only** (`status != decommissioned`); decommissioned tenant meta pointing at Decom instance is audit residue (OK).
+  - **Gatekeeper on write** (422 + tenant list); SPA disable Decom + show blockers.
+  - **Rebuild ≠ Decom** — new KSUID / clean install after catalog cleared; different workflow from retiring same catalog row.
+  - **Catalog-level only** — node SQLite + SBC are projections; guard is signpost integrity, not “empty Asterisk.”
+  - MkDocs **`fleet/decommission-instance`** Step 1.
 
 - [ ] **SBC Fail2ban — carrier inbound Peer auto-whitelist (deferred until next carrier onboard):** Edge-authored (Rule 13). Ban→email already shipped. Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.
 
