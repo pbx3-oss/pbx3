@@ -144,6 +144,20 @@ final class InstanceEdgeProvision
             'sbc_backend_uri' => $uri,
         ], $actor);
 
+        // Lab reinstall / prior test cycles: drop stale fleet-owned domains not in catalog.
+        $pruneOrphans = null;
+        try {
+            $pruneOrphans = (new CatalogReconcile($registrar, $sbc))->pruneOrphans([
+                'confirm' => true,
+                'fleet_owned_only' => true,
+            ]);
+        } catch (\Throwable $e) {
+            $pruneOrphans = [
+                'ok' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+
         return [
             'ok' => true,
             'dry_run' => false,
@@ -153,6 +167,7 @@ final class InstanceEdgeProvision
             'edge' => $edge,
             'domain' => $domainResult,
             'instance' => $patched['instance'] ?? null,
+            'prune_orphans' => $pruneOrphans,
         ];
     }
 }

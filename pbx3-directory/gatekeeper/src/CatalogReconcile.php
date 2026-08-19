@@ -8,6 +8,7 @@ namespace Pbx3\Gatekeeper;
  * S10.4 — catalog (HoR) ↔ SBC domain.setid reconcile.
  * Direction: catalog expected; SBC is projection (Rule 13).
  * Force-project fixes setid_mismatch via repointTenant and missing_fleet_tag via registerDomain.
+ * pruneOrphans removes orphan_on_sbc rows (catalog-driven; fleet-owned only by default).
  * Soft-decommissioned tenants (Fleet Delete audit metas) are omitted — SBC domain removal is expected.
  * missing_on_sbc / DID → S10.5.
  */
@@ -47,22 +48,7 @@ final class CatalogReconcile
             throw new \InvalidArgumentException('confirm: true required to project (or dry_run: true)', 422);
         }
 
-        $domainFilter = null;
-        if (isset($body['domains']) && is_array($body['domains'])) {
-            $domainFilter = [];
-            foreach ($body['domains'] as $d) {
-                if (! is_string($d)) {
-                    continue;
-                }
-                $key = strtolower(trim($d));
-                if ($key !== '') {
-                    $domainFilter[$key] = true;
-                }
-            }
-            if ($domainFilter === []) {
-                $domainFilter = null;
-            }
-        }
+        $domainFilter = self::parseDomainFilter($body['domains'] ?? null);
 
         $before = $this->report();
         $plan = self::planProject($before, $domainFilter);
@@ -118,6 +104,74 @@ final class CatalogReconcile
         return [
             'dry_run' => false,
             'projected' => $projected,
+            'skipped' => $plan['skipped'],
+            'before' => [
+                'ok' => $before['ok'],
+                'summary' => $before['summary'],
+                'checked_at' => $before['checked_at'],
+            ],
+            'after' => $after,
+        ];
+    }
+
+    /**
+     * Remove SBC domain rows with no active catalog tenant or instance author (orphan_on_sbc).
+     *
+     * Body:
+     * - confirm (bool) required unless dry_run
+     * - dry_run (bool) optional
+     * - domains (string[]) optional — limit to these domain names
+     * - fleet_owned_only (bool) default true — skip rows without fleet=domain stamp
+     *
+     * @param  array<string, mixed>  $body
+     * @return array<string, mixed>
+     */
+    public function pruneOrphans(array $body): array
+    {
+        $dryRun = ! empty($body['dry_run']);
+        if (! $dryRun && empty($body['confirm'])) {
+            throw new \InvalidArgumentException('confirm: true required to prune (or dry_run: true)', 422);
+        }
+
+        $domainFilter = self::parseDomainFilter($body['domains'] ?? null);
+        $fleetOwnedOnly = ! array_key_exists('fleet_owned_only', $body) || ! empty($body['fleet_owned_only']);
+
+        $before = $this->report();
+        $plan = self::planPruneOrphans($before, $domainFilter, $fleetOwnedOnly);
+
+        if ($dryRun) {
+            return [
+                'dry_run' => true,
+                'actions' => $plan['actions'],
+                'skipped' => $plan['skipped'],
+                'before' => $before,
+            ];
+        }
+
+        $pruned = [];
+        foreach ($plan['actions'] as $action) {
+            $domain = (string) $action['domain'];
+            try {
+                $sbcResult = $this->sbc->deleteDomain($domain);
+                $pruned[] = [
+                    ...$action,
+                    'ok' => ! empty($sbcResult['ok']),
+                    'result' => $sbcResult,
+                ];
+            } catch (\Throwable $e) {
+                $pruned[] = [
+                    ...$action,
+                    'ok' => false,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        $after = $this->report();
+
+        return [
+            'dry_run' => false,
+            'pruned' => $pruned,
             'skipped' => $plan['skipped'],
             'before' => [
                 'ok' => $before['ok'],
@@ -202,6 +256,79 @@ final class CatalogReconcile
     }
 
     /**
+     * Build prune actions from orphan_on_sbc drifts (pure / unit-tested).
+     *
+     * @param  array<string, mixed>  $report
+     * @param  array<string, true>|null  $domainFilter  lowercase domain keys
+     * @return array{actions: list<array<string, mixed>>, skipped: list<array<string, mixed>>}
+     */
+    public static function planPruneOrphans(
+        array $report,
+        ?array $domainFilter = null,
+        bool $fleetOwnedOnly = true
+    ): array {
+        $actions = [];
+        $skipped = [];
+        foreach ($report['drifts'] ?? [] as $drift) {
+            if (! is_array($drift)) {
+                continue;
+            }
+            $kind = (string) ($drift['kind'] ?? '');
+            if ($kind !== 'orphan_on_sbc') {
+                continue;
+            }
+            $domain = trim((string) ($drift['domain'] ?? ''));
+            $domainKey = strtolower($domain);
+            if ($domain === '') {
+                continue;
+            }
+            if ($domainFilter !== null && ! isset($domainFilter[$domainKey])) {
+                continue;
+            }
+            $fleetOwned = ! array_key_exists('fleet_owned', $drift) || ! empty($drift['fleet_owned']);
+            if ($fleetOwnedOnly && ! $fleetOwned) {
+                $skipped[] = [
+                    'kind' => $kind,
+                    'domain' => $domain,
+                    'reason' => 'not fleet-owned — manual SBC cleanup only',
+                ];
+                continue;
+            }
+            $actions[] = [
+                'kind' => $kind,
+                'domain' => $domain,
+                'actual_setid' => isset($drift['actual_setid']) ? (int) $drift['actual_setid'] : null,
+                'fleet_owned' => $fleetOwned,
+            ];
+        }
+
+        return ['actions' => $actions, 'skipped' => $skipped];
+    }
+
+    /**
+     * @param  mixed  $domains
+     * @return array<string, true>|null
+     */
+    private static function parseDomainFilter(mixed $domains): ?array
+    {
+        if (! is_array($domains)) {
+            return null;
+        }
+        $domainFilter = [];
+        foreach ($domains as $d) {
+            if (! is_string($d)) {
+                continue;
+            }
+            $key = strtolower(trim($d));
+            if ($key !== '') {
+                $domainFilter[$key] = true;
+            }
+        }
+
+        return $domainFilter === [] ? null : $domainFilter;
+    }
+
+    /**
      * Pure compare for unit tests (no S3 / HTTP).
      *
      * @param  array<string, mixed>  $catalog
@@ -224,6 +351,9 @@ final class CatalogReconcile
 
         $instanceFqdns = [];
         foreach ($instancesById as $inst) {
+            if (strtolower((string) ($inst['status'] ?? 'active')) === 'decommissioned') {
+                continue;
+            }
             $fqdn = strtolower(trim((string) ($inst['fqdn'] ?? '')));
             if ($fqdn !== '') {
                 $instanceFqdns[$fqdn] = true;
@@ -359,6 +489,7 @@ final class CatalogReconcile
                 'instance_id' => null,
                 'expected_setid' => null,
                 'actual_setid' => $setid,
+                'fleet_owned' => $row['fleet_owned'],
                 'detail' => "SBC domain {$domainKey} not present in catalog tenants",
             ];
         }

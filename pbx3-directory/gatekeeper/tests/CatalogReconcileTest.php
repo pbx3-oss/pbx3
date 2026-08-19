@@ -333,4 +333,63 @@ final class CatalogReconcileTest extends TestCase
         $this->assertCount(1, $plan['actions']);
         $this->assertSame('a.pbx3.com', $plan['actions'][0]['domain']);
     }
+
+    public function test_decommissioned_instance_fqdn_on_sbc_is_orphan(): void
+    {
+        $report = CatalogReconcile::compare(
+            [
+                'instances' => [
+                    [
+                        'id' => 'old01',
+                        'fqdn' => 'ykdjmf.pbx3.com',
+                        'status' => 'decommissioned',
+                        'sbc_dispatcher_setid' => 1,
+                    ],
+                    [
+                        'id' => 'new01',
+                        'fqdn' => 'nqybwn.pbx3.com',
+                        'sbc_dispatcher_setid' => 2,
+                    ],
+                ],
+            ],
+            [],
+            [
+                ['domain' => 'ykdjmf.pbx3.com', 'setid' => 1, 'fleet_owned' => true],
+                ['domain' => 'nqybwn.pbx3.com', 'setid' => 2, 'fleet_owned' => true],
+            ]
+        );
+
+        $this->assertCount(1, $report['drifts']);
+        $this->assertSame('orphan_on_sbc', $report['drifts'][0]['kind']);
+        $this->assertSame('ykdjmf.pbx3.com', $report['drifts'][0]['domain']);
+    }
+
+    public function test_plan_prune_orphans_skips_non_fleet_owned(): void
+    {
+        $report = [
+            'drifts' => [
+                [
+                    'kind' => 'orphan_on_sbc',
+                    'domain' => 'stale.pbx3.com',
+                    'actual_setid' => 1,
+                    'fleet_owned' => true,
+                ],
+                [
+                    'kind' => 'orphan_on_sbc',
+                    'domain' => 'manual.example',
+                    'actual_setid' => 2,
+                    'fleet_owned' => false,
+                ],
+                [
+                    'kind' => 'setid_mismatch',
+                    'domain' => 'live.pbx3.com',
+                ],
+            ],
+        ];
+        $plan = CatalogReconcile::planPruneOrphans($report);
+        $this->assertCount(1, $plan['actions']);
+        $this->assertSame('stale.pbx3.com', $plan['actions'][0]['domain']);
+        $this->assertCount(1, $plan['skipped']);
+        $this->assertSame('manual.example', $plan['skipped'][0]['domain']);
+    }
 }

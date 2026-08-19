@@ -656,6 +656,14 @@ try {
         ));
     }
 
+    if ($method === 'POST' && $path === '/api/v1/reconcile/prune-orphans') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        JsonResponse::send(200, (new CatalogReconcile($registrar, new SbcFleetClient()))->pruneOrphans(
+            is_array($body) ? $body : []
+        ));
+    }
+
     if ($method === 'GET' && $path === '/api/v1/sbc/dispatcher-sets') {
         Auth::requireAbility(FleetAbilities::READ);
         JsonResponse::send(200, ['sets' => (new SbcFleetClient())->listDispatcherSets()]);
