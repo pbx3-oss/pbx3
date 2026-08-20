@@ -7,7 +7,7 @@
 | **User guides** | Installers, MSP ops, PBX administrators | Future **`pbx3-docs`** repo → MkDocs `docs/` | How-to: install, configure, operate — **not for developers** |
 | **Workingdocs** | Developers + AI agents | `pbx3` / `pbx3api` / `pbx3spa` / `pbx3-directory` **`workingdocs/`** | Handoffs, audits, TODO, architecture — **not published as-is** |
 
-**Reference implementation:** **`~/Git/sail6-docs`** — `mkdocs-material`, `.github/workflows/ci.yml` → `mkdocs gh-deploy --force` → GitHub Pages.
+**Reference implementation:** **`pbx3-docs`** — `mkdocs-material`, `.github/workflows/ci.yml` → `mkdocs gh-deploy --force` → GitHub Pages.
 
 **Product docs repo:** **`pbx3-docs/`** (holding-folder sibling under `pbx3-master/`). Promote stable pages when operator-facing behaviour is shipped — do **not** mirror `workingdocs/`.
 
@@ -163,7 +163,7 @@ Status: **seeded in `pbx3-docs/`** (2026-07-15) — operator drafts from runbook
 | **4b — Cloud / S3** | Reference AWS EC2 + S3 guides (rows 30a–30d); Rule 9 framing (S3-compatible OK) | `pbx3-docs` |
 | **5 — Maintenance** | When workingdoc operator steps change, update MkDocs in same release; no auto-sync until CI copy script is worth it |
 
-**MkDocs config fixes (when creating repo):** Move **`nav`** out of `extra:` (bug in current `pbx3/mkdocs.yml` / sail6 template). Set `repo_url`, `edit_uri`, `site_url`. Pin `mkdocs-material` version in CI like sail6-docs.
+**MkDocs config fixes (when creating repo):** Move **`nav`** out of `extra:` (bug in older templates). Set `repo_url`, `edit_uri`, `site_url`. Pin `mkdocs-material` version in CI like **`pbx3-docs`**.
 
 ---
 
@@ -176,4 +176,4 @@ Status: **seeded in `pbx3-docs/`** (2026-07-15) — operator drafts from runbook
 | `pbx3-directory/docs/SELF_SERVICE_REBUILD_DESIGN.md` § Mode 4 | **Source of truth** for agent-assisted rebuild (interim S10.7); promote as MkDocs **28b** |
 | `pbx3-directory/docs/IMPLEMENTATION_PLAN.md` § S10.7 | Parked orchestrator; points at Mode 4 / this map |
 | `pbx3spa/workingdocs/PROJECT_PLAN.md` | Product plan pointer |
-| `~/Git/sail6-docs` | Layout and CI reference |
+| **`pbx3-docs`** | Layout and CI reference |

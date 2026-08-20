@@ -63,6 +63,7 @@
 33. ~~**Fleet hop-1 DID — block assign + reconcile**~~ — **done** (Allocate `delivery` singleton|block; `GET /dids/reconcile` + Apply via project; SPA DIDs drift check). Lock: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**.  
 34. ~~**Fleet domain→setid Magrathea lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
 35. **SBC site timezone at install (should-do)** — **`pbx3sbc-admin/install.sh`**: prompt or `--site-timezone` → write `PBX3_SBC_SITE_TIMEZONE` (Home/CDR day buckets). Default = host `/etc/timezone`. Optional later: Filament change-later; optional `timedatectl` OS set with clear warning. No UI today.  
+36. **Legacy SARK admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**. **P1 partial:** CoS extension matrix + rule defaults + **`globals.cosstart`**. **P2+ parked:** recordings browse, list PDF reports, 3p provisioning certs, wallboard, shell, LDAP, pcap, factory reset.
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -118,7 +119,7 @@
 
 - [ ] **Device table — lean done in seed; residual (2026-08-06):** Seed keepers + prune SQL landed; SPA **Devices** removed from System nav. **Still open:** drop Devices routes/views entirely; Snom/Grandstream pkey gap; optional later packaged JSON keepers. Provision templates still relevant when **#23** builds.
 
-- [ ] **Extension phone image / UA model harvest (parked 2026-08-09):** Sidekick design locked — edge `GET /fleet/registrations` + home `harvest-devicemodel` soft-fills `ipphone.devicemodel`. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Assets: **`~/GiT/nonGitStuff/phoneimages/`** (sailpbx zip URL dead); slice E = SPA + model→filename map.
+- [ ] **Extension phone image / UA model harvest (parked 2026-08-09):** Sidekick design locked — edge `GET /fleet/registrations` + home `harvest-devicemodel` soft-fills `ipphone.devicemodel`. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Assets: **`~/GiT/nonGitStuff/phoneimages/`** (historic zip URL dead); slice E = SPA + model→filename map.
 
 - [ ] **SPA list action icons — shared component (parked 2026-08-03):** Extract small **`ListEditIcon` / `ListDeleteIcon`** (or combined row-actions) in **pbx3spa** and reuse everywhere. Not urgent polish.
 

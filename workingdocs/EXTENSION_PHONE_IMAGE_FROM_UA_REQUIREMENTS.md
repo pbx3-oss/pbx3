@@ -187,7 +187,7 @@ Same LAN IP on multiple AoRs is expected — join must be shortuid@domain.
 
 | Item | Value |
 |------|--------|
-| Historic URL | `http://sailpbx.com/phoneimages.zip` (pre-scrub `getimages.sh`; **dead** as of 2026-08-09 — 302 to sail6-docs HTML) |
+| Historic URL | `http://sailpbx.com/phoneimages.zip` (pre-scrub; **dead** as of 2026-08-09) |
 | Local unpack (lab) | **`~/GiT/nonGitStuff/phoneimages/`** — ~3.9M, 138 JPEGs, vendor dirs: aastra, cisco, fanvil, panasonic, polycom, snom, vtech, yealink |
 | Consume on node | Tree must land as `/opt/pbx3/cache/phoneimages/<vendor>/…` (same layout `getimages.sh` expects after unzip). Lab: rsync this tree, or zip it and set `PBX3_PHONEIMAGES_URL`. |
 | Package default | **Unset** — do not bake a third-party host into the product tree |
