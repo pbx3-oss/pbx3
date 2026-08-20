@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-19 (**#4** / **#5** umbrellas closed for now; **#5d** parked later out; testing residual)  
+**Last updated:** 2026-08-20 (cloud **`install-pbx3-pbx3api.md`** aligned with lab; **#4** / **#5** closed; **#5d** parked)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -17,7 +17,7 @@
 4b. ~~**Tenant delete data integrity**~~ — **T1–T5 done** (`TENANT_DELETE_DATA_INTEGRITY.md`). Lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1 (2026-08-10). Remaining optional: T6 DID policy, T7 Class B, T8 FK.  
 4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 (2026-08-10).  
 4d. ~~**Fleet trunk Create vs Edit**~~ — **done** (`FLEET_TRUNK_PEERING_DECISION.md` §4.3.1): hide/403 Create on fleet; keep Edit for Egress mangle.  
-5. ~~**Lab / install automation**~~ — **closed for now (2026-08-19):** 5a–5c / 5e–5k done or superseded; **#5d** parked later out. MkDocs happy path (two phones and a call) locked; sequence Gatekeeper → SBC → home → SPA → adopt → Provision edge. **Residual:** soak / more lab testing (not blocking the #5 close). Follow-ons elsewhere: make **`aelintra/pbx3` public** · stale cloud **`install-pbx3-pbx3api.md`**. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**.  
+5. ~~**Lab / install automation**~~ — **closed for now (2026-08-19):** 5a–5c / 5e–5k done or superseded; **#5d** parked later out. MkDocs happy path (two phones and a call) locked; sequence Gatekeeper → SBC → home → SPA → adopt → Provision edge. **Residual:** soak / more lab testing (not blocking the #5 close). Follow-ons elsewhere: make **`aelintra/pbx3` public**. ~~Stale cloud **`install-pbx3-pbx3api.md`**~~ — **done (2026-08-20):** aligned with lab `install-home-host.sh` + DNS/LE; fleet still via Commission. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**.  
 5a. ~~**Toliman vanity shortuid (`kildare`)**~~ — **superseded** (2026-08-15): instance teardown / greenfield replace instead of in-place vanity. Operator: MkDocs **`fleet/decommission-instance`**.  
 5b. ~~**Instance Name → SBC Peer label sync**~~ — **done (2026-08-19):** Fleet Name PATCH pushes sitename to node + **`sync-node-label`** on SBC (Peer + dispatcher description) when `sbc_dispatcher_setid` set.  
 5c. ~~**Multi-locale / cross-border desk**~~ — **locked (2026-08-19):** **§3.A** — instance nationally homed; cross-border = phone multi-identity across instances. No further #5c engineering this pass. Lock: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`**.  
