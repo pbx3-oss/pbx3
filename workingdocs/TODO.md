@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-19 (**#5i** Decom RESTRICT + **#5g** + **#5f** done; lab worksheet)  
+**Last updated:** 2026-08-19 (**#4** / **#5** umbrellas closed for now; **#5d** parked later out; testing residual)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -12,16 +12,16 @@
 1. ~~**Workingdocs hygiene**~~ — **done** (session handoffs in **`aelintra/pbx3-ops`**; product stubs remain).  
 2. ~~**Apache-2.0 `LICENSE` files**~~ — **done** (clean Apache-2.0 on product repos; see open-item note).  
 3. ~~**Strip customer-migrate tooling from pbx3**~~ — **done** (private ETL owns migrate; package keeps shortuid normalize only).  
-4. **First out triage** — **`FIRST_OUT_CHECKLIST.md`** (must-fix F1–F5 vs nice N* vs parked).  
+4. ~~**First out triage**~~ — **closed for now (2026-08-19):** **4a–4d** green; **`FIRST_OUT_CHECKLIST.md`** F7–F9 = safety / wipe / ext_len done; F5 anonymize done; F1–F4 = lab rollout + smoke (green with #5). Optional crumbs: F6 device prune, N1–N7 nice. Checklist stays the regression reference.
 4a. ~~**Pre-release safety debt (go/no-go)**~~ — **code + tests + golden go-smoke done** (`PRE_RELEASE_SAFETY_DEBT.md` 1–16). ChanSpy desk + sipplab feature pack **U**; golden dial + SPA login + DID `441924910444` green (2026-08-09). Bzy smoke optional.  
 4b. ~~**Tenant delete data integrity**~~ — **T1–T5 done** (`TENANT_DELETE_DATA_INTEGRITY.md`). Lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1 (2026-08-10). Remaining optional: T6 DID policy, T7 Class B, T8 FK.  
 4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 (2026-08-10).  
 4d. ~~**Fleet trunk Create vs Edit**~~ — **done** (`FLEET_TRUNK_PEERING_DECISION.md` §4.3.1): hide/403 Create on fleet; keep Edit for Egress mangle.  
-5. **Lab / install automation** — **D1 / A9a lab green**. **MkDocs happy path locked 2026-08-18:** two phones and a call. Sequence **Gatekeeper → SBC → home → SPA → adopt → Provision edge**. Home installer takes fleet token + Egress in one pass; ARM CAGI is compile-on-guest. **pbx3** still private (rsync/copy fallback). Cloud **`install-pbx3-pbx3api.md`** left stale. **Next:** make **`aelintra/pbx3` public** · phone soak. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**.  
+5. ~~**Lab / install automation**~~ — **closed for now (2026-08-19):** 5a–5c / 5e–5k done or superseded; **#5d** parked later out. MkDocs happy path (two phones and a call) locked; sequence Gatekeeper → SBC → home → SPA → adopt → Provision edge. **Residual:** soak / more lab testing (not blocking the #5 close). Follow-ons elsewhere: make **`aelintra/pbx3` public** · stale cloud **`install-pbx3-pbx3api.md`**. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**.  
 5a. ~~**Toliman vanity shortuid (`kildare`)**~~ — **superseded** (2026-08-15): instance teardown / greenfield replace instead of in-place vanity. Operator: MkDocs **`fleet/decommission-instance`**.  
 5b. ~~**Instance Name → SBC Peer label sync**~~ — **done (2026-08-19):** Fleet Name PATCH pushes sitename to node + **`sync-node-label`** on SBC (Peer + dispatcher description) when `sbc_dispatcher_setid` set.  
-5c. **Multi-locale / cross-border desk** — stub **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`**. **Lean §3.A:** instance nationally homed; cross-border = phone multi-identity across UK+US instances (Toliman lab). Confirm lock when ready.  
-5d. **Outbound drouting group per home (problem)** — SBC `do_routing(0)` is global; Twilio `prefix=1` hits every home (UK CLIP → Twilio 403). Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**. Design next; no SBC park as product answer.  
+5c. ~~**Multi-locale / cross-border desk**~~ — **locked (2026-08-19):** **§3.A** — instance nationally homed; cross-border = phone multi-identity across instances. No further #5c engineering this pass. Lock: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`**.  
+5d. **Outbound drouting group per home** — **parked past first candidate (2026-08-19):** design accepted; most customers do not need multi-country trunks for v1. Later out: **`ORIGIN_OUTBOUND_ROUTING_DESIGN.md`**. Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**. Lab workaround (park Twilio rule) stays lab-only until then.  
 5e. ~~**SBC Fail2ban — fleet home auto-whitelist**~~ — **done (2026-08-19):** Provision edge upserts whitelist DB + unban + sync via `FleetNodeProvisioner`; **Decom** retires fleet-home rows via Gatekeeper → SBC `retire-node-whitelist`; stale IP dropped on re-provision. Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.  
 5f. ~~**Fleet Instances — Remove after Decom (required UX)**~~ — **done (2026-08-19):** Gatekeeper **`POST /api/v1/instances/{id}/remove`** (decommissioned only); Fleet SPA **Remove** on row menu; keeps S3 meta/backups. CLI **`unregister-instance.sh --remove`** unchanged. Docs: MkDocs **`fleet/decommission-instance`**, **`INSTANCE_ONBOARDING.md`**.  
 5g. ~~**Fleet service token — mint once, never re-type**~~ — **done (2026-08-19):** Control mints once; lab + cloud use the **same** path — `grep` / export **`PBX3_FLEET_SERVICE_TOKEN`**, reuse on SBC admin + home (or onboard in cloud). Removed LAN-only bootstrap pull. SBC admin: required token, no Enter-to-skip (`--skip-fleet-token` standalone). MkDocs lab install pages.  
@@ -92,6 +92,8 @@
 - [x] **D1 MkDocs re-walk (2026-08-18):** control re-run + clean home install + Vite catalog + Fleet register + Sanctum + probe **lab green**. **pbx3** still private — rsync fallback in Lab MkDocs. Empty SBC URL skip on control installer.
 - [x] **Lab SBC + ARM CAGI (2026-08-18):** amd64 edge reinstall + Provision edge + Egress; ARM home compiles CAGI on-guest (`pbx3cagi.arm64`).
 - [x] **Lab SIP / Provision edge (2026-08-17):** amd64 SBC + Gatekeeper provision → setid; home Egress seeded; egress qualify **Avail**; F2B jail + auto-whitelist on provision; **registerDomain** on provision-edge (Domain Routes).
+- [x] **#5 umbrella closed for now (2026-08-19):** engineering for 5a–5c / 5e–5k done or superseded; **#5d** later out. Residual = soak / more testing, not more #5 features.
+- [x] **#4 umbrella closed for now (2026-08-19):** 4a–4d green; F7–F9 engineering done; F1–F4 lab-smoke satisfied with install path (#5). Residual: optional F6 / N* crumbs; soak testing.
 
 - [x] **Fleet service token — mint once, never re-type (#5g, 2026-08-19):** One token from control; same env/paste path lab + cloud; SBC admin Enter-to-skip removed.
 
@@ -150,7 +152,7 @@
 
 - [x] **Number dialect — paid Twilio inbound/outbound (2026-08-11):** Toliman↔Twilio both ways lab green (SBC Route-strip + public From/PAI host; Egress CLIP update without `default` tenant). Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · wire: **`EGRESS_PLUS_E164_WIRE.md`**. CLI stays as-stored (no CLIP mangle). Follow-on: **§5.4** ops-authored profiles (no tip for recombination).
 
-- [ ] **Outbound drouting group per home (#5d — open 2026-08-12):** `FROM_ASTERISK` hardcodes `do_routing(0)`; Twilio `prefix=1` applies to every home (Toliman UK CLIP → Twilio 403). Need per-home / `serving_cc` group. Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**. Design next.
+- [ ] **Outbound drouting group per home (#5d — parked past first out, 2026-08-19):** design accepted (**`ORIGIN_OUTBOUND_ROUTING_DESIGN.md`**). Not first-candidate. Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**.
 
 - [ ] **Number wire Phase 2 / D2–D4 (parked 2026-08-06):** Phase 1 = node Mangle (**D1 = C** locked). Do not strip node Mangle until Phase-2 gate. Specs: **`NUMBER_WIRE_POLICY.md`**, **`NUMBER_WIRE_STANDARD_DRAFT.md`**.
 

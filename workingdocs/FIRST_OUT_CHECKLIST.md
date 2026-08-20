@@ -1,6 +1,6 @@
 # First out — checklist (must-fix vs nice)
 
-**Status:** Operator lean (**2026-08-06**; duplex won't-do **2026-08-11**) — product is **mostly there**; this is cleanup triage, not a new build plan.  
+**Status:** Triage **closed for now (2026-08-19)** — engineering gates green (4a–4d / F7–F9); lab install + smoke green (#5). **`FIRST_OUT_CHECKLIST.md`** remains the regression reference. Optional: F6 device prune, N1–N7 nice.  
 **Related:** **`TODO.md`** · **`STAKEHOLDER_DEMO_SCRIPT.md`** · **`TRACK_B_RELEASE_HARDENING.md`** · **`PROVISIONING_SERVER_REQUIREMENTS.md`** (parked, §0 / §0.1) · Device lean in **`sqlite_device_data.sql`** + **`sqlite_device_lean_prune.sql`**.
 
 **First out** here means: a credible fleet PBX you can show / soft-land with a friendly customer — not OSS org polish, not HA SKUs, not a provisioning-server product.
@@ -87,6 +87,7 @@ Do **not** block first out on these:
 - Fleet cookie/SSO  
 - TOTP 2FA (SPA + SBC) — **`TOTP_2FA_REQUIREMENTS.md`**  
 
+- **#5d origin outbound drouting / mixed-country trunks** — design accepted; later out — **`ORIGIN_OUTBOUND_ROUTING_DESIGN.md`**  
 - Number wire Phase 2 / SBC dialect habit  
 - ~~Velocity standalone~~ — **won't-do** (2026-08-11) — in-tree only · AMI wallboard / Grafana / door-knock heat  
 - cagi Phase 4 / Ast generator deep refactor  
