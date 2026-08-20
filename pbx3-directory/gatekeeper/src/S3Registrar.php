@@ -196,6 +196,10 @@ final class S3Registrar
             }
             $apiBase = (string) ($instances[$index]['api_base_url'] ?? '');
             (new NodeSitenameClient())->putSitename($apiBase, $label);
+            $setid = (int) ($instances[$index]['sbc_dispatcher_setid'] ?? 0);
+            if ($setid >= 1) {
+                InstanceEdgeLabelSync::pushToSbc($id, $label, $setid);
+            }
         }
 
         $now = $this->nowIso();

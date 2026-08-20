@@ -220,6 +220,29 @@ final class SbcFleetClient
     }
 
     /**
+     * Sync fleet instance friendly Name → SBC Asterisk Peer + dispatcher descriptions (#5b).
+     *
+     * @return array<string, mixed>
+     */
+    public function syncNodeLabel(string $instanceId, string $description, int $setid): array
+    {
+        $instanceId = trim($instanceId);
+        $description = trim($description);
+        if ($instanceId === '' || $description === '') {
+            throw new \InvalidArgumentException('instance_id and description required', 422);
+        }
+        if ($setid < 1) {
+            throw new \InvalidArgumentException('setid (>=1) required', 422);
+        }
+
+        return $this->post('/fleet/sync-node-label', [
+            'instance_id' => $instanceId,
+            'description' => $description,
+            'setid' => $setid,
+        ]);
+    }
+
+    /**
      * Active VIP: create backup zip + upload to S3.
      *
      * @return array{ok:bool, zip?:string, backup_stamp?:string, epoch?:int, uploaded?:bool, message?:string}

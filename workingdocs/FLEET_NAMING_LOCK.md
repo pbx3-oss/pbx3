@@ -35,7 +35,7 @@ Schema may differ by class; **operator language** should not. Prefer UI **Name**
 - **No instance `pkey` column.** Tenant `cluster.pkey` only. Instance **Name** is sitename≡label (product “pkey-like” role without that DB name).
 - **Name** is the short recogniser (chooser, Home). **Description** elaborates; never promote notes into Name.
 - **Edit surface (locked 2026-08-06):**
-  - **Fleet node:** **Fleet → Instances** only. Gatekeeper PATCHes catalog `label` after **`PUT /api/fleet/sitename`** on the node (fail whole save if node push fails). **Network → Site Name is read-only.**
+  - **Fleet node:** **Fleet → Instances** only. Gatekeeper PATCHes catalog `label` after **`PUT /api/fleet/sitename`** on the node and **`POST /fleet/sync-node-label`** on the SBC (Peer + dispatcher description) when provisioned — fail whole save if either push fails. **Network → Site Name is read-only.**
   - **Solo:** **Network → Site Name** only (no catalog).
 - Display Name: `sitename || label || shortuid` (not FQDN, not notes).
 - Lab (**done 2026-08-06**): `label === sitename` — **Golden**, **AEL Nodes**, **Labtest-B**. Vanity FQDN debt left as-is until rebuild.
