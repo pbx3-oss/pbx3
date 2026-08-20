@@ -20,6 +20,7 @@ use Pbx3\Gatekeeper\DidInventory;
 use Pbx3\Gatekeeper\Env;
 use Pbx3\Gatekeeper\FleetAbilities;
 use Pbx3\Gatekeeper\Http\JsonResponse;
+use Pbx3\Gatekeeper\InstanceEdgeLifecycle;
 use Pbx3\Gatekeeper\InstanceEdgeProvision;
 use Pbx3\Gatekeeper\NodeFleetDialClient;
 use Pbx3\Gatekeeper\NotifyDispatcher;
@@ -686,22 +687,28 @@ try {
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         $body = SbcSetidGuard::applyToBody(is_array($body) ? $body : [], new SbcFleetClient());
         $actor = Auth::user()['email'] ?? null;
-        JsonResponse::send(200, $registrar->patchInstance(
+        $result = $registrar->patchInstance(
             $m[1],
             $body,
             is_string($actor) ? $actor : null
-        ));
+        );
+        if (isset($body['status']) && (string) $body['status'] === 'decommissioned') {
+            $result = InstanceEdgeLifecycle::attachFail2banRetire($result, new SbcFleetClient(), $m[1]);
+        }
+        JsonResponse::send(200, $result);
     }
 
     if ($method === 'POST' && preg_match('#^/api/v1/instances/([A-Za-z0-9_-]+)/decommission$#', $path, $m)) {
         Auth::requireAbility(FleetAbilities::INSTANCES);
         $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
         $actor = Auth::user()['email'] ?? null;
-        JsonResponse::send(200, $registrar->decommissionInstance(
+        $result = $registrar->decommissionInstance(
             $m[1],
             $body,
             is_string($actor) ? $actor : null
-        ));
+        );
+        $result = InstanceEdgeLifecycle::attachFail2banRetire($result, new SbcFleetClient(), $m[1]);
+        JsonResponse::send(200, $result);
     }
 
     if ($method === 'POST' && preg_match('#^/api/v1/instances/([A-Za-z0-9_-]+)/remove$#', $path, $m)) {

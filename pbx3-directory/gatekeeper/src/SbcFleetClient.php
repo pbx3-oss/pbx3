@@ -205,6 +205,21 @@ final class SbcFleetClient
     }
 
     /**
+     * Retire fleet-home Fail2ban whitelist rows (#5e decom / stale IP).
+     *
+     * @return array<string, mixed>
+     */
+    public function retireNodeWhitelist(string $instanceId): array
+    {
+        $instanceId = trim($instanceId);
+        if ($instanceId === '') {
+            throw new \InvalidArgumentException('instance_id required', 422);
+        }
+
+        return $this->post('/fleet/retire-node-whitelist', ['instance_id' => $instanceId]);
+    }
+
+    /**
      * Active VIP: create backup zip + upload to S3.
      *
      * @return array{ok:bool, zip?:string, backup_stamp?:string, epoch?:int, uploaded?:bool, message?:string}

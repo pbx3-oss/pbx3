@@ -198,7 +198,7 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 7. Later (notify plane): webhooks / Slack. **Fail2ban ban→email — Done.**  
 8. **Separate track:** optional Prometheus + Grafana for metrics dashboards.  
 9. **Toll fraud / velocity track:** **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** (instance detect → Gatekeeper deliver).  
-10. **Fail2ban fleet-home auto-whitelist** — **TODO #5e** (required; lab gap).  
+10. ~~**Fail2ban fleet-home auto-whitelist**~~ — **Done (#5e, 2026-08-19):** Provision edge upsert + Decom retire via SBC `retire-node-whitelist`.  
 11. **Fail2ban Peer auto-whitelist** (next carrier onboard).
 
 ---

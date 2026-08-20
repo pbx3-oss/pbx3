@@ -22,7 +22,7 @@
 5b. **Instance Name → SBC Peer label sync** (optional) — Fleet Name PATCH does not update SBC Peer description today.  
 5c. **Multi-locale / cross-border desk** — stub **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`**. **Lean §3.A:** instance nationally homed; cross-border = phone multi-identity across UK+US instances (Toliman lab). Confirm lock when ready.  
 5d. **Outbound drouting group per home (problem)** — SBC `do_routing(0)` is global; Twilio `prefix=1` hits every home (UK CLIP → Twilio 403). Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**. Design next; no SBC park as product answer.  
-5e. **SBC Fail2ban — fleet home auto-whitelist** — **done (2026-08-17):** Provision edge upserts whitelist DB + unban + sync via `FleetNodeProvisioner`. Retire stale IPs on decommission still open. Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.  
+5e. ~~**SBC Fail2ban — fleet home auto-whitelist**~~ — **done (2026-08-19):** Provision edge upserts whitelist DB + unban + sync via `FleetNodeProvisioner`; **Decom** retires fleet-home rows via Gatekeeper → SBC `retire-node-whitelist`; stale IP dropped on re-provision. Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.  
 5f. ~~**Fleet Instances — Remove after Decom (required UX)**~~ — **done (2026-08-19):** Gatekeeper **`POST /api/v1/instances/{id}/remove`** (decommissioned only); Fleet SPA **Remove** on row menu; keeps S3 meta/backups. CLI **`unregister-instance.sh --remove`** unchanged. Docs: MkDocs **`fleet/decommission-instance`**, **`INSTANCE_ONBOARDING.md`**.  
 5g. ~~**Fleet service token — mint once, never re-type**~~ — **done (2026-08-19):** Control mints once; lab + cloud use the **same** path — `grep` / export **`PBX3_FLEET_SERVICE_TOKEN`**, reuse on SBC admin + home (or onboard in cloud). Removed LAN-only bootstrap pull. SBC admin: required token, no Enter-to-skip (`--skip-fleet-token` standalone). MkDocs lab install pages.  
 5h. ~~**Lab home installer — fleet `.env` + Egress seed harden**~~ — **done (2026-08-19):** `home_set_env_kv` newline-safe append; **`seed-fleet-egress-trunk.sh`** in **`pbx3/scripts/`** + deb **`/opt/pbx3/scripts/`**; **`link-asterisk-configs.sh`** + GenAst stubs; fleet token requires **`PBX3_SBC_EGRESS_HOST`**; post-install verify (Egress + symlinks); **`PBX3_CLEAN_INSTALL=1`**; MkDocs **`install-lab-home.md`**.  
@@ -178,7 +178,7 @@
 
 - [ ] **S10.7 — Orchestrated onboard / rebuild (parked 2026-07-15):** Interim: agent-assisted Mode 4. Design: **`SELF_SERVICE_REBUILD_DESIGN.md`**.
 
-- [x] **SBC Fail2ban — fleet home auto-whitelist (#5e — 2026-08-17):** `FleetNodeProvisioner` upserts whitelist DB + unban + sync on Provision edge. Lab manual path retired for new installs.
+- [x] **SBC Fail2ban — fleet home auto-whitelist (#5e — 2026-08-19):** `FleetNodeProvisioner` upserts on Provision edge; retires fleet-home rows on Decom + stale IP on re-provision; Gatekeeper calls SBC `retire-node-whitelist`.
 
 - [x] **Fleet Instances — Remove after Decom (#5f, 2026-08-19):** Gatekeeper `POST …/remove` + Fleet SPA **Remove** on decommissioned rows; S3 meta/backups kept.
 
