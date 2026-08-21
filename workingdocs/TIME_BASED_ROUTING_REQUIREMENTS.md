@@ -2,8 +2,8 @@
 
 **Status:** **TRACK COMPLETE 2026-08-04** on **`time-based-routing`**. Slices **A–E** delivered (dual-read retained). Golden: lunch profile + force modes lab green; packages **pbx3 0.0.4-7** + **pbx3cagi 1.0.0-13**; day-parts help applied. SPA profiles primary; open/close demoted. BLF *30/*31 AUTO/CLOSED; multi-mode force via AstDB. **Not** pushed/merged. **Kildare** untouched.  
 **Scope:** Instance / tenant inbound schedule → destination selection (`dateseg`, `holiday`, `pbx3timer.php`, `CheckState` / `CheckTime`, `inroutes`, SPA Day/Holiday timers + Inbound + route profiles).  
-**Not:** Fleet control plane, **SBC / Magrathea product code** (unchanged path edge), FreePBX-style time-condition chains (deferred — §6), trunk legacy open/close fields.  
-**Related:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 4 parked — this track changes CheckState contract first) · `CALL_TEST_STRATEGY.md` / CAGI **`TEST_RECIPE.md`** · canvas study [time-based routing review](file:///Users/jeffstokoe/.cursor/projects/Users-jeffstokoe-GiT-pbx3-master/canvases/time-based-routing-review.canvas.tsx) · Existing-DB convert: shortuid normalize + private migrate tooling.
+**Not:** Fleet control plane, **SBC** product code (unchanged path edge), FreePBX-style time-condition chains (deferred — §6), trunk legacy open/close fields, **per-mode CoS matrices** (CoS stays binary — §5.10).  
+**Related:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 4 parked — this track changes CheckState contract first) · `CALL_TEST_STRATEGY.md` / CAGI **`TEST_RECIPE.md`** · canvas study [time-based routing review](file:///Users/jeffstokoe/.cursor/projects/Users-jeffstokoe-GiT-pbx3-master/canvases/time-based-routing-review.canvas.tsx) · Existing-DB convert: shortuid normalize + private migrate tooling · CoS SPA backlog: **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**.
 
 **Lab hosts (2026-08-04):**
 
@@ -271,6 +271,34 @@ Those UIs framed windows as **closed periods** (sclose/eclose) on default-open �
 **With ranges under default open:** typical office → ~3–5 rows (open/lunch/evening on `mon-fri`, overnight `*` or `mon-fri`, sat/sun closed) — not 22.
 
 **Status (2026-08-05):** matcher + API + SPA options shipped on **`time-based-routing`**.
+
+### 5.10 Class of service (CoS) vs day-parts — **binary cue locked** (2026-08-20)
+
+**Question:** After multi-mode inbound (open / closed / lunch / …), should CoS still follow open/closed, or grow a matrix per schedule mode?
+
+**Locked:** CoS stays **binary**. It takes its cue from **open vs closed** only — not from every day-part. Day-parts remain an **inbound** concern (where the call lands). CoS remains an **outbound privilege** concern (may this phone dial mobiles / international / premium?).
+
+| Layer | Model |
+|-------|--------|
+| **Inbound** | `sched_mode` + route profiles (N modes) |
+| **CoS** | Two matrices per extension: `ipphonecosopen` / `ipphonecosclosed` (daytime / closed-hours) |
+| **Bridge** | `pbx3_oclo_from_mode`: **`closed` → `CLOSED`**; all other modes (`open`, `lunch`, `evening`, `night`, …) → **`OPEN`** |
+| **Dialplan** | `STATE == CLOSED` → `closedcos`; else → `opencos` |
+
+**Why not per-mode CoS**
+
+- Different jobs: inbound modes answer greeting / queue / IVR; CoS answers dial privilege.  
+- A third dimension on the extension CoS matrix is costly UX for rare need (“stricter CoS at lunch”).  
+- Matches SARK heritage: rules in force during **normal hours** vs **closed hours**.
+
+**Operator / BLF:** master or tenant force **CLOSED** still selects the closed CoS set; **AUTO** resumes schedule (and thus the binary map above).
+
+**Not v1:** N CoS matrices keyed by schedule mode.
+
+**Optional later (only if a real shop asks):** tenant **closed-like modes** list (e.g. treat `night` / `evening` as closed for CoS) — still two matrices, richer mapping. Do not schedule until demanded.
+
+**SPA:** keep daytime / nighttime CoS labeling (`ipphonecosopen` / `ipphonecosclosed`); do not invent per-mode columns when completing the CoS assignment backlog.
+
 ---
 
 ## 6. Non-goals (v1)
@@ -283,6 +311,7 @@ Those UIs framed windows as **closed periods** (sclose/eclose) on default-open �
 - Instance-shared profile library (Q6).  
 - Open-hours / **default-closed** as fleet default — **rejected** (§5.8; BLF-only shops).  
 - Day-of-week ranges (`mon-fri`) — **shipped 2026-08-05** (§5.9).  
+- Per-mode CoS matrices — **rejected**; CoS stays binary open/closed (§5.10 / Q8).  
 - Faithful preservation of older holiday absolute-time subversion (Q4).
 
 ---
@@ -304,7 +333,7 @@ Existing DBs already have `dateseg`, `Holiday`, `openroute`/`closeroute`, `oclo`
 
 ---
 
-## 8. Design locks (Q1–Q7) — locked 2026-08-04
+## 8. Design locks (Q1–Q8) — locked 2026-08-04 (+ Q8 2026-08-20)
 
 | Id | Decision |
 |----|----------|
@@ -315,6 +344,7 @@ Existing DBs already have `dateseg`, `Holiday`, `openroute`/`closeroute`, `oclo`
 | **Q5** | Operator **hard-force wins over holiday** (force was intentional). |
 | **Q6** | Profiles **tenant-scoped only**. No live instance-shared “standard day” (sites differ enough). Copy/duplicate OK. |
 | **Q7** | **Closed-window** framing + **default open** (Q1). Open-hours / default-closed invert **rejected** as fleet default — §5.8. |
+| **Q8** | **CoS stays binary** — open vs closed cue only (`pbx3_oclo_from_mode`; non-`closed` day-parts → open CoS). No per-mode CoS matrices. Optional closed-like map later if demanded — §5.10. |
 
 ---
 
@@ -474,3 +504,4 @@ Gate: **`make test` PASS** on every CAGI PR in this track.
 | 2026-08-04 | Timespan half-open `[start, end)`. §5.8 expanded: no-match default alternatives (A–D) + preferred tenant setting residual. |
 | 2026-08-04 | §5.9: Prior timer UIs had **Every Day** (`*`) — pbx3 stored it but SPA edit showed bare `*`; label fixed to Every day. Ranges still the surpass target. |
 | 2026-08-04 | §5.8: **default open reaffirmed** (BLF-only / no-timer shops); default-closed rejected as fleet default. Day ranges remain primary UX residual. |
+| 2026-08-20 | §5.10: **CoS stays binary** (open vs closed cue via `pbx3_oclo_from_mode`); no per-mode CoS matrices; optional closed-like map later only if demanded. |
