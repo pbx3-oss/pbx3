@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-21 (CoS Q8 lock; backup endpoint-index parked; Ring2All note outside git)  
+**Last updated:** 2026-08-21 (home/package versioning TODO tightened; CoS Q8 / endpoint-index earlier)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -30,6 +30,7 @@
 5j. ~~**Fleet home Commit reload / Egress REGISTER log**~~ — **closed (2026-08-19):** **#5j-b** post-Commit reload **OK** on lab (active call + new ext). **#5j-a** `AOR '' not found for endpoint 'Egress'` = unknown shortuid or pre–first-Commit REGISTER (expected). Wrong password → **`Failed to authenticate`** on correct endpoint. Docs: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · **`install-lab-adopt.md`**. No **`pbx3api`** reload change.  
 5k. ~~**SBC orphan domain rows after lab reinstall**~~ — **done (2026-08-19):** **`CatalogReconcile::pruneOrphans`** + **`POST /reconcile/prune-orphans`**; auto on **Provision edge**; Fleet **Catalog reconcile** UI. Decommissioned instance FQDNs now flagged as orphans. MkDocs **`installation/install-lab-adopt.md`**. Rule 13 catalog-driven prune (fleet-owned only).  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
+6a. **Home / package versioning** — **should-do before a painful break** (not first-out). Know which home is on which **pbx3 / cagi / api** floor+tip; survive mixed floors; plan for a future breaking change without tribal memory. Open item below · **`REPOS_AND_RELEASES.md`**.  
 7. **New instance / package install** — fleet floors **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** (+ tips between — see **TODO_OPS**).  
 8. **Toll fraud / velocity** — plan **Accepted**; **WP0 + WP3 + WP1** done (2026-08-11). Remainder deferred (V4 / SBC floor / Wangiri). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
 8b. ~~**CDR dest pie (Home)**~~ — **done** (pulse `dest_where_today`; SPA doughnut; golden tip). Home CC via `PBX3_CDR_HOME_CC`.  
@@ -210,7 +211,7 @@
 
 - [ ] **Fleet endpoint shortuid lookup — backup-derived index (parked 2026-08-20):** Do **not** catalog every extension/IVR suid on create (Rule 1). Optional later: amalgamate thin rows from latest instance `backup.zip` → e.g. `catalog/endpoint-index.json` for ops “where is this suid?”. Note: **`~/GiT/pbx3-ops/devdocs/pbx3/pbx3-directory/docs/BACKUP_DERIVED_ENDPOINT_INDEX_NOTE.md`**.
 
-- [ ] **Home / package version inventory & mixed-floor story (parked 2026-08-21):** ClueCon/Ring2All audience pressed PBX versioning; we have tips/floors but no operator-facing “home A on X / home B on Y” narrative. Competitive note (private): **`~/GiT/nonGitStuff/obsidian/Ring2all.md`**. Not scheduled.
+- [ ] **Home / package versioning (parked 2026-08-21 — should-do):** Not urgent today; **emotional later** if a breaking package/schema change lands and we cannot answer “who is on what?” We already have floors + tips (`TODO_OPS`, catalog `package_version`) but no operator-facing inventory / mixed-floor policy / upgrade path. Scope when scheduled: per-home reported versions (pbx3, cagi, api tip/deb), Fleet or ops visibility, rules for mixed floors, and how a breaking roll is announced/gated. Cadence backdrop: **`REPOS_AND_RELEASES.md`**. Competitive reminder only: **`~/GiT/nonGitStuff/obsidian/Ring2all.md`**.
 
 - [ ] **LDAP — overall strategy deferred:** Parking all LDAP work until a design is chosen.
 
