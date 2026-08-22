@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-20 (backup-derived endpoint index note parked; lab soak / cloud install / lab WSS earlier)  
+**Last updated:** 2026-08-21 (CoS Q8 lock; backup endpoint-index parked; Ring2All note outside git)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -209,6 +209,8 @@
 - [ ] **pbx3api astamis `PJSIPShowEndpoint/{id}`:** Singular action not whitelisted — fix when implementing live endpoint query.
 
 - [ ] **Fleet endpoint shortuid lookup — backup-derived index (parked 2026-08-20):** Do **not** catalog every extension/IVR suid on create (Rule 1). Optional later: amalgamate thin rows from latest instance `backup.zip` → e.g. `catalog/endpoint-index.json` for ops “where is this suid?”. Note: **`~/GiT/pbx3-ops/devdocs/pbx3/pbx3-directory/docs/BACKUP_DERIVED_ENDPOINT_INDEX_NOTE.md`**.
+
+- [ ] **Home / package version inventory & mixed-floor story (parked 2026-08-21):** ClueCon/Ring2All audience pressed PBX versioning; we have tips/floors but no operator-facing “home A on X / home B on Y” narrative. Competitive note (private): **`~/GiT/nonGitStuff/obsidian/Ring2all.md`**. Not scheduled.
 
 - [ ] **LDAP — overall strategy deferred:** Parking all LDAP work until a design is chosen.
 
