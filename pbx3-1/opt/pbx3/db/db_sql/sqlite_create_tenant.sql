@@ -261,7 +261,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "protocol" TEXT DEFAULT 'IPV4',			 -- IPV4/IPV6
     "provision" TEXT,                        -- provisioning string with #INCLUDE directives
     "provisionwith" TEXT DEFAULT 'IP',       -- how to provision: IP or FQDN
-    "pjsipuser" TEXT,						 -- Asterisk PJSIP string							
+    "pjsipuser" TEXT,						 -- DEPRECATED 2026-08-23: was Device.sipiaxfriend copy; GenAst uses pjsip_overlay. Keep until schema drop.
     "stealtime" INTEGER,                     -- epoch time this extension was stolen by HD
     "stolen" TEXT,                           -- HD thief 
     "technology" TEXT,                       -- SIP/IAX2/DiD/CLiD/Class
@@ -269,6 +269,7 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "transport" TEXT DEFAULT 'udp',		     -- transport(udp/tcp/tls/wss)
     "vmailfwd" TEXT,                         -- vmail forward email address
     "pjsip_overlay" TEXT,                    -- thin PJSIP phone overlay (tmpl key merge on Commit)
+    "named_groups" TEXT DEFAULT 'ALL',       -- named call+pickup groups (comma-sep); ALL/empty → GenAst $clst
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',

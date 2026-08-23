@@ -790,6 +790,7 @@ class genAsteriskObjects
 	 *   $id / $pkey / $ext / $username — object identity (phones: shortuid vs dialable pkey)
 	 *   $clst — tenant shortuid (COS / mailbox domain)
 	 *   $clstkey — parking lot name park-{tenant shortuid} (must run before $clst)
+	 *   $named_groups — named_call/pickup groups (ALL/empty → $clst; else ipphone.named_groups)
 	 *   $outbound_proxy — whole line or empty (fleet → sip:{PBX3_SBC_EGRESS_HOST};lr)
 	 */
 	private function xlatePjsipBuff(&$buffer, $row)
@@ -811,6 +812,15 @@ class genAsteriskObjects
 		$clst = $rep($row['cluster'] ?? null);
 		$clstkey = ($clst !== '') ? ('park-' . $clst) : '';
 		$buffer = preg_replace('/\$clstkey/', $clstkey, $buffer);
+		// Named pickup: ALL or empty → tenant shortuid (tenant-scoped whole-tenant pool).
+		// Custom tokens (sales, 1,2, …) emit as-is. Replace $named_groups before $clst.
+		$namedRaw = trim($rep($row['named_groups'] ?? null));
+		if ($namedRaw === '' || strcasecmp($namedRaw, 'ALL') === 0) {
+			$namedGroups = $clst;
+		} else {
+			$namedGroups = $namedRaw;
+		}
+		$buffer = preg_replace('/\$named_groups/', $namedGroups, $buffer);
 		$buffer = preg_replace('/\$clst/', $clst, $buffer);
 
 		if (!empty($row['strategy'])) {

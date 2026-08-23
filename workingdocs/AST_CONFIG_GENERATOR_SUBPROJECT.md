@@ -149,7 +149,7 @@ pjsip_phone.tmpl  --(always on get)-->  + overlay (DB pjsip_overlay preferred; f
 - Page / `***` presets.
 - Tighter OpenSIPS gate / tenant DNS ≠ VIP (edge; pointer only).
 - ~~Trunk/queue **copy-once** staging~~ — **H:** trunks/queues/parks tmpl + DB overlay (same as phones).
-- [`TODO.md`](TODO.md) **pjsipuser for extensions** / NAT tmpl keys — fold here when touched.
+- [`TODO.md`](TODO.md) ~~pjsipuser / sipiaxfriend~~ — **deprecated 2026-08-23** (GenAst tmpl + overlay). NAT tmpl keys — fold here when touched.
 
 ### Phase H notes (trunk / queue / park C2 — built)
 

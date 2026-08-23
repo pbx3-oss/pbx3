@@ -22,7 +22,7 @@ Treat as **done on `main` / lab-proven** unless a regression appears:
 | Ops notify / log retention / SBC aging | Shipped tracks |
 | Packages | **pbx3 0.0.5-1** / **cagi 1.0.0-14** artefacts on `main` |
 | Privileges | Instance P1–P4 + B′ login homing |
-| Device templates (lean) | Seed **11** keepers only; SPA **Devices** nav removed (`main`) — create-time `sipiaxfriend` still via Device table |
+| Device templates (lean) | Seed **11** keepers only; SPA **Devices** nav removed. `sipiaxfriend` **deprecated** (2026-08-23) — not used by GenAst |
 | Provisioning server | **Won't-do** (2026-08-23) — manufacturer RPS (M1); no 3pcerts |
 
 ---

@@ -2,6 +2,8 @@
 -- No in-house HTTP provisioner templates (#INCLUDE / Fkey / common fat rows).
 -- Keepers: General SIP, WebRTC, MAILBOX + vendor bases used by ExtensionController MAC path.
 -- Existing DBs: run sqlite_device_lean_prune.sql (or equivalent) to delete surplus rows.
+-- NOTE 2026-08-23: Device.sipiaxfriend is DEPRECATED (unused by GenAst; tmpl + pjsip_overlay).
+-- Seed still inserts heritage blobs so INSERT OR IGNORE stays compatible; do not rely on them.
 BEGIN TRANSACTION;
 INSERT OR IGNORE INTO Device(pkey,desc,device,noproxy,owner,sipiaxfriend,technology) values ('General SIP','General SIP definition','General SIP','1','system','type=peer
 defaultuser=$desc

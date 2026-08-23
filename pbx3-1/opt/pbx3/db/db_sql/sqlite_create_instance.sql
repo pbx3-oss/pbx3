@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS device (
 "owner" TEXT DEFAULT 'system',
 "pkeys" INTEGER,
 "provision" TEXT,
-"sipiaxfriend" TEXT,
+"sipiaxfriend" TEXT,	-- DEPRECATED 2026-08-23: SARK chan_sip peer body; GenAst uses pjsip tmpl + overlay. Keep until schema drop.
 "technology" TEXT,
 "tftpname" TEXT,
 "zapdevfixed" TEXT,

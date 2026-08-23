@@ -74,6 +74,12 @@ if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$OVERLAY_APPLY" ]; then
 	sh "$OVERLAY_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
 fi
 
+# Extension named pickup groups (named_call_group / named_pickup_group).
+NAMED_GROUPS_APPLY="$SYSPATH/scripts/apply-sqlite-add-named-groups.sh"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$NAMED_GROUPS_APPLY" ]; then
+	sh "$NAMED_GROUPS_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+fi
+
 # Time-based routing (day-parts) slice A: schema + dual-read profile convert.
 TIMEBASE_APPLY="$SYSPATH/scripts/apply-sqlite-add-time-based-routing.sh"
 TIMEBASE_CONVERT="$SYSPATH/scripts/convert-route-profiles.sh"

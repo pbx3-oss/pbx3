@@ -384,6 +384,7 @@ CREATE TABLE ipphone (
     "transport" TEXT DEFAULT 'udp',		      -- transport(udp/tcp/tls/wss)
     "vmailfwd" TEXT,
     "pjsip_overlay" TEXT,                    -- thin PJSIP phone overlay (tmpl key merge on Commit)
+    "named_groups" TEXT DEFAULT 'ALL',       -- named call+pickup groups (comma-sep); ALL/empty → GenAst $clst
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
