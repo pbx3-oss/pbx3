@@ -203,9 +203,9 @@ class genAsteriskObjects
 			if (!file_exists(ASTSHARE . "/moh-" . $row['shortuid'])) {
 				$rc = $this->helper->request_syscmd("mkdir " . ASTSHARE . "/moh-" . $row['shortuid']);
 			}
-			$this->OUT .= "\n; Tenant - " . $row['shortuid'] . "\n";
-			$this->OUT .= "[" . $row['pkey'] . "]\n";
-			
+			// Class name must match CAGI setMoh: CHANNEL(musicclass)=moh-{cluster shortuid}
+			$this->OUT .= "\n; Tenant - " . $row['pkey'] . " (" . $row['shortuid'] . ")\n";
+			$this->OUT .= "[moh-" . $row['shortuid'] . "]\n";
 			$this->OUT .= "mode=files\n";
 			$this->OUT .= "directory=moh-" . $row['shortuid'] . "\n";
 			$this->OUT .= "sort=random\n";
