@@ -1,9 +1,10 @@
 # Provisioning — requirements (sketch)
 
-**Status:** Direction refreshed **2026-08-10**. Preferred fleet shape = **home-local listener** (lift/polish SARK `device.php` routines) + **edge nginx provision proxy** (SBC-analogue routing). Not a commitment to schedule build yet — design is workable; implement when prioritized.  
-**Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard. Management options **M1–M5** retained in **§0.1** as alternatives.  
+**Status:** **Won't-do (2026-08-23).** No in-house HTTP phone provisioner and no **sark3pcerts** panel. Major manufacturers (except Cisco) already ship RPS; reinventing is not worth it. Prefer **M1** (vendor/reseller RPS). Spec below kept as archive only.  
+**Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — not building.  
+**Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard.  
 **Reference notes:** private prior co-located provisioner / SARK archives (operator only — not in product tree).  
-**Related:** **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** (extension authoring + Commit/genAst) · **`TLS_AND_CERTIFICATES.md` §0** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · TODO *Provisioning*.
+**Related:** **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** (extension SIP fields / Commit — unrelated to RPS product) · **`TLS_AND_CERTIFICATES.md` §0** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23.
 
 ---
 

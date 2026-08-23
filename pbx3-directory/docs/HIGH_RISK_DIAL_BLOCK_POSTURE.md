@@ -32,7 +32,7 @@ Per tenant (locale pack):
 | **`HR_UK070`** | High risk — UK personal 070 | `_070. _+4470. _076. _+4476.` | open+closed YES (UK pack) |
 | **`HR_OFFSHORE`** | High risk — offshore / IRSF | `_001268. _+1268. _00252. …` (UK `00`/`+`) or `_1268. _011252. …` (US) | open+closed YES |
 
-SPA: **Class of Service** list shows these like any other rule. Operator can clear `default*`, detach from phones, or edit patterns (liability unlock ≈ remove/narrow the rule).
+SPA: **Class of Service** list shows these like any other rule (stable **`pkey`** + **cname** explain what they deny). Operator can clear `default*`, detach from phones, or edit patterns (liability unlock ≈ remove/narrow the rule). SPA-created custom rules omit operator key — API sets **`pkey = shortuid`**; seeds keep the `HR_*` names for upsert.
 
 **Not** OutRoute / `default_outbound_dialplan` — that **allows** trunk seize (`_0XXX. _00XX.`); high-risk is a **deny** layer.
 

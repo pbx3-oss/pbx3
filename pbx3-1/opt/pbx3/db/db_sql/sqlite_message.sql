@@ -97,7 +97,7 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('copy','Copy'
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('cosclosed','Default Closed','Defines whether this COS will be ON by default for closed hours when new extensions are created.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('cosday','Day time Class of Service','Daytime COS entries.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('cosdialplan','Dialplan','The dialplan pattern for this class-of-service.  COS dialplans follow standard Asterisk dialplan conventions.');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('cosname','COS Name','System-wide unique name for this class-of-service rule.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('cosname','Key','Dialplan context key for this Class of Service rule. SPA-created rules use the system UID automatically; product seeds may use a stable name (e.g. HR_UK070). Not editable after create.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('cosnight','Night time Class of Service','Night time COS entries.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('cosopen','Default Open','Defines whether this COS will be ON by default for open hours when new extensions are created.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('cosstart','Class Of Service','Whether we will run COS or not.  PBX3 Class of Service is very powerful but if you dont intend to use it then you can save a little cpu by turning it off.');

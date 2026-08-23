@@ -1,7 +1,7 @@
 # First out — checklist (must-fix vs nice)
 
 **Status:** Triage **closed for now (2026-08-19)** — engineering gates green (4a–4d / F7–F9); lab install + smoke green (#5). **`FIRST_OUT_CHECKLIST.md`** remains the regression reference. Optional: F6 device prune, N1–N7 nice.  
-**Related:** **`TODO.md`** · **`STAKEHOLDER_DEMO_SCRIPT.md`** · **`TRACK_B_RELEASE_HARDENING.md`** · **`PROVISIONING_SERVER_REQUIREMENTS.md`** (parked, §0 / §0.1) · Device lean in **`sqlite_device_data.sql`** + **`sqlite_device_lean_prune.sql`**.
+**Related:** **`TODO.md`** · **`STAKEHOLDER_DEMO_SCRIPT.md`** · **`TRACK_B_RELEASE_HARDENING.md`** · **`PROVISIONING_SERVER_REQUIREMENTS.md`** (**won't-do** 2026-08-23) · Device lean in **`sqlite_device_data.sql`** + **`sqlite_device_lean_prune.sql`**.
 
 **First out** here means: a credible fleet PBX you can show / soft-land with a friendly customer — not OSS org polish, not HA SKUs, not a provisioning-server product.
 
@@ -23,7 +23,7 @@ Treat as **done on `main` / lab-proven** unless a regression appears:
 | Packages | **pbx3 0.0.5-1** / **cagi 1.0.0-14** artefacts on `main` |
 | Privileges | Instance P1–P4 + B′ login homing |
 | Device templates (lean) | Seed **11** keepers only; SPA **Devices** nav removed (`main`) — create-time `sipiaxfriend` still via Device table |
-| Provisioning server | **Parked** — lean don’t build; vendor/reseller RPS (M1). Spec only |
+| Provisioning server | **Won't-do** (2026-08-23) — manufacturer RPS (M1); no 3pcerts |
 
 ---
 
@@ -31,7 +31,7 @@ Treat as **done on `main` / lab-proven** unless a regression appears:
 
 | Item | Where |
 |------|--------|
-| Provisioning product question + M1–M5 options | **`PROVISIONING_SERVER_REQUIREMENTS.md`** |
+| Provisioning product — won't-do (M1) | **`PROVISIONING_SERVER_REQUIREMENTS.md`** |
 | First-out triage (this file) | **`FIRST_OUT_CHECKLIST.md`** |
 | Private migrate ETL stays under Aelintra (**done**) | **`TODO.md`** · **`REPOS_AND_RELEASES.md`** · **`OPEN_SOURCE_GITHUB_SETUP.md`** |
 | Device seed lean + prune SQL; Devices off System nav | pbx3 `sqlite_device_*` · pbx3spa `AppLayout` |
@@ -80,7 +80,7 @@ Worth doing if a soft-land or public-ish demo is soon; not architecture:
 
 Do **not** block first out on these:
 
-- Provisioning **server** product — **`PROVISIONING_SERVER_REQUIREMENTS.md`** §0 lean **M1** (vendor/reseller RPS); §0.1 M2–M5 if ever resumed  
+- ~~Provisioning **server** product~~ — **won't-do** (2026-08-23): manufacturer RPS; no **sark3pcerts** — **`PROVISIONING_SERVER_REQUIREMENTS.md`**  
 - Multi-AZ lab proof (production confidence later; same-AZ is enough for first out)  
 - ~~Control-plane HA / duplex~~ — **won't-do** (2026-08-11): management binary; Rule 11 — **`CONTROL_HOST.md`**  
 - Instance shadowing / S10.7 orchestrated rebuild  

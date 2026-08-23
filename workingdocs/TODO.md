@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-21 (home/package versioning TODO tightened; CoS Q8 / endpoint-index earlier)  
+**Last updated:** 2026-08-23 (CoS #36 done pending lab sign-off)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -50,7 +50,7 @@
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
-23. **Provisioning (home listener + edge proxy)** — direction **2026-08-10**: SARK lift on home + nginx Host→home proxy (stable A; no DNS on move). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Schedule when prioritized; TLS §0 cross-link when shipping.  
+23. ~~**Provisioning (home listener + edge proxy)**~~ — **won't-do (2026-08-23):** no in-house HTTP phone provisioner / 3pcerts panel. Use manufacturer RPS (except niche Cisco). Spec retained as archive note: **`PROVISIONING_SERVER_REQUIREMENTS.md`**.  
 23a. **UA → `devicemodel` sidekick** (parked) — **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`** (implement A–D when scheduled; images = E).  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked).  
@@ -64,7 +64,7 @@
 33. ~~**Fleet hop-1 DID — block assign + reconcile**~~ — **done** (Allocate `delivery` singleton|block; `GET /dids/reconcile` + Apply via project; SPA DIDs drift check). Lock: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**.  
 34. ~~**Fleet domain→setid Magrathea lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
 35. **SBC site timezone at install (should-do)** — **`pbx3sbc-admin/install.sh`**: prompt or `--site-timezone` → write `PBX3_SBC_SITE_TIMEZONE` (Home/CDR day buckets). Default = host `/etc/timezone`. Optional later: Filament change-later; optional `timedatectl` OS set with clear warning. No UI today.  
-36. **Legacy SARK admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**. **P1 partial:** CoS extension matrix + rule defaults + **`globals.cosstart`**. **P2+ parked:** recordings browse, list PDF reports, 3p provisioning certs, wallboard, shell, LDAP, pcap, factory reset.
+36. **Legacy SARK admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**. **P1 CoS (sarkcos): done pending lab sign-off (2026-08-23)** — rules CRUD, extension open/closed matrix, rule defaults, Override (`oride*`), **`globals.cosstart`**; SPA create uses **`pkey = shortuid`** (seeds keep `HR_*`); junction via **`extensions/{id}/cos`**. **sarkreport:** inline **Export PDF/CSV** on Greetings, Day timers, Holiday timers, Route profiles, CoS only (not every panel). **P2+ parked:** recordings browse, wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **sark3pcerts** (with provisioning won't-do).
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -118,9 +118,9 @@
 
 - [x] **Lab / demo SQLite anonymize (2026-08-12):** Stripped surnames from `ipphone.desc` — **Sirius** (all person-named exts); **golden** tenants **duns** / **affcot** only. Non-person labels left (MeetingRoom, fax, WebRTC, SIPp). Host backups under `db_database_dumps/pre-anonymize-*`. No product runbook yet.
 
-- [ ] **Provisioning — home listener + edge proxy (direction 2026-08-10):** Preferred: lift/polish SARK provision routines on the **home**; fleet **nginx** routes by tenant Host/SNI to current home; proxy has stable **A**; tenant move = remap only (no DNS). Secrets stay on `ipphone`. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Not scheduled to build yet; update **`TLS_AND_CERTIFICATES.md` §0** (provision A→proxy exception) when shipping.
+- [x] **Provisioning / 3pcerts — won't-do (2026-08-23):** No home listener + edge provision proxy; no **sark3pcerts** panel. Manufacturer RPS covers major vendors (Cisco remains niche). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** (status won't-do).
 
-- [ ] **Device table — lean done in seed; residual (2026-08-06):** Seed keepers + prune SQL landed; SPA **Devices** removed from System nav. **Still open:** drop Devices routes/views entirely; Snom/Grandstream pkey gap; optional later packaged JSON keepers. Provision templates still relevant when **#23** builds.
+- [ ] **Device table — lean done in seed; residual (2026-08-06):** Seed keepers + prune SQL landed; SPA **Devices** removed from System nav. **Still open:** drop Devices routes/views entirely; Snom/Grandstream pkey gap; optional later packaged JSON keepers. (Not tied to HTTP provisioning — **#23** won't-do.)
 
 - [ ] **Extension phone image / UA model harvest (parked 2026-08-09):** Sidekick design locked — edge `GET /fleet/registrations` + home `harvest-devicemodel` soft-fills `ipphone.devicemodel`. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Assets: **`~/GiT/nonGitStuff/phoneimages/`** (historic zip URL dead); slice E = SPA + model→filename map.
 
