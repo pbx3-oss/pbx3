@@ -5,6 +5,8 @@ auth=$id
 allow=!all,ulaw,alaw,opus,vp8
 callerid="$desc" <$ext>
 context=$clst
+subscribe_context=$clst
+allow_subscribe=yes
 dtls_auto_generate_cert=yes
 ; Fleet: same signaling path as desk phones — UDP via Magrathea for Dial(…@tenant.fqdn).
 ; transport-wss alone makes tenant-FQDN DIMs resolve to the instance EIP (hairpin INVITE,

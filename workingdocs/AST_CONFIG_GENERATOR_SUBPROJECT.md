@@ -150,6 +150,7 @@ pjsip_phone.tmpl  --(always on get)-->  + overlay (DB pjsip_overlay preferred; f
 - Tighter OpenSIPS gate / tenant DNS ≠ VIP (edge; pointer only).
 - ~~Trunk/queue **copy-once** staging~~ — **H:** trunks/queues/parks tmpl + DB overlay (same as phones).
 - [`TODO.md`](TODO.md) ~~pjsipuser / sipiaxfriend~~ — **deprecated 2026-08-23** (GenAst tmpl + overlay). NAT tmpl keys — fold here when touched.
+- **BLF / SUBSCRIBE (2026-08-23):** phone + WebRTC tmpl `allow_subscribe=yes` + `subscribe_context=$clst` (hints live in tenant context; desk `context=` stays `COS_$clst`). Asterisk docs’ `[HINTS]` is only an example name — we use the tenant shortuid context.
 
 ### Phase H notes (trunk / queue / park C2 — built)
 
