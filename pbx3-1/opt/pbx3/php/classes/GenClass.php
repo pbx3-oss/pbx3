@@ -790,7 +790,7 @@ class genAsteriskObjects
 	 *   $id / $pkey / $ext / $username — object identity (phones: shortuid vs dialable pkey)
 	 *   $clst — tenant shortuid (COS / mailbox domain)
 	 *   $clstkey — parking lot name park-{tenant shortuid} (must run before $clst)
-	 *   $named_groups — named_call/pickup groups (ALL/empty → $clst; else ipphone.named_groups)
+	 *   $named_call_group / $named_pickup_group — PJSIP named groups (ALL/empty → $clst)
 	 *   $outbound_proxy — whole line or empty (fleet → sip:{PBX3_SBC_EGRESS_HOST};lr)
 	 */
 	private function xlatePjsipBuff(&$buffer, $row)
@@ -812,15 +812,22 @@ class genAsteriskObjects
 		$clst = $rep($row['cluster'] ?? null);
 		$clstkey = ($clst !== '') ? ('park-' . $clst) : '';
 		$buffer = preg_replace('/\$clstkey/', $clstkey, $buffer);
-		// Named pickup: ALL or empty → tenant shortuid (tenant-scoped whole-tenant pool).
-		// Custom tokens (sales, 1,2, …) emit as-is. Replace $named_groups before $clst.
-		$namedRaw = trim($rep($row['named_groups'] ?? null));
-		if ($namedRaw === '' || strcasecmp($namedRaw, 'ALL') === 0) {
-			$namedGroups = $clst;
-		} else {
-			$namedGroups = $namedRaw;
+		// Named call/pickup: ALL or empty → tenant shortuid (tenant-scoped whole-tenant pool).
+		// Custom tokens (sales, 1,2, …) emit as-is. Replace before $clst.
+		$resolveNamed = function ($raw) use ($clst, $rep) {
+			$v = trim($rep($raw));
+			if ($v === '' || strcasecmp($v, 'ALL') === 0) {
+				return $clst;
+			}
+			return $v;
+		};
+		$buffer = preg_replace('/\$named_call_group/', $resolveNamed($row['named_call_group'] ?? null), $buffer);
+		$buffer = preg_replace('/\$named_pickup_group/', $resolveNamed($row['named_pickup_group'] ?? null), $buffer);
+		// Legacy single-field templates (pre-split): both sides from named_groups if still present.
+		if (strpos($buffer, '$named_groups') !== false) {
+			$legacy = $resolveNamed($row['named_groups'] ?? ($row['named_call_group'] ?? null));
+			$buffer = preg_replace('/\$named_groups/', $legacy, $buffer);
 		}
-		$buffer = preg_replace('/\$named_groups/', $namedGroups, $buffer);
 		$buffer = preg_replace('/\$clst/', $clst, $buffer);
 
 		if (!empty($row['strategy'])) {

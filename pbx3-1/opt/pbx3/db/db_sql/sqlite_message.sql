@@ -290,6 +290,8 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('monitor_out'
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('monitor_stage','Monitor stage path','Staging directory for in-progress monitor recordings.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('month','Month','Month Date when this segment is active (asterisk * means any month).');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('musicclass','Music class','Music-on-hold class played to callers while waiting. Must match an MOH class configured for this tenant or the system default.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('named_call_group','Named call groups','Asterisk **named_call_group**: the pickup pool(s) this extension **belongs to**. Ringing calls on this phone are eligible for pickup by others whose **Named pickup groups** include the same token(s). Default **ALL** = whole tenant (tenant shortuid on Commit — isolated across tenants on one instance). Comma-separated department names or digit tokens (e.g. `sales` or `1,2`). Can differ from Named pickup groups.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('named_pickup_group','Named pickup groups','Asterisk **named_pickup_group**: the pool(s) this extension **can pick up from** (*8 / directed pickup). Default **ALL** = whole tenant. Comma-separated department names or digit tokens (e.g. `sales` or `1,2`). Can differ from Named call groups (e.g. belong to `sales` but pick up `sales,support`). Takes effect on Commit.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('natdefault','Default NAT setting','The NAT setting is important when creating extension entries, it helps to manage RTP (voice) traffic across NAT firewalls.  Set this to "local" if most of your phones will be on the same network segment as the PBX (i.e. on the same LAN), otherwise set it to remote. PBX3 will initially set the value to "local" for CPE based deployments and "remote" for cloud based deployments but you can change it to suit your needs and also change it at the individual extension level.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('natparams','Default NAT Parameter String','You can set the Asterisk nat parameter string for remote phones here.  Usually you should leave this as it is.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('netmask','Netmask','Set this to the correct value for your subnet.');
@@ -334,6 +336,27 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('preannounce'
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('predial','Dial String Lead-in','Used to construct the beginning part of the dial for this technology. For example, to use misdn TE p2p group dial  you might specify mISDN/g:TEPP (see the mISDN setup guides at http://www.misdn.org).');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('prefix','Dial Prefix','Use this if you need to have PBX3 dial a line-seize digit or some other pre-dial string during call back to an authorized number.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('privileged','Priv','Denotes whether this trunk is running in privileged mode or unprivileged mode.  For regular external trunks, you can generally leave this to default.  Set the switch ON if you are building inter-site trunks, for example between remote premises. It will set the correct trunk contexts and send the correct CLID during intersite exchanges.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('pjsip_overlay','PJSIP overlay','Admin-only thin fragment merged into the stock phone/WebRTC (or trunk) PJSIP template on **Commit**. Each block targets a PJSIP object by **`type=`** — **endpoint**, **auth**, or **aor** (not just the endpoint). GenAst **replaces or adds** keys on that object. Leave empty for the stock template. Prefer first-class SPA fields (e.g. Named call/pickup groups) when they exist.
+
+**Examples** (use the extension **shortuid** in `[...]`; you can combine several blocks in one overlay):
+
+Endpoint — codecs:
+[abc123]
+type=endpoint
+allow=!all,ulaw,alaw,g722
+
+Endpoint — media:
+[abc123]
+type=endpoint
+direct_media=yes
+
+AOR — contacts / qualify:
+[abc123]
+type=aor
+max_contacts=2
+qualify_frequency=60
+
+Takes effect on **Commit**. Stock defaults live in the package templates; generated output is in `pjsip_ready_phones.conf` / `pjsip_ready_webrtc.conf` on the node.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('protocol','Internet Protocol','This can be IPV4 or IPV6 (if your network supports it).');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('provisioning','Provisioning','Free form text box into which you may copy/load device specific provisioning rules.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('provisionwith','Provision With URL?','Tells PBX3 what kind of addresses to set in the provisioning stream.  This will be used by the endpoint to request provisioning data from PBX3. You can set this to either *FQDN* or *IP*, depending upon how you want the phone to contact PBX3.');

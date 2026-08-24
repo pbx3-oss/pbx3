@@ -74,7 +74,7 @@ if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$OVERLAY_APPLY" ]; then
 	sh "$OVERLAY_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
 fi
 
-# Extension named pickup groups (named_call_group / named_pickup_group).
+# Extension named call + pickup groups (split fields; migrates legacy named_groups).
 NAMED_GROUPS_APPLY="$SYSPATH/scripts/apply-sqlite-add-named-groups.sh"
 if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$NAMED_GROUPS_APPLY" ]; then
 	sh "$NAMED_GROUPS_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true

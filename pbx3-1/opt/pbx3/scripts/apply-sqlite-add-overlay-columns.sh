@@ -43,4 +43,13 @@ apply_one trunks pjsip_overlay "pjsip_overlay TEXT"
 apply_one queue queue_overlay "queue_overlay TEXT"
 apply_one cluster park_overlay "park_overlay TEXT"
 
+HELP_SQL="$SQL_DIR/sqlite_update_pjsip_overlay_help.sql"
+if [ -f "$HELP_SQL" ]; then
+	has_table=$(sqlite3 "$DB" "SELECT 1 FROM sqlite_master WHERE type='table' AND name='tt_help_core' LIMIT 1;" || true)
+	if [ "$has_table" = "1" ]; then
+		sqlite3 "$DB" < "$HELP_SQL" || true
+		echo "pjsip_overlay help updated on $DB"
+	fi
+fi
+
 exit 0

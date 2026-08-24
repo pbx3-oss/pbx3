@@ -57,7 +57,7 @@ These are the “big” call types operators care about.
 | `maj-lepdial-fleet` | Fleet dial string | **`lepdial-fleet`** **U** | — | yes | **L0: U** · live **H** |
 | `maj-page` | Page group | — | — | yes | **H** |
 | `maj-park` | Park / retrieve | — | — | yes | **H** |
-| `maj-pickup` | Directed pickup | — | — | yes | **H** |
+| `maj-pickup` | Directed pickup `*8{ext}` + named call/pickup groups | — | **`pickup-directed-ok`**, **`pickup-group-deny`**, **`pickup-pjsip-config`** (sipplab `./run-pickup-pack.sh`) — req **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab acceptance; **lab green pending** | yes (BLF) | **U** (harness req; green pending) |
 | `maj-conf` | Conference | — | — | yes | **H** |
 | `maj-vm-leave` | Leave voicemail | **`postdial-noanswer-vm`** partial **U** | — | yes | **L0: U** · live **H** (record/listen) |
 | `maj-vm-retrieve` | Check mailbox | — | — | yes | **H** |
@@ -97,7 +97,7 @@ These are the “big” call types operators care about.
 |------|-----------|--------|
 | `*52*` echo · `*55*` time · `*56*` say ext | Playback UX | **H** (must hear) |
 | `*50*` / `*51*` / `vm{ext}` / `*{ext}` | VM main / leave | **H** |
-| `_*8XX.` / `*8` | Pickup | **H** (two parties) |
+| `_*8XX.` / `*8` | Directed pickup (`Pickup(@PICKUPMARK)`); named groups on PJSIP endpoint | **U** (req sipplab `./run-pickup-pack.sh`; **`pickup-directed-ok`** / **`pickup-group-deny`**; blind idle `*8` not in v1) |
 | `_*24*` wakeup | Legacy / PJSIP debt | **H** / avoid |
 | `_***XXX(X)` | Legacy strip-dial | **H** |
 
@@ -178,3 +178,4 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 | 2026-07-27 | Clarify `out-egress-ok` = Local originate (not SIPp phone UAC); strategy status → L1 9/9. |
 | 2026-07-27 | + `in-queue-cancel-vm`, `out-busy-or-reject` (catcher uas-486). |
 | 2026-08-09 | §2.1 Attend **U** for DND/CF/ringdelay/ChanSpy via sipplab `./run-feature-pack.sh` (10/10 ×2 golden). Multi-tenant spy isolation remains debt. |
+| 2026-08-24 | **`maj-pickup`** + `_*8XX.` — L1 requirement via sipplab `./run-pickup-pack.sh` (3 ids); lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab acceptance. Attend **U** once green; BLF stays L3. |

@@ -126,6 +126,8 @@ Keep **separate** from L1 pass/fail.
 
 Provision once: `sipplab/targets/pbx3/provision-soak-phones.sh` (exts 2100–2139 on catcher tenant). Signalling-only is enough for CDR/Home + live demo backdrop. Answerer UAS must echo Magrathea **Record-Route** (`[last_Record-Route:]` in 180/200) or Magrathea leaves state-3 — see **sipplab** `docs/LEANINGS.md` / `docs/NAT_AND_DIALOG.md`.
 
+**Pickup / named groups (L1 gate on soak start):** Before `./run-soak.sh start`, sipplab may run **`./run-pickup-pack.sh`** when `SOAK_PICKUP_VALIDATE=1` (default) and `GOLDEN_SSH` is set. Requirement: **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab acceptance · harness **`sipplab/workingdocs/PICKUP_PACK.md`**. First lab green is pending; do not treat named pickup as release-signed until pack is green twice on target home.
+
 ---
 
 ## 7. Build order (when we implement)
