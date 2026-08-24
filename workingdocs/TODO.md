@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-23 (named pickup groups + sipiaxfriend deprecation)  
+**Last updated:** 2026-08-23 (named pickup + BLF subscribe_context)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -64,7 +64,7 @@
 33. ~~**Fleet hop-1 DID — block assign + reconcile**~~ — **done** (Allocate `delivery` singleton|block; `GET /dids/reconcile` + Apply via project; SPA DIDs drift check). Lock: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**.  
 34. ~~**Fleet domain→setid Magrathea lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
 35. **SBC site timezone at install (should-do)** — **`pbx3sbc-admin/install.sh`**: prompt or `--site-timezone` → write `PBX3_SBC_SITE_TIMEZONE` (Home/CDR day buckets). Default = host `/etc/timezone`. Optional later: Filament change-later; optional `timedatectl` OS set with clear warning. No UI today.  
-36. **Legacy SARK admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**. **P1 CoS (sarkcos): done pending lab sign-off (2026-08-23)**. **sarkreport:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** Tenant edit upload/list/play/delete + `usemohcustom` (GenAst class `moh-{shortuid}`). **Extension named pickup groups:** Extension field `named_groups` (default **ALL** → GenAst `$clst`); lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**. ETL digit→named: **`~/GiT/sark-to-pbx3`**. **P2+ parked:** recordings browse, wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **sark3pcerts**.
+36. **Legacy SARK admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**. **P1 CoS (sarkcos): done pending lab sign-off (2026-08-23)**. **sarkreport:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** Tenant edit upload/list/play/delete + `usemohcustom` (GenAst class `moh-{shortuid}`). **Extension named pickup groups:** Extension field `named_groups` (default **ALL** → GenAst `$clst`); lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**. ETL digit→named: **`~/GiT/sark-to-pbx3`**. **BLF SUBSCRIBE:** phone/WebRTC tmpl `allow_subscribe=yes` + `subscribe_context=$clst` (desk `context=` stays `COS_$clst`); lab-proven `.31`. **PJSIP config wizard:** won't-do — GenAst discrete objects already cover it. **P2+ parked:** recordings browse, wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **sark3pcerts**.
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
