@@ -126,7 +126,7 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 4. Remove or gate FQDN inline path (`fqdninspect=NO` default; skip update on fleet import — already decided in mobility design).
 5. Package bump when ready for fleet roll.
 
-- [x] **2026-08-25 (`ufw-phase1`):** Depends `ufw` (drop shorewall*); installer `ufw-apply-baseline.sh`; LE + fail2ban; setip `/etc/pbx3/lan.cidr`; NetHelper/update-fqdn-inline UFW path; changelog **0.0.5-7**. Shorewall templates remain in tree until Phase 4 purge.
+- [x] **2026-08-25 (`ufw-phase1`):** Depends `ufw` (drop shorewall*); installer `ufw-apply-baseline.sh`; LE + fail2ban; setip `/etc/pbx3/lan.cidr`; NetHelper/update-fqdn-inline UFW path. Shorewall templates remain in tree until Phase 4 purge. **Package floor:** tip-only until rebuild → **`0.0.6-1`**.
 
 ### Phase 3 — API + SPA
 
@@ -145,7 +145,7 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 3. Greenfield install must never install Shorewall.
 4. Upgrade path: one-shot “detect Shorewall → apply UFW baseline → disable Shorewall” in postinst/installer.
 
-- [x] **2026-08-25 (`ufw-phase1`):** Templates/rsyslog/logrotate/`shorewall.local` removed; `firewall-reload.php`; NetHelper UFW-only; LE UFW-only; sudoers `ufw`; installer `apt-get remove shorewall*`; help UPDATEs; changelog **0.0.5-8**. Git history retains archaeology.
+- [x] **2026-08-25 (`ufw-phase1`):** Templates/rsyslog/logrotate/`shorewall.local` removed; `firewall-reload.php`; NetHelper UFW-only; LE UFW-only; sudoers `ufw`; installer `apt-get remove shorewall*`; help UPDATEs. Git history retains archaeology. **Next built .deb = `pbx3 0.0.6-1`** (consolidates Phases 1–4; 0.0.5-7/8 never packaged).
 
 ### Phase 5 — Optional harden (not blocking)
 
