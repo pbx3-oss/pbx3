@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-25 (SIP TLS mid-term lock)  
+**Last updated:** 2026-08-25 (SIP TLS mid-term + MkDocs SBC posture)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
