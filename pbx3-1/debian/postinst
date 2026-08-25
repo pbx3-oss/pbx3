@@ -103,6 +103,14 @@ if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$DIAL_COHORT_APPLY" ]; then
 	sh "$DIAL_COHORT_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
 fi
 
+CLID_BLOCK_SQL="$SYSPATH/db/db_sql/sqlite_add_clid_block.sql"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$CLID_BLOCK_SQL" ] && command -v sqlite3 >/dev/null 2>&1; then
+	sqlite3 /opt/pbx3/db/sqlite.db < "$CLID_BLOCK_SQL" >/dev/null 2>&1 || true
+	sqlite3 /opt/pbx3/db/sqlite.db <<'EOF' >/dev/null 2>&1 || true
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('clidblock','Blocked caller ID','Digits-only calling line ID to reject on inbound calls for this tenant. Use the same digit form you see in CDR (e.g. 441924918076 or 01924918076). No Commit required — active rows apply on the next inbound call.');
+EOF
+fi
+
 # After apt upgrade + runLinker, regenerate PJSIP/dialplan from sqlite (HoR) into
 # ASTLOCALCONF so symlinked /etc/asterisk is not left pointing at empty/stale ready files.
 # Then rewrite external_* to this node's public IP/EIP and restart Asterisk.

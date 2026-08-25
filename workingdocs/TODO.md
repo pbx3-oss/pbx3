@@ -75,7 +75,8 @@
 ## Open items
 
 - [x] **Device templates — won't-do / purged (2026-08-25):** No in-house provisioner; Device table seed/API/SPA removed. `ipphone.device` stays as type label. Existing DBs: **`sqlite_device_drop.sql`**. Retrofit SARK 6.5 only if provisioning returns.
-- [ ] **Tenant CLID blacklist — greenfield (locked 2026-08-24):** Per-tenant caller block list; **SPA + auth** to mutate (no open phone feature key in v1). SARK stub unused — **do not ETL**. Spec: **`CLID_BLACKLIST_REQUIREMENTS.md`**.
+- [x] **Tenant CLID blacklist — Phase 1 (2026-08-25):** `clid_block` table, API `clidblocks`, SPA **Inbound → Blocked caller IDs**, CAGI `Ingress()` reject. Digits-only exact match; no Commit. **Phase 1 sufficient** — SPA admin policy is the product shape.
+- [ ] **Tenant CLID blacklist — Phase 2 (parked, optional):** Desk feature code → email block **request** → tenant admin approves in SPA. **Not required** unless customers ask; spec sketch: **`CLID_BLACKLIST_REQUIREMENTS.md`** § Phase 2.
 
 - [ ] **SBC SIP TLS — hardphones (mid-term, locked 2026-08-25):** Not building today. Phone ↔ SBC **TLS :5061**; SBC ↔ home/carriers **UDP**; reuse edge LE for **`sbc.pbx3.com`** (outbound proxy); mix TLS desks + UDP Peers OK. Effort ~2–4 d lab / ~1 wk productize. Spec: **`SBC_PRODUCT_TRACKS.md`** gap **#1** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2. Out of MVP: SDES SRTP, carrier mTLS, rtpengine.
 

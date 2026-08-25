@@ -524,5 +524,22 @@ CREATE INDEX IF NOT EXISTS idx_recordings_cluster_epoch ON recordings ("cluster"
 CREATE INDEX IF NOT EXISTS idx_recordings_cluster_callerid ON recordings ("cluster", "callerid");
 CREATE INDEX IF NOT EXISTS idx_recordings_cluster_dnid ON recordings ("cluster", "dnid");
 
+/* Tenant CLID block list — inbound caller ID reject (greenfield; moves with miniDB) */
+CREATE TABLE IF NOT EXISTS clid_block (
+    "id" TEXT PRIMARY KEY,
+    "shortuid" TEXT UNIQUE,
+    "pkey" TEXT NOT NULL,
+    "active" TEXT DEFAULT 'YES',
+    "cluster" TEXT DEFAULT 'default',
+    "action" TEXT DEFAULT 'hangup',
+    "cname" TEXT,
+    "description" TEXT,
+    "z_created" datetime,
+    "z_updated" datetime,
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
+);
+CREATE INDEX IF NOT EXISTS idx_clid_block_cluster_pkey ON clid_block ("cluster", "pkey");
+
 COMMIT;
 
