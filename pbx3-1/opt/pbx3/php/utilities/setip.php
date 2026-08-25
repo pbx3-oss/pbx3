@@ -67,11 +67,8 @@ else {
 	} else {
 		logit("wrote /etc/pbx3/lan.cidr = $lanCidr");
 	}
-	# Legacy Shorewall params (no-op hosts may still have /etc/shorewall until Phase 4 purge)
-	if ( file_exists( "/etc/shorewall") ) {
-		`echo LAN=$netaddress/$cidr > /etc/shorewall/local.lan`;
-		`echo IF1=$interface > /etc/shorewall/local.if1`;
-	}
+# Legacy Shorewall locals removed (UFW). Keep no-op for archaeology hosts until purged.
+	# (setip no longer writes /etc/shorewall/*)
 	
 	if ( file_exists( "/etc/fail2ban/jail.d/pbx3-jails.conf" ) ) {
 		`sed -i --follow-symlinks '/^ignoreip/c \ignoreip = 127.0.0.1 $netaddress\/$cidr 224.0.1.0\/24' /etc/fail2ban/jail.d/pbx3-jails.conf`;

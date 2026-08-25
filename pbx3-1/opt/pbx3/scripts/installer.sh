@@ -400,7 +400,7 @@ else
 fi
 
 # Enable UFW baseline (stops/disables Shorewall if present — F7).
-# Allow rules before default deny are handled inside ufw-apply-baseline.sh.
+# Upgrade path: remove leftover Shorewall packages after UFW is applied.
 _ufw_profile=$(pbx3_ufw_profile)
 echo "Applying UFW baseline (profile=${_ufw_profile})"
 if [ -x "$SCRIPTS/ufw-apply-baseline.sh" ]; then
@@ -411,6 +411,11 @@ if [ -x "$SCRIPTS/ufw-apply-baseline.sh" ]; then
 else
     echo "ERROR: missing $SCRIPTS/ufw-apply-baseline.sh" >&2
     exit 1
+fi
+# Phase 4: purge Shorewall packages on upgrade hosts (ignore if not installed).
+if dpkg -l shorewall 2>/dev/null | grep -q '^ii'; then
+    echo "Removing leftover shorewall packages (UFW is home firewall)"
+    apt-get remove -y shorewall shorewall6 2>/dev/null || true
 fi
 
 

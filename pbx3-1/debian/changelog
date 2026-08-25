@@ -1,3 +1,12 @@
+pbx3 (0.0.5-8) noble; urgency=medium
+
+  * Home firewall Phase 4: purge Shorewall templates/rsyslog/logrotate;
+    firewall-reload.php; sudoers → ufw; installer apt-remove shorewall*;
+    help text for UFW allow-list; LE :80 UFW-only.
+  * Spec: workingdocs/UFW_SHOREWALL_MIGRATION.md.
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Tue, 25 Aug 2026 12:50:00 -0400
+
 pbx3 (0.0.5-7) noble; urgency=medium
 
   * Home firewall Phase 2: Depends ufw (drop shorewall*); installer applies

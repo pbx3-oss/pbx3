@@ -13,9 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Apply home firewall after FQDN / sysglobal changes.
-// UFW path: NetHelper::restartFirewall() re-runs ufw-apply-baseline (no STRING INLINE).
-// Shorewall path (pre-cutover): regenerates pbx3_inline_fqdn + shorewall restart.
+// Apply home firewall (UFW baseline / allow-list). Called by update-fqdn-inline.sh.
 
 require_once __DIR__ . "/../config.php";
 

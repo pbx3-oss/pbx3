@@ -1,6 +1,6 @@
 # Home firewall — Shorewall → UFW migration
 
-**Status:** Direction locked **2026-08-24**; **Phases 1–3** on branch **`ufw-phase1`** (2026-08-25). Phase 4 Shorewall purge open.  
+**Status:** Direction locked **2026-08-24**; **Phases 1–4** on branch **`ufw-phase1`** (2026-08-25). Phase 5 optional.  
 **Repos when built:** **pbx3** (installer, package Depends, scripts, NetHelper) · **pbx3api** (FirewallController, syscommands ICMP/LE noise) · **pbx3spa** (FirewallView) · docs MkDocs install/firewall notes.  
 **Related:** [`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`](../pbx3-directory/docs/TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md) §11.4–11.7 · [`FLEET_TRUNK_PEERING_DECISION.md`](../pbx3-directory/docs/FLEET_TRUNK_PEERING_DECISION.md) · [`LETSENCRYPT_PER_TENANT_FQDN.md`](LETSENCRYPT_PER_TENANT_FQDN.md) · private ETL **`aelintra/sark-to-pbx3`** (§10) · Design Rules SIP-obscurity context (fleet no longer depends on home STRING match).
 
@@ -144,6 +144,8 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 2. Delete dead PHP (inline FQDN writers), prerm links, help text, log names.
 3. Greenfield install must never install Shorewall.
 4. Upgrade path: one-shot “detect Shorewall → apply UFW baseline → disable Shorewall” in postinst/installer.
+
+- [x] **2026-08-25 (`ufw-phase1`):** Templates/rsyslog/logrotate/`shorewall.local` removed; `firewall-reload.php`; NetHelper UFW-only; LE UFW-only; sudoers `ufw`; installer `apt-get remove shorewall*`; help UPDATEs; changelog **0.0.5-8**. Git history retains archaeology.
 
 ### Phase 5 — Optional harden (not blocking)
 
