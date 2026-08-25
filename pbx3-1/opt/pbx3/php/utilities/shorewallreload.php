@@ -1,5 +1,5 @@
 <?php
-// Copyright (c) KoKoSoft 2005-10
+// Copyright (c) Aelintra Telecom Limited
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Apply home firewall after FQDN / sysglobal changes.
+// UFW path: NetHelper::restartFirewall() re-runs ufw-apply-baseline (no STRING INLINE).
+// Shorewall path (pre-cutover): regenerates pbx3_inline_fqdn + shorewall restart.
+
 require_once __DIR__ . "/../config.php";
 
 include(NETHELPER);
@@ -20,4 +24,4 @@ $net = new nethelper;
 
 $net->restartFirewall();
 
-?>		
+?>

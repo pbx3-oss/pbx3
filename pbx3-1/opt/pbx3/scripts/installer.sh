@@ -14,11 +14,30 @@ setvcl() {
 # turn on VCL in Globals
     echo "AWS instance detected, setting cloud flags"
     /usr/bin/sqlite3 $SYSDB "UPDATE globals SET vcl=1"
-# open 80,443 and 22 in the firewall (otherwise we'll be locked out)
-    echo "WARNING!!!  Ports 80, 443 and 22 have been opened to prevent AWS lockout - you should review these and set sensible values"
-    sed -i 's/ACCEPT net:$LAN $FW tcp 80/ACCEPT net $FW tcp 80/' $FW_RULES
-    sed -i 's/ACCEPT net:$LAN $FW tcp 443/ACCEPT net $FW tcp 443/' $FW_RULES
-    sed -i 's/ACCEPT net:$LAN $FW tcp 22/ACCEPT net $FW tcp 22/' $FW_RULES 
+# UFW fleet/solo baseline already allows SSH (:22) and API (:44300). Do not
+# permanently open :80/:443 — LE uses le-port80-open/close; API is :44300 only.
+    echo "AWS/VCL: UFW baseline keeps 22 + 44300 open; review SG + UFW if needed"
+}
+
+# Resolve UFW profile for ufw-apply-baseline.sh (F1 / UFW_SHOREWALL_MIGRATION.md).
+# Prefer explicit PBX3_UFW_PROFILE; else fleet when PBX3_FLEET_MODE=true or SBC host set.
+pbx3_ufw_profile() {
+    if [ -n "${PBX3_UFW_PROFILE:-}" ]; then
+        echo "$PBX3_UFW_PROFILE"
+        return
+    fi
+    _env="${PBX3API_ENV:-/opt/pbx3api/.env}"
+    if [ -f "$_env" ]; then
+        if grep -qE '^[[:space:]]*PBX3_FLEET_MODE=true' "$_env" 2>/dev/null; then
+            echo fleet
+            return
+        fi
+        if grep -qE '^[[:space:]]*PBX3_SBC_EGRESS_HOST=' "$_env" 2>/dev/null; then
+            echo fleet
+            return
+        fi
+    fi
+    echo solo
 }
 
 
@@ -105,25 +124,12 @@ if [ -f $ASTPATH/logger.conf ]; then
     /usr/sbin/asterisk -rx 'logger reload' 2>/dev/null || true
 fi
 
-#Shorewall setup
-if [ -d $SHOREWALL ]; then
-    sed -i 's/startup=0/startup=1/' /etc/default/shorewall
-    sed -i "/^SAVE_IPSETS/c\SAVE_IPSETS=Yes" $SHOREWALL/shorewall.conf
-    echo 'INCLUDE local.lan' > $SHOREWALL/params
-    echo 'INCLUDE local.if1' >> $SHOREWALL/params
-
-    cp -f $SYSPATH/etc/shorewall/rules $SHOREWALL/rules
-    cp -f $SYSPATH/etc/shorewall/pbx3_rules $SHOREWALL/pbx3_rules
-    #for pre 5.x upgrades check that 443 is open (otherwise they won't be able to login)
-    grep  -q "tcp\s*443\s*" $FW_RULES
-    if [  "$?" -ne "0" ] ; then
-        echo ACCEPT net:\$LAN \$FW tcp 443 - - >> $FW_RULES 
-    fi
-    cp -f $SYSPATH/etc/shorewall/pbx3_inline_fqdn $SHOREWALL/pbx3_inline_fqdn
-    cp -f $SYSPATH/etc/shorewall/pbx3_inline_limit $SHOREWALL/pbx3_inline_limit
-    chown www-data:www-data $FW_RULES
-    chown www-data:www-data $SHOREWALL/pbx3_inline_fqdn
-    chown www-data:www-data $SHOREWALL/pbx3_inline_limit
+# Firewall: UFW is the home product path (UFW_SHOREWALL_MIGRATION.md).
+# Shorewall templates may still exist in the package tree for archaeology /
+# pre-cutover hosts — do not enable or copy them as live config (Phase 2).
+# Ensure fqdninspect/sipflood cannot resurrect STRING/limit INLINE under UFW.
+if [ -f "$SYSDB" ]; then
+    /usr/bin/sqlite3 "$SYSDB" "UPDATE globals SET fqdninspect='NO', sipflood='NO';" 2>/dev/null || true
 fi
 
 # Instance identity (applied only on fresh DB rebuild, unless PBX3_APPLY_INSTANCE_IDENTITY=1 — see below).
@@ -347,7 +353,7 @@ if [ -f "$SYSDB" ] && [ -x "$SCRIPTS/bootstrap-admin-user.sh" ]; then
     fi
 fi
 
-# Run setip once (network detection, shorewall/fail2ban/Asterisk localnet, /etc/issue)
+# Run setip once (network detection, /etc/pbx3/lan.cidr, fail2ban ignoreip, Asterisk localnet, /etc/issue)
 # Previously a systemd oneshot at boot; we run it here so the installer does not depend on it.
 echo running setip to resolve IP addresses
 /usr/bin/php $SYSPATH/php/utilities/setip.php
@@ -356,26 +362,13 @@ systemctl disable debsetlan.service 2>/dev/null || true
 rm -f /etc/systemd/system/debsetlan.service
 systemctl daemon-reload 2>/dev/null || true
 
-# Shorewall6 setup (create /etc/shorewall6 if missing so service can start)
-if [ -d "$SYSPATH/etc/shorewall6" ]; then
-    mkdir -p /etc/shorewall6
-    cp -f $SYSPATH/etc/shorewall6/rules /etc/shorewall6
-    [ -f /etc/default/shorewall6 ] && sed -i 's/startup=0/startup=1/' /etc/default/shorewall6
-    for file in $(ls $SYSPATH/etc/shorewall6/); do
-        [ ! -e "/etc/shorewall6/$file" ] && cp -f "$SYSPATH/etc/shorewall6/$file" /etc/shorewall6
-    done
-    [ -f /etc/shorewall6/pbx3_rules6 ] && chown www-data:www-data /etc/shorewall6/pbx3_rules6
-fi
-
-#run shorewall's own fix routines
-shorewall update
-
-# F2b setup — Ubuntu 24.04 LTS (jail.d fragments; do not symlink jail.local)
-ln -sf $SYSPATH/etc/fail2ban/action.d/shorewall.local /etc/fail2ban/action.d/shorewall.local
+# F2b setup — Ubuntu 24.04 LTS (jail.d fragments; banaction=ufw; do not symlink jail.local)
 mkdir -p /etc/fail2ban/jail.d
 if [ -L /etc/fail2ban/jail.local ] && [ "$(readlink /etc/fail2ban/jail.local 2>/dev/null)" = "$SYSPATH/etc/fail2ban/jail.local" ]; then
 	rm -f /etc/fail2ban/jail.local
 fi
+# Drop legacy Shorewall banaction symlink if present (Phase 2 → ufw).
+[ -L /etc/fail2ban/action.d/shorewall.local ] && rm -f /etc/fail2ban/action.d/shorewall.local
 if [ -f "$SYSPATH/etc/fail2ban/jail.d/pbx3-jails.conf" ]; then
 	ln -sf "$SYSPATH/etc/fail2ban/jail.d/pbx3-jails.conf" /etc/fail2ban/jail.d/pbx3-jails.conf
 fi
@@ -406,13 +399,19 @@ else
     fi
 fi
 
-# enable shorewall
-[ -e $SHOREWALL/routestopped ] && mv $SHOREWALL/routestopped $SHOREWALL/routestopped.bak
-systemctl enable shorewall.service
-systemctl enable shorewall6.service
-
-systemctl start shorewall.service
-systemctl start shorewall6.service
+# Enable UFW baseline (stops/disables Shorewall if present — F7).
+# Allow rules before default deny are handled inside ufw-apply-baseline.sh.
+_ufw_profile=$(pbx3_ufw_profile)
+echo "Applying UFW baseline (profile=${_ufw_profile})"
+if [ -x "$SCRIPTS/ufw-apply-baseline.sh" ]; then
+    if ! "$SCRIPTS/ufw-apply-baseline.sh" "$_ufw_profile"; then
+        echo "ERROR: ufw-apply-baseline.sh failed (profile=${_ufw_profile}). SSH may be open until fixed." >&2
+        exit 1
+    fi
+else
+    echo "ERROR: missing $SCRIPTS/ufw-apply-baseline.sh" >&2
+    exit 1
+fi
 
 
 # call recording 

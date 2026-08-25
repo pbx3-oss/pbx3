@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-25 (UFW Phase 1 lab on `.31`)  
+**Last updated:** 2026-08-25 (UFW Phase 2 installer/Depends)  
 **Branch:** Product **`ufw-phase1`** (pbx3) · others **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
-0. **Home firewall Shorewall → UFW** — **Phase 1 lab green on `.31` (2026-08-25):** baseline script + LE/fail2ban UFW paths; Shorewall stopped. **Next:** Phase 2 package/installer Depends cutover. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
+0. **Home firewall Shorewall → UFW** — **Phase 1 lab + Phase 2 package/installer (2026-08-25)** on **`ufw-phase1`**. **Next:** Phase 3 API/SPA Firewall panel · Phase 4 Shorewall purge · ETL M2–M4. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
 0a. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
 0b. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0c. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
@@ -75,7 +75,7 @@
 
 - [ ] **Tenant CLID blacklist — greenfield (locked 2026-08-24):** Per-tenant caller block list; **SPA + auth** to mutate (no open phone feature key in v1). SARK stub unused — **do not ETL**. Spec: **`CLID_BLACKLIST_REQUIREMENTS.md`**.
 
-- [ ] **Home firewall — Shorewall → UFW (Phase 1 lab 2026-08-25; Phase 2+ open):** Lab `.31` on UFW fleet baseline. Still open: Phase 2 package/installer Depends + setip; Phase 3 API/SPA; Phase 4 Shorewall purge; ETL M2–M4. Spec: **`UFW_SHOREWALL_MIGRATION.md`** · CLID product: **`CLID_BLACKLIST_REQUIREMENTS.md`**.
+- [ ] **Home firewall — Shorewall → UFW (Phase 1–2 done 2026-08-25; Phase 3+ open):** Lab `.31` UFW; package Depends/installer/setip/NetHelper on **`ufw-phase1`** (**0.0.5-7**). Still open: Phase 3 API/SPA; Phase 4 Shorewall purge; ETL M2–M4. Spec: **`UFW_SHOREWALL_MIGRATION.md`** · CLID product: **`CLID_BLACKLIST_REQUIREMENTS.md`**.
 
 - [ ] **Named pickup — sipplab L1 pack (2026-08-24):** Manual L3 **pickup OK** lab `.31` — see **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab status. Unattended **`./run-pickup-pack.sh`** still pending. **BLF:** Snom OK; Yealink config TBD (not blocking pickup).
 

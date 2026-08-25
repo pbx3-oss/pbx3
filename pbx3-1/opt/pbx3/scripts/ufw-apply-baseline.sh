@@ -68,12 +68,18 @@ resolve_lan_cidr() {
         is_ipv4_or_cidr "$LAN_CIDR" || die "PBX3_UFW_LAN_CIDR must be IP or CIDR (got: $LAN_CIDR)"
         return
     fi
+    if [ -f /etc/pbx3/lan.cidr ]; then
+        LAN_CIDR=$(tr -d '[:space:]' < /etc/pbx3/lan.cidr)
+        if is_ipv4_or_cidr "$LAN_CIDR"; then
+            return
+        fi
+    fi
     # Prefer connected route on default iface; fall back to /24 of primary address.
     LAN_CIDR=$(ip -4 route show scope link 2>/dev/null | awk '/proto kernel/ {print $1; exit}')
     if [ -z "$LAN_CIDR" ]; then
         local addr
         addr=$(ip -4 -o addr show scope global 2>/dev/null | awk '{print $4; exit}')
-        [ -n "$addr" ] || die "could not detect LAN CIDR; set PBX3_UFW_LAN_CIDR"
+        [ -n "$addr" ] || die "could not detect LAN CIDR; set PBX3_UFW_LAN_CIDR or run setip"
         # Force /24 when only host/prefix known (appliance default — F10).
         LAN_CIDR=$(echo "$addr" | awk -F'[./]' '{printf "%s.%s.%s.0/24\n",$1,$2,$3}')
     fi

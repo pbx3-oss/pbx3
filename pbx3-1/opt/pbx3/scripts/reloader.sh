@@ -192,15 +192,20 @@ chown $HTTPOWNER $DBPATH/*
 chmod 664 $SYSDB
 
 
-# clean the firewall up
-echo Running firewall sanitizer
-php $UTILITIES/sanitize-firewall.php
-echo Firewall rules are as follows
-cat $FW_RULES
-echo running firewall check
-if sudo /sbin/shorewall check ;then
-	echo "\nfirewall rules checked out OK...\n\n"
+# clean the firewall up (legacy Shorewall sanitizer — skip when UFW is active)
+if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -qi '^Status: active'; then
+	echo "UFW active — skipping Shorewall sanitizer/check"
+	ufw status verbose | sed -n '1,40p' || true
 else
-	echo "\nfirewall check failed with errors.  \nYou must correct the firewall rules!\n\n"
+	echo Running firewall sanitizer
+	php $UTILITIES/sanitize-firewall.php
+	echo Firewall rules are as follows
+	cat $FW_RULES
+	echo running firewall check
+	if sudo /sbin/shorewall check ;then
+		echo "\nfirewall rules checked out OK...\n\n"
+	else
+		echo "\nfirewall check failed with errors.  \nYou must correct the firewall rules!\n\n"
+	fi
 fi
 

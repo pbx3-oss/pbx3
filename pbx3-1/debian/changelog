@@ -1,3 +1,12 @@
+pbx3 (0.0.5-7) noble; urgency=medium
+
+  * Home firewall Phase 2: Depends ufw (drop shorewall*); installer applies
+    ufw-apply-baseline.sh (fleet|solo); LE :80 + fail2ban banaction=ufw;
+    setip writes /etc/pbx3/lan.cidr; NetHelper/update-fqdn-inline no-op under UFW.
+  * Spec: workingdocs/UFW_SHOREWALL_MIGRATION.md.
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Tue, 25 Aug 2026 12:30:00 -0400
+
 pbx3 (0.0.5-6) noble; urgency=medium
 
   * Lab install harden (#5h): link-asterisk-configs.sh + shipped GenAst stub

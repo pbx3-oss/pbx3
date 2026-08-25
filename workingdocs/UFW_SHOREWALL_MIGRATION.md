@@ -1,6 +1,6 @@
 # Home firewall — Shorewall → UFW migration
 
-**Status:** Direction locked **2026-08-24**; **Phase 1 lab applied on `.31` (2026-08-25)** — package/installer cutover still Phase 2.  
+**Status:** Direction locked **2026-08-24**; **Phase 1 lab green** + **Phase 2 package/installer** on branch **`ufw-phase1`** (2026-08-25). Phase 3 API/SPA open.  
 **Repos when built:** **pbx3** (installer, package Depends, scripts, NetHelper) · **pbx3api** (FirewallController, syscommands ICMP/LE noise) · **pbx3spa** (FirewallView) · docs MkDocs install/firewall notes.  
 **Related:** [`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`](../pbx3-directory/docs/TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md) §11.4–11.7 · [`FLEET_TRUNK_PEERING_DECISION.md`](../pbx3-directory/docs/FLEET_TRUNK_PEERING_DECISION.md) · [`LETSENCRYPT_PER_TENANT_FQDN.md`](LETSENCRYPT_PER_TENANT_FQDN.md) · private ETL **`aelintra/sark-to-pbx3`** (§10) · Design Rules SIP-obscurity context (fleet no longer depends on home STRING match).
 
@@ -103,7 +103,7 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 ### Phase 0 — Spec complete (this doc)
 
 - [x] Choose UFW; record locks F0–F9 and **fleet standard allow set** (2026-08-25).
-- [ ] Confirm SBC IP list source (env vs provision artifact) before coding Phase 2.
+- [x] SBC IP list source (Phase 2): **`PBX3_UFW_SBC_IPS`** (preferred) or literal **`PBX3_SBC_EGRESS_HOST`** in `/opt/pbx3api/.env`. Hostname-only values are skipped (must be IP/CIDR).
 
 ### Phase 1 — Lab proof (no SPA rewrite yet)
 
@@ -125,6 +125,8 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 3. Replace LE port-80 scripts; setip LAN for solo; fail2ban → `ufw`.
 4. Remove or gate FQDN inline path (`fqdninspect=NO` default; skip update on fleet import — already decided in mobility design).
 5. Package bump when ready for fleet roll.
+
+- [x] **2026-08-25 (`ufw-phase1`):** Depends `ufw` (drop shorewall*); installer `ufw-apply-baseline.sh`; LE + fail2ban; setip `/etc/pbx3/lan.cidr`; NetHelper/update-fqdn-inline UFW path; changelog **0.0.5-7**. Shorewall templates remain in tree until Phase 4 purge.
 
 ### Phase 3 — API + SPA
 

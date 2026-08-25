@@ -242,9 +242,18 @@ public function get_externip() {
 public function restartFirewall() {
 
 	/*  
-	 * 	restart the firewall
+	 * 	Apply home firewall. Prefer UFW baseline (product path); Shorewall
+	 *  only if UFW is not active (pre-cutover archaeology).
 	 */ 
-	
+
+		if ($this->ufwIsActive()) {
+			$profile = $this->ufwProfile();
+			$script = escapeshellarg(SYSPATH . '/scripts/ufw-apply-baseline.sh');
+			$rc = `sudo $script $profile 2>&1`;
+			syslog(LOG_INFO, SYSPREFIX . " NetHelper UFW apply profile=$profile: " . trim((string)$rc));
+			return true;
+		}
+
 	 	$this->copyFirewallTemplates(); 
 		
 		$rc = `sudo /sbin/shorewall check 2>&1`;
@@ -256,6 +265,36 @@ public function restartFirewall() {
 			return(False);
 		}
 					
+	}
+
+	/** @return bool */
+	private function ufwIsActive() {
+		if (!is_executable('/usr/sbin/ufw') && !is_executable('/sbin/ufw')) {
+			return false;
+		}
+		$st = `ufw status 2>/dev/null`;
+		return (stripos((string)$st, 'Status: active') !== false);
+	}
+
+	/** @return string fleet|solo */
+	private function ufwProfile() {
+		$env = getenv('PBX3_UFW_PROFILE');
+		if (is_string($env) && ($env === 'fleet' || $env === 'solo')) {
+			return $env;
+		}
+		$apiEnv = '/opt/pbx3api/.env';
+		if (is_readable($apiEnv)) {
+			$raw = @file_get_contents($apiEnv);
+			if (is_string($raw)) {
+				if (preg_match('/^[[:space:]]*PBX3_FLEET_MODE=true/m', $raw)) {
+					return 'fleet';
+				}
+				if (preg_match('/^[[:space:]]*PBX3_SBC_EGRESS_HOST=/m', $raw)) {
+					return 'fleet';
+				}
+			}
+		}
+		return 'solo';
 	}
 	
 	/**
@@ -297,6 +336,11 @@ public function restartFirewall() {
 	}
 
 	public function copyFirewallTemplates() {
+
+		# UFW path: STRING/fqdninspect INLINE is retired (F2). Do not write Shorewall files.
+		if ($this->ufwIsActive()) {
+			return;
+		}
 
 		$this->dbh = DB::getInstance();
 		if (!isset($this->helper) || !is_object($this->helper)) {

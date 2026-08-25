@@ -57,6 +57,17 @@ else {
 		logit  ("Static Virt ip $staticIPV4");
 		$net->set_staticIPV4(false,$staticIPV4);
 	}
+	# UFW solo SIP source (F10) — declarative LAN CIDR for ufw-apply-baseline.sh
+	$lanCidr = $netaddress . '/' . $cidr;
+	if (!is_dir('/etc/pbx3')) {
+		@mkdir('/etc/pbx3', 0755, true);
+	}
+	if (@file_put_contents('/etc/pbx3/lan.cidr', $lanCidr . "\n") === false) {
+		logit("could not write /etc/pbx3/lan.cidr");
+	} else {
+		logit("wrote /etc/pbx3/lan.cidr = $lanCidr");
+	}
+	# Legacy Shorewall params (no-op hosts may still have /etc/shorewall until Phase 4 purge)
 	if ( file_exists( "/etc/shorewall") ) {
 		`echo LAN=$netaddress/$cidr > /etc/shorewall/local.lan`;
 		`echo IF1=$interface > /etc/shorewall/local.if1`;
