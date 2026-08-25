@@ -78,6 +78,8 @@
 - [x] **Tenant CLID blacklist — Phase 1 (2026-08-25):** `clid_block` table, API `clidblocks`, SPA **Inbound → Blocked caller IDs**, CAGI `Ingress()` reject. Digits-only exact match; no Commit. **Phase 1 sufficient** — SPA admin policy is the product shape.
 - [ ] **Tenant CLID blacklist — Phase 2 (parked, optional):** Desk feature code → email block **request** → tenant admin approves in SPA. **Not required** unless customers ask; spec sketch: **`CLID_BLACKLIST_REQUIREMENTS.md`** § Phase 2.
 
+- [ ] **Support line test panel — Phase 2 (parked 2026-08-25):** Separate SPA panel; predefined **hidden WebRTC** caller per tenant; dial **any** ext; **Hold/Resume** in-call (MOH → jitter sampling); post-call report. Reuses Phase 1 JsSIP engine. Spec: **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`** §10.
+
 - [ ] **SBC SIP TLS — hardphones (mid-term, locked 2026-08-25):** Not building today. Phone ↔ SBC **TLS :5061**; SBC ↔ home/carriers **UDP**; reuse edge LE for **`sbc.pbx3.com`** (outbound proxy); mix TLS desks + UDP Peers OK. Effort ~2–4 d lab / ~1 wk productize. Spec: **`SBC_PRODUCT_TRACKS.md`** gap **#1** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2. Out of MVP: SDES SRTP, carrier mTLS, rtpengine.
 
 - [ ] **Named pickup — sipplab L1 pack (2026-08-24):** Manual L3 **pickup OK** lab `.31` — see **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab status. Unattended **`./run-pickup-pack.sh`** still pending. **BLF:** Snom OK; Yealink config TBD (not blocking pickup).
