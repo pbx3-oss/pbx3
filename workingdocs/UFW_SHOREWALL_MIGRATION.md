@@ -37,14 +37,29 @@ Replace **EOL Shorewall / Shorewall6** on the home (instance) with **UFW**, matc
 | # | Lock |
 |---|------|
 | **F0** | Home host firewall product path = **UFW** (IPv4 + IPv6 via UFW dual-stack). |
-| **F1** | **Fleet:** no Shorewall STRING / `pbx3_inline_fqdn` / `update-fqdn-inline.sh` on the call path. SIP **UDP/TCP 5060** (and **5061** if used) **from SBC address(es) only**. |
+| **F1** | **Fleet install baseline is fixed and small** (default deny inbound; only the ports below). Not a free-form Shorewall dialect at install. |
 | **F2** | **`fqdninspect`:** retire as a live fleet security control. Panel/API may hide or no-op on fleet; solo/direct may keep a transitional period then drop. |
-| **F3** | **RTP 10000–20000/udp** stays **open to the world** (RTP bypass + roaming phones). Optional per-source rate-limit is a later harden, not a v1 blocker. |
-| **F4** | **fail2ban** banaction moves from `shorewall` → **`ufw`** (shipped fail2ban action). |
-| **F5** | SPA Firewall panel edits a **structured allow-list**, not Shorewall rule text. Apply = rewrite managed UFW rules + `ufw reload` (via syshelper). |
-| **F6** | LE temporary **:80** open/close remains; implement with **UFW managed rules** (or `ufw allow`/`delete` by comment), not Shorewall `pbx3_rules` append. |
-| **F7** | Do **not** run Shorewall and UFW together. Migration disables/removes Shorewall services before enabling UFW default-deny + allow set. |
-| **F8** | EC2/security groups remain a **second layer**; UFW is host policy. Document both in install/commission docs. |
+| **F3** | **RTP 10000–20000/udp** open to the world (RTP bypass + roaming phones). |
+| **F4** | **fail2ban** banaction moves from `shorewall` → **`ufw`**. |
+| **F5** | SPA Firewall panel columns (v1): **proto** (`tcp` \| `udp` \| `icmp` \| `all`), **port** (or range; N/A for icmp as needed), **source** (`any` / IP / CIDR), **comment**. No Shorewall ACTION/`$FW`/sport/origdest/**connrate**/Raw. LE `:80` may be managed/read-only. Install baseline does not depend on SPA. |
+| **F6** | LE temporary **:80** open/close via UFW managed allow/delete (cert scripts), not a permanent open port. |
+| **F7** | Do **not** run Shorewall and UFW together. |
+| **F8** | EC2/security groups remain a **second layer**; UFW is host policy. |
+| **F10** | **Sources are literal only** (`any`, IP, CIDR). No `$LAN` / `$SBC` shorthand. **Fleet SIP:** concrete SBC address(es). **LAN-sourced allows** (solo): default = **detected interface CIDR** from setip (in practice almost always a **`/24`** on `192.168.x.0`). Operator may widen in the Firewall panel if needed (rare). Drop Shorewall **connrate** for now. |
+
+### Fleet home — standard allow set (locked 2026-08-25)
+
+| Port | Proto | Source | Notes |
+|------|-------|--------|-------|
+| **22** | tcp | anywhere | SSH |
+| **44300** | tcp | anywhere | API / SPA |
+| **5060** | udp + tcp | **SBC IP(s) only** | SIP signalling |
+| **5061** | tcp | **SBC IP(s) only** | SIP TLS (same restriction) |
+| **10000:20000** | udp | anywhere | RTP |
+| **80** | tcp | anywhere while LE needs it | Opened/closed by Let’s Encrypt scripts only |
+| **Everything else** | — | — | **Closed** (default deny) — including **:443** (no public webserver; API is **:44300** only) |
+
+No permanent :80. No :443. No fleet :8089 on the home (WSS at edge). No LAN SIP, LDAP, IAX, or STRING/`fqdninspect` in the fleet baseline.
 
 ---
 
@@ -52,35 +67,13 @@ Replace **EOL Shorewall / Shorewall6** on the home (instance) with **UFW**, matc
 
 ### 4.1 Fleet home (primary)
 
-| Allow | Source | Notes |
-|-------|--------|-------|
-| SSH 22/tcp | anywhere (or operator CIDR if hardened later) | Same as today |
-| API 44300/tcp | anywhere | SPA/API |
-| SIP 5060/udp + 5060/tcp | **SBC VIP/EIP set** | Core fleet lock |
-| SIP 5061/tcp | SBC set **if** TLS used node↔SBC | Optional |
-| RTP 10000:20000/udp | anywhere | Bypass; see F3 |
-| HTTP 80/tcp | ephemeral | LE only (open/close scripts) |
-| WSS 8089/tcp | **closed** on fleet homes (edge WSS) | Lab/solo may open |
+Apply **§3 standard allow set** at install (`ufw-apply-baseline.sh` profile `fleet`). SBC address(es) from env / onboard / provision artifact (pick one at implement and document).
 
-NTP / LDAP / IAX from “LAN” in today’s `pbx3_rules` are **legacy solo shapes** — keep only if a solo/direct profile still needs them; do not invent fleet LAN SIP.
-
-**SBC address source of truth (implementer choice, pick one and document):**
-
-1. Env / onboard: `PBX3_SBC_SIP_SOURCES` (CIDR/IP list), or  
-2. Read from Egress peer / fleet posture already on the node, or  
-3. Installer writes `/etc/pbx3/ufw-sbc.sources` refreshed on Provision edge / setip.
-
-Prefer **idempotent rewrite** of a named UFW app or numbered comment block (`# pbx3-managed`) so Provision edge IP changes do not stack duplicate allows.
+Prefer **idempotent rewrite** of a `# pbx3-managed` block so Provision edge IP changes do not stack duplicate allows.
 
 ### 4.2 Solo / direct (no SBC)
 
-| Allow | Source | Notes |
-|-------|--------|-------|
-| SIP 5060/udp+tcp (±5061) | **LAN CIDR** (from setip) and/or operator-edited allows | Replaces `$LAN` Shorewall params |
-| Same API/SSH/RTP/LE as fleet | | |
-| 8089 | if instance-direct WSS used | Lab / singleton |
-
-No STRING match. Security = network allow + Asterisk auth (+ optional fail2ban), not SIP URI inspection.
+Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected LAN CIDR** at install (typically `192.168.x.0/24`). Panel can widen the `from` later; uncommon. Optional `:8089` for instance-direct WSS. Default deny everything else.
 
 ---
 
@@ -109,17 +102,14 @@ No STRING match. Security = network allow + Asterisk auth (+ optional fail2ban),
 
 ### Phase 0 — Spec complete (this doc)
 
-- [x] Choose UFW; record locks F0–F8 and fleet vs solo postures.
+- [x] Choose UFW; record locks F0–F9 and **fleet standard allow set** (2026-08-25).
 - [ ] Confirm SBC IP list source (env vs provision artifact) before coding Phase 2.
 
 ### Phase 1 — Lab proof (no SPA rewrite yet)
 
-1. Snapshot lab home (`.31` or throwaway).
-2. Capture current working ports with Shorewall up.
-3. Disable shorewall{,6}; enable UFW default deny incoming / allow outgoing.
-4. Apply fleet baseline by hand (SBC IP + RTP + 44300 + 22).
-5. Prove: desk REGISTER via SBC, extension call, RTP audio, SPA login `:44300`, fail2ban ban/unban once.
-6. Prove LE open/close :80 with UFW helpers (dry-run or staging).
+1. Rebuild or wipe lab home (`.31`) if convenient — no production tenants.
+2. Disable shorewall{,6}; enable UFW default deny; apply **§3 standard allow set** with lab SBC IP.
+3. Prove: desk REGISTER via SBC, extension call + RTP, SPA `:44300`, fail2ban once, LE open/close :80.
 
 **Exit:** written lab notes in ops TODO; no package cutover yet.
 
@@ -133,11 +123,11 @@ No STRING match. Security = network allow + Asterisk auth (+ optional fail2ban),
 
 ### Phase 3 — API + SPA
 
-1. New allow-list file format (JSON or simple line DSL owned by pbx3 — **not** Shorewall syntax).
-2. `FirewallController` GET/POST/PUT against that file + `ufw-apply` via syshelper.
-3. Rewrite `FirewallView` to structured rows; keep IPv4/IPv6 sections or unify under UFW dual-stack with source family.
+1. Declarative allow-list file (JSON or simple line DSL) matching §3 columns.
+2. `FirewallController` GET/POST/PUT → that file + `ufw-apply` via syshelper.
+3. **Simplify `FirewallView`:** drop Shorewall parser (action/source/dest/`$FW`/sport/connrate + Raw mode). One table: allow rows for the standard set; optional add-row for rare extras. Unify IPv4/IPv6 under UFW (or hide v6 until needed).
 4. ICMP syscommand: reimplement or drop from UI until needed.
-5. Docs: `general.md`, install pages, LE docs (drop Shorewall INLINE FQDN as active path).
+5. Docs / help: remove Shorewall manpage copy.
 
 ### Phase 4 — Retire Shorewall entirely
 
@@ -168,8 +158,12 @@ No STRING match. Security = network allow + Asterisk auth (+ optional fail2ban),
 }
 ```
 
+**Description / comment:** UFW supports this natively — `ufw allow … comment 'SBC SIP'`. Comments show in `ufw status numbered` (trailing `# …`). Updating a rule with a new `comment` changes the text; `comment ''` clears it.
+
+**HoR for the SPA:** keep `comment` on the **declarative allow-list file** (JSON/DSL), and have `ufw-apply` emit `comment '…'` on each rule. Do not scrape `ufw status` as the editor source of truth (fragile parse). Use a stable comment (e.g. `LE renewal (managed)`) so LE open/close can find/delete the ephemeral `:80` rule the same way Shorewall used a marker line.
+
 **POST** validates and writes the managed file (does not apply).  
-**PUT** (restart/apply) runs `ufw-apply-baseline.sh` or `ufw reload` after syncing managed rules.
+**PUT** (restart/apply) runs `ufw-apply-baseline.sh` after syncing managed rules.
 
 Do **not** expose raw `iptables`/`nft` in v1. Advanced SSH remains for break-glass.
 
@@ -177,10 +171,9 @@ Do **not** expose raw `iptables`/`nft` in v1. Advanced SSH remains for break-gla
 
 ## 8. Upgrade / coexistence rules
 
-1. **Never** `ufw enable` while Shorewall is still the active policy without a rehearsed cutover (risk of double-filter or lockout).
-2. Installer must ensure **SSH and 44300** are allowed **before** default-deny takes effect (same caution as today’s Shorewall bootstrap comment).
-3. Existing customer-edited `pbx3_rules` lines do **not** auto-translate perfectly — document: migration applies **profile baseline**; operators re-add custom allows in the new panel.
-4. Cloud nodes: verify **SG** still admits needed ports; UFW tighten must not assume SG is open.
+1. Prefer **greenfield / rebuild** over translating old `pbx3_rules` (F9). Lab wipe OK.
+2. Still apply baseline **before** relying on default deny in installer scripts (order: allow 22 + 44300 + … then enable) so a half-finished install does not strand SSH mid-script — not a “existing customer” concern.
+3. Cloud nodes: SG still admits needed ports; UFW is host policy on top.
 
 ---
 
