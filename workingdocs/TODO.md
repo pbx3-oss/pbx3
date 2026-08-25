@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-25 (UFW track closed)  
+**Last updated:** 2026-08-25 (SIP TLS mid-term lock)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -48,6 +48,7 @@
 18. **S7+** attested PCI — customer ask.  
 19. **SBC Track A lab** — third-party PBX (± FreePBX/SARK) behind SBC — still open. **`SBC_PRODUCT_TRACKS.md`** Track A.  
 19a. ~~**STIR Twilio shape A lab**~~ — **observed green** (2026-08-11): after Twilio ID checks, outbound rated attestation **A** (carrier signs as SP). Own-cert shapes B/C not started. Spec: **`SBC_PRODUCT_TRACKS.md`** Track B.  
+19b. **SBC SIP TLS (hardphones)** — **mid-term, not today.** Posture locked **2026-08-25**: TLS :5061 phones ↔ SBC; UDP homes/carriers; reuse `sbc.pbx3.com` LE; mix OK. Spec: **`SBC_PRODUCT_TRACKS.md`** gap **#1** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2.  
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
@@ -75,6 +76,8 @@
 
 - [x] **Home firewall — Shorewall → UFW (closed `main` 2026-08-25):** Phases 1–4 + ETL M2–M4 + MkDocs + **`pbx3_0.0.6-2`** + Pack A offline tests. Phase 5 parked. Spec: **`UFW_SHOREWALL_MIGRATION.md`**. Fleet floor roll when ready.
 - [ ] **Tenant CLID blacklist — greenfield (locked 2026-08-24):** Per-tenant caller block list; **SPA + auth** to mutate (no open phone feature key in v1). SARK stub unused — **do not ETL**. Spec: **`CLID_BLACKLIST_REQUIREMENTS.md`**.
+
+- [ ] **SBC SIP TLS — hardphones (mid-term, locked 2026-08-25):** Not building today. Phone ↔ SBC **TLS :5061**; SBC ↔ home/carriers **UDP**; reuse edge LE for **`sbc.pbx3.com`** (outbound proxy); mix TLS desks + UDP Peers OK. Effort ~2–4 d lab / ~1 wk productize. Spec: **`SBC_PRODUCT_TRACKS.md`** gap **#1** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2. Out of MVP: SDES SRTP, carrier mTLS, rtpengine.
 
 - [ ] **Named pickup — sipplab L1 pack (2026-08-24):** Manual L3 **pickup OK** lab `.31` — see **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab status. Unattended **`./run-pickup-pack.sh`** still pending. **BLF:** Snom OK; Yealink config TBD (not blocking pickup).
 

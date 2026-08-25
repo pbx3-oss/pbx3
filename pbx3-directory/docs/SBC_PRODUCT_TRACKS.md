@@ -1,15 +1,16 @@
 # SBC product tracks & roadmap
 
-**Status:** **2026-07-28** — WebRTC/WSS promoted to **#1 near-term** (golden demo, few weeks). Teams C1 + STIR vendors + capability gaps remain. Recovery tag: **`pre-webrtc-wss-20260728`**.
+**Status:** **2026-08-25** — WebRTC/WSS **lab green**. **SIP TLS** posture locked as **mid-term** (not building today). Teams C1 + STIR vendors + other capability gaps remain. Recovery tag: **`pre-webrtc-wss-20260728`**.
 
-### Product posture locked (2026-07-28)
+### Product posture locked (2026-07-28; SIP TLS 2026-08-25)
 
 | Track | Decision |
 |-------|----------|
 | **C — Teams** | **Do not** build or certify Direct Routing on pbx3sbc. Customer ask → **C1** answer (rent/peer Microsoft-approved SBC ahead, or Operator Connect). No C2/C3 investment. |
 | **B — STIR/SHAKEN** | **Pragmatic / Peer-shaped.** Twilio shape **A** lab **observed** (attestation **A** after ID checks, **2026-08-11**). Escalate to Bandwidth Hosted Signing (B) or OpenSIPS AS (C) only when circumstance requires. Append vendors over time. |
 | **A — General SBC** | Still valid SKU intent. **Lab next:** stand up a **SARK** box (and optionally **FreePBX**) behind Magrathea / scratch SBC — domain, dispatcher, phone registrar = SBC, one DID path — prove proxy-registrar without GenAst. |
-| **WebRTC / WSS (S8.11 / W1)** | **#1 near-term — Magrathea lab green 2026-08-03.** Browser **WSS only on SBC** (`wss://sbc.pbx3.com:8089/ws`); SBC → home is **ordinary SIP UDP**; RTP bypass; **home instance TCP 8089 not required** (golden closed 8089, calls OK). Home WebRTC PJSIP = UDP + `outbound_proxy` + `webrtc=yes`. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · **`WEBRTC_WSS_LAB.md`** · checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**. |
+| **WebRTC / WSS (S8.11 / W1)** | **Magrathea lab green 2026-08-03.** Browser **WSS only on SBC** (`wss://sbc.pbx3.com:8089/ws`); SBC → home is **ordinary SIP UDP**; RTP bypass; **home instance TCP 8089 not required** (golden closed 8089, calls OK). Home WebRTC PJSIP = UDP + `outbound_proxy` + `webrtc=yes`. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · **`WEBRTC_WSS_LAB.md`** · checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**. |
+| **SIP TLS (hardphones)** | **Mid-term — not today.** Same proxy-registrar model as WSS: phone ↔ SBC **SIP TLS :5061**; SBC ↔ home / most carriers stay **SIP UDP**. Reuse edge LE cert for **`sbc.pbx3.com`** (phone outbound proxy). Mix TLS phones + UDP carriers OK. Detail: gap **#1** below · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2. |
 
 **Related:** **`DESIGN_RULES.md`** Rules **7** + **13**; **`EDGE_PORTABILITY_SCORECARD.md`**; **`NUMBER_DIALECT_REQUIREMENTS.md`**; **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WebRTC WSS); pbx3sbc proxy-registrar architecture; **`PEERING-PLAN.md`**; living research **`TELEPHONE_FRAUD_RESEARCH.md`** §5–§6 (peer STIR postures; ClearIP/Sansay bolt-on effort/cost/value).
 
@@ -17,7 +18,7 @@
 
 ## Capability gaps & roadmap
 
-**Committed / active:** **WebRTC / WSS on the edge** — Magrathea terminates WSS; homes speak SIP UDP (see §6.1 / W1 lab). Instance `:8089` optional for singleton-direct only. See **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · IMPLEMENTATION_PLAN **S8.11** / **W1**.
+**Committed / active:** **WebRTC / WSS on the edge** — Magrathea lab green; homes speak SIP UDP (see §6.1 / W1). Instance `:8089` optional for singleton-direct only. **SIP TLS** = mid-term (gap **#1**), not current build.
 
 **Excluded by posture (not gaps to build on Magrathea):** Teams Direct Routing on OpenSIPS; first-party STI-AS on every Peer; door-knock SIP header capture; control-plane HA homed on the SBC; OpenSIPS rename-for-purity; competitor-style media termination for the few-week demo.
 
@@ -43,8 +44,8 @@
 
 | # | Gap | Notes | Trigger |
 |---|-----|--------|---------|
-| **0** | **WebRTC / WSS** (W1) | Near-term: **golden `:8089`** (no Magrathea UDP impact). Later: SBC `proto_wss` + TLS; domain→dispatcher; **RTP bypass**. | **Demo / now (golden)** |
-| **1** | **SIP TLS** (and SRTP when media is touched) | Admin HTTPS done; phone/carrier path still largely UDP + RTP bypass. Sibling to WebRTC TLS/WSS. | WebRTC work; enterprise / cloud Peer demand |
+| **0** | **WebRTC / WSS** (W1) | **Lab green** — SBC `proto_wss` + LE; domain→dispatcher; **RTP bypass**; home `:8089` optional (singleton only). | **Done (lab)** |
+| **1** | **SIP TLS** (hardphones; SRTP optional later) | **Mid-term (locked 2026-08-25) — do not start today.** **Not shipping now:** desks/carriers still **UDP :5060**. **Target:** `proto_tls` + `socket=tls:…:5061`; terminate TLS on SBC; relay **UDP** to homes; carriers stay UDP unless a Peer requires TLS. **Certs:** reuse existing LE for **`sbc.pbx3.com`** (same material as admin HTTPS / WSS) — phone **outbound proxy** = that FQDN; SIP domain remains tenant. **Mix OK:** TLS phones + UDP Peers on one edge. **Effort (ballpark):** ~2–4 d lab green if WSS/`tls_mgm` already live; ~1 wk with docs/renew/handset soak. **Out of MVP:** home SDES SRTP, carrier mTLS, rtpengine. Sibling to WSS; admin HTTPS ≠ SIP TLS. | Enterprise / cloud Peer / operator pull |
 | **2** | **Optional media plane** (rtpengine-class) | RTP bypass stays default. **Parked** — not for try-it/adoption. Trigger only: LAN-edge, Track A legacy, Peer forbids bypass. Design research: **`RTPENGINE_SELECTIVE_ENGAGE.md`**. Try-it ease/cost is a **separate** track: **`../../workingdocs/FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**. | LAN-edge / Track A / Peer forbids bypass |
 | **3** | **Downstream trunk REGISTER** | IP-trusted Peers + outbound `uac_registrant` exist. Dynamic inbound trunks that REGISTER → **separate registration-edge** instance class (not bolt-on). Spec: **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**. | Customer ITSP that only REGISTERs |
 | **4** | **Fail2ban Peer auto-whitelist** | Auto-sync carrier inbound Peer IPs on save/delete; site NATs stay manual. TODO already. | Next carrier onboard |
@@ -62,9 +63,9 @@
 
 ### Roadmap order (SBC-owned)
 
-1. **WebRTC / WSS** (active) — **golden `:8089` first** (webphone demo; no Magrathea UDP impact) → later SBC WSS (scratch or VIP booked window); RTP bypass  
+1. **WebRTC / WSS** — **lab green** (Magrathea); keep as reference path for edge TLS  
 2. **Track A lab** — SARK (± FreePBX) behind SBC; document recipe  
-3. **SIP TLS** for hardphones / Peers (align with WebRTC cert story where possible)  
+3. **SIP TLS** for hardphones — **mid-term** (gap **#1**); not scheduled as current build; align with WSS LE/`tls_mgm` story  
 4. **Optional rtpengine path** when bypass is insufficient (or competitor-parity demand) — **parked**; see gap #2. **Try-it deploy** (2-box / tailor script) is separate — **`../../workingdocs/FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`**.  
 5. **Fail2ban Peer auto-whitelist** at next carrier onboard  
 6. **Registration-edge** only on customer demand (own image)  
@@ -248,14 +249,14 @@ Teams Phone  ↔  Microsoft-certified SBC  ↔  pbx3sbc  ↔  PBX / carrier Peer
 2. **A — SARK (± FreePBX) behind SBC** — operator lab prove; document gaps  
 3. **B — Twilio STIR shape A observed** (attestation A, 2026-08-11); escalate B/C only on circumstance; append vendors over time  
 4. **C — parked**; customer Teams ask → **C1** commercial answer only  
-5. **Capability roadmap** (above) — WebRTC committed; then SIP TLS / optional media / Fail2ban whitelist / registration-edge on demand  
+5. **Capability roadmap** (above) — WebRTC lab green; **SIP TLS mid-term** (not today); optional media / Fail2ban whitelist / registration-edge on demand  
 
 ---
 
 ## Out of scope until asked
 
-OpenSIPS production STIR / Teams code; Filament STIR UI; STI-CA / APNF / Bandwidth Hosted Signing signup; Microsoft Direct Routing certification or uncertified lab DR; renaming OpenSIPS vocabulary for Rule **7** purity.
+OpenSIPS production STIR / Teams code; Filament STIR UI; STI-CA / APNF / Bandwidth Hosted Signing signup; Microsoft Direct Routing certification or uncertified lab DR; renaming OpenSIPS vocabulary for Rule **7** purity. **SIP TLS build** — parked mid-term until scheduled (posture locked; see gap **#1**).
 
 ---
 
-*Last updated: 2026-07-28 (capability gaps / roadmap added).*
+*Last updated: 2026-08-25 (SIP TLS mid-term posture + effort; WSS marked lab green).*

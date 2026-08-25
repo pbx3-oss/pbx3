@@ -330,6 +330,22 @@ Client: **`wss://sbc.pbx3.com:8089/ws`** + SIP user = shortuid + **SIP domain = 
 ```
 
 **Does not block:** SBC soak (UDP phones), peering, Phase A Egress, move wizard v1 (UDP endpoints).
+
+### 6.2 SIP TLS hardphones (mid-term — not today)
+
+**Locked 2026-08-25** in **`SBC_PRODUCT_TRACKS.md`** gap **#1**. Do **not** implement until scheduled.
+
+Same proxy-registrar pattern as §6.1 WSS:
+
+```text
+Phone ──SIP TLS :5061──► SBC ──SIP UDP :5060──► Home / most carriers
+```
+
+- **Outbound proxy** on the phone = edge FQDN (`sbc.pbx3.com`) so existing **LE** certs apply; **SIP domain** stays tenant.
+- **Mix OK:** TLS desks + UDP Peers; home Asterisk stays UDP.
+- **RTP bypass** remains default. Optional home **SDES SRTP** and **rtpengine** are separate (not MVP).
+- **Effort ballpark:** ~2–4 d lab / ~1 wk productize — see tracks doc.
+
 ---
 
 ## 7. Solo / direct-to-node (Rule 6)
