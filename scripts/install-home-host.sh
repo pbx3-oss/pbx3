@@ -437,6 +437,10 @@ Home PBX ready (Lab). No Let's Encrypt; API is snakeoil on :44300.
   SPA API:  https://${ip:-127.0.0.1}:44300/api
   Login:    ${PBX3_ADMIN_EMAIL}
 
+Firewall: UFW left SSH :22 and API :44300 open from anywhere so install
+cannot lock you out. In Admin → Firewall, narrow those Source fields to
+your ops/VPN CIDR(s), then Save and Apply (lab LAN is usually enough).
+
 Next: Adopt from Fleet (Instances → Register instance).
 If SIP lab: install SBC on amd64 VM, set PBX3_SBC_ADMIN_API_URL on control, Provision edge
 (home IP is auto-whitelisted on the SBC).

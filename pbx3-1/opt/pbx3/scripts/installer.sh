@@ -14,9 +14,10 @@ setvcl() {
 # turn on VCL in Globals
     echo "AWS instance detected, setting cloud flags"
     /usr/bin/sqlite3 $SYSDB "UPDATE globals SET vcl=1"
-# UFW fleet/solo baseline already allows SSH (:22) and API (:44300). Do not
-# permanently open :80/:443 — LE uses le-port80-open/close; API is :44300 only.
-    echo "AWS/VCL: UFW baseline keeps 22 + 44300 open; review SG + UFW if needed"
+# UFW fleet/solo baseline already allows SSH (:22) and API (:44300) from anywhere
+# (F11 — do not lock operator out). Do not permanently open :80/:443 — LE uses
+# le-port80-open/close; API is :44300 only. Operator narrows 22/44300 later.
+    echo "AWS/VCL: UFW keeps 22 + 44300 open from anywhere; narrow Firewall + SG when safe"
 }
 
 # Resolve UFW profile for ufw-apply-baseline.sh (F1 / UFW_SHOREWALL_MIGRATION.md).
@@ -418,6 +419,13 @@ if dpkg -l shorewall 2>/dev/null | grep -q '^ii'; then
     apt-get remove -y shorewall shorewall6 2>/dev/null || true
 fi
 
+echo ""
+echo "======== Firewall (UFW) — operator action ========"
+echo "  SSH :22 and API :44300 are open from anywhere after install"
+echo "  so you are not locked out. Narrow their Source in Admin → Firewall"
+echo "  to your ops/VPN CIDR(s), then Save and Apply. On cloud, also"
+echo "  tighten the security group for 22 and 44300."
+echo ""
 
 # call recording 
 [ ! -d $SYSPATH/media/recordings/default ] && mkdir -p $SYSPATH/media/recordings/default

@@ -46,13 +46,14 @@ Replace **EOL Shorewall / Shorewall6** on the home (instance) with **UFW**, matc
 | **F7** | Do **not** run Shorewall and UFW together. |
 | **F8** | EC2/security groups remain a **second layer**; UFW is host policy. |
 | **F10** | **Sources are literal only** (`any`, IP, CIDR). No `$LAN` / `$SBC` shorthand. **Fleet SIP:** concrete SBC address(es). **LAN-sourced allows** (solo): default = **detected interface CIDR** from setip (in practice almost always a **`/24`** on `192.168.x.0`). Operator may widen in the Firewall panel if needed (rare). Drop Shorewall **connrate** for now. |
+| **F11** | **SSH :22 and API :44300** stay **`from=any` after install** (bootstrap must not lock the operator out). **Warn** in the package installer summary, lab `install-home-host` summary, and Firewall SPA that the operator should **narrow Source** to ops/VPN CIDR(s) when safe. Do not auto-tighten at install. Cloud SG is a second layer (F8). |
 
 ### Fleet home — standard allow set (locked 2026-08-25)
 
 | Port | Proto | Source | Notes |
 |------|-------|--------|-------|
-| **22** | tcp | anywhere | SSH |
-| **44300** | tcp | anywhere | API / SPA |
+| **22** | tcp | anywhere | SSH — **install leaves `from=any`; operator should narrow** (Firewall panel + installer warn) |
+| **44300** | tcp | anywhere | API / SPA — **same: open after install; narrow when safe** |
 | **5060** | udp + tcp | **SBC IP(s) only** | SIP signalling |
 | **5061** | tcp | **SBC IP(s) only** | SIP TLS (same restriction) |
 | **10000:20000** | udp | anywhere | RTP |
@@ -149,9 +150,9 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 
 ### Phase 5 — Optional harden (not blocking)
 
-- RTP UDP per-source rate-limit (UFW limit or small nft snippet beside UFW).
-- Tighten SSH/API source CIDRs for cloud images.
-- Auto-refresh SBC allow list on Provision edge / EIP change.
+- RTP UDP per-source rate-limit (UFW limit or small nft snippet beside UFW) — **parked** unless soak shows abuse (hard to pick a sane per-source pps that survives dense NAT).
+- Tighten SSH/API source CIDRs for cloud images — **default stays open (F11)**; installer/SPA **warn** to narrow. Auto-tighten at install is not the product path.
+- **SBC allow auto-refresh** on Provision edge / EIP change — **parked until pain (2026-08-25).** Easy half: re-sync SIP `from` rows from `PBX3_UFW_SBC_IPS` / literal `PBX3_SBC_EGRESS_HOST` on apply. Hard half: nothing today pushes a new SBC EIP onto the home (Provision edge updates **SBC** fail2ban whitelist for the **home** IP, not the reverse; hostname-only egress is skipped). Until an EIP/VIP change actually breaks fleet SIP on a live box, operator edits Source (or `.env` + re-bootstrap) is enough.
 
 ---
 

@@ -203,8 +203,8 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdesc','Com
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdest','Dest','Unused under UFW (legacy Shorewall field).');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdestports','Port','Destination port or range (e.g. 5060 or 10000:20000). Leave empty for icmp.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwproto','Proto','Network protocol: tcp, udp, icmp, or all.');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwsource','Source','Literal source only: any, an IPv4 address, or CIDR (e.g. 192.168.1.85 or 192.168.1.0/24). No $LAN/$SBC shorthand.');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwsource6','Source','Unused — UFW dual-stack uses the same Source column as IPv4.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwsource','Source','Literal source only: any, an IPv4 or IPv6 address, or CIDR (e.g. 192.168.1.85, 192.168.1.0/24, 2001:db8::1, 2001:db8::/32). No $LAN/$SBC shorthand. One table covers UFW IPv4 and IPv6.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwsource6','Source','Unused — UFW dual-stack uses the same Source column (IPv4 or IPv6) as the main allow-list.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('gatewayip','Gateway','Gateway address of your subnet');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('greeting','Greeting Number','Greeting number that this IVR uses.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('greetingnum','Number','The 4-digit greeting number');
@@ -494,8 +494,8 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ztp','Zero T
 UPDATE tt_help_core SET displayname='Comment', htext='Optional comment stored on the UFW allow-list rule (shown in ufw status).' WHERE pkey='fwdesc';
 UPDATE tt_help_core SET displayname='Port', htext='Destination port or range (e.g. 5060 or 10000:20000). Leave empty for icmp.' WHERE pkey='fwdestports';
 UPDATE tt_help_core SET displayname='Proto', htext='Network protocol: tcp, udp, icmp, or all.' WHERE pkey='fwproto';
-UPDATE tt_help_core SET displayname='Source', htext='Literal source only: any, an IPv4 address, or CIDR (e.g. 192.168.1.85 or 192.168.1.0/24). No $LAN/$SBC shorthand.' WHERE pkey='fwsource';
-UPDATE tt_help_core SET htext='Unused — UFW dual-stack uses the same Source column as IPv4.' WHERE pkey='fwsource6';
+UPDATE tt_help_core SET displayname='Source', htext='Literal source only: any, an IPv4 or IPv6 address, or CIDR (e.g. 192.168.1.85, 192.168.1.0/24, 2001:db8::1, 2001:db8::/32). No $LAN/$SBC shorthand. One table covers UFW IPv4 and IPv6.' WHERE pkey='fwsource';
+UPDATE tt_help_core SET htext='Unused — UFW dual-stack uses the same Source column (IPv4 or IPv6) as the main allow-list.' WHERE pkey='fwsource6';
 UPDATE tt_help_core SET htext='Retired under UFW. Fleet SIP is limited to SBC IP(s) on the allow-list; STRING packet inspection is no longer used. Leave this set to NO.' WHERE pkey='fqdninspect';
 UPDATE tt_help_core SET htext='Retired under UFW (no Shorewall limit template). Leave NO; SIP abuse controls live at the SBC for fleet.' WHERE pkey='sipflood';
 
