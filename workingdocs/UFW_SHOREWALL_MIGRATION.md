@@ -233,8 +233,8 @@ ETL **v2** drops `shorewall_blacklist` / `shorewall_whitelist` from `TABLE_MAP` 
 
 ### 10.3 ETL / docs work when UFW ships
 
-1. ~~**`sark-to-pbx3`:** M2–M4 in v2 transform + REQUIREMENTS lock row~~ — **done 2026-08-25** (`REQUIREMENTS` **#13**; force `fqdninspect`/`sipflood` **NO**; drop shorewall_* + clid_blacklist from map). Fixture assert optional when next offline migrate run.  
-2. **MkDocs migrate / first-boot:** “Firewall is UFW baseline; old Shorewall custom rules and fqdninspect are not ported.”  
+1. **`sark-to-pbx3`:** M2–M4 in v2 transform + REQUIREMENTS lock row — **done 2026-08-25** (`REQUIREMENTS` **#13**; force `fqdninspect`/`sipflood` **NO**; drop shorewall_* + clid_blacklist from map). Fixture assert optional when next offline migrate run.  
+2. ~~**MkDocs migrate / first-boot:**~~ — **done 2026-08-25** in **`pbx3-docs`** `admin/firewall.md` (UFW baseline + SARK migrate note); Shorewall wording cleared on LE / login / cert / globals / API reference.  
 3. **Product help (`tt_help_core`):** rewrite `fqdninspect` / firewall help away from Shorewall manpage links when SPA hides the control.  
 4. Optional later: if a customer zip has non-empty shorewall_* lists, add a one-off report (`migrate --firewall-report`) listing IPs for manual UFW entry — not a silent import into a missing table.
 

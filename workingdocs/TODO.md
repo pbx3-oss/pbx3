@@ -5,7 +5,7 @@
 
 ### Suggested “what next?” order
 
-0. **Home firewall Shorewall → UFW** — **Phases 1–4 + ETL M2–M4 done (2026-08-25)** on **`ufw-phase1`**. Tip-only so far; **next built .deb = `0.0.6-1`**. **Next:** merge/push · build/ship **0.0.6-1** · Phase 5 optional · MkDocs migrate note. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
+0. **Home firewall Shorewall → UFW** — **Phases 1–4 + ETL + MkDocs + deb `0.0.6-1` done (2026-08-25)** on **`ufw-phase1`**. **Next:** merge/push · Phase 5 optional. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
 0a. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
 0b. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0c. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
@@ -32,7 +32,7 @@
 5k. ~~**SBC orphan domain rows after lab reinstall**~~ — **done (2026-08-19):** **`CatalogReconcile::pruneOrphans`** + **`POST /reconcile/prune-orphans`**; auto on **Provision edge**; Fleet **Catalog reconcile** UI. Decommissioned instance FQDNs now flagged as orphans. MkDocs **`installation/install-lab-adopt.md`**. Rule 13 catalog-driven prune (fleet-owned only).  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
 6a. **Home / package versioning** — **should-do before a painful break** (not first-out). Know which home is on which **pbx3 / cagi / api** floor+tip; survive mixed floors; plan for a future breaking change without tribal memory. Open item below · **`REPOS_AND_RELEASES.md`**.  
-7. **New instance / package install** — fleet floors **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** (+ tips between — see **TODO_OPS**). **Next pbx3 floor when rebuilt:** **`0.0.6-1`** (UFW Phases 1–4).  
+7. **New instance / package install** — fleet floors still **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** until roll (**`0.0.6-1`** UFW artefact ready on **`ufw-phase1`**). Tips: **TODO_OPS**.  
 8. **Toll fraud / velocity** — plan **Accepted**; **WP0 + WP3 + WP1** done (2026-08-11). Remainder deferred (V4 / SBC floor / Wangiri). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
 8b. ~~**CDR dest pie (Home)**~~ — **done** (pulse `dest_where_today`; SPA doughnut; golden tip). Home CC via `PBX3_CDR_HOME_CC`.  
 8a. ~~**Paid Twilio inbound/outbound**~~ — **lab green** (Toliman↔Twilio both ways; SBC Route-strip + public From/PAI; Egress CLIP). **Next dialect eng:** ops-authored profiles without tip (**`NUMBER_DIALECT_REQUIREMENTS.md` §5.4**) — close v1 gap (hard-coded preset ids in OpenSIPS / Filament enum).  
@@ -73,7 +73,7 @@
 
 ## Open items
 
-- [x] **Home firewall — Shorewall → UFW (Phases 1–4 + ETL M2–M4 done 2026-08-25):** Lab + installer + SPA/API + Shorewall purge on **`ufw-phase1`**. ETL: force `fqdninspect`/`sipflood` **NO**; drop shorewall_* (**`sark-to-pbx3` REQUIREMENTS #13**). **Package lock:** next rebuild ships **`pbx3 0.0.6-1`**. Residual: Phase 5 optional; merge/push · build **0.0.6-1** · MkDocs migrate note. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.
+- [x] **Home firewall — Shorewall → UFW (done 2026-08-25):** Phases 1–4 + ETL M2–M4 + MkDocs + artefact **`pbx3_0.0.6-1_all.deb`** on **`ufw-phase1`**. Residual: Phase 5 optional; merge/push. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.
 - [ ] **Tenant CLID blacklist — greenfield (locked 2026-08-24):** Per-tenant caller block list; **SPA + auth** to mutate (no open phone feature key in v1). SARK stub unused — **do not ETL**. Spec: **`CLID_BLACKLIST_REQUIREMENTS.md`**.
 
 - [ ] **Named pickup — sipplab L1 pack (2026-08-24):** Manual L3 **pickup OK** lab `.31` — see **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab status. Unattended **`./run-pickup-pack.sh`** still pending. **BLF:** Snom OK; Yealink config TBD (not blocking pickup).
