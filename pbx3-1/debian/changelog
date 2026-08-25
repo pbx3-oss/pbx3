@@ -1,3 +1,15 @@
+pbx3 (0.0.6-1) noble; urgency=medium
+
+  * Home firewall Shorewall → UFW (Phases 1–4): Depends ufw; installer
+    ufw-apply-baseline.sh (fleet|solo); HoR firewall.allows.json + SPA/API
+    allow-list; Shorewall templates/rsyslog/logrotate purged; firewall-reload.php;
+    sudoers → ufw; installer apt-remove shorewall*; LE :80 + fail2ban ufw;
+    setip /etc/pbx3/lan.cidr; help text for UFW allow-list.
+  * Next built .deb floor after tip-only 0.0.5-7/8 changelog drafts (never
+    packaged). Spec: workingdocs/UFW_SHOREWALL_MIGRATION.md.
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Tue, 25 Aug 2026 12:53:00 -0400
+
 pbx3 (0.0.5-6) noble; urgency=medium
 
   * Lab install harden (#5h): link-asterisk-configs.sh + shipped GenAst stub

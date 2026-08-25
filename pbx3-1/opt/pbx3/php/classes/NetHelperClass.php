@@ -241,111 +241,40 @@ public function get_externip() {
 
 public function restartFirewall() {
 
-	/*  
-	 * 	restart the firewall
-	 */ 
-	
-	 	$this->copyFirewallTemplates(); 
-		
-		$rc = `sudo /sbin/shorewall check 2>&1`;
-		if (! strchr($rc, 'ERROR')) {
-			$rc = `sudo /sbin/shorewall restart`;
-			return(True);
-		}
-		else {
-			return(False);
-		}
-					
-	}
-	
-	/**
-	 * Shorewall INLINE string-match line for SIP FQDN inspect (Option A / LETSENCRYPT_PER_TENANT_FQDN.md).
-	 * @param string $proto tcp|udp
-	 * @param string $bindport SIP port from globals (e.g. 5060)
-	 * @param string $fqdn tenant / node FQDN (Host-Only)
+	/*
+	 * Apply home UFW baseline / allow-list (product path).
 	 */
-	private function shorewallFqdnInlineRuleLine($proto, $bindport, $fqdn) {
-		// Shorewall FQDN INLINE: "5060;;" then double-quoted FQDN (no sip: prefix).
-		$fqdnEsc = str_replace(['\\', '"'], ['\\\\', '\\"'], $fqdn);
-		return 'INLINE(ACCEPT) net $FW ' . $proto . ' ' . $bindport
-			. ';; -m string --algo bm --to 1000 --string "' . $fqdnEsc . '"';
-	}
-
-	/**
-	 * @param string $path absolute path under /etc/shorewall
-	 * @param string $content file body (newline-terminated lines)
-	 */
-	private function writeShorewallFile($path, $content) {
-		// Prefer direct write (sudo php / syshelper). Never call syshelper from inside
-		// syshelper — the daemon is single-threaded and would deadlock on port 7601.
-		if (@file_put_contents($path, $content) !== false) {
-			return true;
+		$script = escapeshellarg(SYSPATH . '/scripts/ufw-apply-baseline.sh');
+		$allows = '/etc/pbx3/firewall.allows.json';
+		if (is_readable($allows)) {
+			$rc = `sudo $script 2>&1`;
+		} else {
+			$profile = $this->ufwProfile();
+			$rc = `sudo $script $profile 2>&1`;
 		}
-		if (!isset($this->helper) || !is_object($this->helper)) {
-			$this->helper = new helper();
-		}
-		$tmp = tempnam(sys_get_temp_dir(), 'pbx3fw');
-		if ($tmp === false) {
-			return false;
-		}
-		if (@file_put_contents($tmp, $content) === false) {
-			@unlink($tmp);
-			return false;
-		}
-		$this->helper->request_syscmd('/bin/mv ' . escapeshellarg($tmp) . ' ' . escapeshellarg($path));
+		syslog(LOG_INFO, SYSPREFIX . " NetHelper UFW apply: " . trim((string)$rc));
 		return true;
 	}
 
-	public function copyFirewallTemplates() {
-
-		$this->dbh = DB::getInstance();
-		if (!isset($this->helper) || !is_object($this->helper)) {
-			$this->helper = new helper();
+	/** @return string fleet|solo */
+	private function ufwProfile() {
+		$env = getenv('PBX3_UFW_PROFILE');
+		if (is_string($env) && ($env === 'fleet' || $env === 'solo')) {
+			return $env;
 		}
-		$res = $this->dbh->query("SELECT bindport, fqdninspect, sipflood FROM globals LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-		if (empty($res)) {
-			$res = array('bindport' => '5060', 'fqdninspect' => 'NO', 'sipflood' => 'NO');
-		}
-		$bindport = (isset($res['bindport']) && $res['bindport'] !== '' && $res['bindport'] !== null)
-			? trim($res['bindport']) : '5060';
-
-		$inlineLines = array();
-		if (!empty($res['fqdninspect']) && $res['fqdninspect'] === 'YES') {
-			$stmt = $this->dbh->query(
-				"SELECT fqdn FROM cluster WHERE fqdn IS NOT NULL AND length(trim(fqdn)) > 0 "
-				. "ORDER BY CASE WHEN pkey = 'default' THEN 0 ELSE 1 END, pkey"
-			);
-			$rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : array();
-			$seen = array();
-			foreach ($rows as $row) {
-				$fq = isset($row['fqdn']) ? trim($row['fqdn']) : '';
-				if ($fq === '') {
-					continue;
+		$apiEnv = '/opt/pbx3api/.env';
+		if (is_readable($apiEnv)) {
+			$raw = @file_get_contents($apiEnv);
+			if (is_string($raw)) {
+				if (preg_match('/^[[:space:]]*PBX3_FLEET_MODE=true/m', $raw)) {
+					return 'fleet';
 				}
-				$key = strtolower($fq);
-				if (isset($seen[$key])) {
-					continue;
-				}
-				$seen[$key] = true;
-				foreach (array('tcp', 'udp') as $proto) {
-					$inlineLines[] = $this->shorewallFqdnInlineRuleLine($proto, $bindport, $fq);
+				if (preg_match('/^[[:space:]]*PBX3_SBC_EGRESS_HOST=/m', $raw)) {
+					return 'fleet';
 				}
 			}
 		}
-		if (empty($inlineLines)) {
-			$inlineLines = array('#');
-		}
-		$this->writeShorewallFile("/etc/shorewall/pbx3_inline_fqdn", implode("\n", $inlineLines) . "\n");
-
-		$file = SYSPATH . '/templates/shorewall/pbx3_inline_limit';
-		$limitPath = '/etc/shorewall/pbx3_inline_limit';
-		if (file_exists($file) && !empty($res['sipflood']) && $res['sipflood'] == 'YES') {
-			if (!@copy($file, $limitPath)) {
-				$this->helper->request_syscmd('cp ' . escapeshellarg($file) . ' ' . escapeshellarg($limitPath));
-			}
-		} else {
-			$this->writeShorewallFile($limitPath, "#\n");
-		}
+		return 'solo';
 	}
 
 }

@@ -180,7 +180,7 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('filetype','F
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('forename','Forename','Forename for a person or blank for an organization');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fqdn','Public FQDN','The Fully Qualified Domain Name (if any) which resolves to this server, e.g. *somesip.someserver.com*');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fqdnhttp','Filter my FQDN for HTTP?','Turning this on will cause header inspection to be done on all *remote* HTTP/HTTPS connections.  Packets referencing our FQDN in the URL will be allowed to pass.  Packets not referencing our FQDN will be rejected. This can help prevent robo-hack attempts to brute-force a login or provisioning request. This feature will have no effect on *local* (LAN) connections. Obviously, you must have a FQDN which resolves to your external IP address.  N.B. you must restart the HTTP server (e.g. nginx) for this feature to take effect.');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fqdninspect','Filter my FQDN for SIP?','Turning this on will cause packet inspection to be done on all new unencrypted inbound SIP connections.  Packets referencing our FQDN in the SIP RURL will be allowed through the firewall.  Packets not referencing our FQDN will be subject to the normal firewall rules. This can help prevent robo-hack attempts to brute-force a login. This feature can only be enabled on non-TLS SIP connections (i.e. regular UDP or TCP over port 5060). N.B. You must restart the firewall after setting/unsetting this switch.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fqdninspect','Filter my FQDN for SIP?','Retired under UFW. Fleet SIP is limited to SBC IP(s) on the allow-list; STRING packet inspection is no longer used. Leave this set to NO.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fqdnipaddress','IP Address','IP address this FQDN resolves to');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fqdnprov','Provision with FQDN?','When creating new extensions if an FQDN exists then set them to send the Fully Qualified Domain Name (instead of the public IP) when provisioning remote phones? (recommended) ');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fqdntrust','Accept dynamic URLs?','A list of dynamic URLs will be used to periodically construas the registrar andct a set of trusted IP addresses.  This can be useful for dynamic IP addresses');
@@ -199,20 +199,12 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fresetsshpor
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fresetusergreets','Delete user greetings','');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fresetvmail','Delete Voicemail','');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fresetvrec','Delete call recordings','');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdesc','Rule description','Optional comment for this Shorewall rule (shown after # in the rules file).');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdest','Dest','Packet Destination - for PBX3 ths is always $FW (meaning inbound through the firewall) ');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdestports','Ports','Destination ports - a comma separated list of the port(s) you want to open; e.g. 5060,4569. For a port-range use a colon e.g. 10000:20000');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwproto','Proto','The network Protocol.  This can be tcp, udp or ALL.');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwsource','Source','Packet Source - takes the form net{:IPADDR{/cidr}} or "$LAN". Examples:
-*net:192.192.192.192/24
-$LAN
-net*
-Specifying "net" on its own will open a port completely to the Internet.  More commonly, you may use a cidr to allow an address range, for example *net:194.194.194.200/29*.  You can also use the keyword "$LAN" if you simply wish to restrict access to the local subnet.');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwsource6','Source','Packet Source - takes the form net:[IPV6ADDR{/cidr}]. Examples:
-*net:[fe80::/10]
-net:[2001:db8:1234:1a00::/56]
-net:[::/0]*
-Specifying net:[::/0] will open a port completely to the Internet.  More commonly, you may use a cidr to allow an address range.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdesc','Comment','Optional comment stored on the UFW allow-list rule (shown in ufw status).');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdest','Dest','Unused under UFW (legacy Shorewall field).');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdestports','Port','Destination port or range (e.g. 5060 or 10000:20000). Leave empty for icmp.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwproto','Proto','Network protocol: tcp, udp, icmp, or all.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwsource','Source','Literal source only: any, an IPv4 address, or CIDR (e.g. 192.168.1.85 or 192.168.1.0/24). No $LAN/$SBC shorthand.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwsource6','Source','Unused — UFW dual-stack uses the same Source column as IPv4.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('gatewayip','Gateway','Gateway address of your subnet');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('greeting','Greeting Number','Greeting number that this IVR uses.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('greetingnum','Number','The 4-digit greeting number');
@@ -422,7 +414,7 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sendedomain'
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sessiontimout','Session timeout','Web session idle timeout in minutes before automatic logout.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('shortuid','UID','System generated shortuid.   A 6-character unique value allocated to objects to uniquely identify them.  Among other things it is used to identify SIP endpoints (i.e. the *sip-user*) to Asterisk.   This is separate from any dialable number (e.g. an extension number or DDI).');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sipdriver','SIP Channel Driver','You can use the older chan_sip (SIP) stack or the more modern PJSIP stack.  You MUST issue a commit after you change this and then you MUST restart Asterisk or bad things will happen.');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sipflood','Throttle SIP floods?','Turning this on will throttle sipfloods in the firewall. This may help control SIP DOS attacks and over enthusiastic SIP crack robots');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sipflood','Throttle SIP floods?','Retired under UFW (no Shorewall limit template). Leave NO; SIP abuse controls live at the SBC for fleet.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sipiaxfriend','SIP Peer entry','Asterisk SIP settings');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sipiaxstart','Extension Start Number','Extension number from which PBX3 will begin allocating extensions.  Set extension length (EXTLEN in Globals) BEFORE you set this value.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sipiaxuser','SIP user entry','Asterisk user stanza name');
@@ -497,5 +489,14 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('wrapuptime',
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('xref','Cross Reference','Objects which reference this object');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('year','Year','Year(YYYY)');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ztp','Zero Touch Provisioning','Enable this to provide Zero Touch Provisioning. You must also have PnP enabled with this option');
+
+-- UFW Phase 4: refresh firewall help on existing DBs (INSERT OR IGNORE does not update).
+UPDATE tt_help_core SET displayname='Comment', htext='Optional comment stored on the UFW allow-list rule (shown in ufw status).' WHERE pkey='fwdesc';
+UPDATE tt_help_core SET displayname='Port', htext='Destination port or range (e.g. 5060 or 10000:20000). Leave empty for icmp.' WHERE pkey='fwdestports';
+UPDATE tt_help_core SET displayname='Proto', htext='Network protocol: tcp, udp, icmp, or all.' WHERE pkey='fwproto';
+UPDATE tt_help_core SET displayname='Source', htext='Literal source only: any, an IPv4 address, or CIDR (e.g. 192.168.1.85 or 192.168.1.0/24). No $LAN/$SBC shorthand.' WHERE pkey='fwsource';
+UPDATE tt_help_core SET htext='Unused — UFW dual-stack uses the same Source column as IPv4.' WHERE pkey='fwsource6';
+UPDATE tt_help_core SET htext='Retired under UFW. Fleet SIP is limited to SBC IP(s) on the allow-list; STRING packet inspection is no longer used. Leave this set to NO.' WHERE pkey='fqdninspect';
+UPDATE tt_help_core SET htext='Retired under UFW (no Shorewall limit template). Leave NO; SIP abuse controls live at the SBC for fleet.' WHERE pkey='sipflood';
 
 COMMIT;

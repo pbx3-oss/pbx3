@@ -146,10 +146,9 @@ define('PJSIP_READY_TRUNKS',            ASTLOCALCONF . '/pjsip_ready_trunks.conf
 define('SOUNDIR',                       '/usr/share/asterisk' . SYSPREFIX . '/sounds/');
 
 /**
- * Shorewall
+ * Home firewall (UFW)
  */
-define('SHOREWALL',                     '/etc/shorewall');
-define('FW_RULES',                      '/etc/shorewall/pbx3_rules');
+define('UFW_ALLOWS',                    '/etc/pbx3/firewall.allows.json');
 
 /**
  * BASH params

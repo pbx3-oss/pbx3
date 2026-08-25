@@ -73,7 +73,7 @@ Historical pain: bumping a fat **main** `.deb` for every biggish patch. Forerunn
 | Component | Cadence |
 |-----------|---------|
 | **pbx3cagi** | **Deb-first** — new floor when the binary moves; rare is good. |
-| **pbx3** | **Release / AMI / try-it floors** as `.deb` (pin + Depends). **Between floors:** tip / rsync under `/opt/pbx3` is first-class (lab + hotfix). Do not invent `0.0.x-N` for every patch. Tip SHAs → ops **`TODO_OPS.md`**. |
+| **pbx3** | **Release / AMI / try-it floors** as `.deb` (pin + Depends). **Between floors:** tip / rsync under `/opt/pbx3` is first-class (lab + hotfix). Do not invent `0.0.x-N` for every patch. Tip SHAs → ops **`TODO_OPS.md`**. **Next UFW floor:** tip Phases 1–4 ship as **`0.0.6-1`** (skip packaging unshipped 0.0.5-7/8 drafts). |
 | **pbx3api** | Clone-at-tag / tip; optional `.deb` deferred (**TODO #6** / try-it D6). |
 
 Detail: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** § Public GitHub org vs packages.

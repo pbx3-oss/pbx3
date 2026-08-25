@@ -57,10 +57,18 @@ else {
 		logit  ("Static Virt ip $staticIPV4");
 		$net->set_staticIPV4(false,$staticIPV4);
 	}
-	if ( file_exists( "/etc/shorewall") ) {
-		`echo LAN=$netaddress/$cidr > /etc/shorewall/local.lan`;
-		`echo IF1=$interface > /etc/shorewall/local.if1`;
+	# UFW solo SIP source (F10) — declarative LAN CIDR for ufw-apply-baseline.sh
+	$lanCidr = $netaddress . '/' . $cidr;
+	if (!is_dir('/etc/pbx3')) {
+		@mkdir('/etc/pbx3', 0755, true);
 	}
+	if (@file_put_contents('/etc/pbx3/lan.cidr', $lanCidr . "\n") === false) {
+		logit("could not write /etc/pbx3/lan.cidr");
+	} else {
+		logit("wrote /etc/pbx3/lan.cidr = $lanCidr");
+	}
+# Legacy Shorewall locals removed (UFW). Keep no-op for archaeology hosts until purged.
+	# (setip no longer writes /etc/shorewall/*)
 	
 	if ( file_exists( "/etc/fail2ban/jail.d/pbx3-jails.conf" ) ) {
 		`sed -i --follow-symlinks '/^ignoreip/c \ignoreip = 127.0.0.1 $netaddress\/$cidr 224.0.1.0\/24' /etc/fail2ban/jail.d/pbx3-jails.conf`;

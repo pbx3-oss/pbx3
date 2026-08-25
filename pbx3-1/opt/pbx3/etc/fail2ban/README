@@ -8,8 +8,8 @@ Mission: PBX server (Asterisk + API on 44300). Jails protect SSH (admin), Asteri
 
 - **Does not** symlink `jail.local` (Ubuntu 24.04 fail2ban breaks on a full custom `jail.local` with `%(auth_log)s`).
 - Symlinks `jail.d/pbx3-jails.conf` and `jail.d/pbx3-api.conf` → `/etc/fail2ban/jail.d/`
-- Symlinks `action.d/shorewall.local` → `/etc/fail2ban/action.d/shorewall.local`
-- Removes a legacy pbx3 `jail.local` symlink if present
+- Default `banaction = ufw` (home firewall is UFW)
+- Removes a legacy pbx3 `jail.local` or `shorewall.local` symlink if present
 - Runs `fail2ban-client -t` then reload when config is valid
 
 ## Jails
@@ -26,10 +26,6 @@ Mission: PBX server (Asterisk + API on 44300). Jails protect SSH (admin), Asteri
 - Fail2ban 1.0.2-3 can fail under Python 3.12 (`No module named 'asynchat'`). Use fail2ban **1.1.0 or later**.
 - Validate config: `sudo fail2ban-client -t`
 - Status: `sudo fail2ban-client status`
-- Test filters:  
-  `fail2ban-regex /var/log/auth.log /etc/fail2ban/filter.d/sshd.conf`  
-  `fail2ban-regex /var/log/asterisk/messages /etc/fail2ban/filter.d/asterisk.conf`  
-  `fail2ban-regex /var/log/nginx/access.log /etc/fail2ban/filter.d/apache-badbots.conf`
 
 ## Shipped files
 
@@ -37,4 +33,3 @@ Mission: PBX server (Asterisk + API on 44300). Jails protect SSH (admin), Asteri
 |------|--------|
 | `jail.d/pbx3-jails.conf` | sshd, asterisk, recidive + `[DEFAULT]` banaction/ignoreip |
 | `jail.d/pbx3-api.conf` | apache-badbots jail for pbx3api (nginx access.log) |
-| `action.d/shorewall.local` | Shorewall ban action |

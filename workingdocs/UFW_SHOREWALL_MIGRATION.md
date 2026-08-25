@@ -1,6 +1,6 @@
 # Home firewall — Shorewall → UFW migration
 
-**Status:** Direction locked **2026-08-24** (choose **UFW**; plan not yet implemented).  
+**Status:** Direction locked **2026-08-24**; **Phases 1–4** on branch **`ufw-phase1`** (2026-08-25). Phase 5 optional.  
 **Repos when built:** **pbx3** (installer, package Depends, scripts, NetHelper) · **pbx3api** (FirewallController, syscommands ICMP/LE noise) · **pbx3spa** (FirewallView) · docs MkDocs install/firewall notes.  
 **Related:** [`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`](../pbx3-directory/docs/TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md) §11.4–11.7 · [`FLEET_TRUNK_PEERING_DECISION.md`](../pbx3-directory/docs/FLEET_TRUNK_PEERING_DECISION.md) · [`LETSENCRYPT_PER_TENANT_FQDN.md`](LETSENCRYPT_PER_TENANT_FQDN.md) · private ETL **`aelintra/sark-to-pbx3`** (§10) · Design Rules SIP-obscurity context (fleet no longer depends on home STRING match).
 
@@ -103,7 +103,7 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 ### Phase 0 — Spec complete (this doc)
 
 - [x] Choose UFW; record locks F0–F9 and **fleet standard allow set** (2026-08-25).
-- [ ] Confirm SBC IP list source (env vs provision artifact) before coding Phase 2.
+- [x] SBC IP list source (Phase 2): **`PBX3_UFW_SBC_IPS`** (preferred) or literal **`PBX3_SBC_EGRESS_HOST`** in `/opt/pbx3api/.env`. Hostname-only values are skipped (must be IP/CIDR).
 
 ### Phase 1 — Lab proof (no SPA rewrite yet)
 
@@ -111,7 +111,12 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 2. Disable shorewall{,6}; enable UFW default deny; apply **§3 standard allow set** with lab SBC IP.
 3. Prove: desk REGISTER via SBC, extension call + RTP, SPA `:44300`, fail2ban once, LE open/close :80.
 
-**Exit:** written lab notes in ops TODO; no package cutover yet.
+**Scripts (branch `ufw-phase1`):** `scripts/ufw-apply-baseline.sh` · LE `le-port80-*.sh` UFW path · fail2ban `banaction=ufw`.  
+**SBC IP source (lab):** `PBX3_UFW_SBC_IPS` or literal `PBX3_SBC_EGRESS_HOST` in `/opt/pbx3api/.env` (Phase 0 confirm still open for cloud EIP list).
+
+**Exit:** written lab notes in ops TODO; no package Depends/installer cutover yet (Phase 2).
+
+- [x] Lab `.31` apply (2026-08-25): Shorewall stopped/disabled; UFW active; fleet allow set from `192.168.1.85`; post-cutover desk REGISTER via SBC; API `:44300` 200; LE open/close; fail2ban `action=ufw` wired; **101→102 call/RTP OK**. Live ban smoke optional. Notes: **`~/GiT/pbx3-ops/TODO_OPS.md`**.
 
 ### Phase 2 — pbx3 package + installer
 
@@ -121,13 +126,17 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 4. Remove or gate FQDN inline path (`fqdninspect=NO` default; skip update on fleet import — already decided in mobility design).
 5. Package bump when ready for fleet roll.
 
+- [x] **2026-08-25 (`ufw-phase1`):** Depends `ufw` (drop shorewall*); installer `ufw-apply-baseline.sh`; LE + fail2ban; setip `/etc/pbx3/lan.cidr`; NetHelper/update-fqdn-inline UFW path. Shorewall templates remain in tree until Phase 4 purge. **Package floor:** tip-only until rebuild → **`0.0.6-1`**.
+
 ### Phase 3 — API + SPA
 
 1. Declarative allow-list file (JSON or simple line DSL) matching §3 columns.
-2. `FirewallController` GET/POST/PUT → that file + `ufw-apply` via syshelper.
+2. `FirewallController` GET/POST/PUT → that file + `ufw-apply` via syscmd.
 3. **Simplify `FirewallView`:** drop Shorewall parser (action/source/dest/`$FW`/sport/connrate + Raw mode). One table: allow rows for the standard set; optional add-row for rare extras. Unify IPv4/IPv6 under UFW (or hide v6 until needed).
 4. ICMP syscommand: reimplement or drop from UI until needed.
 5. Docs / help: remove Shorewall manpage copy.
+
+- [x] **2026-08-25 (`ufw-phase1`):** HoR `/etc/pbx3/firewall.allows.json` · API `GET/POST/PUT firewalls` · SPA table proto/port/source/comment · ICMP under UFW = default allow (toggle parked) · logs list `ufw.log`.
 
 ### Phase 4 — Retire Shorewall entirely
 
@@ -135,6 +144,8 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 2. Delete dead PHP (inline FQDN writers), prerm links, help text, log names.
 3. Greenfield install must never install Shorewall.
 4. Upgrade path: one-shot “detect Shorewall → apply UFW baseline → disable Shorewall” in postinst/installer.
+
+- [x] **2026-08-25 (`ufw-phase1`):** Templates/rsyslog/logrotate/`shorewall.local` removed; `firewall-reload.php`; NetHelper UFW-only; LE UFW-only; sudoers `ufw`; installer `apt-get remove shorewall*`; help UPDATEs. Git history retains archaeology. **Next built .deb = `pbx3 0.0.6-1`** (consolidates Phases 1–4; 0.0.5-7/8 never packaged).
 
 ### Phase 5 — Optional harden (not blocking)
 
@@ -207,7 +218,7 @@ Do **not** expose raw `iptables`/`nft` in v1. Advanced SSH remains for break-gla
 | Host `/etc/shorewall/pbx3_rules` (custom ACCEPTs) | **No** | Not in backup; lives only on the old box |
 | fail2ban ignoreip | **No** | Host-local |
 
-ETL **v2** (`python/sources/sark/transform.py`) still has identity `TABLE_MAP` entries for `shorewall_blacklist` / `shorewall_whitelist`, but **current pbx3 schema has no such tables** — those copies are dead weight (skip or fail depending on loader strictness). Help text / schema comments still say Shorewall.
+ETL **v2** drops `shorewall_blacklist` / `shorewall_whitelist` from `TABLE_MAP` (**M4**, 2026-08-25). Help text / schema comments still say Shorewall until product help rewrite.
 
 ### 10.2 Locks for migrate + UFW
 
@@ -222,8 +233,8 @@ ETL **v2** (`python/sources/sark/transform.py`) still has identity `TABLE_MAP` e
 
 ### 10.3 ETL / docs work when UFW ships
 
-1. **`sark-to-pbx3`:** M2–M4 in v2 transform + REQUIREMENTS lock row; fixture assert `fqdninspect=NO` (or explicit migrate report warning).  
-2. **MkDocs migrate / first-boot:** “Firewall is UFW baseline; old Shorewall custom rules and fqdninspect are not ported.”  
+1. **`sark-to-pbx3`:** M2–M4 in v2 transform + REQUIREMENTS lock row — **done 2026-08-25** (`REQUIREMENTS` **#13**; force `fqdninspect`/`sipflood` **NO**; drop shorewall_* + clid_blacklist from map). Fixture assert optional when next offline migrate run.  
+2. ~~**MkDocs migrate / first-boot:**~~ — **done 2026-08-25** in **`pbx3-docs`** `admin/firewall.md` (UFW baseline + SARK migrate note); Shorewall wording cleared on LE / login / cert / globals / API reference.  
 3. **Product help (`tt_help_core`):** rewrite `fqdninspect` / firewall help away from Shorewall manpage links when SPA hides the control.  
 4. Optional later: if a customer zip has non-empty shorewall_* lists, add a one-off report (`migrate --firewall-report`) listing IPs for manual UFW entry — not a silent import into a missing table.
 
@@ -246,7 +257,7 @@ ETL **v2** (`python/sources/sark/transform.py`) still has identity `TABLE_MAP` e
 2. Phase 2 scripts + installer + fail2ban + LE.  
 3. Phase 3 API/SPA.  
 4. Phase 4 package purge + docs.  
-5. **ETL M2–M4** (can parallel Phase 2–3; must land before marketing “migrate to UFW homes”).  
+5. ~~**ETL M2–M4**~~ — **done 2026-08-25** in **`aelintra/sark-to-pbx3`**.  
 6. Phase 5 only if soak demands it.
 
 Track as product TODO open item pointing here; tip/host gossip stays in **`~/GiT/pbx3-ops/TODO_OPS.md`**.
