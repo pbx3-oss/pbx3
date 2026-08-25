@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-25 (session end — CLID blacklist Phase 1 shipped)  
+**Last updated:** 2026-08-25 (session end — line test Phase 2 spec)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
