@@ -1,3 +1,11 @@
+pbx3 (0.0.6-2) noble; urgency=medium
+
+  * Solo/singleton UFW baseline: SSH :22, API :44300, SIP, and RTP
+    default from LAN CIDR (not any). Fleet F11 unchanged.
+  * Spec: workingdocs/UFW_SHOREWALL_MIGRATION.md F10/F11.
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Tue, 25 Aug 2026 13:47:00 -0400
+
 pbx3 (0.0.6-1) noble; urgency=medium
 
   * Home firewall Shorewall → UFW (Phases 1–4): Depends ufw; installer

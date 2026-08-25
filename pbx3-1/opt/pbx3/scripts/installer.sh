@@ -14,10 +14,10 @@ setvcl() {
 # turn on VCL in Globals
     echo "AWS instance detected, setting cloud flags"
     /usr/bin/sqlite3 $SYSDB "UPDATE globals SET vcl=1"
-# UFW fleet/solo baseline already allows SSH (:22) and API (:44300) from anywhere
-# (F11 — do not lock operator out). Do not permanently open :80/:443 — LE uses
-# le-port80-open/close; API is :44300 only. Operator narrows 22/44300 later.
-    echo "AWS/VCL: UFW keeps 22 + 44300 open from anywhere; narrow Firewall + SG when safe"
+# UFW fleet baseline allows SSH (:22) and API (:44300) from anywhere (F11).
+# Solo baseline uses LAN CIDR for 22/44300/SIP/RTP (F10). Do not permanently
+# open :80/:443 — LE uses le-port80-open/close; API is :44300 only.
+    echo "AWS/VCL: fleet UFW keeps 22+44300 from any — narrow Firewall + SG when safe"
 }
 
 # Resolve UFW profile for ufw-apply-baseline.sh (F1 / UFW_SHOREWALL_MIGRATION.md).
@@ -421,10 +421,11 @@ fi
 
 echo ""
 echo "======== Firewall (UFW) — operator action ========"
-echo "  SSH :22 and API :44300 are open from anywhere after install"
-echo "  so you are not locked out. Narrow their Source in Admin → Firewall"
-echo "  to your ops/VPN CIDR(s), then Save and Apply. On cloud, also"
-echo "  tighten the security group for 22 and 44300."
+echo "  Fleet profile: SSH :22 and API :44300 are open from anywhere after"
+echo "  install so you are not locked out. Narrow their Source in Admin →"
+echo "  Firewall to your ops/VPN CIDR(s), then Save and Apply. On cloud,"
+echo "  also tighten the security group for 22 and 44300."
+echo "  Solo profile: those ports (plus SIP/RTP) default to the LAN CIDR."
 echo ""
 
 # call recording 

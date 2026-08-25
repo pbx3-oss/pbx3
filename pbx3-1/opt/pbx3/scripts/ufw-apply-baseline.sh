@@ -150,15 +150,15 @@ import json, os, sys
 path = sys.argv[1]
 lan = os.environ["LAN_CIDR"]
 rules = [
-    {"action": "allow", "proto": "tcp", "port": "22", "from": "any", "comment": "SSH"},
-    {"action": "allow", "proto": "tcp", "port": "44300", "from": "any", "comment": "API"},
-    {"action": "allow", "proto": "udp", "port": "10000:20000", "from": "any", "comment": "RTP"},
+    {"action": "allow", "proto": "tcp", "port": "22", "from": lan, "comment": "SSH"},
+    {"action": "allow", "proto": "tcp", "port": "44300", "from": lan, "comment": "API"},
+    {"action": "allow", "proto": "udp", "port": "10000:20000", "from": lan, "comment": "RTP"},
     {"action": "allow", "proto": "udp", "port": "5060", "from": lan, "comment": "SIP UDP"},
     {"action": "allow", "proto": "tcp", "port": "5060", "from": lan, "comment": "SIP TCP"},
     {"action": "allow", "proto": "tcp", "port": "5061", "from": lan, "comment": "SIP TLS"},
 ]
 if os.environ.get("PBX3_UFW_SOLO_WSS") == "1":
-    rules.append({"action": "allow", "proto": "tcp", "port": "8089", "from": "any", "comment": "WSS"})
+    rules.append({"action": "allow", "proto": "tcp", "port": "8089", "from": lan, "comment": "WSS"})
 with open(path, "w", encoding="utf-8") as f:
     json.dump({"profile": "solo", "rules": rules}, f, indent=2)
     f.write("\n")
