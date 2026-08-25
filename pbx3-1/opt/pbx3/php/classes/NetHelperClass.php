@@ -247,10 +247,15 @@ public function restartFirewall() {
 	 */ 
 
 		if ($this->ufwIsActive()) {
-			$profile = $this->ufwProfile();
 			$script = escapeshellarg(SYSPATH . '/scripts/ufw-apply-baseline.sh');
-			$rc = `sudo $script $profile 2>&1`;
-			syslog(LOG_INFO, SYSPREFIX . " NetHelper UFW apply profile=$profile: " . trim((string)$rc));
+			$allows = '/etc/pbx3/firewall.allows.json';
+			if (is_readable($allows)) {
+				$rc = `sudo $script 2>&1`;
+			} else {
+				$profile = $this->ufwProfile();
+				$rc = `sudo $script $profile 2>&1`;
+			}
+			syslog(LOG_INFO, SYSPREFIX . " NetHelper UFW apply: " . trim((string)$rc));
 			return true;
 		}
 

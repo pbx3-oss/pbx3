@@ -1,43 +1,35 @@
 #!/bin/bash
-# Apply PBX3 home UFW baseline (fleet | solo). Idempotent rewrite of pbx3-managed rules.
-# Spec: workingdocs/UFW_SHOREWALL_MIGRATION.md §3–§4 / Phase 1–2.
+# Apply PBX3 home UFW rules from declarative HoR (/etc/pbx3/firewall.allows.json)
+# or bootstrap a fleet|solo baseline into that file then apply.
+# Spec: workingdocs/UFW_SHOREWALL_MIGRATION.md §3–§4 / §7 / Phase 1–3.
 #
 # Usage (as root):
-#   ufw-apply-baseline.sh fleet
-#   ufw-apply-baseline.sh solo
-#   PBX3_UFW_SBC_IPS='192.168.1.85' ufw-apply-baseline.sh fleet
-#   PBX3_UFW_LAN_CIDR='192.168.1.0/24' ufw-apply-baseline.sh solo
+#   ufw-apply-baseline.sh              # apply existing JSON (or die if missing)
+#   ufw-apply-baseline.sh fleet|solo   # bootstrap JSON if missing, then apply
+#   PBX3_UFW_SBC_IPS='…' ufw-apply-baseline.sh fleet
 #
-# Env:
-#   PBX3_UFW_SBC_IPS   — space/comma-separated literal IPs/CIDRs (fleet SIP/TLS source).
-#                        Else first IP-looking PBX3_SBC_EGRESS_HOST from /opt/pbx3api/.env.
-#   PBX3_UFW_LAN_CIDR  — solo SIP source (default: detect from ip route /24).
-#   PBX3_UFW_SKIP_SHOREWALL_STOP=1 — leave Shorewall running (debug only; F7 forbids coexistence).
-#
-# Order: stop Shorewall → ensure SSH allow → rewrite managed allows → defaults → enable UFW.
+# JSON HoR shape:
+#   { "profile":"fleet", "rules":[
+#       {"action":"allow","proto":"tcp","port":"22","from":"any","comment":"SSH"}, …
+#   ]}
+# UFW comments become "pbx3-managed <comment>" so re-apply can delete by marker.
+# LE :80 uses a separate comment ("LE renewal (managed)") — not in this file.
 
 set -euo pipefail
 
 PROFILE="${1:-}"
 API_ENV="${PBX3API_ENV:-/opt/pbx3api/.env}"
+ALLOWS_FILE="${PBX3_UFW_ALLOWS_FILE:-/etc/pbx3/firewall.allows.json}"
 MARKER_PREFIX="pbx3-managed"
-LE_MARKER="LE renewal (managed)"
 
 die() { echo "ufw-apply-baseline: $*" >&2; exit 1; }
 log() { echo "ufw-apply-baseline: $*"; }
 
 [ "$(id -u)" -eq 0 ] || die "must run as root"
 command -v ufw >/dev/null 2>&1 || die "ufw not installed"
-[ -n "$PROFILE" ] || die "usage: $0 fleet|solo"
-case "$PROFILE" in
-    fleet|solo) ;;
-    *) die "profile must be fleet or solo (got: $PROFILE)" ;;
-esac
-
-# --- helpers ---
+command -v python3 >/dev/null 2>&1 || die "python3 required for firewall.allows.json"
 
 is_ipv4_or_cidr() {
-    # Accept a.b.c.d or a.b.c.d/nn (literal only — F10).
     echo "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(/[0-9]+)?$'
 }
 
@@ -56,7 +48,7 @@ resolve_sbc_ips() {
         if is_ipv4_or_cidr "$ip"; then
             SBC_IPS="$SBC_IPS $ip"
         else
-            log "skip non-literal SBC host '$ip' (need IP/CIDR for UFW; set PBX3_UFW_SBC_IPS)"
+            log "skip non-literal SBC host '$ip' (need IP/CIDR; set PBX3_UFW_SBC_IPS)"
         fi
     done
     SBC_IPS=$(echo "$SBC_IPS" | xargs)
@@ -74,19 +66,16 @@ resolve_lan_cidr() {
             return
         fi
     fi
-    # Prefer connected route on default iface; fall back to /24 of primary address.
     LAN_CIDR=$(ip -4 route show scope link 2>/dev/null | awk '/proto kernel/ {print $1; exit}')
     if [ -z "$LAN_CIDR" ]; then
         local addr
         addr=$(ip -4 -o addr show scope global 2>/dev/null | awk '{print $4; exit}')
         [ -n "$addr" ] || die "could not detect LAN CIDR; set PBX3_UFW_LAN_CIDR or run setip"
-        # Force /24 when only host/prefix known (appliance default — F10).
         LAN_CIDR=$(echo "$addr" | awk -F'[./]' '{printf "%s.%s.%s.0/24\n",$1,$2,$3}')
     fi
     is_ipv4_or_cidr "$LAN_CIDR" || die "detected LAN CIDR invalid: $LAN_CIDR"
 }
 
-# Delete every numbered UFW rule whose comment contains MARKER (newest-first safe: always delete first match).
 delete_rules_matching() {
     local needle="$1"
     local num
@@ -97,22 +86,7 @@ delete_rules_matching() {
     done
 }
 
-ufw_allow_any() {
-    local port_proto="$1"
-    local comment="$2"
-    ufw allow "$port_proto" comment "$comment" >/dev/null
-}
-
-ufw_allow_from() {
-    local from="$1"
-    local port="$2"
-    local proto="$3"
-    local comment="$4"
-    ufw allow from "$from" to any port "$port" proto "$proto" comment "$comment" >/dev/null
-}
-
 ensure_ssh_before_cutover() {
-    # Avoid stranding SSH if Shorewall stops before UFW is enabled.
     if ! ufw status 2>/dev/null | grep -qE '22/tcp.*ALLOW'; then
         ufw allow 22/tcp comment "${MARKER_PREFIX} SSH" >/dev/null || true
     fi
@@ -135,7 +109,6 @@ stop_shorewall() {
     if [ -f /etc/default/shorewall6 ]; then
         sed -i 's/^startup=.*/startup=0/' /etc/default/shorewall6 || true
     fi
-    # Clear Shorewall chains so UFW owns netfilter (F7).
     if command -v shorewall >/dev/null 2>&1; then
         shorewall clear 2>/dev/null || true
     fi
@@ -144,61 +117,156 @@ stop_shorewall() {
     fi
 }
 
-apply_common_anywhere() {
-    ufw_allow_any "22/tcp" "${MARKER_PREFIX} SSH"
-    ufw_allow_any "44300/tcp" "${MARKER_PREFIX} API"
-    ufw_allow_any "10000:20000/udp" "${MARKER_PREFIX} RTP"
+# Build baseline rules JSON into ALLOWS_FILE for profile.
+bootstrap_allows_file() {
+    local profile="$1"
+    mkdir -p "$(dirname "$ALLOWS_FILE")"
+    case "$profile" in
+        fleet)
+            resolve_sbc_ips
+            [ -n "$SBC_IPS" ] || die "fleet profile needs SBC IP(s): set PBX3_UFW_SBC_IPS or PBX3_SBC_EGRESS_HOST=IP"
+            SBC_IPS="$SBC_IPS" python3 - "$ALLOWS_FILE" <<'PY'
+import json, os, sys
+path = sys.argv[1]
+ips = os.environ.get("SBC_IPS", "").split()
+rules = [
+    {"action": "allow", "proto": "tcp", "port": "22", "from": "any", "comment": "SSH"},
+    {"action": "allow", "proto": "tcp", "port": "44300", "from": "any", "comment": "API"},
+    {"action": "allow", "proto": "udp", "port": "10000:20000", "from": "any", "comment": "RTP"},
+]
+for ip in ips:
+    rules.append({"action": "allow", "proto": "udp", "port": "5060", "from": ip, "comment": "SIP UDP"})
+    rules.append({"action": "allow", "proto": "tcp", "port": "5060", "from": ip, "comment": "SIP TCP"})
+    rules.append({"action": "allow", "proto": "tcp", "port": "5061", "from": ip, "comment": "SIP TLS"})
+with open(path, "w", encoding="utf-8") as f:
+    json.dump({"profile": "fleet", "rules": rules}, f, indent=2)
+    f.write("\n")
+PY
+            ;;
+        solo)
+            resolve_lan_cidr
+            LAN_CIDR="$LAN_CIDR" PBX3_UFW_SOLO_WSS="${PBX3_UFW_SOLO_WSS:-0}" python3 - "$ALLOWS_FILE" <<'PY'
+import json, os, sys
+path = sys.argv[1]
+lan = os.environ["LAN_CIDR"]
+rules = [
+    {"action": "allow", "proto": "tcp", "port": "22", "from": "any", "comment": "SSH"},
+    {"action": "allow", "proto": "tcp", "port": "44300", "from": "any", "comment": "API"},
+    {"action": "allow", "proto": "udp", "port": "10000:20000", "from": "any", "comment": "RTP"},
+    {"action": "allow", "proto": "udp", "port": "5060", "from": lan, "comment": "SIP UDP"},
+    {"action": "allow", "proto": "tcp", "port": "5060", "from": lan, "comment": "SIP TCP"},
+    {"action": "allow", "proto": "tcp", "port": "5061", "from": lan, "comment": "SIP TLS"},
+]
+if os.environ.get("PBX3_UFW_SOLO_WSS") == "1":
+    rules.append({"action": "allow", "proto": "tcp", "port": "8089", "from": "any", "comment": "WSS"})
+with open(path, "w", encoding="utf-8") as f:
+    json.dump({"profile": "solo", "rules": rules}, f, indent=2)
+    f.write("\n")
+PY
+            ;;
+        *) die "bootstrap profile must be fleet|solo" ;;
+    esac
+    log "wrote $ALLOWS_FILE (profile=$profile)"
 }
 
-apply_fleet_sip() {
-    local ip
-    [ -n "$SBC_IPS" ] || die "fleet profile needs SBC IP(s): set PBX3_UFW_SBC_IPS or PBX3_SBC_EGRESS_HOST=IP in $API_ENV"
-    for ip in $SBC_IPS; do
-        ufw_allow_from "$ip" 5060 udp "${MARKER_PREFIX} SIP UDP"
-        ufw_allow_from "$ip" 5060 tcp "${MARKER_PREFIX} SIP TCP"
-        ufw_allow_from "$ip" 5061 tcp "${MARKER_PREFIX} SIP TLS"
-    done
-    log "SIP 5060/5061 allowed from:$SBC_IPS"
-}
-
-apply_solo_sip() {
-    ufw_allow_from "$LAN_CIDR" 5060 udp "${MARKER_PREFIX} SIP UDP"
-    ufw_allow_from "$LAN_CIDR" 5060 tcp "${MARKER_PREFIX} SIP TCP"
-    ufw_allow_from "$LAN_CIDR" 5061 tcp "${MARKER_PREFIX} SIP TLS"
-    # Optional instance-direct WSS (solo only — not in fleet baseline).
-    if [ "${PBX3_UFW_SOLO_WSS:-0}" = "1" ]; then
-        ufw_allow_any "8089/tcp" "${MARKER_PREFIX} WSS"
+apply_rule_from_json_line() {
+    # stdin: one JSON object per invocation via env vars set by python driver
+    local action="$1" proto="$2" port="$3" from="$4" comment="$5"
+    local ufw_comment
+    if [ -n "$comment" ]; then
+        ufw_comment="${MARKER_PREFIX} ${comment}"
+    else
+        ufw_comment="${MARKER_PREFIX}"
     fi
-    log "SIP 5060/5061 allowed from LAN $LAN_CIDR"
+    case "$action" in
+        allow) ;;
+        *) log "skip unsupported action '$action'"; return 0 ;;
+    esac
+    case "$proto" in
+        tcp|udp|icmp|all) ;;
+        *) die "invalid proto: $proto" ;;
+    esac
+    if [ "$proto" = "icmp" ]; then
+        # UFW icmp: allow from source (port N/A)
+        if [ "$from" = "any" ] || [ -z "$from" ]; then
+            ufw allow proto icmp comment "$ufw_comment" >/dev/null 2>&1 || \
+                ufw allow icmp comment "$ufw_comment" >/dev/null || true
+        else
+            ufw allow from "$from" proto icmp comment "$ufw_comment" >/dev/null || true
+        fi
+        return 0
+    fi
+    if [ "$proto" = "all" ]; then
+        if [ "$from" = "any" ] || [ -z "$from" ]; then
+            [ -n "$port" ] && [ "$port" != "N/A" ] && die "proto=all with port not supported"
+            ufw allow from any comment "$ufw_comment" >/dev/null || true
+        else
+            ufw allow from "$from" comment "$ufw_comment" >/dev/null
+        fi
+        return 0
+    fi
+    [ -n "$port" ] || die "port required for proto=$proto"
+    if [ "$from" = "any" ] || [ -z "$from" ]; then
+        ufw allow "${port}/${proto}" comment "$ufw_comment" >/dev/null
+    else
+        ufw allow from "$from" to any port "$port" proto "$proto" comment "$ufw_comment" >/dev/null
+    fi
+}
+
+apply_allows_file() {
+    [ -f "$ALLOWS_FILE" ] || die "missing $ALLOWS_FILE (pass fleet|solo to bootstrap)"
+    # Stream rules as TSV: action proto port from comment
+    while IFS=$'\t' read -r action proto port from comment; do
+        [ -n "$action" ] || continue
+        apply_rule_from_json_line "$action" "$proto" "$port" "$from" "$comment"
+    done < <(python3 - "$ALLOWS_FILE" <<'PY'
+import json, sys
+with open(sys.argv[1], encoding="utf-8") as f:
+    data = json.load(f)
+rules = data.get("rules") or []
+for r in rules:
+    action = (r.get("action") or "allow").strip()
+    proto = (r.get("proto") or "").strip().lower()
+    port = (r.get("port") or "").strip()
+    frm = (r.get("from") or "any").strip() or "any"
+    comment = (r.get("comment") or "").replace("\t", " ").replace("\n", " ").strip()
+    print("\t".join([action, proto, port, frm, comment]))
+PY
+)
+    PROFILE_APPLIED=$(python3 - "$ALLOWS_FILE" <<'PY'
+import json, sys
+print(json.load(open(sys.argv[1], encoding="utf-8")).get("profile", ""))
+PY
+)
+    log "applied rules from $ALLOWS_FILE (profile=${PROFILE_APPLIED:-unknown})"
 }
 
 # --- main ---
 
-log "profile=$PROFILE"
+if [ -n "$PROFILE" ]; then
+    case "$PROFILE" in
+        fleet|solo) ;;
+        *) die "usage: $0 [fleet|solo]" ;;
+    esac
+    if [ ! -f "$ALLOWS_FILE" ]; then
+        bootstrap_allows_file "$PROFILE"
+    else
+        log "keeping existing $ALLOWS_FILE (pass: delete file to re-bootstrap profile=$PROFILE)"
+    fi
+elif [ ! -f "$ALLOWS_FILE" ]; then
+    die "usage: $0 fleet|solo   # first run bootstraps $ALLOWS_FILE"
+fi
+
+log "allows=$ALLOWS_FILE"
 ensure_ssh_before_cutover
 stop_shorewall
 
-# Defaults before enable (safe while inactive).
 ufw default deny incoming >/dev/null
 ufw default allow outgoing >/dev/null
 ufw default deny routed >/dev/null 2>/dev/null || true
 
-# Rewrite managed allows (leave LE ephemeral rule alone if present).
 delete_rules_matching "$MARKER_PREFIX"
-# Do not delete LE_MARKER here — le-port80-*.sh owns that lifecycle.
-
-apply_common_anywhere
-
-case "$PROFILE" in
-    fleet)
-        resolve_sbc_ips
-        apply_fleet_sip
-        ;;
-    solo)
-        resolve_lan_cidr
-        apply_solo_sip
-        ;;
-esac
+apply_allows_file
 
 ufw --force enable >/dev/null
 ufw status verbose | sed -n '1,80p'
