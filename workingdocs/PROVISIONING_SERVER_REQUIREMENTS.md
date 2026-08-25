@@ -1,10 +1,11 @@
 # Provisioning — requirements (sketch)
 
 **Status:** **Won't-do (2026-08-23).** No in-house HTTP phone provisioner and no **sark3pcerts** panel. Major manufacturers (except Cisco) already ship RPS; reinventing is not worth it. Prefer **M1** (vendor/reseller RPS). Spec below kept as archive only.  
+**2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a type label only. If provisioning is ever revived, retrofit SARK 6.5 — do not reintroduce Device templates.  
 **Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — not building.  
 **Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard.  
 **Reference notes:** private prior co-located provisioner / SARK archives (operator only — not in product tree).  
-**Related:** **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** (extension SIP fields / Commit — unrelated to RPS product) · **`TLS_AND_CERTIFICATES.md` §0** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23.
+**Related:** **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** (extension SIP fields / Commit — unrelated to RPS product) · **`TLS_AND_CERTIFICATES.md` §0** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23 / #28.
 
 ---
 

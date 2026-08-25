@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-25 (SIP TLS mid-term + MkDocs SBC posture)  
+**Last updated:** 2026-08-25 (Device templates won't-do / purged)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -58,7 +58,7 @@
 25. **Number wire Phase 2 / D2–D4** (parked).  
 26. ~~**Seed outbound US dialplan / wire (O4)**~~ — **lab green** for Toliman call chain (Egress `011:+ 1:+1` + Twilio). Product US globals auto-seed pack still optional. Spec: **`EGRESS_PLUS_E164_WIRE.md`** · **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.  
 27. **Instance API digest deepen** (optional).  
-28. **Device templates** — seed lean + nav done; prune existing DBs / drop routes residual.  
+28. ~~**Device templates**~~ — **won't-do / removed (2026-08-25):** In-house provisioner won't-do; Device table seed/API/SPA purged. Extension `ipphone.device` remains a type label (General SIP / WebRTC / MAILBOX / MAC OUI vendor). Existing DBs: `sqlite_device_drop.sql`. If provisioning returns, retrofit SARK 6.5 — do not revive templates.  
 29. **OSS org + repo transfer** — after Apache `LICENSE` + migrate extract/strip (**done**).  
 30. **Optional SBC media plane / rtpengine** (parked) — selective engage only; load model in **`pbx3-directory/docs/RTPENGINE_SELECTIVE_ENGAGE.md`**. Triggers: LAN-edge / Track A / Peer; see try-it Appendix A.  
 31. **Incident notify (parked)** — tenant callout teams → ConfBridge + optional SMS; SARK `mcstcaller` heritage. Spec: **`INCIDENT_NOTIFY_REQUIREMENTS.md`**. Est. **~5–7 d** v1 (voice MVP **~4–5 d**). Not first-out.  
@@ -74,7 +74,7 @@
 
 ## Open items
 
-- [x] **Home firewall — Shorewall → UFW (closed `main` 2026-08-25):** Phases 1–4 + ETL M2–M4 + MkDocs + **`pbx3_0.0.6-2`** + Pack A offline tests. Phase 5 parked. Spec: **`UFW_SHOREWALL_MIGRATION.md`**. Fleet floor roll when ready.
+- [x] **Device templates — won't-do / purged (2026-08-25):** No in-house provisioner; Device table seed/API/SPA removed. `ipphone.device` stays as type label. Existing DBs: **`sqlite_device_drop.sql`**. Retrofit SARK 6.5 only if provisioning returns.
 - [ ] **Tenant CLID blacklist — greenfield (locked 2026-08-24):** Per-tenant caller block list; **SPA + auth** to mutate (no open phone feature key in v1). SARK stub unused — **do not ETL**. Spec: **`CLID_BLACKLIST_REQUIREMENTS.md`**.
 
 - [ ] **SBC SIP TLS — hardphones (mid-term, locked 2026-08-25):** Not building today. Phone ↔ SBC **TLS :5061**; SBC ↔ home/carriers **UDP**; reuse edge LE for **`sbc.pbx3.com`** (outbound proxy); mix TLS desks + UDP Peers OK. Effort ~2–4 d lab / ~1 wk productize. Spec: **`SBC_PRODUCT_TRACKS.md`** gap **#1** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2. Out of MVP: SDES SRTP, carrier mTLS, rtpengine.

@@ -74,9 +74,8 @@ if [ "$legacy" = "true" ]; then
 	sqlite3 $SYSDB < $LEGACY_DB
 else
 	#create the db from the system files
-	echo "Creating new database $SYSDB from $INSTANCE_DB, $DEVICE_DATA, $LARAVEL_DB and $TENANT_DB"
+	echo "Creating new database $SYSDB from $INSTANCE_DB, $LARAVEL_DB and $TENANT_DB"
 	sqlite3 $SYSDB < $INSTANCE_DB
-	[ -e "$DEVICE_DATA" ] && sqlite3 $SYSDB < $DEVICE_DATA
 	sqlite3 $SYSDB < $LARAVEL_DB
 	sqlite3 $SYSDB < $TENANT_DB
 fi
@@ -86,8 +85,6 @@ if [ -e $SYSMSGDB ]; then
 	echo Loading system messages
 	sqlite3 $SYSDB < $SYSMSGDB
 fi
-echo Loading system device data
-sqlite3 $SYSDB < $DBSQL/sqlite_device_data.sql
 
 #Reload any saved customer data
 

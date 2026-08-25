@@ -68,28 +68,8 @@ CREATE TABLE IF NOT EXISTS tt_help_core (
 "z_updater" TEXT DEFAULT 'system'
 );
 
-/* Device table: provisioning templates (vendor XML / PJSIP friend stubs) */
-CREATE TABLE IF NOT EXISTS device (
-"pkey" TEXT PRIMARY KEY,
-"blfkeyname" TEXT,
-"blfkeys" INTEGER,
-"desc" TEXT,
-"device" TEXT,
-"fkeys" INTEGER,
-"imageurl" TEXT,
-"legacy" TEXT,
-"noproxy" TEXT,
-"owner" TEXT DEFAULT 'system',
-"pkeys" INTEGER,
-"provision" TEXT,
-"sipiaxfriend" TEXT,	-- DEPRECATED 2026-08-23: SARK chan_sip peer body; GenAst uses pjsip tmpl + overlay. Keep until schema drop.
-"technology" TEXT,
-"tftpname" TEXT,
-"zapdevfixed" TEXT,
-"z_created" datetime,
-"z_updated" datetime,
-"z_updater" TEXT DEFAULT 'system'
-);
+/* Device table removed 2026-08-25 — provisioning templates won't-do (manufacturer RPS).
+   Existing DBs: run sqlite_device_drop.sql. Extension type labels live on ipphone.device. */
 
 /* trunks/gateways - instance-owned (TRUNK_ROUTE_MULTITENANCY) */
 CREATE TABLE IF NOT EXISTS trunks (

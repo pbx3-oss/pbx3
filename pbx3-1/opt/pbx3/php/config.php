@@ -167,8 +167,6 @@ define('SYSONCE',                       SYSPATH . '/once');				    //once direct
 define('SYSALWAYS',                     SYSPATH . '/always');				//always directory
 define('SYSONCEDONE',                   SYSPATH . '/oncedone');				//applied once files
 define('CUSTDATA',                      DBDUMPS . '/last_data.sql');		//customer data previous iteration
-define('LASTDEVICE',                    DBDUMPS . '/last_device.sql');		//device table previous iteration      
-define('CUSTDEVICE',                    DBDUMPS . '/last_custdevice.sql');	//customer devices previous iteration
 define('SIPLOG',                        DBPATH . '/var/log/siplog');	    //installed db create
 define('DUMPER',                        UTILITIES . '/dumper.php'); 	    //loc. of the dumper
 define('ASTGEN',                        UTILITIES . '/runAstGen.php');

@@ -190,13 +190,6 @@
 		"dateSeg" => array (
 				"desc"	
 			),
-		"Device" => array (
-				"imageurl",
-				"noproxy",
-				"tftpname",
-				"zapdevfixed",
-				"desc"
-			),
 		"Greeting" => array (
 				"desc"	
 			),
