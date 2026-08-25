@@ -1,14 +1,15 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-24 (park BLF + parkedcallreparking; AMI quiet; tenant topbar)  
+**Last updated:** 2026-08-24 (UFW + CLID blacklist locks)  
 **Branch:** Product repos **`main`**. Private session state: **`~/GiT/pbx3-ops`** (**`TODO_OPS.md`** for tip/lab gossip). SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
-0. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
-0a. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
-0b. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
-0b. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS lock **#11** named call/pickup (`callgroup`→`named_call_group`, `pickupgroup`→`named_pickup_group`). Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
+0. **Home firewall Shorewall → UFW** — **plan locked (2026-08-24):** replace EOL Shorewall with UFW; fleet SIP = SBC IP(s) only; drop `fqdninspect` STRING path. Spec: **`UFW_SHOREWALL_MIGRATION.md`**. Implement when scheduled (lab proof → package → API/SPA).  
+0a. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
+0b. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
+0c. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
+0d. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS lock **#11** named call/pickup (`callgroup`→`named_call_group`, `pickupgroup`→`named_pickup_group`). Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
 1. ~~**Workingdocs hygiene**~~ — **done** (session handoffs in **`aelintra/pbx3-ops`**; product stubs remain).  
 2. ~~**Apache-2.0 `LICENSE` files**~~ — **done** (clean Apache-2.0 on product repos; see open-item note).  
 3. ~~**Strip customer-migrate tooling from pbx3**~~ — **done** (private ETL owns migrate; package keeps shortuid normalize only).  
@@ -71,6 +72,10 @@
 ---
 
 ## Open items
+
+- [ ] **Tenant CLID blacklist — greenfield (locked 2026-08-24):** Per-tenant caller block list; **SPA + auth** to mutate (no open phone feature key in v1). SARK stub unused — **do not ETL**. Spec: **`CLID_BLACKLIST_REQUIREMENTS.md`**.
+
+- [ ] **Home firewall — Shorewall → UFW (plan locked 2026-08-24):** Replace EOL Shorewall/Shorewall6 with **UFW** on Ubuntu appliance homes. Fleet: SIP from SBC IP(s) only; retire `fqdninspect` STRING path. Phases: lab proof → package/installer/fail2ban/LE → API/SPA structured allows → purge Shorewall. **SARK ETL:** force `fqdninspect=NO`, drop dead `shorewall_*` TABLE_MAP; **ignore** unused `clid_blacklist`. Spec: **`UFW_SHOREWALL_MIGRATION.md`** · CLID product: **`CLID_BLACKLIST_REQUIREMENTS.md`**. Ubuntu lock-in accepted for appliance class; keep declarative allow-list so a future nft backend remains possible.
 
 - [ ] **Named pickup — sipplab L1 pack (2026-08-24):** Manual L3 **pickup OK** lab `.31` — see **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab status. Unattended **`./run-pickup-pack.sh`** still pending. **BLF:** Snom OK; Yealink config TBD (not blocking pickup).
 

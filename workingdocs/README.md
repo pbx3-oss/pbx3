@@ -23,6 +23,8 @@ Product stub: **`AGENT_HANDOFF.md`** (behavior + read-order + permanent referenc
 | **Session end habit** | **`~/GiT/pbx3-ops/SESSION_END_CHECKLIST.md`** | Stub: `SESSION_END_CHECKLIST.md` |
 | **Locked product / fleet** | Prefer **`pbx3-directory/docs/`** when fleet-wide | DESIGN_RULES, runbooks, dialect reqs |
 | **Feature plans (instance)** | This folder | TLS, short dial, time-based routing, test packs |
+| **Home firewall UFW** | `UFW_SHOREWALL_MIGRATION.md` | Shorewall EOL → UFW; fleet SIP from SBC only |
+| **Tenant CLID blacklist** | `CLID_BLACKLIST_REQUIREMENTS.md` | Greenfield; auth to mutate; not SARK ETL |
 | **Repos / releases** | **REPOS_AND_RELEASES.md** | Multi-repo policy |
 
 **Do not** re-grow closed TODO checkmarks in **TODO.md** — closed ledger → **archive/TODO_DONE_LOG.md**.
