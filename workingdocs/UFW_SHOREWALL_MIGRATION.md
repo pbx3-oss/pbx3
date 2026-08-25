@@ -218,7 +218,7 @@ Do **not** expose raw `iptables`/`nft` in v1. Advanced SSH remains for break-gla
 | Host `/etc/shorewall/pbx3_rules` (custom ACCEPTs) | **No** | Not in backup; lives only on the old box |
 | fail2ban ignoreip | **No** | Host-local |
 
-ETL **v2** (`python/sources/sark/transform.py`) still has identity `TABLE_MAP` entries for `shorewall_blacklist` / `shorewall_whitelist`, but **current pbx3 schema has no such tables** — those copies are dead weight (skip or fail depending on loader strictness). Help text / schema comments still say Shorewall.
+ETL **v2** drops `shorewall_blacklist` / `shorewall_whitelist` from `TABLE_MAP` (**M4**, 2026-08-25). Help text / schema comments still say Shorewall until product help rewrite.
 
 ### 10.2 Locks for migrate + UFW
 
@@ -233,7 +233,7 @@ ETL **v2** (`python/sources/sark/transform.py`) still has identity `TABLE_MAP` e
 
 ### 10.3 ETL / docs work when UFW ships
 
-1. **`sark-to-pbx3`:** M2–M4 in v2 transform + REQUIREMENTS lock row; fixture assert `fqdninspect=NO` (or explicit migrate report warning).  
+1. ~~**`sark-to-pbx3`:** M2–M4 in v2 transform + REQUIREMENTS lock row~~ — **done 2026-08-25** (`REQUIREMENTS` **#13**; force `fqdninspect`/`sipflood` **NO**; drop shorewall_* + clid_blacklist from map). Fixture assert optional when next offline migrate run.  
 2. **MkDocs migrate / first-boot:** “Firewall is UFW baseline; old Shorewall custom rules and fqdninspect are not ported.”  
 3. **Product help (`tt_help_core`):** rewrite `fqdninspect` / firewall help away from Shorewall manpage links when SPA hides the control.  
 4. Optional later: if a customer zip has non-empty shorewall_* lists, add a one-off report (`migrate --firewall-report`) listing IPs for manual UFW entry — not a silent import into a missing table.
@@ -257,7 +257,7 @@ ETL **v2** (`python/sources/sark/transform.py`) still has identity `TABLE_MAP` e
 2. Phase 2 scripts + installer + fail2ban + LE.  
 3. Phase 3 API/SPA.  
 4. Phase 4 package purge + docs.  
-5. **ETL M2–M4** (can parallel Phase 2–3; must land before marketing “migrate to UFW homes”).  
+5. ~~**ETL M2–M4**~~ — **done 2026-08-25** in **`aelintra/sark-to-pbx3`**.  
 6. Phase 5 only if soak demands it.
 
 Track as product TODO open item pointing here; tip/host gossip stays in **`~/GiT/pbx3-ops/TODO_OPS.md`**.

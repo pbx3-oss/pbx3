@@ -5,7 +5,7 @@
 
 ### Suggested “what next?” order
 
-0. **Home firewall Shorewall → UFW** — **Phases 1–4 done (2026-08-25)** on **`ufw-phase1`**. Tip-only so far; **next built .deb = `0.0.6-1`** (not 0.0.5-7/8). **Next:** merge/push · build/ship **0.0.6-1** · ETL M2–M4 · Phase 5 optional. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
+0. **Home firewall Shorewall → UFW** — **Phases 1–4 + ETL M2–M4 done (2026-08-25)** on **`ufw-phase1`**. Tip-only so far; **next built .deb = `0.0.6-1`**. **Next:** merge/push · build/ship **0.0.6-1** · Phase 5 optional · MkDocs migrate note. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
 0a. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
 0b. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0c. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
@@ -73,7 +73,7 @@
 
 ## Open items
 
-- [x] **Home firewall — Shorewall → UFW (Phases 1–4 done 2026-08-25):** Lab + installer + SPA/API + Shorewall purge on **`ufw-phase1`**. **Package lock:** next rebuild ships **`pbx3 0.0.6-1`** (0.0.5-7/8 never packaged). Residual: ETL M2–M4; Phase 5 optional; merge/push · build **0.0.6-1**. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.
+- [x] **Home firewall — Shorewall → UFW (Phases 1–4 + ETL M2–M4 done 2026-08-25):** Lab + installer + SPA/API + Shorewall purge on **`ufw-phase1`**. ETL: force `fqdninspect`/`sipflood` **NO**; drop shorewall_* (**`sark-to-pbx3` REQUIREMENTS #13**). **Package lock:** next rebuild ships **`pbx3 0.0.6-1`**. Residual: Phase 5 optional; merge/push · build **0.0.6-1** · MkDocs migrate note. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.
 - [ ] **Tenant CLID blacklist — greenfield (locked 2026-08-24):** Per-tenant caller block list; **SPA + auth** to mutate (no open phone feature key in v1). SARK stub unused — **do not ETL**. Spec: **`CLID_BLACKLIST_REQUIREMENTS.md`**.
 
 - [ ] **Named pickup — sipplab L1 pack (2026-08-24):** Manual L3 **pickup OK** lab `.31` — see **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab status. Unattended **`./run-pickup-pack.sh`** still pending. **BLF:** Snom OK; Yealink config TBD (not blocking pickup).
