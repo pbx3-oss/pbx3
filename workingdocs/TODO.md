@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-25 (pbx3 0.0.6-3 Device purge deb)  
+**Last updated:** 2026-08-25 (session end — Device templates purged; 0.0.6-3)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
