@@ -21,12 +21,16 @@ PROFILE="${1:-}"
 API_ENV="${PBX3API_ENV:-/opt/pbx3api/.env}"
 ALLOWS_FILE="${PBX3_UFW_ALLOWS_FILE:-/etc/pbx3/firewall.allows.json}"
 MARKER_PREFIX="pbx3-managed"
+# Offline tests: PBX3_UFW_TEST_BOOTSTRAP=1 fleet|solo writes JSON only (no root/ufw).
+TEST_BOOTSTRAP="${PBX3_UFW_TEST_BOOTSTRAP:-0}"
 
 die() { echo "ufw-apply-baseline: $*" >&2; exit 1; }
 log() { echo "ufw-apply-baseline: $*"; }
 
-[ "$(id -u)" -eq 0 ] || die "must run as root"
-command -v ufw >/dev/null 2>&1 || die "ufw not installed"
+if [ "$TEST_BOOTSTRAP" != "1" ]; then
+    [ "$(id -u)" -eq 0 ] || die "must run as root"
+    command -v ufw >/dev/null 2>&1 || die "ufw not installed"
+fi
 command -v python3 >/dev/null 2>&1 || die "python3 required for firewall.allows.json"
 
 is_ipv4_or_cidr() {
@@ -51,7 +55,7 @@ resolve_sbc_ips() {
             log "skip non-literal SBC host '$ip' (need IP/CIDR; set PBX3_UFW_SBC_IPS)"
         fi
     done
-    SBC_IPS=$(echo "$SBC_IPS" | xargs)
+    SBC_IPS=$(echo "$SBC_IPS" | tr -s '[:space:]' ' ' | sed 's/^ //;s/ $//')
 }
 
 resolve_lan_cidr() {
@@ -242,6 +246,17 @@ PY
 }
 
 # --- main ---
+
+if [ "$TEST_BOOTSTRAP" = "1" ]; then
+    case "$PROFILE" in
+        fleet|solo) ;;
+        *) die "usage: PBX3_UFW_TEST_BOOTSTRAP=1 $0 fleet|solo" ;;
+    esac
+    rm -f "$ALLOWS_FILE"
+    bootstrap_allows_file "$PROFILE"
+    log "test-bootstrap wrote $ALLOWS_FILE"
+    exit 0
+fi
 
 if [ -n "$PROFILE" ]; then
     case "$PROFILE" in

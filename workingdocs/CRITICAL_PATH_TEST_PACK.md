@@ -21,6 +21,9 @@ Status legend: **done** · **partial** · **todo** · **lab-only** (keep as reci
 | Recordings list/stream contract (happy + 404) | **pbx3api** | **done** | `tests/Feature/RecordingHttpTest.php` (mocked index; Sanctum admin) |
 | Fleet gatekeeper list API shape | **pbx3** gatekeeper | **done** | `tests/FleetListContractTest.php` + fixtures (no live S3) |
 | SPA fleet token gate (login → storage → Authorization) | **pbx3spa** | **done** | `src/config/fleetGatekeeper.test.js` (Vitest) |
+| UFW allow-list bootstrap (fleet vs solo Sources) | **pbx3** | **done** | `pbx3-1/opt/pbx3/scripts/tests/ufw-apply-baseline-test.sh` |
+| Firewall allow-list `from`/port validation | **pbx3api** | **done** | `tests/Unit/FirewallAllowRuleTest.php` |
+| Firewall SPA F11 admin-port warn helpers | **pbx3spa** | **done** | `src/utils/firewallAdminWarn.test.js` |
 
 **How to run Pack A:**
 
@@ -37,10 +40,14 @@ composer test
 cd pbx3api && php vendor/bin/pest \
   tests/Unit/SnapshotRetentionTest.php \
   tests/Feature/RecordingHttpTest.php \
-  tests/Unit/RecordingServicesTest.php
+  tests/Unit/RecordingServicesTest.php \
+  tests/Unit/FirewallAllowRuleTest.php
 
 # pbx3spa
-cd pbx3spa && npm test -- --run src/config/fleetGatekeeper.test.js
+cd pbx3spa && npm test -- --run src/config/fleetGatekeeper.test.js src/utils/firewallAdminWarn.test.js
+
+# pbx3 UFW bootstrap (no root)
+bash pbx3/pbx3-1/opt/pbx3/scripts/tests/ufw-apply-baseline-test.sh
 ```
 
 Repo-root `make test-critical` deferred until CI wiring is desired.

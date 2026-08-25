@@ -262,3 +262,13 @@ ETL **v2** drops `shorewall_blacklist` / `shorewall_whitelist` from `TABLE_MAP` 
 6. Phase 5 only if soak demands it.
 
 Track as product TODO open item pointing here; tip/host gossip stays in **`~/GiT/pbx3-ops/TODO_OPS.md`**.
+
+## 13. Regression tests (offline)
+
+| Check | Command |
+|-------|---------|
+| Fleet vs solo bootstrap Sources | `bash pbx3-1/opt/pbx3/scripts/tests/ufw-apply-baseline-test.sh` |
+| API `from`/port validation | `cd pbx3api && ./vendor/bin/pest tests/Unit/FirewallAllowRuleTest.php` |
+| SPA F11 warn helpers | `cd pbx3spa && npm test -- --run src/utils/firewallAdminWarn.test.js` |
+
+Also listed in **`CRITICAL_PATH_TEST_PACK.md`** Pack A. Lab apply/RTP still = live proof on a home.
