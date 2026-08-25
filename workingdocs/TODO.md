@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-25 (UFW Phase 4 Shorewall purge)  
-**Branch:** Product **`ufw-phase1`** (pbx3 / pbx3api / pbx3spa). Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
+**Last updated:** 2026-08-25 (UFW merge/push)  
+**Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
-0. **Home firewall Shorewall → UFW** — **Phases 1–4 + ETL + MkDocs + deb `0.0.6-1` done (2026-08-25)** on **`ufw-phase1`**. **Next:** merge/push · Phase 5 optional. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
+0. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-1`**. Residual: Phase 5 optional · fleet floor roll when ready. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
 0a. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
 0b. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0c. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
@@ -73,7 +73,7 @@
 
 ## Open items
 
-- [x] **Home firewall — Shorewall → UFW (done 2026-08-25):** Phases 1–4 + ETL M2–M4 + MkDocs + artefact **`pbx3_0.0.6-1_all.deb`** on **`ufw-phase1`**. Residual: Phase 5 optional; merge/push. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.
+- [x] **Home firewall — Shorewall → UFW (merged `main` 2026-08-25):** Phases 1–4 + ETL M2–M4 + MkDocs + **`pbx3_0.0.6-1_all.deb`**. Residual: Phase 5 optional; fleet floor roll. Spec: **`UFW_SHOREWALL_MIGRATION.md`**.
 - [ ] **Tenant CLID blacklist — greenfield (locked 2026-08-24):** Per-tenant caller block list; **SPA + auth** to mutate (no open phone feature key in v1). SARK stub unused — **do not ETL**. Spec: **`CLID_BLACKLIST_REQUIREMENTS.md`**.
 
 - [ ] **Named pickup — sipplab L1 pack (2026-08-24):** Manual L3 **pickup OK** lab `.31` — see **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab status. Unattended **`./run-pickup-pack.sh`** still pending. **BLF:** Snom OK; Yealink config TBD (not blocking pickup).
