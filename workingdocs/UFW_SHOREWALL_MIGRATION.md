@@ -1,6 +1,6 @@
 # Home firewall — Shorewall → UFW migration
 
-**Status:** Direction locked **2026-08-24** (choose **UFW**; plan not yet implemented).  
+**Status:** Direction locked **2026-08-24**; **Phase 1 lab applied on `.31` (2026-08-25)** — package/installer cutover still Phase 2.  
 **Repos when built:** **pbx3** (installer, package Depends, scripts, NetHelper) · **pbx3api** (FirewallController, syscommands ICMP/LE noise) · **pbx3spa** (FirewallView) · docs MkDocs install/firewall notes.  
 **Related:** [`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`](../pbx3-directory/docs/TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md) §11.4–11.7 · [`FLEET_TRUNK_PEERING_DECISION.md`](../pbx3-directory/docs/FLEET_TRUNK_PEERING_DECISION.md) · [`LETSENCRYPT_PER_TENANT_FQDN.md`](LETSENCRYPT_PER_TENANT_FQDN.md) · private ETL **`aelintra/sark-to-pbx3`** (§10) · Design Rules SIP-obscurity context (fleet no longer depends on home STRING match).
 
@@ -111,7 +111,12 @@ Same 22 / 44300 / RTP / LE `:80` as fleet. SIP **5060/5061** from the **detected
 2. Disable shorewall{,6}; enable UFW default deny; apply **§3 standard allow set** with lab SBC IP.
 3. Prove: desk REGISTER via SBC, extension call + RTP, SPA `:44300`, fail2ban once, LE open/close :80.
 
-**Exit:** written lab notes in ops TODO; no package cutover yet.
+**Scripts (branch `ufw-phase1`):** `scripts/ufw-apply-baseline.sh` · LE `le-port80-*.sh` UFW path · fail2ban `banaction=ufw`.  
+**SBC IP source (lab):** `PBX3_UFW_SBC_IPS` or literal `PBX3_SBC_EGRESS_HOST` in `/opt/pbx3api/.env` (Phase 0 confirm still open for cloud EIP list).
+
+**Exit:** written lab notes in ops TODO; no package Depends/installer cutover yet (Phase 2).
+
+- [x] Lab `.31` apply (2026-08-25): Shorewall stopped/disabled; UFW active; fleet allow set from `192.168.1.85`; post-cutover desk REGISTER via SBC; API `:44300` 200; LE open/close; fail2ban `action=ufw` wired; **101→102 call/RTP OK**. Live ban smoke optional. Notes: **`~/GiT/pbx3-ops/TODO_OPS.md`**.
 
 ### Phase 2 — pbx3 package + installer
 

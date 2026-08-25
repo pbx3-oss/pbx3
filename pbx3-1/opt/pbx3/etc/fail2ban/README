@@ -8,7 +8,7 @@ Mission: PBX server (Asterisk + API on 44300). Jails protect SSH (admin), Asteri
 
 - **Does not** symlink `jail.local` (Ubuntu 24.04 fail2ban breaks on a full custom `jail.local` with `%(auth_log)s`).
 - Symlinks `jail.d/pbx3-jails.conf` and `jail.d/pbx3-api.conf` → `/etc/fail2ban/jail.d/`
-- Symlinks `action.d/shorewall.local` → `/etc/fail2ban/action.d/shorewall.local`
+- Default `banaction = ufw` (Shorewall path retired with UFW home firewall; `action.d/shorewall.local` kept for archaeology until Phase 4 purge)
 - Removes a legacy pbx3 `jail.local` symlink if present
 - Runs `fail2ban-client -t` then reload when config is valid
 
@@ -37,4 +37,4 @@ Mission: PBX server (Asterisk + API on 44300). Jails protect SSH (admin), Asteri
 |------|--------|
 | `jail.d/pbx3-jails.conf` | sshd, asterisk, recidive + `[DEFAULT]` banaction/ignoreip |
 | `jail.d/pbx3-api.conf` | apache-badbots jail for pbx3api (nginx access.log) |
-| `action.d/shorewall.local` | Shorewall ban action |
+| `action.d/shorewall.local` | Legacy Shorewall ban action (unused once `banaction=ufw`) |
