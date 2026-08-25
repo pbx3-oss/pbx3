@@ -1,3 +1,12 @@
+pbx3 (0.0.6-3) noble; urgency=medium
+
+  * Remove Device provisioning templates (won't-do): drop Device table from
+    new installs; ship sqlite_device_drop.sql for existing DBs; remove seed
+    and lean-prune SQL. Extension ipphone.device remains a type label.
+  * Spec: workingdocs/TODO.md #28 · PROVISIONING_SERVER_REQUIREMENTS.md.
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Tue, 25 Aug 2026 16:05:51 -0400
+
 pbx3 (0.0.6-2) noble; urgency=medium
 
   * Solo/singleton UFW baseline: SSH :22, API :44300, SIP, and RTP
