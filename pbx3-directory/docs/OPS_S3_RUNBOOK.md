@@ -1084,6 +1084,19 @@ Anonymous GET must fail. Gatekeeper role can put/get only under `tenants/*/recor
 | Calling this “PCI certified” | Docs must say **not attested** until S7+ / QSA |
 | Apply backup lifecycle script to recordings bucket | Use **`apply-recordings-lifecycle-rule.sh`** (`class=recording`, prefix `tenants/`) |
 
+### 13.5 Capability + tenant policy (S7)
+
+**Lock (2026-08-26):** Install capability (default **Off**) + tenant **`rec_s3`** (default **NO**). Full operator page: MkDocs **`fleet/recordings-s3-offload`**. Design: **`RECORDINGS_STORAGE_DESIGN.md`**.
+
+| | |
+|--|--|
+| **Capability On** | Control has `PBX3_RECORDINGS_BUCKET`. Home: `PBX3_RECORDING_UPLOAD_ENABLED=true`, `PBX3_GATEKEEPER_URL`, `PBX3_GATEKEEPER_TOKEN` (break-glass / fleet_admin). Cron: `pbx3:recordings-s3-upload`. |
+| **Capability Off** | `PBX3_RECORDING_UPLOAD_ENABLED=false` (default). Upload no-ops. |
+| **Tenant** | `cluster.rec_s3=YES` required for that site’s rows to upload. `PBX3_RECORDING_UPLOAD_TENANTS` = break-glass allowlist only. |
+| **Fleet UI** | Optional later: Instances **read-only** plumbing status — not the tenant opt-in. |
+
+Smoke: `sudo -u www-data php artisan pbx3:recordings-s3-upload` from `/opt/pbx3api`.
+
 ---
 
 ## 14. Related docs

@@ -45,6 +45,8 @@ SBC_ADMIN_API_URL="${PBX3_SBC_ADMIN_API_URL:-}"
 ADMIN_EMAIL="${GATEKEEPER_ADMIN_EMAIL:-}"
 ADMIN_PASSWORD="${GATEKEEPER_ADMIN_PASSWORD:-}"
 ADMIN_NAME="${GATEKEEPER_ADMIN_NAME:-Fleet Admin}"
+# Recordings S3 capability: unset = prompt (default No); 1/yes/true = On; 0/no/false = Off
+RECORDINGS_S3="${PBX3_RECORDINGS_S3:-}"
 
 usage() {
   sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
@@ -383,32 +385,72 @@ else
   control_prompt SBC_ADMIN_API_URL "SBC admin API URL (http://IP/api — Enter if no SIP yet)" ""
 fi
 
+# Recordings S3 capability (default No). Tenants still opt in with cluster.rec_s3.
+if [[ -z "$RECORDINGS_S3" ]]; then
+  if [[ -t 0 ]]; then
+    control_prompt RECORDINGS_S3 "Enable call recordings S3 offload? (y/N)" "N"
+  else
+    RECORDINGS_S3="N"
+  fi
+fi
+case "$(printf '%s' "$RECORDINGS_S3" | tr '[:upper:]' '[:lower:]')" in
+  1|y|yes|true|on) RECORDINGS_S3=1 ;;
+  *) RECORDINGS_S3=0 ;;
+esac
+
 CATALOG_URL="http://${CONTROL_IP}/catalog/instance-index.json"
 
 install_apt
 install_awscli_v2
 
+S3_ENDPOINT=""
+REC_BUCKET=""
 if [[ "$SKIP_GARAGE" -eq 1 ]]; then
   control_log "Skipping Garage (--skip-garage)"
   if [[ -z "${AWS_ENDPOINT:-}" || -z "${AWS_ACCESS_KEY_ID:-}" ]]; then
     control_err "--skip-garage needs AWS_ENDPOINT + static keys already set"
     exit 1
   fi
+  S3_ENDPOINT="$AWS_ENDPOINT"
+  if [[ "$RECORDINGS_S3" -eq 1 ]]; then
+    REC_BUCKET="${BUCKET}-recordings"
+    control_log "Recordings S3 capability On — set PBX3_RECORDINGS_BUCKET=${REC_BUCKET} (create/harden bucket separately if needed)"
+  fi
 else
+  if [[ "$RECORDINGS_S3" -eq 1 ]]; then
+    # Homes must reach Garage for presigned PUT (not 127.0.0.1).
+    GARAGE_S3_BIND="0.0.0.0:3900"
+    export GARAGE_S3_BIND
+  fi
   garage_lab_install "$BUCKET"
   # shellcheck disable=SC1090
   set -a
   # shellcheck disable=SC1090
   source "$GARAGE_DEFAULTS_ENV"
   set +a
+  if [[ "$RECORDINGS_S3" -eq 1 ]]; then
+    S3_ENDPOINT="$(garage_s3_client_endpoint "$CONTROL_IP")"
+    REC_BUCKET="${BUCKET}-recordings"
+    garage_ensure_private_bucket "$REC_BUCKET"
+    garage_bucket_allow_rw "$REC_BUCKET"
+    control_log "Recordings bucket ${REC_BUCKET}; AWS_ENDPOINT=${S3_ENDPOINT}"
+  else
+    S3_ENDPOINT="$(garage_s3_endpoint)"
+  fi
 fi
 
 sync_gatekeeper_tree
 composer_install
-write_gatekeeper_env "$BUCKET" "$(garage_s3_endpoint)" "$CATALOG_URL"
+write_gatekeeper_env "$BUCKET" "$S3_ENDPOINT" "$CATALOG_URL"
 if [[ -n "$SBC_ADMIN_API_URL" && -f "$ENV_FILE" ]]; then
   control_set_env_kv "$ENV_FILE" PBX3_SBC_ADMIN_API_URL "$SBC_ADMIN_API_URL"
   control_log "Set PBX3_SBC_ADMIN_API_URL in $ENV_FILE"
+fi
+if [[ "$RECORDINGS_S3" -eq 1 && -n "$REC_BUCKET" ]]; then
+  control_set_env_kv "$ENV_FILE" PBX3_RECORDINGS_BUCKET "$REC_BUCKET"
+  # Existing .env may still have localhost endpoint from a prior install.
+  control_set_env_kv "$ENV_FILE" AWS_ENDPOINT "$S3_ENDPOINT"
+  control_log "Set PBX3_RECORDINGS_BUCKET=${REC_BUCKET}"
 fi
 bootstrap_catalog "$SLUG" "$CATALOG_URL"
 write_nginx "_" "$(garage_web_host "$BUCKET")"

@@ -139,7 +139,8 @@ CREATE TABLE IF NOT EXISTS cluster (
     "rec_mount" TEXT,                   	-- Recording folder mount command
     "recmaxage" TEXT DEFAULT '60',		   -- Max age in days of call recordings for this tenant
     "recmaxsize" TEXT DEFAULT '0',		   -- Recording storage maximum for this tenant
-    "recused" TEXT DEFAULT '0',			   -- Recording storage used by this tenant (updated according to cron freq)						
+    "recused" TEXT DEFAULT '0',			   -- Recording storage used by this tenant (updated according to cron freq)
+    "rec_s3" TEXT DEFAULT 'NO',			   -- S7: YES = upload archive to fleet recordings bucket (needs install capability)
     "ringdelay" INTEGER DEFAULT 20,       -- voip artificial ring timeout (seconds)
     "routeoverride" TEXT,					   -- Holiday scheduler route override
     "spy_pass" TEXT DEFAULT '',           -- spy password (empty = ChanSpy denied)

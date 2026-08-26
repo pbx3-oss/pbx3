@@ -40,6 +40,10 @@ PBX3_SKIP_FLEET="${PBX3_SKIP_FLEET:-0}"
 PBX3_SBC_EGRESS_HOST="${PBX3_SBC_EGRESS_HOST:-}"
 SEED_EGRESS_SCRIPT="${SEED_EGRESS_SCRIPT:-}"
 PBX3_CLEAN_INSTALL="${PBX3_CLEAN_INSTALL:-0}"
+# Recordings S3 plumbing: unset = prompt when fleet; 1/yes = wire; 0/no = skip
+PBX3_RECORDING_UPLOAD_ENABLED="${PBX3_RECORDING_UPLOAD_ENABLED:-}"
+PBX3_GATEKEEPER_URL="${PBX3_GATEKEEPER_URL:-}"
+PBX3_GATEKEEPER_TOKEN="${PBX3_GATEKEEPER_TOKEN:-}"
 FLEET_CONFIGURED=0
 
 if [[ "$(id -u)" -ne 0 ]]; then
@@ -255,6 +259,59 @@ home_configure_fleet_api() {
   FLEET_CONFIGURED=1
 }
 
+# Wire S7 upload plumbing only when control has recordings capability (operator confirms).
+# Product opt-in remains tenant cluster.rec_s3 (default NO).
+home_configure_recordings_s3() {
+  local env_file="/opt/pbx3api/.env" ans enable=0
+
+  if [[ "$FLEET_CONFIGURED" -ne 1 ]]; then
+    return 0
+  fi
+
+  if [[ -n "$PBX3_RECORDING_UPLOAD_ENABLED" ]]; then
+    case "$(printf '%s' "$PBX3_RECORDING_UPLOAD_ENABLED" | tr '[:upper:]' '[:lower:]')" in
+      1|y|yes|true|on) enable=1 ;;
+      *) enable=0 ;;
+    esac
+  elif [[ -t 0 ]]; then
+    read -r -p "Wire recordings S3 upload? (y/N — only if control enabled recordings bucket): " ans || true
+    case "$(printf '%s' "${ans:-N}" | tr '[:upper:]' '[:lower:]')" in
+      y|yes) enable=1 ;;
+      *) enable=0 ;;
+    esac
+  else
+    enable=0
+  fi
+
+  if [[ "$enable" -ne 1 ]]; then
+    home_set_env_kv "$env_file" PBX3_RECORDING_UPLOAD_ENABLED false
+    home_log "Recordings S3 upload plumbing left Off (tenant rec_s3 still defaults NO)"
+    return 0
+  fi
+
+  if [[ -z "$PBX3_GATEKEEPER_URL" ]]; then
+    home_prompt PBX3_GATEKEEPER_URL "Gatekeeper URL (e.g. http://192.168.1.33)" ""
+  fi
+  if [[ -z "$PBX3_GATEKEEPER_TOKEN" ]]; then
+    home_prompt_secret PBX3_GATEKEEPER_TOKEN "Gatekeeper break-glass token (GATEKEEPER_API_TOKEN / fleet_admin)"
+  fi
+  if [[ -z "$PBX3_GATEKEEPER_URL" || -z "$PBX3_GATEKEEPER_TOKEN" ]]; then
+    home_err "PBX3_GATEKEEPER_URL and PBX3_GATEKEEPER_TOKEN required to wire recordings S3 upload"
+    exit 1
+  fi
+
+  home_log "Writing recordings S3 upload plumbing to $env_file"
+  home_set_env_kv "$env_file" PBX3_RECORDING_UPLOAD_ENABLED true
+  home_set_env_kv "$env_file" PBX3_GATEKEEPER_URL "$PBX3_GATEKEEPER_URL"
+  home_set_env_kv "$env_file" PBX3_GATEKEEPER_TOKEN "$PBX3_GATEKEEPER_TOKEN"
+  home_set_env_kv "$env_file" PBX3_GATEKEEPER_HTTP_VERIFY false
+  if [[ -f /opt/pbx3api/scripts/cron.d/pbx3-recordings.example && ! -f /etc/cron.d/pbx3-recordings ]]; then
+    cp /opt/pbx3api/scripts/cron.d/pbx3-recordings.example /etc/cron.d/pbx3-recordings
+    home_log "Installed /etc/cron.d/pbx3-recordings"
+  fi
+  (cd /opt/pbx3api && php artisan config:clear) || true
+}
+
 home_link_asterisk_configs() {
   if [[ -x /opt/pbx3/scripts/link-asterisk-configs.sh ]]; then
     home_log "Linking /etc/asterisk → GenAst configs (stubs + runLinker)"
@@ -420,6 +477,7 @@ home_log "Running pbx3api installer.sh (snakeoil :44300, no Let's Encrypt)"
 /opt/pbx3api/scripts/installer.sh
 
 home_configure_fleet_api
+home_configure_recordings_s3
 home_seed_fleet_egress
 home_link_asterisk_configs
 home_verify_fleet_install

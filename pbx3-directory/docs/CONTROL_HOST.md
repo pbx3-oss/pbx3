@@ -49,11 +49,20 @@ SPA Fleet mode uses control-plane **email/password login** (Bearer in sessionSto
 
 ## Recordings bucket (S7)
 
-Lab bucket **`08jzwn-pbx3-recordings`** (PCI-shaped: BPA on, TLS-only, SSE-S3 — **not** attested). Create / harden: **`OPS_S3_RUNBOOK.md`** §13 · tool **`tools/create-recordings-bucket.sh`**. IAM JSON: **`schema/pbx3-control-gatekeeper-recordings.policy.json`**.
+**Capability (install, default Off):** Ask at control install whether to enable call recordings S3 offload. Off → no dedicated recordings bucket. On → create `{stem}-pbx3-recordings` (PCI-shaped: BPA, TLS-only, SSE-S3 — **not** attested) and set gatekeeper `PBX3_RECORDINGS_BUCKET`. Cloud: **`OPS_S3_RUNBOOK.md`** §13 · **`tools/create-recordings-bucket.sh`**. Lab Garage: dedicated bucket + LAN-reachable S3 bind (`AWS_ENDPOINT=http://<control-ip>:3900`). IAM: **`schema/pbx3-control-gatekeeper-recordings.policy.json`**. API: `POST /api/v1/s3/presign-recordings`.
 
-**Gatekeeper `.env`:** set `PBX3_RECORDINGS_BUCKET=08jzwn-pbx3-recordings`. API: `POST /api/v1/s3/presign-recordings`.
+**Policy (tenant):** `cluster.rec_s3` default **`NO`**. Upload only when home capability is on **and** `rec_s3=YES`.
 
-**Node (`pbx3api`) `.env` for upload:** `PBX3_RECORDING_UPLOAD_ENABLED=true`, `PBX3_GATEKEEPER_URL=https://control.pbx3.com`, `PBX3_GATEKEEPER_TOKEN=<break-glass or fleet token>`, optional `PBX3_RECORDING_UPLOAD_TENANTS=duns`.
+### Home plumbing (not the product switch)
+
+| Action | Env |
+|--------|-----|
+| **Capability on** | `PBX3_RECORDING_UPLOAD_ENABLED=true` + `PBX3_GATEKEEPER_URL` + `PBX3_GATEKEEPER_TOKEN` (= **`GATEKEEPER_API_TOKEN`** / fleet_admin). Lab: `PBX3_GATEKEEPER_HTTP_VERIFY=false`. Optional break-glass `PBX3_RECORDING_UPLOAD_TENANTS=…`. |
+| **Capability off** | `PBX3_RECORDING_UPLOAD_ENABLED=false` (default). |
+
+Smoke: `cd /opt/pbx3api && sudo -u www-data php artisan pbx3:recordings-s3-upload`. Cron: **`pbx3api/scripts/cron.d/pbx3-recordings.example`**.
+
+**Operator MkDocs:** **`fleet/recordings-s3-offload`**. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** § Capability vs policy. Fleet Instances may later show **read-only** plumbing status (not tenant opt-in).
 
 ## Operator notes
 

@@ -1,7 +1,7 @@
 # Recordings storage & search — design
 
-**Status:** Design (2026-07-07; amended — SQLite catalog, deletion §6.1, PCI §6.2–6.4 PSP handoff)  
-**Related:** **`IMPLEMENTATION_PLAN.md`** § Phase R1 / § Phase S7 · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 · **`DESIGN_RULES.md`** (Rule 1 fail-safe)
+**Status:** Design (2026-07-07; amended — SQLite catalog, deletion §6.1, PCI §6.2–6.4 PSP handoff; **2026-08-26** install capability + tenant `rec_s3` opt-in)  
+**Related:** **`IMPLEMENTATION_PLAN.md`** § Phase R1 / § Phase S7 · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 · **`DESIGN_RULES.md`** (Rule 1 fail-safe) · MkDocs **`fleet/recordings-s3-offload`**
 
 This document captures the agreed **shape** of call recordings storage and search: how the legacy system worked, what **Phase R1** shipped, and how **local archive offload** (R1.5) and **S3 offload** (S7) should extend it. It is written as durable history so implementers do not have to rediscover the reasoning.
 
@@ -23,7 +23,43 @@ This document captures the agreed **shape** of call recordings storage and searc
 
 Queue calls may add `{queue}-{extension}` tokens or a `Qexec` prefix (unswept).
 
-**Operator UX:** `pbx3api` `RecordingIndexService` + `RecordingController` list/search/stream/download from the recordings filesystem disk (`PBX3_RECORDINGS_ROOT`, default `/var/spool/asterisk/monitor`). `pbx3spa` Recordings panel (ported from legacy `sarkrecordings`) provides filters, inline play, and download. Tenant column shows `cluster.pkey` (display name), not shortuid.
+**Operator UX:** `pbx3api` `RecordingIndexService` + `RecordingController` list/search/stream/download over the **SQLite catalog** (spool scan fallback). SPA **Recordings** panel: one list for local + S3-backed (`s3_only`) rows; **From / To / Tenant / Search** query `GET /recordings`; play/download stream local file or gatekeeper S3 proxy (spinner while fetching). Tenant column shows `cluster.pkey` (display name), not shortuid.
+
+### Capability vs policy (locked 2026-08-26)
+
+S3 recordings are **not** always-on for every fleet tenant. Two layers:
+
+| Layer | Who | Default | Meaning |
+|-------|-----|---------|---------|
+| **Capability (install)** | Control (+ home plumbing) | **Off** (ask at install) | Off → no dedicated recordings bucket / no home upload wiring. On → create `{stem}-pbx3-recordings`, set gatekeeper `PBX3_RECORDINGS_BUCKET`, home may set `PBX3_RECORDING_UPLOAD_ENABLED=true` + gatekeeper URL/token + cron. |
+| **Policy (tenant)** | `cluster.rec_s3` `YES`/`NO` | **`NO`** | Opt-in to S3 DR for that site. Local spool → archive + `recmaxage` / `recmaxsize` always work without S3. Upload runs only when **capability On** and **`rec_s3=YES`**. |
+
+```mermaid
+flowchart TD
+  installAsk["Install: enable recordings S3 capability? default No"]
+  installAsk -->|No| localFleet["No recordings bucket; homes local-only"]
+  installAsk -->|Yes| cap["Bucket + gatekeeper + home upload ready"]
+  cap --> tenant["Tenant rec_s3? default NO"]
+  tenant -->|NO| localTenant["Local archive + recmaxage"]
+  tenant -->|YES| upload["pbx3:recordings-s3-upload for that cluster"]
+```
+
+**S3 is canonical only for opted-in tenants.** Others remain local-first. Solo (no fleet): no recordings bucket unless a future solo path is scheduled.
+
+**Home `.env` is plumbing**, not the product switch:
+
+| | Env |
+|--|-----|
+| Capability ready | `PBX3_RECORDING_UPLOAD_ENABLED=true` + `PBX3_GATEKEEPER_URL` + `PBX3_GATEKEEPER_TOKEN` (= control **`GATEKEEPER_API_TOKEN`** / `fleet_admin`) + control `PBX3_RECORDINGS_BUCKET` |
+| Capability off | `PBX3_RECORDING_UPLOAD_ENABLED=false` (default) |
+
+`PBX3_RECORDING_UPLOAD_TENANTS` remains a **break-glass allowlist override** only — not the primary product control. Operator MkDocs: **`fleet/recordings-s3-offload`**.
+
+**Lab Garage:** S3 API must be LAN-reachable from homes (`0.0.0.0:3900` or control LAN IP; gatekeeper `AWS_ENDPOINT=http://<control-ip>:3900`). Default localhost bind makes home PUTs fail.
+
+### Fleet UI (parked — plumbing status only)
+
+**Surface:** Fleet → **Instances** (optional later). **Read-only** capability / health (recordings bucket configured? last upload error?) — **not** the tenant opt-in. Tenant opt-in is **`rec_s3`** on Tenant → Call recording (instance SPA). Do **not** have the browser edit node `.env` or hold recordings IAM.
 
 **Principle (Rule 1):** R1 works **without S3** — same as telephony. Capture and playback do not depend on offload, NFS, or the fleet control plane.
 
@@ -89,7 +125,7 @@ See `sqlite_create_tenant.sql`, `Tenant` model, SPA tenant advanced fields.
 
 ## 3. Target architecture — three tiers
 
-**Decision (2026-07-07):** **S3-first for fleet** — S3 under `tenants/{shortuid}/recordings/` is the **canonical fleet archive**. Local `/opt/pbx3/media/recordings` (+ optional `rec_mount`) remains an **optional on-prem / legacy path**, not the fleet source of truth.
+**Decision (2026-07-07; amended 2026-08-26):** For **opted-in** fleet tenants (`rec_s3=YES` + install capability), S3 under `tenants/{shortuid}/recordings/` is the **canonical fleet archive**. Tenants with `rec_s3=NO` (default) stay **local-first** (Tier 1 + Tier 2 + `recmaxage`). Local `/opt/pbx3/media/recordings` (+ optional `rec_mount`) remains the on-node archive path for everyone.
 
 ```mermaid
 flowchart LR

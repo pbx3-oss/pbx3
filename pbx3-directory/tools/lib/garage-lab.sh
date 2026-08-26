@@ -180,8 +180,50 @@ garage_ensure_bucket() {
   "$GARAGE_BIN" -c "$GARAGE_TOML" bucket website --allow "$bucket" >/dev/null || true
 }
 
+# Dedicated recordings bucket — never website (private; homes PUT via presign).
+garage_ensure_private_bucket() {
+  local bucket="$1"
+  if ! "$GARAGE_BIN" -c "$GARAGE_TOML" bucket info "$bucket" >/dev/null 2>&1; then
+    "$GARAGE_BIN" -c "$GARAGE_TOML" bucket create "$bucket" >/dev/null
+  fi
+}
+
+garage_bucket_allow_rw() {
+  local bucket="$1" key="${2:-}"
+  if [[ -z "$key" && -f "$GARAGE_DEFAULTS_ENV" ]]; then
+    # shellcheck disable=SC1090
+    set -a
+    # shellcheck disable=SC1090
+    source "$GARAGE_DEFAULTS_ENV"
+    set +a
+    key="${GARAGE_DEFAULT_ACCESS_KEY:-}"
+  fi
+  if [[ -z "$key" ]]; then
+    echo "garage_bucket_allow_rw: no access key" >&2
+    return 1
+  fi
+  "$GARAGE_BIN" -c "$GARAGE_TOML" bucket allow "$bucket" --key "$key" --read --write >/dev/null
+}
+
+# Endpoint homes use in AWS_ENDPOINT / presigns. When bind is 0.0.0.0, pass LAN IP.
 garage_s3_endpoint() {
   printf 'http://%s' "$GARAGE_S3_BIND"
+}
+
+garage_s3_client_endpoint() {
+  local lan_ip="${1:-}"
+  case "$GARAGE_S3_BIND" in
+    0.0.0.0:*)
+      if [[ -z "$lan_ip" ]]; then
+        echo "garage_s3_client_endpoint: lan_ip required when bind is 0.0.0.0" >&2
+        return 1
+      fi
+      printf 'http://%s:%s' "$lan_ip" "${GARAGE_S3_BIND##*:}"
+      ;;
+    *)
+      garage_s3_endpoint
+      ;;
+  esac
 }
 
 garage_web_host() {
