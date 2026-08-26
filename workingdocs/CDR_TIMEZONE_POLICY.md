@@ -45,6 +45,7 @@ In **UK summer (BST = UTC+1)**, the same class of bug appears (±1h and around m
 1. **Near-term Home fix (no CDR rewrite):** Day buckets (`outcomeToday`, any “today”/calendar CDR filter) must use the **same wall clock CDR was written in** — today that is **node local** (`timedatectl` / host TZ), **not** bare Laravel UTC `today`. Rolling windows (`volumeLast24h`) are less sensitive but hour **labels** should eventually match that same clock.
 2. **Transnational end-state:** Prefer **UTC in CDR at rest** (Asterisk `usegmtime` / equivalent where supported) + **site TZ** for SPA “today” and operator-facing day reports (kinship: Network timezone / `sysglobals` — see SPA Network panel). Convert only at presentation.
 3. **Until UTC CDR is fleet-default:** treat **written `calldate` strings as canon** for comparisons; never assume they are UTC just because Laravel is.
+4. **Federated OS default (2026-08-26):** Prefer **host `Etc/UTC`** on control / SBC / multi-region nodes. Leave cloud SBC UTC as-is until operators need a non-UTC Filament day bucket — then set `PBX3_SBC_SITE_TIMEZONE` (presentation only; do not flip OS TZ casually).
 
 Do **not** flip golden CDR to UTC in a one-off lab patch without a fleet install/GenAst story and a note on existing local rows.
 
@@ -81,3 +82,4 @@ Checklist item for any Asterisk install review: **“CDR HoR UTC?”** — verif
 | 2026-07-31 | Install watch: CSV already `usegmtime=yes`; SQLite HoR still local via `${CDR(start)}` — fix at Asterisk install/package. |
 | 2026-07-31 | **Shipped package + golden:** SQLite HoR UTC via STRFTIME; verified new `calldate` ≈ `date -u`. |
 | 2026-08-01 | SPA/API site-TZ display + day filters; SBC Filament Home/CDR site-TZ; mixed-row harness skipped. |
+| 2026-08-26 | Federated default: OS UTC; cloud SBC left UTC; site TZ override only when operators ask. |

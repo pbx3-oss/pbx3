@@ -67,7 +67,7 @@
 32. ~~**Instance SIP logging**~~ — **done** (A–G on **`main`**; **pbx3 `0.0.5-5`** on golden/bzy/Toliman; API tip; S3 **`sip-text`** ship confirmed). Spec: **`HOME_SIP_LOGGING_REQUIREMENTS.md`**.  
 33. ~~**Fleet hop-1 DID — block assign + reconcile**~~ — **done** (Allocate `delivery` singleton|block; `GET /dids/reconcile` + Apply via project; SPA DIDs drift check). Lock: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**.  
 34. ~~**Fleet domain→setid Magrathea lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
-35. **SBC site timezone at install (should-do)** — **`pbx3sbc-admin/install.sh`**: prompt or `--site-timezone` → write `PBX3_SBC_SITE_TIMEZONE` (Home/CDR day buckets). Default = host `/etc/timezone`. Optional later: Filament change-later; optional `timedatectl` OS set with clear warning. No UI today.  
+35. ~~**SBC site timezone at install**~~ — **done (2026-08-26):** `pbx3sbc-admin/install.sh` prompt / `--site-timezone` / `PBX3_SBC_SITE_TIMEZONE` → `.env` (Home/CDR day buckets). Default = host `/etc/timezone`. Does not change OS clock. Optional later: Filament change-later.  
 36. **Legacy SARK admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**. **P1 CoS (sarkcos): done pending lab sign-off (2026-08-23)**. **sarkreport:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** lab green (2026-08-25) — upload/play/delete + `moh reload` (no Commit for file swaps); Custom MOH Active still Save. **Recordings (sarkrecordings):** panel shipped (R1/R1.5/S7); unified list filters + play spinner **done (2026-08-26)**. **Extension named call/pickup groups:** `named_call_group` + `named_pickup_group` — lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**; **pickup manual L3 OK** lab `.31`; sipplab pack pending. **BLF SUBSCRIBE:** tmpl `allow_subscribe=yes` + `subscribe_context=$clst`; **Snom BLF OK** lab `.31`; **Yealink** — phone config under investigation (Asterisk assumed OK). **Parking:** `parkinghints=yes` + **`parkedcallreparking=both`** (restores `*5` after timeout comeback; no Dial-arg knob in res_parking) — lab OK (2026-08-24). ETL: **`~/GiT/sark-to-pbx3`**. **PJSIP config wizard:** won't-do. **P2+ parked:** wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **sark3pcerts**.
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
@@ -86,7 +86,7 @@
 - [x] **Tenant CLID blacklist — Phase 1 (2026-08-25):** `clid_block` table, API `clidblocks`, SPA **Inbound → Blocked caller IDs**, CAGI `Ingress()` reject. Digits-only exact match; no Commit. **Phase 1 sufficient** — SPA admin policy is the product shape.
 - [ ] **Tenant CLID blacklist — Phase 2 (parked, optional):** Desk feature code → email block **request** → tenant admin approves in SPA. **Not required** unless customers ask; spec sketch: **`CLID_BLACKLIST_REQUIREMENTS.md`** § Phase 2.
 
-- [ ] **Support line test panel — Phase 2 (parked 2026-08-25):** Separate SPA panel; predefined **hidden WebRTC** caller per tenant; dial **any** ext; **Hold/Resume** in-call (MOH → jitter sampling); post-call report. **Supersedes** per-WebRTC **Line test** button on ship. Spec: **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`** §10.
+- [x] **Support line test panel — Phase 2 (2026-08-26):** Tools → Line quality test; hidden WebRTC (`system:line-test`); dial any ext; Hold/Resume + MOH sampling; post-call report. Retires per-WebRTC Line test button. Spec: **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`** §10.
 
 - [ ] **SBC SIP TLS — hardphones (mid-term, locked 2026-08-25):** Not building today. Phone ↔ SBC **TLS :5061**; SBC ↔ home/carriers **UDP**; reuse edge LE for **`sbc.pbx3.com`** (outbound proxy); mix TLS desks + UDP Peers OK. Effort ~2–4 d lab / ~1 wk productize. Spec: **`SBC_PRODUCT_TRACKS.md`** gap **#1** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2. Out of MVP: SDES SRTP, carrier mTLS, rtpengine.
 
@@ -192,7 +192,7 @@
 
 - [x] **Fleet domain→setid Magrathea lock (2026-08-11 #34):** `fleet=domain` stamp on register/repoint; DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`. Spec: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.
 
-- [ ] **SBC site timezone at install (parked 2026-08-12 — should-do):** `pbx3sbc-admin/install.sh` prompt or `--site-timezone` → `PBX3_SBC_SITE_TIMEZONE` in `.env` (Home/CDR day buckets via `SiteTimezone`). Default host `/etc/timezone`. Optional later: Filament change-later; optional OS `timedatectl` with warning. No UI today.
+- [x] **SBC site timezone at install (2026-08-26):** `pbx3sbc-admin/install.sh` prompt / `--site-timezone` → `PBX3_SBC_SITE_TIMEZONE`. Default host `/etc/timezone`. No OS `timedatectl`. Optional later: Filament change-later.
 
 - [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
 

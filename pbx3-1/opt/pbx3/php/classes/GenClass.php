@@ -805,7 +805,8 @@ class genAsteriskObjects
 		$buffer = preg_replace('/\$id/', $rep($row['shortuid'] ?? null), $buffer);
 		$buffer = preg_replace('/\$pkey/', $rep($row['pkey'] ?? null), $buffer);
 		$buffer = preg_replace('/\$trunk/', $rep($row['pkey'] ?? null), $buffer);
-		$buffer = preg_replace('/\$ext/', $rep($row['pkey'] ?? null), $buffer);
+		// $ext must not eat $externip (pkey 999 → media_address=999ernip).
+		$buffer = preg_replace('/\$ext(?![A-Za-z0-9_])/', $rep($row['pkey'] ?? null), $buffer);
 		$buffer = preg_replace('/\$username/', $rep($row['pkey'] ?? null), $buffer);
 
 		// parkinglot=park-{tenant} — replace $clstkey before $clst (else $clst eats the prefix)
