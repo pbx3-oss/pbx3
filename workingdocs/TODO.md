@@ -241,9 +241,9 @@
 
 - [x] **pjsipuser / Device.sipiaxfriend — deprecated (2026-08-23):** Not used by GenAst (tmpl + `pjsip_overlay`). API no longer copies or accepts updates; columns/seed kept until a later schema drop.
 
-- [ ] **Extensions edit panel — Runtime section (re-examine):** Deferred until phones are registered on a test instance.
+- [x] **Extensions edit panel — Behaviour (was Runtime) (2026-08-26):** Closed. CFIM / CFBS / ring delay are editable under **Behaviour**; Save → `PUT …/runtime`. Live IP/RTT stay on Extensions list (not edit). Polish note: **`pbx3spa/workingdocs/PANEL_POLISH_2026-07-18.md`**.
 
-- [ ] **Inbound route panels — SWOCLIP (re-examine):** Confirm field placement / create-edit parity.
+- [x] **Inbound route panels — SWOCLIP create parity (2026-08-26):** Create exposes **SWOCLIP** default **YES** (DB true); edit already had it.
 
 - [ ] **pbx3cagi — `maxin` / `maxout` call counters:** Fix concurrent-call limit enforcement.
 
