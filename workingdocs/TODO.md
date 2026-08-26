@@ -237,9 +237,7 @@
 
 - [ ] **Home / package versioning (parked 2026-08-21 — should-do):** Not urgent today; **emotional later** if a breaking package/schema change lands and we cannot answer “who is on what?” We already have floors + tips (`TODO_OPS`, catalog `package_version`) but no operator-facing inventory / mixed-floor policy / upgrade path. Scope when scheduled: per-home reported versions (pbx3, cagi, api tip/deb), Fleet or ops visibility, rules for mixed floors, and how a breaking roll is announced/gated. Cadence backdrop: **`REPOS_AND_RELEASES.md`**. Competitive reminder only: **`~/GiT/nonGitStuff/obsidian/Ring2all.md`**.
 
-- [ ] **LDAP — overall strategy deferred:** Parking all LDAP work until a design is chosen.
-
-- [ ] **LDAP: LDAPHelperClass reads from `globals` but instance `globals` has no LDAP columns.** Fold into LDAP strategy when picked up.
+- [ ] **LDAP — parked (2026-08-26):** SPA tenant LDAP section removed (create/edit). Schema/API/`tenantAdvanced.js` LDAP defs kept. Reinstate notes: **`pbx3spa/workingdocs/LDAP_TENANT_PANEL_PARKED.md`**. Includes known debt: **`LDAPHelperClass`** reads `globals` but LDAP columns are on **`cluster`**.
 
 - [x] **pjsipuser / Device.sipiaxfriend — deprecated (2026-08-23):** Not used by GenAst (tmpl + `pjsip_overlay`). API no longer copies or accepts updates; columns/seed kept until a later schema drop.
 
