@@ -144,8 +144,9 @@
 
 - [x] **Provisioning / 3pcerts — won't-do (2026-08-23):** No home listener + edge provision proxy; no **sark3pcerts** panel. Manufacturer RPS covers major vendors (Cisco remains niche). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** (status won't-do).
 
-- [ ] **Device table — lean done in seed; residual (2026-08-06):** Seed keepers + prune SQL landed; SPA **Devices** removed from System nav. **Still open:** drop Devices routes/views entirely; Snom/Grandstream pkey gap; optional later packaged JSON keepers. (Not tied to HTTP provisioning — **#23** won't-do.)
+- [x] **Device table — lean residual (superseded 2026-08-25):** Full purge / won't-do closed the lean keepers track. See **#28** / Device templates purged; **`sqlite_device_drop.sql`**.
 
+- [ ] **Backup ZIP: include `/etc/asterisk` (optional later):** Today backups cover media + DB; full Asterisk tree would help disaster recovery.
 - [ ] **Extension phone image / UA model harvest (parked 2026-08-09):** Sidekick design locked — edge `GET /fleet/registrations` + home `harvest-devicemodel` soft-fills `ipphone.devicemodel`. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Assets: **`~/GiT/nonGitStuff/phoneimages/`** (historic zip URL dead); slice E = SPA + model→filename map.
 
 - [ ] **SPA list action icons — shared component (parked 2026-08-03):** Extract small **`ListEditIcon` / `ListDeleteIcon`** (or combined row-actions) in **pbx3spa** and reuse everywhere. Not urgent polish.
