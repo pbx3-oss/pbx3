@@ -281,7 +281,7 @@ Those UIs framed windows as **closed periods** (sclose/eclose) on default-open �
 | Layer | Model |
 |-------|--------|
 | **Inbound** | `sched_mode` + route profiles (N modes) |
-| **CoS** | Two matrices per extension: `ipphonecosopen` / `ipphonecosclosed` (daytime / closed-hours) |
+| **CoS** | Two matrices per extension: `ipphonecosopen` / `ipphonecosclosed` (**Standard** / **After-hours**) |
 | **Bridge** | `pbx3_oclo_from_mode`: **`closed` → `CLOSED`**; all other modes (`open`, `lunch`, `evening`, `night`, …) → **`OPEN`** |
 | **Dialplan** | `STATE == CLOSED` → `closedcos`; else → `opencos` |
 
@@ -291,13 +291,13 @@ Those UIs framed windows as **closed periods** (sclose/eclose) on default-open �
 - A third dimension on the extension CoS matrix is costly UX for rare need (“stricter CoS at lunch”).  
 - Matches SARK heritage: rules in force during **normal hours** vs **closed hours**.
 
-**Operator / BLF:** master or tenant force **CLOSED** still selects the closed CoS set; **AUTO** resumes schedule (and thus the binary map above).
+**Operator / BLF:** master or tenant force **CLOSED** still selects the After-hours CoS set; **AUTO** resumes schedule (and thus the binary map above).
 
 **Not v1:** N CoS matrices keyed by schedule mode.
 
 **Optional later (only if a real shop asks):** tenant **closed-like modes** list (e.g. treat `night` / `evening` as closed for CoS) — still two matrices, richer mapping. Do not schedule until demanded.
 
-**SPA:** keep daytime / nighttime CoS labeling (`ipphonecosopen` / `ipphonecosclosed`); do not invent per-mode columns when completing the CoS assignment backlog.
+**SPA (2026-08-26):** Extension CoS headings **Standard** / **After-hours** (`ipphonecosopen` / `ipphonecosclosed`). Avoid “open/closed” and “day/night” labels — lunch is inbound-closed-ish but still **Standard** CoS. Do not invent per-mode columns.
 
 ---
 
@@ -504,4 +504,5 @@ Gate: **`make test` PASS** on every CAGI PR in this track.
 | 2026-08-04 | Timespan half-open `[start, end)`. §5.8 expanded: no-match default alternatives (A–D) + preferred tenant setting residual. |
 | 2026-08-04 | §5.9: Prior timer UIs had **Every Day** (`*`) — pbx3 stored it but SPA edit showed bare `*`; label fixed to Every day. Ranges still the surpass target. |
 | 2026-08-04 | §5.8: **default open reaffirmed** (BLF-only / no-timer shops); default-closed rejected as fleet default. Day ranges remain primary UX residual. |
+| 2026-08-26 | §5.10 SPA labels: **Standard** / **After-hours** (not day/night or open/closed). |
 | 2026-08-20 | §5.10: **CoS stays binary** (open vs closed cue via `pbx3_oclo_from_mode`); no per-mode CoS matrices; optional closed-like map later only if demanded. |
