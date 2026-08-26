@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-26 (line-test Asterisk-leg twin parked as future)  
+**Last updated:** 2026-08-26 (SPA session idle timeout from Instance Globals)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -250,7 +250,7 @@
 
 - [ ] **pbx3cagi — `maxin` / `maxout` call counters:** Fix concurrent-call limit enforcement.
 
-- [ ] **SPA session timeout (Instance Globals `sessiontimout`):** Implement client-side idle/session expiry. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`**.
+- [x] **SPA session timeout (Instance Globals `sessiontimout`) (2026-08-26):** Idle auto-logout honours **`GET sysglobals.sessiontimout`** (seconds; default **600** = 10 min). Build env `VITE_AUTO_LOGOUT_MINUTES` remains fallback before globals load / fleet-only. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`** §6.
 
 - [ ] **tt_help_core cleanup — unreferenced rows (final pass):** Review unreferenced help keys; prune or rewire.
 

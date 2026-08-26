@@ -69,9 +69,9 @@ Worth doing if a soft-land or public-ish demo is soon; not architecture:
 | **N1** | **SPA production bundle diet** | Explicit pre-first-release TODO; lab OK, prod Pages chunk fat |
 | **N2** | **Pages + CORS** for production SPA origin | If first out ≠ `npm run dev` |
 | **N3** | **Fleet instance health includes Asterisk** | `/up` alone lies; embarrassing in a live Fleet view |
-| **N4** | **SPA session timeout** honour `globals.sessiontimout` | Small trust/UX gap |
+| **N4** | ~~**SPA session timeout** honour `globals.sessiontimout`~~ **done (2026-08-26)** | Default 600 s; editable in Instance Globals |
 | **N5** | Magrathea gwid **dialect** / Twilio crumb if that carrier story is in the pitch | Only if demo script needs it |
-| **N6** | Quick pass: inbound **SWOCLIP** create/edit parity; Extension **Runtime** with a live phone | Panel honesty on demo path |
+| **N6** | ~~Quick pass: inbound **SWOCLIP** create/edit parity; Extension **Runtime**~~ **done (2026-08-26)** | Create SWOCLIP YES; Behaviour (was Runtime) editable — **`TODO.md`** |
 | **N7** | ~~Drop Devices routes/views~~ **done (2026-08-25)** | Device templates purged |
 
 ---

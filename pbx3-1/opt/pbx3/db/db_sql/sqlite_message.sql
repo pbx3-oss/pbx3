@@ -414,7 +414,7 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('searchkey','
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('secondary','Secondary Path','The second choice trunk for this route.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('selectall','Select All','');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sendedomain','Send domain','Domain name sent in SIP headers for outbound calls from this instance.');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sessiontimout','Session timeout','Web session idle timeout in minutes before automatic logout.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sessiontimout','Session timeout','Web session idle timeout in seconds before automatic SPA logout (default 600 = 10 minutes).');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('shortuid','UID','System generated shortuid.   A 6-character unique value allocated to objects to uniquely identify them.  Among other things it is used to identify SIP endpoints (i.e. the *sip-user*) to Asterisk.   This is separate from any dialable number (e.g. an extension number or DDI).');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sipdriver','SIP Channel Driver','You can use the older chan_sip (SIP) stack or the more modern PJSIP stack.  You MUST issue a commit after you change this and then you MUST restart Asterisk or bad things will happen.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sipflood','Throttle SIP floods?','Retired under UFW (no Shorewall limit template). Leave NO; SIP abuse controls live at the SBC for fleet.');
