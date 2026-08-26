@@ -1,15 +1,16 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-25 (session end — line test Phase 2 spec)  
+**Last updated:** 2026-08-25 (session end — MOH polish + recordings list plan)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
-0. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
-0a. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
-0b. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
-0c. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
-0d. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS lock **#11** named call/pickup (`callgroup`→`named_call_group`, `pickupgroup`→`named_pickup_group`). Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
+0. **Recordings panel — unified catalog + play spinner** — **plan ready (next session):** list = SQLite headers (local + S3 metadata); From/To filter that list; S3 only on play/download; spinner while blob fetch (~1–2s). Wire SPA filters to `GET /recordings?from=&to=…`. S7 must be enabled for S3 rows. Plan: Cursor **`recordings_unified_list`**. Spec: **`pbx3-directory/docs/RECORDINGS_STORAGE_DESIGN.md`**.  
+0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
+0b. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
+0c. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
+0d. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
+0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS lock **#11** named call/pickup (`callgroup`→`named_call_group`, `pickupgroup`→`named_pickup_group`). Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
 1. ~~**Workingdocs hygiene**~~ — **done** (session handoffs in **`aelintra/pbx3-ops`**; product stubs remain).  
 2. ~~**Apache-2.0 `LICENSE` files**~~ — **done** (clean Apache-2.0 on product repos; see open-item note).  
 3. ~~**Strip customer-migrate tooling from pbx3**~~ — **done** (private ETL owns migrate; package keeps shortuid normalize only).  
@@ -66,13 +67,17 @@
 33. ~~**Fleet hop-1 DID — block assign + reconcile**~~ — **done** (Allocate `delivery` singleton|block; `GET /dids/reconcile` + Apply via project; SPA DIDs drift check). Lock: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**.  
 34. ~~**Fleet domain→setid Magrathea lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
 35. **SBC site timezone at install (should-do)** — **`pbx3sbc-admin/install.sh`**: prompt or `--site-timezone` → write `PBX3_SBC_SITE_TIMEZONE` (Home/CDR day buckets). Default = host `/etc/timezone`. Optional later: Filament change-later; optional `timedatectl` OS set with clear warning. No UI today.  
-36. **Legacy SARK admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**. **P1 CoS (sarkcos): done pending lab sign-off (2026-08-23)**. **sarkreport:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** Tenant edit upload/list/play/delete + `usemohcustom` (GenAst class `moh-{shortuid}`). **Extension named call/pickup groups:** `named_call_group` + `named_pickup_group` — lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**; **pickup manual L3 OK** lab `.31`; sipplab pack pending. **BLF SUBSCRIBE:** tmpl `allow_subscribe=yes` + `subscribe_context=$clst`; **Snom BLF OK** lab `.31`; **Yealink** — phone config under investigation (Asterisk assumed OK). **Parking:** `parkinghints=yes` + **`parkedcallreparking=both`** (restores `*5` after timeout comeback; no Dial-arg knob in res_parking) — lab OK (2026-08-24). ETL: **`~/GiT/sark-to-pbx3`**. **PJSIP config wizard:** won't-do. **P2+ parked:** recordings browse, wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **sark3pcerts**.
+36. **Legacy SARK admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**. **P1 CoS (sarkcos): done pending lab sign-off (2026-08-23)**. **sarkreport:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** lab green (2026-08-25) — upload/play/delete + `moh reload` (no Commit for file swaps); Custom MOH Active still Save. **Recordings (sarkrecordings):** panel shipped (R1/R1.5/S7); next = unified list filters + play spinner (TODO **0**). **Extension named call/pickup groups:** `named_call_group` + `named_pickup_group` — lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**; **pickup manual L3 OK** lab `.31`; sipplab pack pending. **BLF SUBSCRIBE:** tmpl `allow_subscribe=yes` + `subscribe_context=$clst`; **Snom BLF OK** lab `.31`; **Yealink** — phone config under investigation (Asterisk assumed OK). **Parking:** `parkinghints=yes` + **`parkedcallreparking=both`** (restores `*5` after timeout comeback; no Dial-arg knob in res_parking) — lab OK (2026-08-24). ETL: **`~/GiT/sark-to-pbx3`**. **PJSIP config wizard:** won't-do. **P2+ parked:** wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **sark3pcerts**.
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
 ---
 
 ## Open items
+
+- [ ] **Recordings — unified list filters + play spinner (next session):** SQLite catalog list (local + S3 metadata); existing From/To; S3 only on play/download; spinner during blob fetch. Wire SPA → `GET /recordings` query params. Plan: Cursor **`recordings_unified_list`**. Spec: **`RECORDINGS_STORAGE_DESIGN.md`**.
+
+- [x] **Tenant custom MOH — upload UX + live reload (2026-08-25):** Primary Upload MOH button; segmented Master force radii; PHP/nginx **50M** upload floor; **`moh reload`** after upload/delete (no Commit for file swaps). Custom MOH Active still Save (+ Commit only if class never generated).
 
 - [x] **Device templates — won't-do / purged (2026-08-25):** No in-house provisioner; Device table seed/API/SPA removed. `ipphone.device` stays as type label. Existing DBs: **`sqlite_device_drop.sql`**. Retrofit SARK 6.5 only if provisioning returns.
 - [x] **Tenant CLID blacklist — Phase 1 (2026-08-25):** `clid_block` table, API `clidblocks`, SPA **Inbound → Blocked caller IDs**, CAGI `Ingress()` reject. Digits-only exact match; no Commit. **Phase 1 sufficient** — SPA admin policy is the product shape.
