@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-26 (S7 + panel polish: CoS labels, SWOCLIP create, TODO hygiene)  
+**Last updated:** 2026-08-26 (line-test Asterisk-leg twin parked as future)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -164,6 +164,8 @@
 - [ ] **Fleet instance health includes Asterisk (parked, pre-live 2026-07-27):** Gatekeeper node badge uses HTTP **`/up`** only. Extend probe for call-plane liveness before production. Do not block dial-alias.
 
 - [ ] **AMI wallboard feed (side gig, parked 2026-07-27):** Feed-only live board when demand appears — separate small track.
+
+- [ ] **Line test — Asterisk-leg RTCP twin (parked 2026-08-26):** Browser `getStats` is enough for now. Future: AMI/RTCP (or hangup QoS) section beside the SPA report; multi-channel correlation is the hard part. Spec: **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`** §11.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** Not built. Best-effort AMI overlay on move jobs.
 
