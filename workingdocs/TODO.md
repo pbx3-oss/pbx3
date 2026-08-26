@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-26 (S7 capability + tenant `rec_s3` lock)  
+**Last updated:** 2026-08-26 (S7 + panel polish: CoS labels, SWOCLIP create, TODO hygiene)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
