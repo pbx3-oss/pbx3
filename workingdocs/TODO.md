@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-27 (inbound DISA/CALLBACK note)  
+**Last updated:** 2026-08-27 (register Via / private host support hint)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -150,6 +150,8 @@
 
 - [ ] **Backup ZIP: include `/etc/asterisk` (optional later):** Today backups cover media + DB; full Asterisk tree would help disaster recovery.
 - [ ] **Extension phone image SPA (slice F) — shelved 2026-08-27:** Wait on OEM/partner portal assets (Yealink/Grandstream/…); private phoneimages repo §9.0 when ready. Handset **text** is enough until then. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.
+
+- [ ] **Extension — last register Via / private host (support hint, 2026-08-27):** AstDB `registrar/contact` already has `via_addr` / `via_port` (often the phone’s real LAN IP) and `x-ast-orig-host`; public NAT is SBC `received`, not AstDB. Expose read-only on extension Handset / detail for “where is this phone?” when the customer doesn’t know. Differentiator — most Asterisk GUIs never show it. Same AstDB source as **23a**; not call-path. Spec note: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`** §5.1.
 
 - [ ] **SPA list action icons — shared component (parked 2026-08-03):** Extract small **`ListEditIcon` / `ListDeleteIcon`** (or combined row-actions) in **pbx3spa** and reuse everywhere. Not urgent polish.
 

@@ -223,6 +223,14 @@ $manufacturer_regex = [
 
 **List:** User = `desc`. Device = type enum. Brand/model = harvest columns (not Device table).
 
+### 5.1 Later — last register Via / private host (support)
+
+**Why:** Customers often cannot say where a handset lives. AstDB `registrar/contact` already stores **`via_addr` / `via_port`** (typically the phone’s LAN address from Via) and Contact **`x-ast-orig-host`**. That is the best “which site / which LAN” clue without asking them to dig in the phone UI. Public NAT path is on the **SBC** (`received`), not this AstDB field.
+
+**Product shape (when scheduled):** Read-only on extension Handset / detail (and maybe list tooltip) — e.g. “Last register Via: `192.168.1.92:6182`”. Same home AstDB source as harvest (**S5**); async or on-demand AMI/`database show` — **not** REGISTER path. Do **not** treat Via as a routing address from the cloud.
+
+**Note:** Few (if any) common Asterisk GUIs expose this — useful differentiator for support.
+
 ---
 
 ## 6. Non-goals (v1)
