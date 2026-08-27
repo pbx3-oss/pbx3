@@ -88,6 +88,17 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdesc','Com
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwdestports','Port','Destination port or range (e.g. 5060 or 10000:20000). Leave empty for icmp.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwproto','Proto','Network protocol: tcp, udp, icmp, or all.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('fwsource','Source','Literal source only: any, an IPv4 or IPv6 address, or CIDR (e.g. 192.168.1.85, 192.168.1.0/24, 2001:db8::1, 2001:db8::/32). No $LAN/$SBC shorthand. One table covers UFW IPv4 and IPv6.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('firewall_allow_rules','Allow rules','One allow-list drives UFW for IPv4 and IPv6 (no separate IPv6 panel).
+
+**Proto** — tcp, udp, icmp, or all.
+
+**Port** — Destination port or range (e.g. 5060 or 10000:20000). Leave empty for icmp.
+
+**Source** — Literal only: any, an IPv4/IPv6 address, or CIDR. No $LAN/$SBC shorthand.
+
+**Comment** — Optional note shown in ufw status.
+
+Save writes the JSON allow-list; Apply runs the UFW baseline. Fleet SIP should stay limited to SBC IP(s). Port 80 is managed only by Let''s Encrypt scripts.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('greeting','Greeting Number','Greeting number that this IVR uses.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('greetingnum','Number','The 4-digit greeting number');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('host','Host address','Enter the URL or the IP address of the target host (unless this host will register with you, in which case enter the string ''dynamic'')');
@@ -249,6 +260,18 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('retry','Queu
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ringdelay','Ring Time(sec)','The number of seconds that we will ring the end-point before taking an outcome. If you leave this blank the default delay is 20 seconds, or about 5 ring cycles.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('route','Route','Route name - must be system-wide unique.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('route_profile','Route profile','The **route profile** key used by this DID route — maps schedule mode to destination for the tenant. Pick from the dropdown.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('route_profile_destinations','Destinations','Where inbound calls go when this profile''s schedule mode is **open** or **closed**.
+
+**Open destination** — Used for open / day-part modes that are not closed (and when not forced closed).
+
+**Closed destination** — Used when the schedule is closed, or when tenant/master force CLOSED.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('route_profile_extra_modes','Additional schedule modes','Optional destinations for day-parts beyond open/closed (lunch, evening, night, break, or any custom name).
+
+**Mode** — Freeform lowercase name. The dropdown is suggestions only — type any mode name, then create a day timer entry to match it (same string in **Mode when matched**).
+
+**Destination** — Where inbound calls go while that mode is active. Choose a real destination (not None).
+
+Mode names must match exactly between this profile and the tenant''s day timers.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sched_mode','Schedule mode','Current day-parts mode written by the timer (open, closed, lunch, …). Inbound routing uses this with route profiles. Operator CLOSED force overrides it.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sendedomain','Send domain','Domain name sent in SIP headers for outbound calls from this instance.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('sessiontimout','Session timeout','Web session idle timeout in seconds before automatic SPA logout (default 600 = 10 minutes).');

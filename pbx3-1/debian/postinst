@@ -113,6 +113,20 @@ if [ -f /opt/pbx3/db/sqlite.db ] && command -v sqlite3 >/dev/null 2>&1; then
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('recs3','S3 offload','Opt this tenant into fleet S3 disaster recovery for call recordings (default No). Requires the home to have recordings S3 upload plumbing enabled at install. Local archive and max age/size always apply; Yes only adds upload of archived files to the fleet recordings bucket.');
 UPDATE tt_help_core SET displayname = 'Standard Class of Service', htext = 'Rules that apply in Standard hours: schedule mode is anything other than closed (open, lunch, evening, night day-parts, etc.), or when not forced closed. Outbound dial privileges for this extension.' WHERE pkey = 'cosday';
 UPDATE tt_help_core SET displayname = 'After-hours Class of Service', htext = 'Rules that apply in After-hours: schedule mode closed, or tenant/master force CLOSED. Lunch and other non-closed day-parts still use Standard CoS.' WHERE pkey = 'cosnight';
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('route_profile_extra_modes','Additional schedule modes','Optional destinations for day-parts beyond open/closed (lunch, evening, night, break, or any custom name).
+
+**Mode** — Freeform lowercase name. The dropdown is suggestions only — type any mode name, then create a day timer entry to match it (same string in **Mode when matched**).
+
+**Destination** — Where inbound calls go while that mode is active. Choose a real destination (not None).
+
+Mode names must match exactly between this profile and the tenant''s day timers.');
+UPDATE tt_help_core SET displayname = 'Additional schedule modes', htext = 'Optional destinations for day-parts beyond open/closed (lunch, evening, night, break, or any custom name).
+
+**Mode** — Freeform lowercase name. The dropdown is suggestions only — type any mode name, then create a day timer entry to match it (same string in **Mode when matched**).
+
+**Destination** — Where inbound calls go while that mode is active. Choose a real destination (not None).
+
+Mode names must match exactly between this profile and the tenant''s day timers.' WHERE pkey = 'route_profile_extra_modes';
 EOF
 fi
 
