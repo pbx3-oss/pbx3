@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-27 (23a posture **A** locked — devicevendor / firstseen·lastseen / device enum; build on flip)  
+**Last updated:** 2026-08-27 (23a harvest lab green; slice F images shelved)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -12,7 +12,7 @@
 0c. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0d. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
 0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** `ipphone.device` enum normalize. Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
-0g. ~~**UA → model / phone images (23a)**~~ — **lab green `.31` (2026-08-27):** harvest every 15 min → `Yealink T46U` / `Snom D717`; Zoiper unmapped; device enum normalized; API `handset_label` + SPA Handset/Last seen. Cron **on** `.31`; package default still off. Residual: phoneimages slice F; roll tips/package; ETL #14 code shipped in sark-to-pbx3. Specs: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
+0g. ~~**UA → model / phone images (23a)**~~ — **lab green `.31` (2026-08-27):** harvest + Handset UI. **Images / slice F shelved** — operator joining OEM partner portals first; no ProVu scrape into product path. Spec §9.0 kept for when ready.  
 1. ~~**Workingdocs hygiene**~~ — **done** (session handoffs in **`aelintra/pbx3-ops`**; product stubs remain).  
 2. ~~**Apache-2.0 `LICENSE` files**~~ — **done** (clean Apache-2.0 on product repos; see open-item note).  
 3. ~~**Strip customer-migrate tooling from pbx3**~~ — **done** (private ETL owns migrate; package keeps shortuid normalize only).  
@@ -56,7 +56,7 @@
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
 23. ~~**Provisioning (home listener + edge proxy)**~~ — **won't-do (2026-08-23):** no in-house HTTP phone provisioner / 3pcerts panel. Use manufacturer RPS (except niche Cisco). Spec retained as archive note: **`PROVISIONING_SERVER_REQUIREMENTS.md`**.  
-23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA). Residual: images pack / slice F; package roll. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
+23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked).  
 26. ~~**Seed outbound US dialplan / wire (O4)**~~ — **lab green** for Toliman call chain (Egress `011:+ 1:+1` + Twilio). Product US globals auto-seed pack still optional. Spec: **`EGRESS_PLUS_E164_WIRE.md`** · **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.  
@@ -148,7 +148,7 @@
 - [x] **Device table — lean residual (superseded 2026-08-25):** Full purge / won't-do closed the lean keepers track. See **#28** / Device templates purged; **`sqlite_device_drop.sql`**.
 
 - [ ] **Backup ZIP: include `/etc/asterisk` (optional later):** Today backups cover media + DB; full Asterisk tree would help disaster recovery.
-- [ ] **Extension phone image / UA model (parked; 2026-08-26):** AstDB UA source; choose durable harvest vs ephemeral on render — **`PHONE_MODEL_DURABLE_VS_EPHEMERAL.md`**. If durable: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Fleet inventory optional, stale-OK. Assets: **`~/GiT/nonGitStuff/phoneimages/`**.
+- [ ] **Extension phone image SPA (slice F) — shelved 2026-08-27:** Wait on OEM/partner portal assets (Yealink/Grandstream/…); private phoneimages repo §9.0 when ready. Handset **text** is enough until then. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.
 
 - [ ] **SPA list action icons — shared component (parked 2026-08-03):** Extract small **`ListEditIcon` / `ListDeleteIcon`** (or combined row-actions) in **pbx3spa** and reuse everywhere. Not urgent polish.
 

@@ -246,7 +246,7 @@ $manufacturer_regex = [
 | **C** | UA mapper unit tests (fixtures §4.4) — vendor + model split |
 | **D** | Soft UPDATE + optional cron (off by default) |
 | **E** | Lab enable on `.31` / golden |
-| **F** | SPA image / “as of” + phoneimages host (§9) |
+| **F** | SPA image / “as of” + phoneimages host (§9) — **shelved 2026-08-27** (partner-portal assets first; Handset text OK without images) |
 | **G** | SARK ETL #14 + drop `getVendorFromMac` |
 
 ---
@@ -267,13 +267,23 @@ $manufacturer_regex = [
 
 ## 9. Phoneimages pack (ops)
 
+### 9.0 Distribution lock (2026-08-27)
+
+| Lock | |
+|------|--|
+| P1 | **Private** assets repo (e.g. `aelintra/phoneimages`) is the **source of truth** — vendor dirs, README, rights notes. **Not** public; **not** in product packages. |
+| P2 | Homes **do not** `git clone` / `git pull` the assets repo. They consume a **release zip** (or equivalent tarball) via existing `getimages.sh` / `PBX3_PHONEIMAGES_URL` into `/opt/pbx3/cache/phoneimages/`. |
+| P3 | Cadence: monthly (or weekly — same as historic getimages cron) when URL is set. Unset → no images; harvest text still works. |
+| P4 | **Fence + takedown:** keep distribution private/controlled. If a rights holder objects, remove the asset from the private repo + cut a new release; homes pick up the omission on next pull. Softphone **logos** optional; missing image = OK (Handset label only). |
+| P5 | Do **not** bake ProVu (or other supplier) URLs into installer / product tree. Ops copy into the private repo; PBX only sees our zip URL. |
+
 | Item | Value |
 |------|--------|
 | Historic URL | `http://sailpbx.com/phoneimages.zip` (pre-scrub; **dead** / 403 as of 2026-08) |
-| **Current image source** | **[ProVu](https://www.provu.co.uk/products/)** — ops-owned copy; **not** a runtime dependency. |
-| Local unpack (lab) | **`~/GiT/nonGitStuff/phoneimages/`** — add **`grandstream/`** + **`gigaset/`** per §9.1. |
-| Consume on node | `/opt/pbx3/cache/phoneimages/<vendor>/…` |
-| Package default | **Unset** — do not bake supplier hosts into installer. |
+| **Authoring copy (interim)** | **`~/GiT/nonGitStuff/phoneimages/`** until the private repo exists — then migrate tree there. |
+| **Ingest source** | **[ProVu](https://www.provu.co.uk/products/)** desk photos (ops copy per §9.1); optional softphone logos (operator judgment). |
+| **Home consume** | `/opt/pbx3/cache/phoneimages/<vendor>/…` via zip URL |
+| Package default | **Unset** |
 
 ### 9.1 ProVu copy rules (Grandstream + Gigaset)
 
@@ -296,10 +306,12 @@ $manufacturer_regex = [
    - **Yealink:** first **three** chars of token → `T46U` / `T46G` → `T46.jpg` (SARK fuzzy).  
    - **Snom:** `snom` + token → `D717` → `snomD717.jpg`.  
    - **Others:** conventional `{token}.jpg` or small override map if library names disagree.  
+   - **Softphones (optional):** e.g. `zoiper/zoiper.jpg` logo; else no file.  
 3. Optional override map file may win over (2). Display string `T46U (Yealink)` is **never** a filesystem key.
 
 | Display | Columns | Likely asset |
 |---------|---------|--------------|
 | `T31P (Yealink)` / `T46U (Yealink)` | Yealink + T31P / T46U | `yealink/T31.jpg`, `yealink/T46.jpg` |
 | `D717 (Snom)` | Snom + D717 | `snom/snomD717.jpg` |
+| `5.6.13 (Zoiper)` | Zoiper + 5.6.13 | `zoiper/zoiper.jpg` (optional logo) or none |
 | WebRTC | — | none |
