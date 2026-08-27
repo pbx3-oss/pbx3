@@ -227,11 +227,38 @@ Unknown UA → skip (leave `devicemodel` alone). Firmware tokens ignored when ou
 
 | Item | Value |
 |------|--------|
-| Historic URL | `http://sailpbx.com/phoneimages.zip` (pre-scrub; **dead** as of 2026-08-09) |
-| **Current image source** | Main VoIP phone **supplier** keeps product images **online, unshielded** — copy needed models into our library as we expand brands (Grandstream, Gigaset, etc.). Ops-owned refresh; not a product runtime dependency. |
-| Local unpack (lab) | **`~/GiT/nonGitStuff/phoneimages/`** — historic tree (~3.9M, 138 JPEGs): aastra, cisco, fanvil, panasonic, polycom, snom, vtech, yealink. Extend this tree from supplier assets as needed. |
+| Historic URL | `http://sailpbx.com/phoneimages.zip` (pre-scrub; **dead** / 403 as of 2026-08) |
+| **Current image source** | **[ProVu](https://www.provu.co.uk/products/)** — unshielded product trees. Ops-owned copy into our library; **not** a product runtime dependency (do not bake ProVu URLs into installer). |
+| Local unpack (lab) | **`~/GiT/nonGitStuff/phoneimages/`** — historic: aastra, cisco, fanvil, panasonic, polycom, snom, vtech, yealink. Add **`grandstream/`** + **`gigaset/`** from ProVu (rules below). |
 | Consume on node | Tree must land as `/opt/pbx3/cache/phoneimages/<vendor>/…` (same layout `getimages.sh` expects after unzip). Lab: rsync this tree, or zip it and set `PBX3_PHONEIMAGES_URL`. |
-| Package default | **Unset** — do **not** bake supplier or third-party image hosts into the product tree / installer. Library is operator-supplied (cache or `PBX3_PHONEIMAGES_URL`). |
+| Package default | **Unset** — do **not** bake supplier hosts into the product tree / installer. |
+
+### 9.1 ProVu copy rules (Grandstream + Gigaset)
+
+**Base URL:** `https://www.provu.co.uk/products/{grandstream|gigaset}/{ModelFolder}/`
+
+**Per-model file pick (one image into our library):**
+
+| Prefer | Skip |
+|--------|------|
+| **`{Model}-1-medium.jpg`** (v0 lock — ~310×195, fits ~190–240px SPA panel; SARK-era choice) | `*-thumb*`, `*-lthumb*`, `*-large*`, `*-square*` (square is sharper but ~6× bytes and cropped — only if UI goes square tiles later) |
+| else `{Model}-medium.jpg` | `{Model}-2-*.jpg`… (alt angles) |
+| | Full/original `{Model}-1.jpg` / `{Model}.jpg` — optional archive only, not browser default |
+| | PDFs / PNGs unless we decide otherwise |
+
+Rename on copy to match our tree, e.g. `grandstream/GXP2170.jpg`, `gigaset/S650H.jpg` (or keep ProVu basename — map layer handles UA mismatch).
+
+**Grandstream folders:** Desk/WP models (`GXP*`, `GRP*`, `WP*`). Skip ATAs (`HT-*`) and expansion modules (`*EXT`) unless we want them later.
+
+**Gigaset folders — handsets only for extension photos:**
+
+| Take | Skip |
+|------|------|
+| Standalone handset SKUs: `*H`, `*HPro`, Maxwell desks (`Maxwell2`, `Maxwell3`, …) | **Bases / systems:** `N300IP`, `N510IP`, `N670IP`, `N720IP-PRO`, `N870IP-PRO`, Hybird/T* PBX, repeaters, `basePSU`, `pdf/` |
+| Bare folder or **`-1` / `P1`** only when variants exist (`Maxwell10-P1`) | **Multi-handset packs:** `N510IPA510-2`…`-6` (and similar) — ProVu sells **1–6 handsets + base** kits; we only need the single-unit / handset SKU |
+| | Marketing dirs (`1-Q4-14-…`) |
+
+**Note:** On many Gigaset SIP installs Asterisk `user_agent` is the **base**; the library photo is often the **handset**. UA→image may need a small bridge later.
 
 **Filename conventions (slice E map from `devicemodel`):**
 
@@ -251,4 +278,4 @@ Adopt **Yealink first-three** as v0 image lookup unless a tighter map entry exis
 | `Snom D717` | `snom/snomD717.jpg` |
 | `WebRTC` | none (skip image) |
 
-New brands: match supplier filenames where practical, or rename into `<vendor>/…` when copying into the library.
+New brands: match ProVu / supplier filenames where practical, or rename into `<vendor>/…` when copying into the library.
