@@ -32,6 +32,8 @@ username=$id
 [$id]
 type=aor
 max_contacts=1
+; Softphones (Bria push/app) and NAT can change Contact URI; replace previous single contact
+remove_existing=yes
 qualify_frequency=30
 minimum_expiration=60 
 default_expiration=120

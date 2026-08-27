@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-27 (fleet roll pbx3 0.0.6-4 / cagi 1.0.0-19)  
+**Last updated:** 2026-08-27 (inbound DISA/CALLBACK note)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -37,6 +37,7 @@
 6a. **Home / package versioning** — **should-do before a painful break** (not first-out). Know which home is on which **pbx3 / cagi / api** floor+tip; survive mixed floors; plan for a future breaking change without tribal memory. Open item below · **`REPOS_AND_RELEASES.md`**.  
 7. ~~**New instance / package install — floor roll**~~ — **done (2026-08-27):** cloud homes **pbx3 `0.0.6-4`** / **pbx3cagi `1.0.0-19`** + api tip (UFW cutover). Tips/hosts: **TODO_OPS**.  
 8. **Toll fraud / velocity** — plan **Accepted**; **WP0 + WP3 + WP1** done (2026-08-11). Remainder deferred (V4 / SBC floor / Wangiri). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
+8c. **Inbound DISA vs CALLBACK** — consider dropping **DISA** (too risky for toll fraud); keep **CALLBACK** if it still works; verify CAGI + SPA. Open item below.  
 8b. ~~**CDR dest pie (Home)**~~ — **done** (pulse `dest_where_today`; SPA doughnut; golden tip). Home CC via `PBX3_CDR_HOME_CC`.  
 8a. ~~**Paid Twilio inbound/outbound**~~ — **lab green** (Toliman↔Twilio both ways; SBC Route-strip + public From/PAI; Egress CLIP). **Next dialect eng:** ops-authored profiles without tip (**`NUMBER_DIALECT_REQUIREMENTS.md` §5.4**) — close v1 gap (hard-coded preset ids in OpenSIPS / Filament enum).  
 9. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
@@ -176,6 +177,8 @@
 - [x] **Toll fraud / velocity — WP1 off-hours (2026-08-11):** `VelocityOrchestrator` + `VelocityOffHoursScanner` / clock; Gatekeeper `velocity_off_hours` mail; enable via fleet `detectors.off_hours` or `PBX3_OPS_VELOCITY_OFF_HOURS`.
 
 - [x] **High-risk dial block posture + CoS seed (2026-08-11):** Prevention = **PBX CoS** (`HR_UK070` / `HR_OFFSHORE`); velocity = detect/act; SBC = optional thin never-route later. Packs: `config/cos/highrisk-*-starter.dialplan`. Artisan **`pbx3:cos-highrisk-seed`**. Lock: **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`**.
+
+- [ ] **Inbound DISA vs CALLBACK (2026-08-27):** SPA Inbound Route edit still offers **None / DISA / CALLBACK**. Lean: **drop or hide DISA** (direct dial-tone after PIN is high toll-fraud risk); **keep CALLBACK** if CAGI path still works — verify on lab/golden, then lock product posture (remove option vs privilege-gate). Related: #8 toll fraud.
 
 - [x] **Toll fraud / velocity — standalone SKU — won't-do (2026-08-11):** Own repo + Go extract / installer cancelled — effort ≫ return. Fraud velocity stays **in-tree** (finish #8 remainder when designed). Spec § Future: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.
 
