@@ -98,6 +98,15 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('idd','Dial',
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('inprefix','Add CLI Prefix','Allows you to add a CLI prefix.  This is because many carriers do not send the NDD character (usually zero).  This allows you to add it back.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ivr_digit_wait','IVR digit wait','How long to wait for another digit');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ivr_key_wait','IVR key wait','How long to wait after keypress');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ivr_keystroke_options','Keystroke options','Each row is one DTMF key the caller can press during this IVR greeting.
+
+**Action on KeyPress** — Where to send the call when this key is pressed (extension, queue, another IVR, Custom App, etc.). Choose **None** to ignore that key.
+
+**Tag** — Optional alpha tag sent to the answering phone. Most phones display this short text when they receive it (phone-specific).
+
+**Alert** — Optional Alert-Info SIP header for distinctive ring (phone-specific; e.g. Bellcore-dr patterns). See also **extalert** on extensions.
+
+Tag and Alert are optional; leave blank when unused.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('language','Language','Default language code for voice prompts and voicemail (e.g. en-gb).');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ldapanonbind','LDAP anonymous bind','LDAP anonymous bind YES/NO');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ldapbase','LDAP Base','LDAP base, sometimes called domain; enter it in the form dc=somecompany,dc=com');
