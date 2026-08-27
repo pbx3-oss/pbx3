@@ -228,16 +228,27 @@ Unknown UA → skip (leave `devicemodel` alone). Firmware tokens ignored when ou
 | Item | Value |
 |------|--------|
 | Historic URL | `http://sailpbx.com/phoneimages.zip` (pre-scrub; **dead** as of 2026-08-09) |
-| Local unpack (lab) | **`~/GiT/nonGitStuff/phoneimages/`** — ~3.9M, 138 JPEGs, vendor dirs: aastra, cisco, fanvil, panasonic, polycom, snom, vtech, yealink |
+| **Current image source** | Main VoIP phone **supplier** keeps product images **online, unshielded** — copy needed models into our library as we expand brands (Grandstream, Gigaset, etc.). Ops-owned refresh; not a product runtime dependency. |
+| Local unpack (lab) | **`~/GiT/nonGitStuff/phoneimages/`** — historic tree (~3.9M, 138 JPEGs): aastra, cisco, fanvil, panasonic, polycom, snom, vtech, yealink. Extend this tree from supplier assets as needed. |
 | Consume on node | Tree must land as `/opt/pbx3/cache/phoneimages/<vendor>/…` (same layout `getimages.sh` expects after unzip). Lab: rsync this tree, or zip it and set `PBX3_PHONEIMAGES_URL`. |
-| Package default | **Unset** — do not bake a third-party host into the product tree |
+| Package default | **Unset** — do **not** bake supplier or third-party image hosts into the product tree / installer. Library is operator-supplied (cache or `PBX3_PHONEIMAGES_URL`). |
 
 **Filename conventions (slice E map from `devicemodel`):**
 
+Library filenames **do not** match SIP UA / harvested `devicemodel` 1:1. Prefer a small **`devicemodel` → relative path** map, or rename on copy. Do not require UA regex captures to equal filenames.
+
+**SARK heritage (field-proven)** — `sail65/sail-6/opt/sark/php/sarkextension/view.php` ~1933–1948:
+
+- **Yealink:** `yealink/` + **`substr(model, 0, 3) . '.jpg'`** — comment in code: *“they keep changing the last few”* (so `T46U` / `T46G` / `T46S` → `T46.jpg`). Fuzzy on purpose.
+- **Others:** vendor dir + `manuf + model + '.jpg'` (Snom-style names under `snom/`).
+- Also normalize manufacturer case (`YEALINK` → `Yealink`) before match.
+
+Adopt **Yealink first-three** as v0 image lookup unless a tighter map entry exists. Matches `~/GiT/nonGitStuff/phoneimages/yealink/T31.jpg` layout.
+
 | Harvested `devicemodel` | Likely asset |
 |-------------------------|--------------|
-| `Yealink T31P` / `Yealink T46U` | `yealink/T31.jpg`, `yealink/T46.jpg` (strip trailing letter variants) |
+| `Yealink T31P` / `Yealink T46U` | `yealink/T31.jpg`, `yealink/T46.jpg` (**first 3** of model token) |
 | `Snom D717` | `snom/snomD717.jpg` |
 | `WebRTC` | none (skip image) |
 
-Yealink files are short model (`T31.jpg`) without P/G/U/W suffix — mapper must normalize.
+New brands: match supplier filenames where practical, or rename into `<vendor>/…` when copying into the library.
