@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-26 (SPA session idle timeout from Instance Globals)  
+**Last updated:** 2026-08-26 (SPA field help exposed batch complete)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -252,7 +252,9 @@
 
 - [x] **SPA session timeout (Instance Globals `sessiontimout`) (2026-08-26):** Idle auto-logout honours **`GET sysglobals.sessiontimout`** (seconds; default **600** = 10 min). Build env `VITE_AUTO_LOGOUT_MINUTES` remains fallback before globals load / fleet-only. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`** §6.
 
-- [ ] **tt_help_core cleanup — unreferenced rows (final pass):** Review unreferenced help keys; prune or rewire.
+- [x] **tt_help_core cleanup — unreferenced rows (final pass, 2026-08-26):** Pruned **233** legacy SARK rows from `sqlite_message.sql` (**190** SPA-wired remain). Audit script `--prune` + `FormTimezoneSelect` / `helpPkeys.js` coverage. Report: **`pbx3spa/workingdocs/HELP_UNREFERENCED_IN_SPA.md`**.
+
+- [x] **SPA field help — exposed batch (2026-08-26):** Missing-pkey + empty-htext worklists **0 actionable** (`FIELD_HELP_MISSING_PKEYS_EXPOSED.md`, `FIELD_HELP_EMPTY_HTEXT_EXPOSED.md`). Hide-help on self-explanatory fields; help rows + wiring (`formHelpPkey.js`); day/holiday timer create panels match edit. Optional follow-up: **23** dynamic `help-pkey` wiring noise (IVR, tenant advanced, firewall, route profile lines).
 
 - [ ] **SPA hygiene (deferred — after S8 / R1 / core panels):** Route lazy-loading + shared list/detail patterns later.
 
