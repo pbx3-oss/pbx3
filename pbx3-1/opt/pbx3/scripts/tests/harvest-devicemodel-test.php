@@ -38,6 +38,12 @@ expect('zoiper short Z', $m && $m[0] === 'Zoiper' && $m[1] === '5.6.13');
 $m = pbx3_map_ua_to_vendor_model('Zoiper Android 5.6.13');
 expect('zoiper named', $m && $m[0] === 'Zoiper' && $m[1] === '5.6.13');
 
+$m = pbx3_map_ua_to_vendor_model('Bria Mobile iOS release 6.23.5 stamp 54641.54641');
+expect('bria mobile ios', $m && $m[0] === 'Bria' && $m[1] === 'Mobile iOS 6.23.5');
+
+$m = pbx3_map_ua_to_vendor_model('Bria Mobile Android release 6.20.0 stamp 1.1');
+expect('bria mobile android', $m && $m[0] === 'Bria' && $m[1] === 'Mobile Android 6.20.0');
+
 $m = pbx3_map_ua_to_vendor_model('SomeUnknownAgent/1.0');
 expect('unknown unmapped', $m === null);
 

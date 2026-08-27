@@ -39,6 +39,9 @@ function pbx3_map_ua_to_vendor_model($ua)
 		// Zoiper lab form: "Z 5.6.13 v2.10.20.14" — product version after Z
 		['zoiper_z', 'Zoiper', '^Z\s+([\d.]+)', 1],
 		['zoiper', 'Zoiper', 'Zoiper[^0-9]*([\d.]+)', 1],
+		// Bria Mobile: "Bria Mobile iOS release 6.23.5 stamp 54641.54641"
+		['bria_mobile', 'Bria', 'Bria\s+Mobile\s+(iOS|Android)\s+release\s+([\d.]+)', 2],
+		['bria', 'Bria', 'Bria[^0-9]*([\d.]+)', 1],
 	];
 
 	foreach ($rules as $rule) {
@@ -53,6 +56,11 @@ function pbx3_map_ua_to_vendor_model($ua)
 		// snomD717 → D717 for display token
 		if (strcasecmp($vendor, 'Snom') === 0 && preg_match('/^snom(.+)$/i', $model, $sm)) {
 			$model = $sm[1];
+		}
+		// Bria Mobile → "Mobile iOS 6.23.5"
+		if (strcasecmp($vendor, 'Bria') === 0 && isset($m[1], $m[2])
+			&& preg_match('/^(iOS|Android)$/i', $m[1])) {
+			$model = 'Mobile ' . $m[1] . ' ' . $m[2];
 		}
 		return [$vendor, $model];
 	}

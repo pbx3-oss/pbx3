@@ -157,6 +157,8 @@ Exit: `0` success or disabled; `1` AMI/CLI/parse/DB error; never touch call plan
 | `fanvil` | `Fanvil\s(\w+)\s` | `Fanvil` | capture | `{model} (Fanvil)` |
 | `zoiper_z` | `^Z\s+([\d.]+)` | `Zoiper` | product ver (e.g. `5.6.13`) | `5.6.13 (Zoiper)` — lab `.31` form |
 | `zoiper` | `Zoiper[^0-9]*([\d.]+)` | `Zoiper` | capture | `{ver} (Zoiper)` |
+| `bria_mobile` | `Bria\s+Mobile\s+(iOS\|Android)\s+release\s+([\d.]+)` | `Bria` | `Mobile {plat} {ver}` | `Mobile iOS 6.23.5 (Bria)` |
+| `bria` | `Bria[^0-9]*([\d.]+)` | `Bria` | capture | `{ver} (Bria)` fallback |
 
 ```php
 // Canonical starter (implement helper splits vendor vs model per table above)
@@ -185,7 +187,7 @@ $manufacturer_regex = [
 | **EU DECT/IP** | **Gigaset** | Need SIP UA sample (unit ordered 2026-08-27) |
 | **Enterprise** | **Poly**, **Cisco** 3PCC | Seeded common forms |
 | **Legacy EU** | **Panasonic**, **Aastra** | Seeded |
-| **Softphones** | Zoiper, etc. | Label or skip image |
+| **Softphones** | Zoiper, Bria, etc. | Label or skip image |
 
 **Out of scope v0 brand chase:** VTech own-brand, Htek/Mitel/Avaya unless customer sample.
 
