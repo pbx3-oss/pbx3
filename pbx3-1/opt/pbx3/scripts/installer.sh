@@ -419,6 +419,11 @@ if dpkg -l shorewall 2>/dev/null | grep -q '^ii'; then
     apt-get remove -y shorewall shorewall6 2>/dev/null || true
 fi
 
+# MOH/backups upload floor when php-fpm / nginx API site already present (no-op otherwise).
+if [ -x "$SCRIPTS/apply-api-upload-limits.sh" ]; then
+    "$SCRIPTS/apply-api-upload-limits.sh" || true
+fi
+
 echo ""
 echo "======== Firewall (UFW) — operator action ========"
 echo "  Fleet profile: SSH :22 and API :44300 are open from anywhere after"

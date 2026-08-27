@@ -11,6 +11,11 @@ if [ -d "$SYSPATH/scripts" ]; then
 	chmod 755 "$SYSPATH/scripts"/*.sh 2>/dev/null || true
 fi
 
+# MOH/backups: PHP + nginx multipart floor (50M). No-op until php-fpm/nginx api site exist.
+if [ -x "$SYSPATH/scripts/apply-api-upload-limits.sh" ]; then
+	"$SYSPATH/scripts/apply-api-upload-limits.sh" >/dev/null 2>&1 || true
+fi
+
 # idpwgen is built on the target host (never ship/copy a Mac binary). Required by pbx3api tenant/extension create.
 if [ -f "$SYSPATH/golang/idpwgen.go" ] && command -v go >/dev/null 2>&1; then
 	rm -f "$SYSPATH/golang/idpwgen"

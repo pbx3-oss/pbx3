@@ -1,3 +1,11 @@
+pbx3 (0.0.6-5) noble; urgency=medium
+
+  * Bake API upload floor into package: ship 99-pbx3-uploads.ini (50M/55M)
+    and apply-api-upload-limits.sh; postinst applies PHP-FPM + nginx
+    client_max_body_size 50M when the API stack is present (MOH/backups).
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Thu, 27 Aug 2026 13:40:00 -0400
+
 pbx3 (0.0.6-4) noble; urgency=medium
 
   * UA harvest (23a): soft-fill devicevendor/devicemodel/lastseen from AstDB
