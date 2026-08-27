@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-26 (section-level help CoS/Firewall/Route profiles + route profile UX)  
+**Last updated:** 2026-08-26 (23a durable vs ephemeral + fleet inventory notes)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -55,7 +55,7 @@
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
 23. ~~**Provisioning (home listener + edge proxy)**~~ — **won't-do (2026-08-23):** no in-house HTTP phone provisioner / 3pcerts panel. Use manufacturer RPS (except niche Cisco). Spec retained as archive note: **`PROVISIONING_SERVER_REQUIREMENTS.md`**.  
-23a. **UA → `devicemodel` sidekick** (parked) — **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`** (implement A–D when scheduled; images = E).  
+23a. **UA → model (parked; 2026-08-26)** — AstDB `registrar/contact` source. Durable soft-fill vs ephemeral on list/edit still open — **`PHONE_MODEL_DURABLE_VS_EPHEMERAL.md`**. Harvest lock (if A): **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Optional fleet inventory = stale-OK hint only.  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked).  
 26. ~~**Seed outbound US dialplan / wire (O4)**~~ — **lab green** for Toliman call chain (Egress `011:+ 1:+1` + Twilio). Product US globals auto-seed pack still optional. Spec: **`EGRESS_PLUS_E164_WIRE.md`** · **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.  
@@ -147,7 +147,7 @@
 - [x] **Device table — lean residual (superseded 2026-08-25):** Full purge / won't-do closed the lean keepers track. See **#28** / Device templates purged; **`sqlite_device_drop.sql`**.
 
 - [ ] **Backup ZIP: include `/etc/asterisk` (optional later):** Today backups cover media + DB; full Asterisk tree would help disaster recovery.
-- [ ] **Extension phone image / UA model harvest (parked 2026-08-09):** Sidekick design locked — edge `GET /fleet/registrations` + home `harvest-devicemodel` soft-fills `ipphone.devicemodel`. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Assets: **`~/GiT/nonGitStuff/phoneimages/`** (historic zip URL dead); slice E = SPA + model→filename map.
+- [ ] **Extension phone image / UA model (parked; 2026-08-26):** AstDB UA source; choose durable harvest vs ephemeral on render — **`PHONE_MODEL_DURABLE_VS_EPHEMERAL.md`**. If durable: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Fleet inventory optional, stale-OK. Assets: **`~/GiT/nonGitStuff/phoneimages/`**.
 
 - [ ] **SPA list action icons — shared component (parked 2026-08-03):** Extract small **`ListEditIcon` / `ListDeleteIcon`** (or combined row-actions) in **pbx3spa** and reuse everywhere. Not urgent polish.
 
