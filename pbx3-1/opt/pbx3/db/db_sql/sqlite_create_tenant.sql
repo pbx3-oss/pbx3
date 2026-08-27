@@ -252,12 +252,15 @@ CREATE TABLE IF NOT EXISTS ipphone (
     -- desc is deprecated, use cname instead
     "desc" TEXT,                             -- asterisk username
     "description" TEXT,                      -- Freeform description
-    "device" TEXT,                           -- device vendor
-    "devicemodel" TEXT,						 -- Harvested model number
+    "device" TEXT,                           -- type only: WebRTC | MAILBOX | General SIP (brand → devicevendor)
+    "devicevendor" TEXT,                     -- Harvested brand from SIP UA (cron harvest; not SPA-writable)
+    "devicemodel" TEXT,						 -- Harvested model token from SIP UA (e.g. T46U)
     "devicerec" TEXT DEFAULT 'default',      -- recoptsdatabse desc
     "dvrvmail" TEXT,                         -- mailbox
     "extalert" TEXT,                         -- alert info
-    "macaddr" TEXT,                          -- mac address
+    "firstseen" TEXT,                        -- UTC ISO: first UA harvest observe (repurposed; was provision)
+    "lastseen" TEXT,                         -- UTC ISO: latest UA harvest observe
+    "macaddr" TEXT,                          -- optional best-effort inventory (not vendor canon)
     "passwd" TEXT,                           -- asterisk password
     "protocol" TEXT DEFAULT 'IPV4',			 -- IPV4/IPV6
     "provision" TEXT,                        -- provisioning string with #INCLUDE directives

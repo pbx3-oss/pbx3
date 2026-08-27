@@ -1,87 +1,93 @@
 # Phone model: durable harvest vs ephemeral render (+ fleet inventory)
 
-**Status:** Parked notes **2026-08-26** — **not scheduled**; not a build lock.  
+**Status:** **Posture A locked 2026-08-27** — build when scheduled (not first-out).  
 **Parent:** **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`** (AstDB `registrar/contact` source).  
 **Why this note:** Same UA source can feed **home display**, optional **fleet inventory**, or both. Trust and freshness differ by posture.
 
 ---
 
-## 0. Clincher — `last_seen` / `reported_at`
+## 0. Clincher — `firstseen` / `lastseen`
 
-**Any durable or rolled-up model/MAC is only honest if it carries when it was observed.**
+**Any durable or rolled-up vendor/model is only honest if it carries when it was observed.**
+
+Home columns (repurposed from defunct provisioner; add to SQLite if missing):
+
+| Column | Role |
+|--------|------|
+| `firstseen` | UTC ISO — first harvest that mapped a UA and soft-wrote / confirmed auto vendor+model |
+| `lastseen` | UTC ISO — most recent such harvest observation |
 
 | Lock | |
 |------|--|
-| L1 | Every stored or directory-projected phone hint includes **`last_seen`** (or `reported_at`) — ISO time of the AstDB observation that produced the slug. |
-| L2 | UI always surfaces that time (“as of …”). No bare model/MAC as “current phone.” |
-| L3 | Stale after a handset swap is **expected**; catch-up on next observe is the fix. Do not treat missing freshness as a defect to hide. |
-| L4 | **Wrong window is short.** `user_agent` in AstDB only changes when the endpoint **REGISTER**s (new/re-REGISTER). Until then the stored hint matches what Asterisk last saw. Incorrect durable/fleet data lasts at most until **next REGISTER → next harvest/observe** (cron cadence), not an unbounded drift. |
-| L5 | **Change can be a warning signal (later).** A new UA/model (or MAC) vs prior observation may mean a desk swap — or someone registering a device they shouldn’t. Needs **retained prior context/history** to sense change. **Parked:** detect / notify only when scheduled; **not** v1 harvest or image ship. Do **not** auto-block REGISTER or calls from inventory drift. |
+| L1 | Every stored or directory-projected phone hint includes **`lastseen`** (fleet may mirror as `reported_at`) — time of the AstDB observation that produced the values. |
+| L2 | UI always surfaces that time (“as of …”). No bare vendor/model/MAC as “current phone.” |
+| L3 | Stale after a handset swap is **expected**; catch-up on next observe is the fix. Contact expiry → **stop bumping** `lastseen`; **leave** vendor/model (do not clear). |
+| L4 | **Wrong window is short.** `user_agent` in AstDB only changes when the endpoint **REGISTER**s. Incorrect durable/fleet data lasts at most until **next REGISTER → next harvest** (**15 min** cron when enabled). |
+| L5 | **Change can be a warning signal (later).** New vendor/model vs prior row may mean a desk swap. **Parked:** detect / notify when scheduled; **not** v1. Do **not** auto-block REGISTER or calls. |
 
-Without **L1–L4**, prefer posture **B** and skip durable/fleet copies. **L5** is optional later (needs history). **With L1–L4**, posture **A** and optional fleet inventory are acceptable ops hints.
+Without **L1–L4**, prefer posture **B**. **With L1–L4**, posture **A** (locked) is acceptable.
 
 ---
 
 ## 1. Shared facts
 
 - Asterisk AstDB `registrar/contact` already has `user_agent` (and endpoint = shortuid) for phones registered **to this home**.
-- End users can swap or reprogram a different handset anytime. **Any stored copy can be wrong until the next observation.**
-- The SIP **User-Agent only changes on REGISTER**. A swap that has not yet registered still shows the old UA in AstDB (correct for “what is registered”); once the new phone registers, AstDB updates and the next harvest/render catches up (**L4**).
-- Therefore: model/MAC roll-ups are **ops hints**, never security, CoS, DID, or “allowed phone” truth — and only with **§0 last_seen**.
+- End users can swap handsets anytime. **Any stored copy can be wrong until the next observation.**
+- SIP **User-Agent only changes on REGISTER**.
+- Vendor/model (and optional MAC) are **ops hints**, never security / CoS / DID / “allowed phone” truth — and only with **§0**.
+- **`ipphone.macaddr`** is **best-effort inventory** (user CRUD); **not** canon for vendor/model. SIP UA harvest is canon.
 
 ---
 
-## 2. Two home postures (open choice before implement)
+## 2. Home posture — **A locked** (2026-08-27)
 
-| | **A — Durable soft harvest** (current parent lock) | **B — Ephemeral on render** |
+| | **A — Durable soft harvest** (**locked**) | **B — Ephemeral on render** (rejected for v1) |
 |---|-----------------------------------------------------|------------------------------|
-| When | Async cron / sidekick | Extension **list** or **edit** API/SPA load |
-| Home DB | Soft-fill `ipphone.devicemodel` **+ last_seen** (S3 soft write) | **No** durable auto-write (or display-only overlay) |
-| Freshness | Stale until next harvest; honesty = **last_seen** | Fresh on each render (if registered now); last_seen = now |
-| Swap risk | Wrong model/image until catch-up — OK if last_seen shown | Wrong only if mid-session swap without refresh |
-| Cost | Cheap reads later; cron AMI dump | AMI/`database show` (or cached dump) on list/edit path |
-| Parent S2 | Fits (“never on SPA request path”) | **Reopens S2** — request-path AstDB read allowed for this feature |
-| Images | Easy from stored `devicemodel` + pack | Map live UA → model → asset on the fly |
+| When | Async cron / sidekick | Extension list/edit API path |
+| Home DB | Soft-fill `devicevendor` + `devicemodel` + `firstseen`/`lastseen` | No durable auto-write |
+| Freshness | Stale until next harvest; honesty = **`lastseen`** | Fresh on each render |
+| Parent S2 | Fits (never on SPA request path) | Would reopen S2 |
+| Images | From stored vendor + model + pack | Live map on render |
 
-**Operator nervousness (swap → wrong inventory):** Mitigated by **§0**, not by pretending the copy is live. Posture **B** avoids a wrong durable row; **A** keeps a row but labels it with **last_seen**. Same durable trail is what makes **L5** (unexpected change → ops warning) possible later.
-
-**Decide A vs B before coding slices A–E** of the parent doc. If **B** wins, re-lock parent S2/S3 (and drop or shrink the cron utility). If **A** wins, parent implement must add **last_seen** alongside soft `devicemodel` (schema/API/SPA as needed).
+**B is not scheduled.** Fleet inventory (§3) remains optional / later.
 
 ---
 
 ## 3. Optional fleet directory inventory
 
-**Idea:** Each home (after observe) pushes **slugs** up via **Gatekeeper** (fleet service token → catalog/S3) — e.g. model slug, optional MAC, shortuid, tenant, instance id, **`reported_at` / last_seen** (required).
+**Idea:** Each home (after observe) pushes **slugs** up via **Gatekeeper** — vendor, model, optional MAC, shortuid, tenant, instance id, **`reported_at` / lastseen** (required).
 
 | Lock (if ever built) | |
 |----------------------|--|
 | F1 | **Optional.** Solo / no fleet token → no push. Home display must not need directory (**Rules 1, 6**). |
-| F2 | **Async fail-soft.** Control down → skip push; phones keep working (**Rule 11**). |
-| F3 | **Not authoritative** + **§0.** Always store / show **`reported_at`**. UI: “as of …”, never “the phone on the desk.” |
-| F4 | **Stale is expected and brief.** Wrong only after REGISTER changes UA until next observe + push (**L4**). Catch-up is normal; do not gate telephony on inventory. |
-| F5 | **Write path = Gatekeeper**, not instance Sanctum catalog mutate (**Rule 10**). |
-| F6 | **Not live telemetry** in `instance-index` — separate inventory object(s), infrequent (sibling of DID inventory / async offload, not pulse badges). |
+| F2 | **Async fail-soft.** Control down → skip push (**Rule 11**). |
+| F3 | **Not authoritative** + **§0.** Always show **`reported_at`**. |
+| F4 | Stale is expected and brief (**L4**). |
+| F5 | **Write path = Gatekeeper**, not instance Sanctum (**Rule 10**). |
+| F6 | **Not** live telemetry in `instance-index`. |
 
-Works with **either** posture A (push after harvest) or **B** (optional periodic observe-only job that never writes `ipphone`, or push only when an admin opens Fleet — product call later). **No last_seen → no inventory row.**
+**No lastseen → no inventory row.**
 
 ---
 
 ## 4. What not to do
 
-- Use directory (or stale `devicemodel`) to **block** REGISTER / calls (including on **L5** change).
-- Show model/MAC **without** last_seen / reported_at.
-- Treat UA or MAC inventory as proof of physical asset without freshness + human judgment.
+- Use directory or stale harvest to **block** REGISTER / calls (including on **L5**).
+- Show vendor/model/MAC **without** lastseen / reported_at.
+- Treat UA or MAC as proof of physical asset without freshness + judgment.
 - Put Gatekeeper tokens in the SPA (**Rule 12**).
-- Require directory for extension panel images on a solo box.
+- Require directory for extension images on a solo box.
+- Write OUI / vendor strings into **`ipphone.device`** (type enum only — see parent).
 
-**Later (parked):** ops notify when harvested model/MAC **changes** — needs prior history (**L5**). Not first harvest/image ship; revisit with **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** when wanted.
+**Later (parked):** ops notify on harvest change (**L5**) — **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**.
 
 ---
 
-## 5. Suggested decision order (when scheduled)
+## 5. Decision order (implement)
 
-1. Keep **§0 last_seen** non-negotiable for any durable or fleet copy.  
-2. Choose **home posture A vs B** (display + soft-write).  
-3. Implement AstDB read + UA→model map (shared).  
-4. Slice E images against that choice.  
-5. Only then: optional fleet inventory (F1–F6) if MSP still wants a cross-node phone list.
+1. §0 `firstseen` / `lastseen` non-negotiable.  
+2. ~~Choose A vs B~~ → **A**.  
+3. AstDB read + UA → `devicevendor` + `devicemodel` map.  
+4. Soft write + cron (parent slices).  
+5. Slice E images.  
+6. Optional fleet inventory (F1–F6) only if still wanted.

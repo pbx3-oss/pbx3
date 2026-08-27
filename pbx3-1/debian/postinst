@@ -108,6 +108,12 @@ REC_S3_APPLY="$SYSPATH/scripts/apply-sqlite-add-rec-s3.sh"
 if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$REC_S3_APPLY" ]; then
 	sh "$REC_S3_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
 fi
+
+# UA harvest columns + ipphone.device type enum normalize (23a).
+DEVICE_HARVEST_APPLY="$SYSPATH/scripts/apply-sqlite-add-device-harvest.sh"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$DEVICE_HARVEST_APPLY" ]; then
+	sh "$DEVICE_HARVEST_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+fi
 if [ -f /opt/pbx3/db/sqlite.db ] && command -v sqlite3 >/dev/null 2>&1; then
 	sqlite3 /opt/pbx3/db/sqlite.db <<'EOF' >/dev/null 2>&1 || true
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('recs3','S3 offload','Opt this tenant into fleet S3 disaster recovery for call recordings (default No). Requires the home to have recordings S3 upload plumbing enabled at install. Local archive and max age/size always apply; Yes only adds upload of archived files to the fleet recordings bucket.');

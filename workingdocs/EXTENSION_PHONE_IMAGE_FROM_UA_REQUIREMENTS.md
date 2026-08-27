@@ -1,12 +1,12 @@
 # Extension device model harvest (sidekick utility)
 
-**Status:** Design re-locked **2026-08-26** (AstDB-home source) — **not scheduled** (nice-to-have; not first-out).  
-**Prior lock (2026-08-09):** edge `GET /fleet/registrations` — **superseded** (more surface than needed).  
+**Status:** **Lab green on `.31` (2026-08-27)** — posture **A** implemented (harvest + API + SPA fields). Package cron still **off by default**; `.31` cron enabled. Images (slice F) not required for this pass.  
+**Prior locks:** 2026-08-09 edge registrations API — **superseded**. 2026-08-26 AstDB-home source. 2026-08-27 design lock.  
 **Name:** `harvest-devicemodel` (script) / “UA model sidekick”.  
-**Problem:** Without HTTP provisioning we no longer learn desk-phone **model** at config time. Customers liked handset images on the extension panel.  
-**Opportunity:** Asterisk already stores each registered contact’s `user_agent` in AstDB under `registrar/contact`. A soft, optional sidekick on the **home** fills `ipphone.devicemodel`.  
-**Related:** `ipphone.devicemodel` · `getimages.sh` (`PBX3_PHONEIMAGES_URL`) · `PROVISIONING_SERVER_REQUIREMENTS.md` (won't-do) · pbx3api `Ami` (Command / AstDB).  
-**Sibling (parked):** **`PHONE_MODEL_DURABLE_VS_EPHEMERAL.md`** — posture **A** (durable soft harvest, this doc) vs **B** (ephemeral AstDB on list/edit render); optional fleet inventory (**stale-OK / not authoritative**). Choose A vs B before implement.
+**Problem:** Without HTTP provisioning we no longer learn desk-phone **vendor/model** at config time. Customers liked handset images on the extension panel.  
+**Opportunity:** Asterisk stores each registered contact’s `user_agent` in AstDB under `registrar/contact`. An optional home cron soft-fills harvest columns.  
+**Related:** `getimages.sh` (`PBX3_PHONEIMAGES_URL`) · `PROVISIONING_SERVER_REQUIREMENTS.md` (won't-do) · pbx3api `Ami`.  
+**Sibling:** **`PHONE_MODEL_DURABLE_VS_EPHEMERAL.md`** — posture **A locked**; optional fleet inventory parked.
 
 ---
 
@@ -14,15 +14,56 @@
 
 | # | Lock |
 |---|------|
-| S1 | **Optional.** Disabled / cron off → no-op exit 0. Solo and fleet use the **same** path. **Do not** require SBC for this feature. |
+| S1 | **Optional.** Disabled / cron off → no-op exit 0. Solo and fleet use the **same** path. **Do not** require SBC. |
 | S2 | **Async only.** Never on REGISTER, dial, GenAst, or SPA request path. |
-| S3 | **Soft write.** Update `ipphone.devicemodel` only when NULL/empty **or** equal to last auto value. Never overwrite a non-empty value that differs from what we would write (operator / migrate ownership). |
-| S4 | **Key = PJSIP endpoint shortuid** (AstDB `endpoint` / key prefix). Look up `ipphone` on this node by shortuid (+ cluster if ambiguous). **Never** by contact IP. |
-| S5 | **Source = this home’s Asterisk AstDB** — `database show registrar/contact` (AMI `Action: Command` or privileged systemcmd). **No** edge registration API; **no** OpenSIPS SQL from the node. |
-| S6 | **Do not** rewrite `ipphone.desc` (User) or `ipphone.device` (MAC vendor). Those stay as today. |
-| S7 | Images are a **separate** concern: model string → asset lookup later; this utility’s deliverable is **`devicemodel` only**. |
-| S8 | Only phones whose REGISTER lands on **this** Asterisk appear in AstDB. Edge-only contacts are out of scope (and not needed for home extension images). |
-| S9 | **UA changes only on REGISTER.** Soft-filled `devicemodel` can lag at most until next REGISTER + next harvest. Prefer recording **last_seen** with the write (see sibling **`PHONE_MODEL_DURABLE_VS_EPHEMERAL.md`** §0). |
+| S3 | **Soft write** on `devicevendor` + `devicemodel`: empty → fill; current equals this run’s mapped values → bump `lastseen` (set `firstseen` if null); else **skip** (treat as operator-owned). No separate “last auto” column in v1. |
+| S4 | **Key = PJSIP endpoint shortuid.** Look up `ipphone` by shortuid (+ cluster if needed). **Never** by contact IP. |
+| S5 | **Source = this home’s Asterisk AstDB** — `database show registrar/contact`. **No** edge registration API; **no** OpenSIPS SQL from the node. |
+| S6 | **Never** rewrite `ipphone.desc` (User). **Never** rewrite `ipphone.device` from harvest (type enum — §1.1). |
+| S7 | Images are a **separate** concern (slice E). Harvest deliverable = `devicevendor` + `devicemodel` + `firstseen`/`lastseen`. |
+| S8 | Only phones whose REGISTER lands on **this** Asterisk appear in AstDB. |
+| S9 | **UA changes only on REGISTER.** Lag at most until next REGISTER + next harvest. Honesty = **`lastseen`** (UTC ISO). |
+| S10 | **Skip** rows whose `device` is `WebRTC` or `MAILBOX` (no harvest write). |
+| S11 | Contact expired / missing → **do not clear** vendor/model; **do not** bump `lastseen`. |
+| S12 | **MAC is not canon.** Optional best-effort inventory only (§1.2). **Drop** OUI → vendor (`getVendorFromMac`). SIP UA is canon for brand/model. |
+
+### 1.1 `ipphone.device` — type enum only
+
+**Allowed values (v1):** `WebRTC` | `MAILBOX` | `General SIP`.  
+New variants only via an explicit future requirement.
+
+| Action | Rule |
+|--------|------|
+| Create / update API | SIP → always `General SIP`; WebRTC → `WebRTC`; mailbox → `MAILBOX`. **No** OUI write into `device`. |
+| Existing DBs | One-shot normalize: any other non-empty value (Yealink, Snom, …) → `General SIP`. |
+| SARK ETL | Same: never leave vendor strings in `device` — force enum (**sark-to-pbx3** REQUIREMENTS **#14**). |
+| Harvest | Does not touch `device`. |
+
+**Not** the purged **Device** templates table (won't-do 2026-08-25).
+
+### 1.2 `ipphone.macaddr` — best-effort inventory
+
+- User **CRUD** on SIP extensions (create / edit / clear). Already updateable in API/SPA.
+- **Not** truth for vendor, model, images, or type.
+- Changing/clearing MAC must **not** rewrite `device`.
+- Keep DB **UNIQUE** for hygiene.
+- Hide on WebRTC.
+- Create UX: optional MAC field; **no** “SIP (MAC)” subtype flavour.
+- Help: optional desk inventory note — not phone identity.
+- SPA edit Identity: readonly fields first — **Device** then **MAC** (UX 2026-08-27).
+
+### 1.3 Harvest columns
+
+| Column | Role |
+|--------|------|
+| `devicevendor` | Brand from UA map (e.g. `Yealink`, `Snom`). Soft-filled by harvest only (not SPA mass-assign). |
+| `devicemodel` | Model **token** only (e.g. `T46U`, `D717`) — **not** `"Yealink T46U"` and **not** the display composite. |
+| `firstseen` | UTC ISO — first successful harvest soft-write/confirm. Repurposed provisioner column (on SQLite create). |
+| `lastseen` | UTC ISO — latest such observation. Same. |
+
+**Display / list composite (locked):** `{devicemodel} ({devicevendor})` — e.g. `T46U (Yealink)`, `D717 (Snom)`. SPA builds this; do **not** store the composite in either column.
+
+SARK provision `firstseen`/`lastseen` must **not** be imported (leave NULL — harvest owns the columns). `devicevendor` NULL on import.
 
 ---
 
@@ -30,15 +71,15 @@
 
 | Piece | Owns |
 |-------|------|
-| Asterisk (home) | Writes `registrar/contact/…` JSON including `user_agent` + `endpoint` on successful REGISTER (already) |
-| **pbx3 home** | Cron/`harvest-devicemodel` → read AstDB → map UA → model → soft UPDATE `ipphone` |
-| SPA (later) | Show image when `devicemodel` + asset pack present |
+| Asterisk (home) | `registrar/contact/…` JSON (`user_agent`, `endpoint`, …) |
+| **pbx3 home** | Cron/`harvest-devicemodel` → AstDB → map → soft UPDATE |
+| SPA (later) | Image / “as of lastseen” when pack present |
 
 ```text
 Asterisk AstDB registrar/contact (endpoint, user_agent, expiration_time, …)
-        → harvest-devicemodel on home (AMI Command or systemcmd)
-        → UA mapper
-        → UPDATE ipphone SET devicemodel=? WHERE shortuid=? AND … soft guards …
+        → harvest-devicemodel on home
+        → UA mapper → (devicevendor, devicemodel)
+        → soft UPDATE devicevendor, devicemodel, firstseen, lastseen
 ```
 
 ---
@@ -51,7 +92,7 @@ Asterisk AstDB registrar/contact (endpoint, user_agent, expiration_time, …)
 asterisk -rx 'database show registrar/contact'
 ```
 
-**Shape (PJSIP realtime / res_pjsip):** one AstDB entry per contact:
+**Shape:**
 
 ```text
 /registrar/contact/{endpoint};@{hash}: {"endpoint":"jxpg8b","user_agent":"Yealink SIP-T46U 108.86.0.90","expiration_time":"…", …}
@@ -60,15 +101,10 @@ asterisk -rx 'database show registrar/contact'
 | Field | Use |
 |-------|-----|
 | `endpoint` | PJSIP endpoint = extension **shortuid** |
-| `user_agent` | Input to UA → model map |
-| `expiration_time` | Prefer non-expired; if multiple contacts for one endpoint, pick **latest** `expiration_time` |
+| `user_agent` | Input to UA → vendor + model map |
+| `expiration_time` | Prefer non-expired; if multiple contacts, pick **latest** |
 
-**Access (implement either; prefer AMI for consistency with other ops):**
-
-1. **AMI** — `Action: Command` / `Command: database show registrar/contact` (same family as other home AMI reads).  
-2. **Privileged systemcmd** — equivalent CLI via existing internal privilege path if that is already the house pattern for CLI dumps.
-
-Parse lines as `key: json`; ignore malformed JSON; skip rows without `endpoint` + `user_agent`.
+Prefer AMI `Action: Command` / `database show registrar/contact`. Parse `key: json`; skip malformed / missing endpoint+UA.
 
 **No new SBC / Gatekeeper API.**
 
@@ -80,50 +116,53 @@ Parse lines as `key: json`; ignore malformed JSON; skip rows without `endpoint` 
 
 | Item | Choice |
 |------|--------|
-| Path | `/opt/pbx3/scripts/harvest-devicemodel.sh` (+ small PHP helper for map + SQLite; AMI via existing Ami patterns or `asterisk -rx`) |
+| Path | `/opt/pbx3/scripts/harvest-devicemodel.sh` (+ PHP helper) |
 | Cron | Optional `/etc/cron.d/pbx3-harvest-devicemodel` — **commented/off by default** |
-| Cadence | Every 15–60 minutes when enabled (REGISTER churn is slow) |
-| Enable | Env e.g. `PBX3_HARVEST_DEVICEMODEL=1` (or cron present + enabled). Unset / `0` → exit 0 |
+| Cadence | **Every 15 minutes** when enabled (AstDB dump is cheap; REGISTER churn is slow) |
+| Enable | `PBX3_HARVEST_DEVICEMODEL=1` (or enabled cron). Unset / `0` → exit 0 |
 
-Exit codes: `0` success or disabled; `1` AMI/CLI/parse/DB error (cron-mailable); never touch call plane.
+Exit: `0` success or disabled; `1` AMI/CLI/parse/DB error; never touch call plane.
 
 ### 4.2 Algorithm
 
-1. If disabled → log + exit 0.  
-2. Dump `registrar/contact` (AMI or systemcmd).  
-3. Collapse to one row per `endpoint` (latest non-expired contact).  
+1. If disabled → exit 0.  
+2. Dump `registrar/contact`.  
+3. One row per `endpoint` (latest non-expired).  
 4. For each endpoint:  
-   - Resolve `ipphone` by `shortuid = endpoint` on this node’s `sqlite.db` (scope by cluster if needed).  
-   - `model = map_ua(user_agent)`; skip if unmapped.  
-   - Soft UPDATE `devicemodel` per S3.  
-5. Log counts: contacts / endpoints / written / skipped(owned) / unmapped / missing ipphone.
+   - Resolve `ipphone` by shortuid.  
+   - If `device` ∈ {WebRTC, MAILBOX} → skip.  
+   - `(vendor, model) = map_ua(user_agent)`; skip if unmapped.  
+   - Soft UPDATE per S3; set `firstseen` if null; always bump `lastseen` on write/confirm.  
+5. Log: contacts / endpoints / written / skipped(owned|type) / unmapped / missing ipphone.
 
-### 4.3 UA → model map (v0 starter)
+### 4.3 UA → vendor + model map (v0 starter)
 
-**Source (operator, 2026-08-27):** not every popular vendor — a **start**. Ship as built-in; extend later via `/opt/pbx3/etc/ua-model-map.json` (optional).
+**Source (operator, 2026-08-27):** starter set. Ship built-in; optional `/opt/pbx3/etc/ua-model-map.json` later.
 
-**Provenance:** These patterns were written for **provisioning HTTP(S)** request `User-Agent` strings (handset fetching config), **not** necessarily SIP `User-Agent` on REGISTER. Wire forms can **differ slightly** (e.g. Snom `-SIP` vs `snomD717/…` in AstDB). Treat the array as a **seed**; tune against live `registrar/contact` UAs (lab + field) and keep dual patterns where both appear.
+**Provenance:** Seed patterns often from **provision HTTP** UAs; SIP REGISTER UAs can differ (e.g. Snom). Tune against live AstDB.
 
-**Match order matters:** try **`yealink`** (SIP-…) **before** **`yealinkDECT`** (broader). First match wins.
+**Match order:** `yealink` (SIP-…) **before** `yealinkDECT`. First match wins.
 
-| Key | Regex (PCRE) | Capture → `devicemodel` (v0 display) |
-|-----|--------------|--------------------------------------|
-| `cisco` | `Cisco-CP-(\d{4}-3PCC)` | `Cisco $1` (e.g. `Cisco 7841-3PCC`) |
-| `polycom` | `PolycomVVX-(VVX_\w+)\-UA` | `Polycom $1` |
-| `snom` | `(snom\w+)\-SIP` **or** `^(snomD\d+)` / `(snom\w+)[/ ]` | Title-case model from capture. **Two wire forms seen:** legacy/SARK-era `…-SIP`, lab `.31` `snomD717/10.1.198.19` (slash + firmware). Keep **both** patterns — old regex vs vendor change is unresolved; dual match is cheap. |
-| `yealink` | `Yealink\sSIP-([\w-]+)\s` | `Yealink $1` (e.g. `Yealink T46U`) |
-| `yealinkDECT` | `Yealink\s([\w-]+)\s` | `Yealink $1` (W-series / non-SIP- token forms) |
-| `panasonic` | `Panasonic_(KX-\w+)\/` | `Panasonic $1` |
-| `aastra` | `Aastra(\d{4}i)\s` | `Aastra $1` |
-| `fanvil` | `Fanvil\s(\w+)\s` | `Fanvil $1` |
+**Output shape (locked):** map returns **`devicevendor`** + **`devicemodel`** separately. Human display = `{devicemodel} ({devicevendor})` (e.g. `T46U (Yealink)`).
+
+| Key | Regex (PCRE) | `devicevendor` | `devicemodel` | Display |
+|-----|--------------|----------------|---------------|---------|
+| `cisco` | `Cisco-CP-(\d{4}-3PCC)` | `Cisco` | capture (e.g. `7841-3PCC`) | `7841-3PCC (Cisco)` |
+| `polycom` | `PolycomVVX-(VVX_\w+)\-UA` | `Polycom` | capture | `{model} (Polycom)` |
+| `snom` / `snom_slash` | `(snom\w+)\-SIP` **or** `^(snomD\d+)` | `Snom` | model token (e.g. `D717`) | `D717 (Snom)` |
+| `yealink` | `Yealink\sSIP-([\w-]+)\s` | `Yealink` | capture (e.g. `T46U`) | `T46U (Yealink)` |
+| `yealinkDECT` | `Yealink\s([\w-]+)\s` | `Yealink` | capture | `{model} (Yealink)` |
+| `panasonic` | `Panasonic_(KX-\w+)\/` | `Panasonic` | capture | `{model} (Panasonic)` |
+| `aastra` | `Aastra(\d{4}i)\s` | `Aastra` | capture | `{model} (Aastra)` |
+| `fanvil` | `Fanvil\s(\w+)\s` | `Fanvil` | capture | `{model} (Fanvil)` |
 
 ```php
-// Canonical starter (copy into helper when implementing)
+// Canonical starter (implement helper splits vendor vs model per table above)
 $manufacturer_regex = [
 	'cisco' => 'Cisco-CP-(\d{4}-3PCC)',
 	'polycom' => 'PolycomVVX-(VVX_\w+)\-UA',
-	'snom' => '(snom\w+)\-SIP',           // e.g. snomD785-SIP…
-	'snom_slash' => '^(snomD\d+)',        // e.g. snomD717/10.1.198.19 — lab .31
+	'snom' => '(snom\w+)\-SIP',
+	'snom_slash' => '^(snomD\d+)',
 	'yealink' => 'Yealink\sSIP-([\w-]+)\s',
 	'yealinkDECT' => 'Yealink\s([\w-]+)\s',
 	'panasonic' => 'Panasonic_(KX-\w+)\/',
@@ -132,70 +171,67 @@ $manufacturer_regex = [
 ];
 ```
 
-**Also keep (not in array above):** `Browser Phone` / `SIPJS` / `JsSIP` → `WebRTC`.
+**Softphones:** `Browser Phone` / `SIPJS` / `JsSIP` → skip harvest when `device=WebRTC` (S10). Unknown UA → skip.
 
-**Brand coverage (v0 base = popular US + Europe desks)** — not “every vendor in the old image zip.” Prefer **live AstDB SIP UAs**. Provision HTTP UAs are a seed only. Soak list still useful: **`pbx3sbc/workingdocs/SBC_SOAK_ENDPOINT_REFERENCE.md`**.
+**Brand coverage (v0)** — prefer live AstDB SIP UAs. Soak: **`pbx3sbc/workingdocs/SBC_SOAK_ENDPOINT_REFERENCE.md`**.
 
-| Region weight | Brands (desk) | Regex / notes |
-|---------------|---------------|---------------|
-| **Both US + EU (must)** | **Yealink**, **Fanvil** | Seeded; tune SIP vs provision UA |
-| **EU-strong** | **Snom** (VTech owns Snom; VTech own-brand SIP handsets → **ignore**) | Seeded + slash form; dual UA forms |
-| **US-strong / global SMB** | **Grandstream** | **Need** SIP UA sample — operator ordering lab unit (2026-08-27) |
-| **EU (esp. DACH) DECT/IP** | **Gigaset** | **Need** SIP UA sample — operator ordering lab DECT unit (2026-08-27) |
-| **Enterprise both sides** | **Poly** (Polycom), **Cisco** (3PCC / multiplatform) | Seeded for common forms; not SMB default |
-| **Legacy EU** | **Panasonic**, **Aastra**/Mitel heritage | Seeded; declining new-buy share — keep for installed base |
-| **Softphones** | Zoiper, Bria, Linphone | Label or skip image; capture UA when seen (Zoiper lab `Z 5.6…`) |
+| Region weight | Brands | Notes |
+|---------------|--------|-------|
+| **Both US + EU** | **Yealink**, **Fanvil** | Seeded |
+| **EU-strong** | **Snom** | Dual UA forms |
+| **US / global SMB** | **Grandstream** | Need SIP UA sample (unit ordered 2026-08-27) |
+| **EU DECT/IP** | **Gigaset** | Need SIP UA sample (unit ordered 2026-08-27) |
+| **Enterprise** | **Poly**, **Cisco** 3PCC | Seeded common forms |
+| **Legacy EU** | **Panasonic**, **Aastra** | Seeded |
+| **Softphones** | Zoiper, etc. | Label or skip image |
 
-**Out of scope for v0 brand chase:** VTech (exited own SIP handset line after Snom acquisition), Htek/Mitel/Avaya unless a customer forces a sample.
-
-**Snom note:** Starter had only `-SIP` (likely provisioning HTTP UA). Lab AstDB SIP UA shows slash+firmware. **HTTP provision UA ≠ SIP REGISTER UA** in general — keep dual forms; expand from AstDB samples, don’t assume provision scrapers are complete for harvest.
-
-Unknown UA → skip (leave `devicemodel` alone). Firmware tokens ignored when outside the capture.
+**Out of scope v0 brand chase:** VTech own-brand, Htek/Mitel/Avaya unless customer sample.
 
 ### 4.4 Lab fixtures
 
-**Lab home `.31` (2026-08-26) — AstDB proof:**
+**Lab home `.31` (2026-08-26):**
 
-| shortuid | User-Agent | Expected `devicemodel` |
-|----------|------------|-------------------------|
-| `jxpg8b` | `Yealink SIP-T46U 108.86.0.90` | `Yealink T46U` (yealink) |
-| `pqjfth` | `snomD717/10.1.198.19` | `Snom D717` via `snom_slash` |
-| `pz9vmk` | `Z 5.6.13 v2.10.20.14` | *(unmapped — skip)* |
+| shortuid | User-Agent | `devicevendor` | `devicemodel` | Display |
+|----------|------------|----------------|---------------|---------|
+| `jxpg8b` | `Yealink SIP-T46U 108.86.0.90` | `Yealink` | `T46U` | `T46U (Yealink)` |
+| `pqjfth` | `snomD717/10.1.198.19` | `Snom` | `D717` | `D717 (Snom)` |
+| `pz9vmk` | `Z 5.6.13 v2.10.20.14` | *(unmapped — skip)* | | |
 
-**Earlier Magrathea-era samples (still valid map cases if those endpoints register on a home):**
+**Earlier samples (still valid):**
 
-| shortuid | User-Agent | Expected `devicemodel` |
-|----------|------------|-------------------------|
-| `59507r` | `snomD717/10.1.198.19` | `Snom D717` via `snom_slash` |
-| `q5zjhw` | `Yealink SIP-T31P 124.86.0.40` | `Yealink T31P` |
-| `1nvd41` / `77k4xz` / `hb64kj` | `Yealink SIP-T46U …` | `Yealink T46U` |
-| `e7sa15gi` | `Browser Phone … SIPJS …` | `WebRTC` |
+| shortuid | User-Agent | `devicevendor` | `devicemodel` | Display |
+|----------|------------|----------------|---------------|---------|
+| `59507r` | `snomD717/10.1.198.19` | `Snom` | `D717` | `D717 (Snom)` |
+| `q5zjhw` | `Yealink SIP-T31P 124.86.0.40` | `Yealink` | `T31P` | `T31P (Yealink)` |
+| `1nvd41` / … | `Yealink SIP-T46U …` | `Yealink` | `T46U` | `T46U (Yealink)` |
 
 ---
 
 ## 5. Schema / API / SPA (follow-ons)
 
-| Layer | Now | When implementing harvest |
-|-------|-----|---------------------------|
-| DB | `ipphone.devicemodel` exists; guarded | Soft UPDATE from utility only |
-| pbx3api | Not in mass-assign | Expose read-only on extension show/list when useful |
-| SPA list | User=`desc`, Device=`device` (vendor) | Optional later: model column or icon from `devicemodel` |
-| Images | Historic pack URL known (see §9); still opt-in via `PBX3_PHONEIMAGES_URL` | Map `devicemodel` → file under `/opt/pbx3/cache/phoneimages`; edit panel image |
+| Layer | Implement |
+|-------|-----------|
+| DB | Add `devicevendor`; ensure `firstseen`/`lastseen` on SQLite (+ ALTER for existing). Comments: harvest not provision. Normalize `device` enum. |
+| pbx3api | Remove `getVendorFromMac` side effects. Expose `devicevendor`, `devicemodel`, `firstseen`, `lastseen` **read-only**. `macaddr` stays updateable; `device` type-only on write. |
+| SPA | Device readonly (type); MAC editable after Device. Later: model/image + “as of lastseen”. |
+| Help | Update `device` / `macaddr`; add keys for harvest fields when exposed. |
+| ETL | **sark-to-pbx3 #14** — `device` → enum; do not import SARK firstseen/lastseen; `devicevendor` NULL. |
 
-**List column reminder:** User ≠ model (migrate often stuffed model-ish strings into `desc`). Device = MAC **vendor**. Harvest fills **`devicemodel`** only.
+**List:** User = `desc`. Device = type enum. Brand/model = harvest columns (not Device table).
 
 ---
 
 ## 6. Non-goals (v1)
 
 - HTTP phone provisioning for images.  
-- Edge / OpenSIPS registration-summary API (superseded).  
-- Hardwiring OpenSIPS DB credentials on the home.  
-- Stomping `desc` / `device`.  
+- Edge / OpenSIPS registration-summary API.  
+- OUI / `manuf.txt` as vendor canon.  
+- Stomping `desc` or type `device` from harvest.  
 - Perfect vendor coverage.  
 - Directory / Gatekeeper / SBC in the loop.  
 - Call-path or GenAst dependency.  
-- Harvesting contacts that never REGISTER to this Asterisk.
+- Clearing vendor/model when REGISTER expires.  
+- L5 change notify / fleet phone inventory.
 
 ---
 
@@ -203,23 +239,27 @@ Unknown UA → skip (leave `devicemodel` alone). Firmware tokens ignored when ou
 
 | Slice | Deliverable |
 |-------|-------------|
-| **A** | Read + parse `registrar/contact` (AMI or systemcmd) → endpoint / UA / expiry |
-| **B** | UA mapper unit tests (fixtures in §4.4) |
-| **C** | Soft UPDATE `ipphone.devicemodel` + optional cron (off by default) |
-| **D** | Lab: enable on `.31` (and/or golden); verify mapped shortuids |
-| **E** | SPA image / model display + durable phoneimages host (see §9) |
+| **A** | Schema: `devicevendor` + `firstseen`/`lastseen`; `device` normalize SQL; drop OUI→device |
+| **B** | Read + parse `registrar/contact` |
+| **C** | UA mapper unit tests (fixtures §4.4) — vendor + model split |
+| **D** | Soft UPDATE + optional cron (off by default) |
+| **E** | Lab enable on `.31` / golden |
+| **F** | SPA image / “as of” + phoneimages host (§9) |
+| **G** | SARK ETL #14 + drop `getVendorFromMac` |
 
 ---
 
 ## 8. Acceptance
 
 - Disabled → exit 0; no DB writes.  
-- §4.4 mapped fixtures → correct `devicemodel` after one run.  
-- Non-empty foreign `devicemodel` unchanged on re-run.  
+- §4.4 fixtures → correct `devicevendor` + `devicemodel` + `lastseen`.  
+- Differing non-empty harvest fields unchanged on re-run (operator-owned).  
 - Unmapped UA → no write.  
+- `device` remains enum-only; WebRTC/MAILBOX skipped.  
+- MAC change does not alter `device`.  
 - Asterisk / AMI down → exit 1; sqlite unchanged.  
-- No change to REGISTER / dial behaviour.  
-- No dependency on SBC registration API.
+- No REGISTER / dial behaviour change.  
+- No SBC registration API dependency.
 
 ---
 
@@ -228,54 +268,36 @@ Unknown UA → skip (leave `devicemodel` alone). Firmware tokens ignored when ou
 | Item | Value |
 |------|--------|
 | Historic URL | `http://sailpbx.com/phoneimages.zip` (pre-scrub; **dead** / 403 as of 2026-08) |
-| **Current image source** | **[ProVu](https://www.provu.co.uk/products/)** — unshielded product trees. Ops-owned copy into our library; **not** a product runtime dependency (do not bake ProVu URLs into installer). |
-| Local unpack (lab) | **`~/GiT/nonGitStuff/phoneimages/`** — historic: aastra, cisco, fanvil, panasonic, polycom, snom, vtech, yealink. Add **`grandstream/`** + **`gigaset/`** from ProVu (rules below). |
-| Consume on node | Tree must land as `/opt/pbx3/cache/phoneimages/<vendor>/…` (same layout `getimages.sh` expects after unzip). Lab: rsync this tree, or zip it and set `PBX3_PHONEIMAGES_URL`. |
-| Package default | **Unset** — do **not** bake supplier hosts into the product tree / installer. |
+| **Current image source** | **[ProVu](https://www.provu.co.uk/products/)** — ops-owned copy; **not** a runtime dependency. |
+| Local unpack (lab) | **`~/GiT/nonGitStuff/phoneimages/`** — add **`grandstream/`** + **`gigaset/`** per §9.1. |
+| Consume on node | `/opt/pbx3/cache/phoneimages/<vendor>/…` |
+| Package default | **Unset** — do not bake supplier hosts into installer. |
 
 ### 9.1 ProVu copy rules (Grandstream + Gigaset)
 
 **Base URL:** `https://www.provu.co.uk/products/{grandstream|gigaset}/{ModelFolder}/`
 
-**Per-model file pick (one image into our library):**
-
 | Prefer | Skip |
 |--------|------|
-| **`{Model}-1-medium.jpg`** (v0 lock — ~310×195, fits ~190–240px SPA panel; SARK-era choice) | `*-thumb*`, `*-lthumb*`, `*-large*`, `*-square*` (square is sharper but ~6× bytes and cropped — only if UI goes square tiles later) |
-| else `{Model}-medium.jpg` | `{Model}-2-*.jpg`… (alt angles) |
-| | Full/original `{Model}-1.jpg` / `{Model}.jpg` — optional archive only, not browser default |
-| | PDFs / PNGs unless we decide otherwise |
+| **`{Model}-1-medium.jpg`** (v0) | thumbs, large, square, alt angles, PDFs |
+| else `{Model}-medium.jpg` | |
 
-Rename on copy to match our tree, e.g. `grandstream/GXP2170.jpg`, `gigaset/S650H.jpg` (or keep ProVu basename — map layer handles UA mismatch).
+**Grandstream:** Desk/WP (`GXP*`, `GRP*`, `WP*`). Skip ATAs / EXT.  
+**Gigaset:** Handsets only (`*H`, Maxwell…). Skip bases, multi-packs, marketing dirs.
 
-**Grandstream folders:** Desk/WP models (`GXP*`, `GRP*`, `WP*`). Skip ATAs (`HT-*`) and expansion modules (`*EXT`) unless we want them later.
+**Note:** Gigaset AstDB UA is often the **base**; library photo is often the **handset** — bridge later if needed.
 
-**Gigaset folders — handsets only for extension photos:**
+**Image map (slice F) — clear rule:**
 
-| Take | Skip |
-|------|------|
-| Standalone handset SKUs: `*H`, `*HPro`, Maxwell desks (`Maxwell2`, `Maxwell3`, …) | **Bases / systems:** `N300IP`, `N510IP`, `N670IP`, `N720IP-PRO`, `N870IP-PRO`, Hybird/T* PBX, repeaters, `basePSU`, `pdf/` |
-| Bare folder or **`-1` / `P1`** only when variants exist (`Maxwell10-P1`) | **Multi-handset packs:** `N510IPA510-2`…`-6` (and similar) — ProVu sells **1–6 handsets + base** kits; we only need the single-unit / handset SKU |
-| | Marketing dirs (`1-Q4-14-…`) |
+1. Vendor directory = lowercased `devicevendor` (`Yealink` → `yealink/`, `Snom` → `snom/`).  
+2. Filename from **`devicemodel` token only** (ignore display parentheses):  
+   - **Yealink:** first **three** chars of token → `T46U` / `T46G` → `T46.jpg` (SARK fuzzy).  
+   - **Snom:** `snom` + token → `D717` → `snomD717.jpg`.  
+   - **Others:** conventional `{token}.jpg` or small override map if library names disagree.  
+3. Optional override map file may win over (2). Display string `T46U (Yealink)` is **never** a filesystem key.
 
-**Note:** On many Gigaset SIP installs Asterisk `user_agent` is the **base**; the library photo is often the **handset**. UA→image may need a small bridge later.
-
-**Filename conventions (slice E map from `devicemodel`):**
-
-Library filenames **do not** match SIP UA / harvested `devicemodel` 1:1. Prefer a small **`devicemodel` → relative path** map, or rename on copy. Do not require UA regex captures to equal filenames.
-
-**SARK heritage (field-proven)** — `sail65/sail-6/opt/sark/php/sarkextension/view.php` ~1933–1948:
-
-- **Yealink:** `yealink/` + **`substr(model, 0, 3) . '.jpg'`** — comment in code: *“they keep changing the last few”* (so `T46U` / `T46G` / `T46S` → `T46.jpg`). Fuzzy on purpose.
-- **Others:** vendor dir + `manuf + model + '.jpg'` (Snom-style names under `snom/`).
-- Also normalize manufacturer case (`YEALINK` → `Yealink`) before match.
-
-Adopt **Yealink first-three** as v0 image lookup unless a tighter map entry exists. Matches `~/GiT/nonGitStuff/phoneimages/yealink/T31.jpg` layout.
-
-| Harvested `devicemodel` | Likely asset |
-|-------------------------|--------------|
-| `Yealink T31P` / `Yealink T46U` | `yealink/T31.jpg`, `yealink/T46.jpg` (**first 3** of model token) |
-| `Snom D717` | `snom/snomD717.jpg` |
-| `WebRTC` | none (skip image) |
-
-New brands: match ProVu / supplier filenames where practical, or rename into `<vendor>/…` when copying into the library.
+| Display | Columns | Likely asset |
+|---------|---------|--------------|
+| `T31P (Yealink)` / `T46U (Yealink)` | Yealink + T31P / T46U | `yealink/T31.jpg`, `yealink/T46.jpg` |
+| `D717 (Snom)` | Snom + D717 | `snom/snomD717.jpg` |
+| WebRTC | — | none |

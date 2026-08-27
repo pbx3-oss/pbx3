@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-27 (23a AstDB harvest re-lock + ProVu phoneimages rules; build on flip)  
+**Last updated:** 2026-08-27 (23a posture **A** locked — devicevendor / firstseen·lastseen / device enum; build on flip)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -11,8 +11,8 @@
 0b. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
 0c. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0d. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
-0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS lock **#11** named call/pickup (`callgroup`→`named_call_group`, `pickupgroup`→`named_pickup_group`). Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
-0g. **UA → model / phone images (23a) — build on flip** — design parked/locked 2026-08-27: AstDB source; durable vs ephemeral open; ProVu **`-1-medium`**. Specs: **`PHONE_MODEL_DURABLE_VS_EPHEMERAL.md`** · **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Ops: Grandstream/Gigaset units ordered; copy images per §9.1.  
+0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** `ipphone.device` enum normalize. Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
+0g. ~~**UA → model / phone images (23a)**~~ — **lab green `.31` (2026-08-27):** harvest every 15 min → `Yealink T46U` / `Snom D717`; Zoiper unmapped; device enum normalized; API `handset_label` + SPA Handset/Last seen. Cron **on** `.31`; package default still off. Residual: phoneimages slice F; roll tips/package; ETL #14 code shipped in sark-to-pbx3. Specs: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 1. ~~**Workingdocs hygiene**~~ — **done** (session handoffs in **`aelintra/pbx3-ops`**; product stubs remain).  
 2. ~~**Apache-2.0 `LICENSE` files**~~ — **done** (clean Apache-2.0 on product repos; see open-item note).  
 3. ~~**Strip customer-migrate tooling from pbx3**~~ — **done** (private ETL owns migrate; package keeps shortuid normalize only).  
@@ -56,12 +56,12 @@
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
 23. ~~**Provisioning (home listener + edge proxy)**~~ — **won't-do (2026-08-23):** no in-house HTTP phone provisioner / 3pcerts panel. Use manufacturer RPS (except niche Cisco). Spec retained as archive note: **`PROVISIONING_SERVER_REQUIREMENTS.md`**.  
-23a. **UA → model (parked; 2026-08-26)** — AstDB `registrar/contact` source. Durable soft-fill vs ephemeral on list/edit still open — **`PHONE_MODEL_DURABLE_VS_EPHEMERAL.md`**. Harvest lock (if A): **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**. Optional fleet inventory = stale-OK hint only.  
+23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA). Residual: images pack / slice F; package roll. Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked).  
 26. ~~**Seed outbound US dialplan / wire (O4)**~~ — **lab green** for Toliman call chain (Egress `011:+ 1:+1` + Twilio). Product US globals auto-seed pack still optional. Spec: **`EGRESS_PLUS_E164_WIRE.md`** · **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.  
 27. **Instance API digest deepen** (optional).  
-28. ~~**Device templates**~~ — **won't-do / removed (2026-08-25):** In-house provisioner won't-do; Device table seed/API/SPA purged. Extension `ipphone.device` remains a type label (General SIP / WebRTC / MAILBOX / MAC OUI vendor). Existing DBs: `sqlite_device_drop.sql`. If provisioning returns, retrofit SARK 6.5 — do not revive templates.  
+28. ~~**Device templates**~~ — **won't-do / removed (2026-08-25):** Device **table** purged. **`ipphone.device`** = type enum only (**WebRTC** \| **MAILBOX** \| **General SIP**) — locked with **23a** (2026-08-27); OUI vendor strings normalized away; brand → `devicevendor`. Existing DBs: `sqlite_device_drop.sql` + device-enum normalize on 23a build.  
 29. **OSS org + repo transfer** — after Apache `LICENSE` + migrate extract/strip (**done**).  
 30. **Optional SBC media plane / rtpengine** (parked) — selective engage only; load model in **`pbx3-directory/docs/RTPENGINE_SELECTIVE_ENGAGE.md`**. Triggers: LAN-edge / Track A / Peer; see try-it Appendix A.  
 31. **Incident notify (parked)** — tenant callout teams → ConfBridge + optional SMS; SARK `mcstcaller` heritage. Spec: **`INCIDENT_NOTIFY_REQUIREMENTS.md`**. Est. **~5–7 d** v1 (voice MVP **~4–5 d**). Not first-out.  
@@ -83,7 +83,7 @@
 
 - [x] **Tenant custom MOH — upload UX + live reload (2026-08-25):** Primary Upload MOH button; segmented Master force radii; PHP/nginx **50M** upload floor; **`moh reload`** after upload/delete (no Commit for file swaps). Custom MOH Active still Save (+ Commit only if class never generated).
 
-- [x] **Device templates — won't-do / purged (2026-08-25):** No in-house provisioner; Device table seed/API/SPA removed. `ipphone.device` stays as type label. Existing DBs: **`sqlite_device_drop.sql`**. Retrofit SARK 6.5 only if provisioning returns.
+- [x] **Device templates — won't-do / purged (2026-08-25):** Device table removed. **`ipphone.device`** type enum locked with **23a** (2026-08-27). Existing DBs: **`sqlite_device_drop.sql`**.
 - [x] **Tenant CLID blacklist — Phase 1 (2026-08-25):** `clid_block` table, API `clidblocks`, SPA **Inbound → Blocked caller IDs**, CAGI `Ingress()` reject. Digits-only exact match; no Commit. **Phase 1 sufficient** — SPA admin policy is the product shape.
 - [ ] **Tenant CLID blacklist — Phase 2 (parked, optional):** Desk feature code → email block **request** → tenant admin approves in SPA. **Not required** unless customers ask; spec sketch: **`CLID_BLACKLIST_REQUIREMENTS.md`** § Phase 2.
 

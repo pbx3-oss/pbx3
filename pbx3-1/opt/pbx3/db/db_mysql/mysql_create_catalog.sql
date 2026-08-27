@@ -334,14 +334,15 @@ cluster TEXT DEFAULT 'default',        -- Tenant
 -- desc is deprecated, use cname instead
 desc TEXT,
 description TEXT,                      -- asterisk username
-device TEXT,                           -- device vendor
-devicemodel TEXT,						      -- Harvested model number
+device TEXT,                           -- type only: WebRTC | MAILBOX | General SIP (brand → devicevendor)
+devicevendor TEXT,                     -- Harvested brand from SIP UA
+devicemodel TEXT,						      -- Harvested model token from SIP UA (e.g. T46U)
 devicerec TEXT DEFAULT 'default',      -- recopts
 dvrvmail TEXT,                         -- mailbox
 extalert TEXT,                         -- alert info
-firstseen TEXT,						      -- first date provisioned (or NULL)
-lastseen TEXT,							      -- last date provisioned (or NULL)
-macaddr TEXT,                          -- mac address
+firstseen TEXT,						      -- UTC ISO: first UA harvest observe (was provision)
+lastseen TEXT,							      -- UTC ISO: latest UA harvest observe
+macaddr TEXT,                          -- optional best-effort inventory (not vendor canon)
 passwd TEXT,                           -- asterisk password
 protocol DEFAULT 'IPV4',			      -- IPV4/IPV6
 pjsipuser TEXT,						      -- Asterisk PJSIP string							

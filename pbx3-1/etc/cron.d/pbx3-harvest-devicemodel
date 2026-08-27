@@ -1,0 +1,9 @@
+# Optional UA → devicevendor/devicemodel harvest (AstDB registrar/contact).
+# Off by default. To enable on a home:
+#   1. Uncomment the job below (or copy to a local override)
+#   2. Ensure apply-sqlite-add-device-harvest.sh has been run
+# Cadence: every 15 minutes. Spec: EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md
+
+. /opt/pbx3/scripts/bashconfig
+
+# */15 * * * * root PBX3_HARVEST_DEVICEMODEL=1 $SCRIPTS/harvest-devicemodel.sh >>/var/log/pbx3-harvest-devicemodel.log 2>&1
