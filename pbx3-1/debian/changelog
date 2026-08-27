@@ -1,3 +1,16 @@
+pbx3 (0.0.6-4) noble; urgency=medium
+
+  * UA harvest (23a): soft-fill devicevendor/devicemodel/lastseen from AstDB
+    UserAgent; cron harvest-devicemodel; Zoiper UA map; device type enum
+    normalize on upgrade.
+  * Tenant CLID blacklist schema (sqlite_add_clid_block.sql) + help seed.
+  * S7 tenant rec_s3 opt-in column + help; CoS / route-profile / section help.
+  * WebRTC tmpl: stop \$ext xlate eating \$externip; UTC fleet TZ default note.
+  * Spec: EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md ·
+    CLID_BLACKLIST_REQUIREMENTS.md · RECORDINGS_STORAGE_DESIGN.md.
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Thu, 27 Aug 2026 13:06:34 -0400
+
 pbx3 (0.0.6-3) noble; urgency=medium
 
   * Remove Device provisioning templates (won't-do): drop Device table from

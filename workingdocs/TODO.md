@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-27 (23a harvest lab green; slice F images shelved)  
+**Last updated:** 2026-08-27 (fleet roll pbx3 0.0.6-4 / cagi 1.0.0-19)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -35,7 +35,7 @@
 5k. ~~**SBC orphan domain rows after lab reinstall**~~ — **done (2026-08-19):** **`CatalogReconcile::pruneOrphans`** + **`POST /reconcile/prune-orphans`**; auto on **Provision edge**; Fleet **Catalog reconcile** UI. Decommissioned instance FQDNs now flagged as orphans. MkDocs **`installation/install-lab-adopt.md`**. Rule 13 catalog-driven prune (fleet-owned only).  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
 6a. **Home / package versioning** — **should-do before a painful break** (not first-out). Know which home is on which **pbx3 / cagi / api** floor+tip; survive mixed floors; plan for a future breaking change without tribal memory. Open item below · **`REPOS_AND_RELEASES.md`**.  
-7. **New instance / package install** — fleet floors still **pbx3 `0.0.5-5`** / **pbx3cagi `1.0.0-18`** until roll (**`0.0.6-3`** Device-purge artefact on **`main`**). Tips: **TODO_OPS**.  
+7. ~~**New instance / package install — floor roll**~~ — **done (2026-08-27):** cloud homes **pbx3 `0.0.6-4`** / **pbx3cagi `1.0.0-19`** + api tip (UFW cutover). Tips/hosts: **TODO_OPS**.  
 8. **Toll fraud / velocity** — plan **Accepted**; **WP0 + WP3 + WP1** done (2026-08-11). Remainder deferred (V4 / SBC floor / Wangiri). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
 8b. ~~**CDR dest pie (Home)**~~ — **done** (pulse `dest_where_today`; SPA doughnut; golden tip). Home CC via `PBX3_CDR_HOME_CC`.  
 8a. ~~**Paid Twilio inbound/outbound**~~ — **lab green** (Toliman↔Twilio both ways; SBC Route-strip + public From/PAI; Egress CLIP). **Next dialect eng:** ops-authored profiles without tip (**`NUMBER_DIALECT_REQUIREMENTS.md` §5.4**) — close v1 gap (hard-coded preset ids in OpenSIPS / Filament enum).  
