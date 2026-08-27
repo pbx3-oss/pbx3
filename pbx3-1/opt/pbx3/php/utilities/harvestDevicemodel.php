@@ -36,6 +36,9 @@ function pbx3_map_ua_to_vendor_model($ua)
 		['fanvil', 'Fanvil', 'Fanvil\s(\w+)\s', 1],
 		['grandstream', 'Grandstream', 'Grandstream\s([\w-]+)', 1],
 		['gigaset', 'Gigaset', 'Gigaset\s([\w-]+)', 1],
+		// Zoiper lab form: "Z 5.6.13 v2.10.20.14" — product version after Z
+		['zoiper_z', 'Zoiper', '^Z\s+([\d.]+)', 1],
+		['zoiper', 'Zoiper', 'Zoiper[^0-9]*([\d.]+)', 1],
 	];
 
 	foreach ($rules as $rule) {

@@ -155,6 +155,8 @@ Exit: `0` success or disabled; `1` AMI/CLI/parse/DB error; never touch call plan
 | `panasonic` | `Panasonic_(KX-\w+)\/` | `Panasonic` | capture | `{model} (Panasonic)` |
 | `aastra` | `Aastra(\d{4}i)\s` | `Aastra` | capture | `{model} (Aastra)` |
 | `fanvil` | `Fanvil\s(\w+)\s` | `Fanvil` | capture | `{model} (Fanvil)` |
+| `zoiper_z` | `^Z\s+([\d.]+)` | `Zoiper` | product ver (e.g. `5.6.13`) | `5.6.13 (Zoiper)` — lab `.31` form |
+| `zoiper` | `Zoiper[^0-9]*([\d.]+)` | `Zoiper` | capture | `{ver} (Zoiper)` |
 
 ```php
 // Canonical starter (implement helper splits vendor vs model per table above)
@@ -195,7 +197,7 @@ $manufacturer_regex = [
 |----------|------------|----------------|---------------|---------|
 | `jxpg8b` | `Yealink SIP-T46U 108.86.0.90` | `Yealink` | `T46U` | `T46U (Yealink)` |
 | `pqjfth` | `snomD717/10.1.198.19` | `Snom` | `D717` | `D717 (Snom)` |
-| `pz9vmk` | `Z 5.6.13 v2.10.20.14` | *(unmapped — skip)* | | |
+| `pz9vmk` | `Z 5.6.13 v2.10.20.14` | `Zoiper` | `5.6.13` | `5.6.13 (Zoiper)` |
 
 **Earlier samples (still valid):**
 

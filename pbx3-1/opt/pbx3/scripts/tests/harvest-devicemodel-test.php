@@ -33,7 +33,13 @@ $m = pbx3_map_ua_to_vendor_model('Yealink SIP-T31P 124.86.0.40');
 expect('yealink T31P', $m && $m[0] === 'Yealink' && $m[1] === 'T31P');
 
 $m = pbx3_map_ua_to_vendor_model('Z 5.6.13 v2.10.20.14');
-expect('zoiper unmapped', $m === null);
+expect('zoiper short Z', $m && $m[0] === 'Zoiper' && $m[1] === '5.6.13');
+
+$m = pbx3_map_ua_to_vendor_model('Zoiper Android 5.6.13');
+expect('zoiper named', $m && $m[0] === 'Zoiper' && $m[1] === '5.6.13');
+
+$m = pbx3_map_ua_to_vendor_model('SomeUnknownAgent/1.0');
+expect('unknown unmapped', $m === null);
 
 $dump = <<<'TXT'
 /registrar/contact/jxpg8b;@abc: {"endpoint":"jxpg8b","user_agent":"Yealink SIP-T46U 108.86.0.90","expiration_time":"9999999999"}
