@@ -225,11 +225,13 @@ $manufacturer_regex = [
 
 ### 5.1 Later — last register Via / private host (support)
 
-**Why:** Customers often cannot say where a handset lives. AstDB `registrar/contact` already stores **`via_addr` / `via_port`** (typically the phone’s LAN address from Via) and Contact **`x-ast-orig-host`**. That is the best “which site / which LAN” clue without asking them to dig in the phone UI. Public NAT path is on the **SBC** (`received`), not this AstDB field.
+**Why:** Customers often cannot say where a handset lives. AstDB `registrar/contact` already stores **`via_addr` / `via_port`** (typically the phone’s LAN address from Via) and Contact **`x-ast-orig-host`**. That is the best “which site / which LAN” clue without asking them to dig in the phone UI.
 
-**Product shape (when scheduled):** Read-only on extension Handset / detail (and maybe list tooltip) — e.g. “Last register Via: `192.168.1.92:6182`”. Same home AstDB source as harvest (**S5**); async or on-demand AMI/`database show` — **not** REGISTER path. Do **not** treat Via as a routing address from the cloud.
+**Public NAT (knowledge only):** On fleet, OpenSIPS **`location.received`** is the edge-facing IP:port for the same shortuid. Useful for operators who already have SBC access — **do not** build a dedicated SPA/API query just to show it. If a future Handset panel already has a registrations feed that includes `received`, surface it then; otherwise leave as ops lore.
 
-**Note:** Few (if any) common Asterisk GUIs expose this — useful differentiator for support.
+**Product shape (if/when Via is shown):** Read-only from **home AstDB only** — e.g. “Last register Via: `192.168.1.92:6182`”. Same class of source as harvest (**S5**); not REGISTER/call path. Do **not** treat Via as a cloud routing address.
+
+**Note:** Few Asterisk GUIs expose Via — still a differentiator even without the SBC half.
 
 ---
 
