@@ -29,7 +29,7 @@ The pbx3 package **Depends** on **php-cli** and **php-sqlite3** (see debian/cont
 - **Architecture / OS:** The binary must be built on the **same** machine (or same OS+arch cross-compile target) that runs PHP/pbx3api. A binary built on **macOS arm64** will **not** run on **Linux arm64** (`cannot execute binary file: Exec format error`, shell exit 126). After copying a tree from a Mac, **delete** `/opt/pbx3/golang/idpwgen` and rebuild on the server: `cd /opt/pbx3/golang && go build -o idpwgen idpwgen.go && chmod 755 idpwgen`, or re-run **installer.sh** (it removes the old binary before building).
 - **idpwgen** is a Go binary at `/opt/pbx3/golang/idpwgen`, built at install by **installer.sh** (not shipped in the package). It is used for:
   - **Shortuids** (6 chars, charset without vowels/similar): **HelperClass::generate()** in pbx3 and **dumper.php** (via `helper::generate()`), and **generate_shortuid()** in pbx3api.
-  - **Phone passwords** (8 lowercase a–z; softphone typing): **pbx3api** **Helper::ret_password()** only.
+  - **Phone passwords** (8 lowercase letters, no `i`/`j`; softphone typing): **pbx3api** **Helper::ret_password()** only.
 - Path in pbx3: **config.php** constant **`IDPWGEN`**. Path in pbx3api: env **`IDPWGEN_PATH`** (default `/opt/pbx3/golang/idpwgen`).
 
 ## Minimal PHP for “run generator”
