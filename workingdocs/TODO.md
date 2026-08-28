@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-28 (session end — OutRoute floor ≥3; short-dial §3.8.1)  
+**Last updated:** 2026-08-28 (SPA Keychain verify checklist; OutRoute floor / §3.8.1)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -261,6 +261,15 @@
 - [x] **tt_help_core cleanup — unreferenced rows (final pass, 2026-08-26):** Pruned **233** legacy SARK rows from `sqlite_message.sql` (**190** SPA-wired remain). Audit script `--prune` + `FormTimezoneSelect` / `helpPkeys.js` coverage. Report: **`pbx3spa/workingdocs/HELP_UNREFERENCED_IN_SPA.md`**.
 
 - [x] **SPA field help — exposed batch (2026-08-26):** Missing-pkey + empty-htext worklists **0 actionable** (`FIELD_HELP_MISSING_PKEYS_EXPOSED.md`, `FIELD_HELP_EMPTY_HTEXT_EXPOSED.md`). Hide-help on self-explanatory fields; help rows + wiring (`formHelpPkey.js`); day/holiday timer create panels match edit. Optional follow-up: **23** dynamic `help-pkey` wiring noise (IVR, tenant advanced, firewall, route profile lines).
+
+- [ ] **SPA — no Keychain on device/SIP secrets (code done 2026-08-28; operator verify):** Safari was offering iCloud Keychain save for SIP/device passwords (extension edit). Fix: never `type=password` for non-login secrets — extension SIP uses text + bullets; other panels use FormField **`obscure`** (text + disc CSS + `autocomplete=off`). Real login/account/user/fleet password fields **unchanged** (Keychain OK there). Tip: **pbx3spa `de04219`**. **Tick as you smoke (Save / leave panel — no “save password?”):**
+  - [x] Extensions → Edit — SIP Password (`053c0f9`; operator OK)
+  - [ ] Line quality test — SIP password
+  - [ ] Trunks → Create — Password
+  - [ ] Trunks → Edit — Password
+  - [ ] Network → SMTP — Auth password (+ Auth user)
+  - [ ] Tenants → Create — Advanced — Spy pass / Sys pass
+  - [ ] Tenants → Edit — Advanced — Spy pass / Sys pass
 
 - [ ] **SPA hygiene (deferred — after S8 / R1 / core panels):** Route lazy-loading + shared list/detail patterns later.
 
