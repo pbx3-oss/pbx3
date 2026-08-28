@@ -154,14 +154,14 @@ Same-node “hairpin” back to the same Asterisk via dispatcher is **correct** 
 | **Tenant `ext_len`** | **Enforced.** Field already on `cluster`. **Default 3**, **maximum 5**, allowed **2–5**. **No mixed lengths** within a single tenant — every extension `pkey` is exactly `ext_len` digits. |
 | **Remainder charset** | **Digits only** (`0–9`). Remainder is a target **extension** (`pkey`-shaped). **No** star/hash feature shortcodes through the prefix path (e.g. `81*50*1000` is **deny**). Local feature codes stay on the calling tenant (dial without prefix; always begin `*`). Reopen only on an explicit product ask. |
 | **GenAst** | One dialplan pattern per active prefix; remainder length = **destination** `ext_len` (e.g. `_81XXXX` for prefix `81` + dest `ext_len=4`). **Not** open `_81X.`. CAGI rejects wrong-length / non-digit remainder. |
-| **Length namespaces** | Local exts own length `ext_len`. OutRoute and short-dial patterns must only match dial strings **strictly longer than** the calling tenant’s `ext_len`. Machine gates — not “operator be careful.” |
-| **OutRoute / seize** | Patterns whose minimum match length is **≤ `ext_len`** are **forbidden**. Compatible “dial 9” = long pattern (e.g. `_9` + enough digits) + strip/mangle leading seize digit — classic iron PBX / PSTN practice. Bare `_9.` is not allowed under this rule. |
+| **Length namespaces** | Local exts own length `ext_len` as **exact** dialplan matches. OutRoute patterns use a **SARK floor**: min match **≥ 3** (anything larger than two chars) — not tied to `ext_len`. Exact extension matches always outrank patterns in Asterisk; do not put extensions in `1xx` if you also route `_1XX`. Short-dial still requires prefix+dest **>** caller `ext_len`. |
+| **OutRoute / seize** | Min match **&lt; 3** forbidden (e.g. `_9.`, `_XX`). `999`, `_1XX`, `_XXX`, `_00.` all OK. “Dial 9” for longer PSTN = `_9` + enough digits + strip/mangle. |
 | **Fleet gate** | Feature **fleet-gated** in v1. Requires SBC path. |
 | **Singleton** | Multi-tenant singleton **without SBC** cannot inter-tenant prefix dial — accepted. Local shortcut **rejected** (§15). |
 | **Deny** | Missing/inactive prefix, wrong-length remainder, **or non-digit remainder** → **congestion + hangup** (no attendant / custom playback v1). |
 | **CoS** | **Tenant-wide:** active prefix row ⇒ allowed for all CoS classes. Per-class grant later if needed. |
 
-**Deferred implement** ~~(stance locked; code when scheduled)~~ **Implemented 2026-08-10 (#4c):** API/SPA enforce `ext_len` on extension create/update; GenAst length-bounded PrefixDial patterns; OutRoute save validates min match length `> ext_len`; CAGI rejects wrong-length remainder when dest is local. UK seed dialplan → `_0XXX. _00XX.` (L7a).
+**Deferred implement** ~~(stance locked; code when scheduled)~~ **Implemented 2026-08-10 (#4c):** API/SPA enforce `ext_len` on extension create/update; GenAst length-bounded PrefixDial patterns; OutRoute save validates min match **≥ 3** (SARK floor — **2026-08-28**; not tied to `ext_len`); CAGI rejects wrong-length remainder when dest is local. UK seed dialplan → `_0XXX. _00XX.` (L7a).
 
 **Lab procedure (tip-deploy):** [`TENANT_WIPE_AND_EXT_LEN_LAB.md`](TENANT_WIPE_AND_EXT_LEN_LAB.md) §2.
 
