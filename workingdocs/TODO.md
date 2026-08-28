@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-27 (session end — SBC OPTIONS qualify; Via follow-on)  
+**Last updated:** 2026-08-28 (session end — OutRoute floor ≥3; short-dial §3.8.1)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -19,7 +19,7 @@
 4. ~~**First out triage**~~ — **closed for now (2026-08-19):** **4a–4d** green; **`FIRST_OUT_CHECKLIST.md`** F7–F9 = safety / wipe / ext_len done; F5 anonymize done; F1–F4 = lab rollout + smoke (green with #5). Optional crumbs: F6 device prune, N1–N7 nice. Checklist stays the regression reference.
 4a. ~~**Pre-release safety debt (go/no-go)**~~ — **code + tests + golden go-smoke done** (`PRE_RELEASE_SAFETY_DEBT.md` 1–16). ChanSpy desk + sipplab feature pack **U**; golden dial + SPA login + DID `441924910444` green (2026-08-09). Bzy smoke optional.  
 4b. ~~**Tenant delete data integrity**~~ — **T1–T5 done** (`TENANT_DELETE_DATA_INTEGRITY.md`). Lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1 (2026-08-10). Remaining optional: T6 DID policy, T7 Class B, T8 FK.  
-4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 (2026-08-10).  
+4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 (2026-08-10). **2026-08-28:** OutRoute min match floor **≥ 3** (SARK; not tied to `ext_len`); short-dial queue/IVR edge cases **§3.8.1**.  
 4d. ~~**Fleet trunk Create vs Edit**~~ — **done** (`FLEET_TRUNK_PEERING_DECISION.md` §4.3.1): hide/403 Create on fleet; keep Edit for Egress mangle.  
 5. ~~**Lab / install automation**~~ — **closed for now (2026-08-19):** 5a–5c / 5e–5k done or superseded; **#5d** parked later out. MkDocs happy path locked. ~~Soak / more lab testing residual~~ — **done (2026-08-20)** local harness (desks + WebRTC Line test + Commit-with-call + reg soak + day-parts timer + short-dial hairpin). ~~Stale cloud **`install-pbx3-pbx3api.md`**~~ — **done (2026-08-20).** Follow-on: make **`aelintra/pbx3` public**. Lab WSS: **`pbx3sbc/scripts/enable-lab-wss.sh`**. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**.  
 5a. ~~**Toliman vanity shortuid (`kildare`)**~~ — **superseded** (2026-08-15): instance teardown / greenfield replace instead of in-place vanity. Operator: MkDocs **`fleet/decommission-instance`**.  
@@ -103,7 +103,7 @@
 - [x] **Pre-release go smoke — golden (2026-08-09):** Dial + SPA login + fleet DID `441924910444` (Peer SIPp → Magrathea → `dhbm8x`/`1000`). Bzy optional.
 - [x] **Tenant delete data integrity T1–T5 (2026-08-10):** Wipe-preflight; mesh prune; park cleanup; `pbx3:tenant-orphan-audit`; `pbx3:tenant-wipe-list-check`. Spec: **`TENANT_DELETE_DATA_INTEGRITY.md`**. Lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1. Open later: **T6** DID policy, **T7** Class B, **T8** FK.
 
-- [x] **Enforce tenant `ext_len` (2026-08-10 #4c):** Default **3**, max **5**, allowed **2–5**; no mixed-length extension pkeys. GenAst PrefixDial fixed remainder; OutRoute/sysglobal seed min match `> ext_len`; UK seed `_0XXX. _00XX.`. Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 / Q15. Lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2.
+- [x] **Enforce tenant `ext_len` (2026-08-10 #4c):** Default **3**, max **5**, allowed **2–5**; no mixed-length extension pkeys. GenAst PrefixDial fixed remainder; UK seed `_0XXX. _00XX.`. Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 / Q15 / **§3.8.1**. Lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2. **Amended 2026-08-28:** OutRoute min match floor **≥ 3** (SARK), not `> ext_len`.
 
 - [x] **Fleet trunk Create vs Edit (2026-08-10):** No Create on fleet (SPA hide + API 403); Edit kept for Egress mangle. Solo unchanged. Lock: **`FLEET_TRUNK_PEERING_DECISION.md`** §4.3.1.
 

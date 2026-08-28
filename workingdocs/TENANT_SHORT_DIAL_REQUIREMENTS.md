@@ -165,6 +165,22 @@ Same-node “hairpin” back to the same Asterisk via dispatcher is **correct** 
 
 **Lab procedure (tip-deploy):** [`TENANT_WIPE_AND_EXT_LEN_LAB.md`](TENANT_WIPE_AND_EXT_LEN_LAB.md) §2.
 
+#### 3.8.1 Edge cases — queues / IVRs / other dialables (noted 2026-08-28)
+
+Short dial carries **`{routing_prefix}` + exactly `dest.ext_len` digits** → INVITE those digits at the destination FQDN. Near and far **`ext_len` need not match** (remainder always follows the **destination**).
+
+| Reachable via short dial? | Why |
+|---------------------------|-----|
+| Far-side **phone** whose `pkey` length = `dest.ext_len` | Intended path |
+| Far-side **queue / IVR / conference** whose dial number length = `dest.ext_len` | Same INVITE shape; exact match on far dialplan — works |
+| Far-side queue / IVR with a **different** length (e.g. 5-digit IVR when `dest.ext_len` is 3 or 4) | Prefix pattern (`_81XXX` / `_81XXXX`) never matches; call never leaves the caller |
+
+**Operator guidance (v1):** give cross-site service numbers (queues/IVRs you want dialled from sister sites) a dial number in the **destination tenant’s `ext_len`**. Longer local-only service numbers stay fine on that tenant; they are just not short-dial targets.
+
+**Use case parked (not v1):** call-centre tenant + office tenant in one Site Group — office wants to dial centre queues/IVRs that use longer numbers. Reopen Q2 / remainder width only on an explicit product ask (extra patterns or variable-length remainder).
+
+**CLIP note:** Queue/IVR without a phone shortuid — display name where possible; return dial may be non-returnable (§3.9 caveats).
+
 ### 3.9 CallerID and return-call (locked 2026-07-27)
 
 Bare extension as CallerID **num** is not a reliable cross-tenant redial (Alice’s `1000` on Bob’s phone redials *Bob’s* `1000`). Legacy InterSARK extension CLIP assumed globally unique exts — gone.
@@ -363,7 +379,7 @@ Summary:
 | Id | Decision | Lock |
 |----|----------|------|
 | **Q1** | Digit plan shape | **Fixed-width prefix** (2–4 digits per row); no delimiter. |
-| **Q2** | Extension after prefix | **Fixed remainder** = destination `ext_len` (not open `_X.`); **digits only**; length namespaces §3.8 (2026-08-10). |
+| **Q2** | Extension after prefix | **Fixed remainder** = destination `ext_len` (not open `_X.`); **digits only**; length namespaces §3.8 (2026-08-10). **Edge:** far queues/IVRs reachable via short dial only when dial # length = `dest.ext_len` (§3.8.1). |
 | **Q15** | Tenant `ext_len` | **Enforced** (2026-08-10): default **3**, max **5**, allowed **2–5**; **no mixed lengths** in one tenant. |
 | **Q3** | Prefix uniqueness | Unique per **calling tenant** only. |
 | **Q4** | Table ownership | Per calling tenant prefix rows (not instance/org shared directory). |
@@ -465,6 +481,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | 2026-08-05 | **§15 Local shortcut rejected** — dual-path debt not worth same-node SBC bounce; Path 1 desk return lab green. |
 | 2026-08-10 | **§3.8 / Q2 / Q15:** enforce tenant `ext_len` (default 3, max 5, allowed 2–5, no mixed length); short-dial + OutRoute min match **> `ext_len`**; GenAst length-bounded remainder; drop “operator collision hygiene.” |
 | 2026-08-10 | **#4c implement:** ExtLenPolicy + API/SPA/GenAst/CAGI; UK seed `_0XXX. _00XX.` (L7a). |
+| 2026-08-28 | **§3.8.1:** short-dial edge cases — queues/IVRs only if dial length = `dest.ext_len`; call-centre mesh parked. OutRoute min match floor **≥ 3** (SARK; not tied to `ext_len`). |
 
 ---
 
