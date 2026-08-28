@@ -46,6 +46,8 @@ function pbx3_map_ua_to_vendor_model($ua)
 		['groundwire', 'Groundwire', 'Groundwire/([\d.]+)\s*\([^;]*;\s*(iOS|Android)\s+([\d.]+)', 1],
 		// Acrobits cloud path e.g. "Acrobits SIPIS"
 		['acrobits', 'Acrobits', '^Acrobits\s+(\S+)', 1],
+		// MicroSIP: "MicroSIP/3.22.12"
+		['microsip', 'MicroSIP', 'MicroSIP/([\d.]+)', 1],
 	];
 
 	foreach ($rules as $rule) {

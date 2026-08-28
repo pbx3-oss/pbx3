@@ -61,7 +61,7 @@ New variants only via an explicit future requirement.
 | `firstseen` | UTC ISO — first successful harvest soft-write/confirm. Repurposed provisioner column (on SQLite create). |
 | `lastseen` | UTC ISO — latest such observation. Same. |
 
-**Display / list composite (locked):** `{devicemodel} ({devicevendor})` — e.g. `T46U (Yealink)`, `D717 (Snom)`. SPA builds this; do **not** store the composite in either column.
+**Display / list composite (locked):** `{devicevendor} ({devicemodel})` — e.g. `Yealink (T46U)`, `Snom (D717)`. API `handset_label` builds this; do **not** store the composite in either column.
 
 SARK provision `firstseen`/`lastseen` must **not** be imported (leave NULL — harvest owns the columns). `devicevendor` NULL on import.
 
@@ -143,22 +143,25 @@ Exit: `0` success or disabled; `1` AMI/CLI/parse/DB error; never touch call plan
 
 **Match order:** `yealink` (SIP-…) **before** `yealinkDECT`. First match wins.
 
-**Output shape (locked):** map returns **`devicevendor`** + **`devicemodel`** separately. Human display = `{devicemodel} ({devicevendor})` (e.g. `T46U (Yealink)`).
+**Output shape (locked):** map returns **`devicevendor`** + **`devicemodel`** separately. Human display = `{devicevendor} ({devicemodel})` (e.g. `Yealink (T46U)`).
 
 | Key | Regex (PCRE) | `devicevendor` | `devicemodel` | Display |
 |-----|--------------|----------------|---------------|---------|
-| `cisco` | `Cisco-CP-(\d{4}-3PCC)` | `Cisco` | capture (e.g. `7841-3PCC`) | `7841-3PCC (Cisco)` |
-| `polycom` | `PolycomVVX-(VVX_\w+)\-UA` | `Polycom` | capture | `{model} (Polycom)` |
-| `snom` / `snom_slash` | `(snom\w+)\-SIP` **or** `^(snomD\d+)` | `Snom` | model token (e.g. `D717`) | `D717 (Snom)` |
-| `yealink` | `Yealink\sSIP-([\w-]+)\s` | `Yealink` | capture (e.g. `T46U`) | `T46U (Yealink)` |
-| `yealinkDECT` | `Yealink\s([\w-]+)\s` | `Yealink` | capture | `{model} (Yealink)` |
-| `panasonic` | `Panasonic_(KX-\w+)\/` | `Panasonic` | capture | `{model} (Panasonic)` |
-| `aastra` | `Aastra(\d{4}i)\s` | `Aastra` | capture | `{model} (Aastra)` |
-| `fanvil` | `Fanvil\s(\w+)\s` | `Fanvil` | capture | `{model} (Fanvil)` |
-| `zoiper_z` | `^Z\s+([\d.]+)` | `Zoiper` | product ver (e.g. `5.6.13`) | `5.6.13 (Zoiper)` — lab `.31` form |
-| `zoiper` | `Zoiper[^0-9]*([\d.]+)` | `Zoiper` | capture | `{ver} (Zoiper)` |
-| `bria_mobile` | `Bria\s+Mobile\s+(iOS\|Android)\s+release\s+([\d.]+)` | `Bria` | `Mobile {plat} {ver}` | `Mobile iOS 6.23.5 (Bria)` |
-| `bria` | `Bria[^0-9]*([\d.]+)` | `Bria` | capture | `{ver} (Bria)` fallback |
+| `cisco` | `Cisco-CP-(\d{4}-3PCC)` | `Cisco` | capture (e.g. `7841-3PCC`) | `Cisco (7841-3PCC)` |
+| `polycom` | `PolycomVVX-(VVX_\w+)\-UA` | `Polycom` | capture | `Polycom ({model})` |
+| `snom` / `snom_slash` | `(snom\w+)\-SIP` **or** `^(snomD\d+)` | `Snom` | model token (e.g. `D717`) | `Snom (D717)` |
+| `yealink` | `Yealink\sSIP-([\w-]+)\s` | `Yealink` | capture (e.g. `T46U`) | `Yealink (T46U)` |
+| `yealinkDECT` | `Yealink\s([\w-]+)\s` | `Yealink` | capture | `Yealink ({model})` |
+| `panasonic` | `Panasonic_(KX-\w+)\/` | `Panasonic` | capture | `Panasonic ({model})` |
+| `aastra` | `Aastra(\d{4}i)\s` | `Aastra` | capture | `Aastra ({model})` |
+| `fanvil` | `Fanvil\s(\w+)\s` | `Fanvil` | capture | `Fanvil ({model})` |
+| `zoiper_z` | `^Z\s+([\d.]+)` | `Zoiper` | product ver (e.g. `5.6.13`) | `Zoiper (5.6.13)` — lab `.31` form |
+| `zoiper` | `Zoiper[^0-9]*([\d.]+)` | `Zoiper` | capture | `Zoiper ({ver})` |
+| `bria_mobile` | `Bria\s+Mobile\s+(iOS\|Android)\s+release\s+([\d.]+)` | `Bria` | `Mobile {plat} {ver}` | `Bria (Mobile iOS 6.23.5)` |
+| `bria` | `Bria[^0-9]*([\d.]+)` | `Bria` | capture | `Bria ({ver})` fallback |
+| `groundwire` | `Groundwire/([\d.]+)\s*\([^;]*;\s*(iOS\|Android)\s+([\d.]+)` | `Groundwire` | `Mobile {plat} {ver}` | `Groundwire (Mobile iOS 25.3.101)` |
+| `acrobits` | `^Acrobits\s+(\S+)` | `Acrobits` | capture (e.g. `SIPIS`) | `Acrobits (SIPIS)` |
+| `microsip` | `MicroSIP/([\d.]+)` | `MicroSIP` | capture | `MicroSIP (3.22.12)` |
 
 ```php
 // Canonical starter (implement helper splits vendor vs model per table above)
@@ -197,17 +200,17 @@ $manufacturer_regex = [
 
 | shortuid | User-Agent | `devicevendor` | `devicemodel` | Display |
 |----------|------------|----------------|---------------|---------|
-| `jxpg8b` | `Yealink SIP-T46U 108.86.0.90` | `Yealink` | `T46U` | `T46U (Yealink)` |
-| `pqjfth` | `snomD717/10.1.198.19` | `Snom` | `D717` | `D717 (Snom)` |
-| `pz9vmk` | `Z 5.6.13 v2.10.20.14` | `Zoiper` | `5.6.13` | `5.6.13 (Zoiper)` |
+| `jxpg8b` | `Yealink SIP-T46U 108.86.0.90` | `Yealink` | `T46U` | `Yealink (T46U)` |
+| `pqjfth` | `snomD717/10.1.198.19` | `Snom` | `D717` | `Snom (D717)` |
+| `pz9vmk` | `Z 5.6.13 v2.10.20.14` | `Zoiper` | `5.6.13` | `Zoiper (5.6.13)` |
 
 **Earlier samples (still valid):**
 
 | shortuid | User-Agent | `devicevendor` | `devicemodel` | Display |
 |----------|------------|----------------|---------------|---------|
-| `59507r` | `snomD717/10.1.198.19` | `Snom` | `D717` | `D717 (Snom)` |
-| `q5zjhw` | `Yealink SIP-T31P 124.86.0.40` | `Yealink` | `T31P` | `T31P (Yealink)` |
-| `1nvd41` / … | `Yealink SIP-T46U …` | `Yealink` | `T46U` | `T46U (Yealink)` |
+| `59507r` | `snomD717/10.1.198.19` | `Snom` | `D717` | `Snom (D717)` |
+| `q5zjhw` | `Yealink SIP-T31P 124.86.0.40` | `Yealink` | `T31P` | `Yealink (T31P)` |
+| `1nvd41` / … | `Yealink SIP-T46U …` | `Yealink` | `T46U` | `Yealink (T46U)` |
 
 ---
 
@@ -319,11 +322,11 @@ $manufacturer_regex = [
    - **Snom:** `snom` + token → `D717` → `snomD717.jpg`.  
    - **Others:** conventional `{token}.jpg` or small override map if library names disagree.  
    - **Softphones (optional):** e.g. `zoiper/zoiper.jpg` logo; else no file.  
-3. Optional override map file may win over (2). Display string `T46U (Yealink)` is **never** a filesystem key.
+3. Optional override map file may win over (2). Display string `Yealink (T46U)` is **never** a filesystem key.
 
 | Display | Columns | Likely asset |
 |---------|---------|--------------|
-| `T31P (Yealink)` / `T46U (Yealink)` | Yealink + T31P / T46U | `yealink/T31.jpg`, `yealink/T46.jpg` |
-| `D717 (Snom)` | Snom + D717 | `snom/snomD717.jpg` |
-| `5.6.13 (Zoiper)` | Zoiper + 5.6.13 | `zoiper/zoiper.jpg` (optional logo) or none |
+| `Yealink (T31P)` / `Yealink (T46U)` | Yealink + T31P / T46U | `yealink/T31.jpg`, `yealink/T46.jpg` |
+| `Snom (D717)` | Snom + D717 | `snom/snomD717.jpg` |
+| `Zoiper (5.6.13)` | Zoiper + 5.6.13 | `zoiper/zoiper.jpg` (optional logo) or none |
 | WebRTC | — | none |

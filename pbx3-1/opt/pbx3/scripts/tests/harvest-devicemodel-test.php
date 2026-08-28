@@ -50,6 +50,9 @@ expect('groundwire ios', $m && $m[0] === 'Groundwire' && $m[1] === 'Mobile iOS 2
 $m = pbx3_map_ua_to_vendor_model('Acrobits SIPIS');
 expect('acrobits sipis', $m && $m[0] === 'Acrobits' && $m[1] === 'SIPIS');
 
+$m = pbx3_map_ua_to_vendor_model('MicroSIP/3.22.12');
+expect('microsip', $m && $m[0] === 'MicroSIP' && $m[1] === '3.22.12');
+
 $m = pbx3_map_ua_to_vendor_model('SomeUnknownAgent/1.0');
 expect('unknown unmapped', $m === null);
 
