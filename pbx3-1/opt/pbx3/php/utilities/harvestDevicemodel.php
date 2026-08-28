@@ -42,11 +42,15 @@ function pbx3_map_ua_to_vendor_model($ua)
 		// Bria Mobile: "Bria Mobile iOS release 6.23.5 stamp 54641.54641"
 		['bria_mobile', 'Bria', 'Bria\s+Mobile\s+(iOS|Android)\s+release\s+([\d.]+)', 2],
 		['bria', 'Bria', 'Bria[^0-9]*([\d.]+)', 1],
+		// Groundwire (Acrobits): "Groundwire/25.3.101 (build …; iOS 18.7.7; …)"
+		['groundwire', 'Groundwire', 'Groundwire/([\d.]+)\s*\([^;]*;\s*(iOS|Android)\s+([\d.]+)', 1],
+		// Acrobits cloud path e.g. "Acrobits SIPIS"
+		['acrobits', 'Acrobits', '^Acrobits\s+(\S+)', 1],
 	];
 
 	foreach ($rules as $rule) {
 		[, $vendor, $pattern, $cap] = $rule;
-		if (!preg_match('/' . $pattern . '/i', $ua, $m)) {
+		if (!preg_match('#' . $pattern . '#i', $ua, $m)) {
 			continue;
 		}
 		$model = isset($m[$cap]) ? trim($m[$cap]) : '';
@@ -61,6 +65,11 @@ function pbx3_map_ua_to_vendor_model($ua)
 		if (strcasecmp($vendor, 'Bria') === 0 && isset($m[1], $m[2])
 			&& preg_match('/^(iOS|Android)$/i', $m[1])) {
 			$model = 'Mobile ' . $m[1] . ' ' . $m[2];
+		}
+		// Groundwire → "Mobile iOS 25.3.101" (app version; OS in UA paren is optional context)
+		if (strcasecmp($vendor, 'Groundwire') === 0 && isset($m[2])
+			&& preg_match('/^(iOS|Android)$/i', $m[2])) {
+			$model = 'Mobile ' . $m[2] . ' ' . $model;
 		}
 		return [$vendor, $model];
 	}

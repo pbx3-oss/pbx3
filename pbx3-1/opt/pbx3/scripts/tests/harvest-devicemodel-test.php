@@ -44,6 +44,12 @@ expect('bria mobile ios', $m && $m[0] === 'Bria' && $m[1] === 'Mobile iOS 6.23.5
 $m = pbx3_map_ua_to_vendor_model('Bria Mobile Android release 6.20.0 stamp 1.1');
 expect('bria mobile android', $m && $m[0] === 'Bria' && $m[1] === 'Mobile Android 6.20.0');
 
+$m = pbx3_map_ua_to_vendor_model('Groundwire/25.3.101 (build 2498308; iOS 18.7.7; arm64-neon)');
+expect('groundwire ios', $m && $m[0] === 'Groundwire' && $m[1] === 'Mobile iOS 25.3.101');
+
+$m = pbx3_map_ua_to_vendor_model('Acrobits SIPIS');
+expect('acrobits sipis', $m && $m[0] === 'Acrobits' && $m[1] === 'SIPIS');
+
 $m = pbx3_map_ua_to_vendor_model('SomeUnknownAgent/1.0');
 expect('unknown unmapped', $m === null);
 
