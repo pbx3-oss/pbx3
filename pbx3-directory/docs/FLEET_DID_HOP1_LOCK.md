@@ -14,6 +14,10 @@
 
 Example: SBC may match block `4419249264…` (digit E.164 after dialect) → tenant home; tenant then routes hop-2 `+441924918076` / national face → `40001`.
 
+### Accepted imbalance — Allocate does **not** seed hop-2 (2026-08-29)
+
+Fleet Allocate → catalog + SBC project only. It does **not** auto-create tenant `inroutes`. That looks like two gestures for one DID, but open-seeding per Allocate would fight **Class** / consecutive-number masks (many DIDs → one hop-2 row). Hop-2 stays instance-authored (DiD singleton, Class, CLiD, regex). Keep instance **Inbound Routes → Create**; do not hide it for fleet.
+
 ---
 
 ## Product path to retarget hop 1
@@ -22,7 +26,9 @@ Example: SBC may match block `4419249264…` (digit E.164 after dialect) → ten
 
 **Magrathea MUST NOT offer** edit/delete of fleet-owned hop-1 rows (`attrs` contain `fleet=did`). Hide actions; reject mutate if attempted. Message: use Fleet DIDs.
 
-**Standalone SBC** (no `fleet=did` tags): Filament Number routes remain first-class hop-1 authoring.
+**Standalone SBC** (no `fleet=did` tags / empty `PBX3_FLEET_SERVICE_TOKEN`): Filament Number routes remain first-class hop-1 authoring (inbound + outbound).
+
+**Fleet-joined Magrathea (2026-08-29):** Filament **hides inbound** Number route list/create (outbound only). Signal = non-empty `PBX3_FLEET_SERVICE_TOKEN`. Projector + `/api/fleet/project-dids` still write groupid **1**. Reopen later if general-SBC non-fleet backends need Filament inbound again.
 
 **Forbidden:** Magrathea → catalog sync as product path; treating Filament retarget as sticky under fleet.
 
