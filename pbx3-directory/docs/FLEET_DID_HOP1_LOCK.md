@@ -22,7 +22,7 @@ Fleet Allocate → catalog + SBC project only. It does **not** auto-create tenan
 
 ## Product path to retarget hop 1
 
-**Switch tenant A → B (singleton or block):** Fleet **Allocate / reassign** (with `reassign` when changing owner) → catalog write → `projectDids`. Or **move** the owning tenant (homing + re-project).
+**Switch tenant A → B (singleton or block):** unusual — **Release** on A, then **Allocate / Re-allocate** to B → project (or **move** the owning tenant). No automatic take-over; Allocate only warns when the number/block is already owned.
 
 **Magrathea MUST NOT offer** edit/delete of fleet-owned hop-1 rows (`attrs` contain `fleet=did`). Hide actions; reject mutate if attempted. Message: use Fleet DIDs.
 
