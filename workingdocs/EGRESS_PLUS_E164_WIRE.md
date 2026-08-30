@@ -1,8 +1,8 @@
 # Fleet Egress wire — +E.164 toward SBC
 
-**Related:** [`NUMBER_WIRE_POLICY.md`](../pbx3-directory/docs/NUMBER_WIRE_POLICY.md) (who does what) · [`NUMBER_DIALECT_REQUIREMENTS.md`](../pbx3-directory/docs/NUMBER_DIALECT_REQUIREMENTS.md) · [`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`](MULTI_LOCALE_INSTANCE_REQUIREMENTS.md) (US desk + UK business; one mangle ≠ two nationals) · operator manual [`pbx3-docs` `fleet/number-dialect.md`](../../pbx3-docs/docs/fleet/number-dialect.md)
+**Related:** [`NUMBER_WIRE_POLICY.md`](../pbx3-directory/docs/NUMBER_WIRE_POLICY.md) (**tenant forms valid E.164 for the SBC**) · [`NUMBER_DIALECT_REQUIREMENTS.md`](../pbx3-directory/docs/NUMBER_DIALECT_REQUIREMENTS.md) · [`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`](MULTI_LOCALE_INSTANCE_REQUIREMENTS.md) (US desk + UK business; one mangle ≠ two nationals) · operator manual [`pbx3-docs` `fleet/number-dialect.md`](../../pbx3-docs/docs/fleet/number-dialect.md)
 
-Fleet nodes dial PSTN only via the **Egress** trunk to the SBC. Carrier-specific formats are applied on the SBC Peer dialect. The **node → SBC** userpart should be **`+CC…`** where **CC is the country code of the country that node serves** (UK `+44…`, US `+1…`) — not a hard-coded `+44` everywhere.
+Fleet nodes dial PSTN only via the **Egress** trunk to the SBC. Carrier-specific formats are applied on the SBC Peer dialect. The **node → SBC** userpart must be **valid E.164** (`+CC…` where **CC** is the country code of the country that node serves — UK `+44…`, US `+1…`) — not a hard-coded `+44` everywhere. The SBC does not infer serving CC from the dial string.
 
 **Phase 1 (current policy):** the **node** produces that `+E.164` via Egress transform. Do not empty the transform until Phase 2 is gated — see the policy doc.
 
