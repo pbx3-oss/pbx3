@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-29 (trunk carrier-face stub; DID hops / SARK DiD E.164)  
+**Last updated:** 2026-08-30 (SBC management-access stub; E.164 handoff lock)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -14,6 +14,7 @@
 0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** `ipphone.device` enum; **#15** DiD → `+E.164` (tip when merged). Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
 0g. ~~**UA → model / phone images (23a)**~~ — **lab green `.31` (2026-08-27):** harvest + Handset UI. **Images / slice F shelved** — operator joining OEM partner portals first; no ProVu scrape into product path. Spec §9.0 kept for when ready.  
 0h. **Trunk carrier-face normalization** — describe / transform / normalize inbound+outbound Peer face so homes stay carrier-agnostic (fleet wire `+E.164`). Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. Builds on dialect §5.4 + NUMBER_WIRE Phase 2.  
+0i. **SBC management access (firewall UI)** — Filament allowlist for **22/443**; **host firewall SoT** (portable); AWS SG optional overlay only. Stub: **`pbx3-directory/docs/SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`**. Not scheduled.  
 1. ~~**Workingdocs hygiene**~~ — **done** (session handoffs in **`aelintra/pbx3-ops`**; product stubs remain).  
 2. ~~**Apache-2.0 `LICENSE` files**~~ — **done** (clean Apache-2.0 on product repos; see open-item note).  
 3. ~~**Strip customer-migrate tooling from pbx3**~~ — **done** (private ETL owns migrate; package keeps shortuid normalize only).  
@@ -188,6 +189,8 @@
 - [x] **Number dialect — paid Twilio inbound/outbound (2026-08-11):** Toliman↔Twilio both ways lab green (SBC Route-strip + public From/PAI host; Egress CLIP update without `default` tenant). Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · wire: **`EGRESS_PLUS_E164_WIRE.md`**. CLI stays as-stored (no CLIP mangle). Follow-on: **§5.4** ops-authored profiles (no tip for recombination).
 
 - [ ] **Trunk carrier-face normalization (2026-08-29):** Describe → transform → normalize inbound/outbound Peer face so a trunk/home works **anywhere** relative to fleet wire (`+E.164`), irrespective of carrier national/IDD quirks. Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. Pulls together dialect §5.4, NUMBER_WIRE Phase 2, Egress seeds, SARK DiD #15. Not scheduled.
+
+- [ ] **SBC management access / firewall UI (2026-08-30):** Filament allowlist for SSH+HTTPS; **host firewall product SoT** (non-AWS SBC installs); cloud SG optional. Fail2ban unchanged. Stub: **`pbx3-directory/docs/SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`**. Not scheduled.
 
 - [ ] **Outbound drouting group per home (#5d — parked past first out, 2026-08-19):** design accepted (**`ORIGIN_OUTBOUND_ROUTING_DESIGN.md`**). Not first-candidate. Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**.
 
