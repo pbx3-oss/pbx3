@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-08-28 (SPA Keychain verify checklist; OutRoute floor / §3.8.1)  
+**Last updated:** 2026-08-29 (trunk carrier-face stub; DID hops / SARK DiD E.164)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -11,8 +11,9 @@
 0b. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
 0c. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0d. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
-0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** `ipphone.device` enum normalize. Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
+0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** `ipphone.device` enum; **#15** DiD → `+E.164` (tip when merged). Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
 0g. ~~**UA → model / phone images (23a)**~~ — **lab green `.31` (2026-08-27):** harvest + Handset UI. **Images / slice F shelved** — operator joining OEM partner portals first; no ProVu scrape into product path. Spec §9.0 kept for when ready.  
+0h. **Trunk carrier-face normalization** — describe / transform / normalize inbound+outbound Peer face so homes stay carrier-agnostic (fleet wire `+E.164`). Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. Builds on dialect §5.4 + NUMBER_WIRE Phase 2.  
 1. ~~**Workingdocs hygiene**~~ — **done** (session handoffs in **`aelintra/pbx3-ops`**; product stubs remain).  
 2. ~~**Apache-2.0 `LICENSE` files**~~ — **done** (clean Apache-2.0 on product repos; see open-item note).  
 3. ~~**Strip customer-migrate tooling from pbx3**~~ — **done** (private ETL owns migrate; package keeps shortuid normalize only).  
@@ -59,7 +60,7 @@
 23. ~~**Provisioning (home listener + edge proxy)**~~ — **won't-do (2026-08-23):** no in-house HTTP phone provisioner / 3pcerts panel. Use manufacturer RPS (except niche Cisco). Spec retained as archive note: **`PROVISIONING_SERVER_REQUIREMENTS.md`**.  
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
-25. **Number wire Phase 2 / D2–D4** (parked).  
+25. **Number wire Phase 2 / D2–D4** (parked) — companion **0h** trunk carrier-face stub.  
 26. ~~**Seed outbound US dialplan / wire (O4)**~~ — **lab green** for Toliman call chain (Egress `011:+ 1:+1` + Twilio). Product US globals auto-seed pack still optional. Spec: **`EGRESS_PLUS_E164_WIRE.md`** · **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.  
 27. **Instance API digest deepen** (optional).  
 28. ~~**Device templates**~~ — **won't-do / removed (2026-08-25):** Device **table** purged. **`ipphone.device`** = type enum only (**WebRTC** \| **MAILBOX** \| **General SIP**) — locked with **23a** (2026-08-27); OUI vendor strings normalized away; brand → `devicevendor`. Existing DBs: `sqlite_device_drop.sql` + device-enum normalize on 23a build.  
@@ -186,9 +187,11 @@
 
 - [x] **Number dialect — paid Twilio inbound/outbound (2026-08-11):** Toliman↔Twilio both ways lab green (SBC Route-strip + public From/PAI host; Egress CLIP update without `default` tenant). Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · wire: **`EGRESS_PLUS_E164_WIRE.md`**. CLI stays as-stored (no CLIP mangle). Follow-on: **§5.4** ops-authored profiles (no tip for recombination).
 
+- [ ] **Trunk carrier-face normalization (2026-08-29):** Describe → transform → normalize inbound/outbound Peer face so a trunk/home works **anywhere** relative to fleet wire (`+E.164`), irrespective of carrier national/IDD quirks. Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. Pulls together dialect §5.4, NUMBER_WIRE Phase 2, Egress seeds, SARK DiD #15. Not scheduled.
+
 - [ ] **Outbound drouting group per home (#5d — parked past first out, 2026-08-19):** design accepted (**`ORIGIN_OUTBOUND_ROUTING_DESIGN.md`**). Not first-candidate. Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**.
 
-- [ ] **Number wire Phase 2 / D2–D4 (parked 2026-08-06):** Phase 1 = node Mangle (**D1 = C** locked). Do not strip node Mangle until Phase-2 gate. Specs: **`NUMBER_WIRE_POLICY.md`**, **`NUMBER_WIRE_STANDARD_DRAFT.md`**.
+- [ ] **Number wire Phase 2 / D2–D4 (parked 2026-08-06):** Phase 1 = node Mangle (**D1 = C** locked). Do not strip node Mangle until Phase-2 gate. Specs: **`NUMBER_WIRE_POLICY.md`**, **`NUMBER_WIRE_STANDARD_DRAFT.md`**. Companion: trunk carrier-face stub above.
 
 - [x] **Seed outbound US dialplan / wire (O4) — lab (2026-08-11):** Toliman US call chain green (Egress transform `011:+ 1:+1`; Twilio in/out). UK `_0XXX. _00XX.` already shipped (#4c). Product US `globals.default_outbound_dialplan` auto-seed pack still optional. Specs: **`EGRESS_PLUS_E164_WIRE.md`**, **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.
 

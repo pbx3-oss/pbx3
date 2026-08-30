@@ -2,7 +2,7 @@
 
 **Status:** Policy locked **2026-08-06** (D1 = Model C).  
 **Audience:** Operators and implementers configuring fleet PSTN.  
-**Detail / decision log:** [`NUMBER_WIRE_STANDARD_DRAFT.md`](NUMBER_WIRE_STANDARD_DRAFT.md) · Peer dialects: [`NUMBER_DIALECT_REQUIREMENTS.md`](NUMBER_DIALECT_REQUIREMENTS.md) · Phase-1 node practice: [`EGRESS_PLUS_E164_WIRE.md`](../../workingdocs/EGRESS_PLUS_E164_WIRE.md)
+**Detail / decision log:** [`NUMBER_WIRE_STANDARD_DRAFT.md`](NUMBER_WIRE_STANDARD_DRAFT.md) · Peer dialects: [`NUMBER_DIALECT_REQUIREMENTS.md`](NUMBER_DIALECT_REQUIREMENTS.md) · Phase-1 node practice: [`EGRESS_PLUS_E164_WIRE.md`](../../workingdocs/EGRESS_PLUS_E164_WIRE.md) · Trunk face program: [`TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`](TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md)
 
 **Naming:** Say **the SBC** for our edge. **Magrathea** / **Gamma** are UK ITSP **Peers** the SBC talks *to* — not the SBC.
 
@@ -59,6 +59,7 @@ Phase 2 (gated):
 | Creating a **DID** | Catalog / drouting = digit E.164; node inroute = `+E.164`. |
 | Wondering if the PBX should “speak Brindley” | **No.** Lab adapters (if any) are SBC Peer presets. |
 | Stripping node Mangle because “the SBC should do it” | **Not yet.** Phase 2 only after `serving_cc` + habit-accept advertise. |
+| Seeing **400 E.164 required** on outbound | Home sent habit (`0…` / `00…`), not fleet wire. Fix Egress transform (Phase 1). |
 
 ---
 

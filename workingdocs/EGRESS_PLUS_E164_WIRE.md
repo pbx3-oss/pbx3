@@ -30,6 +30,8 @@ Longer prefix first (`00` before `0`) so overseas IDD is not mis-written as `+44
 | UK national | `01924918076` | `+441924918076` |
 | UK IDD overseas | `0015139266349` | `+15139266349` |
 
+**Footgun (lab 2026-08-29):** Empty Egress `transform` sends national `0…` to the SBC. Brindley’s emergency `strip=2` / `pri_prefix=0` (digit-E.164 → national) then yields e.g. `01924910444` → `0924910444` → carrier **503** / Asterisk **Congestion**. Colocated-tenant DID dials (trombone via carrier) need Phase-1 Mangle intact — **never neither** (`NUMBER_WIRE_POLICY.md`). Re-seed or set `00:+ 0:+44`, then copy live DB → `sqlite.rdonly.db` (Commit / `genAst.sh`) so CAGI sees it. **SBC Phase-1 guard:** Asterisk→PSTN INVITEs that are not `+E.164` / digit E.164 get **`400 E.164 required`** (fail loud; removed when Phase 2 habit-accept lands).
+
 ## Seed transform (US / NANP lab)
 
 US / NANP nodes need a different seed — do **not** use UK `0:+44`. Longer IDD first:
