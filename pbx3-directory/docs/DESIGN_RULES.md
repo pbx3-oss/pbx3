@@ -367,7 +367,7 @@ The SPA must not hold SSH, cloud root, registrar Mac IAM, or long-lived break-gl
 - Facts **not** yet in the directory (typical: carrier Peers, Fail2ban, LE, one-off edge tuning) stay **edge-authored** for everyone until product deliberately moves them into HoR.
 - Prefer tagging fleet-owned rows (e.g. `fleet=did`, `fleet=domain` attrs) so projectors purge/upsert **their** namespace and do **not** clobber hand-authored peers or foreign `dr_rules`.
 
-**Anti-patterns:** Making Filament second-class or read-only for standalone users; co-hosting fleet console inside `pbx3sbc-admin` (Rule 7); inventing a second HoR in OpenSIPS tables; treating “fleet user opened Filament” as equal authorship for catalog-owned rows; Magrathea→catalog sync as product path.
+**Anti-patterns:** Making Filament second-class or read-only for standalone users; co-hosting fleet console inside `pbx3sbc-admin` (Rule 7); inventing a second HoR in OpenSIPS tables; treating “fleet user opened Filament” as equal authorship for catalog-owned rows; Magrathea→catalog sync as product path; **burying edge mutators only in Livewire** so a later HTTP/local-admin surface needs a rewrite — keep shared services; grow `/api/fleet` only for HoR projection / headless ops (**`FLEET_HTTP_COMMS.md`** Direction).
 
 **Implication:** Move cutover updates HoR and projection in one job (or fails/rolls back). Calls keep using last projection if control plane is down (Rule 11). Ties Rules 7 + 8.
 

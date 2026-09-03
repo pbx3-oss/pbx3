@@ -12,8 +12,13 @@
 | **WebRTC / WSS (S8.11 / W1)** | **Magrathea lab green 2026-08-03.** Browser **WSS only on SBC** (`wss://sbc.pbx3.com:8089/ws`); SBC → home is **ordinary SIP UDP**; RTP bypass; **home instance TCP 8089 not required** (golden closed 8089, calls OK). Home WebRTC PJSIP = UDP + `outbound_proxy` + `webrtc=yes`. Spec: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 · **`WEBRTC_WSS_LAB.md`** · checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**. |
 | **SIP TLS (hardphones)** | **Mid-term — not today.** Same proxy-registrar model as WSS: phone ↔ SBC **SIP TLS :5061**; SBC ↔ home / most carriers stay **SIP UDP**. Reuse edge LE cert for **`sbc.pbx3.com`** (phone outbound proxy). Mix TLS phones + UDP carriers OK. Detail: gap **#1** below · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2. |
 
-**Related:** **`DESIGN_RULES.md`** Rules **7** + **13**; **`EDGE_PORTABILITY_SCORECARD.md`**; **`NUMBER_DIALECT_REQUIREMENTS.md`**; **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WebRTC WSS); **`SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`** (Filament 22/443 allowlist — host firewall SoT); pbx3sbc proxy-registrar architecture; **`PEERING-PLAN.md`**; living research **`TELEPHONE_FRAUD_RESEARCH.md`** §5–§6 (peer STIR postures; ClearIP/Sansay bolt-on effort/cost/value).
+**Related:** **`DESIGN_RULES.md`** Rules **7** + **13**; **`FLEET_HTTP_COMMS.md`** (SPA ↔ Gatekeeper ↔ edge HTTP + **Filament vs `/api/fleet` direction**); **`EDGE_PORTABILITY_SCORECARD.md`**; **`NUMBER_DIALECT_REQUIREMENTS.md`**; **`DOWNSTREAM_PEER_REGISTRATION_REQUIREMENTS.md`**; **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WebRTC WSS); **`SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`** (Filament 22/443 allowlist — host firewall SoT); pbx3sbc proxy-registrar architecture; **`PEERING-PLAN.md`**; living research **`TELEPHONE_FRAUD_RESEARCH.md`** §5–§6 (peer STIR postures; ClearIP/Sansay bolt-on effort/cost/value).
 
+### Direction — do not block a future edge HTTP surface (2026-09-03)
+
+**Not building now:** full API twin of Filament. **Do build so we can:** shared mutator services behind Filament; `/api/fleet` stays projection/ops-only until a fact is catalog HoR. Detail + do/don't table: **`FLEET_HTTP_COMMS.md`**.
+
+**SSO (same doc):** attractive end-goal as **identity** per plane — not one token for home+fleet+SBC. Does not justify exposing all Filament knobs over HTTP.
 ---
 
 ## Capability gaps & roadmap

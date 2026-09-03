@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-03 (fleet Egress narrow edit surface)  
+**Last updated:** 2026-09-03 (FLEET_HTTP_COMMS + WebRTC list IP; CloudSIP mule proven)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -211,7 +211,7 @@
 
 - [x] **SBC site timezone at install (2026-08-26):** `pbx3sbc-admin/install.sh` prompt / `--site-timezone` → `PBX3_SBC_SITE_TIMEZONE`. Default host `/etc/timezone`. No OS `timedatectl`. Optional later: Filament change-later.
 
-- [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough. Design: **`FLEET_AUTH_COOKIE_SSO.md`**.
+- [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough. Design: **`FLEET_AUTH_COOKIE_SSO.md`**. **Channel constraints** (SSO must not collapse planes / SPA→SBC): **`pbx3-directory/docs/FLEET_HTTP_COMMS.md`** § Direction — SSO.
 
 - [x] **TOTP 2FA — SBC Filament (2026-08-07):** Lab green Magrathea; **`main`**. Spec: **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`**.
 
