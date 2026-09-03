@@ -136,13 +136,23 @@ Fleet vs solo behaviour is gated by instance posture (e.g. directory / fleet fla
 | **Solo** (no SBC) | **Show** real carrier trunks (old behaviour) — the node *is* the PSTN edge | On the node |
 | **Fleet** | Show **`Egress`** (+ later **EgressFailover**) as the node’s PSTN face — status/SBC host — **not** Magrathea/Twilio peers | On **SBC admin** (Peers / Registrations / Number routes / DID aliases) |
 
-**Fleet Create vs Edit (locked 2026-08-10):**
+**Fleet Create vs Edit (locked 2026-08-10; Egress edit surface 2026-09-03):**
 
 | Action | Fleet | Solo |
 |--------|-------|------|
 | **Create** trunk | **Hidden / API 403** — carriers are SBC-side | Allowed |
-| **Edit** trunk | **Allowed** — needed for **Egress** (mangle/transform, qualify, host, etc.) | Allowed |
-| **Delete** | Still available (ops cleanup); do not delete seeded Egress casually | Allowed |
+| **Edit** trunk | **Allowed** for manufactured **`Egress`** / **`EgressFailover`** — **narrow surface** below | Allowed (full form) |
+| **Delete** | **Hidden / API 403** for manufactured Egress trunks | Allowed |
+
+**Fleet manufactured Egress edit surface (2026-09-03):** `Egress` / `EgressFailover` are **seeded system peers**, not carrier trunks. Naive operators must not rewrite peer identity.
+
+| Editable | Locked (readonly / hidden; API ignores or rejects) |
+|----------|-----------------------------------------------------|
+| **Transform** (primary — habit → fleet wire) | Name (`pkey`), Technology, Host, SIP registration, Peername, Username, Trunkname, Password, PJSIP overlay |
+| Caller ID, In prefix, Device recording, Call progress | Privileged, Match |
+| Common name, Description | **Active** forced **YES** (Active=NO drops GenAst fleet mode); **Delete** blocked |
+
+Host / VIP changes: reseed / onboard (`seed-fleet-egress-trunk.sh`), not Trunks → Edit. SPA shows Host readonly so operators can still “see the wire.”
 
 Hiding carrier trunks on a fleet node is **correct** (carrier peering is SBC-side). Hiding *everything* with no Egress stand-in is a UX gap — operators lose “see the wire” confidence. Do **not** put carrier Peers back on the golden trunks list under fleet posture.
 
@@ -423,6 +433,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 
 | Date | Change |
 |------|--------|
+| 2026-09-03 | §4.3.1 — fleet Egress / EgressFailover **narrow edit surface** (transform + dialplan knobs); lock peer identity; Delete + Active=NO blocked |
 | 2026-07-20 | §6 — HA detail → **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (VIP/EIP promote, 15–20 min RTO, reject SRV primary, Occam over seconds) |
 | 2026-07-20 | §6.0 — **park** SQLite + Litestream; current local engine **MariaDB**; Litestream irrelevant while on MariaDB |
 | 2026-07-14 | §6.0 — prefer **SQLite** on-box for portability + **Litestream** for S3/standby WAL; lab stays MySQL until soak. §6 HA/WebRTC settlements earlier same day. |
