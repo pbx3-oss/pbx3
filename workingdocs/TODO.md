@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-03 (FLEET_HTTP_COMMS + WebRTC list IP; CloudSIP mule proven)  
+**Last updated:** 2026-09-03 (desk phone NAT checklist; FLEET_HTTP_COMMS + WebRTC list IP)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -94,6 +94,8 @@
 - [x] **Support line test panel — Phase 2 (2026-08-26):** Tools → Line quality test; hidden WebRTC (`system:line-test`); dial any ext; Hold/Resume + MOH sampling; post-call report. Retires per-WebRTC Line test button. Spec: **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`** §10.
 
 - [ ] **SBC SIP TLS — hardphones (mid-term, locked 2026-08-25):** Not building today. Phone ↔ SBC **TLS :5061**; SBC ↔ home/carriers **UDP**; reuse edge LE for **`sbc.pbx3.com`** (outbound proxy); mix TLS desks + UDP Peers OK. Effort ~2–4 d lab / ~1 wk productize. Spec: **`SBC_PRODUCT_TRACKS.md`** gap **#1** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2. Out of MVP: SDES SRTP, carrier mTLS, rtpengine.
+
+- [ ] **Fleet desk phone NAT / STUN (provisioning — 2026-09-03):** SBC + cloud-anchored media ⇒ handsets need explicit NAT (Yealink **Auto**, or **STUN**+server if no Auto). Direct-cloud Asterisk Contact-rewrite does not apply the same way. Checklist by manufacturer: **`pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md`**. Customer RPS templates must be updated.
 
 - [ ] **Named pickup — sipplab L1 pack (2026-08-24):** Manual L3 **pickup OK** lab `.31` — see **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab status. Unattended **`./run-pickup-pack.sh`** still pending. **BLF:** Snom OK; Yealink config TBD (not blocking pickup).
 
