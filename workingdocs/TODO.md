@@ -1,11 +1,12 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-08 (reinstate instance provisioning; pluggable transcription)  
+**Last updated:** 2026-09-08 (transcription/solo S3 direction; singleton local next)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
+0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0k. **Phone provisioning — reinstate (instance-local)** — reopen after **won't-do (2026-08-23)**. **v1:** each home runs its own HTTP provisioner (no fleet edge proxy yet). Still no **sark3pcerts**; no Device templates (#28). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** (status reopened). Ties to desk NAT templates: **`FLEET_DESK_PHONE_NAT.md`**.  
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
@@ -101,6 +102,8 @@
 - [ ] **Fleet desk phone NAT / STUN (provisioning — 2026-09-03):** SBC + cloud-anchored media ⇒ handsets need explicit NAT (Yealink **Auto**, or **STUN**+server if no Auto). Direct-cloud Asterisk Contact-rewrite does not apply the same way. Checklist by manufacturer: **`pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md`**. Customer RPS templates must be updated.
 
 - [ ] **Phone provisioning — reinstate, instance-local (#23 / 0k — 2026-09-08):** Reopen after won't-do. Each instance runs its own HTTP provisioner **for now** (no fleet edge proxy / shared host yet). No 3pcerts; no Device templates. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
+
+- [ ] **Singleton local install (#0m — 2026-09-08):** Local solo home (no fleet/SBC). Harness for solo S3/STT and existing-singleton first step. Rule 6 · try-it / lab home install docs.
 
 - [ ] **Audio transcription — pluggable STT (#37 / 0l — 2026-09-08):** Simple interface + adapter(s); local spool (± S3). Solo vs fleet S3 plumbing isolated. Potential first-out: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **`RECORDINGS_STORAGE_DESIGN.md`**.
 
