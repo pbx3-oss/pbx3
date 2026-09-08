@@ -1,7 +1,7 @@
 # Recordings storage & search — design
 
 **Status:** Design (2026-07-07; amended — SQLite catalog, deletion §6.1, PCI §6.2–6.4 PSP handoff; **2026-08-26** install capability + tenant `rec_s3` opt-in)  
-**Related:** **`IMPLEMENTATION_PLAN.md`** § Phase R1 / § Phase S7 · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 · **`DESIGN_RULES.md`** (Rule 1 fail-safe) · MkDocs **`fleet/recordings-s3-offload`**
+**Related:** **`IMPLEMENTATION_PLAN.md`** § Phase R1 / § Phase S7 · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.6 / §2.6.1 · **`DESIGN_RULES.md`** (Rule 1 fail-safe) · MkDocs **`fleet/recordings-s3-offload`** · **voicemail archive (parallel pattern):** **`../../workingdocs/VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** (local spool + async S3; not native S3 / not ODBC-SQLite blobs)
 
 This document captures the agreed **shape** of call recordings storage and search: how the legacy system worked, what **Phase R1** shipped, and how **local archive offload** (R1.5) and **S3 offload** (S7) should extend it. It is written as durable history so implementers do not have to rediscover the reasoning.
 
@@ -44,7 +44,16 @@ flowchart TD
   tenant -->|YES| upload["pbx3:recordings-s3-upload for that cluster"]
 ```
 
-**S3 is canonical only for opted-in tenants.** Others remain local-first. Solo (no fleet): no recordings bucket unless a future solo path is scheduled.
+**S3 is canonical only for opted-in tenants.** Others remain local-first.
+
+**Solo / singleton (locked 2026-09-08):** A solo home **may** use S3 for recordings (+ transcripts) **without** joining fleet or using the SBC. Do **not** force fleet-of-one just for archive/STT. Isolate the difference behind upload/fetch plumbing:
+
+| Mode | Bucket / auth | Notes |
+|------|----------------|-------|
+| **Fleet** | Org recordings bucket via **gatekeeper** (S7 as today) | Multi-home, catalog prefixes |
+| **Solo** | **Home-owned** bucket (instance IAM / keys on the box) | Same object layout idea (audio + transcript side-by-side); **no** Gatekeeper dependency |
+
+SPA/API consumers should see the same catalog shape (`local` / `s3_only`); only the offload transport differs. Detail also: **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.
 
 **Home `.env` is plumbing**, not the product switch:
 

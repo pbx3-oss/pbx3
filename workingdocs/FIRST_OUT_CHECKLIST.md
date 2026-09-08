@@ -73,6 +73,7 @@ Worth doing if a soft-land or public-ish demo is soon; not architecture:
 | **N5** | Magrathea gwid **dialect** / Twilio crumb if that carrier story is in the pitch | Only if demo script needs it |
 | **N6** | ~~Quick pass: inbound **SWOCLIP** create/edit parity; Extension **Runtime**~~ **done (2026-08-26)** | Create SWOCLIP YES; Behaviour (was Runtime) editable — **`TODO.md`** |
 | **N7** | ~~Drop Devices routes/views~~ **done (2026-08-25)** | Device templates purged |
+| **N8** | **Audio transcription (pluggable)** — potential first-out if **Pharma / PV** is in scope | **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · TODO **#37** / **0l** |
 
 ---
 

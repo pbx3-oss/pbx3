@@ -1,11 +1,13 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-03 (desk phone NAT checklist; FLEET_HTTP_COMMS + WebRTC list IP)  
+**Last updated:** 2026-09-08 (reinstate instance provisioning; pluggable transcription)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
+0k. **Phone provisioning — reinstate (instance-local)** — reopen after **won't-do (2026-08-23)**. **v1:** each home runs its own HTTP provisioner (no fleet edge proxy yet). Still no **sark3pcerts**; no Device templates (#28). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** (status reopened). Ties to desk NAT templates: **`FLEET_DESK_PHONE_NAT.md`**.  
+0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
 0b. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
@@ -59,7 +61,7 @@
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
-23. ~~**Provisioning (home listener + edge proxy)**~~ — **won't-do (2026-08-23):** no in-house HTTP phone provisioner / 3pcerts panel. Use manufacturer RPS (except niche Cisco). Spec retained as archive note: **`PROVISIONING_SERVER_REQUIREMENTS.md`**.  
+23. **Provisioning — reinstate (instance-local)** — **reopened 2026-09-08** (supersedes won't-do 2026-08-23). **v1:** provisioner per home/instance only; fleet edge proxy / shared provision host **later if needed**. Still **no** 3pcerts panel; still **no** Device templates (#28). Manufacturer RPS remains an option alongside. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** · desk NAT: **`FLEET_DESK_PHONE_NAT.md`**.  
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked) — companion **0h** trunk carrier-face stub.  
@@ -74,6 +76,7 @@
 34. ~~**Fleet domain→setid Magrathea lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
 35. ~~**SBC site timezone at install**~~ — **done (2026-08-26):** `pbx3sbc-admin/install.sh` prompt / `--site-timezone` / `PBX3_SBC_SITE_TIMEZONE` → `.env` (Home/CDR day buckets). Default = host `/etc/timezone`. Does not change OS clock. Optional later: Filament change-later.  
 36. **Legacy SARK admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**. **P1 CoS (sarkcos): done pending lab sign-off (2026-08-23)**. **sarkreport:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** lab green (2026-08-25) — upload/play/delete + `moh reload` (no Commit for file swaps); Custom MOH Active still Save. **Recordings (sarkrecordings):** panel shipped (R1/R1.5/S7); unified list filters + play spinner **done (2026-08-26)**. **Extension named call/pickup groups:** `named_call_group` + `named_pickup_group` — lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**; **pickup manual L3 OK** lab `.31`; sipplab pack pending. **BLF SUBSCRIBE:** tmpl `allow_subscribe=yes` + `subscribe_context=$clst`; **Snom BLF OK** lab `.31`; **Yealink** — phone config under investigation (Asterisk assumed OK). **Parking:** `parkinghints=yes` + **`parkedcallreparking=both`** (restores `*5` after timeout comeback; no Dial-arg knob in res_parking) — lab OK (2026-08-24). ETL: **`~/GiT/sark-to-pbx3`**. **PJSIP config wizard:** won't-do. **P2+ parked:** wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **sark3pcerts**.
+37. **Audio transcription (pluggable)** — provider interface; choose backend. Potential first-out: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **0l**.
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -96,6 +99,10 @@
 - [ ] **SBC SIP TLS — hardphones (mid-term, locked 2026-08-25):** Not building today. Phone ↔ SBC **TLS :5061**; SBC ↔ home/carriers **UDP**; reuse edge LE for **`sbc.pbx3.com`** (outbound proxy); mix TLS desks + UDP Peers OK. Effort ~2–4 d lab / ~1 wk productize. Spec: **`SBC_PRODUCT_TRACKS.md`** gap **#1** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2. Out of MVP: SDES SRTP, carrier mTLS, rtpengine.
 
 - [ ] **Fleet desk phone NAT / STUN (provisioning — 2026-09-03):** SBC + cloud-anchored media ⇒ handsets need explicit NAT (Yealink **Auto**, or **STUN**+server if no Auto). Direct-cloud Asterisk Contact-rewrite does not apply the same way. Checklist by manufacturer: **`pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md`**. Customer RPS templates must be updated.
+
+- [ ] **Phone provisioning — reinstate, instance-local (#23 / 0k — 2026-09-08):** Reopen after won't-do. Each instance runs its own HTTP provisioner **for now** (no fleet edge proxy / shared host yet). No 3pcerts; no Device templates. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
+
+- [ ] **Audio transcription — pluggable STT (#37 / 0l — 2026-09-08):** Simple interface + adapter(s); local spool (± S3). Solo vs fleet S3 plumbing isolated. Potential first-out: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **`RECORDINGS_STORAGE_DESIGN.md`**.
 
 - [ ] **Named pickup — sipplab L1 pack (2026-08-24):** Manual L3 **pickup OK** lab `.31` — see **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab status. Unattended **`./run-pickup-pack.sh`** still pending. **BLF:** Snom OK; Yealink config TBD (not blocking pickup).
 
@@ -149,7 +156,7 @@
 
 - [x] **Lab / demo SQLite anonymize (2026-08-12):** Stripped surnames from `ipphone.desc` — **Sirius** (all person-named exts); **golden** tenants **duns** / **affcot** only. Non-person labels left (MeetingRoom, fax, WebRTC, SIPp). Host backups under `db_database_dumps/pre-anonymize-*`. No product runbook yet.
 
-- [x] **Provisioning / 3pcerts — won't-do (2026-08-23):** No home listener + edge provision proxy; no **sark3pcerts** panel. Manufacturer RPS covers major vendors (Cisco remains niche). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** (status won't-do).
+- [x] **Provisioning / 3pcerts — won't-do (2026-08-23; superseded 2026-09-08):** Edge-proxy shape + 3pcerts stayed won't-do. **Instance-local provisioner reopened** — see open **#23 / 0k**. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
 
 - [x] **Device table — lean residual (superseded 2026-08-25):** Full purge / won't-do closed the lean keepers track. See **#28** / Device templates purged; **`sqlite_device_drop.sql`**.
 

@@ -1,11 +1,12 @@
 # Provisioning — requirements (sketch)
 
-**Status:** **Won't-do (2026-08-23).** No in-house HTTP phone provisioner and no **sark3pcerts** panel. Major manufacturers (except Cisco) already ship RPS; reinventing is not worth it. Prefer **M1** (vendor/reseller RPS). Spec below kept as archive only.  
-**2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a type label only. If provisioning is ever revived, retrofit SARK 6.5 — do not reintroduce Device templates.  
-**Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — not building.  
+**Status:** **Reopened 2026-09-08** (supersedes won't-do 2026-08-23).  
+**v1 direction:** **instance-local** HTTP phone provisioner on each home — independently, at least for now. **Not** building the fleet edge nginx provision proxy / shared provision host yet (that shape remains in §0 as a later option). Still **no** **sark3pcerts** panel. Manufacturer/reseller RPS (**M1**) remains a valid alternative alongside in-house.  
+**2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a type label only. Revival must **not** reintroduce Device templates — retrofit SARK 6.5-style expand from extension/handset data.  
+**Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — deferred past instance-local v1.  
 **Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard.  
 **Reference notes:** private prior co-located provisioner / SARK archives (operator only — not in product tree).  
-**Related:** **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** (extension SIP fields / Commit — unrelated to RPS product) · **`TLS_AND_CERTIFICATES.md` §0** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23 / #28.
+**Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** (extension SIP fields / Commit) · **`TLS_AND_CERTIFICATES.md` §0** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23 / #28 / **0k**.
 
 ---
 
