@@ -1436,9 +1436,11 @@ HERE;
             }
             $this->OUT .= $OUTstring;
 
-// outcome processing...  If there is a dialable outcome in the tuple then use it.
-            if (is_numeric($qrow['outcome'])) {
-                $this->OUT .= "\texten => " . $qrow['pkey'] . ",n,GoTo(" . $qrow['outcome'] . ",1)\n";
+// outcome processing... dialable: numeric endpoint, or *{ext} leave-voicemail (SARK).
+            $outcome = isset($qrow['outcome']) ? trim((string) $qrow['outcome']) : '';
+            if ($outcome !== '' && strcasecmp($outcome, 'None') !== 0
+                && (is_numeric($outcome) || preg_match('/^\*\S+$/', $outcome))) {
+                $this->OUT .= "\texten => " . $qrow['pkey'] . ",n,GoTo(" . $outcome . ",1)\n";
             }
         }
 
