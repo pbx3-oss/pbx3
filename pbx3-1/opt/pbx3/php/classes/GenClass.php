@@ -757,8 +757,48 @@ class genAsteriskObjects
 				// fall through
 			}
 		}
-
 		return $fallback;
+	}
+
+	/**
+	 * Active extension pkeys for a tenant (queue.cluster is usually shortuid).
+	 * Used by genQueues to tell desk members (Local/Q…) from PSTN (Local/{n}@tenant).
+	 *
+	 * @return array<string, true> pkey => true
+	 */
+	private function extensionPkeysForCluster($cluster)
+	{
+		static $cache = null;
+		if ($cache === null) {
+			$cache = [];
+			try {
+				$phones = $this->helper->getTable('ipphone', null, false);
+			} catch (Exception $e) {
+				$phones = [];
+			}
+			if (!is_array($phones)) {
+				$phones = [];
+			}
+			foreach ($phones as $p) {
+				if (($p['active'] ?? 'YES') === 'NO') {
+					continue;
+				}
+				$cl = isset($p['cluster']) ? trim((string) $p['cluster']) : '';
+				$pkey = isset($p['pkey']) ? trim((string) $p['pkey']) : '';
+				if ($cl === '' || $pkey === '') {
+					continue;
+				}
+				if (!isset($cache[$cl])) {
+					$cache[$cl] = [];
+				}
+				$cache[$cl][$pkey] = true;
+			}
+		}
+		$cluster = trim((string) $cluster);
+		if ($cluster === '' || !isset($cache[$cluster])) {
+			return [];
+		}
+		return $cache[$cluster];
 	}
 
 	/**
@@ -908,8 +948,21 @@ class genAsteriskObjects
 				$row['members'] = preg_replace('/\s*$/', "", $row['members']);
 				$Qbuff .= "\n";
 				$extension = explode(" ", $row['members']);
+				$cluster = $row['cluster'];
+				$localExts = $this->extensionPkeysForCluster($cluster);
 				foreach ($extension as $ext) {
-					$Qbuff .= "member=Local/Q" . $ext . "@" . $row['cluster'] . "\n";
+					$ext = trim((string) $ext);
+					if ($ext === '') {
+						continue;
+					}
+					// Tenant extension → Local/Q{ext} (PrepDial queue path).
+					// Non-extension (PSTN etc.) → Local/{num}@{tenant} so OutRoute matches
+					// (SARK Alias used Local/{n}@internal for the same idea).
+					if (isset($localExts[$ext])) {
+						$Qbuff .= "member=Local/Q" . $ext . "@" . $cluster . "\n";
+					} else {
+						$Qbuff .= "member=Local/" . $ext . "@" . $cluster . "\n";
+					}
 				}
 			}
 			$readyQueues .= $Qbuff;
@@ -1502,9 +1555,8 @@ HERE;
             $this->OUT .= "\tsame => n,agi(" . SYSAGI . ",PostDial," . $phone['shortuid'] . "," . $phone['cluster'] . ",,,)\n";
             $this->OUT .= "\tsame => n(" . $phone['shortuid'] . "-done),Hangup()\n";
 /**
- *  Queue members: Local/Q{ext}@tenant (see genQueues).
- *  Phase E: CAGI PrepDial(type=queue) decides dial string (same recipe as LepDial /
- *  fleet AoR), sets PBX3_DIAL, returns; dialplan Dial owns the bridge (short-run AGI).
+ *  Queue members: Local/Q{ext}@tenant for desk extensions; Local/{pstn}@tenant for
+ *  non-extension tokens (OutRoute). See genQueues.
  */
             $this->OUT .= "\texten => Q" . $phone['pkey'] . ",1,agi(" . SYSAGI . ",Dial," . $phone['shortuid'] . "," . $phone['cluster'] . ",queue,,)\n";
             $this->OUT .= "\texten => Q" . $phone['pkey'] . ",n,Dial(\${PBX3_DIAL})\n";
