@@ -7,7 +7,8 @@ namespace Pbx3\Gatekeeper;
 /**
  * S10.4 — catalog (HoR) ↔ SBC domain.setid reconcile.
  * Direction: catalog expected; SBC is projection (Rule 13).
- * Force-project fixes setid_mismatch via repointTenant and missing_fleet_tag via registerDomain.
+ * Force-project fixes setid_mismatch via repointTenant, missing_fleet_tag /
+ * domain_label_mismatch via registerDomain, dispatcher_label_mismatch via syncNodeLabel.
  * pruneOrphans removes orphan_on_sbc rows (catalog-driven; fleet-owned only by default).
  * Soft-decommissioned tenants (Fleet Delete audit metas) are omitted — SBC domain removal is expected.
  * missing_on_sbc / DID → S10.5.
@@ -25,13 +26,13 @@ final class CatalogReconcile
         return self::compare(
             $this->registrar->getCatalog(),
             $this->registrar->listTenants(),
-            $this->sbc->listDomains()
+            $this->sbc->listDomains(),
+            $this->sbc->listDispatcherSets()
         );
     }
 
     /**
-     * Project catalog expected setids onto SBC for setid_mismatch drifts;
-     * stamp fleet=domain for missing_fleet_tag.
+     * Project catalog expected setids / labels onto SBC.
      *
      * Body:
      * - confirm (bool) required unless dry_run
@@ -64,7 +65,7 @@ final class CatalogReconcile
 
         $projected = [];
         foreach ($plan['actions'] as $action) {
-            $domain = (string) $action['domain'];
+            $domain = (string) ($action['domain'] ?? '');
             $kind = (string) ($action['kind'] ?? '');
             $to = (int) $action['to_setid'];
             try {
@@ -73,7 +74,18 @@ final class CatalogReconcile
                     $live[] = (int) $row['setid'];
                 }
                 SbcSetidGuard::assertLive($to, $live);
-                if ($kind === 'missing_fleet_tag') {
+
+                if ($kind === 'dispatcher_label_mismatch') {
+                    $instanceId = trim((string) ($action['instance_id'] ?? ''));
+                    $label = trim((string) ($action['label'] ?? ''));
+                    $sbcResult = $this->sbc->syncNodeLabel($instanceId, $label, $to);
+                    $projected[] = [
+                        ...$action,
+                        'ok' => ! empty($sbcResult['ok']),
+                        'synced' => true,
+                        'result' => $sbcResult,
+                    ];
+                } elseif ($kind === 'missing_fleet_tag' || $kind === 'domain_label_mismatch') {
                     $label = isset($action['label']) ? trim((string) $action['label']) : '';
                     $shortuid = isset($action['shortuid']) ? trim((string) $action['shortuid']) : '';
                     $sbcResult = $this->sbc->registerDomain(
@@ -219,13 +231,19 @@ final class CatalogReconcile
                 continue;
             }
 
-            if ($kind === 'setid_mismatch' || $kind === 'missing_fleet_tag') {
+            if (
+                $kind === 'setid_mismatch'
+                || $kind === 'missing_fleet_tag'
+                || $kind === 'domain_label_mismatch'
+                || $kind === 'dispatcher_label_mismatch'
+            ) {
                 $to = $drift['expected_setid'] ?? null;
                 if (! is_int($to) && ! (is_string($to) && ctype_digit($to))) {
                     $skipped[] = [
                         'kind' => $kind,
                         'domain' => $domain !== '' ? $domain : null,
                         'shortuid' => $drift['shortuid'] ?? null,
+                        'instance_id' => $drift['instance_id'] ?? null,
                         'reason' => 'missing expected_setid',
                     ];
                     continue;
@@ -234,17 +252,29 @@ final class CatalogReconcile
                 if ($to < 1) {
                     $skipped[] = [
                         'kind' => $kind,
-                        'domain' => $domain,
+                        'domain' => $domain !== '' ? $domain : null,
                         'shortuid' => $drift['shortuid'] ?? null,
+                        'instance_id' => $drift['instance_id'] ?? null,
                         'reason' => 'invalid expected_setid',
                     ];
                     continue;
+                }
+                if ($kind === 'dispatcher_label_mismatch') {
+                    $label = trim((string) ($drift['label'] ?? ''));
+                    if ($label === '') {
+                        $skipped[] = [
+                            'kind' => $kind,
+                            'instance_id' => $drift['instance_id'] ?? null,
+                            'reason' => 'missing instance label',
+                        ];
+                        continue;
+                    }
                 }
                 $actions[] = [
                     'kind' => $kind,
                     'shortuid' => $drift['shortuid'] ?? null,
                     'label' => $drift['label'] ?? null,
-                    'domain' => $domain,
+                    'domain' => $domain !== '' ? $domain : null,
                     'instance_id' => $drift['instance_id'] ?? null,
                     'from_setid' => isset($drift['actual_setid']) ? (int) $drift['actual_setid'] : null,
                     'to_setid' => $to,
@@ -348,11 +378,16 @@ final class CatalogReconcile
      *
      * @param  array<string, mixed>  $catalog
      * @param  list<array<string, mixed>>  $tenants
-     * @param  list<array{domain: string, setid: int, fleet_owned?: bool}>  $sbcDomains
+     * @param  list<array{domain: string, setid: int, fleet_owned?: bool, label?: string|null}>  $sbcDomains
+     * @param  list<array{setid: int, destinations?: int, description?: string|null}>  $dispatcherSets
      * @return array<string, mixed>
      */
-    public static function compare(array $catalog, array $tenants, array $sbcDomains): array
-    {
+    public static function compare(
+        array $catalog,
+        array $tenants,
+        array $sbcDomains,
+        array $dispatcherSets = []
+    ): array {
         $instancesById = [];
         foreach ($catalog['instances'] ?? [] as $inst) {
             if (! is_array($inst)) {
@@ -385,9 +420,37 @@ final class CatalogReconcile
             $fleetOwned = array_key_exists('fleet_owned', $row)
                 ? (bool) $row['fleet_owned']
                 : true;
+            // Absent label key → unknown (skip label compare); present null/'' → empty.
+            $labelKnown = array_key_exists('label', $row);
+            $label = null;
+            if ($labelKnown) {
+                $label = trim((string) ($row['label'] ?? ''));
+            }
             $sbcByDomain[$domain] = [
                 'setid' => (int) ($row['setid'] ?? 0),
                 'fleet_owned' => $fleetOwned,
+                'label' => $label,
+                'label_known' => $labelKnown,
+            ];
+        }
+
+        $descBySetid = [];
+        foreach ($dispatcherSets as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $setid = (int) ($row['setid'] ?? 0);
+            if ($setid < 1) {
+                continue;
+            }
+            $descKnown = array_key_exists('description', $row);
+            $desc = null;
+            if ($descKnown) {
+                $desc = trim((string) ($row['description'] ?? ''));
+            }
+            $descBySetid[$setid] = [
+                'description' => $desc,
+                'description_known' => $descKnown,
             ];
         }
 
@@ -486,7 +549,31 @@ final class CatalogReconcile
                     'instance_id' => $instanceId !== '' ? $instanceId : null,
                     'expected_setid' => $expectedSetid,
                     'actual_setid' => $actualSetid,
-                    'detail' => "SBC domain {$domain} matches setid but lacks fleet=domain — Magrathea may co-author",
+                    'detail' => "SBC domain {$domain} matches setid but lacks fleet=domain — SBC admin may co-author",
+                ];
+                continue;
+            }
+
+            $expectedLabel = self::sanitizeLabel($label);
+            if (
+                $expectedLabel !== ''
+                && $sbcByDomain[$domainKey]['label_known']
+                && (string) $sbcByDomain[$domainKey]['label'] !== $expectedLabel
+            ) {
+                $actualLabel = (string) $sbcByDomain[$domainKey]['label'];
+                $drifts[] = [
+                    'kind' => 'domain_label_mismatch',
+                    'severity' => 'warning',
+                    'shortuid' => $shortuid !== '' ? $shortuid : null,
+                    'label' => $expectedLabel,
+                    'domain' => $domain,
+                    'instance_id' => $instanceId !== '' ? $instanceId : null,
+                    'expected_setid' => $expectedSetid,
+                    'actual_setid' => $actualSetid,
+                    'actual_label' => $actualLabel !== '' ? $actualLabel : null,
+                    'detail' => $actualLabel === ''
+                        ? "SBC domain {$domain} missing label= (catalog: {$expectedLabel})"
+                        : "SBC domain {$domain} label \"{$actualLabel}\" ≠ catalog \"{$expectedLabel}\"",
                 ];
                 continue;
             }
@@ -512,6 +599,45 @@ final class CatalogReconcile
                 'actual_setid' => $setid,
                 'fleet_owned' => $row['fleet_owned'],
                 'detail' => "SBC domain {$domainKey} not present in catalog tenants",
+            ];
+        }
+
+        // Instance Name ↔ dispatcher description (Domain Routes Destinations column).
+        foreach ($instancesById as $instanceId => $inst) {
+            if (strtolower((string) ($inst['status'] ?? 'active')) === 'decommissioned') {
+                continue;
+            }
+            $expectedSetid = self::expectedSetid($instanceId, $instancesById);
+            if ($expectedSetid === null) {
+                continue;
+            }
+            $expectedName = trim((string) ($inst['label'] ?? ''));
+            if ($expectedName === '') {
+                continue;
+            }
+            if (! isset($descBySetid[$expectedSetid])) {
+                continue; // no live set — setid guard / other drifts cover missing edge
+            }
+            if (! $descBySetid[$expectedSetid]['description_known']) {
+                continue; // older SBC API — skip until tip-deploy
+            }
+            $actualDesc = (string) ($descBySetid[$expectedSetid]['description'] ?? '');
+            if ($actualDesc === $expectedName) {
+                continue;
+            }
+            $drifts[] = [
+                'kind' => 'dispatcher_label_mismatch',
+                'severity' => 'warning',
+                'shortuid' => null,
+                'label' => $expectedName,
+                'domain' => null,
+                'instance_id' => $instanceId,
+                'expected_setid' => $expectedSetid,
+                'actual_setid' => $expectedSetid,
+                'actual_label' => $actualDesc !== '' ? $actualDesc : null,
+                'detail' => $actualDesc === ''
+                    ? "Dispatcher setid {$expectedSetid} missing description (catalog instance Name: {$expectedName})"
+                    : "Dispatcher setid {$expectedSetid} description \"{$actualDesc}\" ≠ instance Name \"{$expectedName}\"",
             ];
         }
 
@@ -564,6 +690,17 @@ final class CatalogReconcile
         }
 
         return '';
+    }
+
+    /**
+     * Match SBC FleetDomainOwnership::sanitizeLabel so compare equals stamped attrs.
+     */
+    private static function sanitizeLabel(string $label): string
+    {
+        $label = trim(str_replace([';', '='], ' ', $label));
+        $label = preg_replace('/\s+/', ' ', $label) ?? $label;
+
+        return trim($label);
     }
 
     /**

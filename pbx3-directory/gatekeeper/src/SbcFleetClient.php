@@ -32,7 +32,7 @@ final class SbcFleetClient
     }
 
     /**
-     * @return list<array{domain: string, setid: int, fleet_owned?: bool}>
+     * @return list<array{domain: string, setid: int, fleet_owned?: bool, label?: string|null}>
      */
     public function listDomains(): array
     {
@@ -58,6 +58,10 @@ final class SbcFleetClient
             if (array_key_exists('fleet_owned', $row)) {
                 $item['fleet_owned'] = (bool) $row['fleet_owned'];
             }
+            if (array_key_exists('label', $row)) {
+                $label = trim((string) ($row['label'] ?? ''));
+                $item['label'] = $label !== '' ? $label : null;
+            }
             $out[] = $item;
         }
 
@@ -65,7 +69,7 @@ final class SbcFleetClient
     }
 
     /**
-     * @return list<array{setid: int, destinations: int}>
+     * @return list<array{setid: int, destinations: int, description?: string|null, instance?: string|null}>
      */
     public function listDispatcherSets(): array
     {
@@ -84,10 +88,18 @@ final class SbcFleetClient
             if ($setid < 1) {
                 continue;
             }
-            $out[] = [
+            $item = [
                 'setid' => $setid,
                 'destinations' => (int) ($row['destinations'] ?? 0),
             ];
+            if (array_key_exists('description', $row)) {
+                $desc = trim((string) ($row['description'] ?? ''));
+                $item['description'] = $desc !== '' ? $desc : null;
+            }
+            if (array_key_exists('instance', $row) && $row['instance'] !== null && $row['instance'] !== '') {
+                $item['instance'] = (string) $row['instance'];
+            }
+            $out[] = $item;
         }
 
         return $out;

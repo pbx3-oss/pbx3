@@ -392,4 +392,152 @@ final class CatalogReconcileTest extends TestCase
         $this->assertCount(1, $plan['skipped']);
         $this->assertSame('manual.example', $plan['skipped'][0]['domain']);
     }
+
+    public function test_domain_label_mismatch_is_warning_and_projectable(): void
+    {
+        $report = CatalogReconcile::compare(
+            [
+                'instances' => [
+                    ['id' => '08jzwn', 'fqdn' => '08jzwn.pbx3.com', 'sbc_dispatcher_setid' => 2],
+                ],
+            ],
+            [
+                [
+                    'shortuid' => '9wvvnb',
+                    'pkey' => 'Affcot',
+                    'instance_id' => '08jzwn',
+                    'fqdn' => 'affcot.pbx3.com',
+                ],
+            ],
+            [
+                ['domain' => 'affcot.pbx3.com', 'setid' => 2, 'fleet_owned' => true, 'label' => null],
+                ['domain' => '08jzwn.pbx3.com', 'setid' => 2, 'fleet_owned' => true, 'label' => 'Golden'],
+            ]
+        );
+
+        $this->assertFalse($report['ok']);
+        $this->assertSame('domain_label_mismatch', $report['drifts'][0]['kind']);
+        $this->assertSame('warning', $report['drifts'][0]['severity']);
+        $this->assertSame('Affcot', $report['drifts'][0]['label']);
+
+        $plan = CatalogReconcile::planProject($report);
+        $this->assertCount(1, $plan['actions']);
+        $this->assertSame('domain_label_mismatch', $plan['actions'][0]['kind']);
+        $this->assertSame('Affcot', $plan['actions'][0]['label']);
+        $this->assertSame(2, $plan['actions'][0]['to_setid']);
+    }
+
+    public function test_domain_label_match_is_ok(): void
+    {
+        $report = CatalogReconcile::compare(
+            [
+                'instances' => [
+                    ['id' => '08jzwn', 'fqdn' => '08jzwn.pbx3.com', 'sbc_dispatcher_setid' => 2, 'label' => 'Golden'],
+                ],
+            ],
+            [
+                [
+                    'shortuid' => '9wvvnb',
+                    'pkey' => 'Affcot',
+                    'instance_id' => '08jzwn',
+                    'fqdn' => 'affcot.pbx3.com',
+                ],
+            ],
+            [
+                ['domain' => 'affcot.pbx3.com', 'setid' => 2, 'fleet_owned' => true, 'label' => 'Affcot'],
+            ],
+            [
+                ['setid' => 2, 'destinations' => 1, 'description' => 'Golden'],
+            ]
+        );
+
+        $this->assertTrue($report['ok']);
+        $this->assertSame(1, $report['summary']['matched']);
+    }
+
+    public function test_absent_label_key_does_not_false_flag(): void
+    {
+        $report = CatalogReconcile::compare(
+            [
+                'instances' => [
+                    ['id' => '08jzwn', 'sbc_dispatcher_setid' => 2],
+                ],
+            ],
+            [
+                [
+                    'shortuid' => '9wvvnb',
+                    'pkey' => 'Affcot',
+                    'instance_id' => '08jzwn',
+                    'fqdn' => 'affcot.pbx3.com',
+                ],
+            ],
+            [
+                // Older SBC tip: no label key → skip label compare
+                ['domain' => 'affcot.pbx3.com', 'setid' => 2, 'fleet_owned' => true],
+            ]
+        );
+
+        $this->assertTrue($report['ok']);
+        $this->assertSame(1, $report['summary']['matched']);
+    }
+
+    public function test_dispatcher_label_mismatch_is_warning_and_projectable(): void
+    {
+        $report = CatalogReconcile::compare(
+            [
+                'instances' => [
+                    [
+                        'id' => 'bzy54n',
+                        'fqdn' => 'bzy54n.pbx3.com',
+                        'sbc_dispatcher_setid' => 3,
+                        'label' => 'Sirius',
+                    ],
+                ],
+            ],
+            [],
+            [
+                ['domain' => 'bzy54n.pbx3.com', 'setid' => 3, 'fleet_owned' => true],
+            ],
+            [
+                ['setid' => 3, 'destinations' => 1, 'description' => 'bzy54n fleet node'],
+            ]
+        );
+
+        $this->assertFalse($report['ok']);
+        $this->assertSame('dispatcher_label_mismatch', $report['drifts'][0]['kind']);
+        $this->assertSame('Sirius', $report['drifts'][0]['label']);
+        $this->assertSame('bzy54n fleet node', $report['drifts'][0]['actual_label']);
+
+        $plan = CatalogReconcile::planProject($report);
+        $this->assertCount(1, $plan['actions']);
+        $this->assertSame('dispatcher_label_mismatch', $plan['actions'][0]['kind']);
+        $this->assertSame('bzy54n', $plan['actions'][0]['instance_id']);
+        $this->assertSame('Sirius', $plan['actions'][0]['label']);
+        $this->assertSame(3, $plan['actions'][0]['to_setid']);
+    }
+
+    public function test_dispatcher_label_mismatch_skipped_when_domain_filter(): void
+    {
+        $report = [
+            'drifts' => [
+                [
+                    'kind' => 'dispatcher_label_mismatch',
+                    'instance_id' => 'bzy54n',
+                    'label' => 'Sirius',
+                    'expected_setid' => 3,
+                    'domain' => null,
+                ],
+                [
+                    'kind' => 'domain_label_mismatch',
+                    'domain' => 'a.pbx3.com',
+                    'label' => 'A',
+                    'expected_setid' => 2,
+                    'shortuid' => 'aaaaaa',
+                ],
+            ],
+        ];
+        $plan = CatalogReconcile::planProject($report, ['a.pbx3.com' => true]);
+        $this->assertCount(1, $plan['actions']);
+        $this->assertSame('domain_label_mismatch', $plan['actions'][0]['kind']);
+    }
 }
