@@ -389,7 +389,12 @@ final class DidInventory
             );
         }
 
-        return $sbc->registerDomain($fqdn, $setid);
+        return $sbc->registerDomain(
+            $fqdn,
+            $setid,
+            trim((string) ($meta['pkey'] ?? $meta['label'] ?? '')) ?: null,
+            $shortuid !== '' ? $shortuid : null
+        );
     }
 
     /**

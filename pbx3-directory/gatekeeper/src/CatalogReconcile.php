@@ -74,7 +74,14 @@ final class CatalogReconcile
                 }
                 SbcSetidGuard::assertLive($to, $live);
                 if ($kind === 'missing_fleet_tag') {
-                    $sbcResult = $this->sbc->registerDomain($domain, $to);
+                    $label = isset($action['label']) ? trim((string) $action['label']) : '';
+                    $shortuid = isset($action['shortuid']) ? trim((string) $action['shortuid']) : '';
+                    $sbcResult = $this->sbc->registerDomain(
+                        $domain,
+                        $to,
+                        $label !== '' ? $label : null,
+                        $shortuid !== '' ? $shortuid : null
+                    );
                     $projected[] = [
                         ...$action,
                         'ok' => true,
@@ -82,7 +89,14 @@ final class CatalogReconcile
                         'dest_setid' => $sbcResult['setid'] ?? $to,
                     ];
                 } else {
-                    $sbcResult = $this->sbc->repointTenant($domain, $to);
+                    $label = isset($action['label']) ? trim((string) $action['label']) : '';
+                    $shortuid = isset($action['shortuid']) ? trim((string) $action['shortuid']) : '';
+                    $sbcResult = $this->sbc->repointTenant(
+                        $domain,
+                        $to,
+                        $label !== '' ? $label : null,
+                        $shortuid !== '' ? $shortuid : null
+                    );
                     $projected[] = [
                         ...$action,
                         'ok' => true,
@@ -229,6 +243,7 @@ final class CatalogReconcile
                 $actions[] = [
                     'kind' => $kind,
                     'shortuid' => $drift['shortuid'] ?? null,
+                    'label' => $drift['label'] ?? null,
                     'domain' => $domain,
                     'instance_id' => $drift['instance_id'] ?? null,
                     'from_setid' => isset($drift['actual_setid']) ? (int) $drift['actual_setid'] : null,
@@ -391,12 +406,14 @@ final class CatalogReconcile
             }
             $considered++;
             $shortuid = (string) ($tenant['shortuid'] ?? '');
+            $label = self::tenantLabel($tenant);
             $domain = self::tenantDomain($tenant);
             if ($domain === '') {
                 $drifts[] = [
                     'kind' => 'tenant_missing_domain',
                     'severity' => 'error',
                     'shortuid' => $shortuid !== '' ? $shortuid : null,
+                    'label' => $label !== '' ? $label : null,
                     'detail' => 'Tenant meta has no fqdn / sbc_domain',
                 ];
                 continue;
@@ -412,6 +429,7 @@ final class CatalogReconcile
                     'kind' => 'missing_on_sbc',
                     'severity' => 'error',
                     'shortuid' => $shortuid !== '' ? $shortuid : null,
+                    'label' => $label !== '' ? $label : null,
                     'domain' => $domain,
                     'instance_id' => $instanceId !== '' ? $instanceId : null,
                     'expected_setid' => $expectedSetid,
@@ -429,6 +447,7 @@ final class CatalogReconcile
                     'kind' => 'unresolvable_expected_setid',
                     'severity' => 'warning',
                     'shortuid' => $shortuid !== '' ? $shortuid : null,
+                    'label' => $label !== '' ? $label : null,
                     'domain' => $domain,
                     'instance_id' => $instanceId !== '' ? $instanceId : null,
                     'expected_setid' => null,
@@ -447,6 +466,7 @@ final class CatalogReconcile
                     'kind' => 'setid_mismatch',
                     'severity' => 'error',
                     'shortuid' => $shortuid !== '' ? $shortuid : null,
+                    'label' => $label !== '' ? $label : null,
                     'domain' => $domain,
                     'instance_id' => $instanceId,
                     'expected_setid' => $expectedSetid,
@@ -461,6 +481,7 @@ final class CatalogReconcile
                     'kind' => 'missing_fleet_tag',
                     'severity' => 'warning',
                     'shortuid' => $shortuid !== '' ? $shortuid : null,
+                    'label' => $label !== '' ? $label : null,
                     'domain' => $domain,
                     'instance_id' => $instanceId !== '' ? $instanceId : null,
                     'expected_setid' => $expectedSetid,
@@ -523,6 +544,19 @@ final class CatalogReconcile
     private static function tenantDomain(array $tenant): string
     {
         foreach (['sbc_domain', 'fqdn'] as $key) {
+            $v = trim((string) ($tenant[$key] ?? ''));
+            if ($v !== '') {
+                return $v;
+            }
+        }
+
+        return '';
+    }
+
+    /** Catalog-friendly name for Domain Routes (pkey preferred). */
+    private static function tenantLabel(array $tenant): string
+    {
+        foreach (['pkey', 'label'] as $key) {
             $v = trim((string) ($tenant[$key] ?? ''));
             if ($v !== '') {
                 return $v;

@@ -27,7 +27,7 @@ Same authorship class as hop-1 DID delivery: sticky Magrathea edit without catal
 
 **Standalone SBC** (no `fleet=domain` / `fleet=node` tags): Filament Domain Routes + Destinations remain first-class.
 
-**Still allowed on Magrathea for fleet rows:** read / View (including read-only destination list if deep-linked).
+**Still allowed on Magrathea for fleet rows:** read / View (including read-only destination list if deep-linked). Domain Routes list shows projected catalog **label** (attrs `label=…`) under the FQDN and destination **description** (instance Name) beside the SIP URI when present.
 
 **Emergency (control plane down):** Filament stays locked. Break-glass = **SSH/SQL/MI** on the SBC, then after recovery **catalog wins** (Fleet reconcile / project). Not a sticky product path.
 
@@ -39,3 +39,4 @@ Same authorship class as hop-1 DID delivery: sticky Magrathea edit without catal
 
 - **Shipped (2026-08-11):** `Domain` save merges attrs (no longer wipes to `setid=` only); `FleetDomainOwnership::stamp` on `registerDomain` / `repoint` / `rollback-repoint`; `DomainPolicy` + Domain Routes Filament lock badge / no-offer / Edit redirect; `GET /fleet/domains` returns `fleet_owned`; Gatekeeper reconcile `missing_fleet_tag` (warning) projectable via registerDomain.
 - **Shipped (2026-08-11):** Hide Manage destinations for `fleet=domain`; `DispatcherPolicy` + create/edit redirect when `setidIsFleetLocked` / `fleet=node`; bulk-select hidden for fleet-owned Domain Routes.
+- **Shipped (2026-09-24):** `registerDomain` / `repoint` accept optional `label` (+ `tenant_shortuid`); stamp `label=` in attrs; Domain Routes UI shows label under FQDN and dispatcher `description` (instance Name) in Destinations. Gatekeeper passes label on provision / reconcile / Repair.

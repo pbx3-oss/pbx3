@@ -137,7 +137,13 @@ final class TenantProvisioner
         }
 
         try {
-            $sbc = $this->sbc->registerDomain($fqdn, $setid);
+            $label = trim((string) ($req['pkey'] ?? $meta['pkey'] ?? $meta['label'] ?? ''));
+            $sbc = $this->sbc->registerDomain(
+                $fqdn,
+                $setid,
+                $label !== '' ? $label : null,
+                $shortuid
+            );
             $stages['sbc'] = 'ok';
 
             return [

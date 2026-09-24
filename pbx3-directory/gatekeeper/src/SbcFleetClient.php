@@ -95,20 +95,35 @@ final class SbcFleetClient
 
     /**
      * Project tenant domain → dispatcher setid (adapter repointTenant).
+     * Optional label / tenant_shortuid refresh attrs on the domain row.
      *
      * @return array<string, mixed>
      */
-    public function repointTenant(string $tenantDomain, int $destDispatcherSetid): array
-    {
+    public function repointTenant(
+        string $tenantDomain,
+        int $destDispatcherSetid,
+        ?string $label = null,
+        ?string $tenantShortuid = null
+    ): array {
         $tenantDomain = trim($tenantDomain);
         if ($tenantDomain === '' || $destDispatcherSetid < 1) {
             throw new \InvalidArgumentException('tenant_domain and dest_dispatcher_setid (>=1) required', 422);
         }
 
-        return $this->post('/fleet/repoint', [
+        $body = [
             'tenant_domain' => $tenantDomain,
             'dest_dispatcher_setid' => $destDispatcherSetid,
-        ]);
+        ];
+        $label = $label !== null ? trim($label) : '';
+        if ($label !== '') {
+            $body['label'] = $label;
+        }
+        $tenantShortuid = $tenantShortuid !== null ? trim($tenantShortuid) : '';
+        if ($tenantShortuid !== '') {
+            $body['tenant_shortuid'] = $tenantShortuid;
+        }
+
+        return $this->post('/fleet/repoint', $body);
     }
 
     /**
@@ -162,20 +177,35 @@ final class SbcFleetClient
 
     /**
      * S10.5 — ensure domain row exists with setid.
+     * Optional label / tenant_shortuid projected into domain attrs for Magrathea Domain Routes UI.
      *
      * @return array<string, mixed>
      */
-    public function registerDomain(string $domain, int $setid): array
-    {
+    public function registerDomain(
+        string $domain,
+        int $setid,
+        ?string $label = null,
+        ?string $tenantShortuid = null
+    ): array {
         $domain = strtolower(trim($domain));
         if ($domain === '' || $setid < 1) {
             throw new \InvalidArgumentException('domain and setid (>=1) required', 422);
         }
 
-        return $this->post('/fleet/domains', [
+        $body = [
             'domain' => $domain,
             'setid' => $setid,
-        ]);
+        ];
+        $label = $label !== null ? trim($label) : '';
+        if ($label !== '') {
+            $body['label'] = $label;
+        }
+        $tenantShortuid = $tenantShortuid !== null ? trim($tenantShortuid) : '';
+        if ($tenantShortuid !== '') {
+            $body['tenant_shortuid'] = $tenantShortuid;
+        }
+
+        return $this->post('/fleet/domains', $body);
     }
 
     /**

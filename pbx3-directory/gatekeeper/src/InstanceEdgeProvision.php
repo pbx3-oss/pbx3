@@ -129,7 +129,11 @@ final class InstanceEdgeProvision
         $fqdn = strtolower(trim((string) ($instance['fqdn'] ?? '')));
         $domainResult = null;
         if ($fqdn !== '') {
-            $domainResult = $sbc->registerDomain($fqdn, $setid);
+            $domainResult = $sbc->registerDomain(
+                $fqdn,
+                $setid,
+                $description !== '' ? $description : null
+            );
             if (empty($domainResult['ok'])) {
                 $msg = (string) ($domainResult['message'] ?? 'SBC registerDomain failed');
                 throw new \RuntimeException("registerDomain {$fqdn}: {$msg}", 502);
