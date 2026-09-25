@@ -1773,24 +1773,29 @@ if (empty($orideclosedarray[$coskeys['cos_pkey']])) {
 HERE;
 
 		/*
+		 * Dial b() pre-dial on outbound PJSIP (PAI + Alert-Info).
+		 * PJSIP_HEADER only sticks on the channel that will send the INVITE.
+		 */
+		$this->OUT .= "\n[pbx3-pre-dial]\n";
+		$this->OUT .= "\texten => s,1,NoOp(pbx3 pre-dial PAI=\${PBX3_RETURN_AOR} Alert=\${PBX3_ALERT_INFO})\n";
+		$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_RETURN_AOR}\"=\"\"]?alert)\n";
+		$this->OUT .= "\tsame => n,Set(PJSIP_HEADER(remove,P-Asserted-Identity)=)\n";
+		$this->OUT .= "\tsame => n,Set(PJSIP_HEADER(add,P-Asserted-Identity)=<sip:\${PBX3_RETURN_AOR}>)\n";
+		$this->OUT .= "\tsame => n(alert),GotoIf(\$[\"\${PBX3_ALERT_INFO}\"=\"\"]?done)\n";
+		$this->OUT .= "\tsame => n,Set(PJSIP_HEADER(add,Alert-Info)=\${PBX3_ALERT_INFO})\n";
+		$this->OUT .= "\tsame => n(done),Return()\n";
+		$this->OUT .= "\n";
+		/* Alias for dial strings still using b(pbx3-site-pai^s^1) */
+		$this->OUT .= "[pbx3-site-pai]\n";
+		$this->OUT .= "\texten => s,1,Goto(pbx3-pre-dial,s,1)\n";
+		$this->OUT .= "\n";
+
+		/*
 		 * Fleet only: Egress identify → SbcDomainRoute.
 		 * PrefixDial / site dial home path: R-URI user@tenant.fqdn after SBC
 		 * usrloc miss → dispatcher. Map FQDN → local tenant context; else DID Ingress.
 		 */
 		if ($this->isFleetMode()) {
-			/*
-			 * PrefixDial Dial b() gosub — attach return AoR as PAI on outbound PJSIP
-			 * (PJSIP_HEADER only works on the channel that will send the INVITE).
-			 */
-			$this->OUT .= "\n[pbx3-site-pai]\n";
-			$this->OUT .= "\texten => s,1,NoOp(site-dial PAI \${PBX3_RETURN_AOR})\n";
-			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_RETURN_AOR}\"=\"\"]?done)\n";
-			/* remove any PAI first; SiteRing has send_pai=no so this is authoritative */
-			$this->OUT .= "\tsame => n,Set(PJSIP_HEADER(remove,P-Asserted-Identity)=)\n";
-			$this->OUT .= "\tsame => n,Set(PJSIP_HEADER(add,P-Asserted-Identity)=<sip:\${PBX3_RETURN_AOR}>)\n";
-			$this->OUT .= "\tsame => n(done),Return()\n";
-			$this->OUT .= "\n";
-
 			$this->OUT .= "\n[SbcDomainRoute]\n";
 			$this->OUT .= "; Carrier +E164 → DID pool (do not treat as site-dial extension)\n";
 			$this->OUT .= "\texten => _+X.,1,Goto(Ingress,\${EXTEN},1)\n";
