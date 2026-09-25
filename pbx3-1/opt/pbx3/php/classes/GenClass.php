@@ -874,6 +874,19 @@ class genAsteriskObjects
 		if (!empty($row['strategy'])) {
 			$buffer = preg_replace('/\$strategy/', $rep($row['strategy'] ?? null), $buffer);
 		}
+		// queue.tmpl timing — SPA Timing & limits; defaults match former hardcodes
+		$qTimeout = (isset($row['timeout']) && $row['timeout'] !== '' && $row['timeout'] !== null)
+			? (string) (int) $row['timeout'] : '30';
+		$qRetry = (isset($row['retry']) && $row['retry'] !== '' && $row['retry'] !== null)
+			? (string) (int) $row['retry'] : '1';
+		$qWrap = (isset($row['wrapuptime']) && $row['wrapuptime'] !== '' && $row['wrapuptime'] !== null)
+			? (string) (int) $row['wrapuptime'] : '0';
+		$qMaxlen = (isset($row['maxlen']) && $row['maxlen'] !== '' && $row['maxlen'] !== null)
+			? (string) (int) $row['maxlen'] : '0';
+		$buffer = preg_replace('/\$timeout/', $qTimeout, $buffer);
+		$buffer = preg_replace('/\$retry/', $qRetry, $buffer);
+		$buffer = preg_replace('/\$wrapuptime/', $qWrap, $buffer);
+		$buffer = preg_replace('/\$maxlen/', $qMaxlen, $buffer);
 /**
  * default to udp for converted rows from imported systems
  */
@@ -1479,7 +1492,13 @@ HERE;
             $OUTstring .= $qrow['shortuid'];
             $OUTstring .= ',';
             $OUTstring .= $qrow['options'];
-            $OUTstring .= ',,,,';
+            // Queue(name,options,URL,announceoverride,timeout,AGI) — timeout = Caller Max Wait
+            $OUTstring .= ',,,';
+            $callerTo = isset($qrow['caller_timeout']) ? (int) $qrow['caller_timeout'] : 0;
+            if ($callerTo > 0) {
+                $OUTstring .= $callerTo;
+            }
+            $OUTstring .= ',';
             if ($qrow['devicerec'] != 'None') {
                 $OUTstring .= SYSAGI;
             }

@@ -455,7 +455,8 @@ CREATE TABLE IF NOT EXISTS queue (
     "maxlen" INTEGER DEFAULT 0,
     "outcome" TEXT DEFAULT 'None',
     "strategy" TEXT DEFAULT 'ringall',    -- fine selection, all of the Asterisk types
-    "timeout" INTEGER DEFAULT 30,
+    "timeout" INTEGER DEFAULT 30,         -- Agent Ring Timeout (queues.conf timeout)
+    "caller_timeout" INTEGER,             -- Caller Max Wait (Queue() 5th arg); NULL/0 = unlimited
     "queue_overlay" TEXT,                 -- thin queue.conf overlay (flat KV merge on Commit)
     "z_created" datetime,
     "z_updated" datetime,

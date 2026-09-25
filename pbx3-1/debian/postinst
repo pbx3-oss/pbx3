@@ -119,9 +119,15 @@ DEVICE_HARVEST_APPLY="$SYSPATH/scripts/apply-sqlite-add-device-harvest.sh"
 if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$DEVICE_HARVEST_APPLY" ]; then
 	sh "$DEVICE_HARVEST_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
 fi
+
+# Queue Caller Max Wait (Queue() 5th arg); NULL = unlimited.
+CALLER_TO_APPLY="$SYSPATH/scripts/apply-sqlite-add-queue-caller-timeout.sh"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$CALLER_TO_APPLY" ]; then
+	sh "$CALLER_TO_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+fi
 if [ -f /opt/pbx3/db/sqlite.db ] && command -v sqlite3 >/dev/null 2>&1; then
 	sqlite3 /opt/pbx3/db/sqlite.db <<'EOF' >/dev/null 2>&1 || true
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('recs3','S3 offload','Opt this tenant into fleet S3 disaster recovery for call recordings (default No). Requires the home to have recordings S3 upload plumbing enabled at install. Local archive and max age/size always apply; Yes only adds upload of archived files to the fleet recordings bucket.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('caller_timeout','Caller Max Wait','Absolute maximum seconds a caller may wait in this queue (Asterisk Queue() application timeout). When it expires the call leaves the queue and follows Outcome. Leave blank (or 0) for unlimited wait — typical for true ACD. Ring-group style queues usually set this and an Outcome for unanswered calls. Separate from Agent Ring Timeout, which only controls how long each member rings per attempt.');
 UPDATE tt_help_core SET displayname = 'Standard Class of Service', htext = 'Rules that apply in Standard hours: schedule mode is anything other than closed (open, lunch, evening, night day-parts, etc.), or when not forced closed. Outbound dial privileges for this extension.' WHERE pkey = 'cosday';
 UPDATE tt_help_core SET displayname = 'After-hours Class of Service', htext = 'Rules that apply in After-hours: schedule mode closed, or tenant/master force CLOSED. Lunch and other non-closed day-parts still use Standard CoS.' WHERE pkey = 'cosnight';
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('route_profile_extra_modes','Additional schedule modes','Optional destinations for day-parts beyond open/closed (lunch, evening, night, break, or any custom name).
