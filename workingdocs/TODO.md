@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-24 (Domain Routes names + label reconcile drifts)  
+**Last updated:** 2026-09-24 (IVR greetings + PJSIP Alert-Info)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
