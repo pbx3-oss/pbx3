@@ -70,6 +70,7 @@ Smoke: `cd /opt/pbx3api && sudo -u www-data php artisan pbx3:recordings-s3-uploa
 - After stop/start without EIP, **update DNS** before renew/client use.  
 - Redeploy code: rsync gatekeeper tree (exclude `.env`), `composer install` with **php8.4**, `sudo systemctl reload php8.4-fpm`.  
 - Policy JSON in repo: `pbx3-directory/schema/pbx3-control-gatekeeper-s3.policy.json` (org) + `…-recordings.policy.json` (S7).
+- **Auth DB DR (gap — TODO #15a):** `GATEKEEPER_AUTH_DB` (`/var/lib/pbx3-gatekeeper/auth.sqlite`) is **not** backed up yet. Plan: regular copy to org bucket `control/` + restore note — **not** Litestream / not Gatekeeper HA.
 
 ## Fleet ops notify (probe + SMTP)
 

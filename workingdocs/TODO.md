@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-24 (IVR greetings + Alert-Info; ChanSpy multi-tenant TODO)  
+**Last updated:** 2026-09-25 (Gatekeeper auth.sqlite backup TODO)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -54,6 +54,7 @@
 13. **AMI wallboard** (parked).  
 14. **Fleet node health ≠ Asterisk** (parked — also **N3** on first-out checklist).  
 15. ~~**Control plane duplex / HA**~~ — **won't-do** (2026-08-11): management binary (up/down); Rule 11. Single host + rebuild/restore — not a duplex SKU. Lock: **`CONTROL_HOST.md`**.  
+15a. **Gatekeeper auth.sqlite backups** — **should-do** before multi-user / first real MSP ops. Local SQLite (`GATEKEEPER_AUTH_DB`) holds fleet users, tokens, TOTP, notify prefs, health/edge state — **no backup today**. **Regular** copy to org bucket `control/` (not Litestream; matches single-host + rebuild posture). Open item below · **`CONTROL_HOST.md`**.  
 16. **Fleet auth cookie/SSO (blocked)**.  
 17. ~~**TOTP 2FA — Fleet Gatekeeper G5**~~ — **won't-do for now** (2026-08-12): opt-in is enough for single fleet-admin ops; revisit if multi-user fleet logins need “admins must enroll.” Spec: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`**.  
 18. **S7+** attested PCI — customer ask.  
@@ -182,6 +183,8 @@
 - [ ] **pbx3cagi Phase 4 — domain file splits (parked 2026-07-26):** Day-parts / CheckState **merged to `main`** — Phase 4 unblocked when scheduled. Spec: **`REFACTOR_PLAN.md`**.
 
 - [x] **Control plane duplex / HA — won't-do (2026-08-11):** Management layer is binary (up/down). Gatekeeper stays a **single host**; calls continue per Rule 11 while Fleet mutate waits. Do **not** build duplex/active-active Gatekeeper. Ops: rebuild/restore + DNS/EIP discipline. Edge HA (Magrathea) remains a separate call-path track. Lock: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.1 · **`DESIGN_RULES.md`** Rule 11.
+
+- [ ] **Gatekeeper auth.sqlite backups (#15a — 2026-09-25):** Ops continuity only (not call path). Daily or post-change **`sqlite3 .backup` / file copy** of `GATEKEEPER_AUTH_DB` → org S3 `control/{id}/…` + N-day retention + restore note in **`CONTROL_HOST.md`**. **Not Litestream** (parked elsewhere; overkill for low-churn control DB under single-host rebuild doctrine). Optional local rotate on-box. Not first-out.
 
 - [ ] **Fleet instance health includes Asterisk (parked, pre-live 2026-07-27):** Gatekeeper node badge uses HTTP **`/up`** only. Extend probe for call-plane liveness before production. Do not block dial-alias.
 
