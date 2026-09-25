@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-25 (Gatekeeper auth.sqlite backup TODO)  
+**Last updated:** 2026-09-25 (queues caller wait + Commit dirty + agent login)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
@@ -86,6 +86,8 @@
 ---
 
 ## Open items
+
+- [x] **Queues — Caller Max Wait + agent login + Commit dirty (2026-09-25):** `queue.caller_timeout` → GenAst `Queue()` 5th arg; SPA labels Agent Ring Timeout / Caller Max Wait; agent PIN edit; CAGI **1.0.0-21** AddQueueMember by queue shortuid + `Local/Q`; GenAst-affecting API CRUD marks `mycommit` + SPA Commit refresh after save.
 
 - [x] **Recordings — unified list filters + play spinner (2026-08-26):** SQLite catalog (local + S3 metadata); From/To/Tenant/Search → `GET /recordings`; spinner during blob fetch; S3 play via gatekeeper. Spec: **`RECORDINGS_STORAGE_DESIGN.md`**.
 
