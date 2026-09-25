@@ -1,3 +1,11 @@
+pbx3 (0.0.6-6) noble; urgency=medium
+
+  * GenAst: emit shared [pbx3-pre-dial] Dial b() gosub for PAI + Alert-Info on
+    outbound PJSIP; keep [pbx3-site-pai] as Goto alias. Pair with pbx3cagi
+    1.0.0-20.
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Fri, 25 Sep 2026 09:45:00 -0400
+
 pbx3 (0.0.6-5) noble; urgency=medium
 
   * Bake API upload floor into package: ship 99-pbx3-uploads.ini (50M/55M)
