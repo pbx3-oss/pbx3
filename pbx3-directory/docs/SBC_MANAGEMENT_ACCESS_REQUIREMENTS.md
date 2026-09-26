@@ -1,8 +1,8 @@
-# SBC management access (firewall) — requirements stub
+# SBC management access (Filament lockdown) — requirements
 
-**Status:** Open work (not scheduled). Seeded **2026-08-30**.  
+**Status:** Locked **2026-09-26** (v1 scope). Implement when scheduled / this session.  
 **Audience:** SBC / Filament / ops.  
-**Related:** Fail2ban Filament pages (reactive) · home **`UFW_SHOREWALL_MIGRATION.md`** · **`EDGE_PORTABILITY_SCORECARD.md`** · **`SBC_PRODUCT_TRACKS.md`** · **`DESIGN_RULES.md`** Rule **7** (edge portability).
+**Related:** Fail2ban Filament pages (reactive) · home **`UFW_SHOREWALL_MIGRATION.md`** (different product job) · **`EDGE_PORTABILITY_SCORECARD.md`** · **`SBC_PRODUCT_TRACKS.md`** · **`DESIGN_RULES.md`** Rule **7** (edge portability) · SBC TOTP (**`TOTP_2FA_SBC.md`**).
 
 **Naming:** **SBC** = edge. Do not hard-require AWS Security Groups as the product firewall.
 
@@ -10,47 +10,60 @@
 
 ## Problem
 
-SSH (**22**) and admin HTTPS (**443**) are often open to the world on lab/cloud SBC images. Filament already exposes **Fail2ban** (ban after abuse + ignoreip whitelist). That does **not** restrict who may connect to management ports.
+Admin HTTPS (**443**) is often open to the world on lab/cloud SBC images. Filament already has **UID/password** + optional **TOTP 2FA**, and **Fail2ban** (reactive bans + ignoreip). None of those **restrict who may open the admin UI** before login.
 
-Operators want a **browser-visible allowlist** for management access. Some fleets run the SBC on **AWS**; others on bare metal, other clouds, or customer colo — product must not assume Security Groups.
-
----
-
-## Locked stance
-
-1. **Product SoT = host firewall** (UFW or nftables wrapper — same family as home UFW track). Portable everywhere the SBC image runs.  
-2. **AWS SG (or equivalent cloud SG) = optional ops overlay**, not the Filament dependency. Lab AWS may mirror allowlists into SG for defense in depth; non-AWS installs never need it.  
-3. **Scope = management ports only** by default: **22** + **443** (and optional admin-only alt HTTPS if ever used). Do **not** put SIP **5060**, RTP, or WSS **8089** behind this allowlist — those stay carrier/phone-facing.  
-4. **Fail2ban stays** for reactive bans on whatever remains reachable; management allowlist is a separate panel (“Management access”), not a rename of Fail2ban whitelist.  
-5. **Break-glass:** never apply a change that drops the **current client IP** without an explicit confirm; refuse deleting the last CIDR while lockdown is enabled; document console / serial / physical access recovery for non-AWS.  
-6. **Rule 7:** no AWS API hardwiring in the Filament domain path for the core feature. Optional “sync to SG” adapter later, behind capability detection.
+Operators want a **browser-visible allowlist** for Filament reachability. Some fleets run the SBC on **AWS**; others on bare metal / colo — product must not assume Security Groups for this feature.
 
 ---
 
-## Desired UX (sketch)
+## Locked stance (v1)
 
-Filament **System → Management access** (name TBD):
+1. **Product SoT = host UFW** for **admin HTTPS (443) only**. Portable everywhere the SBC image runs.  
+2. **SSH (22)** is **out of product** for v1 — operators use AWS SG / customer edge firewall / host UFW by hand. Panel may note this; no SSH toggle.  
+3. **SIP / RTP / WSS** are **out of scope**. Domain checking + Fail2ban remain the edge signaling defenses. Do not put those ports behind this allowlist.  
+4. **UX = dedicated Filament panel** — **System → Management access** (not a clone of the home Firewall table; not folded into Fail2ban whitelist).  
+5. **Defense in depth:** network allowlist (optional lockdown) **then** password **then** 2FA. This panel does not replace auth.  
+6. **Default:** lockdown **off** (world can reach 443, same as today). Operators turn on when ready.  
+7. **Break-glass:** on lockdown Apply, **always keep the current client IP** (auto-add `/32` or `/128` if missing) and say so in the result message; refuse enabling lockdown with an **empty** allow list after that step; refuse deleting the last CIDR while lockdown is on. Document AWS console / serial recovery. No confirm checkbox.  
+8. **Rule 7:** no AWS API hardwiring in Filament for the core feature. Optional SG sync adapter is **parked**.  
+9. **Fail2ban stays** separate (reactive). Management allowlist is pre-connect; Fail2ban whitelist is post-abuse ignoreip.
+10. **php-fpm ProtectSystem=full:** Ubuntu’s php-fpm unit mounts `/etc` read-only for the service **and** `sudo` children. Mutating UFW from Filament requires systemd **`ReadWritePaths=/etc/ufw`** (`pbx3sbc/scripts/setup-php-fpm-ufw-write.sh`). Status (`--status`) stays read-only and must not require write.
 
-- Toggle: **Restrict SSH / Restrict HTTPS** (or one “lockdown” with per-port checkboxes).  
-- CIDR list (desk, office, control host, …) + “Add my IP”.  
-- Apply → write host firewall; show effective rules / last apply result.  
-- Clear copy: phones and carriers are unaffected.
+### Existential difference vs instance Firewall
+
+| | Instance Firewall | SBC Management access |
+|--|-------------------|------------------------|
+| **Job** | PBX host service posture (SIP/RTP + ops ports) | Who may reach Filament |
+| **Shape** | General proto/port/source rows | Lockdown + CIDR allow list for **443** |
+| **Sibling defenses** | UFW is primary for fleet SIP-from-SBC | Auth + 2FA + F2B + (ops) SG for SSH |
+
+---
+
+## Desired UX (v1)
+
+Filament **System → Management access**:
+
+- Toggle: **Restrict admin HTTPS** (lockdown).  
+- CIDR list + comment; **Add my IP**.  
+- **Apply** → write state + run UFW helper (sudo); show last apply / effective rules (mgmt-tagged only).  
+- Clear copy: *Phones and carriers are unaffected. Password and 2FA still apply. SSH is not managed here.*
 
 ---
 
 ## Non-goals (v1)
 
-- Full generic firewall GUI (arbitrary ports/chains).  
+- Full generic firewall GUI.  
+- SSH lockdown in-panel.  
 - Replacing Fail2ban.  
-- Requiring IAM / AWS credentials on the SBC for the feature to work.
+- Requiring IAM / AWS credentials on the SBC.  
+- HA apply-both (park until HA productized).
 
 ---
 
-## Open
+## Open / parked
 
-- [ ] UFW vs nftables on current Ubuntu SBC image (prefer align with home UFW).  
-- [ ] Default on fresh install: open vs restricted-with-installer-seeded CIDR.  
+- [ ] Optional cloud SG sync adapter (lab only).  
 - [ ] HA pair: apply on active only vs both members.  
-- [ ] Optional cloud SG sync adapter (lab only).
+- [ ] SSH toggle for colo/bare-metal (if demand).
 
-*Last updated: 2026-08-30*
+*Last updated: 2026-09-26*
