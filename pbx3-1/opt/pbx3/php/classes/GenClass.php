@@ -1623,9 +1623,11 @@ HERE;
 $this->OUT .= <<<HERE
 ;
 ;   Conference bridges (if any)
-;	
+;
 HERE;
-    $this->confBridge($row['shortuid']);
+
+        $this->OUT .= "\n";
+        $this->confBridge($row['shortuid']);
 
 
 
@@ -1985,6 +1987,9 @@ HERE;
 		}
 
         foreach ($meetme as $room) {
+			if (!empty($room['active']) && strtoupper((string) $room['active']) !== 'YES') {
+				continue;
+			}
 			$this->OUT .= "\texten => " . $room['pkey'] . ",1,NoOp(conference " . $room['pkey'] . ")\n";
 			$this->OUT .= "\tsame => n,Answer(500)\n";
 			if ($room['pin'] and $room['pin'] != "None") {
