@@ -151,7 +151,7 @@ Same-node “hairpin” back to the same Asterisk via dispatcher is **correct** 
 | Topic | Lock |
 |-------|------|
 | **Digit plan** | **Fixed-width prefix** (2–4 digits) + **fixed-width extension remainder** = destination tenant’s `ext_len`. No delimiter. Dial = `{prefix}{ext}` (e.g. prefix `81` + `1000` with `ext_len=4` → `811000`). |
-| **Tenant `ext_len`** | **Enforced.** Field already on `cluster`. **Default 3**, **maximum 5**, allowed **2–5**. **No mixed lengths** within a single tenant — every extension `pkey` is exactly `ext_len` digits. |
+| **Tenant `ext_len`** | **Enforced.** Field already on `cluster`. **Default 3**, **maximum 5**, allowed **3–5** only (SPA selector). **No mixed lengths** within a single tenant — every extension `pkey` is exactly `ext_len` digits. |
 | **Remainder charset** | **Digits only** (`0–9`). Remainder is a target **extension** (`pkey`-shaped). **No** star/hash feature shortcodes through the prefix path (e.g. `81*50*1000` is **deny**). Local feature codes stay on the calling tenant (dial without prefix; always begin `*`). Reopen only on an explicit product ask. |
 | **GenAst** | One dialplan pattern per active prefix; remainder length = **destination** `ext_len` (e.g. `_81XXXX` for prefix `81` + dest `ext_len=4`). **Not** open `_81X.`. CAGI rejects wrong-length / non-digit remainder. |
 | **Length namespaces** | Local exts own length `ext_len` as **exact** dialplan matches. OutRoute patterns use a **SARK floor**: min match **≥ 3** (anything larger than two chars) — not tied to `ext_len`. Exact extension matches always outrank patterns in Asterisk; do not put extensions in `1xx` if you also route `_1XX`. Short-dial still requires prefix+dest **>** caller `ext_len`. |
@@ -380,7 +380,7 @@ Summary:
 |----|----------|------|
 | **Q1** | Digit plan shape | **Fixed-width prefix** (2–4 digits per row); no delimiter. |
 | **Q2** | Extension after prefix | **Fixed remainder** = destination `ext_len` (not open `_X.`); **digits only**; length namespaces §3.8 (2026-08-10). **Edge:** far queues/IVRs reachable via short dial only when dial # length = `dest.ext_len` (§3.8.1). |
-| **Q15** | Tenant `ext_len` | **Enforced** (2026-08-10): default **3**, max **5**, allowed **2–5**; **no mixed lengths** in one tenant. |
+| **Q15** | Tenant `ext_len` | **Enforced** (2026-08-10; **amended 2026-09-26**): default **3**, max **5**, allowed **3–5** only; **no mixed lengths** in one tenant. |
 | **Q3** | Prefix uniqueness | Unique per **calling tenant** only. |
 | **Q4** | Table ownership | Per calling tenant prefix rows (not instance/org shared directory). |
 | **Q5** | Singleton / non-fleet | **Fleet-gated**; SBC required. Singleton multi-tenant without SBC = no prefix dial. Local shortcut **rejected** (§15). |
@@ -482,6 +482,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | 2026-08-10 | **§3.8 / Q2 / Q15:** enforce tenant `ext_len` (default 3, max 5, allowed 2–5, no mixed length); short-dial + OutRoute min match **> `ext_len`**; GenAst length-bounded remainder; drop “operator collision hygiene.” |
 | 2026-08-10 | **#4c implement:** ExtLenPolicy + API/SPA/GenAst/CAGI; UK seed `_0XXX. _00XX.` (L7a). |
 | 2026-08-28 | **§3.8.1:** short-dial edge cases — queues/IVRs only if dial length = `dest.ext_len`; call-centre mesh parked. OutRoute min match floor **≥ 3** (SARK; not tied to `ext_len`). |
+| 2026-09-26 | **Q15 / §3.8:** `ext_len` allowed **3–5** only (drop 2); SPA selector; ExtLenPolicy MIN=3. |
 
 ---
 

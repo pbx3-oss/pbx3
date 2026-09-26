@@ -126,7 +126,7 @@
 - [x] **Pre-release go smoke — golden (2026-08-09):** Dial + SPA login + fleet DID `441924910444` (Peer SIPp → Magrathea → `dhbm8x`/`1000`). Bzy optional.
 - [x] **Tenant delete data integrity T1–T5 (2026-08-10):** Wipe-preflight; mesh prune; park cleanup; `pbx3:tenant-orphan-audit`; `pbx3:tenant-wipe-list-check`. Spec: **`TENANT_DELETE_DATA_INTEGRITY.md`**. Lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1. Open later: **T6** DID policy, **T7** Class B, **T8** FK.
 
-- [x] **Enforce tenant `ext_len` (2026-08-10 #4c):** Default **3**, max **5**, allowed **2–5**; no mixed-length extension pkeys. GenAst PrefixDial fixed remainder; UK seed `_0XXX. _00XX.`. Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 / Q15 / **§3.8.1**. Lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2. **Amended 2026-08-28:** OutRoute min match floor **≥ 3** (SARK), not `> ext_len`.
+- [x] **Enforce tenant `ext_len` (2026-08-10 #4c):** Default **3**, max **5**, allowed **3–5** (amended **2026-09-26**; was 2–5). No mixed-length extension pkeys. GenAst PrefixDial fixed remainder; UK seed `_0XXX. _00XX.`. Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 / Q15 / **§3.8.1**. Lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2. **Amended 2026-08-28:** OutRoute min match floor **≥ 3** (SARK), not `> ext_len`.
 
 - [x] **Fleet trunk Create vs Edit (2026-08-10; Egress surface 2026-09-03):** No Create on fleet (SPA hide + API 403); Egress/EgressFailover narrow edit (transform + Caller ID / In prefix / Device recording / Call progress / cname / description); peer identity + Privileged/Match hidden; Delete + Active=NO blocked. Solo unchanged. Lock: **`FLEET_TRUNK_PEERING_DECISION.md`** §4.3.1.
 

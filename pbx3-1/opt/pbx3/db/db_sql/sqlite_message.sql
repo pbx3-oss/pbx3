@@ -321,6 +321,6 @@ INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('vmailfwd','E
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('voice_instr','Play Long Vmail Intro','Setting this value to YES will cause voicemail to play the long instruction message.  Setting it to NO plays the short version.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('voip_max','Max Outbound VOIP calls','Maximum number of concurrent VOIP outbound calls the system will allow before failing over to other pathways.  This number should be set well below the bandwidth threshold of your Internet circuit.');
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('wrapuptime','Wrap-up time','Seconds an agent remains unavailable after completing a call before receiving the next queue call.');
-INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ext_len','Extensions length','Number of digits for each extension in this tenant (2–5; default 3). Every extension must be exactly this length — no mixed lengths within one tenant. Outbound routes and short-dial prefixes must match dial strings strictly longer than this count.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('ext_len','Extensions length','Number of digits for each extension in this tenant (3, 4, or 5; default 3). Every extension must be exactly this length — no mixed lengths within one tenant. Outbound routes and short-dial prefixes must match dial strings strictly longer than this count.');
 
 COMMIT;

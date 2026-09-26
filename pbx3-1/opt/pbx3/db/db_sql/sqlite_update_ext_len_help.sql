@@ -1,0 +1,2 @@
+-- Extension length: product allows 3–5 only (not 2). SPA selector + ExtLenPolicy MIN=3.
+UPDATE tt_help_core SET displayname='Extensions length', htext='Number of digits for each extension in this tenant (3, 4, or 5; default 3). Every extension must be exactly this length — no mixed lengths within one tenant. Outbound routes and short-dial prefixes must match dial strings strictly longer than this count.' WHERE pkey='ext_len';

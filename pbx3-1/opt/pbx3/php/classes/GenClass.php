@@ -733,7 +733,7 @@ class genAsteriskObjects
 				$r = $st->fetch(PDO::FETCH_ASSOC);
 				if ($r && isset($r['ext_len']) && is_numeric($r['ext_len'])) {
 					$n = (int) $r['ext_len'];
-					if ($n >= 2 && $n <= 5) {
+					if ($n >= 3 && $n <= 5) {
 						return $n;
 					}
 				}
@@ -749,7 +749,7 @@ class genAsteriskObjects
 				$r = $st->fetch(PDO::FETCH_ASSOC);
 				if ($r && isset($r['ext_len']) && is_numeric($r['ext_len'])) {
 					$n = (int) $r['ext_len'];
-					if ($n >= 2 && $n <= 5) {
+					if ($n >= 3 && $n <= 5) {
 						return $n;
 					}
 				}
@@ -1438,7 +1438,7 @@ HERE;
             $callerExtLen = 3;
             if (isset($row['ext_len']) && is_numeric($row['ext_len'])) {
                 $n = (int) $row['ext_len'];
-                if ($n >= 2 && $n <= 5) {
+                if ($n >= 3 && $n <= 5) {
                     $callerExtLen = $n;
                 }
             }
