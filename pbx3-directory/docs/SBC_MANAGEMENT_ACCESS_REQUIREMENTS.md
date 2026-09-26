@@ -1,6 +1,6 @@
 # SBC management access (Filament lockdown) — requirements
 
-**Status:** Locked **2026-09-26** (v1 scope). Implement when scheduled / this session.  
+**Status:** **Done / shipped 2026-09-26** (v1). Tips: **pbx3sbc-admin `c772714`** · **pbx3sbc `8690a16`** (+ cloud SBC tip + php-fpm `ReadWritePaths=/etc/ufw`).  
 **Audience:** SBC / Filament / ops.  
 **Related:** Fail2ban Filament pages (reactive) · home **`UFW_SHOREWALL_MIGRATION.md`** (different product job) · **`EDGE_PORTABILITY_SCORECARD.md`** · **`SBC_PRODUCT_TRACKS.md`** · **`DESIGN_RULES.md`** Rule **7** (edge portability) · SBC TOTP (**`TOTP_2FA_SBC.md`**).
 
@@ -66,4 +66,4 @@ Filament **System → Management access**:
 - [ ] HA pair: apply on active only vs both members.  
 - [ ] SSH toggle for colo/bare-metal (if demand).
 
-*Last updated: 2026-09-26*
+*Last updated: 2026-09-26 (shipped)*
