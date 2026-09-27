@@ -169,8 +169,10 @@ Tiny MSP tenants do **not** appear here unless someone adds them (don’t).
 
 ### 4.4 Instance UI — Dial prefixes (member tenant)
 
+**Not in the instance sidebar** (2026-09-27). Route `/dialaliases` kept for lab / break-glass / deep-link only. Production operators use **Fleet → Site Groups** (+ tenant card routing prefix).
+
 ```text
-┌─ Dial prefixes ───────────────────────────────────────────┐
+┌─ Dial prefixes (deep-link / lab) ─────────────────────────┐
 │  Managed by site group “Acme offices” — edit in Fleet       │
 │                                                            │
 │  Prefix   Destination              Source                  │
@@ -313,10 +315,11 @@ Legacy InterSARK migrate recipe ([`DIAL_PREFIX_LEGACY_MIGRATE.md`](DIAL_PREFIX_L
 2. Add 4th member: job completes; \(2×3\) projections; dial works; no hand edits.  
 3. Remove one member: both directions gone; isolate again.  
 4. Change one routing prefix: peers dial new digits; old digits deny.  
-5. Instance UI shows managed rows read-only.  
+5. Instance `/dialaliases` (not in sidebar) shows managed rows read-only.  
 6. After join/Sync: **no leftover unmanaged** cross-tenant dialalias on members (hand lab rows gone or converted); dialplan matches managed set only.
 
 ---
 
 **Visual companion:** Cursor canvas `dial-cohort-plan.canvas.tsx` (UX + flow).  
-**Tracked:** [`TODO.md`](TODO.md).
+**Tracked:** [`TODO.md`](TODO.md).  
+**2026-09-27:** Instance **Dial prefixes** removed from sidebar nav; route kept for lab/deep-link. HoR remains Fleet → Site Groups.
