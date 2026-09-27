@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-27 (CoS profiles merged to **`main`**; package **0.0.6-8**)  
+**Last updated:** 2026-09-27 (CoS **0.0.6-8** + MkDocs expand; Dial prefixes off instance sidebar)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
-0p. ~~**CoS profiles**~~ — **done (2026-09-27):** Slices A–F + Q6 fixed Default merged to **`main`**; package **pbx3 0.0.6-8**. Spec: **`COS_PROFILE_REQUIREMENTS.md`**. SPA Route Profile delete confirm (`:show`) fixed in same track.  
+0p. ~~**CoS profiles**~~ — **done (2026-09-27):** Slices A–F + Q6 merged to **`main`**; package **pbx3 0.0.6-8** on golden+bzy. Spec: **`COS_PROFILE_REQUIREMENTS.md`**. MkDocs: **`admin/timers-cos`**. SPA Route Profile delete confirm + Dial prefixes removed from instance sidebar (deep-link `/dialaliases` only; HoR Site Groups).  
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
