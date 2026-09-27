@@ -95,6 +95,16 @@ if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$TIMEBASE_APPLY" ]; then
 	fi
 fi
 
+# CoS profiles Slice A: schema + junction→profile convert (GenAst still junctions until Slice B).
+COS_PROF_APPLY="$SYSPATH/scripts/apply-sqlite-add-cos-profiles.sh"
+COS_PROF_CONVERT="$SYSPATH/scripts/convert-cos-profiles.sh"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$COS_PROF_APPLY" ]; then
+	sh "$COS_PROF_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+	if [ -f "$COS_PROF_CONVERT" ]; then
+		sh "$COS_PROF_CONVERT" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+	fi
+fi
+
 # Default outbound dialplan (globals string → copy to tenant OutRoute on create).
 OUTDIAL_APPLY="$SYSPATH/scripts/apply-sqlite-add-default-outbound-dialplan.sh"
 if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$OUTDIAL_APPLY" ]; then

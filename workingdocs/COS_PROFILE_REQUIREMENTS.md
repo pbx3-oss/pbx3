@@ -31,7 +31,7 @@ Today CoS **works** but is brutal:
 
 1. **GenAst emits ~3 contexts per phone** (`…opencos`, `…closedcos`, `…Cosend`) — O(phones), flagged as debt in the Ast config generator track.  
 2. **Assignment UX** is a per-phone checkbox matrix × Standard / After-hours × N deny rules. Operators think in **roles** (Staff / Lobby / Restricted), not N×M ticks.  
-3. **Three attachment knobs** — rule `default*`, rule `oride*` (GenAst-only, no junction backfill), and junction rows — easy for SPA to diverge from Commit. Profiles collapse assignment to **profile lists + optional Tenant floor**.  
+3. **Three attachment knobs** — rule `default*`, rule `oride*` (GenAst-only, no junction backfill), and junction rows — easy for SPA to diverge from Commit. Profiles collapse assignment to **profile lists + optional Tenant-wide**.  
 4. **Dispatcher `[COS_$clst]`** routes via `CALLERID(num)` into per-phone contexts and heavy `_X.` matching — fragile if CLIP ≠ extension pkey.  
 5. **Naming** — “class of service” sounds like a privilege class; the `cos` table is really a **deny pack**, and the phone’s privilege is the **set** of packs.
 
@@ -57,7 +57,7 @@ Today CoS **works** but is brutal:
 | Keep binary cue from site STATE as v1 clock (Q8) | Assume OPEN/CLOSED means the schedule type system has only two modes |
 | Plan later “night-like modes” without losing after-hours lockdown | Ship per-mode (lunch) CoS matrices unless a real shop demands it |
 
-Related prevention: **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`** (always-on packs / Tenant floor) complements After-hours lists; it does not replace them.
+Related prevention: **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`** (always-on packs / Tenant-wide) complements After-hours lists; it does not replace them.
 
 ---
 
@@ -86,11 +86,11 @@ Phones land in `COS_$clst` via `pjsip_phone.tmpl` (`context=COS_$clst`).
 
 ### 2.3 High-risk seed
 
-**`HIGH_RISK_DIAL_BLOCK_POSTURE.md`:** seeded `HR_*` rules with `defaultopen`/`defaultclosed=YES`. Under profiles (update posture doc in Slice C):
+**`HIGH_RISK_DIAL_BLOCK_POSTURE.md`:** seeded `HR_*` rules with `defaultopen`/`defaultclosed=YES`. Under profiles (**Slice C done** — `SeedCosHighRiskOnTenantCreate`):
 
 1. Attach `HR_*` to the **tenant default profile** (visible in normal profile edit).  
-2. Set **Tenant floor = ON** for Standard and After-hours on those rules (so an “Unrestricted” profile cannot omit them while the floor is on).  
-3. Operator can still clear Tenant floor or narrow/delete the rule — that is intentional and must be obvious in UI/help.
+2. Set **Tenant-wide = ON** for Standard and After-hours on those rules (so an “Unrestricted” profile cannot omit them while Tenant-wide is ON).  
+3. Operator can still clear Tenant-wide or narrow/delete the rule — that is intentional and must be obvious in UI/help.
 
 ---
 
@@ -115,25 +115,25 @@ Phones land in `COS_$clst` via `pjsip_phone.tmpl` (`context=COS_$clst`).
 | **CoS rule** | A deny pack: patterns that get congestion | `cos` row |
 | **CoS profile** | A named phone class (Staff / Lobby / …) with its own Standard + After-hours rule lists | New — replaces per-phone junction as HoR |
 | **Standard / After-hours** | Which of the profile’s two lists applies right now | Was open/closed matrix; cue still STATE |
-| **Default profile** | The profile **new extensions** get | Replaces rule `default*` as the primary seed path |
-| **Tenant floor** | When ON for a rule: GenAst also includes that rule on **every** profile (Standard and/or After-hours as flagged) | `orideopen` / `orideclosed` — **not** labelled Override/Mandatory in SPA |
+| **Default profile** | Fixed per-tenant profile **new extensions** get; edit its lists to change default policy | Convert/seed `is_default=YES` row — not a movable flag |
+| **Tenant-wide** | When ON for a rule: GenAst also includes that rule on **every** profile (Standard and/or After-hours as flagged) | `orideopen` / `orideclosed` — **not** labelled Override/Mandatory in SPA |
 
 SPA labels stay **Standard** / **After-hours** (not “open/closed” — lunch is inbound-closed-ish but still Standard CoS). See day-parts §5.10.
 
-**Do not** use SPA labels **Override** or **Mandatory** — both mislead (SARK heritage / false absolutism). Column names may stay `oride*` in DB until a later rename; product copy = **Tenant floor**.
+**Do not** use SPA labels **Override** or **Mandatory** — both mislead (SARK heritage / false absolutism). Column names may stay `oride*` in DB until a later rename; product copy = **Tenant-wide**.
 
 ### 4.1.1 Two knobs — do not conflate
 
 | Knob | Answers | Who can “escape”? |
 |------|---------|-------------------|
 | **Profile membership** | May phones **on this profile** hit this deny? | Put the phone on another profile, or edit this profile’s lists |
-| **Tenant floor** (per rule, per side) | Should **every** profile get this deny at Commit? | Only the **operator** — turn Tenant floor OFF, or edit/delete the rule. Phones/profiles cannot opt out while it is ON |
+| **Tenant-wide** (per rule, per side) | Should **every** profile get this deny at Commit? | Only the **operator** — turn Tenant-wide OFF, or edit/delete the rule. Phones/profiles cannot opt out while it is ON |
 
-**Default profile ≠ Tenant floor.**  
-Default profile = inheritance for **new phones**.  
-Tenant floor = optional **all-profiles** include at GenAst.
+**Default profile ≠ Tenant-wide.**  
+Default profile = **fixed** inheritance slot for **new phones** (and blank `cos_profile` at GenAst) — edit that profile’s lists to change default policy.  
+Tenant-wide = optional **all-profiles** include at GenAst.
 
-**Defaults:** Tenant floor **OFF** on SPA create (SARK defaulted Override ON — **rejected** for pbx3). High-risk seed is the exception that turns floor **ON** for `HR_*` (§2.3).
+**Defaults:** Tenant-wide **OFF** on SPA create (SARK defaulted Override ON — **rejected** for pbx3). High-risk seed is the exception that turns Tenant-wide **ON** for `HR_*` (§2.3).
 
 **Lab check:** If operators confuse the two knobs in Slice D, fix copy/layout before merge — wrong mental model = wrong dial policy.
 
@@ -160,15 +160,18 @@ Junction shape (illustrative — exact table names at implement):
 ### 4.4 Rules panel
 
 - CRUD deny packs (`dialplan` required).  
-- **Tenant floor** toggles (map to `orideopen` / `orideclosed`): when YES, GenAst includes that rule on **all profiles** for that side. No requirement to backfill profile junction rows (GenAst-only include — same mechanics as today’s override).  
+- **Tenant-wide** toggles (map to `orideopen` / `orideclosed`): when YES, GenAst includes that rule on **all profiles** for that side. No requirement to backfill profile junction rows (GenAst-only include — same mechanics as today’s override).  
 - Help text (required): e.g. *“When on, this deny applies to every CoS profile at Commit — not only profiles that list the rule. Turn off to allow a profile to omit it.”*  
 - **`defaultopen` / `defaultclosed`:** demoted. Convert / high-risk seed input only for building the default profile’s lists. Hide or read-only after Slice D — do not keep a third “default” path beside Default profile.
 
-### 4.5 Tenant default profile
+### 4.5 Tenant default profile (**fixed** — Q6)
 
-- One default profile per tenant (flag on `cos_profile` or tenant/cluster column — prefer **flag on profile** `is_default=YES`, unique per cluster).  
-- New extension → assign default profile.  
-- Changing which profile is default does **not** rewrite existing phones (only new creates) — same spirit as today’s default flags.
+- Exactly **one** Default profile per tenant (`is_default=YES`, unique per cluster).  
+- That row is **durable**: evolve tenant default policy by **editing its Standard / After-hours lists**, not by electing a different profile as default.  
+- **Do not** move the default flag between profiles in SPA (no “make this the Default” toggle). Convert / tenant seed / empty-tenant bootstrap may create the initial Default; operators do not re-point it.  
+- New extension (create with “Tenant default”) → assign that fixed Default’s pkey.  
+- Existing phones keep their stored `cos_profile`; changing Default’s **lists** changes dial rights for everyone still on that profile (including phones left on convert’s Migrated/Default). Renaming the Default’s **display name** is fine; deleting the Default profile is **forbidden**.  
+- Other profiles (Staff / Restricted / …) are explicit classes only.
 
 ### 4.6 GenAst / PJSIP shape
 
@@ -180,12 +183,12 @@ PJSIP context = COS_{clst}_{profile_pkey}
   _X. → read STATE → Goto open or closed profile context
 
 [COS_{clst}_{profile_pkey}_open]
-  include tenant-floor Standard rules (orideopen=YES)
+  include tenant-wide Standard rules (orideopen=YES)
   include this profile’s Standard rules
   include → …_end
 
 [COS_{clst}_{profile_pkey}_closed]
-  include tenant-floor After-hours rules (orideclosed=YES)
+  include tenant-wide After-hours rules (orideclosed=YES)
   include this profile’s After-hours rules
   include → …_end
 
@@ -235,7 +238,7 @@ Idempotent convert:
 6. Mark default.  
 7. Leave `ipphonecos*` rows in place (read-only / ignored by GenAst once profiles are authoritative).
 
-**Behaviour:** Same denies open vs closed as before convert (modulo Tenant floor / `oride*`, which already was GenAst-global).
+**Behaviour:** Same denies open vs closed as before convert (modulo Tenant-wide / `oride*`, which already was GenAst-global).
 
 ### 5.2 SARK ETL (`sark-to-pbx3`, Slice E)
 
@@ -253,8 +256,8 @@ A profile with a single member is valid. Operator may rename/merge profiles late
 
 | Surface | Behaviour |
 |---------|-----------|
-| **Rules** | Deny-pack CRUD; **Tenant floor** (Standard / After-hours); dialplan; active. No “Override” / “Mandatory” labels |
-| **Profiles** (new) | List/create/edit: Standard + After-hours rule multi-select; mark **Default profile**; active |
+| **Rules** | Deny-pack CRUD; **Tenant-wide** (Standard / After-hours); dialplan; active. No “Override” / “Mandatory” labels |
+| **Profiles** (new) | List/create/edit: Standard + After-hours rule multi-select; **Default** is fixed (badge only — edit lists to change default policy); active |
 | **Extension** | Single **Profile** dropdown (cname); no dual checkbox matrix as primary |
 | **Instance globals** | `cosstart` unchanged |
 | **Nav** | Prefer split: **CoS rules** + **CoS profiles** (crystal clear) |
@@ -270,12 +273,12 @@ Do **not** mix with Follow-me, CAGI Phase 4, or other dial-locus rewrites.
 | Slice | Repos | Operator-visible | Done when |
 |-------|--------|------------------|-----------|
 | **0** — requirements accepted | — | — | **Done 2026-09-27** |
-| **A** — schema + idempotent convert | pbx3, pbx3api (schema reg) | None if GenAst still legacy until B | Convert fixtures: junction → profile parity |
-| **B** — GenAst + PJSIP context | pbx3 | Commit dialplan shape | Golden: fewer contexts; Staff≠Restricted dial; park/`*5`/emergency bypass; `cosstart` OFF |
-| **C** — API + seed | pbx3api | — | Feature tests; high-risk → default profile **+** Tenant floor ON; new ext gets default |
-| **D** — SPA Profiles + extension dropdown | pbx3spa | New UX | Lab create/assign/Commit/dial; operator can explain Default profile vs Tenant floor without coaching |
-| **E** — ETL + docs | sark-to-pbx3, pbx3-docs | Migrate / MkDocs | Fixture migrate → profiles; docs match |
-| **F** — merge gate | all | — | Operator accepts lab → merge `main` / package bump. Else **delete branches** |
+| **A** — schema + idempotent convert | pbx3, pbx3api (schema reg) | None if GenAst still legacy until B | **Done 2026-09-27** — `apply/convert-cos-profiles` + fixture `scripts/tests/convert-cos-profiles-test.sh` |
+| **B** — GenAst + PJSIP context | pbx3 | Commit dialplan shape | **Done 2026-09-27** (offline fixture + **golden smoke**). 70→6 CoS contexts; Staff `prohibited`≠Unrestricted; floor HR on Unrestricted; park/999 bypass; `cosstart` OFF→tenant context. CLOSED GotoIf present (open/closed lists same on lab fingerprints). |
+| **C** — API + seed | pbx3api | — | **Done 2026-09-27** — `cosprofiles` CRUD; extension `cos_profile`; HR_* → default profile + floor ON; feature/unit tests |
+| **D** — SPA Profiles + extension dropdown | pbx3spa | New UX | **Done 2026-09-27** (+ follow-ups pending commit: Tenant-wide label; rule Key on create; extension **create** profile; create dirty-flag fix) |
+| **E** — ETL + docs | sark-to-pbx3, pbx3-docs | Migrate / MkDocs | **Done 2026-09-27** — overlay + convert hook; MkDocs; fixture smoke on `~/Backups/{wdcvs,regal,pdh4s03}` (parity 0 mismatches) |
+| **F** — merge gate | all | — | **Lab+desk green 2026-09-27** on Aelintra — await operator accept → merge / bump after pending commit, else drop branches |
 
 **Suggested code order:** A → B (call path) → C → D → lab → E → F.
 
@@ -289,16 +292,16 @@ Do **not** mix with Follow-me, CAGI Phase 4, or other dial-locus rewrites.
 | **Q2** | Rule atoms | Keep **`cos` deny packs**; patterns → congestion |
 | **Q3** | Open vs closed | **Binary** Standard / After-hours from STATE (day-parts Q8) — **time-aware privilege required** (§1.1); not optional polish |
 | **Q4** | Escape hatch | **Feature branch only** — no dual GenAst engine |
-| **Q5** | Tenant floor | Keep **`oride*`** mechanics: when ON, GenAst includes rule on **all** profiles for that side. SPA label **Tenant floor** only — not Override/Mandatory |
-| **Q6** | Default profile | **One default profile** per tenant for new extensions; rule `default*` demoted to convert/seed input |
+| **Q5** | Tenant-wide | Keep **`oride*`** mechanics: when ON, GenAst includes rule on **all** profiles for that side. SPA label **Tenant-wide** only — not Override/Mandatory |
+| **Q6** | Default profile | **One fixed Default profile** per tenant. Evolve by editing its rule lists. **No** SPA/API reassignment of `is_default` between profiles (bootstrap/convert/seed only). Cannot delete the Default |
 | **Q7** | Missing profile | GenAst falls back to **default profile** |
 | **Q8** | Junction tables | Keep through track; GenAst ignores once profiles authoritative; drop only after merge confidence (optional later) |
 | **Q9** | SARK | Junction copy + **same fingerprint convert** |
 | **Q10** | CAGI / SBC | **Out of scope** |
 | **Q11** | Lab | **Golden only** until F |
 | **Q12** | Branch name | **`cos-profiles`** |
-| **Q13** | Tenant floor default | **OFF** on SPA create (reject SARK Override default ON). High-risk seed sets floor **ON** for `HR_*` |
-| **Q14** | Clarity gate | If Slice D lab shows people mixing Default profile with Tenant floor, fix UX/copy before merge — do not ship confusing labels |
+| **Q13** | Tenant-wide default | **OFF** on SPA create (reject SARK Override default ON). High-risk seed sets Tenant-wide **ON** for `HR_*` |
+| **Q14** | Clarity gate | If Slice D lab shows people mixing Default profile with Tenant-wide, fix UX/copy before merge — do not ship confusing labels |
 
 ---
 
@@ -307,21 +310,24 @@ Do **not** mix with Follow-me, CAGI Phase 4, or other dial-locus rewrites.
 1. Operator assigns **Staff** vs **Restricted** via profile dropdown; dial privileges differ as configured.  
 2. Commit dialplan context count scales with **profiles**, not phone count.  
 3. Converted golden (or fixture): privileges match pre-convert junction matrices.  
-4. High-risk seed: default-profile phones blocked; Unrestricted profile **also** blocked while Tenant floor is ON; clearing floor or rule restores opt-out.  
+4. High-risk seed: default-profile phones blocked; Unrestricted profile **also** blocked while Tenant-wide is ON; clearing Tenant-wide or the rule restores opt-out.  
 5. Park retrieve, feature codes, emergency still bypass CoS.  
-6. Operators can state in one sentence what Default profile vs Tenant floor do (Q14).  
+6. Operators can state in one sentence what Default profile vs Tenant-wide do (Q14).  
 7. Disliked lab → branches dropped; **0.0.6-7** / **1.0.0-22** package floor untouched.
 
 ---
 
 ## 10. Testing (mandatory)
 
-| Layer | Examples |
-|-------|----------|
-| **Convert unit** | Same open/closed sets → one profile; different sets → two; empty → unrestricted/default; tenant-floor flags not part of fingerprint |
-| **GenAst offline** | N phones / 2 profiles → ~O(2) CoS blocks; profile lists + tenant-floor includes; bypass present |
-| **API** | Profile CRUD; extension assign; default unique; HR_* on default profile + floor ON |
-| **Golden dial** | Profile-only deny; floor-on deny even on Unrestricted; force CLOSED → After-hours; `cosstart` OFF |
+| Layer | When | Examples |
+|-------|------|----------|
+| **Convert unit** | Slice **A** (same PR as schema) | Same open/closed sets → one profile; different → two; empty → unrestricted/default; `oride*` not in fingerprint; idempotent re-run; default-profile pick order |
+| **GenAst offline** | Slice **B** before golden dial | N phones / 2 profiles → ~O(profiles) CoS blocks; PJSIP `context=COS_{clst}_{profile}`; floor includes; bypass; `cosstart` OFF |
+| **API** | Slice **C** | Profile CRUD; extension assign; default unique; HR_* on default profile + floor ON; new ext → default |
+| **Golden dial** | Slice **B**/ **F** smoke (not first emit proof) | Staff≠Restricted; floor-on Unrestricted; force CLOSED → After-hours; park/`*5`/emergency; `cosstart` OFF |
+| **SARK migrate** | Slice **E** (same convert as A) | **Done 2026-09-27** offline on operator samples `~/Backups/{wdcvs,regal,pdh4s03}` — 0 junction↔profile mismatches; regal 4 fingerprints / 32 phones; empty-CoS → Unrestricted. Smoke: sark-to-pbx3 `scripts/tests/cos-profiles-migrate-smoke.sh` |
+
+**Not in v1:** sipplab CoS pack; dual GenAst engine compare; SPA E2E for Tenant-wide.
 
 ---
 
@@ -342,6 +348,18 @@ Do **not** mix with Follow-me, CAGI Phase 4, or other dial-locus rewrites.
 | Date | Note |
 |------|------|
 | 2026-09-27 | Initial lock for operator review — profiles HoR, branch-drop escape, slices A–F, SARK fingerprint post-pass. |
-| 2026-09-27 | **Tenant floor** naming (not Override/Mandatory); default OFF; ≠ Default profile; HR_* seed = default profile + floor ON; Q13–Q14 clarity gate. |
+| 2026-09-27 | **Tenant-wide** naming (not Override/Mandatory); default OFF; ≠ Default profile; HR_* seed = default profile + Tenant-wide ON; Q13–Q14 clarity gate. |
 | 2026-09-27 | §1.1 — CoS is **time-dependent** (out-of-hours toll-fraud throttle); After-hours required; do not simplify away. |
-| 2026-09-27 | **Accepted** — implement on **`cos-profiles`**; Slice 0 done. Tenant floor label may change after first-out UX. |
+| 2026-09-27 | **Accepted** — implement on **`cos-profiles`**; Slice 0 done. SPA label may change after first-out UX. |
+| 2026-09-27 | §10 — per-slice test cadence; SARK migrate fixtures via operator samples on request (Slice E). |
+| 2026-09-27 | **Slice A done** — schema + convert + fixture; GenAst still junctions until B. |
+| 2026-09-27 | **Slice B done** — GenAst O(profiles) + `$cos_context` PJSIP; fixture `genclass-cos-profiles-test.php`. Golden dial smoke still gate for F. |
+| 2026-09-27 | **Slice C done** — CosProfile API + Extension assign/default; HR_* seed attaches default profile + Tenant-wide ON. |
+| 2026-09-27 | **Slice D done** — SPA CoS profiles + extension profile dropdown; rules/nav Tenant-wide wording. |
+| 2026-09-27 | **Slice E done** — sark-to-pbx3 overlay + convert post-pass; pbx3-docs CoS rules/profiles. Fixture migrate awaits operator SARK samples. |
+| 2026-09-27 | **Slice E fixture** — offline migrate+convert on `~/Backups/wdcvs` (Unrestricted), `regal` (4 profiles / parity OK), `pdh4s03` (per-tenant Unrestricted). Smoke script in sark-to-pbx3. |
+| 2026-09-27 | **Slice F lab (Aelintra)** — profiles Staff/`20hq48`, Restricted/`p67y3v`, UnrestrictedLab/`bfdjzc`; phones **491–493**; rule `LAB_INTL` `_00.`; `HR_UK070` Tenant-wide ON. Dialplan+CLI: Staff≠Restricted intl; Tenant-wide 070 on empty UnrestrictedLab; CLOSED→After-hours LAB_INTL vs OPEN Cosend; park/999/`*_X.` bypass. Backup `/opt/pbx3/bkup/cos-lab-f-*`. **Note:** GenAst `oride*` is pkey-global (other tenants’ Tenant-wide can still `include` same rule pkey). **Await operator accept (Q14).** |
+| 2026-09-27 | **SPA label lock:** **Tenant-wide** (was “Tenant floor”) — clearer for operators; DB `oride*` unchanged. |
+| 2026-09-27 | **Slice F desk (Aelintra):** HR intl CoS OK; `PREMIUM_0900` Tenant-wide ON → congestion before OutRoute. |
+| 2026-09-27 | **Committed on `cos-profiles`:** (1) SPA **Tenant-wide** + CoS rules layout; (2) CoS rule **Key** on create; (3) Extension create CoS profile + API `cos_profile`; (4) Create panels `beginHydrate`/`markClean` (PANEL_PATTERN); (5) **Q6 fixed Default**. MkDocs timers-cos / api reference.
+| 2026-09-27 | **Q6 amended** — Default profile is **fixed** per tenant (edit lists in place). Moving the default flag between profiles rejected (operator confusion / lost “what was default”). |

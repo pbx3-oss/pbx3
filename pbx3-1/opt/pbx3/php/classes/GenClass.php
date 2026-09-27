@@ -72,6 +72,10 @@ class genAsteriskObjects
 	private $cluster;
 	private $appl;
 	private $OUT;
+	/** @var array<string,string> cluster => default cos_profile.pkey */
+	private $cosDefaultByCluster = array();
+	/** @var bool */
+	private $cosDefaultLoaded = false;
 
 
 
@@ -850,11 +854,44 @@ class genAsteriskObjects
 	}
 
 	/**
+	 * Resolve CoS profile pkey for a phone row (GenAst / PJSIP).
+	 * Missing/blank → tenant default profile; no default → '' (caller uses tenant context).
+	 */
+	private function resolveCosProfilePkey(array $row)
+	{
+		$clst = trim((string) ($row['cluster'] ?? ''));
+		$prof = trim((string) ($row['cos_profile'] ?? ''));
+		if ($prof !== '') {
+			return $prof;
+		}
+		if (!$this->cosDefaultLoaded) {
+			$this->cosDefaultByCluster = array();
+			try {
+				$sql = "SELECT cluster, pkey FROM cos_profile WHERE upper(trim(is_default)) = 'YES'";
+				$qRes = $this->dbh->query($sql);
+				$rows = $qRes ? $qRes->fetchAll(PDO::FETCH_ASSOC) : array();
+				foreach ($rows as $r) {
+					$c = trim((string) ($r['cluster'] ?? ''));
+					if ($c !== '') {
+						$this->cosDefaultByCluster[$c] = (string) $r['pkey'];
+					}
+				}
+			} catch (PDOException $e) {
+				// schema not present
+			}
+			$this->cosDefaultLoaded = true;
+		}
+		return $this->cosDefaultByCluster[$clst] ?? '';
+	}
+
+	/**
 	 * Expand template tokens in a PJSIP/queue buffer before write.
 	 * Token notes:
 	 *   $id / $pkey / $ext / $username — object identity (phones: shortuid vs dialable pkey)
 	 *   $clst — tenant shortuid (COS / mailbox domain)
 	 *   $clstkey — parking lot name park-{tenant shortuid} (must run before $clst)
+	 *   $cos_context — PJSIP endpoint context: COS_{clst}_{profile} when cosstart=ON, else $clst
+	 *   $cos_profile — profile pkey (for COS_$clst_$cos_profile templates)
 	 *   $named_call_group / $named_pickup_group — PJSIP named groups (ALL/empty → $clst)
 	 *   $outbound_proxy — whole line or empty (fleet → sip:{PBX3_SBC_EGRESS_HOST};lr)
 	 */
@@ -894,6 +931,16 @@ class genAsteriskObjects
 			$legacy = $resolveNamed($row['named_groups'] ?? ($row['named_call_group'] ?? null));
 			$buffer = preg_replace('/\$named_groups/', $legacy, $buffer);
 		}
+
+		// CoS profile context — replace $cos_context / $cos_profile before $clst
+		$cosProfile = $this->resolveCosProfilePkey($row);
+		$cosContext = $clst;
+		if (($this->globals['cosstart'] ?? '') === 'ON' && $cosProfile !== '') {
+			$cosContext = 'COS_' . $clst . '_' . $cosProfile;
+		}
+		$buffer = preg_replace('/\$cos_context/', $cosContext, $buffer);
+		$buffer = preg_replace('/\$cos_profile/', $cosProfile, $buffer);
+
 		$buffer = preg_replace('/\$clst/', $clst, $buffer);
 
 		if (!empty($row['strategy'])) {
@@ -1260,40 +1307,58 @@ BANNEREND;
 private function genExtensionsCoS()
 {
 //
-//  CoS (clusters)
+//  CoS entry contexts — one per profile (O(profiles), not O(phones)).
+//  PJSIP context=COS_{clst}_{profile_pkey}; bypass → tenant; else STATE → _open/_closed.
 //
+	if (($this->globals['cosstart'] ?? '') != "ON") {
+		return;
+	}
 
-    foreach ($this->cluster as $row) {
-        $myCluster = $row['pkey'];
-        $myClusterId = $row['shortuid'];
-/*		
-        if ($row['pkey'] == "default") {
-            $myCluster = 'qrxvtmny';
-            $myClusterId = 'qrxvtmny';
-        }
-*/        
-        $this->OUT .= "\n; Tenant - " . $row['pkey'] . "\n";
-        $this->OUT .= "; Class of Service (CoS)\n";
-        $this->OUT .= "[COS_$myClusterId]\n";
-        $this->OUT .= "\texten => _*X.,1,GoTo($myClusterId,\${EXTEN},1)\n";
-        $dialplan = explode(" ", (string) ($this->globals['emergency'] ?? ''));
-        foreach ($dialplan as $plan) {
-            $this->OUT .= "\texten => $plan,1,GoTo($myClusterId,\${EXTEN},1)\n";;
-        }
+	try {
+		$sql = "SELECT * FROM cos_profile WHERE upper(trim(coalesce(active,'YES'))) = 'YES' ORDER BY cluster, pkey";
+		$qRes = $this->dbh->query($sql);
+		$profiles = $qRes ? $qRes->fetchAll(PDO::FETCH_ASSOC) : array();
+		$qRes = NULL;
+	} catch (PDOException $e) {
+		// Slice A not applied yet — nothing to emit
+		return;
+	}
+	if (empty($profiles)) {
+		return;
+	}
 
-        // Park retrieve slots (exact) — must beat COS `_X.` or dial-901 never reaches park-* include.
-        // Stock lot parkpos 901-903; overlay may widen later (keep in sync with parking_lot.tmpl).
-        for ($parkPos = 901; $parkPos <= 903; $parkPos++) {
-            $this->OUT .= "\texten => $parkPos,1,GoTo($myClusterId,\${EXTEN},1)\n";
-        }
+	$this->OUT .= "\n; Class of Service (CoS) — profile entry contexts\n";
 
-        $this->OUT .= "\texten => _X.,1,GoToIf(\$[\${LEN(\${CALLERID(num)})} > 6]?$myClusterId,\${EXTEN},1)\n";
-        $this->OUT .= "\texten => _X.,2,SET(myClusterOclo=\${DB($myClusterId/STATE)})\n";
+	$emergency = preg_replace('/\s+/', ' ', trim((string) ($this->globals['emergency'] ?? '')));
+	$dialplan = ($emergency === '') ? array() : explode(' ', $emergency);
 
-        $this->OUT .= "\t" . 'exten => _X.,n,GoToIf($["${myClusterOclo}" = "CLOSED"]?' .
-            $myClusterId . '${CALLERID(num)}closedcos,${EXTEN},1:' .
-            $myClusterId . '${CALLERID(num)}opencos,${EXTEN},1)' . "\n\n";
-    }
+	foreach ($profiles as $prof) {
+		$clst = trim((string) ($prof['cluster'] ?? ''));
+		$ppkey = trim((string) ($prof['pkey'] ?? ''));
+		if ($clst === '' || $ppkey === '') {
+			continue;
+		}
+		$ctx = 'COS_' . $clst . '_' . $ppkey;
+		$cname = (string) ($prof['cname'] ?? $ppkey);
+
+		$this->OUT .= "\n; Tenant $clst — CoS profile $cname ($ppkey)\n";
+		$this->OUT .= "[$ctx]\n";
+		// Feature / emergency / park retrieve — bypass deny filters into tenant context
+		$this->OUT .= "\texten => _*X.,1,GoTo($clst,\${EXTEN},1)\n";
+		foreach ($dialplan as $plan) {
+			if ($plan === '') {
+				continue;
+			}
+			$this->OUT .= "\texten => $plan,1,GoTo($clst,\${EXTEN},1)\n";
+		}
+		for ($parkPos = 901; $parkPos <= 903; $parkPos++) {
+			$this->OUT .= "\texten => $parkPos,1,GoTo($clst,\${EXTEN},1)\n";
+		}
+		$this->OUT .= "\texten => _X.,1,SET(myClusterOclo=\${DB($clst/STATE)})\n";
+		$this->OUT .= "\t" . 'exten => _X.,n,GoToIf($["${myClusterOclo}" = "CLOSED"]?' .
+			$ctx . '_closed,${EXTEN},1:' .
+			$ctx . '_open,${EXTEN},1)' . "\n";
+	}
 }    
 
 		
@@ -1676,129 +1741,116 @@ HERE;
 
     private function genExtensionsCosTests()
     {
-
-
 		$this->OUT .= <<<HERE
 ;
-;   CoS inline filters (if any)
+;   CoS profile filters + deny rule contexts (if any)
 ;
 
 HERE;
-		if (($this->globals['cosstart'] ?? '') == "ON") {
-			$orideopenarray = array();
-			$orideclosedarray = array();
-			//
-			//      select the overrides first
-			//
+		if (($this->globals['cosstart'] ?? '') != "ON") {
+			return;
+		}
 
-			try {
-				$sql = "SELECT * FROM cos ORDER BY pkey";
-				$qRes = $this->dbh->query($sql);
-				$cos = $qRes->fetchAll();
-				$qRes = NULL;
-			} catch (PDOException $e) {
-				$errorMsg = $e->getMessage();
-				return $errorMsg;
+		try {
+			$sql = "SELECT * FROM cos ORDER BY pkey";
+			$qRes = $this->dbh->query($sql);
+			$cos = $qRes ? $qRes->fetchAll(PDO::FETCH_ASSOC) : array();
+			$qRes = NULL;
+		} catch (PDOException $e) {
+			return;
+		}
+
+		// Tenant-wide (oride*): GenAst-global include on every profile for that side
+		// (same as legacy per-phone Cosend path — not cluster-filtered).
+		$orideopen = array();
+		$orideclosed = array();
+		foreach ($cos as $mycos) {
+			if (($mycos['orideopen'] ?? '') == 'YES') {
+				$orideopen[$mycos['pkey']] = 'YES';
 			}
-			foreach ($cos as $mycos) {
-				if ($mycos['orideopen'] == 'YES') {
-					$orideopenarray[$mycos['pkey']] =	"YES";
-				}
-				if ($mycos['orideclosed'] == 'YES') {
-					$orideclosedarray[$mycos['pkey']] =	"YES";
-				}
-			}
-			//
-			//		now do the process 
-			//
-			try {							
-				$sql = "SELECT * FROM ipphone ORDER BY pkey";
-				$qRes = $this->dbh->query($sql);
-				$cosphone = $qRes->fetchAll();
-				$qRes = NULL;
-			} catch (PDOException $e) {
-				$errorMsg = $e->getMessage();
-				return $errorMsg;
-			}
-			foreach ($cosphone as $IPphone) {
-				$myCluster = $IPphone['cluster'];
-/*
-				if ($myCluster == 'default') {
-					$myCluster = 'qrxvtmny';
-				} 
-*/
-				$this->OUT .= "[" . $myCluster . $IPphone['pkey'] . "opencos]\n";
-
-
-				//			$this->OUT .= "\tinclude => Emergency\n"; 
-				//			
-				//			print the overrides
-				//			 
-				foreach ($orideopenarray as $key => $value) {
-					$this->OUT .= "\tinclude => " . $key . "\n";
-				}
-
-				try {
-					$sql = 	"SELECT cos_pkey FROM ipphonecosopen where ipphone_pkey='" . $IPphone['pkey'] . "'";
-					$qRes = $this->dbh->query($sql);
-					$cosopen = $qRes->fetchAll();
-					$qRes = NULL;
-				} catch (PDOException $e) {
-					$errorMsg = $e->getMessage();
-					return $errorMsg;
-				}
-
-				foreach ($cosopen as $coskeys) {
-					//
-					//          don't print if already overridden
-					// 
-if (empty($orideopenarray[$coskeys['cos_pkey']])) {
-					$this->OUT .= "\tinclude => " . $coskeys['cos_pkey'] . "\n";
-					}
-				}
-
-				$this->OUT .= "\tinclude => " . $myCluster . $IPphone['pkey'] . "Cosend\n";
-				$this->OUT .= "[" . $myCluster . $IPphone['pkey'] . "closedcos]\n";
-				
-				foreach ($orideclosedarray as $key => $value) {
-					$this->OUT .= "\tinclude => " . $key . "\n";
-				}
-
-				try {
-					$sql = 	"SELECT cos_pkey FROM ipphonecosclosed where ipphone_pkey='" . $IPphone['pkey'] . "'";
-					$qRes = $this->dbh->query($sql);
-					$cosclosed = $qRes->fetchAll();
-					$qRes = NULL;
-				} catch (PDOException $e) {
-					$errorMsg = $e->getMessage();
-					return $errorMsg;
-				}
-
-				foreach ($cosclosed as $coskeys) {
-					//
-					//          don't print if already overridden
-					// 
-if (empty($orideclosedarray[$coskeys['cos_pkey']])) {
-					$this->OUT .= "\tinclude => " . $coskeys['cos_pkey'] . "\n";
-					}
-				}
-				//			$this->OUT .= "\tinclude => " . $myCluster . "Cosend\n";
-				$this->OUT .= "\tinclude => " . $myCluster . $IPphone['pkey'] . "Cosend\n";
-
-				//			$this->OUT .= '[' . $myCluster . $iKey . "Cosend]\n";
-				$this->OUT .= '[' . $myCluster . $IPphone['pkey'] . "Cosend]\n";
-
-				//			$this->OUT .= '[' . $myCluster ."Cosend]\n";  
-				$this->OUT .= "\texten => _X.,1,GoTo($myCluster,\${EXTEN},1)\n\n";
+			if (($mycos['orideclosed'] ?? '') == 'YES') {
+				$orideclosed[$mycos['pkey']] = 'YES';
 			}
 		}
 
+		try {
+			$sql = "SELECT * FROM cos_profile WHERE upper(trim(coalesce(active,'YES'))) = 'YES' ORDER BY cluster, pkey";
+			$qRes = $this->dbh->query($sql);
+			$profiles = $qRes ? $qRes->fetchAll(PDO::FETCH_ASSOC) : array();
+			$qRes = NULL;
+		} catch (PDOException $e) {
+			$profiles = array();
+		}
+
+		foreach ($profiles as $prof) {
+			$clst = trim((string) ($prof['cluster'] ?? ''));
+			$ppkey = trim((string) ($prof['pkey'] ?? ''));
+			if ($clst === '' || $ppkey === '') {
+				continue;
+			}
+			$ctx = 'COS_' . $clst . '_' . $ppkey;
+			$clstEsc = str_replace("'", "''", $clst);
+			$ppEsc = str_replace("'", "''", $ppkey);
+
+			// --- Standard (open) ---
+			$this->OUT .= "[$ctx" . "_open]\n";
+			foreach ($orideopen as $key => $_v) {
+				$this->OUT .= "\tinclude => " . $key . "\n";
+			}
+			try {
+				$sql = "SELECT cos_pkey FROM cos_profile_open WHERE cluster='$clstEsc' AND profile_pkey='$ppEsc' ORDER BY cos_pkey";
+				$qRes = $this->dbh->query($sql);
+				$cosopen = $qRes ? $qRes->fetchAll(PDO::FETCH_ASSOC) : array();
+				$qRes = NULL;
+			} catch (PDOException $e) {
+				$cosopen = array();
+			}
+			foreach ($cosopen as $row) {
+				$ck = $row['cos_pkey'];
+				if (empty($orideopen[$ck])) {
+					$this->OUT .= "\tinclude => " . $ck . "\n";
+				}
+			}
+			$this->OUT .= "\tinclude => " . $ctx . "_end\n";
+
+			// --- After-hours (closed) ---
+			$this->OUT .= "[$ctx" . "_closed]\n";
+			foreach ($orideclosed as $key => $_v) {
+				$this->OUT .= "\tinclude => " . $key . "\n";
+			}
+			try {
+				$sql = "SELECT cos_pkey FROM cos_profile_closed WHERE cluster='$clstEsc' AND profile_pkey='$ppEsc' ORDER BY cos_pkey";
+				$qRes = $this->dbh->query($sql);
+				$cosclosed = $qRes ? $qRes->fetchAll(PDO::FETCH_ASSOC) : array();
+				$qRes = NULL;
+			} catch (PDOException $e) {
+				$cosclosed = array();
+			}
+			foreach ($cosclosed as $row) {
+				$ck = $row['cos_pkey'];
+				if (empty($orideclosed[$ck])) {
+					$this->OUT .= "\tinclude => " . $ck . "\n";
+				}
+			}
+			$this->OUT .= "\tinclude => " . $ctx . "_end\n";
+
+			// --- end → tenant ---
+			$this->OUT .= "[$ctx" . "_end]\n";
+			$this->OUT .= "\texten => _X.,1,GoTo($clst,\${EXTEN},1)\n\n";
+		}
+
+		// Deny rule atoms (unchanged)
 		foreach ($cos as $COS) {
 			$this->OUT .= "[" . $COS['pkey'] . "]\n";
-			$COS['dialplan'] = preg_replace('/\s+/', " ", $COS['dialplan']);
-			$COS['dialplan'] = preg_replace('/\s*$/', "", $COS['dialplan']);
-			$dialplan = explode(" ", $COS['dialplan']);
-			foreach ($dialplan as $plan) {
+			$dp = preg_replace('/\s+/', ' ', (string) ($COS['dialplan'] ?? ''));
+			$dp = preg_replace('/\s*$/', '', $dp);
+			if ($dp === '') {
+				continue;
+			}
+			foreach (explode(' ', $dp) as $plan) {
+				if ($plan === '') {
+					continue;
+				}
 				$this->OUT .= "\texten => $plan,1,Playtones(congestion)\n";
 				$this->OUT .= "\texten => $plan,2,Hangup\n";
 			}

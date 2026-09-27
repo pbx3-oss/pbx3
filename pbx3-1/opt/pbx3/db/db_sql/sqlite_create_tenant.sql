@@ -275,13 +275,51 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "pjsip_overlay" TEXT,                    -- thin PJSIP phone overlay (tmpl key merge on Commit)
     "named_call_group" TEXT DEFAULT 'ALL',   -- PJSIP named_call_group (groups this phone is in); ALL/empty → GenAst $clst
     "named_pickup_group" TEXT DEFAULT 'ALL', -- PJSIP named_pickup_group (groups this phone can pickup); ALL/empty → GenAst $clst
+    "cos_profile" TEXT,                      -- cos_profile.pkey (tenant-scoped); GenAst HoR after Slice B
     "z_created" datetime,
     "z_updated" datetime,
     "z_updater" TEXT DEFAULT 'system',
     UNIQUE("cluster", "pkey"),
     UNIQUE("macaddr")
 );
-/* Class of service */
+/* CoS profiles: named phone class (Staff / Lobby / …) — Standard + After-hours rule sets */
+CREATE TABLE IF NOT EXISTS cos_profile (
+    "id" TEXT PRIMARY KEY,
+    "shortuid" TEXT UNIQUE,
+    "pkey" TEXT NOT NULL,
+    "active" TEXT DEFAULT 'YES',
+    "cluster" TEXT DEFAULT 'default',
+    "cname" TEXT,
+    "description" TEXT,
+    "is_default" TEXT DEFAULT 'NO',
+    "z_created" datetime,
+    "z_updated" datetime,
+    "z_updater" TEXT DEFAULT 'system',
+    UNIQUE("cluster", "pkey")
+);
+CREATE TABLE IF NOT EXISTS cos_profile_open (
+    "id" TEXT,
+    "cluster" TEXT DEFAULT 'default',
+    "active" TEXT DEFAULT 'YES',
+    "profile_pkey" TEXT,
+    "cos_pkey" TEXT,
+    "z_created" datetime,
+    "z_updated" datetime,
+    "z_updater" TEXT DEFAULT 'system',
+    PRIMARY KEY (cluster, profile_pkey, cos_pkey)
+);
+CREATE TABLE IF NOT EXISTS cos_profile_closed (
+    "id" TEXT,
+    "cluster" TEXT DEFAULT 'default',
+    "active" TEXT DEFAULT 'YES',
+    "profile_pkey" TEXT,
+    "cos_pkey" TEXT,
+    "z_created" datetime,
+    "z_updated" datetime,
+    "z_updater" TEXT DEFAULT 'system',
+    PRIMARY KEY (cluster, profile_pkey, cos_pkey)
+);
+/* Class of service (per-phone junctions — retained; GenAst ignores after profiles authoritative) */
 CREATE TABLE IF NOT EXISTS ipphonecosopen (
     "id" TEXT,
     "cluster" TEXT DEFAULT 'default',
