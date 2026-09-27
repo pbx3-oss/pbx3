@@ -89,7 +89,7 @@ These are the “big” call types operators care about.
 | Rec greeting | `_*60*XXXX` | Record greeting | `RecGreet` (60) | **H** |
 | Agent pause/unpause | `_*63*` / `_*64*` | Pause / unpause | 63 / 64 | **H** |
 | Agent login/out | `_*65*` / `_*66*` | Login / logout | 65 / 66 | **H** |
-| ChanSpy (whisper) | `_*67*` / `_*68*` | Spy | 67 / 68 | **U** (2026-08-09 sipplab feature pack; multi-tenant isolation still **H** debt) |
+| ChanSpy (whisper) | `_*67*` / `_*68*` | Spy | 67 / 68 | **U** (2026-08-09 sipplab feature pack; **2026-09-26** cross-tenant deny **U** — cagi **1.0.0-22**) |
 
 ### 2.2 Dialplan-only utilities
 
