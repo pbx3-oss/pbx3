@@ -1,3 +1,15 @@
+pbx3 (0.0.6-7) noble; urgency=medium
+
+  * GenAst: fleet park timeout Dial via tenant FQDN (PrepDial-style); exact
+    COS park retrieve 901–903; parking lot parkingtime=60.
+  * GenAst: fix conference exten commented out by heredoc glue.
+  * GenAst: Queue() caller max wait from caller_timeout; agent ring uses
+    timeout when set.
+  * Help: ext_len locked to 3–5 digits.
+  * Pair with pbx3cagi 1.0.0-22 (ChanSpy cross-tenant deny).
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Sat, 26 Sep 2026 22:30:00 -0400
+
 pbx3 (0.0.6-6) noble; urgency=medium
 
   * GenAst: emit shared [pbx3-pre-dial] Dial b() gosub for PAI + Alert-Info on

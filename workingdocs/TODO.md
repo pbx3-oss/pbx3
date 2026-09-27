@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-26 (fleet park timeout + *5 retrieve lab green)  
+**Last updated:** 2026-09-26 (package floor **pbx3 0.0.6-7** / **cagi 1.0.0-22**)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
