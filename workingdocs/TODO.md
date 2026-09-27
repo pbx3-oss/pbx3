@@ -1,10 +1,11 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-26 (package floor **pbx3 0.0.6-7** / **cagi 1.0.0-22**)  
-**Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
+**Last updated:** 2026-09-27 (CoS profiles requirements accepted — branch **`cos-profiles`**)  
+**Branch:** Product **`main`** (+ active track **`cos-profiles`** on pbx3 / pbx3api / pbx3spa). Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
+0p. **CoS profiles** — **requirements accepted 2026-09-27.** Named profiles + GenAst O(profiles); time-aware Standard/After-hours; Tenant floor (label may change after first-out). Spec: **`COS_PROFILE_REQUIREMENTS.md`**. Branches: **`cos-profiles`**. Resume **Slice A** (schema + convert).  
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
