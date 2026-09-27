@@ -3,8 +3,11 @@
 parkext_exclusive=yes
 parkinghints=yes
 context=park-$clstshortuid
-parkingtime=30
-comebacktoorigin=yes
+parkingtime=60
+; Fleet: bare Dial(PJSIP/suid) from park-dial → CHANUNAVAIL; custom context Dials like PrepDial.
+comebacktoorigin=no
+comebackcontext=park-timeout-$clstshortuid
+comebackdialtime=30
 parkext=*900
 parkpos=901-903
 ; DTMF park again on retrieve/comeback (res_parking comeback Dial has no feature args)

@@ -227,6 +227,10 @@ class genAsteriskObjects
 	private function genParks()
 	{	
 		$readyParks = $this->genFileBanner();
+		$parkTimeout = $this->genFileBanner();
+		$parkTimeout .= "; Park timeout return-to-parker (comebacktoorigin=no → these contexts)\n";
+		$parkTimeout .= "; Fleet Dial must use sip:suid@tenant.fqdn (same as PrepDial); bare PJSIP/suid CHANUNAVAIL.\n";
+		$fleet = $this->isFleetMode();
 		$Pbuff = NULL;
 		foreach ($this->cluster as $row) {
 			if (!empty($row['active'])) {
@@ -234,18 +238,33 @@ class genAsteriskObjects
 					continue;
 				}
 			}
+			$suid = (string)($row['shortuid'] ?? '');
 			$Pbuff .= $this->helper->getParkInstance(
-				$row['shortuid'],
+				$suid,
 				isset($row['park_overlay']) ? $row['park_overlay'] : null
 			);
 			if ($Pbuff) {
 				$Pbuff = preg_replace('/\$clstpkey/', (string)($row['pkey'] ?? ''), $Pbuff);
-				$Pbuff = preg_replace('/\$clstshortuid/', (string)($row['shortuid'] ?? ''), $Pbuff);
+				$Pbuff = preg_replace('/\$clstshortuid/', $suid, $Pbuff);
 			}
 
 			$readyParks .= $Pbuff;
 			$readyParks .= "\n";
 			$Pbuff = NULL;
+
+			if ($suid === '') {
+				continue;
+			}
+			$fqdn = trim((string)($row['fqdn'] ?? ''));
+			$parkTimeout .= "\n[park-timeout-" . $suid . "]\n";
+			$parkTimeout .= "; Tenant " . (string)($row['pkey'] ?? $suid) . " — EXTEN is flattened PARKER (PJSIP_{shortuid})\n";
+			$parkTimeout .= "exten => _PJSIP_.,1,NoOp(Park timeout return \${EXTEN:6} space=\${PARKING_SPACE})\n";
+			if ($fleet && $fqdn !== '') {
+				$parkTimeout .= " same => n,Dial(PJSIP/\${EXTEN:6}/sip:\${EXTEN:6}@" . $fqdn . ",30,tT)\n";
+			} else {
+				$parkTimeout .= " same => n,Dial(PJSIP/\${EXTEN:6},30,tT)\n";
+			}
+			$parkTimeout .= " same => n,Hangup()\n";
 		}
 /*
  * First, initialise the file with an empty comment
@@ -261,6 +280,12 @@ class genAsteriskObjects
 			fwrite($fh, $readyParks) or die("Could not write to file $targetFile !");
 			fclose($fh);
 		}
+
+		$timeoutFile = READY_PARK_TIMEOUT;
+		$this->checkFileIsWriteable($timeoutFile);
+		$fh = fopen($timeoutFile, 'w') or die("Could not open file $timeoutFile!");
+		fwrite($fh, $parkTimeout) or die("Could not write to file $timeoutFile !");
+		fclose($fh);
 }
 /**
  * genIax
@@ -1256,6 +1281,12 @@ private function genExtensionsCoS()
             $this->OUT .= "\texten => $plan,1,GoTo($myClusterId,\${EXTEN},1)\n";;
         }
 
+        // Park retrieve slots (exact) — must beat COS `_X.` or dial-901 never reaches park-* include.
+        // Stock lot parkpos 901-903; overlay may widen later (keep in sync with parking_lot.tmpl).
+        for ($parkPos = 901; $parkPos <= 903; $parkPos++) {
+            $this->OUT .= "\texten => $parkPos,1,GoTo($myClusterId,\${EXTEN},1)\n";
+        }
+
         $this->OUT .= "\texten => _X.,1,GoToIf(\$[\${LEN(\${CALLERID(num)})} > 6]?$myClusterId,\${EXTEN},1)\n";
         $this->OUT .= "\texten => _X.,2,SET(myClusterOclo=\${DB($myClusterId/STATE)})\n";
 
@@ -1935,6 +1966,7 @@ HERE;
 
     $this->OUT .= "\n#include extensions_presets.conf\n";
     $this->OUT .= "\n#tryinclude extensions_withhold_clid.conf\n";
+    $this->OUT .= "\n#include extensions_park_timeout.conf\n";
 			
     }
 

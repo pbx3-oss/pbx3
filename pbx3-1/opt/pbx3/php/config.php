@@ -84,6 +84,7 @@ define('PARK',                         'parking.conf');
 define('PARK_OVERLAY',                 'parking.overlay.conf');
 define('PARK_TEMPLATE',                 ASTMPL . '/parking_lot.tmpl');
 define('READY_PARKS',                   ASTLOCALCONF . '/ready_parks.conf');
+define('READY_PARK_TIMEOUT',            ASTLOCALCONF . '/extensions_park_timeout.conf');
 
 define('IAX_TRUNK',					    'trunk.conf');
 define('IAX_TRUNK_SNDREG_TEMPLATE',	    ASTMPL . '/iax_trunk_sndreg.tmpl');

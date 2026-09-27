@@ -56,7 +56,7 @@ These are the “big” call types operators care about.
 | `maj-out-busy-reject` | Far-end reject / cancel | **`postdial-*`** **U** | **`out-busy-or-reject`** (pack) | yes | **L0: U** · **L1: U** Local→catcher 486→PostDial VM/Busy |
 | `maj-lepdial-fleet` | Fleet dial string | **`lepdial-fleet`** **U** | — | yes | **L0: U** · live **H** |
 | `maj-page` | Page group | — | — | yes | **H** |
-| `maj-park` | Park / retrieve | — | — | yes | **H** |
+| `maj-park` | Park / retrieve | — | — | yes | **H** (golden 2026-09-26: `*5` + dial `901` + timeout comeback) |
 | `maj-pickup` | Directed pickup `*8{ext}` + named call/pickup groups | — | **`pickup-directed-ok`**, **`pickup-group-deny`**, **`pickup-pjsip-config`** (sipplab `./run-pickup-pack.sh`) — req **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab acceptance; **lab green pending** | yes (BLF) | **U** (harness req; green pending) |
 | `maj-conf` | Conference | — | — | yes | **H** |
 | `maj-vm-leave` | Leave voicemail | **`postdial-noanswer-vm`** partial **U** | — | yes | **L0: U** · live **H** (record/listen) |
