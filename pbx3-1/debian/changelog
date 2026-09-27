@@ -1,3 +1,12 @@
+pbx3 (0.0.6-8) noble; urgency=medium
+
+  * CoS profiles: schema + junction→profile convert on upgrade; GenAst emits
+    O(profiles) CoS contexts; PJSIP $cos_context; Q6 fixed Default profile.
+  * Pair with pbx3api CosProfile API + SPA CoS Profiles panel (tip on main).
+  * Spec: workingdocs/COS_PROFILE_REQUIREMENTS.md (Slices A–F).
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Sun, 27 Sep 2026 13:00:00 -0400
+
 pbx3 (0.0.6-7) noble; urgency=medium
 
   * GenAst: fleet park timeout Dial via tenant FQDN (PrepDial-style); exact

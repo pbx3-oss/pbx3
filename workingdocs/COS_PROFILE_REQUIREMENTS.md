@@ -1,7 +1,7 @@
 # CoS profiles requirements (named class of service)
 
-**Status:** **Accepted 2026-09-27** — implement on feature branch **`cos-profiles`**. Slice **0** done. No dual GenAst engine; drop branches if lab disappoints.  
-**Scope:** Tenant outbound **deny** CoS — assignment model + GenAst dialplan shape. Repos: **pbx3**, **pbx3api**, **pbx3spa**; later **sark-to-pbx3**, **pbx3-docs**.  
+**Status:** **Shipped on `main` 2026-09-27** — Slices A–F + Q6. Package floor **pbx3 0.0.6-8** (cagi unchanged **1.0.0-22**).  
+**Scope:** Tenant outbound **deny** CoS — assignment model + GenAst dialplan shape. Repos: **pbx3**, **pbx3api**, **pbx3spa**, **sark-to-pbx3**, **pbx3-docs**.  
 **Not:** CAGI, SBC / Gatekeeper, per-mode (lunch) CoS matrices, allow-list OutRoutes as CoS, Follow-me, velocity (stays detection/act).  
 **Related:** **`TIME_BASED_ROUTING_REQUIREMENTS.md`** §5.10 / Q8 (binary CoS cue) · **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`** · **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (O(phones) CoS debt) · SPA backlog **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`** · private audit **`~/GiT/pbx3-ops/devdocs/pbx3api/workingdocs/COS_AUDIT_PROTOTYPE.md`**.
 
@@ -9,16 +9,16 @@
 
 | Host | Use |
 |------|-----|
-| **Golden** (`08jzwn`) | **Only** Commit / dial prove for this track |
-| **bzy54n / VirginiaOne / singleton** | Not required until merge |
-| **SBC** | No product branch |
+| **Golden** (`08jzwn`) | Primary Commit / dial prove |
+| **bzy54n / VirginiaOne / singleton** | Package floor when rolling |
+| **SBC** | Out of scope |
 
 **Git / way back (locked)**
 
 | Rule | Detail |
 |------|--------|
-| Feature branch | **`cos-profiles`** on **pbx3**, **pbx3api**, **pbx3spa** from current `main` |
-| Escape hatch | **Drop the branches** if lab disappoints. Floor stays **pbx3 0.0.6-7** / **pbx3cagi 1.0.0-22** |
+| Feature branch | **`cos-profiles`** merged to **`main`** (2026-09-27) |
+| Escape hatch | Was drop-branch before F; **closed** after accept |
 | Explicitly rejected | Dual GenAst engine (`cos_engine=legacy\|profiles`), long-lived dual-emit, or “keep both forever” |
 
 **Testing rule:** Unit/offline fixtures with each schema/GenAst slice; golden dial smoke before merge. A slice is not done on “worked once.”
@@ -278,7 +278,7 @@ Do **not** mix with Follow-me, CAGI Phase 4, or other dial-locus rewrites.
 | **C** — API + seed | pbx3api | — | **Done 2026-09-27** — `cosprofiles` CRUD; extension `cos_profile`; HR_* → default profile + floor ON; feature/unit tests |
 | **D** — SPA Profiles + extension dropdown | pbx3spa | New UX | **Done 2026-09-27** (+ follow-ups pending commit: Tenant-wide label; rule Key on create; extension **create** profile; create dirty-flag fix) |
 | **E** — ETL + docs | sark-to-pbx3, pbx3-docs | Migrate / MkDocs | **Done 2026-09-27** — overlay + convert hook; MkDocs; fixture smoke on `~/Backups/{wdcvs,regal,pdh4s03}` (parity 0 mismatches) |
-| **F** — merge gate | all | — | **Lab+desk green 2026-09-27** on Aelintra — await operator accept → merge / bump after pending commit, else drop branches |
+| **F** — merge gate | all | — | **Done 2026-09-27** — accepted; merged **`cos-profiles`** → **`main`**; package **0.0.6-8** |
 
 **Suggested code order:** A → B (call path) → C → D → lab → E → F.
 
@@ -363,3 +363,4 @@ Do **not** mix with Follow-me, CAGI Phase 4, or other dial-locus rewrites.
 | 2026-09-27 | **Slice F desk (Aelintra):** HR intl CoS OK; `PREMIUM_0900` Tenant-wide ON → congestion before OutRoute. |
 | 2026-09-27 | **Committed on `cos-profiles`:** (1) SPA **Tenant-wide** + CoS rules layout; (2) CoS rule **Key** on create; (3) Extension create CoS profile + API `cos_profile`; (4) Create panels `beginHydrate`/`markClean` (PANEL_PATTERN); (5) **Q6 fixed Default**. MkDocs timers-cos / api reference.
 | 2026-09-27 | **Q6 amended** — Default profile is **fixed** per tenant (edit lists in place). Moving the default flag between profiles rejected (operator confusion / lost “what was default”). |
+| 2026-09-27 | **Accepted + merged** — **`cos-profiles`** → **`main`** (pbx3 / api / spa / docs / sark-to-pbx3); package **pbx3 0.0.6-8**. |
