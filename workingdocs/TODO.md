@@ -1,10 +1,11 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-27 (CoS **0.0.6-8** + MkDocs expand; Dial prefixes off instance sidebar)  
+**Last updated:** 2026-09-27 (OCLO/BLF AstDB collision TODO; Flixton ingest lab green)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
+0q. **GenAst OCLO / BLF AstDB — tenant-scope keys (near-term)** — CoS already uses `DB({shortuid}/STATE)`; OCLO throw still uses **`pkey`** (`DB({pkey}/OCSTAT)`, `Custom:{pkey}`) and VM BLF hints use bare **`Custom:vm{ext}`** (`GenClass.php`). On a multi-tenant home, overlapping extension ranges collide on VM BLF device-state; OCLO/`Custom:{pkey}` is fragile if Names ever collide or operators expect shortuid-only AstDB. **Fix:** key OCLO + BLF (and related Custom: hints) by **shortuid** (align with CoS); Commit + lab prove two tenants sharing `717`-style ranges. Found after Flixton ingest on golden.  
 0p. ~~**CoS profiles**~~ — **done (2026-09-27):** Slices A–F + Q6 merged to **`main`**; package **pbx3 0.0.6-8** on golden+bzy. Spec: **`COS_PROFILE_REQUIREMENTS.md`**. MkDocs: **`admin/timers-cos`**. SPA Route Profile delete confirm + Dial prefixes removed from instance sidebar (deep-link `/dialaliases` only; HoR Site Groups).  
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
@@ -16,7 +17,7 @@
 0b. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
 0c. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0d. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
-0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** `ipphone.device` enum; **#15** DiD → `+E.164` (tip when merged). Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
+0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** `ipphone.device` enum; **#15** DiD → `+E.164`. **Built-tenant fleet ingest** CLI **lab green** (Flixton on golden 2026-09-27): **`FLEET_BUILT_TENANT_INGEST_REQUIREMENTS.md`** · `tenant:ingest-built`. Tip/host gossip: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
 0g. ~~**UA → model / phone images (23a)**~~ — **lab green `.31` (2026-08-27):** harvest + Handset UI. **Images / slice F shelved** — operator joining OEM partner portals first; no ProVu scrape into product path. Spec §9.0 kept for when ready.  
 0h. **Trunk carrier-face normalization** — describe / transform / normalize inbound+outbound Peer face so homes stay carrier-agnostic (fleet wire `+E.164`). Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. Builds on dialect §5.4 + NUMBER_WIRE Phase 2.  
 0i. ~~**SBC management access (Filament lockdown)**~~ — **done (2026-09-26):** UFW allowlist for **admin HTTPS 443 only**; SSH = ops/SG; SIP out of scope; dedicated panel + lockdown (default off); auth+2FA still apply. Spec: **`pbx3-directory/docs/SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`**. Tips: **pbx3sbc-admin `c772714`** · **pbx3sbc `8690a16`**.  
@@ -87,6 +88,8 @@
 ---
 
 ## Open items
+
+- [ ] **GenAst OCLO / BLF AstDB — tenant-scope keys (#0q — 2026-09-27):** Near-term. Align OCLO (`OCSTAT` / `Custom:{pkey}`) and VM BLF (`Custom:vm{ext}`) with CoS `DB({shortuid}/STATE)` so multi-tenant homes with overlapping ext ranges do not collide. Suggested order **0q**.
 
 - [x] **GenAst conference rooms — dialplan exten commented (2026-09-26):** Header heredoc ended with `;`+tab glued onto `exten =>`, so rooms never registered (`invalid extension`). Fixed + regenerates clean ConfBridge lines. Tip **`8016808`**.
 - [x] **Custom MOH Active — Save then Commit (2026-09-26):** CAGI reads `sqlite.rdonly.db`; SPA hint corrected. Tenant Save refreshes Commit pending.
