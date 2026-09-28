@@ -59,4 +59,4 @@ Those follow after schema agreement and LE work is merged.
 
 ## Git
 
-This folder lives in the **pbx3** repository at **`pbx3-directory/`**. When the service is real, it may split into its own repository (e.g. `github.com/aelintra/pbx3-directory`).
+This folder lives in the **pbx3** repository at **`pbx3-directory/`**. When the service is real, it may split into its own repository (e.g. `github.com/pbx3-oss/pbx3-directory`).

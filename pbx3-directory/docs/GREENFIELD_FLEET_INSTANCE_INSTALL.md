@@ -82,11 +82,11 @@ It is an optional **local parent folder** some operators keep for sibling checko
 
 | Prerequisite | Why | How to obtain |
 |--------------|-----|---------------|
-| **`pbx3` git clone on Mac** | Release `.deb` + fleet tools (`onboard-fleet-instance.sh`) | [github.com/aelintra/pbx3](https://github.com/aelintra/pbx3) · `main` · **private today** — authenticate as yourself on the Mac |
-| **`pbx3cagi` git clone on Mac** | Release `pbx3cagi_*.deb` | [github.com/aelintra/pbx3cagi](https://github.com/aelintra/pbx3cagi) · `main` · **private today** |
+| **`pbx3` git clone on Mac** | Release `.deb` + fleet tools (`onboard-fleet-instance.sh`) | [github.com/pbx3-oss/pbx3](https://github.com/pbx3-oss/pbx3) · `main` · **public** |
+| **`pbx3cagi` git clone on Mac** | Release `pbx3cagi_*.deb` | [github.com/pbx3-oss/pbx3cagi](https://github.com/pbx3-oss/pbx3cagi) · `main` · **public** |
 | **Built `.deb` files on Mac** | Copied to the node with `scp` (§4) | Prefer **committed release debs** at each repo root (e.g. `pbx3_0.0.4-3_all.deb`, `pbx3cagi_1.0.0-8_all.deb`) |
 
-**Why not `git clone` on the EC2 for packages?** While **`pbx3`** and **`pbx3cagi`** remain private, equipping every new instance with deploy keys just to fetch debs is heavier than `scp` from a Mac that already has the clones. When those repos are public, this guide can switch to on-node clone.
+**Why `scp` debs from the Mac?** Keeps the instance free of a full git tree for packaging; anonymous HTTPS clone of public repos also works if you prefer on-node fetch.
 
 **Create your own holding folder and clones** (adjust names/paths as you like):
 
@@ -96,9 +96,9 @@ mkdir -p ~/GiT/pbx3-master
 cd ~/GiT/pbx3-master
 
 # 2) Separate git clones (each is its own repo; parent is NOT git)
-#    Use credentials GitHub already accepts on this Mac (SSH or HTTPS + token).
-git clone https://github.com/aelintra/pbx3.git
-git clone https://github.com/aelintra/pbx3cagi.git
+#    Public HTTPS — no GitHub auth required for product repos.
+git clone https://github.com/pbx3-oss/pbx3.git
+git clone https://github.com/pbx3-oss/pbx3cagi.git
 
 cd pbx3 && git checkout main && git pull --ff-only
 cd ../pbx3cagi && git checkout main && git pull --ff-only
@@ -380,7 +380,7 @@ pbx3api has no `.deb` — deploy under `/opt/pbx3api`, then run its installer.
 ```bash
 # If the repo is reachable from the node (deploy key or public HTTPS):
 sudo rm -rf /opt/pbx3api
-sudo git clone https://github.com/aelintra/pbx3api.git /opt/pbx3api
+sudo git clone https://github.com/pbx3-oss/pbx3api.git /opt/pbx3api
 cd /opt/pbx3api
 sudo git checkout main
 sudo git pull --ff-only origin main

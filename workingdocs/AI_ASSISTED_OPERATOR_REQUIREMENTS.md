@@ -118,6 +118,6 @@ Honest risks. Mitigations are **process/docs**, not code theater.
 
 - MkDocs: `getting-started/ai-assisted.md` · `installation/ai-assisted-install.md` · `fleet/agent-assisted.md`  
 - Design Rules 1, 6, 8 (call path; solo; catalog → SPA)  
-- OSS org move: promote carefully on `github.com/pbx3` README when org exists (classical first)  
+- OSS org move: promote carefully on `github.com/pbx3-oss` README when org exists (classical first)  
 - Parked orchestrated onboard: S10.7 / S8.9 — agent-assisted remains interim for fleet rebuild  
 - Rollout: `~/GiT/pbx3-ops/devdocs/oss-move/AI_ASSISTED_POSTURE_ROLLOUT.md`

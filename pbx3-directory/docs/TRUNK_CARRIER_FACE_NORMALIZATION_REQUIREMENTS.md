@@ -2,7 +2,7 @@
 
 **Status:** Open work (not scheduled). Seeded **2026-08-29**.  
 **Audience:** Product / SBC / node implementers.  
-**Related:** [`NUMBER_WIRE_POLICY.md`](NUMBER_WIRE_POLICY.md) · [`NUMBER_DIALECT_REQUIREMENTS.md`](NUMBER_DIALECT_REQUIREMENTS.md) · [`EGRESS_PLUS_E164_WIRE.md`](../../workingdocs/EGRESS_PLUS_E164_WIRE.md) · MkDocs [DIDs](https://aelintra.github.io/pbx3-docs/fleet/dids/) · [Number dialects](https://aelintra.github.io/pbx3-docs/fleet/number-dialect/)
+**Related:** [`NUMBER_WIRE_POLICY.md`](NUMBER_WIRE_POLICY.md) · [`NUMBER_DIALECT_REQUIREMENTS.md`](NUMBER_DIALECT_REQUIREMENTS.md) · [`EGRESS_PLUS_E164_WIRE.md`](../../workingdocs/EGRESS_PLUS_E164_WIRE.md) · MkDocs [DIDs](https://pbx3-oss.github.io/pbx3-docs/fleet/dids/) · [Number dialects](https://pbx3-oss.github.io/pbx3-docs/fleet/number-dialect/)
 
 **Naming:** **SBC** = edge. Carrier **Peers** (upstream carrier, Gamma, Twilio, …) are not the SBC.
 

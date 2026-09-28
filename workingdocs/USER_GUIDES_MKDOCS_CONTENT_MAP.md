@@ -86,7 +86,7 @@ Home                          ← same top-level schematic as “What is PBX3?�
 
 ## Page inventory (promote from workingdocs)
 
-Status: **seeded in `pbx3-docs/`** (2026-07-15) — operator drafts from runbooks; lab URLs included. Expect human edit pass. Live: https://aelintra.github.io/pbx3-docs/
+Status: **seeded in `pbx3-docs/`** (2026-07-15) — operator drafts from runbooks; lab URLs included. Expect human edit pass. Live: https://pbx3-oss.github.io/pbx3-docs/
 
 | # | MkDocs page | Audience | Source workingdoc (promote / distill) | Priority | Notes |
 |---|-------------|----------|-------------------------------------|----------|-------|

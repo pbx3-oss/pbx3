@@ -2,11 +2,11 @@
 
 Use this when creating a **new GitHub organization** for PBX3 and preparing for outside contributors.
 
-**Transfer execution plan (phases + checklists):** private ops **`~/GiT/pbx3-ops/devdocs/oss-move/OSS_ORG_TRANSFER_PLAN.md`** — slug **`pbx3`**, set A locked 2026-09-28 (not executed yet). Do not keep that plan in product repos.
+**Transfer execution plan (phases + checklists):** private ops **`~/GiT/pbx3-ops/devdocs/oss-move/OSS_ORG_TRANSFER_PLAN.md`** — slug **`pbx3-oss`** (was `pbx3`, taken; not `fleetpbx` — FreePBX rhyme). **Executed 2026-09-28** (Phases 0–4): seven product/SBC repos **public** under `pbx3-oss`; harden + URL retarget done. Do not keep that plan in product repos.
 
 ### Organization model
 
-- **One org for the project** (neutral name: **`pbx3`** — locked).
+- **One org for the project** (forge slug: **`pbx3-oss`** — locked; product name remains **PBX3**).
 - **One GitHub account per human** (maintainers + contributors).
 - Avoid shared personal accounts. If you need automation beyond Actions, use a **GitHub App** or a **bot user**.
 
@@ -14,9 +14,9 @@ Use this when creating a **new GitHub organization** for PBX3 and preparing for 
 
 Inventory and version coupling: **`workingdocs/REPOS_AND_RELEASES.md`**. **Policy: multi-repo** (not one amalgamated monorepo). Full transfer matrix: private **`~/GiT/pbx3-ops/devdocs/oss-move/OSS_ORG_TRANSFER_PLAN.md`**.
 
-**Before / while transferring out of `aelintra`:** keep private migrate ETL and ops under Aelintra (`pbx3-ops`, private offline-migrate repo, `sipplabs`). See **`TODO.md`**.
+**Private under Aelintra (unchanged):** `pbx3-ops`, `sark-to-pbx3`, `sipplabs`. See **`TODO.md`** · **`REPOS_AND_RELEASES.md`**.
 
-Transfer set (all **public** under `pbx3`):
+Transfer set (all **public** under org **`pbx3-oss`** — done):
 
 - `pbx3` — backend package + installer + workingdocs + **`pbx3-directory/`** (Gatekeeper stays nested — no extract now)
 - `pbx3api` — API (Laravel) + nginx installer
