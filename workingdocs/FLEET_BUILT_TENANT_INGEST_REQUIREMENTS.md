@@ -36,7 +36,7 @@ Same as create: fleet owns home + catalog + SBC domain; instance owns day-2 PBX 
 
 | Key | Policy |
 |-----|--------|
-| **`pkey` (Name)** | Keep from source DB. **Collision = fail** — operator renames in source or on node before retry. Do not remint Name |
+| **`pkey` (Name)** | Keep from source DB. **`default` / empty = fail** (common on solo/single-tenant DBs). **Collision = fail**. Operator renames in the candidate `.db` before ingest — no CLI override; do not remint Name. MkDocs: `fleet/ingest-compatible-db` §0 |
 | **`shortuid` / `cluster.id`** | **Preserve** when free on the home (and catalog, when enroll runs). On **opaque** collision → **remint** the clashing key(s), rewrite all cluster-scoped refs, set FQDN. UIDs have **no** intrinsic semantics — uniqueness only |
 | **FQDN** | Always rewrite to `{shortuid}.{apex}` using home `globals.domain` (after any remint) |
 | Ops visibility | Log / CLI output **old→new** `shortuid` (and `id` if reminted) |
@@ -44,13 +44,14 @@ Same as create: fleet owns home + catalog + SBC domain; instance owns day-2 PBX 
 ## Human process (happy path v1)
 
 1. Obtain **external** one-tenant `.db` (e.g. sark-to-pbx3 `migrate-offline` → `split-tenants`, or export from another fleet).
-2. Ops: copy `.db` to target **fleet home**; run ingest CLI (dry-run then apply).
-3. Node merges tenant rows; remints opaque keys only if needed; FQDN + fleet route normalize.
-4. Ops enrolls catalog meta + SBC **domain** (`register-tenant` + Register-on-SBC) — **same shortuid/FQDN** the merge returned.
-5. **Fleet DID attach (hop-1)** — if the tenant must receive PSTN: Fleet → DIDs → **Allocate** (singleton or block) to this tenant → project to SBC (`fleet=did`). Ingest/create do **not** do this. Source DIDs in `inroutes` are hop-2 only until hop-1 points at the new home.
-6. Instance admin: hop-2 / site policy as needed, **Commit**, desk/SIPp smoke (incl. DID if allocated).
+2. If `cluster.pkey` is `default` / empty / colliding: rename in a copy of the candidate DB (MkDocs §0).
+3. Ops: copy `.db` to target **fleet home**; run ingest CLI (dry-run then apply).
+4. Node merges tenant rows; remints opaque keys only if needed; FQDN + fleet route normalize.
+5. Ops enrolls catalog meta + SBC **domain** (`register-tenant` + Register-on-SBC) — **same shortuid/FQDN** the merge returned; set catalog `label` = `pkey` if the shell script omitted it.
+6. **Fleet DID attach (hop-1)** — if the tenant must receive PSTN: Fleet → DIDs → **Allocate** (singleton or block) to this tenant → project to SBC (`fleet=did`). Ingest/create do **not** do this. Source DIDs in `inroutes` are hop-2 only until hop-1 points at the new home.
+7. Instance admin: hop-2 / site policy as needed, **Commit**, desk/SIPp smoke (incl. DID if allocated).
 
-**Lab:** do not stop after step 3 with a node-only tenant. Do not treat “domain registered” as “DIDs work.”
+**Lab:** do not stop after merge with a node-only tenant. Do not treat “domain registered” as “DIDs work.”
 
 ## Technical flow (v1 CLI)
 
