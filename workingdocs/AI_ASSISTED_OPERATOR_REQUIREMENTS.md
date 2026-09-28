@@ -13,6 +13,7 @@
 | **Not** | AI-led marketing, “preferred”/only serious path, unattended install, or a substitute for install UX polish. |
 | **Why both** | Agents will hit the repos anyway; kickoffs steer them onto published procedures. Skipping AI docs does not stop freelancing — it only removes our steering. |
 | **Panacea** | **AI is not yet a panacea.** Residual SoTA agent error remains after stepwise checks (A11). Docs must not imply otherwise. |
+| **Provenance (README)** | Short honest preamble on public READMEs: designed by humans mid/late 2025; most code implemented in Cursor under **human-directed AI** — not unattended. Canonical blurb: `~/GiT/pbx3-ops/devdocs/oss-move/snippets/GITHUB_README_DOCS_BLURB.md`. |
 
 Rollout checklist: `~/GiT/pbx3-ops/devdocs/oss-move/AI_ASSISTED_POSTURE_ROLLOUT.md` (must honor §0).
 
@@ -49,7 +50,8 @@ This is **operator co-pilot**, not a chat support bot for live calls, and not a 
 | MkDocs **AI-assisted** getting-started + install kickoffs | Parallel newcomer story (with classical) | **P0** (landed 2026-09-28) |
 | Fleet **agent-assisted** onboard/rebuild (existing) | Interim until S10.7 / S8.9 | P0 (landed; cross-linked) |
 | Root **`AGENTS.md`** on public repos | Machine-oriented “where truth lives + gates” | P0 thin stubs (`pbx3`, `pbx3-docs` done; rest in rollout) |
-| Org / repo **README** blurb | “Also: try with an AI agent” **after** one-line product + classical clone/docs link | P1 with org move |
+| Org / repo **README** blurb | Shared MkDocs pointer + CLI-first / optional AI lines (**same block** on each public README) | P1 |
+| GitHub **About** sidebar | Short per-repo description + **Homepage** = MkDocs site URL | P1 |
 | Bug / issue hygiene | Template fields: doc page + step; optional agent note | P1 |
 | Optional Cursor rules in product trees | Enforce A1–A11 for maintainers | P2 |
 
