@@ -1,11 +1,11 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-28 (session end — ingest MkDocs Name §0 / default rename)  
+**Last updated:** 2026-09-28 (session — #0q OCLO/BLF shortuid keys)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
 
-0q. **GenAst OCLO / BLF AstDB — tenant-scope keys (near-term)** — CoS already uses `DB({shortuid}/STATE)`; OCLO throw still uses **`pkey`** (`DB({pkey}/OCSTAT)`, `Custom:{pkey}`) and VM BLF hints use bare **`Custom:vm{ext}`** (`GenClass.php`). On a multi-tenant home, overlapping extension ranges collide on VM BLF device-state; OCLO/`Custom:{pkey}` is fragile if Names ever collide or operators expect shortuid-only AstDB. **Fix:** key OCLO + BLF (and related Custom: hints) by **shortuid** (align with CoS); Commit + lab prove two tenants sharing `717`-style ranges. Found after Flixton ingest on golden.  
+0q. ~~**GenAst OCLO / BLF AstDB — tenant-scope keys**~~ — **done (2026-09-28):** OCLO AstDB + `Custom:` and VM BLF `Custom:vm-{shortuid}-{ext}` keyed by shortuid; dial/BLF extension stays Name; throw dual-writes `{shortuid}/STATE` for CoS. Offline: `genclass-oclo-blf-shortuid-test.php`. Lock: **`TIME_BASED_ROUTING_REQUIREMENTS.md` §2.3**. Tip GenClass + `vmnotify.sh`; re-toggle OCLO after Commit.  
 0p. ~~**CoS profiles**~~ — **done (2026-09-27):** Slices A–F + Q6 merged to **`main`**; package **pbx3 0.0.6-8** on golden+bzy. Spec: **`COS_PROFILE_REQUIREMENTS.md`**. MkDocs: **`admin/timers-cos`**. SPA Route Profile delete confirm + Dial prefixes removed from instance sidebar (deep-link `/dialaliases` only; HoR Site Groups).  
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
@@ -89,7 +89,7 @@
 
 ## Open items
 
-- [ ] **GenAst OCLO / BLF AstDB — tenant-scope keys (#0q — 2026-09-27):** Near-term. Align OCLO (`OCSTAT` / `Custom:{pkey}`) and VM BLF (`Custom:vm{ext}`) with CoS `DB({shortuid}/STATE)` so multi-tenant homes with overlapping ext ranges do not collide. Suggested order **0q**.
+- [x] **GenAst OCLO / BLF AstDB — tenant-scope keys (#0q — 2026-09-28):** OCLO `{shortuid}/OCSTAT` + `Custom:{shortuid}` + STATE dual-write; VM `Custom:vm-{shortuid}-{ext}` + vmnotify; Name remains dial/BLF target. Offline test + §2.3 lock.
 
 - [x] **GenAst conference rooms — dialplan exten commented (2026-09-26):** Header heredoc ended with `;`+tab glued onto `exten =>`, so rooms never registered (`invalid extension`). Fixed + regenerates clean ConfBridge lines. Tip **`8016808`**.
 - [x] **Custom MOH Active — Save then Commit (2026-09-26):** CAGI reads `sqlite.rdonly.db`; SPA hint corrected. Tenant Save refreshes Commit pending.

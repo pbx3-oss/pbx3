@@ -1440,30 +1440,36 @@ HERE;
 	    }
 
 				// Visual open/close tenant throw
+				// Dialable/BLF extension stays Name (pkey); AstDB + Custom device keyed by shortuid
+				// (align with CoS DB({shortuid}/STATE); CAGI reads shortuid/OCSTAT).
 
 		$this->OUT .= <<<HERE
 ;
-;   Visual open/close tenant throw
+;   Visual open/close tenant throw (AstDB+Custom by shortuid; dial/BLF = Name)
 ;	
 HERE;
 
+        $ocloName = $row['pkey'];
+        $ocloSuid = $row['shortuid'];
         $this->OUT .= "\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",hint,Custom:" . $row['pkey'] . "\n\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",1,Set(state=\${DB(" . $row['pkey'] . "/OCSTAT)})\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",n,GoToIf(\$[\"\${state}\" = \"AUTO\"]?" . $row['pkey'] . "close:" . $row['pkey'] . "open)\n";
+        $this->OUT .= "\texten => " . $ocloName . ",hint,Custom:" . $ocloSuid . "\n\n";
+        $this->OUT .= "\texten => " . $ocloName . ",1,Set(state=\${DB(" . $ocloSuid . "/OCSTAT)})\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n,GoToIf(\$[\"\${state}\" = \"AUTO\"]?" . $ocloName . "close:" . $ocloName . "open)\n";
         $this->OUT .= "\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",n(" . $row['pkey'] . "close),Set(DB(" . $row['pkey'] . "/OCSTAT)=CLOSED)\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Set(DEVICE_STATE(Custom:" . $row['pkey'] . ")=INUSE)\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Playback(activated)\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Hangup\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n(" . $ocloName . "close),Set(DB(" . $ocloSuid . "/OCSTAT)=CLOSED)\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n,Set(DB(" . $ocloSuid . "/STATE)=CLOSED)\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n,Set(DEVICE_STATE(Custom:" . $ocloSuid . ")=INUSE)\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n,Playback(activated)\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n,Hangup\n";
         $this->OUT .= "\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",n(" . $row['pkey'] . "open),Set(DB(" . $row['pkey'] . "/OCSTAT)=AUTO)\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Set(DEVICE_STATE(Custom:" . $row['pkey'] . ")=NOT_INUSE)\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Playback(de-activated)\n";
-        $this->OUT .= "\texten => " . $row['pkey'] . ",n,Hangup\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n(" . $ocloName . "open),Set(DB(" . $ocloSuid . "/OCSTAT)=AUTO)\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n,Set(DB(" . $ocloSuid . "/STATE)=OPEN)\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n,Set(DEVICE_STATE(Custom:" . $ocloSuid . ")=NOT_INUSE)\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n,Playback(de-activated)\n";
+        $this->OUT .= "\texten => " . $ocloName . ",n,Hangup\n";
         $this->OUT .= "\n";
-        $this->OUT .= "\texten => *33*,1,GoTo(" . $row['pkey'] . ',' . $row['pkey'] . "open)\n";
-        $this->OUT .= "\texten => *34*,1,GoTo(" . $row['pkey'] . ',' . $row['pkey'] . "close)\n";
+        $this->OUT .= "\texten => *33*,1,GoTo(" . $ocloName . ',' . $ocloName . "open)\n";
+        $this->OUT .= "\texten => *34*,1,GoTo(" . $ocloName . ',' . $ocloName . "close)\n";
         $this->OUT .= "\n";
     //
     //  pickup marks
@@ -1681,7 +1687,7 @@ HERE;
                     $phone['dvrvmail'] = $phone['pkey'];							
                 }
                 $this->OUT .=  "\texten => *" . $phone['pkey'] . ",1,Voicemail(" . $phone['dvrvmail'] . "@" . $row["shortuid"]  . ",su)\n";
-                $this->OUT .=  "\texten => vm" . $phone['pkey'] . ",hint,Custom:vm" . $phone['pkey'] . "\n";
+                $this->OUT .=  "\texten => vm" . $phone['pkey'] . ",hint,Custom:vm-" . $row["shortuid"] . "-" . $phone['pkey'] . "\n";
                 $this->OUT .=  "\texten => vm" . $phone['pkey'] . ",1,VoicemailMain(" . $phone['pkey'] . "@" . $row["shortuid"]  .  ")\n";
             }
 

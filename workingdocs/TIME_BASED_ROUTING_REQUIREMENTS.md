@@ -58,6 +58,19 @@ Today the product exposes **OPEN / CLOSED / AUTO**, but the call path only ever 
 
 GenAst emits MASTER / per-tenant BLF and `*30*`–`*34*` style throws that toggle AstDB between **CLOSED** and **AUTO** (resume schedule).
 
+**AstDB / Custom keying (#0q, 2026-09-28):**
+
+| Surface | Key | Notes |
+|---------|-----|--------|
+| Dialable / BLF extension | Tenant **Name** (`cluster.pkey`) | Phone BLF targets stay Name |
+| Tenant AstDB OCSTAT | `{shortuid}/OCSTAT` | Matches CAGI `CheckState` / `myCluster` |
+| CoS clock (dual-write on throw) | `{shortuid}/STATE` = `CLOSED` or `OPEN` | CoS `DB({shortuid}/STATE)`; force only — timer does not write STATE |
+| OCLO device-state | `Custom:{shortuid}` | Hint still on Name extension |
+| VM BLF device-state | `Custom:vm-{shortuid}-{ext}` | `vmnotify.sh` uses voicemail context (= shortuid) |
+| MASTER | `STAT/OCSTAT` + `Custom:MASTER` | Instance-global; unchanged |
+
+After Commit, re-toggle OCLO once if a lab still has stale `{Name}/OCSTAT` rows (inert after rekey).
+
 ### 2.4 What we keep as a strength
 
 **Precompute in cron; O(1) at call time.** Do **not** move to dialplan `GotoIfTime` forests (classic FreePBX cost: every call re-qualifies calendar / holidays). Minute lag is acceptable for business hours.
