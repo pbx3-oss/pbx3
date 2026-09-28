@@ -6,12 +6,13 @@
 **Create (empty tenant):** [`FLEET_TENANT_CREATE_REQUIREMENTS.md`](FLEET_TENANT_CREATE_REQUIREMENTS.md).  
 **Move (already-fleet tenant):** [`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`](../pbx3-directory/docs/TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md) · `tenant:export` / `tenant:import`.  
 **Lab:** never leave node-only tenants — [`LAB_FLEET_TENANTS.md`](../pbx3-directory/docs/LAB_FLEET_TENANTS.md).  
-**ETL artifact:** private **`aelintra/sark-to-pbx3`** REQUIREMENTS **#17** (`bin/split-tenants.py`) · MkDocs `operator/migrate-and-split`.  
-**Related rules:** 6 / 10 / 11 / 14.
+**External DB sources:** sark-to-pbx3 split (**#17**), another fleet’s built tenant sqlite, or any one-`cluster` pbx3 DB — **provenance does not change the enroll runbook**.  
+**DID hop-1:** [`FLEET_DID_HOP1_LOCK.md`](../pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md).  
+**Related rules:** 6 / 10 / 11 / 13 / 14.
 
 ## Problem
 
-SARK → pbx3 offline ETL can emit a **per-tenant** sqlite (`<pkey>.db`) after migrate + split. Product today can only **create** an empty fleet tenant (node + catalog + SBC). There is **no** path to home a **built** tenant DB on a fleet instance and enroll it.
+Operators need to home a **built** tenant sqlite on a fleet instance (not only mint an empty tenant via Create). Sources include SARK offline ETL split DBs, a DB taken from **another fleet**, or other external one-tenant artifacts. Merge + catalog + SBC **domain** alone do **not** deliver PSTN — **Fleet DID attach (hop-1)** remains a required follow-on unless the tenant is extension/intersite-only.
 
 ## Product decision
 
@@ -19,11 +20,12 @@ SARK → pbx3 offline ETL can emit a **per-tenant** sqlite (`<pkey>.db`) after m
 |----------|------|
 | Who ingests | **Fleet / ops** (MSP / NOC) — not end-customer self-serve |
 | v1 surface | **Ops/CLI first** (home artisan + catalog/SBC enroll). Gatekeeper API + Fleet SPA = **later**, same stages |
-| Input artifact | **Direct** sark-to-pbx3 **split** `.db` (one `cluster`). Not “must wrap as mobility zip” |
-| ETL #17 | **Unchanged** — split keeps full `globals` + inactive `trunks` for offline inspect; product **strips** on ingest |
+| Input artifact | **Direct** one-`cluster` pbx3 sqlite (lab primary: sark-to-pbx3 **split** `.db`). Not “must wrap as mobility zip” |
+| Source-agnostic | Same merge + enroll + **DID attach** runbook whether the DB came from ETL, another fleet, or elsewhere |
+| ETL #17 | **Unchanged** when source is sark-to-pbx3 — split keeps full `globals` + inactive `trunks` for offline inspect; product **strips** on ingest |
 | Create vs ingest | Create = empty cluster + seeds. Ingest = merge **built** payload; **do not** re-seed `MainOut` / CoS when those tables already have rows |
-| Mobility vs ingest | Mobility = move **already-fleet** tenant (zip; preserve identity). Ingest = **first** fleet home from ETL artifact |
-| DID attach | **Separate** Fleet DIDs step (same as create v1) |
+| Mobility vs ingest | Mobility = move **already-fleet** tenant (zip; preserve identity). Ingest = **first** home of an **external** built DB on this fleet (may remint opaque keys on collision) |
+| DID attach | **Required runbook stage** after catalog + SBC domain when the tenant needs PSTN delivery — **not** auto inside `tenant:ingest-built`. Use Fleet DIDs Allocate → project (hop-1). Hop-2 `inroutes` stay instance-authored ([`FLEET_DID_HOP1_LOCK.md`](../pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md)) |
 | Solo | Out of scope for this lock; Rule 6 solo create/import paths unchanged |
 
 ### Lifecycle ownership (after ingest)
@@ -34,34 +36,35 @@ Same as create: fleet owns home + catalog + SBC domain; instance owns day-2 PBX 
 
 | Key | Policy |
 |-----|--------|
-| **`pkey` (Name)** | Keep from ETL. **Collision = fail** — operator renames in source or on node before retry. Do not remint Name |
+| **`pkey` (Name)** | Keep from source DB. **Collision = fail** — operator renames in source or on node before retry. Do not remint Name |
 | **`shortuid` / `cluster.id`** | **Preserve** when free on the home (and catalog, when enroll runs). On **opaque** collision → **remint** the clashing key(s), rewrite all cluster-scoped refs, set FQDN. UIDs have **no** intrinsic semantics — uniqueness only |
 | **FQDN** | Always rewrite to `{shortuid}.{apex}` using home `globals.domain` (after any remint) |
 | Ops visibility | Log / CLI output **old→new** `shortuid` (and `id` if reminted) |
 
 ## Human process (happy path v1)
 
-1. Offline: `migrate-offline.py` → optional `split-tenants.py` → `<pkey>.db` (e.g. smoke `flixton.db`).
+1. Obtain **external** one-tenant `.db` (e.g. sark-to-pbx3 `migrate-offline` → `split-tenants`, or export from another fleet).
 2. Ops: copy `.db` to target **fleet home**; run ingest CLI (dry-run then apply).
 3. Node merges tenant rows; remints opaque keys only if needed; FQDN + fleet route normalize.
-4. Ops enrolls catalog meta + SBC domain (reuse create enroll / `register-tenant` + Register-on-SBC repair) — **same shortuid/FQDN** the merge returned.
-5. Instance admin: remap any remaining site policy, **Commit**, desk/SIPp smoke.
-6. Optional later: Fleet DIDs assign.
+4. Ops enrolls catalog meta + SBC **domain** (`register-tenant` + Register-on-SBC) — **same shortuid/FQDN** the merge returned.
+5. **Fleet DID attach (hop-1)** — if the tenant must receive PSTN: Fleet → DIDs → **Allocate** (singleton or block) to this tenant → project to SBC (`fleet=did`). Ingest/create do **not** do this. Source DIDs in `inroutes` are hop-2 only until hop-1 points at the new home.
+6. Instance admin: hop-2 / site policy as needed, **Commit**, desk/SIPp smoke (incl. DID if allocated).
 
-**Lab:** do not stop after step 3 with a node-only tenant.
+**Lab:** do not stop after step 3 with a node-only tenant. Do not treat “domain registered” as “DIDs work.”
 
 ## Technical flow (v1 CLI)
 
 ```text
-split <pkey>.db
+external <pkey>.db
   → Home: preflight + merge (strip globals/trunks/threat/Laravel)
   → Identity preserve-or-remint + FQDN rewrite
-  → Fleet: normalize route.path* → Egress (drop ETL trunks)
+  → Fleet: normalize route.path* → Egress (drop source trunks)
   → Catalog registerTenant (meta; label = pkey)
   → SBC domain → instance sbc_dispatcher_setid
+  → Fleet DID Allocate + project (hop-1)   ← runbook; not inside artisan ingest
 ```
 
-Later (I5): Gatekeeper orchestrates the same stages (upload/stage → node merge API → catalog → SBC), then SPA.
+Later (I5): Gatekeeper orchestrates merge → catalog → SBC domain (same as create family); **DID attach stays the Fleet DIDs path** unless a future lock folds hop-1 into the ingest job.
 
 ### What the split `.db` contains vs what the home keeps
 
@@ -116,7 +119,14 @@ Ensure catalog Name/`label` = tenant **`pkey`** (create path sets `label=pkey`; 
 
 2. **SBC domain** — Fleet → Tenants → **Register on SBC** (or Gatekeeper domain enroll) using the home’s `sbc_dispatcher_setid`.
 
-3. **Commit** on the home; desk / SIPp smoke. DID attach remains a separate Fleet DIDs step.
+3. **Fleet DID attach (hop-1)** — required for PSTN delivery after any external-DB ingest (ETL, other fleet, etc.):
+
+   - Fleet → **DIDs** → **Allocate** / re-allocate the number or block to this tenant’s **shortuid**.
+   - Confirm project / Apply so SBC `dr_rules` (`fleet=did`) target this home’s setid.
+   - **Hop-2** (`inroutes` already in the merged DB, or new Class/DiD rows) stays instance-authored — Allocate does **not** seed hop-2 ([`FLEET_DID_HOP1_LOCK.md`](../pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md)).
+   - Skip only if the tenant is intentionally non-PSTN (extensions / site-dial only).
+
+4. **Commit** on the home; desk / SIPp smoke (REGISTER + optional DID).
 
 ### Lab mule (Flixton)
 
@@ -128,7 +138,7 @@ Smoke artifact (gitignored ETL work tree):
 # On the fleet home (after rsync tip pbx3api):
 sudo -u www-data php /opt/pbx3api/artisan tenant:ingest-built /tmp/flixton.db --dry-run
 sudo -u www-data php /opt/pbx3api/artisan tenant:ingest-built /tmp/flixton.db
-# Then enroll checklist above with printed shortuid/FQDN.
+# Then enroll checklist: catalog + SBC domain + Fleet DID Allocate (if PSTN) + Commit.
 ```
 
 Unit coverage: `pbx3api` `tests/Unit/BuiltTenantIngestTest.php` (preserve, remint, pkey fail, Egress normalize).
@@ -137,8 +147,9 @@ Unit coverage: `pbx3api` `tests/Unit/BuiltTenantIngestTest.php` (preserve, remin
 
 - Changing sark-to-pbx3 #17 split contract (drop globals/trunks or zip-only output)
 - Requiring mobility zip as the only ingest input
-- Auto DID inventory / SBC DID project
-- Importing SARK greetings/recordings media or Laravel portable users
+- **Auto** DID inventory / hop-1 project **inside** `tenant:ingest-built` (operator uses Fleet DIDs; documented as stage 3)
+- Auto-seeding hop-2 `inroutes` from Allocate
+- Importing greetings/recordings media or Laravel portable users
 - SPA wizard / Gatekeeper upload UI (I5)
 - Billing / quotas
 - Always reminting shortuid when free (rejected — preserve-first)
@@ -146,12 +157,13 @@ Unit coverage: `pbx3api` `tests/Unit/BuiltTenantIngestTest.php` (preserve, remin
 ## Lab acceptance (when built)
 
 1. Dry-run on smoke split DB reports cluster Name, shortuid, row counts, collision plan (none or remint).
-2. Apply on lab fleet home → one new `cluster`; **no** extra trunks from ETL; outbound paths → `Egress`.
+2. Apply on lab fleet home → one new `cluster`; **no** extra trunks from source; outbound paths → `Egress`.
 3. Catalog `tenants/{shortuid}/meta.json` + SBC domain for home setid; Fleet list shows tenant (**pkey** as Name).
 4. FQDN is `{shortuid}.{apex}`; REGISTER via SBC works after Commit (desk or SIPp).
-5. Forced shortuid collision (lab) → remint logged; ingest succeeds; Name/`pkey` unchanged.
-6. Forced `pkey` collision → fail cleanly; no partial catalog row.
-7. No node-only leftover if enroll skipped — ops checklist / reconcile still applies.
+5. After Fleet DID Allocate + project, inbound PSTN reaches the home (hop-1); hop-2 uses existing or new `inroutes`.
+6. Forced shortuid collision (lab) → remint logged; ingest succeeds; Name/`pkey` unchanged.
+7. Forced `pkey` collision → fail cleanly; no partial catalog row.
+8. No node-only leftover if enroll skipped — ops checklist / reconcile still applies.
 
 ## Open questions (non-blocking)
 
