@@ -28,7 +28,7 @@ SQLite schema has **no `FOREIGN KEY`** constraints on `cluster` → child tables
 | # | Lock |
 |---|------|
 | I1 | **Delete = wipe**, not “refuse if dependents exist.” Gating Delete on empty children would fight Fleet Delete / solo tear-down and leave operators stuck. |
-| I2 | **End-state direction = hybrid RI.** In-DB tenant graph → prefer **SQLite FK + `ON DELETE CASCADE`** (engine truth) once normalize + `PRAGMA foreign_keys=ON` are safe. **Out-of-DB** planes (S3 catalog, Magrathea domain/DIDs, media trees, peer dialaliases on *other* tenants) **cannot** be FK-cascaded — those stay **Rule 14 jobs / wipe steps**. |
+| I2 | **End-state direction = hybrid RI.** In-DB tenant graph → prefer **SQLite FK + `ON DELETE CASCADE`** (engine truth) once normalize + `PRAGMA foreign_keys=ON` are safe. **Out-of-DB** planes (S3 catalog, SBC domain/DIDs, media trees, peer dialaliases on *other* tenants) **cannot** be FK-cascaded — those stay **Rule 14 jobs / wipe steps**. |
 | I3 | **Near-term:** keep app wipe, but treat `TENANT_DATA_TABLES` drift as the known failure mode — harden with preflight, orphan audit, schema↔list CI, sibling dialalias + park parity (T1–T5). |
 | I4 | Trunks remain **instance-owned** (not in tenant wipe) — intentional. |
 | I5 | App wipe does **not** go away when FKs land — it shrinks to: resolve aliases → delete `cluster` (children cascade) → run **extra-plane** steps (S3/edge/media/peers). |
@@ -45,7 +45,7 @@ SQLite schema has **no `FOREIGN KEY`** constraints on `cluster` → child tables
                     │
                     ├─ Sibling dialalias on *other* tenants     ─┐
                     ├─ Catalog / S3 tenant meta + DID attach    ─┼─ jobs / wipe steps
-                    ├─ Magrathea domain / edge projection       ─┤   (not SQLite FK)
+                    ├─ SBC domain / edge projection       ─┤   (not SQLite FK)
                     └─ Greeting/recording files on disk         ─┘
 ```
 
@@ -63,7 +63,7 @@ Tenant delete must **not** silently destroy audit / compliance material. Split:
 |-------|----------|------------------|
 | **A — Operational config** | `ipphone`, `inroutes`, routes, queues, IVR, COS, day-parts, dialalias *owned by* tenant, greetings DB rows | **Wipe** with cluster (app list today; FK CASCADE later) |
 | **B — Call evidence** | MixMonitor / recording **files**, `recordings` index rows, **CDR** (Asterisk MySQL / instance CDR plane) | **Retain by default.** Purge only via **explicit** confirm (typed shortuid + separate “also delete recordings/CDR” flags) or a later retention job — never as an unnoticed side effect of FK CASCADE |
-| **C — Fleet / edge projection** | Catalog meta, attached DIDs, Magrathea domain | Soft-decommission / edge DELETE as today; DID auto-unassign = product pick (T6) |
+| **C — Fleet / edge projection** | Catalog meta, attached DIDs, SBC domain | Soft-decommission / edge DELETE as today; DID auto-unassign = product pick (T6) |
 | **D — Instance-shared** | Trunks, globals | **Never** tenant-cascaded |
 
 **Today’s awkwardness:** wipe already deletes `recordings` **index** rows (`TENANT_DATA_TABLES`) but **leaves media trees** on disk (G3). That is half-destructive and confusing for ops/compliance. Near-term fix direction:
@@ -127,7 +127,7 @@ DiDs **on the node** (`inroutes` with matching `cluster`) **are** in the wipe li
 
 - Blocking Delete solely because extensions/DiDs exist.  
 - Cascading **instance** trunks with the tenant.  
-- Believing SQLite FK will cascade **S3 / Magrathea / sibling peers** — it will not.  
+- Believing SQLite FK will cascade **S3 / SBC / sibling peers** — it will not.  
 - **Silent** wipe of call recordings or CDR as part of ordinary tenant Delete (Class B = opt-in only).  
 - Full S3 catalog hard-purge (Fleet Delete catalog soft-decommission stays until a later product pick).  
 - **Leaving Site Group prefix projections stale** after Fleet Delete for operators to clean by hand (I7 — prune is Fleet’s job).

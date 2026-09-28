@@ -310,22 +310,15 @@ Gatekeeper: handle `velocity_irsf` like other ops-events → SMTP to `notify_fai
 
 ---
 
-## Competitive notes (2026-07-23)
+## Differentiation (intent)
 
-**Market gap:** FreePBX / Sangoma / 3CX / Issabel-class systems emphasize **prevention** (outbound rules, country allow-lists, PIN) and **outside→in** (Fail2ban / Responsive Firewall). **Carrier / Tier‑3** tools add country blocks and weekly **$** / path caps — valuable but often **slow** and **trunk-scoped**. Few ship **fast inside→out** “kill this compromised phone” as a first-class PBX feature.
+**Market gap (category):** Many SMB / hosted PBX stacks emphasize **prevention** (outbound rules, country allow-lists, PIN) and **outside→in** (Fail2ban-class). Carrier tools add spend / path caps — often **slow** and **trunk-scoped**. Few ship **fast inside→out** “kill this compromised phone” as a first-class PBX feature.
 
-| Offering | Typical capability | vs pbx3 plan |
-|----------|-------------------|--------------|
-| **FreePBX / Sangoma** | Routes, PIN, time groups; Firewall / Fail2ban; SysAdmin Pro **abnormal call volume notification** | Notify / IP ban — not extension `active=NO` |
-| **3CX** | Country allow-lists, outbound rules, anti-hacking IP list | Prevention; CDR review / carrier backstop |
-| **Issabel lineage** | Dialplan CoS; AMI DIY | No built-in velocity product |
-| **SecAst (Telium)** | Fraud number DB, hacker IPs, heuristics, **disconnect calls**, dialplan override | Closest commercial Asterisk peer; heavier add-on |
-| **PBXDom** (CDR SaaS) | Alerts on after-hours, premium watchlist, short storms, dormant ext, weekend, forwarding chains | **Detect + notify**; not native PBX disable |
-| **Carriers** | Spend caps, fraud desks | Backstop; not minutes-scale extension act |
-
-**pbx3 differentiation (intent):** on-box batch CDR → ops mail → **`ipphone.active=NO` + clear CF + hangup**, fixture-testable, **one phone** blast radius — Fail2ban’s cousin **inside→out**, built in for fleet/MSP.
+**pbx3 intent:** on-box batch CDR → ops mail → **`ipphone.active=NO` + clear CF + hangup**, fixture-testable, **one phone** blast radius — Fail2ban’s cousin **inside→out**, built in for fleet/MSP.
 
 Published pattern lists (e.g. CDR short-storms, dormant ext, concurrency, weekend blitz, forward chains) are **fair game** to implement as later rule packs; cite industry practice in release notes, not proprietary UI copy.
+
+*(Named-vendor comparison table lives in private ops: `~/GiT/pbx3-ops/devdocs/oss-move/competitive/VELOCITY_COMPETITIVE_NOTES.md`.)*
 
 ---
 

@@ -11,7 +11,7 @@
 |------|--------|------------------------|
 | Tenant SIP **FQDN → dispatcher setid** (homing) | SBC `domain` row | **Fleet only** (catalog → register / repoint / reconcile project) |
 
-Same authorship class as hop-1 DID delivery: sticky Magrathea edit without catalog update = **dual HoR**.
+Same authorship class as hop-1 DID delivery: sticky SBC edit without catalog update = **dual HoR**.
 
 ---
 
@@ -21,17 +21,17 @@ Same authorship class as hop-1 DID delivery: sticky Magrathea edit without catal
 **Missing row:** Fleet **Repair SBC domain** / provision path → `registerDomain`.  
 **Tag backfill:** Reconcile drift `missing_fleet_tag` → project (`registerDomain` stamps `fleet=domain`).
 
-**Magrathea MUST NOT offer** rename / setid change / delete of fleet-owned Domain Routes (`attrs` contain `fleet=domain`). Hide actions; reject mutate if attempted. Message: use Fleet.
+**SBC MUST NOT offer** rename / setid change / delete of fleet-owned Domain Routes (`attrs` contain `fleet=domain`). Hide actions; reject mutate if attempted. Message: use Fleet.
 
-**Magrathea MUST NOT offer** Manage destinations / create / edit / delete of dispatcher rows for a setid that is fleet-locked (any `fleet=domain` tenant on that set, or any `fleet=node` destination). Change instance backends via Fleet Instances / node provision.
+**SBC MUST NOT offer** Manage destinations / create / edit / delete of dispatcher rows for a setid that is fleet-locked (any `fleet=domain` tenant on that set, or any `fleet=node` destination). Change instance backends via Fleet Instances / node provision.
 
 **Standalone SBC** (no `fleet=domain` / `fleet=node` tags): Filament Domain Routes + Destinations remain first-class.
 
-**Still allowed on Magrathea for fleet rows:** read / View (including read-only destination list if deep-linked). Domain Routes list shows projected catalog **label** (attrs `label=…`) under the FQDN and destination **description** (instance Name) beside the SIP URI when present.
+**Still allowed on the SBC for fleet rows:** read / View (including read-only destination list if deep-linked). Domain Routes list shows projected catalog **label** (attrs `label=…`) under the FQDN and destination **description** (instance Name) beside the SIP URI when present.
 
 **Emergency (control plane down):** Filament stays locked. Break-glass = **SSH/SQL/MI** on the SBC, then after recovery **catalog wins** (Fleet reconcile / project). Not a sticky product path.
 
-**Forbidden:** Magrathea → catalog sync as product path; treating Filament setid flip or destination edit as sticky under fleet.
+**Forbidden:** SBC → catalog sync as product path; treating Filament setid flip or destination edit as sticky under fleet.
 
 ---
 

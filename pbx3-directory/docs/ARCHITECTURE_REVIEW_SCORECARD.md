@@ -1,9 +1,9 @@
 # PBX3 fleet — architecture review scorecard
 
 **Status:** Living document — re-score after major drills or phase completions.  
-**Audience:** Product, architects, ops leads — anyone who needs **honest** positioning, not marketing.  
+**Audience:** Product, architects, ops leads — honest architecture drills and rule enforcement (not competitive marketing).  
 **First review:** 2026-07-09  
-**Related:** `FLEET_SYSTEM_OVERVIEW.md` · `DESIGN_RULES.md` · **`ARCHITECTURE_PEER_REVIEW.md`** (full narrative grounding) · `FLEET_TRUNK_PEERING_DECISION.md` · `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` · `IMPLEMENTATION_PLAN.md`
+**Related:** `FLEET_SYSTEM_OVERVIEW.md` · `DESIGN_RULES.md` · `FLEET_TRUNK_PEERING_DECISION.md` · `TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` · `IMPLEMENTATION_PLAN.md`
 
 ---
 
@@ -11,9 +11,9 @@
 
 PBX3 fleet is **telco-style federation** (sovereign nodes + replaceable SIP edge + async ops catalog), **not** a monolith multi-tenant cloud PBX. That is the **right trade for MSP mobility and blast-radius control**; it is the **wrong trade** if the primary goal is minimum infra cost per seat on a single shared box.
 
-**Use this doc to:** (1) know where we win and lose vs alternatives, (2) run repeatable drills with numbers, (3) block designs that violate founding rules.
+**Use this doc to:** (1) run repeatable drills with numbers, (2) block designs that violate founding rules, (3) track dimension scores honestly.
 
-**Narrative grounding (read occasionally):** `ARCHITECTURE_PEER_REVIEW.md` — full external challenge write-up from 2026-07-09.
+**Private competitive narrative** (OSS-excluded): `~/GiT/pbx3-ops/devdocs/oss-move/competitive/ARCHITECTURE_PEER_REVIEW.md`.
 
 ---
 
@@ -23,8 +23,8 @@ PBX3 fleet is **telco-style federation** (sovereign nodes + replaceable SIP edge
 |-------|-----|
 | **OpenSIPS/Kamailio farm + Asterisk workers** | **Primary cousin** — domain homing, dispatcher, drouting, SBC choke point |
 | **EC2-cell / cell-based SaaS** | **Management model** — fleet console discovers cells; each cell owns IAM and runtime |
-| **Monolith multi-tenant hosted PBX** | **Explicit non-goal** for fleet product (FusionPBX-style density) |
-| **CPaaS (Twilio-class)** | **Different category** — API control plane; compare only for SIP trunking / ops automation rows |
+| **Monolith multi-tenant hosted PBX** | **Explicit non-goal** for fleet product (shared-box density) |
+| **CPaaS** | **Different category** — API control plane; compare only for SIP trunking / ops automation rows |
 
 ---
 
@@ -45,12 +45,12 @@ PBX3 fleet is **telco-style federation** (sovereign nodes + replaceable SIP edge
 | Fleet observability / SRE | **1** | 3 | v0 = no live health in catalog; **EC2 without CloudWatch** |
 | S3 / catalog consistency at scale | **2** | 4 | Fine at low churn; **gatekeeper not built** — biggest scale seam |
 | PSTN path efficiency (fleet double-hop) | **3** | 3 | Acceptable trade for mobility; **measure latency**, don’t assume |
-| WebRTC / modern endpoint story | **1** | 3 | Phase W1 deferred; competitors lead **for now** |
+| WebRTC / modern endpoint story | **1** | 3 | Phase W1 deferred; commercial hosted stacks often lead **for now** |
 | Compliance runway (STIR/SHAKEN, audit) | **2** | 4 | Edge is natural home; **not productized yet** |
 | Operational cognitive load | **2** | 3 | Many layers (node, SBC, S3, adapter, solo vs fleet) — **docs help; runbooks must match** |
 | Cost efficiency (low tenant count) | **2** | 2 | **By design** — don’t score ourselves down for a trade we chose |
 
-**Weighted read:** Runtime architecture **≥ 4**; operator platform **≤ 2**. That gap is **expected** until B′/D/W1 land — not a surprise, but **is** the competitive exposure.
+**Weighted read:** Runtime architecture **≥ 4**; operator platform **≤ 2**. That gap is **expected** until B′/D/W1 land — not a surprise, but **is** the operator-platform exposure.
 
 ---
 
@@ -158,23 +158,23 @@ Map PBX3 layers to published patterns. **Gap = missing doc, code, or drill.**
 
 ---
 
-## 7. Competitive parity matrix (ICP: MSP fleet + mobility)
+## 7. Capability priorities (ICP: MSP fleet + mobility)
 
-**Not** a feature checklist for sales — **Must / Should / Won’t** for *our* product.
+**Not** a rival feature checklist — **Must / Should / Won’t** for *our* product.
 
-| Capability | PBX3 fleet (committed) | Monolith cloud PBX | DIY OS+Asterisk farm | Notes |
-|------------|------------------------|--------------------|-----------------------|-------|
-| Tenant move without phone reconfig | **Must** | Should | Must (if built) | Our core bet |
-| Solo install, no cloud deps | **Must** (Rule 6) | Won’t | Must | Funnel |
-| Central instance picker | **Must** (v0) | Must | Won’t | |
-| SSO across fleet | **Should** (Phase D) | Must | Won’t | **Gap today** |
-| Fleet health dashboard | **Should** (later) | Should | Won’t | **Gap today** |
-| WebRTC softphone at edge | **Should** (W1) | Must | Should | **Gap today** |
-| STIR/SHAKEN | **Should** (edge) | Must (US) | Should | Planned at SBC |
-| API-first everything | **Won’t** (v1) | Should | Won’t | SIP + node API first |
-| Cheapest $/seat density | **Won’t** | Must | Should | Not our game |
+| Capability | PBX3 fleet (committed) | Notes |
+|------------|------------------------|-------|
+| Tenant move without phone reconfig | **Must** | Our core bet |
+| Solo install, no cloud deps | **Must** (Rule 6) | Funnel |
+| Central instance picker | **Must** (v0) | |
+| SSO across fleet | **Should** (Phase D) | **Gap today** |
+| Fleet health dashboard | **Should** (later) | **Gap today** |
+| WebRTC softphone at edge | **Should** (W1) | **Gap today** |
+| STIR/SHAKEN | **Should** (edge) | Planned at SBC |
+| API-first everything | **Won’t** (v1) | SIP + node API first |
+| Cheapest $/seat density | **Won’t** | Not our game |
 
-**Comparator sources (verify live — do not trust training data alone):** 3CX MSP docs, FusionPBX multi-tenant, Kamailio/OpenSIPS wiki, one MSP interview/quarter.
+Named-vendor parity matrix (private): `~/GiT/pbx3-ops/devdocs/oss-move/competitive/ARCHITECTURE_COMPETITIVE_EXCERPTS.md`.
 
 ---
 
@@ -215,7 +215,7 @@ Fill annually or when pricing fleet SKU.
 | Ops hours / month (per 100 tenants) | | |
 | **$/tenant/month** (internal) | | |
 
-**Win condition:** Fleet line wins on **move cost + MSP ops hours**, not raw VM density. If fleet $/seat ≫ monolith at same N, that is **OK** if mobility SLA justifies it — **document the SLA**.
+**Win condition:** Fleet line wins on **move cost + MSP ops hours**, not raw VM density. If fleet $/seat ≫ shared-box density at same N, that is **OK** if mobility SLA justifies it — **document the SLA**.
 
 ---
 
@@ -235,12 +235,14 @@ Fill annually or when pricing fleet SKU.
 
 ## 12. External knowledge limits
 
-Model/training knowledge of commercial PBX internals is **incomplete and dated**. Treat vendor architecture claims as **hypotheses** until verified via:
+Model/training knowledge of commercial PBX internals is **incomplete and dated**. Treat third-party architecture claims as **hypotheses** until verified via:
 
 1. **Drills** (§5) — our ground truth  
 2. **MSP interviews** — 2–3 operators on OpenSIPS+Asterisk farms  
-3. **Public docs only** for 3CX / FusionPBX / Kamailio — note version and date  
+3. **Public docs only** for peer engines (Kamailio / OpenSIPS) and any vendor under review — note version and date  
 4. **This scorecard** — updated after each drill, not after each blog post  
+
+Competitive narrative excerpts stay in private ops (`oss-move/competitive/`).
 
 ---
 

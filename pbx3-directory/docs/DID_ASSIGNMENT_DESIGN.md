@@ -1,6 +1,6 @@
 # Fleet DID assignment — central registry vs inroutes-only
 
-**Status:** Design (2026-07-09); **hop-1 authorship locked 2026-08-11** — see **`FLEET_DID_HOP1_LOCK.md`** (Fleet-only retarget under fleet; Magrathea must not offer `fleet=did` edit).  
+**Status:** Design (2026-07-09); **hop-1 authorship locked 2026-08-11** — see **`FLEET_DID_HOP1_LOCK.md`** (Fleet-only retarget under fleet; SBC must not offer `fleet=did` edit).  
 **Audience:** Product, fleet implementers (control-plane, pbx3-directory, pbx3sbc, pbx3api)  
 **Related:** **`FLEET_DID_HOP1_LOCK.md`**, **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §11.9–§11.10, **`FLEET_TRUNK_PEERING_DECISION.md`** §5.1, **`NUMBER_DIALECT_REQUIREMENTS.md`** (wire +E.164 / carrier dialects), **`schema/did-record.v0.json`**
 

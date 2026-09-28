@@ -1,9 +1,9 @@
 # CoS profiles requirements (named class of service)
 
 **Status:** **Shipped on `main` 2026-09-27** — Slices A–F + Q6. Package floor **pbx3 0.0.6-8** (cagi unchanged **1.0.0-22**).  
-**Scope:** Tenant outbound **deny** CoS — assignment model + GenAst dialplan shape. Repos: **pbx3**, **pbx3api**, **pbx3spa**, **sark-to-pbx3**, **pbx3-docs**.  
+**Scope:** Tenant outbound **deny** CoS — assignment model + GenAst dialplan shape. Repos: **pbx3**, **pbx3api**, **pbx3spa**, **private offline migrate tool**, **pbx3-docs**.  
 **Not:** CAGI, SBC / Gatekeeper, per-mode (lunch) CoS matrices, allow-list OutRoutes as CoS, Follow-me, velocity (stays detection/act).  
-**Related:** **`TIME_BASED_ROUTING_REQUIREMENTS.md`** §5.10 / Q8 (binary CoS cue) · **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`** · **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (O(phones) CoS debt) · SPA backlog **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`** · private audit **`~/GiT/pbx3-ops/devdocs/pbx3api/workingdocs/COS_AUDIT_PROTOTYPE.md`**.
+**Related:** **`TIME_BASED_ROUTING_REQUIREMENTS.md`** §5.10 / Q8 (binary CoS cue) · **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`** · **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** (O(phones) CoS debt) · SPA backlog **`pbx3spa/workingdocs/LEGACY_PBX_PANEL_BACKLOG.md`** · private audit **`~/GiT/pbx3-ops/devdocs/pbx3api/workingdocs/COS_AUDIT_PROTOTYPE.md`**.
 
 **Lab hosts**
 
@@ -37,14 +37,14 @@ Today CoS **works** but is brutal:
 
 **Keep as strengths**
 
-- Deny-pattern packs → congestion/Hangup (SARK muscle memory; high-risk prevention HoR).  
+- Deny-pattern packs → congestion/Hangup (previous PBX muscle memory; high-risk prevention HoR).  
 - **Time-aware privilege** — Standard vs After-hours (day-parts Q8 cue) — see **§1.1**.  
 - `globals.cosstart` master on/off.  
 - Feature / emergency / park retrieve bypass CoS into the tenant context.
 
 ### 1.1 Why CoS is time-dependent (do not “simplify away”)
 
-**SARK heritage:** Early CoS users needed to **throttle the PBX out of hours**. PBX/SIP credential abuse was (and remains) common; quiet buildings + compromised endpoints + international/premium routes = large fraud bills. Open vs closed CoS matrices existed so the **same extension** could dial more freely in business hours and be locked down after hours (e.g. **no international out of hours**) without re-provisioning the phone.
+**previous PBX heritage:** Early CoS users needed to **throttle the PBX out of hours**. PBX/SIP credential abuse was (and remains) common; quiet buildings + compromised endpoints + international/premium routes = large fraud bills. Open vs closed CoS matrices existed so the **same extension** could dial more freely in business hours and be locked down after hours (e.g. **no international out of hours**) without re-provisioning the phone.
 
 **Still a first-class need:** Detection (velocity, Fail2ban) helps; **prevention** still wants clock-gated privilege. Big-iron / CUCM express the same idea as COR/CSS × time-of-day overlays. Teams mostly schedules **inbound** only — our outbound deny layer must stay time-aware.
 
@@ -100,7 +100,7 @@ Phones land in `COS_$clst` via `pjsip_phone.tmpl` (`context=COS_$clst`).
 2. **GenAst O(profiles)**, not O(phones).  
 3. Keep **deny-rule atoms** (`cos` table) and **time-aware** Standard / After-hours (§1.1) — not a single timeless list.  
 4. **Forward-convert** existing junction matrices without silent dial-privilege change.  
-5. **SARK migrate** path: same convert after 1:1 junction copy.  
+5. **previous-PBX migrate** path: same convert after 1:1 junction copy.  
 6. **Branch-drop** escape — no dual-path product debt.  
 7. Test with the code (§10).
 
@@ -120,7 +120,7 @@ Phones land in `COS_$clst` via `pjsip_phone.tmpl` (`context=COS_$clst`).
 
 SPA labels stay **Standard** / **After-hours** (not “open/closed” — lunch is inbound-closed-ish but still Standard CoS). See day-parts §5.10.
 
-**Do not** use SPA labels **Override** or **Mandatory** — both mislead (SARK heritage / false absolutism). Column names may stay `oride*` in DB until a later rename; product copy = **Tenant-wide**.
+**Do not** use SPA labels **Override** or **Mandatory** — both mislead (previous PBX heritage / false absolutism). Column names may stay `oride*` in DB until a later rename; product copy = **Tenant-wide**.
 
 ### 4.1.1 Two knobs — do not conflate
 
@@ -133,7 +133,7 @@ SPA labels stay **Standard** / **After-hours** (not “open/closed” — lunch 
 Default profile = **fixed** inheritance slot for **new phones** (and blank `cos_profile` at GenAst) — edit that profile’s lists to change default policy.  
 Tenant-wide = optional **all-profiles** include at GenAst.
 
-**Defaults:** Tenant-wide **OFF** on SPA create (SARK defaulted Override ON — **rejected** for pbx3). High-risk seed is the exception that turns Tenant-wide **ON** for `HR_*` (§2.3).
+**Defaults:** Tenant-wide **OFF** on SPA create (previous PBX defaulted Override ON — **rejected** for pbx3). High-risk seed is the exception that turns Tenant-wide **ON** for `HR_*` (§2.3).
 
 **Lab check:** If operators confuse the two knobs in Slice D, fix copy/layout before merge — wrong mental model = wrong dial policy.
 
@@ -141,7 +141,7 @@ Tenant-wide = optional **all-profiles** include at GenAst.
 
 - Exactly **one** `cos_profile` reference (tenant-scoped).  
 - No dual matrix as primary UX after Slice D.  
-- Empty / missing profile on a phone when `cosstart=ON`: treat as **tenant default profile** at GenAst (or refuse Commit with a clear error — lock in implement: **prefer default fallback** so SARK convert one-offs never black-hole).
+- Empty / missing profile on a phone when `cosstart=ON`: treat as **tenant default profile** at GenAst (or refuse Commit with a clear error — lock in implement: **prefer default fallback** so previous PBX convert one-offs never black-hole).
 
 ### 4.3 Profile contents
 
@@ -240,7 +240,7 @@ Idempotent convert:
 
 **Behaviour:** Same denies open vs closed as before convert (modulo Tenant-wide / `oride*`, which already was GenAst-global).
 
-### 5.2 SARK ETL (`sark-to-pbx3`, Slice E)
+### 5.2 previous PBX ETL (`private offline migrate tool`, Slice E)
 
 1. Keep today’s 1:1 copy of `cos` + `ipphonecosopen` / `ipphonecosclosed`.  
 2. Run the **same fingerprint → profile** pass (shared script or duplicated logic with fixture tests).  
@@ -277,7 +277,7 @@ Do **not** mix with Follow-me, CAGI Phase 4, or other dial-locus rewrites.
 | **B** — GenAst + PJSIP context | pbx3 | Commit dialplan shape | **Done 2026-09-27** (offline fixture + **golden smoke**). 70→6 CoS contexts; Staff `prohibited`≠Unrestricted; floor HR on Unrestricted; park/999 bypass; `cosstart` OFF→tenant context. CLOSED GotoIf present (open/closed lists same on lab fingerprints). |
 | **C** — API + seed | pbx3api | — | **Done 2026-09-27** — `cosprofiles` CRUD; extension `cos_profile`; HR_* → default profile + floor ON; feature/unit tests |
 | **D** — SPA Profiles + extension dropdown | pbx3spa | New UX | **Done 2026-09-27** (+ follow-ups pending commit: Tenant-wide label; rule Key on create; extension **create** profile; create dirty-flag fix) |
-| **E** — ETL + docs | sark-to-pbx3, pbx3-docs | Migrate / MkDocs | **Done 2026-09-27** — overlay + convert hook; MkDocs; fixture smoke on `~/Backups/{wdcvs,regal,pdh4s03}` (parity 0 mismatches) |
+| **E** — ETL + docs | private offline migrate tool, pbx3-docs | Migrate / MkDocs | **Done 2026-09-27** — overlay + convert hook; MkDocs; fixture smoke on `~/Backups/{wdcvs,regal,pdh4s03}` (parity 0 mismatches) |
 | **F** — merge gate | all | — | **Done 2026-09-27** — accepted; merged **`cos-profiles`** → **`main`**; package **0.0.6-8** |
 
 **Suggested code order:** A → B (call path) → C → D → lab → E → F.
@@ -296,11 +296,11 @@ Do **not** mix with Follow-me, CAGI Phase 4, or other dial-locus rewrites.
 | **Q6** | Default profile | **One fixed Default profile** per tenant. Evolve by editing its rule lists. **No** SPA/API reassignment of `is_default` between profiles (bootstrap/convert/seed only). Cannot delete the Default |
 | **Q7** | Missing profile | GenAst falls back to **default profile** |
 | **Q8** | Junction tables | Keep through track; GenAst ignores once profiles authoritative; drop only after merge confidence (optional later) |
-| **Q9** | SARK | Junction copy + **same fingerprint convert** |
+| **Q9** | previous PBX | Junction copy + **same fingerprint convert** |
 | **Q10** | CAGI / SBC | **Out of scope** |
 | **Q11** | Lab | **Golden only** until F |
 | **Q12** | Branch name | **`cos-profiles`** |
-| **Q13** | Tenant-wide default | **OFF** on SPA create (reject SARK Override default ON). High-risk seed sets Tenant-wide **ON** for `HR_*` |
+| **Q13** | Tenant-wide default | **OFF** on SPA create (reject previous PBX Override default ON). High-risk seed sets Tenant-wide **ON** for `HR_*` |
 | **Q14** | Clarity gate | If Slice D lab shows people mixing Default profile with Tenant-wide, fix UX/copy before merge — do not ship confusing labels |
 
 ---
@@ -325,7 +325,7 @@ Do **not** mix with Follow-me, CAGI Phase 4, or other dial-locus rewrites.
 | **GenAst offline** | Slice **B** before golden dial | N phones / 2 profiles → ~O(profiles) CoS blocks; PJSIP `context=COS_{clst}_{profile}`; floor includes; bypass; `cosstart` OFF |
 | **API** | Slice **C** | Profile CRUD; extension assign; default unique; HR_* on default profile + floor ON; new ext → default |
 | **Golden dial** | Slice **B**/ **F** smoke (not first emit proof) | Staff≠Restricted; floor-on Unrestricted; force CLOSED → After-hours; park/`*5`/emergency; `cosstart` OFF |
-| **SARK migrate** | Slice **E** (same convert as A) | **Done 2026-09-27** offline on operator samples `~/Backups/{wdcvs,regal,pdh4s03}` — 0 junction↔profile mismatches; regal 4 fingerprints / 32 phones; empty-CoS → Unrestricted. Smoke: sark-to-pbx3 `scripts/tests/cos-profiles-migrate-smoke.sh` |
+| **previous-PBX migrate** | Slice **E** (same convert as A) | **Done 2026-09-27** offline on operator samples `~/Backups/{wdcvs,regal,pdh4s03}` — 0 junction↔profile mismatches; regal 4 fingerprints / 32 phones; empty-CoS → Unrestricted. Smoke: private offline migrate tool `scripts/tests/cos-profiles-migrate-smoke.sh` |
 
 **Not in v1:** sipplab CoS pack; dual GenAst engine compare; SPA E2E for Tenant-wide.
 
@@ -347,20 +347,20 @@ Do **not** mix with Follow-me, CAGI Phase 4, or other dial-locus rewrites.
 
 | Date | Note |
 |------|------|
-| 2026-09-27 | Initial lock for operator review — profiles HoR, branch-drop escape, slices A–F, SARK fingerprint post-pass. |
+| 2026-09-27 | Initial lock for operator review — profiles HoR, branch-drop escape, slices A–F, previous PBX fingerprint post-pass. |
 | 2026-09-27 | **Tenant-wide** naming (not Override/Mandatory); default OFF; ≠ Default profile; HR_* seed = default profile + Tenant-wide ON; Q13–Q14 clarity gate. |
 | 2026-09-27 | §1.1 — CoS is **time-dependent** (out-of-hours toll-fraud throttle); After-hours required; do not simplify away. |
 | 2026-09-27 | **Accepted** — implement on **`cos-profiles`**; Slice 0 done. SPA label may change after first-out UX. |
-| 2026-09-27 | §10 — per-slice test cadence; SARK migrate fixtures via operator samples on request (Slice E). |
+| 2026-09-27 | §10 — per-slice test cadence; previous-PBX migrate fixtures via operator samples on request (Slice E). |
 | 2026-09-27 | **Slice A done** — schema + convert + fixture; GenAst still junctions until B. |
 | 2026-09-27 | **Slice B done** — GenAst O(profiles) + `$cos_context` PJSIP; fixture `genclass-cos-profiles-test.php`. Golden dial smoke still gate for F. |
 | 2026-09-27 | **Slice C done** — CosProfile API + Extension assign/default; HR_* seed attaches default profile + Tenant-wide ON. |
 | 2026-09-27 | **Slice D done** — SPA CoS profiles + extension profile dropdown; rules/nav Tenant-wide wording. |
-| 2026-09-27 | **Slice E done** — sark-to-pbx3 overlay + convert post-pass; pbx3-docs CoS rules/profiles. Fixture migrate awaits operator SARK samples. |
-| 2026-09-27 | **Slice E fixture** — offline migrate+convert on `~/Backups/wdcvs` (Unrestricted), `regal` (4 profiles / parity OK), `pdh4s03` (per-tenant Unrestricted). Smoke script in sark-to-pbx3. |
+| 2026-09-27 | **Slice E done** — private offline migrate tool overlay + convert post-pass; pbx3-docs CoS rules/profiles. Fixture migrate awaits operator previous PBX samples. |
+| 2026-09-27 | **Slice E fixture** — offline migrate+convert on `~/Backups/wdcvs` (Unrestricted), `regal` (4 profiles / parity OK), `pdh4s03` (per-tenant Unrestricted). Smoke script in private offline migrate tool. |
 | 2026-09-27 | **Slice F lab (Aelintra)** — profiles Staff/`20hq48`, Restricted/`p67y3v`, UnrestrictedLab/`bfdjzc`; phones **491–493**; rule `LAB_INTL` `_00.`; `HR_UK070` Tenant-wide ON. Dialplan+CLI: Staff≠Restricted intl; Tenant-wide 070 on empty UnrestrictedLab; CLOSED→After-hours LAB_INTL vs OPEN Cosend; park/999/`*_X.` bypass. Backup `/opt/pbx3/bkup/cos-lab-f-*`. **Note:** GenAst `oride*` is pkey-global (other tenants’ Tenant-wide can still `include` same rule pkey). **Await operator accept (Q14).** |
 | 2026-09-27 | **SPA label lock:** **Tenant-wide** (was “Tenant floor”) — clearer for operators; DB `oride*` unchanged. |
 | 2026-09-27 | **Slice F desk (Aelintra):** HR intl CoS OK; `PREMIUM_0900` Tenant-wide ON → congestion before OutRoute. |
 | 2026-09-27 | **Committed on `cos-profiles`:** (1) SPA **Tenant-wide** + CoS rules layout; (2) CoS rule **Key** on create; (3) Extension create CoS profile + API `cos_profile`; (4) Create panels `beginHydrate`/`markClean` (PANEL_PATTERN); (5) **Q6 fixed Default**. MkDocs timers-cos / api reference.
 | 2026-09-27 | **Q6 amended** — Default profile is **fixed** per tenant (edit lists in place). Moving the default flag between profiles rejected (operator confusion / lost “what was default”). |
-| 2026-09-27 | **Accepted + merged** — **`cos-profiles`** → **`main`** (pbx3 / api / spa / docs / sark-to-pbx3); package **pbx3 0.0.6-8**. |
+| 2026-09-27 | **Accepted + merged** — **`cos-profiles`** → **`main`** (pbx3 / api / spa / docs / private offline migrate tool); package **pbx3 0.0.6-8**. |

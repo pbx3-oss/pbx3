@@ -4,7 +4,7 @@
 **Audience:** Product / SBC / node implementers.  
 **Related:** [`NUMBER_WIRE_POLICY.md`](NUMBER_WIRE_POLICY.md) · [`NUMBER_DIALECT_REQUIREMENTS.md`](NUMBER_DIALECT_REQUIREMENTS.md) · [`EGRESS_PLUS_E164_WIRE.md`](../../workingdocs/EGRESS_PLUS_E164_WIRE.md) · MkDocs [DIDs](https://aelintra.github.io/pbx3-docs/fleet/dids/) · [Number dialects](https://aelintra.github.io/pbx3-docs/fleet/number-dialect/)
 
-**Naming:** **SBC** = edge. Carrier **Peers** (Magrathea Telecom, Gamma, Twilio, …) are not the SBC.
+**Naming:** **SBC** = edge. Carrier **Peers** (upstream carrier, Gamma, Twilio, …) are not the SBC.
 
 ---
 
@@ -25,7 +25,7 @@ ITSPs disagree on **inbound** and **outbound** number shape (national `0…`, di
 | **Outbound dialled** | Peer’s required face | Node sends `+E.164` (Phase 1 via Egress Mangle); SBC **renders** Peer face |
 | **Outbound CLI / PAID** | Peer’s required headers + shape | Node chooses **value**; SBC **renders** format/header per dialect |
 
-Swapping Magrathea Telecom ↔ Gamma ↔ Twilio (or UK ↔ US Peer set) should be **Peer + dialect (+ serving_cc)** changes — not a rewrite of tenant inroutes / OutRoutes.
+Swapping upstream carrier ↔ Gamma ↔ Twilio (or UK ↔ US Peer set) should be **Peer + dialect (+ serving_cc)** changes — not a rewrite of tenant inroutes / OutRoutes.
 
 ---
 
@@ -37,7 +37,7 @@ Swapping Magrathea Telecom ↔ Gamma ↔ Twilio (or UK ↔ US Peer set) should b
    - Gap list: NANP bare 10-digit seize, ops-authored profiles without tip ([`NUMBER_DIALECT_REQUIREMENTS.md`](NUMBER_DIALECT_REQUIREMENTS.md) §5.4), Phase-2 habit on SBC ([`NUMBER_WIRE_POLICY.md`](NUMBER_WIRE_POLICY.md)).
 
 2. **Transform (operator / migrate surfaces)**  
-   - SARK DiD → `+E.164` on migrate (lock #15 in `sark-to-pbx3`) — done in tip when merged.  
+   - previous PBX DiD → `+E.164` on migrate (lock #15 in `private offline migrate tool`) — done in tip when merged.  
    - Egress seed / tenant create: serving-country transform packs (UK / US) stay aligned with fleet wire.  
    - Document how Class / CLiD stay local while DiD face is canonical.
 
@@ -50,7 +50,7 @@ Swapping Magrathea Telecom ↔ Gamma ↔ Twilio (or UK ↔ US Peer set) should b
 
 ## Non-goals (this stub)
 
-- Baking Magrathea/Twilio-specific dialplans into GenAst.  
+- Baking SBC/Twilio-specific dialplans into GenAst.  
 - Auto Fleet DID Allocate from ETL.  
 - Changing hop-1 digit-E.164 inventory keys (catalog / `dr_rules.prefix` stay digit form).
 
@@ -73,4 +73,4 @@ Swapping Magrathea Telecom ↔ Gamma ↔ Twilio (or UK ↔ US Peer set) should b
 | `NUMBER_DIALECT_REQUIREMENTS.md` | Recipe grammar + §5.4 compose-without-tip |
 | `ORIGIN_OUTBOUND_ROUTING_DESIGN.md` | Per-home outbound groups (related, parked) |
 | MkDocs `fleet/dids.md` | SBC always emits `+E.164` inbound |
-| `sark-to-pbx3` REQUIREMENTS #15 | Migrate DiD pkeys to `+E.164` |
+| `private offline migrate tool` REQUIREMENTS #15 | Migrate DiD pkeys to `+E.164` |

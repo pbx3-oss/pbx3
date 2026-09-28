@@ -2,26 +2,28 @@
 
 Use this when creating a **new GitHub organization** for PBX3 and preparing for outside contributors.
 
+**Transfer execution plan (phases + checklists):** private ops **`~/GiT/pbx3-ops/devdocs/oss-move/OSS_ORG_TRANSFER_PLAN.md`** — slug **`pbx3`**, set A locked 2026-09-28 (not executed yet). Do not keep that plan in product repos.
+
 ### Organization model
 
-- **One org for the project** (neutral name, e.g. `pbx3`).
+- **One org for the project** (neutral name: **`pbx3`** — locked).
 - **One GitHub account per human** (maintainers + contributors).
 - Avoid shared personal accounts. If you need automation beyond Actions, use a **GitHub App** or a **bot user**.
 
 ### Repos (initial)
 
-Inventory and version coupling: **`workingdocs/REPOS_AND_RELEASES.md`**. **Policy: multi-repo** (not one amalgamated monorepo).
+Inventory and version coupling: **`workingdocs/REPOS_AND_RELEASES.md`**. **Policy: multi-repo** (not one amalgamated monorepo). Full transfer matrix: private **`~/GiT/pbx3-ops/devdocs/oss-move/OSS_ORG_TRANSFER_PLAN.md`**.
 
-**Before transferring repos out of `aelintra`:** keep private migrate ETL under Aelintra (already extracted). See **`TODO.md`**.
+**Before / while transferring out of `aelintra`:** keep private migrate ETL and ops under Aelintra (`pbx3-ops`, private offline-migrate repo, `sipplabs`). See **`TODO.md`**.
 
-- `pbx3` — backend package + installer + workingdocs + **`pbx3-directory/`**
+Transfer set (all **public** under `pbx3`):
+
+- `pbx3` — backend package + installer + workingdocs + **`pbx3-directory/`** (Gatekeeper stays nested — no extract now)
 - `pbx3api` — API (Laravel) + nginx installer
 - `pbx3spa` — admin SPA (Vue) + GitHub Pages deploy (S6.2)
 - `pbx3cagi` — Asterisk AGI (C)
-
-Optional later:
-
-- `pbx3-docs` — consolidated website/docs if you want a separate public site
+- `pbx3-docs` — operator MkDocs site
+- `pbx3sbc` / `pbx3sbc-admin` — edge + Filament admin
 
 ### Teams and permissions (minimal, scalable)
 
@@ -47,7 +49,7 @@ On the default branch (usually `main`):
 ### Contributor-facing files (per repo)
 
 - **Workingdocs (TODO suggested #1 — done; light peel 2026-08-09):** Product/design **locks and active requirements** stay in-repo (agent locality). Agent **session** handoffs + **research/audits/tippy lab** → private **`aelintra/pbx3-ops`** (`~/GiT/pbx3-ops`, including **`devdocs/`**). See **`TODO.md`** · **`workingdocs/README.md`**.
-- **`LICENSE` (landed 2026-08-09):** Product license is **Apache License 2.0** for all product repos (`pbx3`, `pbx3api`, `pbx3spa`, `pbx3cagi`, Magrathea/SBC admin). Root `LICENSE` is the clean Apache-2.0 text (not the httpd composite). Packaging copyright: **Aelintra Telecom Limited** (`debian/copyright` where present; composer/`package.json` `license` fields). Cross-link: Lab packaging § in **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** · **`TODO.md`**. Ops stance: **License ops** below.
+- **`LICENSE` (landed 2026-08-09):** Product license is **Apache License 2.0** for all product repos (`pbx3`, `pbx3api`, `pbx3spa`, `pbx3cagi`, SBC/SBC admin). Root `LICENSE` is the clean Apache-2.0 text (not the httpd composite). Packaging copyright: **Aelintra Telecom Limited** (`debian/copyright` where present; composer/`package.json` `license` fields). Cross-link: Lab packaging § in **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** · **`TODO.md`**. Ops stance: **License ops** below.
 - **Customer migrate (TODO #3 — done 2026-08-09):** Migrate entrypoints stripped from pbx3; private ETL remains under Aelintra. Product keeps shortuid normalize repair only.
 - `CONTRIBUTING.md` (how to run tests/lint, PR expectations; point at License ops + DCO when public)
 - `CODE_OF_CONDUCT.md` (Contributor Covenant is fine)

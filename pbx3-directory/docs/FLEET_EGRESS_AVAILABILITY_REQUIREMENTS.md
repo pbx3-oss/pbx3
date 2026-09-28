@@ -79,7 +79,7 @@ When primary SBC is unreachable, outbound PSTN must not silently black-hole. Can
 
 ## Suggested implementation order
 
-1. ~~**SBC OPTIONS handler** for fleet Asterisk sources (R1)~~ — done in template (deploy + verify on Magrathea).
+1. ~~**SBC OPTIONS handler** for fleet Asterisk sources (R1)~~ — done in template (deploy + verify on the SBC).
 2. ~~**Re-enable `qualify_frequency`** (e.g. 30) on egress template~~ — done; golden + bzy54n **Avail**.
 3. ~~**SPA / API** trunk health from Asterisk endpoint state or AMI (R2)~~ — done.
 4. **`EgressFailover` + cagi** sequential dial (R3) — after SBC active–passive VIP (§6) or second lab SBC exists.

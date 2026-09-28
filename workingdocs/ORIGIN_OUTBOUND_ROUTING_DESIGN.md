@@ -25,11 +25,11 @@ Group **0** is a **global** dest-prefix table. Longest-prefix therefore lets Pee
 | Origin | Dialled (after mangle) | Wrong winner in shared group 0 | Correct Peer set |
 |--------|------------------------|--------------------------------|------------------|
 | UK-homed | NANP `1…` | Twilio | UK ITSPs (intl from UK) |
-| US-homed | UK `44…` | Magrathea | US / Twilio (intl from US) |
+| US-homed | UK `44…` | SBC | US / Twilio (intl from US) |
 
 Lab symptom: UK CLIP → Twilio **403**. Parking a rule is a band-aid, not product.
 
-**Wanted inside one origin group (§3.D):** Magrathea vs Gamma priority / dest-class (`0800` → Gamma else Magrathea). That stays dest-based **within** the group.
+**Wanted inside one origin group (§3.D):** SBC vs Gamma priority / dest-class (`0800` → Gamma else SBC). That stays dest-based **within** the group.
 
 ---
 
@@ -84,12 +84,12 @@ Reserve numeric outbound `groupid`s by **serving country / policy**, not by dest
 
 | Policy | `groupid` | Rules (sketch) |
 |--------|-----------|----------------|
-| `cc=44` (UK) | **10** | `44…` → Magrathea (prio); `0800…` → Gamma; `1…` → Magrathea intl; default → Magrathea |
+| `cc=44` (UK) | **10** | `44…` → SBC (prio); `0800…` → Gamma; `1…` → SBC intl; default → SBC |
 | `cc=1` (US) | **20** | `1…` → Twilio; `44…` → Twilio intl; failover as configured |
 
 Exact IDs are an ops convention; catalog stores the integer (or a named key that projects to it).
 
-**Rule:** Twilio’s `prefix=1` lives **only** in the US group. Magrathea’s `prefix=44` lives in the UK group. Cross-border dests are **intl rules on the origin group**, not foreign Peer prefixes in a shared table.
+**Rule:** Twilio’s `prefix=1` lives **only** in the US group. SBC’s `prefix=44` lives in the UK group. Cross-border dests are **intl rules on the origin group**, not foreign Peer prefixes in a shared table.
 
 ### 5.2 How OpenSIPS selects the group
 
@@ -134,7 +134,7 @@ Gatekeeper remains source of catalog truth; SBC admin rows stay fleet-tagged (Ru
 
 ### 5.5 Non-goals for Phase A
 
-- Caller-facing CPS digits or “pick Magrathea” UI.
+- Caller-facing CPS digits or “pick SBC” UI.
 - Changing CLIP ownership (PBX still owns value; SBC dialect formats).
 - Emptying node Egress mangle (NUMBER_WIRE Phase 2 is separate / gated).
 - Multi-Egress trunks on one instance to fake Peer pick.
@@ -145,10 +145,10 @@ Gatekeeper remains source of catalog truth; SBC admin rows stay fleet-tagged (Ru
 | # | Case | Pass |
 |---|------|------|
 | A1 | US-homed → NANP | Twilio (or US Peer) |
-| A2 | US-homed → UK `44…` / IDD | **Same US Peer set** (not Magrathea steal) |
-| A3 | UK-homed → UK national | Magrathea/Gamma per in-group rules |
+| A2 | US-homed → UK `44…` / IDD | **Same US Peer set** (not SBC steal) |
+| A3 | UK-homed → UK national | SBC/Gamma per in-group rules |
 | A4 | UK-homed → NANP | **UK Peer set** intl (not Twilio steal / no CLIP 403) |
-| A5 | UK group: Magrathea fail → Gamma | `use_next_gw` / gwlist order works |
+| A5 | UK group: SBC fail → Gamma | `use_next_gw` / gwlist order works |
 | A6 | Unknown origin | Fallback group + logged; no silent cross-Peer |
 
 ---

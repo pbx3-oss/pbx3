@@ -11,7 +11,7 @@
   - **Named pickup groups** (`named_pickup_group`) — pools this phone **can pick up from**.
 - Fields are independent (asymmetric department pickup is first-class; no need for `pjsip_overlay`).
 - **Default `ALL`** on both until the operator changes them. Empty/`ALL` → GenAst substitutes **tenant shortuid (`$clst`)** so whole-tenant pickup stays isolated across tenants on one instance.
-- Custom values (`sales`, `1,2`, …) replace the default. Digit tokens are fine (heritage SARK numerics as **named** strings).
+- Custom values (`sales`, `1,2`, …) replace the default. Digit tokens are fine (heritage previous PBX numerics as **named** strings).
 
 ## Schema / GenAst
 
@@ -21,9 +21,9 @@
 - Upgrade: `apply-sqlite-add-named-groups.sh` (also copies legacy `named_groups` → both; seeds help)
 - Help: `tt_help_core` keys `named_call_group` / `named_pickup_group`
 
-## SARK migrate
+## previous-PBX migrate
 
-Private ETL **`~/GiT/sark-to-pbx3`**: map old `callgroup` → `named_call_group`, `pickupgroup` → `named_pickup_group` (and sipiaxfriend lines) with digit tokens as-is. Prefer existing `namedcallgroup` / `namedpickupgroup` if present. Empty → leave default **`ALL`**. See that repo’s `docs/REQUIREMENTS.md` **#11**.
+Private ETL **`~/GiT/private offline migrate tool`**: map old `callgroup` → `named_call_group`, `pickupgroup` → `named_pickup_group` (and sipiaxfriend lines) with digit tokens as-is. Prefer existing `namedcallgroup` / `namedpickupgroup` if present. Empty → leave default **`ALL`**. See that repo’s `docs/REQUIREMENTS.md` **#11**.
 
 ## Lab acceptance (requirement)
 

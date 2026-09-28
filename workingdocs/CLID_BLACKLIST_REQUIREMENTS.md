@@ -2,7 +2,7 @@
 
 **Status:** **Phase 1 shipped** (schema + API + SPA + CAGI enforce). **Phase 1 is sufficient** for product use (SPA admin CRUD). **Phase 2** (feature code → email request → admin approve) is an **optional upgrade only** — **parked**, not scheduled; revisit only if customers ask for desk-side “report caller” workflow.  
 **Repos:** **pbx3** (schema) · **pbx3api** · **pbx3spa** · **pbx3cagi** (enforce).  
-**Not** a SARK port. SARK had a stub `clid_blacklist` table (`cluster`-scoped) that **never shipped in production use** — do **not** ETL-migrate it; greenfield only.
+**Not** a previous-PBX port. previous PBX had a stub `clid_blacklist` table (`cluster`-scoped) that **never shipped in production use** — do **not** ETL-migrate it; greenfield only.
 
 ---
 
@@ -25,7 +25,7 @@ Many competitors expose a star-code / feature key so **any** phone user can blac
 | # | Lock |
 |---|------|
 | **B0** | **Tenant-scoped only.** Rows belong to one `cluster` / shortuid. Tenant A may block `+441234…`; tenant B may still accept it. Never instance-global. |
-| **B1** | **Greenfield.** Ignore SARK `clid_blacklist` for migrate (dropped from ETL map). No heritage UI parity obligation. |
+| **B1** | **Greenfield.** Ignore previous PBX `clid_blacklist` for migrate (dropped from ETL map). No heritage UI parity obligation. |
 | **B2** | **Mutate requires auth.** v1: **SPA (Sanctum)** with tenant/admin ability for that cluster. No open “any extension” feature key in Phase 1. |
 | **B3** | **Phase 2 (optional) — request only from phone.** If ever built: feature code **submits a block request** (not apply the block). Email to tenant `emailalert` (and/or scoped tenant admins). **SPA approval required** before a row appears in `clid_block`. Rate-limit per extension; withheld CLI = no-op. **Not required** for v1 completeness. |
 | **B4** | **Enforce in the call path for that tenant** (inbound before ring/IVR). **Fail open** if DB/lookup broken or CLID empty/short. |
@@ -72,7 +72,7 @@ Sketch table **`clid_block_request`**: `cluster`, normalized `clid`, `requested_
 
 ## 6. Non-goals
 
-- Porting unfinished SARK panel behaviour.
+- Porting unfinished previous PBX panel behaviour.
 - Letting every phone user blacklist without admin approval.
 - Confusing with Fail2ban / UFW IP bans or SBC door-knock.
 

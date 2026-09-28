@@ -36,7 +36,7 @@ New variants only via an explicit future requirement.
 |--------|------|
 | Create / update API | SIP → always `General SIP`; WebRTC → `WebRTC`; mailbox → `MAILBOX`. **No** OUI write into `device`. |
 | Existing DBs | One-shot normalize: any other non-empty value (Yealink, Snom, …) → `General SIP`. |
-| SARK ETL | Same: never leave vendor strings in `device` — force enum (**sark-to-pbx3** REQUIREMENTS **#14**). |
+| previous PBX ETL | Same: never leave vendor strings in `device` — force enum (**private offline migrate tool** REQUIREMENTS **#14**). |
 | Harvest | Does not touch `device`. |
 
 **Not** the purged **Device** templates table (won't-do 2026-08-25).
@@ -63,7 +63,7 @@ New variants only via an explicit future requirement.
 
 **Display / list composite (locked):** `{devicevendor} ({devicemodel})` — e.g. `Yealink (T46U)`, `Snom (D717)`. API `handset_label` builds this; do **not** store the composite in either column.
 
-SARK provision `firstseen`/`lastseen` must **not** be imported (leave NULL — harvest owns the columns). `devicevendor` NULL on import.
+previous PBX provision `firstseen`/`lastseen` must **not** be imported (leave NULL — harvest owns the columns). `devicevendor` NULL on import.
 
 ---
 
@@ -222,7 +222,7 @@ $manufacturer_regex = [
 | pbx3api | Remove `getVendorFromMac` side effects. Expose `devicevendor`, `devicemodel`, `firstseen`, `lastseen` **read-only**. `macaddr` stays updateable; `device` type-only on write. |
 | SPA | Device readonly (type); MAC editable after Device. Later: model/image + “as of lastseen”. |
 | Help | Update `device` / `macaddr`; add keys for harvest fields when exposed. |
-| ETL | **sark-to-pbx3 #14** — `device` → enum; do not import SARK firstseen/lastseen; `devicevendor` NULL. |
+| ETL | **private offline migrate tool #14** — `device` → enum; do not import previous PBX firstseen/lastseen; `devicevendor` NULL. |
 
 **List:** User = `desc`. Device = type enum. Brand/model = harvest columns (not Device table).
 
@@ -262,7 +262,7 @@ $manufacturer_regex = [
 | **D** | Soft UPDATE + optional cron (off by default) |
 | **E** | Lab enable on `.31` / golden |
 | **F** | SPA image / “as of” + phoneimages host (§9) — **shelved 2026-08-27** (partner-portal assets first; Handset text OK without images) |
-| **G** | SARK ETL #14 + drop `getVendorFromMac` |
+| **G** | previous PBX ETL #14 + drop `getVendorFromMac` |
 
 ---
 
@@ -318,7 +318,7 @@ $manufacturer_regex = [
 
 1. Vendor directory = lowercased `devicevendor` (`Yealink` → `yealink/`, `Snom` → `snom/`).  
 2. Filename from **`devicemodel` token only** (ignore display parentheses):  
-   - **Yealink:** first **three** chars of token → `T46U` / `T46G` → `T46.jpg` (SARK fuzzy).  
+   - **Yealink:** first **three** chars of token → `T46U` / `T46G` → `T46.jpg` (previous PBX fuzzy).  
    - **Snom:** `snom` + token → `D717` → `snomD717.jpg`.  
    - **Others:** conventional `{token}.jpg` or small override map if library names disagree.  
    - **Softphones (optional):** e.g. `zoiper/zoiper.jpg` logo; else no file.  

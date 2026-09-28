@@ -1,0 +1,15 @@
+# Naming — SBC vs carriers
+
+**The edge service is the SBC** (product / docs / UI / chat). Do **not** use a commercial ITSP name (including **Magrathea**) as a stand-in for the SBC, or as a generic product brand.
+
+| Say | Do not say |
+|-----|------------|
+| SBC, SBC admin, edge, OpenSIPS edge | Any ITSP name meaning “our edge” |
+| **upstream carrier**, **carrier Peer**, UK national carrier (example) | Magrathea / Magrathea Telecom in product docs or UI copy |
+| Dialect recipe by behaviour (e.g. UK national + PAID) | Branding a recipe “UK — Magrathea” in operator-facing labels |
+
+**Lab / private ops only:** Host nicknames, VIP gossip, and real carrier FQDNs (`*.magrathea.net`, etc.) may appear in **`~/GiT/pbx3-ops/`** or lab seed env vars when naming a specific box or live Peer — still prefer **SBC** + FQDN/IP in product docs and operator MkDocs.
+
+**Wire / schema follow-on:** Recipe id `uk-magrathea` and `carrier=magrathea` may still exist in code/DB until a dual-read rename ships — do not invent new product prose that uses the brand. See **`~/GiT/pbx3-ops/devdocs/oss-move/MAGRATHEA_NAMING_SCRUB.md`**.
+
+When editing docs or operator guidance, default to **SBC** and **upstream carrier**. If an older doc says Magrathea for the edge or an ITSP example, rewrite it.

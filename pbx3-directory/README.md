@@ -2,7 +2,7 @@
 
 **Status:** Stub only — not a deployed service yet. Defines the **instance directory** (control-plane index) for **Model B** central admin.
 
-**New here?** Read **`docs/FLEET_SYSTEM_OVERVIEW.md`** — plain-language, diagram-led introduction to the whole fleet (Instance / Tenant / SBC / S3). **Trunk/peering placement:** **`docs/FLEET_TRUNK_PEERING_DECISION.md`**. **DID assignment (central registry vs inroutes-only):** **`docs/DID_ASSIGNMENT_DESIGN.md`**. **Architecture review / drills:** **`docs/ARCHITECTURE_REVIEW_SCORECARD.md`**. **Grounding narrative (peer review):** **`docs/ARCHITECTURE_PEER_REVIEW.md`**. **Gatekeeper (B′):** **`gatekeeper/README.md`**. **Phase A Egress seed:** **`tools/seed-fleet-egress-trunk.sh`**.
+**New here?** Read **`docs/FLEET_SYSTEM_OVERVIEW.md`** — plain-language, diagram-led introduction to the whole fleet (Instance / Tenant / SBC / S3). **Trunk/peering placement:** **`docs/FLEET_TRUNK_PEERING_DECISION.md`**. **DID assignment (central registry vs inroutes-only):** **`docs/DID_ASSIGNMENT_DESIGN.md`**. **Architecture review / drills:** **`docs/ARCHITECTURE_REVIEW_SCORECARD.md`**. **Gatekeeper (B′):** **`gatekeeper/README.md`**. **Phase A Egress seed:** **`tools/seed-fleet-egress-trunk.sh`**.
 
 **Product direction:** **pbx3spa** repo — **`workingdocs/CENTRAL_ADMIN_DIRECTION.md`**
 

@@ -2,7 +2,7 @@
 
 **Status:** Direction locked **2026-08-24**; **Phases 1–4** on branch **`ufw-phase1`** (2026-08-25). Phase 5 optional.  
 **Repos when built:** **pbx3** (installer, package Depends, scripts, NetHelper) · **pbx3api** (FirewallController, syscommands ICMP/LE noise) · **pbx3spa** (FirewallView) · docs MkDocs install/firewall notes.  
-**Related:** [`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`](../pbx3-directory/docs/TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md) §11.4–11.7 · [`FLEET_TRUNK_PEERING_DECISION.md`](../pbx3-directory/docs/FLEET_TRUNK_PEERING_DECISION.md) · [`LETSENCRYPT_PER_TENANT_FQDN.md`](LETSENCRYPT_PER_TENANT_FQDN.md) · private ETL **`aelintra/sark-to-pbx3`** (§10) · Design Rules SIP-obscurity context (fleet no longer depends on home STRING match).
+**Related:** [`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`](../pbx3-directory/docs/TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md) §11.4–11.7 · [`FLEET_TRUNK_PEERING_DECISION.md`](../pbx3-directory/docs/FLEET_TRUNK_PEERING_DECISION.md) · [`LETSENCRYPT_PER_TENANT_FQDN.md`](LETSENCRYPT_PER_TENANT_FQDN.md) · private ETL **`private offline migrate tool`** (§10) · Design Rules SIP-obscurity context (fleet no longer depends on home STRING match).
 
 ---
 
@@ -204,17 +204,17 @@ Do **not** expose raw `iptables`/`nft` in v1. Advanced SSH remains for break-gla
 
 ---
 
-## 10. SARK → pbx3 migrate impact (ETL)
+## 10. previous PBX → pbx3 migrate impact (ETL)
 
-**Gap noted 2026-08-24:** the UFW decision was locked without an ETL pass; this section closes that. Private ETL: **`aelintra/sark-to-pbx3`**. Product strip already removed migrate from pbx3; firewall host state was never the ETL’s job.
+**Gap noted 2026-08-24:** the UFW decision was locked without an ETL pass; this section closes that. Private ETL: **`private offline migrate tool`**. Product strip already removed migrate from pbx3; firewall host state was never the ETL’s job.
 
-### 10.1 What SARK actually carries
+### 10.1 What previous PBX actually carries
 
 | Artifact | In `sarkbak` zip? | Notes (lab fixtures) |
 |----------|-------------------|----------------------|
 | `globals.fqdninspect` | Yes (DB) | Often **`YES`** on real sites (e.g. duncanrogers, regal, wdcvs, pdh3s01) |
 | `globals.sipflood` | Yes (DB) | Often **`NO`**; drives Shorewall `pbx3_inline_limit` today |
-| Tables `shorewall_blacklist` / `shorewall_whitelist` | Yes (DB) | Present in SARK schema; **empty** on sampled fixtures |
+| Tables `shorewall_blacklist` / `shorewall_whitelist` | Yes (DB) | Present in previous PBX schema; **empty** on sampled fixtures |
 | Table `threat` | Yes (DB) | Sampled empty; legacy UI noise |
 | Host `/etc/shorewall/pbx3_rules` (custom ACCEPTs) | **No** | Not in backup; lives only on the old box |
 | fail2ban ignoreip | **No** | Host-local |
@@ -230,12 +230,12 @@ ETL **v2** drops `shorewall_blacklist` / `shorewall_whitelist` from `TABLE_MAP` 
 | **M3** | **`sipflood`:** either map to a future UFW rate-limit (Phase 5) or force **`NO`** and drop Shorewall limit templates. Do not leave a YES that no longer applies any rules. |
 | **M4** | Drop `shorewall_blacklist` / `shorewall_whitelist` from ETL `TABLE_MAP` (or map into a documented UFW deny/allow sidecar **only if** fixtures show non-empty lists worth preserving). Sampled customer zips were empty — **default = drop**. |
 | **M5** | Custom host Shorewall rules are an **operator checklist** item (MkDocs migrate runbook): re-enter needed allows in the new Firewall SPA / UFW. No automatic dialect translator. |
-| **M6** | **`clid_blacklist`:** ignore for SARK migrate (stub never used in production). Greenfield tenant CLID blacklist is a **separate** product track — **`CLID_BLACKLIST_REQUIREMENTS.md`** (tenant-scoped; mutate requires auth; no open feature key in v1). Not host firewall. |
+| **M6** | **`clid_blacklist`:** ignore for previous-PBX migrate (stub never used in production). Greenfield tenant CLID blacklist is a **separate** product track — **`CLID_BLACKLIST_REQUIREMENTS.md`** (tenant-scoped; mutate requires auth; no open feature key in v1). Not host firewall. |
 
 ### 10.3 ETL / docs work when UFW ships
 
-1. **`sark-to-pbx3`:** M2–M4 in v2 transform + REQUIREMENTS lock row — **done 2026-08-25** (`REQUIREMENTS` **#13**; force `fqdninspect`/`sipflood` **NO**; drop shorewall_* + clid_blacklist from map). Fixture assert optional when next offline migrate run.  
-2. ~~**MkDocs migrate / first-boot:**~~ — **done 2026-08-25** in **`pbx3-docs`** `admin/firewall.md` (UFW baseline + SARK migrate note); Shorewall wording cleared on LE / login / cert / globals / API reference.  
+1. **`private offline migrate tool`:** M2–M4 in v2 transform + REQUIREMENTS lock row — **done 2026-08-25** (`REQUIREMENTS` **#13**; force `fqdninspect`/`sipflood` **NO**; drop shorewall_* + clid_blacklist from map). Fixture assert optional when next offline migrate run.  
+2. ~~**MkDocs migrate / first-boot:**~~ — **done 2026-08-25** in **`pbx3-docs`** `admin/firewall.md` (UFW baseline + previous-PBX migrate note); Shorewall wording cleared on LE / login / cert / globals / API reference.  
 3. **Product help (`tt_help_core`):** rewrite `fqdninspect` / firewall help away from Shorewall manpage links when SPA hides the control.  
 4. Optional later: if a customer zip has non-empty shorewall_* lists, add a one-off report (`migrate --firewall-report`) listing IPs for manual UFW entry — not a silent import into a missing table.
 
@@ -258,7 +258,7 @@ ETL **v2** drops `shorewall_blacklist` / `shorewall_whitelist` from `TABLE_MAP` 
 2. Phase 2 scripts + installer + fail2ban + LE.  
 3. Phase 3 API/SPA.  
 4. Phase 4 package purge + docs.  
-5. ~~**ETL M2–M4**~~ — **done 2026-08-25** in **`aelintra/sark-to-pbx3`**.  
+5. ~~**ETL M2–M4**~~ — **done 2026-08-25** in **`private offline migrate tool`**.  
 6. Phase 5 only if soak demands it.
 
 Track as product TODO open item pointing here; tip/host gossip stays in **`~/GiT/pbx3-ops/TODO_OPS.md`**.

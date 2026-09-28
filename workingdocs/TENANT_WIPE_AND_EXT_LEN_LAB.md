@@ -121,7 +121,7 @@ SPA: Tenant edit shows **Extension length**; Create Extension validates against 
 | Step | Action | Expect |
 |------|--------|--------|
 | Reject | Save route dialplan `_0.` or `_9.` or `_XX` | **422** `dialplan` (min &lt; 3) |
-| OK | `_XXX` / `_1XX` / `999 112` / `_00.` | **200** (SARK floor ≥ 3; any `ext_len`) |
+| OK | `_XXX` / `_1XX` / `999 112` / `_00.` | **200** (previous PBX floor ≥ 3; any `ext_len`) |
 | OK | `_0XXX. _00XX.` (UK seed) | **200** |
 | OK | `_9XXXX` | **200** |
 

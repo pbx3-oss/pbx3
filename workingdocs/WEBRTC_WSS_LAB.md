@@ -1,7 +1,7 @@
 # WebRTC lab notes — golden `:8089` baseline (2026-07-28)
 
 **Status:** Golden `:8089` singleton-direct path (historical baseline).  
-**2026-08-03 W1:** Magrathea edge path **lab green** — desk↔webphone both ways; **home instance TCP 8089 may be closed** (proven on golden). WSS terminates only on SBC; edge→home is ordinary SIP. Checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**.  
+**2026-08-03 W1:** SBC edge path **lab green** — desk↔webphone both ways; **home instance TCP 8089 may be closed** (proven on golden). WSS terminates only on SBC; edge→home is ordinary SIP. Checklist **`pbx3sbc/workingdocs/~/GiT/pbx3-ops/devdocs/oss-move/WEBRTC_W1_SBC_LAB.md`**.  
 **2026-08-03 (earlier):** After Mode 4 rebuild, TLS bind fix via **`apply-active-cert.sh`** (ssl-cert ACLs + Asterisk restart).
 
 ## Done
@@ -51,14 +51,14 @@ Confirm Shorewall **tcp 8089** + **udp 10000–20000** on **net** (not LAN-only)
 
 ## Fleet edge W1 (preferred multi-tenant) — architecture
 
-**Lab green 2026-08-03** including **home instance TCP 8089 closed** (AWS SG): Magrathea-path calls still work.
+**Lab green 2026-08-03** including **home instance TCP 8089 closed** (AWS SG): SBC-path calls still work.
 
 ### The cool part: WSS only at the edge
 
 OpenSIPS is a **proxy-registrar**, not a WSS tunnel to Asterisk:
 
 ```text
-Browser  ── SIP over WSS (TLS :8089/ws) ──►  Magrathea (sbc.pbx3.com)
+Browser  ── SIP over WSS (TLS :8089/ws) ──►  SBC (sbc.pbx3.com)
                                                     │
                                                     │ ordinary SIP UDP :5060
                                                     ▼
@@ -79,7 +79,7 @@ So fleet homes are **not** “WSS extensions” for edge browsers. Home PJSIP We
 - **`webrtc=yes`** still — browser **media** (ICE/DTLS), not “listen for WSS on :8089”
 - PrepDial fleet: `PJSIP/shortuid/sip:shortuid@tenant.fqdn` so dial hits SBC **usrloc** (not SIP.js dummy `192.0.2.x` Contact)
 
-**Side benefit (product):** one WSS edge / cert / port for all tenants; instances speak boring SIP; Track‑A / last-gen homes that already do SIP can share the same edge story without opening instance WSS to the world. **Close instance TCP 8089** for fleet Magrathea path — open it only for intentional **singleton-direct** lab (`wss://instance-fqdn:8089`).
+**Side benefit (product):** one WSS edge / cert / port for all tenants; instances speak boring SIP; Track‑A / last-gen homes that already do SIP can share the same edge story without opening instance WSS to the world. **Close instance TCP 8089** for fleet SBC path — open it only for intentional **singleton-direct** lab (`wss://instance-fqdn:8089`).
 
 ### Client settings
 
@@ -116,7 +116,7 @@ Desk phones normally take both notions (or proxy + domain). Many **webphones hav
 3. **Lab / line test** may stay **singleton-direct** `wss://instance-fqdn:8089` (current golden). That proves PBX WebRTC, not multi-tenant proxy-registrar.
 4. **Do not** invent public tenant DNS solely to “match” desk phones — desks never required that.
 
-See also **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WSS path) and desk proxy-registrar notes in **`SBC_PRODUCT_TRACKS.md`**. **Magrathea enable checklist:** **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**.
+See also **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WSS path) and desk proxy-registrar notes in **`SBC_PRODUCT_TRACKS.md`**. **SBC enable checklist:** **`pbx3sbc/workingdocs/~/GiT/pbx3-ops/devdocs/oss-move/WEBRTC_W1_SBC_LAB.md`**.
 
 ## Notes
 

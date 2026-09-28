@@ -38,10 +38,10 @@ From **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 and **`SBC_PRODUCT_TRACKS.md`**
 
 **Triggers to unpark (existing):**
 
-1. **Track A** — foreign PBX (SARK / FreePBX) behind SBC where bypass is insufficient.
+1. **Track A** — foreign PBX (previous PBX / FreePBX) behind SBC where bypass is insufficient.
 2. **Peer forbids bypass** — carrier or ITSP requires a single public media face / topology hiding.
 3. **LAN-edge** — home on LAN, public remote party; **chunked RTP DNAT** pilot fails or is rejected for ops.
-4. **WebRTC ↔ legacy non-WebRTC** — signaling-only WSS gateway does not yield browser audio; **media** gateway required (**§6.1** — may never be worth it for oldest SARK; separate go/no-go).
+4. **WebRTC ↔ legacy non-WebRTC** — signaling-only WSS gateway does not yield browser audio; **media** gateway required (**§6.1** — may never be worth it for oldest previous PBX; separate go/no-go).
 
 **Prefer before rtpengine (lab / small-N):** chunked RTP port-forwards (**`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** T4 optional carrier subsection).
 

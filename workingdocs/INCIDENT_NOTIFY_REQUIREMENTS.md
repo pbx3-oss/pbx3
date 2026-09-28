@@ -1,7 +1,7 @@
 # Incident notify — requirements (locked sketch)
 
 **Status:** Product direction locked **2026-08-11**. **Not scheduled** (nice feature; not first-out).  
-**Heritage:** SARK `mcstcaller.php` + `/etc/asterisk/sark_mcstcnf.conf` — customer-defined callgroups; fan-out voice into a conference + optional SMS. Originated for a RoRo ferry ops use-case (qualified personnel into a bridge on “incident”).  
+**Heritage:** previous PBX `mcstcaller.php` + `/etc/asterisk/sark_mcstcnf.conf` — customer-defined callgroups; fan-out voice into a conference + optional SMS. Originated for a RoRo ferry ops use-case (qualified personnel into a bridge on “incident”).  
 **Related:** Existing tenant **`meetme`** / GenAst **ConfBridge** · greetings · **not** fleet ops SMTP (`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`) · TODO parked item.  
 **Repos when built:** **pbx3** (schema + GenAst + originator) · **pbx3api** (CRUD + fire) · **pbx3spa** (panel). No Gatekeeper / SBC change for v1.
 
@@ -21,7 +21,7 @@ Let a **tenant admin** define named **incident teams** (voice destinations + opt
 | **I1** | **Customer defines “incident.”** Product does **not** detect incidents. Trigger = dialplan feature / shortcode (v1) + optional authenticated **Fire** API (v1.1). |
 | **I2** | **Voice first, SMS second.** v1 must ship usable callout→ConfBridge without SMS. SMS is a pluggable adapter; one concrete provider in v1 is enough. |
 | **I3** | **Reuse ConfBridge / `meetme`.** Do not reintroduce MeetMe. Incident group points at an existing (or auto-created) conference room. |
-| **I4** | **UI is part of the product.** SARK was INI-only; PBX3 ships SPA CRUD + test fire. No operator-edited Asterisk INI as the admin surface. |
+| **I4** | **UI is part of the product.** previous PBX was INI-only; PBX3 ships SPA CRUD + test fire. No operator-edited Asterisk INI as the admin surface. |
 | **I5** | **SMS = provider interface**, not hardwired Clickatell in a script. Config selects handler + secrets; new carriers = new adapter class/module. |
 | **I6** | **Distinct from fleet ops notify.** Ops probe/SMTP = instance/MSP plane. Incident notify = tenant response team. Do not merge UIs or event models. |
 | **I7** | **Solo and fleet.** Same tenant feature on both; fleet mobility follows tenant DB (no SBC special-case). |
@@ -71,7 +71,7 @@ Tenant-scoped tables (names illustrative):
 | `room` | FK/`pkey` into `meetme` |
 | `greeting` | Sound / greeting id (same family as queues/IVR) |
 | `callerid` / alphatag | Outbound CLIP for callouts |
-| `waittime`, `maxretries`, `retrytime` | Originate behaviour (SARK defaults OK) |
+| `waittime`, `maxretries`, `retrytime` | Originate behaviour (previous PBX defaults OK) |
 | `sms_enabled` | YES/NO |
 | `sms_msg` | Body (cap ~160 for GSM adapters) |
 | `active` | YES/NO |
@@ -111,11 +111,11 @@ Provider fields (instance or tenant): `smshandler`, `smsuser` / `smsapiid`, `sms
 | REST `POST …/incident-teams/{id}/fire` | Soft yes (same as Test fire) | External webhook / automation |
 | AMI / cron / probe hooks | No | Optional |
 
-Custom apps like SARK `mcastdial` are **generated** from DB (GenAst), not hand-maintained contexts per site.
+Custom apps like previous PBX `mcastdial` are **generated** from DB (GenAst), not hand-maintained contexts per site.
 
 ### 6.2 Voice path
 
-Prefer **AMI Originate** (or call files under `/var/spool/asterisk/outgoing` as SARK did — either is fine; AMI is easier to observe from API). On answer: context that plays greeting then `ConfBridge(${room})`.
+Prefer **AMI Originate** (or call files under `/var/spool/asterisk/outgoing` as previous PBX did — either is fine; AMI is easier to observe from API). On answer: context that plays greeting then `ConfBridge(${room})`.
 
 Resolve destinations:
 
@@ -124,7 +124,7 @@ Resolve destinations:
 | Extension | Local PJSIP endpoint for that tenant |
 | External | Via tenant outbound / Egress path (same as normal dial) |
 
-Concurrency: fan-out all members (SARK behaviour). No “first answer wins / cancel others” in v1 (that is a different product = ring group / page).
+Concurrency: fan-out all members (previous PBX behaviour). No “first answer wins / cancel others” in v1 (that is a different product = ring group / page).
 
 ### 6.3 SMS path
 
@@ -145,7 +145,7 @@ interface IncidentSmsProvider {
 }
 ```
 
-Do **not** copy SARK’s dynamic `$smsvars['smshandler']($smsvars)` call — register adapters in a map.
+Do **not** copy previous PBX’s dynamic `$smsvars['smshandler']($smsvars)` call — register adapters in a map.
 
 ---
 
@@ -168,7 +168,7 @@ Panel pattern: existing list/detail (**`PANEL_PATTERN.md`**). Nav under tenant F
 - Automatic incident detection / correlation
 - Two-way SMS, delivery receipts UI, opt-out compliance packs
 - Schedules, escalation ladders, on-call rotations (PagerDuty-class)
-- Multicast RTP paging (different SARK `mcast` feature)
+- Multicast RTP paging (different previous PBX `mcast` feature)
 - Merging with fleet ops notification
 - Per-carrier billing / SKU metering
 - Recording the bridge by default (optional later via existing conf record hooks if any)

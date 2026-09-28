@@ -25,7 +25,7 @@
 
 - [ ] Fleet instance with **SBC in path** (v1: singleton multi-tenant without SBC cannot use prefixes).  
 - [ ] Packages with short dial: **pbx3 ≥ 0.0.4-6**, **pbx3cagi ≥ 1.0.0-11** (PrefixDial + GenAst patterns).  
-- [ ] Magrathea (or fleet SBC): **usrloc miss → domain dispatcher** for `ext@tenant.fqdn` (slice B).  
+- [ ] SBC (or fleet SBC): **usrloc miss → domain dispatcher** for `ext@tenant.fqdn` (slice B).  
 - [ ] Sister site(s) live as **tenant FQDNs** on fleet (dispatcher setid correct).  
 - [ ] You can log in as **instance admin** (Dial prefixes panel is admin-only).  
 - [ ] Commit / genAst available after prefix CRUD on **each** home that hosts a calling tenant.
@@ -192,7 +192,7 @@ Sister sites almost always live on **different** instances.
 | Expect unique-ext bare dial forever | Model rejected |
 | Feature codes after prefix (`81*…`) | Digits-only remainder (locked) |
 | Gatekeeper lookup at dial | Rule 1 |
-| Convert FreePBX site dial with this doc alone | Separate ETL; this recipe is **InterSARK / INTERSITE → dial prefixes** on pbx3 |
+| Convert other-PBX site dial with this doc alone | Separate ETL; this recipe is **InterSARK / INTERSITE → dial prefixes** on pbx3 |
 
 ---
 

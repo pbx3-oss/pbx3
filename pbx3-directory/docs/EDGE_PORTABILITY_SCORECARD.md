@@ -17,7 +17,7 @@
 
 ### Preferred escape hatch (locked 2026-07-20)
 
-**Peer (or cascade), don’t replace.** Same posture as Magrathea: a commercial SBC is another SIP upstream/downstream peer on **our** edge (`dr_gateways` / routes). Keep pbx3sbc as phone/node registrar and fleet projection target. Full BYO-edge (second `SbcFleetAdapter` binding) only if a customer requires **our** OpenSIPS off the phone path — rarer, and not a vocabulary-rename project.
+**Peer (or cascade), don’t replace.** Same posture as SBC: a commercial SBC is another SIP upstream/downstream peer on **our** edge (`dr_gateways` / routes). Keep pbx3sbc as phone/node registrar and fleet projection target. Full BYO-edge (second `SbcFleetAdapter` binding) only if a customer requires **our** OpenSIPS off the phone path — rarer, and not a vocabulary-rename project.
 
 Organic OpenSIPS nouns (`setid`, dispatcher) stay acceptable while we are the edge; they name our box correctly under the peer model.
 

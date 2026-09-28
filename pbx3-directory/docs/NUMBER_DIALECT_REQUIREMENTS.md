@@ -1,6 +1,6 @@
 # Number dialect requirements (PSTN)
 
-**Status:** Requirements locked for UK-first implementation (Magrathea + Gamma).  
+**Status:** Requirements locked for UK-first implementation (SBC + Gamma).  
 **Taxonomy lock (2026-08-12):** presets are **format recipes** parameterized by country (`default_cc` / trunk / IDD) — **not** a per-carrier or per-country vendor catalog. See §5.3.  
 **Ops profile lock (2026-08-12):** composing a new recipe from shipped primitives must **not** require a code tip. See §5.4.  
 **Face grammar lock (2026-08-12):** `[+]? [IDD]? (CC | seize) NSN` — CC and seize are **OR’d**, never stacked. See §5.1.  
@@ -12,8 +12,8 @@ Carriers disagree on **wire formats** for dialled numbers and CLI:
 
 | Form | Example (UK) | Typical use |
 |------|----------------|-------------|
-| National | `01924918076` | Magrathea / Gamma accept on R-URI |
-| IDD | `00441924918076` | Magrathea accept |
+| National | `01924918076` | SBC / Gamma accept on R-URI |
+| IDD | `00441924918076` | SBC accept |
 | E.164 digits | `441924918076` | Some trunks / older peers |
 | **+E.164** | `+441924918076` | Fleet wire; Teams / modern SIP |
 
@@ -26,7 +26,7 @@ Cross-carrier trunking (DID on carrier A, egress on carrier B) requires **normal
 | **Inventory key / HoR** | E.164 **digits only** (no `+`), e.g. `441924918076` — matches catalog `e164_key` |
 | **Canonical wire (+E.164)** | Digit string with leading `+`, e.g. `+441924918076` — **fleet internal** form between node ↔ SBC and toward Asterisk after inbound normalize |
 | **Carrier dialect** | What a Peer accepts inbound and requires outbound (dialled + CLI headers) |
-| **Network number** | Trusted CLI (often PAID) — Magrathea LI |
+| **Network number** | Trusted CLI (often PAID) — SBC LI |
 | **Presentation number** | Display CLI (RPID / From when ≠ network) |
 
 ### 2.1 Why +E.164 on the wire
@@ -126,13 +126,13 @@ Custom: **§5.4** — ops-authored profiles / slot composition without a tip; v1
 | Do | Do not |
 |----|--------|
 | Treat a preset as a **format recipe** (which inbound faces, outbound dial render, CLI headers/privacy) | Mint one preset per carrier logo or per country flag |
-| Parameterize national/IDD with **`default_cc`** (and later trunk / IDD access codes as Peer or serving-country data) | Encode Magrathea / Gamma / Brindley / “Germany” as separate dialect ids when the transform matrix is the same |
+| Parameterize national/IDD with **`default_cc`** (and later trunk / IDD access codes as Peer or serving-country data) | Encode SBC / Gamma / Brindley / “Germany” as separate dialect ids when the transform matrix is the same |
 | Add a **new recipe** only when the accept/render/CLI **matrix** differs (e.g. strict-plus vs national+IDD+PAID/RPID vs NANP habit shapes) | Grow the Filament dropdown toward an ITSP provider list |
-| Keep Magrathea / Gamma as **published carrier anchors** (§6) that *use* a recipe | Rename every new Peer into the taxonomy |
+| Keep SBC / Gamma as **published carrier anchors** (§6) that *use* a recipe | Rename every new Peer into the taxonomy |
 
 **Scale model (world):** a handful of dialing-plan **families** (strict `+E.164`; digit E.164; national+trunk; IDD; NANP specials) × country parameters — not ~250 presets. Most countries share SIP faces and differ mainly by CC / trunk / IDD. Node **serving country** owns phone habit → `+CC…` (Phase 1); Peer dialect owns carrier wire face.
 
-**v1 names:** `uk-magrathea` / `uk-gamma` are lab convenience labels for two CLI-header variants of the same UK multi-accept family. When dialects are next revised, prefer recipe-oriented ids/labels; keep carrier names in docs and `carrier=` attrs, not as the preset taxonomy.
+**v1 recipe ids:** `uk-magrathea` / `uk-gamma` are historical wire tokens for two CLI-header variants of the same UK multi-accept family (UI labels are behavioural — e.g. “UK — Upstream carrier (PAID + RPID)”). Prefer recipe-oriented ids when dialects are next revised; do not brand new presets after a commercial ITSP.
 
 **Peer still carries** host, auth, and `carrier=` / `role=` — those are not dialects.
 
@@ -159,19 +159,16 @@ Custom: **§5.4** — ops-authored profiles / slot composition without a tip; v1
 
 ## 6. Carrier matrices (published anchors)
 
-### 6.1 Magrathea
+### 6.1 UK upstream carrier (PAID + RPID recipe)
 
 Sources:
 
-- [Line Identity (LI) Agreement](https://www.magrathea-telecom.co.uk/wp-content/uploads/2018/09/LI-Agreement-1.pdf)  
-- [Guidance on network and presentation numbers](https://www.magrathea-telecom.co.uk/wp-content/uploads/2018/11/Guidance-on-Network-and-Presentation-numbers.pdf)  
-- [Client Handbook](https://www.magrathea-telecom.co.uk/wp-content/uploads/CLIENT-HANDBOOK-13.pdf)  
 - Lab: national / +E.164 / IDD delivery observed on DID inbound  
 
 | Direction | Field | Accept / send |
 |-----------|--------|----------------|
 | Inbound | R-URI user | national `0…`, `+E.164`, IDD `00…`, digits |
-| Outbound | R-URI | Prefer `+E.164`; national/IDD also accepted by Magrathea |
+| Outbound | R-URI | Prefer `+E.164`; national/IDD also accepted by SBC |
 | Outbound | CLI | Digits and `+` only in userpart; **PAID** = network; **RPID** (or From ≠ PAID) = presentation; always send a valid dialable CLI (withhold via Privacy, do not omit) |
 
 ### 6.2 Gamma
@@ -199,9 +196,9 @@ Default configuration: B-numbers **presented to the customer** with a **leading 
 
 ## 7. Cross-carrier scenario
 
-DID owned by Magrathea, egress via Gamma:
+DID owned by SBC, egress via Gamma:
 
-1. Inbound Magrathea Peer (`dialect=uk-magrathea`) normalizes DID + caller to digit key / +E.164 toward node.  
+1. Inbound upstream carrier Peer (`dialect=uk-magrathea`) normalizes DID + caller to digit key / +E.164 toward node.  
 2. Node applies tenant policy (which CLI); dials Egress with **+E.164** dialled + CLI.  
 3. SBC `do_routing(0)` selects Gamma outbound Peer (`dialect=uk-gamma`); render dialled + CLI for Gamma.  
 
@@ -215,19 +212,19 @@ Inventory `carrier` hint on DID is ops-only; **transforms follow the Peer that i
 - **DNID:** Egress trunk **transformation mask** converts subscriber habit → `+CC…` (UK seed `00:+ 0:+44` — longer prefix first; US needs `011:+` etc. — do not apply UK national rules on a US node).
 - **CLID:** Node sends CLIP **as stored** (no transform mask today). Prefer `+CC…` in extension/cluster/trunk CLI fields; carrier PAID/RURI shape is **SBC outbound dialect**.
 - Overseas examples: UK→US `0015139266349` → `+15139266349`; US→UK `011441924918076` → `+441924918076` (after the right node transform).
-- Do **not** duplicate Magrathea/Gamma header rules on the node.
+- Do **not** duplicate SBC/Gamma header rules on the node.
 
 ## 9. Lab acceptance
 
 | # | Case | Pass |
 |---|------|------|
-| M1 | Magrathea inbound DID as national / +E.164 / IDD | Routes to same tenant; Asterisk sees +E.164 |
-| M2 | Magrathea outbound dial + CLI (+ PAID/RPID) | Call completes; CLI valid |
+| M1 | upstream carrier inbound DID as national / +E.164 / IDD | Routes to same tenant; Asterisk sees +E.164 |
+| M2 | upstream carrier outbound dial + CLI (+ PAID/RPID) | Call completes; CLI valid |
 | M3 | Privacy withhold | Privacy set; CLI still present |
 | G1 | Gamma outbound +E.164 dial + CLI | Call completes |
 | G2 | Gamma inbound national or + | Same as M1 shape |
 | G3 | Gamma outbound national `0…` and/or IDD `00…` B-number (if testing multi-accept) | Call completes (optional; published accept per §6.2) |
-| X1 | DID Magrathea + egress Gamma | Dialled + CLI rendered for Gamma |
+| X1 | DID SBC + egress Gamma | Dialled + CLI rendered for Gamma |
 
 Unit tests in **pbx3sbc-admin** cover preset parse/render matrices offline.
 

@@ -1,6 +1,6 @@
 # SBC high availability — requirements (VIP/EIP + warm standby)
 
-**Status:** **Requirements reopened (2026-07-21)** for **control-plane promote modes**. Topology / VIP / local-DB / RTO locks from **2026-07-20** stand. Lab **FO pair** + warm sync + manual EIP promote: SIP ~**6 s**; LE + HTTPS login on new active closed same day. Cast-iron **managed** checklist: **`pbx3-docs`** `fleet/sbc-ha-promote.md`. Live Magrathea / `sbc.pbx3.com` not pointed at FO EIP.  
+**Status:** **Requirements reopened (2026-07-21)** for **control-plane promote modes**. Topology / VIP / local-DB / RTO locks from **2026-07-20** stand. Lab **FO pair** + warm sync + manual EIP promote: SIP ~**6 s**; LE + HTTPS login on new active closed same day. Cast-iron **managed** checklist: **`pbx3-docs`** `fleet/sbc-ha-promote.md`. Live SBC / `sbc.pbx3.com` not pointed at FO EIP.  
 **Related:** **`FLEET_TRUNK_PEERING_DECISION.md`** §6; **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** (cold DR ≠ HA promote); **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`**; **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`**; **`DESIGN_RULES.md`** Rule 1, Rule 9, Rule 13.
 
 ---

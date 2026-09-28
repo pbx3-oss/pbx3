@@ -12,7 +12,7 @@
 
 ## Problem
 
-Operators need to home a **built** tenant sqlite on a fleet instance (not only mint an empty tenant via Create). Sources include SARK offline ETL split DBs, a DB taken from **another fleet**, or other external one-tenant artifacts. Merge + catalog + SBC **domain** alone do **not** deliver PSTN — **Fleet DID attach (hop-1)** remains a required follow-on unless the tenant is extension/intersite-only.
+Operators need to home a **built** tenant sqlite on a fleet instance (not only mint an empty tenant via Create). Sources include offline-migrate split DBs (private tooling), a DB taken from **another fleet**, or other external one-tenant artifacts. Merge + catalog + SBC **domain** alone do **not** deliver PSTN — **Fleet DID attach (hop-1)** remains a required follow-on unless the tenant is extension/intersite-only.
 
 ## Product decision
 
@@ -20,9 +20,9 @@ Operators need to home a **built** tenant sqlite on a fleet instance (not only m
 |----------|------|
 | Who ingests | **Fleet / ops** (MSP / NOC) — not end-customer self-serve |
 | v1 surface | **Ops/CLI first** (home artisan + catalog/SBC enroll). Gatekeeper API + Fleet SPA = **later**, same stages |
-| Input artifact | **Direct** one-`cluster` pbx3 sqlite (lab primary: sark-to-pbx3 **split** `.db`). Not “must wrap as mobility zip” |
+| Input artifact | **Direct** one-`cluster` pbx3 sqlite (lab primary: offline-migrate **split** `.db`). Not “must wrap as mobility zip” |
 | Source-agnostic | Same merge + enroll + **DID attach** runbook whether the DB came from ETL, another fleet, or elsewhere |
-| ETL #17 | **Unchanged** when source is sark-to-pbx3 — split keeps full `globals` + inactive `trunks` for offline inspect; product **strips** on ingest |
+| Offline migrate split | **Unchanged** when source is private offline migrate — split keeps full `globals` + inactive `trunks` for offline inspect; product **strips** on ingest |
 | Create vs ingest | Create = empty cluster + seeds. Ingest = merge **built** payload; **do not** re-seed `MainOut` / CoS when those tables already have rows |
 | Mobility vs ingest | Mobility = move **already-fleet** tenant (zip; preserve identity). Ingest = **first** home of an **external** built DB on this fleet (may remint opaque keys on collision) |
 | DID attach | **Required runbook stage** after catalog + SBC domain when the tenant needs PSTN delivery — **not** auto inside `tenant:ingest-built`. Use Fleet DIDs Allocate → project (hop-1). Hop-2 `inroutes` stay instance-authored ([`FLEET_DID_HOP1_LOCK.md`](../pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md)) |
@@ -43,7 +43,7 @@ Same as create: fleet owns home + catalog + SBC domain; instance owns day-2 PBX 
 
 ## Human process (happy path v1)
 
-1. Obtain **external** one-tenant `.db` (e.g. sark-to-pbx3 `migrate-offline` → `split-tenants`, or export from another fleet).
+1. Obtain **external** one-tenant `.db` (e.g. private offline migrate → split tenants, or export from another fleet).
 2. If `cluster.pkey` is `default` / empty / colliding: rename in a copy of the candidate DB (MkDocs §0).
 3. Ops: copy `.db` to target **fleet home**; run ingest CLI (dry-run then apply).
 4. Node merges tenant rows; remints opaque keys only if needed; FQDN + fleet route normalize.
@@ -98,7 +98,7 @@ Synchronous v1 (no durable Rule-14 job). Rule 11: other tenants’ calls unaffec
 | **I3** Artisan CLI e.g. `tenant:ingest-built {path.db}` (+ `--dry-run`); lab recipe (e.g. `flixton.db`) | pbx3api + ops notes | **Done** — `php artisan tenant:ingest-built /path/to/flixton.db --dry-run` |
 | **I4** Catalog + SBC enroll using create-family tools / Gatekeeper register + domain; document resume | ops + existing Gatekeeper | **Ops checklist** (below) — no new Gatekeeper API yet |
 | **I5** Gatekeeper `…/tenants/ingest` + Fleet SPA | gatekeeper + pbx3spa | Later |
-| **I6** Optional ETL dual-emit mobility zip | sark-to-pbx3 | Optional later — **not** required by this lock |
+| **I6** Optional ETL dual-emit mobility zip | offline migrate (private) | Optional later — **not** required by this lock |
 
 ## Ops enroll checklist (I4 — after successful merge)
 
@@ -131,9 +131,9 @@ Ensure catalog Name/`label` = tenant **`pkey`** (create path sets `label=pkey`; 
 
 ### Lab mule (Flixton)
 
-Smoke artifact (gitignored ETL work tree):
+Smoke artifact (private offline-migrate work tree — path on ops Mac; not in product git):
 
-`~/GiT/sark-to-pbx3/work/fixture-smoke-backups-20260927/pdh3s02-tenants/flixton.db`
+`…/work/fixture-smoke-backups-*/…/flixton.db`
 
 ```bash
 # On the fleet home (after rsync tip pbx3api):
@@ -146,7 +146,7 @@ Unit coverage: `pbx3api` `tests/Unit/BuiltTenantIngestTest.php` (preserve, remin
 
 ## Non-goals (v1)
 
-- Changing sark-to-pbx3 #17 split contract (drop globals/trunks or zip-only output)
+- Changing private offline-migrate split contract (drop globals/trunks or zip-only output)
 - Requiring mobility zip as the only ingest input
 - **Auto** DID inventory / hop-1 project **inside** `tenant:ingest-built` (operator uses Fleet DIDs; documented as stage 3)
 - Auto-seeding hop-2 `inroutes` from Allocate

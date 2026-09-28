@@ -8,7 +8,7 @@
 
 ## Product decision (2026-08-19)
 
-Operators **Commit** after most admin saves. Same bar as SARK: **`genAst.sh` + reload** — **no** full **`systemctl restart asterisk`** on Commit; **active calls must not drop**.
+Operators **Commit** after most admin saves. Same bar as previous PBX: **`genAst.sh` + reload** — **no** full **`systemctl restart asterisk`** on Commit; **active calls must not drop**.
 
 | Decision | Lock |
 |----------|------|

@@ -189,7 +189,7 @@ final class SbcFleetClient
 
     /**
      * S10.5 — ensure domain row exists with setid.
-     * Optional label / tenant_shortuid projected into domain attrs for Magrathea Domain Routes UI.
+     * Optional label / tenant_shortuid projected into domain attrs for SBC Domain Routes UI.
      *
      * @return array<string, mixed>
      */

@@ -4,7 +4,7 @@
 **Audience:** Operators and implementers configuring fleet PSTN.  
 **Detail / decision log:** [`NUMBER_WIRE_STANDARD_DRAFT.md`](NUMBER_WIRE_STANDARD_DRAFT.md) · Peer dialects: [`NUMBER_DIALECT_REQUIREMENTS.md`](NUMBER_DIALECT_REQUIREMENTS.md) · Phase-1 node practice: [`EGRESS_PLUS_E164_WIRE.md`](../../workingdocs/EGRESS_PLUS_E164_WIRE.md) · Trunk face program: [`TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`](TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md)
 
-**Naming:** Say **the SBC** for our edge. **Magrathea** / **Gamma** are UK ITSP **Peers** the SBC talks *to* — not the SBC.
+**Naming:** Say **the SBC** for our edge. **SBC** / **Gamma** are UK ITSP **Peers** the SBC talks *to* — not the SBC.
 
 ---
 
@@ -44,7 +44,7 @@ Phase 2 (gated, optional):
 ## Hard rules
 
 1. **Valid E.164 to the SBC** — the tenant/home forms it; SBC may **`400 E.164 required`** if not.  
-2. **Carrier face never on the PBX** — no “this trunk is Magrathea so use `0`.”  
+2. **Carrier face never on the PBX** — no “this trunk is SBC so use `0`.”  
 3. **Never both** node habit-Mangle and SBC habit-normalize on the same call.  
 4. **Never neither** — do not empty Egress transform while SBC habit-accept is off.  
 5. **DID prefixes** on the SBC = digit E.164; **inroutes** on the node = `+E.164`.  

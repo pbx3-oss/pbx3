@@ -15,7 +15,7 @@
     "sip_prefix": {
       "type": "string",
       "pattern": "^[0-9]{1,20}$",
-      "description": "Optional OpenSIPS dr_rules prefix (digits as carrier presents R-URI user). Default = e164 without +. Lab Magrathea often needs UK national e.g. 01924918076 while e164 is +441924918076. Required when delivery=block (shorter than e164 digits)."
+      "description": "Optional OpenSIPS dr_rules prefix (digits as carrier presents R-URI user). Default = e164 without +. Lab upstream carriers often need UK national e.g. 01924918076 while e164 is +441924918076. Required when delivery=block (shorter than e164 digits)."
     },
     "delivery": {
       "type": "string",

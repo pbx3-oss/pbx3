@@ -250,7 +250,7 @@ Adding member \(k+1\) with routing prefix already set:
 - [ ] Managed rows not editable on instance SPA.  
 - [ ] Unknown prefix → deny (existing).  
 - [ ] Prefix uniqueness validated at assign / join.  
-- [ ] **Length namespaces** — short-dial pattern length = `prefix_width + dest.ext_len`; must be `>` caller `ext_len`; OutRoute min match floor **≥ 3** (SARK; not tied to `ext_len`) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 / Q15 / **§3.8.1** (queues/IVRs only reachable if dial # length = `dest.ext_len`) — **done #4c 2026-08-10**.  
+- [ ] **Length namespaces** — short-dial pattern length = `prefix_width + dest.ext_len`; must be `>` caller `ext_len`; OutRoute min match floor **≥ 3** (previous PBX; not tied to `ext_len`) — **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 / Q15 / **§3.8.1** (queues/IVRs only reachable if dial # length = `dest.ext_len`) — **done #4c 2026-08-10**.  
 - [ ] v1 single cohort per tenant.  
 - [ ] **Lab remedial:** on join / Sync, **remove unmanaged** cross-tenant `dialalias` rows for that tenant (or replace with managed). No dual source of truth. **Not** an SBC cleanup — prefixes are node-local only.
 

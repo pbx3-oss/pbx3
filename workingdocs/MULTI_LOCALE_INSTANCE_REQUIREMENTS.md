@@ -13,7 +13,7 @@ One fleet **instance** can own DIDs and Peers in **more than one country**. Inbo
 - **USA (and similar strict CLIP-auth Peers):** the carrier rejects CLIP it has not authorised (lab: Twilio **403** on UK CLI). **Outside the USA (typical ITSP):** operators can often present CLIDs the carrier does not “know” in advance after a signed disclaimer — dest-based Peer pick is the product shape, not CLIP-auth per dest.
 - Many handsets **cannot dial `+`**; users fall back to the **serving country’s IDD** (NANP `011…`, UK `00…`).
 
-Persona: *I live in the USA; my business is in the UK.* Desk habit is US; UK numbers and Magrathea (etc.) still matter.
+Persona: *I live in the USA; my business is in the UK.* Desk habit is US; UK numbers and SBC (etc.) still matter.
 
 **Survival without new product (proved Toliman):** a **nationally homed** instance already works for cross-border — primary mangle + **IDD to the other CC** (`01144…` from US) + matching CLIP. No unhomed mode, no multi-Egress, no smart-route locale engine required. Everything below is posture choice / UX, not a go-live blocker.
 
@@ -21,7 +21,7 @@ Persona: *I live in the USA; my business is in the UK.* Desk habit is US; UK num
 
 | Attempt | Result | Lesson |
 |---------|--------|--------|
-| Dial UK mobile `07949943282` with US Egress `011:+ 1:+1` | FAIL — DNID left national; Brindley/Magrathea path congested | US mangle does not interpret UK seize `0` |
+| Dial UK mobile `07949943282` with US Egress `011:+ 1:+1` | FAIL — DNID left national; Brindley/SBC path congested | US mangle does not interpret UK seize `0` |
 | CLIP only on Egress while ext still had `+1…` | FAIL — ext CLIP wins | Multi-identity must be on the **station** (or win over trunk) |
 | Ext CLIP → UK `01924918076`, still dial `07…` | FAIL — CLIP OK on wire; DNID still wrong | CLIP ≠ DNID |
 | Dial `011447949943282` (+ UK CLIP) | **OK** | Serving-locale **IDD** → `+E.164` is the cross-border dial path |
@@ -38,7 +38,7 @@ Two postures fit the persona. **§3.A is locked** (2026-08-19). **§3.B** is not
 |-------|-------------|-------------|
 | Serving locale / mangle | `00:+ 0:+44` | `011:+ 1:+1` |
 | DIDs / CLIP | UK | US |
-| Peers | Magrathea / … | Twilio / … |
+| Peers | SBC / … | Twilio / … |
 | What the human dials | UK national / `00…` | US national / `011…` |
 | Phone | Identity A (reg to UK home) | Identity B (reg to US home) |
 
@@ -85,12 +85,12 @@ Still valid for “one PBX, many countries,” but fights the simple mangle and 
 
 | Region / Peer class | CLIP | Routing |
 |---------------------|------|---------|
-| **Typical non-US ITSP** (UK Magrathea / Gamma / …) | Carrier often accepts CLIDs it has not provisioned in advance; operator signs a **disclaimer**. Product may present the station CLIP as stored. | Several Peers **in the same outbound group**: **priority / failover** (Magrathea unless unavailable) and **dest-class** (e.g. `800` / freephone → Gamma, else Magrathea). OpenSIPS `dr_rules` prefix + `gwlist` / `use_next_gw` — not a fight with Twilio. |
+| **Typical non-US ITSP** (UK SBC / Gamma / …) | Carrier often accepts CLIDs it has not provisioned in advance; operator signs a **disclaimer**. Product may present the station CLIP as stored. | Several Peers **in the same outbound group**: **priority / failover** (SBC unless unavailable) and **dest-class** (e.g. `800` / freephone → Gamma, else SBC). OpenSIPS `dr_rules` prefix + `gwlist` / `use_next_gw` — not a fight with Twilio. |
 | **USA / strict CLIP-auth** (Twilio lab) | CLIP must be an identity that Peer has authorised — unknown CLI → **403**. | Dest pick only **inside the US group**. Must **not** share the UK group’s prefix table (**§9 / #5d**). |
 
-**UK example (in-group, not steal):** Magrathea first; Gamma on Magrathea fail **or** for a dest class (0800…). That is ordinary drouting inside `serving_cc=44`.
+**UK example (in-group, not steal):** SBC first; Gamma on the SBC fail **or** for a dest class (0800…). That is ordinary drouting inside `serving_cc=44`.
 
-**Symmetric steal (global table):** a **UK-homed** user dials a **NANP** dest (`1…` / `011…`) → Twilio `prefix=1` wins, Magrathea never sees it (CLIP 403). A **US-homed** user dials a **UK** dest (`44…` / `01144…`) → Magrathea `prefix=44` wins, Twilio never sees it. Cross-border dest is **valid §3.A** (IDD from the serving locale). Peer must follow **origin home**, not dest CC. Split groups: UK group sends NANP → Magrathea; US group sends `44` → Twilio.
+**Symmetric steal (global table):** a **UK-homed** user dials a **NANP** dest (`1…` / `011…`) → Twilio `prefix=1` wins, SBC never sees it (CLIP 403). A **US-homed** user dials a **UK** dest (`44…` / `01144…`) → SBC `prefix=44` wins, Twilio never sees it. Cross-border dest is **valid §3.A** (IDD from the serving locale). Peer must follow **origin home**, not dest CC. Split groups: UK group sends NANP → SBC; US group sends `44` → Twilio.
 
 ### 3.E Direction — mixed nationality capability; mangle is the bind
 
@@ -105,7 +105,7 @@ Still valid for “one PBX, many countries,” but fights the simple mangle and 
 | **SBC mangle from tenant `serving_cc`** (number-wire Phase 2) | Node passthrough; habit is catalog fact | Move = setid only; habit + origin Peer group follow the tenant |
 | **No national mangle** (digit E.164 / IDD only) | Easy mix | Easy move; desk habit is the cost |
 
-**Carriers** already belong on the SBC (`FLEET_TRUNK_PEERING_DECISION.md`). If #5d selects the outbound **group by tenant origin** (From domain), the instance is **not** nationally bound by Magrathea vs Twilio — only by **mangle** if mangle stays instance-wide.
+**Carriers** already belong on the SBC (`FLEET_TRUNK_PEERING_DECISION.md`). If #5d selects the outbound **group by tenant origin** (From domain), the instance is **not** nationally bound by SBC vs Twilio — only by **mangle** if mangle stays instance-wide.
 
 **Carrier preselect (PSTN analogy).** Default **CPS** = tenant (or serving_cc) is pre-selected onto one outbound **group**; **every** E.164 from that tenant uses that group — **hidden from the caller** (call characteristic, not dialled digits). Call-by-call CPS = optional access prefix (strip, then dest) as ops/power-user only. Still one node **Egress**, SBC `dr_rules`. Origin intent, not dest-CC steal. Companion: **smarter mangle** (tenant/SBC habit) for §3.E — see [`ORIGIN_OUTBOUND_ROUTING_DESIGN.md`](ORIGIN_OUTBOUND_ROUTING_DESIGN.md).
 
@@ -182,18 +182,18 @@ Play space if we ever want **one** box to feel multi-country without §3.A’s s
 **Status:** Open problem **2026-08-12** — **design accepted 2026-08-19; parked past first candidate.** Usual first-out ops = one nationality / one carrier class per home (no mixed-country trunks required).  
 **TODO:** product **#5d** (later out).  
 **Design:** [`ORIGIN_OUTBOUND_ROUTING_DESIGN.md`](ORIGIN_OUTBOUND_ROUTING_DESIGN.md) — Phase A = origin `do_routing` group (hidden CPS); Phase B = smarter tenant/SBC mangle (§3.E).  
-**Lab symptom (Toliman / Magrathea):** From Asterisk, OpenSIPS always `do_routing(0, …)`. Group **0** includes rule **`prefix=1` → Twilio**. Longest-prefix therefore sends **every** NANP (`1…` / `+1…`) home’s outbound to Twilio — including a **UK-homed** (or UK-CLIP) instance such as Toliman. CLIP then fails carrier auth (e.g. Twilio **403** on UK CLI). Parking rule 26 is a lab band-aid, not a product answer.
+**Lab symptom (Toliman / SBC):** From Asterisk, OpenSIPS always `do_routing(0, …)`. Group **0** includes rule **`prefix=1` → Twilio**. Longest-prefix therefore sends **every** NANP (`1…` / `+1…`) home’s outbound to Twilio — including a **UK-homed** (or UK-CLIP) instance such as Toliman. CLIP then fails carrier auth (e.g. Twilio **403** on UK CLI). Parking rule 26 is a lab band-aid, not a product answer.
 
-**Not the same as §3.D:** dest-prefix → Peer is **wanted inside one serving group** (UK: Magrathea vs Gamma). The defect is one **global** group keyed only on DNID, so Peers steal **cross-border dests** from the other home class:
+**Not the same as §3.D:** dest-prefix → Peer is **wanted inside one serving group** (UK: SBC vs Gamma). The defect is one **global** group keyed only on DNID, so Peers steal **cross-border dests** from the other home class:
 
 | Origin home | DNID | Wrong winner if group 0 is shared | Right Peer |
 |-------------|------|-------------------------------------|------------|
-| UK-homed | NANP `1…` | Twilio | Magrathea (intl from UK) |
-| US-homed | UK `44…` | Magrathea | Twilio (intl from US) |
+| UK-homed | NANP `1…` | Twilio | SBC (intl from UK) |
+| US-homed | UK `44…` | SBC | Twilio (intl from US) |
 
 ### What we need
 
-Scope outbound prefix tables by **origin** (`serving_cc` / home or tenant — see open Q), not by dest CC. **Every** E.164 DNID from that origin uses that origin’s Peer set (UK origin → Magrathea/Gamma for `44…` **and** `1…`; US origin → Twilio for `1…` **and** `44…`). Cross-border IDD stays on the **origin** carriers.
+Scope outbound prefix tables by **origin** (`serving_cc` / home or tenant — see open Q), not by dest CC. **Every** E.164 DNID from that origin uses that origin’s Peer set (UK origin → SBC/Gamma for `44…` **and** `1…`; US origin → Twilio for `1…` **and** `44…`). Cross-border IDD stays on the **origin** carriers.
 
 ### Candidate → design draft
 
@@ -202,7 +202,7 @@ Superseded by **[`ORIGIN_OUTBOUND_ROUTING_DESIGN.md`](ORIGIN_OUTBOUND_ROUTING_DE
 ### Weak / non-goals for this issue
 
 - CLIP-only Peer pick as the sole scope (helps A-number vs carrier; does not replace home policy).  
-- Multiple Egress trunks on one instance to “pick Twilio vs Magrathea.”  
+- Multiple Egress trunks on one instance to “pick Twilio vs another upstream carrier.”  
 - Hope that one global group 0 can serve mixed nationally homed fleets.
 
 ### Twin of §3.A

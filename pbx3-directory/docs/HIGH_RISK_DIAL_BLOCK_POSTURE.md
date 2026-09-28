@@ -12,7 +12,7 @@
 | **SBC** | **No never-route floor in current plan** (deferred) | Sat/high-risk stay on **tenant CoS** so ops can open a paying satphone (etc.) per customer |
 | **Carrier** | Backstop geo-bar / fraud desk | Not our HoR |
 
-**Do not** put the full UK/US starter pack only on Magrathea — tenant exceptions, solo sites, and UK **`070`** (looks like mobile) belong on the **home**. Evolve packs (S3 / seeds) and **adopt per tenant** so one customer can be relaxed without a fleet SBC bite.
+**Do not** put the full UK/US starter pack only on the SBC — tenant exceptions, solo sites, and UK **`070`** (looks like mobile) belong on the **home**. Evolve packs (S3 / seeds) and **adopt per tenant** so one customer can be relaxed without a fleet SBC bite.
 
 ```text
 Prevention (CoS deny patterns, seeded; per-tenant exceptions)

@@ -1,7 +1,7 @@
 # Instance directory & S3 catalog — implementation plan
 
 **Branch:** `directory` (pbx3, pbx3api, pbx3spa)  
-**Read first:** `DESIGN_RULES.md` · **Layout:** `S3_LAYOUT_PROPOSAL.md` (improved v1) · **Schemas:** `../schema/` · **Review:** `ARCHITECTURE_REVIEW_SCORECARD.md` · **Grounding:** `ARCHITECTURE_PEER_REVIEW.md`
+**Read first:** `DESIGN_RULES.md` · **Layout:** `S3_LAYOUT_PROPOSAL.md` (improved v1) · **Schemas:** `../schema/` · **Review:** `ARCHITECTURE_REVIEW_SCORECARD.md`
 
 **Product model:** EC2-style fleet console — low-traffic admin; catalog changes rarely; **nodes never depend on S3/directory for calls.**
 
@@ -273,7 +273,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 **Design (storage + search shape):** **`RECORDINGS_STORAGE_DESIGN.md`** — legacy recap, three-tier target (spool → local archive → S3), search strategy, phased R1 / R1.5 / S7 plan.
 
-**Problem:** Capture and tenant config exist (`pbx3cagi` SetRecord, SPA tenant “Call recording” fields, files under `/opt/pbx3/media/recordings/…`) but operators have **no SPA panel** to search, listen, or download. Legacy **`sarkrecordings`** not ported; **no call-recordings API** in pbx3api (only IVR **`GreetingRecordController`**).
+**Problem:** Capture and tenant config exist (`pbx3cagi` SetRecord, SPA tenant “Call recording” fields, files under `/opt/pbx3/media/recordings/…`) but operators have **no SPA panel** to search, listen, or download. Legacy **`Recordings`** not ported; **no call-recordings API** in pbx3api (only IVR **`GreetingRecordController`**).
 
 **Principle (Rule 1):** R1 works **without S3** — same as telephony. S3 offload is **Phase S7**, not a blocker for operator UX.
 
@@ -283,7 +283,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 |---|------|------|--------|
 | R1.1 | **`GET /recordings`** — list/search by tenant, date range, caller/callee | pbx3api | Index from filesystem + filename conventions (epoch in path/name); tenant scope via auth |
 | R1.2 | **`GET /recordings/{id}/stream`** (or `/download`) | pbx3api | Serve from local path when file exists |
-| R1.3 | **SPA recordings panel** — port **`sarkrecordings`** | pbx3spa | List, filters, inline play/download; UTC display per **`DESIGN_RULES.md`** |
+| R1.3 | **SPA recordings panel** — port **`Recordings`** | pbx3spa | List, filters, inline play/download; UTC display per **`DESIGN_RULES.md`** |
 | R1.4 | **Nav + routes** | pbx3spa | Wire panel; help keys for search fields |
 | R1.5 | **Golden smoke** | ops | Place test calls with recording enabled; verify list/play |
 | R1.6 | **Optional:** reuse **`manageRecs.php`** logic or replace with API job for `recused` | pbx3 / pbx3api | Storage display on tenant panel already shows `recused` |
@@ -348,7 +348,7 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 | **S8.8** | **Worked example + regression** | ops | Golden lab rebuilds validated (2026-07): **`REBUILD_INSTANCE_RUNBOOK.md`** path, `0.0.3-21`, preflight + SPA; tenant move smoke when S8.5–6 exist. |
 | **S8.9** | **Self-service rebuild automation** | pbx3 + pbx3api + pbx3spa + ops | Design **`SELF_SERVICE_REBUILD_DESIGN.md`**: fleet AMI, first-boot S3 restore, orchestrator API, SPA wizard; node does restore, control plane does IAM/launch. |
 | **S8.10** | **Tenant mobility — Fleet Console (panel-first)** | pbx3 + pbx3cagi + pbx3api + pbx3spa + **pbx3sbc** + control-plane | Design **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** (**§13** implementer map): **fleet requires SBC tier** (§2.2); cutover = SBC `domain.setid` repoint; **`Egress → SBC`** (Phase A); Fleet Console (**B**); control-plane + S3 gatekeeper (**B′**); move wizard + orchestrator (**C**). Direct-to-node = solo/Rule 6 only. |
-| **S8.11** | **WebRTC edge normalization (WSS on SBC)** | **pbx3sbc** + pbx3 + pbx3api + pbx3spa + control-plane | Design: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1. Goal: SBC terminates WSS for **endpoint simplicity** (same VIP as desk phones); forward toward home instance; **RTP bypass** while backends are WebRTC-capable (PBX3 + last-gen SARK). Interim/beta: node `:8089`. |
+| **S8.11** | **WebRTC edge normalization (WSS on SBC)** | **pbx3sbc** + pbx3 + pbx3api + pbx3spa + control-plane | Design: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1. Goal: SBC terminates WSS for **endpoint simplicity** (same VIP as desk phones); forward toward home instance; **RTP bypass** while backends are WebRTC-capable (PBX3 + last-gen previous PBX). Interim/beta: node `:8089`. |
 | **S8.12** | **Fleet admin actions (panel-first)** | control-plane + pbx3spa (+ adapter) | **See Phase S10** — onboard / decommission / catalog edit / job control / reconcile / DID / fleet-user manage. Ability-gated; Mac scripts remain break-glass. |
 
 **Out of scope S8 v1:** Terraform for full fleet; automatic DNS API (optional in S8.9 B6); SPA tenant-move wizard (S8.5/S8.6 docs + scripts first).
@@ -366,9 +366,9 @@ Schema: `instance-record.v0.json` · example: `instance-index.json`
 
 ### Phase W1 — WebRTC edge normalization (~2–4 weeks after UDP edge)
 
-**Why:** Same stable SBC VIP for webphones as desk phones (endpoint setup / mobility). PBX3 and last-gen SARK already speak WSS/WebRTC — this is not protocol rescue. Closes the gap where webphones hit node `:8089` and do not follow SBC cutover.
+**Why:** Same stable SBC VIP for webphones as desk phones (endpoint setup / mobility). PBX3 and last-gen previous PBX already speak WSS/WebRTC — this is not protocol rescue. Closes the gap where webphones hit node `:8089` and do not follow SBC cutover.
 
-**Non-goal (v1):** Full WebRTC feature platform; RTPEngine at edge; older non-WSS SARK browser webphone (needs media gateway — separate go/no-go).
+**Non-goal (v1):** Full WebRTC feature platform; RTPEngine at edge; older non-WSS previous PBX browser webphone (needs media gateway — separate go/no-go).
 
 | # | Task | Repo | Notes |
 |---|------|------|-------|

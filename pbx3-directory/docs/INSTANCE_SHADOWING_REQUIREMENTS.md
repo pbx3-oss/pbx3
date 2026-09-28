@@ -29,7 +29,7 @@ Customers who want **minimum downtime** and will **pay for it** can run PBX inst
 | **Mechanism** | Reuse SBC HA: warm twin + move stable address; control-plane probe/alert; **Manual** (human promote) or **Auto** (control promotes) |
 | **Product** | Optional **paid SKU** for customers who want that SLA — not default for every node |
 | **Cold DR** | Instance backup/restore remains box-loss rebuild — shadowing ≠ “restore zip as failover” |
-| **Implementation order** | Prove and operate **SBC edge HA** (including lab Magrathea partner when ready) → then instance shadow pairs |
+| **Implementation order** | Prove and operate **SBC edge HA** (including lab SBC partner when ready) → then instance shadow pairs |
 | **Still out until SKU ships** | Auto-billing, self-serve twin provision UI, usrloc/channel sync |
 
 ---

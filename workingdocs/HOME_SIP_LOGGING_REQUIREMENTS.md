@@ -21,7 +21,7 @@ Fleet phones terminate on the **SBC**. Home `:5060` sees **only SBC↔Asterisk**
 - Egress mangle / transform  
 - GenAst dialstring mistakes  
 
-Desk REGISTER and carrier-facing INVITEs remain on Magrathea (OpenSIPS text + `pbx3sbc-sip-pcap`). Home debug **complements** edge capture; it does not replace it.
+Desk REGISTER and carrier-facing INVITEs remain on the SBC (OpenSIPS text + `pbx3sbc-sip-pcap`). Home debug **complements** edge capture; it does not replace it.
 
 ---
 
@@ -40,7 +40,7 @@ Desk REGISTER and carrier-facing INVITEs remain on Magrathea (OpenSIPS text + `p
 
 ```mermaid
 flowchart TB
-  phone[Phone_WebRTC] --> sbc[Magrathea_SBC]
+  phone[Phone_WebRTC] --> sbc[SBC_SBC]
   sbc -->|"always-on sip-pcap + opensips text"| sbcStore[SBC_logs]
   sbc --> home[Home_Asterisk]
   home -->|"session-armed: SIP text + optional pcap"| homeStore[Home_sip_debug]
@@ -64,7 +64,7 @@ flowchart TB
 | **H4** | **Not in the call path** (Design Rule 1). Arm/disarm/extract failure must not affect dial. |
 | **H5** | **PII class = CDR-adjacent.** CLI/DNID in SIP; local ring + short session TTL; no catalog / directory bleed. |
 | **H6** | **Solo:** existing `siplog-set-mode.sh solo` remains the edge always-on pcap path; text logger may follow the same mode when implemented. |
-| **H7** | **SPA controls are in v1.** Instance admin can **see status**, **arm** (text ± pcap, TTL), and **disarm** from the UI. Same backend as CLI scripts. SARK-parity list/download of pcap + text lives on Logs (or a thin SIP debug section). |
+| **H7** | **SPA controls are in v1.** Instance admin can **see status**, **arm** (text ± pcap, TTL), and **disarm** from the UI. Same backend as CLI scripts. previous PBX-parity list/download of pcap + text lives on Logs (or a thin SIP debug section). |
 | **H8** | **S3 like any other instance log.** Rotated SIP **text** and session **pcap** segments ship via the existing instance log-ship path to `instances/{ksuid}/logs/{class}/…` when fleet/S3 is configured. Telephony and local capture must not depend on S3 (Rule 1 / Rule 6). |
 
 ---
@@ -101,7 +101,7 @@ Script (ops-local and/or `/opt/pbx3/scripts/sip-debug-extract.sh`):
 |-------|-----------|
 | Optional `--call-id` | Filter to that dialog |
 | Optional `--since` / last *N* minutes | Time window |
-| Optional `--source text|pcap|auto` | Prefer text; fall back to latest home pcap; document Magrathea paths for edge |
+| Optional `--source text|pcap|auto` | Prefer text; fall back to latest home pcap; document SBC paths for edge |
 
 **Stdout (or `-o file`):** newline-delimited JSON objects, one per SIP message, stable keys:
 
@@ -110,7 +110,7 @@ Script (ops-local and/or `/opt/pbx3/scripts/sip-debug-extract.sh`):
 ```
 
 - Default extract: **no `raw`** (token thrift). `--raw` adds truncated message text when needed.
-- Parallel ops pointer (not automated in v1): Magrathea `/var/log/pbx3sbc/sip-pcap/` + `/var/log/opensips/opensips.log` for edge-side bugs.
+- Parallel ops pointer (not automated in v1): SBC `/var/log/pbx3sbc/sip-pcap/` + `/var/log/opensips/opensips.log` for edge-side bugs.
 
 ---
 
@@ -207,6 +207,6 @@ Est. rough: **~3–5 d** for A–G lean (S3 is mostly extending the existing shi
 |-----|----------------|
 | `FLEET_LOG_RETENTION_REQUIREMENTS.md` | Always-on fleet SIP = SBC; this file = home **session debug** + instance `sip-text` / `sip-pcap` ship classes |
 | `siplog-set-mode.sh` | fleet/solo pcap mode; session arm may call into it temporarily |
-| `SINGLE_PANEL_SCREENS.md` | SARK SIP CAP / Logs debt — this track closes start/stop + list for home |
+| `SINGLE_PANEL_SCREENS.md` | previous PBX SIP CAP / Logs debt — this track closes start/stop + list for home |
 | `SBC_PRODUCT_TRACKS.md` / TODO #20 | Homer/Grafana parked — not this track |
 | `FIRST_OUT_CHECKLIST.md` | Not a first-out must; schedule when SIP debug friction bites |

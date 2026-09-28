@@ -17,7 +17,7 @@ Bias toward **caution over speed** on non-trivial work. Full detail lives in **C
 **Repo-specific (always):**
 
 - **Git:** `pbx3-master/` is not a repo. Commit from **`pbx3/`**, **`pbx3api/`**, **`pbx3spa/`**, **`pbx3cagi/`**, or **`pbx3sbc/`** (SBC edge, moved into holding folder 2026-07-07) as appropriate.
-- **Naming — SBC:** Call the edge **SBC**, not **Magrathea**. Magrathea is a lab host nickname and/or Magrathea Telecom (ITSP); never a generic product name for the SBC.
+- **Naming — SBC:** Call the edge **SBC**, never a commercial ITSP name. Prefer **upstream carrier** / **carrier Peer** for ITSPs. Recipe ids like `uk-magrathea` are legacy wire tokens until renamed — do not use the brand in new prose. See Cursor rule **`sbc-naming-not-magrathea`**.
 - **Fleet / S3 / directory:** on **`main`**. **Track B** Phases 0–4 Tier 1–2 + **panelfixes** panel QA merged to **`main`** (2026-07-02). Branches **`helptext`**, **`panelfixes`**, **`directory`** deleted.
 - **Multi-repo tasks:** state which repo each change belongs in; don’t assume a single root commit.
 - **Private ops:** clone **`aelintra/pbx3-ops`** to **`~/GiT/pbx3-ops`** and add it to the Cursor workspace.
@@ -203,7 +203,7 @@ Do **not** reintroduce session blocks into this product file.
 
 **Scope:** SIP extensions with optional MAC (provisioned/unprovisioned), WebRTC; Save vs Commit (generator runs on Commit, not on every Save). Plan is **finalised**; DB changes (add `provision`, `provisionwith` to ipphone) are applied **manually** by the user (PBX3 has no Laravel migrations). Implementation: API (ExtensionController save/update, getVendorFromMac, adjustAstProvSettings, Device/globals) then frontend (ExtensionCreateView extensionType/MAC, Save/Commit when designed).
 
-**Docs (in pbx3spa/workingdocs):** **EXTENSION_PROVISIONING_QUICKSTART.md** (start here), **EXTENSION_PROVISIONING_DEPLOYMENT_PLAN.md**, **DATABASE_CHANGES_FOR_PROVISIONING.md**, **LEGACY_SARK_EXTENSION_CREATE_REFERENCE.md**. Generator: `genAst.sh` → `runAstGen.php` → GenClass (genPjsipPhones, genPjsipWebrtc); endpoint files created on demand when generator runs.
+**Docs (in pbx3spa/workingdocs):** **EXTENSION_PROVISIONING_QUICKSTART.md** (start here), **EXTENSION_PROVISIONING_DEPLOYMENT_PLAN.md**, **DATABASE_CHANGES_FOR_PROVISIONING.md**, **LEGACY_PBX_EXTENSION_CREATE_REFERENCE.md**. Generator: `genAst.sh` → `runAstGen.php` → GenClass (genPjsipPhones, genPjsipWebrtc); endpoint files created on demand when generator runs.
 
 ---
 

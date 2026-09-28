@@ -49,7 +49,7 @@ All checklist items locked below.
 | **Node consume** | Each `pbx3:ops-velocity` run: GET S3 object (short timeout); cache to `storage/app/ops-velocity-policy.json`; on pull fail → last good cache → else env defaults (**Rule 5 / 6**) |
 | **Override** | Node env `PBX3_OPS_VELOCITY_*` wins when `PBX3_OPS_VELOCITY_POLICY=local` (or solo / no catalog) so lab fixtures stay frictionless (**Rule 6**) |
 | **SPA** | Fleet mode edits via Gatekeeper only — never node Sanctum, never direct S3 write from browser (**Rule 10 / 12**). **No Filament** writer for this object (avoids dual-authorship with SPA). |
-| **Editor cadence** | **API first** (Gatekeeper `GET`/`PUT` → S3), then **SPA Fleet** form on that same API — not Filament-on-control / Magrathea |
+| **Editor cadence** | **API first** (Gatekeeper `GET`/`PUT` → S3), then **SPA Fleet** form on that same API — not Filament-on-control / SBC |
 | **Not** | Push/SSH to nodes; directory/S3 in SIP path; instance Sanctum mutating fleet policy |
 
 **Policy JSON sketch:**

@@ -41,7 +41,7 @@ flowchart LR
 
 ## Industry patterns (grounding — not a product teardown)
 
-Patterns common across PBX / MSP / CPaaS ops. **Not** verified UIs of current 3CX/Twilio/FreePBX releases — useful shape only. Competitive fleet shape lives in **`ARCHITECTURE_PEER_REVIEW.md`**; this section is about **detect → notify**.
+Patterns common across PBX / MSP / CPaaS ops. **Not** verified UIs of specific commercial releases — useful shape only. This section is about **detect → notify** (fleet shape narrative is private ops if needed).
 
 ### Detection
 
@@ -228,7 +228,6 @@ Authorship stays on the **SBC** (**Rule 13**). Detail: **`pbx3sbc/workingdocs/PE
 | **`IMPLEMENTATION_PLAN.md`** | § Fleet & monitoring |
 | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** | R2 preflight / alerts |
 | **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** | Toll fraud / call-pattern velocity (own track) |
-| **`ARCHITECTURE_PEER_REVIEW.md`** | Competitive fleet shape (not notify-specific) |
 | **`pbx3sbc/workingdocs/PEERING-PLAN.md`** | §0.1 Fail2ban — auto fleet homes + carrier inbound; manual site IPs |
 | **`CENTRAL_ADMIN_DIRECTION.md`** | Central monitoring (direction) |
 

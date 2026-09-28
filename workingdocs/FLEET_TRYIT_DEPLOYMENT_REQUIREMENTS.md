@@ -40,12 +40,12 @@
 | Topic | Outcome |
 |-------|---------|
 | **Lab deployment (primary / advertise)** | **T4** — curious user + hypervisor → few **Ubuntu/Debian** VMs + **Garage** → full fleet stack on a LAN. Near-zero recurring cost. |
-| **Try PBX only** | **T1** — **1** VM, Asterisk + API (singleton-direct). No Magrathea, no Gatekeeper, no catalog (Rule **6**). |
-| **Try fleet (cloud)** | **T2** — same packages as Lab; Host A Magrathea+GK, Host B home; org bucket on AWS/R2/etc. **Follow-on** after Lab path works. |
-| **Prod split (optional)** | **T3** — same packages; GK and Magrathea on separate hosts when blast radius matters. |
+| **Try PBX only** | **T1** — **1** VM, Asterisk + API (singleton-direct). No SBC, no Gatekeeper, no catalog (Rule **6**). |
+| **Try fleet (cloud)** | **T2** — same packages as Lab; Host A SBC+GK, Host B home; org bucket on AWS/R2/etc. **Follow-on** after Lab path works. |
+| **Prod split (optional)** | **T3** — same packages; GK and SBC on separate hosts when blast radius matters. |
 | **Portable core** | Versioned **debs** / release tags + **prompted installers on the guests** (control installer starts Garage + seeds catalog). |
 | **AWS AMI** | Optional **skin** later — preinstalled packages; **same** tailor. Not required for Lab. |
-| **Docker** | Optional for **Gatekeeper ± Magrathea ± Garage** only. **Never** Asterisk-in-Docker. |
+| **Docker** | Optional for **Gatekeeper ± SBC ± Garage** only. **Never** Asterisk-in-Docker. |
 | **Org directory (Lab / T2+)** | **`bootstrap-org-bucket`** — Lab default = **Garage**; cloud = S3/R2/etc. **Appendix B**. |
 | **RTP** | **Bypass** (media → home Asterisk). Do **not** add rtpengine to shrink deploy. |
 
@@ -55,7 +55,7 @@
 
 Fleet bring-up today is still too complex for a prospect: typically **three** cloud VMs plus a cloud object store and multi-step install. That raises cost and drop-off.
 
-**This project bounds the first win:** a **Lab deployment** — someone who can create Ubuntu/Debian VMs in VirtualBox, Proxmox, VMware, Hyper-V, etc. follows a short path and runs Magrathea + Gatekeeper + home PBX + Garage on their LAN. No AWS account required. Cloud 2-box and AMI reuse the same tailor/packages later.
+**This project bounds the first win:** a **Lab deployment** — someone who can create Ubuntu/Debian VMs in VirtualBox, Proxmox, VMware, Hyper-V, etc. follows a short path and runs SBC + Gatekeeper + home PBX + Garage on their LAN. No AWS account required. Cloud 2-box and AMI reuse the same tailor/packages later.
 
 ---
 
@@ -66,7 +66,7 @@ Fleet bring-up today is still too complex for a prospect: typically **three** cl
 - Baking **SPA** into instance or edge images (operator browser → LAN SPA or optional local Vite — see T4 SPA subsection).
 - Assuming a **Mac** (or any single OS) for the operator workstation — Lab docs must work for **Linux / Windows / macOS** users; **Windows + hypervisor + browser** is the design persona.
 - Asking the Lab user to run **AWS CLI**, paste Garage keys, or use **`onboard-fleet-instance.sh`** from a laptop.
-- Merging Gatekeeper and Magrathea into one codebase or one HoR (Rule 13).
+- Merging Gatekeeper and SBC into one codebase or one HoR (Rule 13).
 - Requiring **cloud** or **AMI** for the first Lab milestone.
 - Multi-cloud Packer on day one.
 - Replacing greenfield/Mode 4 rebuild runbooks — this track is **quick Lab spin-up**, not every ops path.
@@ -79,12 +79,12 @@ Fleet bring-up today is still too complex for a prospect: typically **three** cl
 ```mermaid
 flowchart TB
   subgraph tryFleet [Fleet_tryit_2_boxes]
-    H1[HostA_Magrathea_plus_Gatekeeper]
+    H1[HostA_SBC_plus_Gatekeeper]
     H2[HostB_Home_PBX]
     H1 -->|SIP_and_catalog| H2
   end
   subgraph tryLab [Lab_deployment_T4]
-    L1[HostA_Magrathea_plus_GK]
+    L1[HostA_SBC_plus_GK]
     L2[HostB_Home_PBX]
     Lg[Garage_org_bucket]
     L1 --> Lg
@@ -99,13 +99,13 @@ flowchart TB
 ### T1 — Solo PBX (1 box)
 
 - Install **pbx3** + **pbx3api** (+ cagi as today) on one VM.
-- No Magrathea, no Gatekeeper, no org catalog required for basic panels (**Rule 6** — no S3).
+- No SBC, no Gatekeeper, no org catalog required for basic panels (**Rule 6** — no S3).
 - Optional instance WSS / singleton-direct for webphone lab.
 - **Marketing default** for “try the PBX.” Works on cloud or a single LAN VM.
 
 ### T2 — Fleet try-it (2 boxes, cloud bucket)
 
-- **Host A:** Magrathea (OpenSIPS + Filament admin) **and** Gatekeeper (control API, auth DB, catalog jobs) on the **same** VM — systemd co-install and/or Compose for GK+SBC only.
+- **Host A:** SBC (OpenSIPS + Filament admin) **and** Gatekeeper (control API, auth DB, catalog jobs) on the **same** VM — systemd co-install and/or Compose for GK+SBC only.
 - **Host B:** normal home instance (Asterisk + API) — **native/deb**, not Docker.
 - **Before or with tailor:** run **Appendix B** bootstrap once (fleet slug → org bucket + catalog URL); paste outputs into tailor / Gatekeeper / SPA env.
 - Org bucket typically **AWS S3 / R2 / similar** (public HTTPS catalog URL for SPA).
@@ -114,7 +114,7 @@ flowchart TB
 
 ### T3 — Split control / edge (3+ boxes)
 
-- Same artifacts as T2; enable only Magrathea on one host and only Gatekeeper on another.
+- Same artifacts as T2; enable only SBC on one host and only Gatekeeper on another.
 - Deploy-time choice (compose profiles / unit sets). Preferred when shared blast radius is unacceptable.
 
 ### T4 — Lab deployment (primary milestone; advertise)
@@ -125,7 +125,7 @@ flowchart TB
 
 | Box | Role |
 |-----|------|
-| **VM A** | Magrathea + Gatekeeper (same as T2 Host A) + **Garage** Compose (default) |
+| **VM A** | SBC + Gatekeeper (same as T2 Host A) + **Garage** Compose (default) |
 | **VM B** | Home PBX 1 (Asterisk + API) |
 | **VM C** | Home PBX 2 (optional — preferred when proving multi-home / Site Groups) |
 
@@ -142,8 +142,8 @@ flowchart TB
 
 **Not** part of D1 acceptance. When a Lab needs an **external carrier** while homes stay private:
 
-1. **First try — chunked RTP port-forwards** (2026-08-10 stance): partition public RTP ranges per home (e.g. `10000–10099` → Ast1, `11000–11099` → Ast2); WAN DNAT each chunk; set each Asterisk `rtpstart`/`rtpend` to its chunk; SDP **`externip`** = public WAN IP. SIP may still terminate on Magrathea (DID → home). Outbound from NATed Asterisk usually works via hole-punch without relying on the forwards.
-2. Magrathea adds little for **carrier media** in that pattern (one Peer face + DID fan-out still useful for fleet practice). Solo **T1** is enough if the goal is only “one PBX + carrier.”
+1. **First try — chunked RTP port-forwards** (2026-08-10 stance): partition public RTP ranges per home (e.g. `10000–10099` → Ast1, `11000–11099` → Ast2); WAN DNAT each chunk; set each Asterisk `rtpstart`/`rtpend` to its chunk; SDP **`externip`** = public WAN IP. SIP may still terminate on the SBC (DID → home). Outbound from NATed Asterisk usually works via hole-punch without relying on the forwards.
+2. SBC adds little for **carrier media** in that pattern (one Peer face + DID fan-out still useful for fleet practice). Solo **T1** is enough if the goal is only “one PBX + carrier.”
 3. If chunked NAT does not scale or is too brittle → unpark **Appendix A** (rtpengine) for a single public media face.
 
 Do **not** invent product RTP-slot allocation UI for this pilot — router + `rtp.conf` / externip is enough.
@@ -184,7 +184,7 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 
 ### Portable core (required)
 
-1. **Packages / release tags** — instance **pbx3** + **pbx3cagi** debs; Magrathea/SBC and Gatekeeper via public release tag + install script (or package when available); **pbx3api** clone-at-tag OK once repos are public (deb still nice-to-have — see below).
+1. **Packages / release tags** — instance **pbx3** + **pbx3cagi** debs; SBC/SBC and Gatekeeper via public release tag + install script (or package when available); **pbx3api** clone-at-tag OK once repos are public (deb still nice-to-have — see below).
 2. **`bootstrap-org-bucket`** (Appendix B) — **library used by the control installer**, not a laptop ritual. Fleet slug → layout; writes Gatekeeper env on the box.
 3. **Prompted guest installers** (control + home). Optional env/file for unattended / AMI later:
    - Topology: `solo` | `fleet_colocated` | `fleet_split` | `lab` (T4 Lab deployment — private names + Garage; alias `fleet_lan`)
@@ -207,7 +207,7 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 | **pbx3** | Keep **release/AMI/try-it `.deb`s** as **stable floors** (known-good pin + Depends). Between floors, **tip / rsync of `/opt/pbx3` is first-class** for lab and hotfixes — do **not** force every biggish patch through a new main deb version (historical pain). Deb = floor artifact, not the only way code lands on a box. |
 | **pbx3api** | **Clone-at-tag / tip** — no deb required for Lab or current fleet. Optional `.deb` later for long-haul apt parity (D6); not a try-it blocker. |
 | **Gatekeeper** | Public clone at tag + install script / Compose; thin deb later for polish. |
-| **Magrathea / SBC** | Overlay install from public tag (plus distro OpenSIPS packages); meta-deb when packaging effort allows. |
+| **SBC / SBC** | Overlay install from public tag (plus distro OpenSIPS packages); meta-deb when packaging effort allows. |
 | **SPA** | LAN static build (Lab default) or Pages / local Vite; not an on-node package. |
 
 **Still prefer versioned floor artifacts where they already help** (cagi always; pbx3 for AMI / advertised Lab pin). Tip/`main` between floors is for operators chasing HEAD or lab hotfix — record tip SHAs in ops (**`TODO_OPS.md`**), not by inventing a new `0.0.x-N` for every patch.
@@ -225,11 +225,11 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 - Packer (or cloud-adapter `BuildImage`) consumes the same install + tailor inputs → AMI / GCP / Azure / qcow2.
 - Do not hand-maintain divergent per-cloud bake scripts.
 
-### Docker (optional, GK + Magrathea ± Garage)
+### Docker (optional, GK + SBC ± Garage)
 
-- Compose can run Gatekeeper + Magrathea on one host (**T2** / **T4**) or split (**T3**).
+- Compose can run Gatekeeper + SBC on one host (**T2** / **T4**) or split (**T3**).
 - **T4:** add Garage to that Compose (or a tiny third guest) as the org bucket.
-- Magrathea may need **host networking** for SIP; document that.
+- SBC may need **host networking** for SIP; document that.
 - **Asterisk stays out of Compose** for try-it and lab appliance.
 
 ---
@@ -259,7 +259,7 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 |-------|--------|--------|
 | **D0** | This requirements doc + TODO link | Done when committed |
 | **D1** | **Lab milestone:** control installer absorbs Garage + catalog seed; home installer stays prompted; Gatekeeper S3 endpoint; Lab MkDocs = copy-paste + panels. Prove on **A9a**. Mac onboard scripts stay ops-only. | ~3–7 days |
-| **D2** | Polish Compose for GK+Magrathea+Garage; SPA Lab CORS/.env examples | ~2–3 days |
+| **D2** | Polish Compose for GK+SBC+Garage; SPA Lab CORS/.env examples | ~2–3 days |
 | **D3** | Cloud **T2** doc path + optional AWS AMI skin | Later |
 | **D4** | Packer multi-cloud | Later |
 | **D5** | Gatekeeper “create fleet” wrapping bootstrap | Later |
@@ -269,7 +269,7 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 
 ## Appendix A — Optional media plane (parked)
 
-**Not part of try-it.** RTP **bypass** remains product default: endpoint ↔ **home Asterisk** (Asterisk always in media path); SIP via Magrathea.
+**Not part of try-it.** RTP **bypass** remains product default: endpoint ↔ **home Asterisk** (Asterisk always in media path); SIP via the SBC.
 
 **rtpengine** only if a real trigger appears: LAN home + public remote where **chunked RTP DNAT** is insufficient, explicit relay mode, or legacy WebRTC↔non-WebRTC gateway. Selective engage; no PBX product mods; HA media deferred. Design research: **`pbx3-directory/docs/RTPENGINE_SELECTIVE_ENGAGE.md`** (load model, engage matrix — not locked).
 
@@ -317,7 +317,7 @@ No SPA feature fork for Lab vs cloud — same picker, same fleet mode; only env 
 - Built for small-to-medium self-host; single binary; official Docker image (`dxflrs/garage`); low RAM — ideal for a LAN lab with a few VMs and almost no recurring cost.
 - S3 API on a dedicated port; works with AWS CLI / SDKs / `rclone` (and even `mc` as a client).
 - Single-node mode for try-it / lab; multi-node later if wanted — not required for first spin-up.
-- Compose may sit beside GK+Magrathea (**D2** / **T4**). Still **not** Asterisk-in-Docker.
+- Compose may sit beside GK+SBC (**D2** / **T4**). Still **not** Asterisk-in-Docker.
 - Same layout + printed env contract as AWS (`endpoint` + keys + bucket + catalog URL). LAN catalog may be `http://garage.lab:3900/...` (lab only).
 
 **Implementation notes (when building D1/D2):**
@@ -361,7 +361,7 @@ Covered by **A7** / **A8** above. Point MkDocs / install docs at the script; kee
 | 2026-08-08 | Product license **locked: Apache-2.0** (all product repos); add `LICENSE` files before public. |
 | 2026-08-09 | Apache-2.0 root `LICENSE` on product repos (clean text; httpd composite removed). |
 | 2026-08-09 | Customer migrate stripped from pbx3 package; private ETL under Aelintra. Public gate = org transfer when scheduled. |
-| 2026-08-10 | T4 prefer **3 boxes** for two homes (GK co-located on Magrathea+Garage). Optional LAN+carrier: **chunked RTP DNAT** before rtpengine. |
+| 2026-08-10 | T4 prefer **3 boxes** for two homes (GK co-located on the SBC+Garage). Optional LAN+carrier: **chunked RTP DNAT** before rtpengine. |
 | 2026-08-17 | **A9a** install harness: local VM snapshots test automation without calls; see **`LAB_INSTALL_AUTOMATION_HARNESS.md`**. Sequencing: automation before LAN carrier. |
 | 2026-08-17 | **UX bar:** Windows tech, basic CLI, **panels after one installer per box**. Garage/bootstrap inside control installer; no AWS CLI happy path. |
 | 2026-08-17 | **D1 / A9a** install path **lab green**: control + home + catalog pick + Sanctum + Fleet. One home wrapper **`pbx3/scripts/install-home-host.sh`**. Probe timer on Lab control. Next: snapshot revert + MkDocs re-walk when asked. |

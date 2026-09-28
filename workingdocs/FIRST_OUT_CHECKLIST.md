@@ -70,7 +70,7 @@ Worth doing if a soft-land or public-ish demo is soon; not architecture:
 | **N2** | **Pages + CORS** for production SPA origin | If first out ≠ `npm run dev` |
 | **N3** | **Fleet instance health includes Asterisk** | `/up` alone lies; embarrassing in a live Fleet view |
 | **N4** | ~~**SPA session timeout** honour `globals.sessiontimout`~~ **done (2026-08-26)** | Default 600 s; editable in Instance Globals |
-| **N5** | Magrathea gwid **dialect** / Twilio crumb if that carrier story is in the pitch | Only if demo script needs it |
+| **N5** | SBC gwid **dialect** / Twilio crumb if that carrier story is in the pitch | Only if demo script needs it |
 | **N6** | ~~Quick pass: inbound **SWOCLIP** create/edit parity; Extension **Runtime**~~ **done (2026-08-26)** | Create SWOCLIP YES; Behaviour (was Runtime) editable — **`TODO.md`** |
 | **N7** | ~~Drop Devices routes/views~~ **done (2026-08-25)** | Device templates purged |
 | **N8** | **Audio transcription (pluggable)** — potential first-out if **Pharma / PV** is in scope | **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · TODO **#37** / **0l** |
@@ -81,7 +81,7 @@ Worth doing if a soft-land or public-ish demo is soon; not architecture:
 
 Do **not** block first out on these:
 
-- ~~Provisioning **server** product~~ — **won't-do** (2026-08-23): manufacturer RPS; no **sark3pcerts** — **`PROVISIONING_SERVER_REQUIREMENTS.md`**  
+- ~~Provisioning **server** product~~ — **won't-do** (2026-08-23): manufacturer RPS; no **third-party certs panel** — **`PROVISIONING_SERVER_REQUIREMENTS.md`**  
 - Multi-AZ lab proof (production confidence later; same-AZ is enough for first out)  
 - ~~Control-plane HA / duplex~~ — **won't-do** (2026-08-11): management binary; Rule 11 — **`CONTROL_HOST.md`**  
 - Instance shadowing / S10.7 orchestrated rebuild  

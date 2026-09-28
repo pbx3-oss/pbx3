@@ -20,9 +20,11 @@
 | **pbx3-docs** | *planned* | Operator/installer MkDocs site | **GitHub Pages** (`docs.pbx.com` TBD) | N/A — see **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** |
 | **pbx3-ops** | `github.com/aelintra/pbx3-ops` (**private**) | Agent session handoffs, tip/lab gossip | Local clone **`~/GiT/pbx3-ops`**; not shipped | This repo |
 
-**Target org (OSS):** e.g. `github.com/pbx3/{pbx3,pbx3api,pbx3spa,pbx3cagi,pbx3-docs}` — transfer from `aelintra` when org exists; update remotes in local clones. **`pbx3-ops`** and **`sark-to-pbx3`** stay under **Aelintra** (private).
+**Target org (OSS):** `github.com/pbx3/{pbx3,pbx3api,pbx3spa,pbx3cagi,pbx3-docs,pbx3sbc,pbx3sbc-admin}` — all **public** after transfer. Execution plan (private): **`~/GiT/pbx3-ops/devdocs/oss-move/OSS_ORG_TRANSFER_PLAN.md`** (locked 2026-09-28; not executed). Update remotes in local clones when done.
 
-**Before transfer:** product tree is scrubbed of migrate tooling (private ETL stays under Aelintra) — see **`TODO.md`**. Do not move private bridges with the OSS product tree.
+**Stay under Aelintra (private):** **`pbx3-ops`**, **`private offline migrate tool`**, **`sipplabs`**. Do not move private bridges with the OSS product tree. Gatekeeper remains inside **`pbx3/pbx3-directory/`** (no separate repo for now).
+
+**Before transfer:** product tree is scrubbed of migrate tooling — see **`TODO.md`**. Phase 0 history scrub for soon-public **`pbx3`** / **`pbx3cagi`**.
 
 **Not in git (holding folder):** `pbx3-master/` workspace root; transient exports (e.g. `tt_help_core.json` at workspace root).
 

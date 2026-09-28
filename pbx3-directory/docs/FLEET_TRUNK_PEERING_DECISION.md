@@ -134,7 +134,7 @@ Fleet vs solo behaviour is gated by instance posture (e.g. directory / fleet fla
 | Posture | Node trunks panel | Carrier / PJSIP peers |
 |---------|-------------------|------------------------|
 | **Solo** (no SBC) | **Show** real carrier trunks (old behaviour) — the node *is* the PSTN edge | On the node |
-| **Fleet** | Show **`Egress`** (+ later **EgressFailover**) as the node’s PSTN face — status/SBC host — **not** Magrathea/Twilio peers | On **SBC admin** (Peers / Registrations / Number routes / DID aliases) |
+| **Fleet** | Show **`Egress`** (+ later **EgressFailover**) as the node’s PSTN face — status/SBC host — **not** SBC/Twilio peers | On **SBC admin** (Peers / Registrations / Number routes / DID aliases) |
 
 **Fleet Create vs Edit (locked 2026-08-10; Egress edit surface 2026-09-03):**
 
@@ -220,7 +220,7 @@ without a separate “singleton vs block” data model on Asterisk. That flexibi
 
 - **Source of truth for behaviour:** tenant `inroutes` (regex `pkey` + `openroute`/`closeroute`/CLIP/transform).
 - **Source of truth for homing:** S3 directory (`tenant → node` in `meta.json`; optional **`dids.json`** for reseller/trunker — see **`DID_ASSIGNMENT_DESIGN.md`**).
-- **SBC rows are derived:** `DID → tenant → node → setid` — regenerated on **move** / Fleet reassign, never independently edited under fleet. Magrathea must **not** offer edit/delete of `fleet=did` rows — **`FLEET_DID_HOP1_LOCK.md`**.
+- **SBC rows are derived:** `DID → tenant → node → setid` — regenerated on **move** / Fleet reassign, never independently edited under fleet. SBC must **not** offer edit/delete of `fleet=did` rows — **`FLEET_DID_HOP1_LOCK.md`**.
 
 **Default SBC projection:** one `dr_rules` row per active inbound DID (full E.164 as prefix → tenant’s current `setid`). Longest-prefix with a full number is effectively exact match — works for scattered singletons without `alias_db`.
 
@@ -274,7 +274,7 @@ A single SBC is acceptable for **lab / golden validation**. **Production fleet**
 | **Directory / S3 HoR** | Unchanged — catalog authoritative; edge is projection |
 ### 6.1 WebRTC / WSS endpoints (fleet edge)
 
-**Settled 2026-07-14** (product framing). **Magrathea lab green 2026-08-03:** browser WSS → SBC → **ordinary SIP UDP home** → RTP bypass; **home TCP 8089 can stay closed** (proven on golden).
+**Settled 2026-07-14** (product framing). **SBC lab green 2026-08-03:** browser WSS → SBC → **ordinary SIP UDP home** → RTP bypass; **home TCP 8089 can stay closed** (proven on golden).
 
 **Business driver:** Same **stable edge** for webphones as desk phones — **endpoint setup simplicity** (one WSS/SIP proxy forever; instance move = edge repoint). Not a requirement to make last-gen backends understand WebRTC (they already do).
 
@@ -283,12 +283,12 @@ A single SBC is acceptable for **lab / golden validation**. **Production fleet**
 OpenSIPS terminates **SIP-over-WSS** for browsers only. Toward fleet homes it speaks **classic SIP (UDP 5060)** — same dispatcher / domain / usrloc story as desk phones. That is intentional and powerful:
 
 - **One WSS cert/port** for all tenants (e.g. `sbc.pbx3.com:8089`)
-- **No per-instance public TCP 8089** for Magrathea clients
+- **No per-instance public TCP 8089** for SBC clients
 - Home “WebRTC” endpoints = **UDP + fleet `outbound_proxy` + `webrtc=yes`** (media/ICE/DTLS) — not client-facing WSS on the node
 - Track‑A / SIP homes can share the edge without speaking WSS to the world
 
 ```text
-Browser ──WSS :8089──► Magrathea ──SIP UDP :5060──► Home Asterisk
+Browser ──WSS :8089──► SBC ──SIP UDP :5060──► Home Asterisk
 Browser ◄════ media ICE/DTLS-SRTP (bypass SBC) ════╝
 ```
 
@@ -307,8 +307,8 @@ Browser WebRTC **always** has a media path (ICE → DTLS-SRTP). **SIP-over-WSS**
 | Backend | Webphone (browser) |
 |---------|-------------------|
 | **PBX3** | Supported — fleet edge path above (UDP + `webrtc=yes`); optional singleton-direct instance WSS for lab |
-| **Last-gen SARK** | SIP-capable homes share the same edge/WSS story once media is WebRTC-capable on the home; beta also used instance WSS |
-| **Older SARK (no WebRTC media)** | Signaling-only WSS→UDP gateway does **not** yield browser audio. Full support would need a **media gateway** (e.g. rtpengine). **May never be worth it** — separate go/no-go, not implied by WSS-on-SBC. |
+| **Last-gen previous PBX** | SIP-capable homes share the same edge/WSS story once media is WebRTC-capable on the home; beta also used instance WSS |
+| **Older previous PBX (no WebRTC media)** | Signaling-only WSS→UDP gateway does **not** yield browser audio. Full support would need a **media gateway** (e.g. rtpengine). **May never be worth it** — separate go/no-go, not implied by WSS-on-SBC. |
 
 #### RTP at the edge
 
@@ -318,8 +318,8 @@ Browser WebRTC **always** has a media path (ICE → DTLS-SRTP). **SIP-over-WSS**
 
 | Layer | WebRTC / WSS |
 |-------|----------------|
-| **pbx3sbc** | **W1 lab green on Magrathea** — pbx3sbc **`main`**; checklist **`pbx3sbc/workingdocs/WEBRTC_W1_MAGRATHEA.md`**. Live: **:8089/ws**; SDP media rewrite skipped for WSS/ICE (RTP bypass). |
-| **Instance (Asterisk)** | **Fleet edge:** `transport-udp` + `outbound_proxy` + `webrtc=yes` (`pjsip_webrtc.tmpl`); PrepDial tenant-FQDN Dial. **Public TCP 8089 not required** for Magrathea clients. Optional **singleton-direct** lab: instance `transport-wss` `:8089`. |
+| **pbx3sbc** | **W1 lab green on the SBC** — pbx3sbc **`main`**; checklist **`pbx3sbc/workingdocs/~/GiT/pbx3-ops/devdocs/oss-move/WEBRTC_W1_SBC_LAB.md`**. Live: **:8089/ws**; SDP media rewrite skipped for WSS/ICE (RTP bypass). |
+| **Instance (Asterisk)** | **Fleet edge:** `transport-udp` + `outbound_proxy` + `webrtc=yes` (`pjsip_webrtc.tmpl`); PrepDial tenant-FQDN Dial. **Public TCP 8089 not required** for SBC clients. Optional **singleton-direct** lab: instance `transport-wss` `:8089`. |
 
 Client: **`wss://sbc.pbx3.com:8089/ws`** + SIP user = shortuid + **SIP domain = tenant** (need not match WSS host).
 
@@ -329,7 +329,7 @@ Client: **`wss://sbc.pbx3.com:8089/ws`** + SIP user = shortuid + **SIP domain = 
 
 **TURN/STUN:** app / MSP concern; not pbx3sbc v1.
 
-#### Implementation order (historical — phases 1–4 done for Magrathea lab)
+#### Implementation order (historical — phases 1–4 done for SBC lab)
 
 ```text
 1. UDP edge stable     — soak, peering, Phase A
@@ -404,7 +404,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 | **SBC local DB — SQLite + Litestream** | pbx3sbc | §6.0 — **parked (2026-07-20)**; current engine **MariaDB**; do not spike unless reopened |
 | `GET_DOMAIN_FROM_SOURCE_IP` hostname gap | pbx3sbc | **Noted** — store Asterisk source IP in dispatcher `attrs`; optional polish |
 | **WebRTC / WSS on SBC** | pbx3sbc | §6.1 — `proto_wss` + TLS on VIP; RTP bypass; **interim/beta:** node `:8089` |
-| Older non-WSS SARK webphone | Product | Needs media gateway — optional / maybe never; not implied by WSS-on-SBC |
+| Older non-WSS previous PBX webphone | Product | Needs media gateway — optional / maybe never; not implied by WSS-on-SBC |
 | Phone TLS termination | Product | SBC vs node — overlaps §6.1 TLS track |
 | `sbc-fleet.v0.json` schema | pbx3-directory | Directory contract for adapter; `sip_proxy_fqdn` = VIP / stable edge name |
 ---
@@ -422,8 +422,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 | **`pbx3sbc/docs/MASTER-PROJECT-PLAN.md`** §4 | TLS & WebRTC on OpenSIPS (planned) |
 | **`DESIGN_RULES.md`** Rule 6 | Solo frictionless path |
 | **`DESIGN_RULES.md`** Rules 7–8 | Replaceable edge; catalog → SPA one-way |
-| **`ARCHITECTURE_REVIEW_SCORECARD.md`** | Honest positioning, drills, red-team checklist |
-| **`ARCHITECTURE_PEER_REVIEW.md`** | Full external challenge narrative (grounding) |
+| **`ARCHITECTURE_REVIEW_SCORECARD.md`** | Drills, dimension scores, red-team checklist |
 | **`SBC_HA_FAILOVER_REQUIREMENTS.md`** | VIP/EIP + warm standby; RTO / promote drill (2026-07-20) |
 | **`SBC_BACKUP_RESTORE_REQUIREMENTS.md`** | Cold DR (≠ HA promote) |
 
@@ -437,7 +436,7 @@ Fleet features (Fleet Console, SBC repoint move wizard) are **opt-in** when org 
 | 2026-07-20 | §6 — HA detail → **`SBC_HA_FAILOVER_REQUIREMENTS.md`** (VIP/EIP promote, 15–20 min RTO, reject SRV primary, Occam over seconds) |
 | 2026-07-20 | §6.0 — **park** SQLite + Litestream; current local engine **MariaDB**; Litestream irrelevant while on MariaDB |
 | 2026-07-14 | §6.0 — prefer **SQLite** on-box for portability + **Litestream** for S3/standby WAL; lab stays MySQL until soak. §6 HA/WebRTC settlements earlier same day. |
-| 2026-07-14 | §6 HA settled: **active–passive + VIP**; **no shared live DB**. §6.1: webphone SIP≠media; beta = node WSS; PBX3 + last-gen SARK OK; SBC WSS for endpoint simplicity; RTP bypass; older SARK needs media GW (maybe never) |
+| 2026-07-14 | §6 HA settled: **active–passive + VIP**; **no shared live DB**. §6.1: webphone SIP≠media; beta = node WSS; PBX3 + last-gen previous PBX OK; SBC WSS for endpoint simplicity; RTP bypass; older previous PBX needs media GW (maybe never) |
 | 2026-07-13 | §4.3.1 — solo vs fleet trunk panel; reject ITSP profiles; DNS outbound / IP inbound → **PEERING-PLAN** §0.1 |
 | 2026-07-09 | **`FLEET_EGRESS_AVAILABILITY_REQUIREMENTS.md`** — future OPTIONS qualify, EgressFailover, trunk health; §4/§6 cross-links |
 | 2026-07-09 | §2.4 founding Rules 7–8 — replaceable edge; SIP runtime API; catalog → SPA one-way |

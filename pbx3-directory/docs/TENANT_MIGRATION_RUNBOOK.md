@@ -280,7 +280,7 @@ Does **not** copy `tenants/{shortuid}/recordings/` on S3 (prefix unchanged; `ins
 - [ ] Login to **bzy54n** API; tenant data complete; **source** has **zero** rows for that shortuid (no orphan extensions showing shortuid as Tenant)
 - [ ] Inbound/outbound test call (SBC path; no tenant DNS required)
 - [ ] Instance LE still valid on both nodes (`https://{instance}:44300/up`)
-- [ ] Magrathea `domain` setid points at dest
+- [ ] SBC `domain` setid points at dest
 - [ ] `pbx3:fleet-preflight` green on both nodes
 
 ---

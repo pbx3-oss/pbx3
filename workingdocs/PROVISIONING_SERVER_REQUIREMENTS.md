@@ -1,11 +1,11 @@
 # Provisioning — requirements (sketch)
 
 **Status:** **Reopened 2026-09-08** (supersedes won't-do 2026-08-23).  
-**v1 direction:** **instance-local** HTTP phone provisioner on each home — independently, at least for now. **Not** building the fleet edge nginx provision proxy / shared provision host yet (that shape remains in §0 as a later option). Still **no** **sark3pcerts** panel. Manufacturer/reseller RPS (**M1**) remains a valid alternative alongside in-house.  
-**2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a type label only. Revival must **not** reintroduce Device templates — retrofit SARK 6.5-style expand from extension/handset data.  
+**v1 direction:** **instance-local** HTTP phone provisioner on each home — independently, at least for now. **Not** building the fleet edge nginx provision proxy / shared provision host yet (that shape remains in §0 as a later option). Still **no** **third-party certs panel** panel. Manufacturer/reseller RPS (**M1**) remains a valid alternative alongside in-house.  
+**2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a type label only. Revival must **not** reintroduce Device templates — retrofit previous PBX 6.5-style expand from extension/handset data.  
 **Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — deferred past instance-local v1.  
 **Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard.  
-**Reference notes:** private prior co-located provisioner / SARK archives (operator only — not in product tree).  
+**Reference notes:** private prior co-located provisioner / previous PBX archives (operator only — not in product tree).  
 **Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** (extension SIP fields / Commit) · **`TLS_AND_CERTIFICATES.md` §0** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23 / #28 / **0k**.
 
 ---
@@ -17,14 +17,14 @@
 | Layer | Role |
 |-------|------|
 | **Edge provision proxy** | nginx (or equivalent). Has a **stable public A/AAAA**. Terminates HTTPS (wildcard / edge LE — detail TBD). Routes to the instance that currently homes the phone’s tenant — by **Host / SNI = tenant FQDN** and/or by **MAC** (always present on GET or POST). |
-| **Home listener** | Co-located on the instance (tenant-aware). Reads **`ipphone`** (same secret HoR as Asterisk). Lift and polish existing **SARK / prior co-located** provision routines (`device.php`-class: MAC → template expand → body). |
+| **Home listener** | Co-located on the instance (tenant-aware). Reads **`ipphone`** (same secret HoR as Asterisk). Lift and polish existing **previous PBX / prior co-located** provision routines (`device.php`-class: MAC → template expand → body). |
 | **Phone** | Provision URL uses the **tenant FQDN** (same string as SIP domain) *or* a stable provision hostname; request carries **MAC** in query/path/body. DNS for the phone-facing name points at the **proxy**, not at the home. SIP REGISTER / media still follow the normal fleet path (**SBC** + tenant domain string) — provision A ≠ SIP next hop. |
 
 ```text
 Phone GET/POST https://{tenant-or-provision-host}/…  (MAC in query, path, or body)
   → DNS A/AAAA → provision proxy (stable; does not change on tenant move)
   → nginx routes by Host/SNI and/or MAC → current home backend
-  → home listener expands vendor config from local SQLite (SARK lift)
+  → home listener expands vendor config from local SQLite (previous PBX lift)
   → phone applies config → SIP REGISTER via SBC (unchanged)
 ```
 
@@ -39,7 +39,7 @@ Prefer **fail closed**: unknown Host and unknown MAC → 404/502; never guess ac
 
 **Tenant move:** update the proxy’s **backend map** (and any MAC→home index) from catalog — same mobility events as SBC `setid` projection. **No** DNS change on move; **no** phone re-key of provision host; secrets never leave the home row for render.
 
-**Why this works (operator stance):** Routing is the hard fleet bit; once Host and/or MAC → home is correct, the provision **application** is mostly already written in SARK-era routines — lift, harden, and polish rather than invent a second inventory.
+**Why this works (operator stance):** Routing is the hard fleet bit; once Host and/or MAC → home is correct, the provision **application** is mostly already written in previous-PBX routines — lift, harden, and polish rather than invent a second inventory.
 
 ### Relationship to `TLS_AND_CERTIFICATES.md` §0
 
@@ -80,7 +80,7 @@ Serve vendor phone config files keyed by **MAC** (and vendor “common” descri
 |---------|--------|
 | **What it is** | Home **HTTP provision listener** + optional **edge reverse-proxy** for fleet Host routing |
 | **What it is not** | Not Asterisk; not Gatekeeper; not SBC call plane; not SPA; **not** required for calls once phones are configured |
-| **SARK lift** | Port behaviour from private archives / SARK `device.php` (MAC → `#INCLUDE` expand → text). Polish auth, HTTPS, multi-tenant pathing, sndcreds |
+| **previous PBX lift** | Port behaviour from private archives / previous PBX `device.php` (MAC → `#INCLUDE` expand → text). Polish auth, HTTPS, multi-tenant pathing, sndcreds |
 | **Call plane** | Phones **register / media** via normal fleet SIP (SBC → instance). Provision is **config HTTP only** |
 | **Directory / Rule 1** | Proxy routing may **read** catalog home facts (projection). Provision must not become a call-routing dependency. Proxy/home down → already-provisioned phones keep working |
 | **Rule 7** | Provision proxy is a **replaceable edge** sibling of the SBC (HTTP, not SIP). Prefer dumb nginx + map over a fat app on the edge |
@@ -95,7 +95,7 @@ Phone discovers provision URL (DHCP opt66/114, PnP, or manual)
   → GET https://{tenant-fqdn}/provisioning…?mac=…   (or vendor path forms)
   → DNS → provision proxy A/AAAA
   → Proxy: Host/SNI → current home
-  → Home: MAC → Device stack → expand → body (SARK routines)
+  → Home: MAC → Device stack → expand → body (previous PBX routines)
 Phone applies config → SIP REGISTER to SBC / domain from file
 ```
 
@@ -124,7 +124,7 @@ Phone applies config → SIP REGISTER to SBC / domain from file
 
 | Do | Notes |
 |----|--------|
-| HTTP(S) MAC / descriptor → vendor config | Same URL families as SARK (`?mac=`, `/{mac}.cfg`, Yealink common, …) |
+| HTTP(S) MAC / descriptor → vendor config | Same URL families as previous PBX (`?mac=`, `/{mac}.cfg`, Yealink common, …) |
 | Template expand | Device `#INCLUDE`; `$localip` / `$ext` / `$password` / ports; optional BLF |
 | Credential gating | `sndcreds` Always \| Once \| No |
 | Multi-tenant | Resolve tenant from Host / path; only that cluster’s phones |
@@ -138,7 +138,7 @@ Phone applies config → SIP REGISTER to SBC / domain from file
 | Input | Source | Note |
 |-------|--------|------|
 | Extension + MAC + secret + device stack | `ipphone` (+ Device) | Authored on instance; **HoR for secrets** |
-| BLF / line keys | fkey tables | As today / SARK |
+| BLF / line keys | fkey tables | As today / previous PBX |
 | SIP host policy | Fleet: embed **SBC** + tenant domain; not home public IP | Matches W1 / fleet desk path |
 | OUI → vendor | `manuf.txt` helper | Create-time UI; not every GET |
 
@@ -181,7 +181,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 
 | Topic | Stance |
 |-------|--------|
-| Open GET by MAC | SARK LAN default; MAC = weak capability |
+| Open GET by MAC | previous PBX LAN default; MAC = weak capability |
 | HTTPS | Required off-lab; proxy owns edge cert |
 | mTLS + vendor CAs | Optional hardened remote |
 | Secrets in body | Only when `sndcreds` allows; prefer Once for first boot |
@@ -206,7 +206,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 
 | Slice | Likely home | Notes |
 |-------|-------------|--------|
-| Home listener | **pbx3** / **pbx3api** (or small co-located PHP) | Lift SARK `device.php` behaviour; multi-tenant Host |
+| Home listener | **pbx3** / **pbx3api** (or small co-located PHP) | Lift previous PBX `device.php` behaviour; multi-tenant Host |
 | Edge proxy | Small edge host or co-located with control/SBC ops box | nginx + map from catalog; **not** in SIP path |
 | Map refresh | Gatekeeper / move job hook | Same events as SBC domain repoint |
 | Device templates | Seed from archives / Device table | Subset OK |
@@ -219,11 +219,11 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 
 0. **Schedule build?** — Direction preferred; priority TBD (TODO).  
 1. **Cert on proxy** — Wildcard `*.apex` vs per-tenant SAN vs name `provision.{apex}` with path-based tenant (path would change phone URL shape — Host-based preferred).  
-2. **Where proxy runs** — Shared fleet box vs next to Magrathea vs control plane; must stay off call-path critical path (Rule 1 / 5).  
+2. **Where proxy runs** — Shared fleet box vs next to the SBC vs control plane; must stay off call-path critical path (Rule 1 / 5).  
 3. **Map transport** — Regenerated nginx conf vs lua (MAC extract from URI/body) vs auth_request to Gatekeeper (cache carefully).  
 4. **Primary route key** — Host-only, MAC-only, or Host with MAC cross-check (lean: support both; MAC always available on the wire).  
 5. **Solo** — Skip proxy; phone → instance directly (M3 solo).  
-6. **Stack for home listener** — PHP parity with SARK vs rewrite; behaviour first.
+6. **Stack for home listener** — PHP parity with previous PBX vs rewrite; behaviour first.
 
 ---
 

@@ -2,8 +2,8 @@
 
 **Status:** **TRACK COMPLETE 2026-08-04** on **`time-based-routing`**. Slices **A–E** delivered (dual-read retained). Golden: lunch profile + force modes lab green; packages **pbx3 0.0.4-7** + **pbx3cagi 1.0.0-13**; day-parts help applied. SPA profiles primary; open/close demoted. BLF *30/*31 AUTO/CLOSED; multi-mode force via AstDB. **Not** pushed/merged. **Kildare** untouched.  
 **Scope:** Instance / tenant inbound schedule → destination selection (`dateseg`, `holiday`, `pbx3timer.php`, `CheckState` / `CheckTime`, `inroutes`, SPA Day/Holiday timers + Inbound + route profiles).  
-**Not:** Fleet control plane, **SBC** product code (unchanged path edge), FreePBX-style time-condition chains (deferred — §6), trunk legacy open/close fields, **per-mode CoS matrices** (CoS stays binary — §5.10).  
-**Related:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 4 parked — this track changes CheckState contract first) · `CALL_TEST_STRATEGY.md` / CAGI **`TEST_RECIPE.md`** · canvas study [time-based routing review](file:///Users/jeffstokoe/.cursor/projects/Users-jeffstokoe-GiT-pbx3-master/canvases/time-based-routing-review.canvas.tsx) · Existing-DB convert: shortuid normalize + private migrate tooling · CoS SPA backlog: **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**.
+**Not:** Fleet control plane, **SBC** product code (unchanged path edge), dialplan time-condition chains (deferred — §6), trunk legacy open/close fields, **per-mode CoS matrices** (CoS stays binary — §5.10).  
+**Related:** `pbx3cagi/workingdocs/REFACTOR_PLAN.md` (Phase 4 parked — this track changes CheckState contract first) · `CALL_TEST_STRATEGY.md` / CAGI **`TEST_RECIPE.md`** · canvas study [time-based routing review](file:///Users/jeffstokoe/.cursor/projects/Users-jeffstokoe-GiT-pbx3-master/canvases/time-based-routing-review.canvas.tsx) · Existing-DB convert: shortuid normalize + private migrate tooling · CoS SPA backlog: **`pbx3spa/workingdocs/LEGACY_PBX_PANEL_BACKLOG.md`**.
 
 **Lab hosts (2026-08-04):**
 
@@ -12,8 +12,8 @@
 | **Golden** (`08jzwn`, EIP `44.196.98.191`) | **Only** instance for package install / call-path / L0–L1 lab for this track. **Slice A lab-gated 2026-08-04:** packages **pbx3 0.0.4-7** + **pbx3cagi 1.0.0-12**; convert + dual-read; offline Ingress `+441924910444` → **1000**. |
 | **Kildare** | **No day-parts packages or experiment installs** — operator production phones; may **originate** lab calls only |
 | **bzy54n / others** | Not required for this track unless operator says otherwise |
-| **SBC (Magrathea)** | **No pbx3sbc product branch / edge feature work** — existing Magrathea path carries the test DID; leave edge config alone unless op says fix |
-| **Inbound DID (spare)** | **`01924910444`** / dial/wire forms as lab uses (digit E.164 **`441924910444`**, node Ingress often **`+441924910444`**) — **points at golden** (Magrathea `dr_rules` → gwid golden). Operator-allocated for day-parts L1/smoke. Originate from **Kildare desk** or **SIPp UAC** (`98.93.32.43` / Peer pack host as documented) — do not repoint office DIDs. |
+| **SBC (SBC)** | **No pbx3sbc product branch / edge feature work** — existing SBC path carries the test DID; leave edge config alone unless op says fix |
+| **Inbound DID (spare)** | **`01924910444`** / dial/wire forms as lab uses (digit E.164 **`441924910444`**, node Ingress often **`+441924910444`**) — **points at golden** (SBC `dr_rules` → gwid golden). Operator-allocated for day-parts L1/smoke. Originate from **Kildare desk** or **SIPp UAC** (`98.93.32.43` / Peer pack host as documented) — do not repoint office DIDs. |
 
 **Convert note:** v1 line shortuids must be unique per profile+mode (profile ‖ `_open`/`_closed`); truncated hex collided — fixed + backfill missing lines.
 
@@ -73,7 +73,7 @@ After Commit, re-toggle OCLO once if a lab still has stale `{Name}/OCSTAT` rows 
 
 ### 2.4 What we keep as a strength
 
-**Precompute in cron; O(1) at call time.** Do **not** move to dialplan `GotoIfTime` forests (classic FreePBX cost: every call re-qualifies calendar / holidays). Minute lag is acceptable for business hours.
+**Precompute in cron; O(1) at call time.** Do **not** move to dialplan `GotoIfTime` forests (classic cost: every call re-qualifies calendar / holidays). Minute lag is acceptable for business hours.
 
 ---
 
@@ -85,7 +85,7 @@ After Commit, re-toggle OCLO once if a lab still has stale `{Name}/OCSTAT` rows 
 4. Keep **cron precompute** + thin CAGI lookup.  
 5. **Forward-convert** existing pbx3 DBs without silent behaviour change **for open/close destinations** (holidays = redesigned; convert is best-effort — §8 Q4).  
 6. Leave **custom apps** as the escape hatch for exotic logic.  
-7. Defer FreePBX **time-condition chains** (optional later).  
+7. Defer dialplan **time-condition chains** (optional later).  
 8. **Test with the code** — offline unit/L0 every slice; lab L1 where call path changes (§14).
 
 ---
@@ -103,14 +103,14 @@ After Commit, re-toggle OCLO once if a lab still has stale `{Name}/OCSTAT` rows 
 | **Holiday** | **Redesigned** calendar override: primarily **force mode**; optional **force dest**. Not absolute-time route subversion from older holiday models. |
 | **Custom app** | Unchanged escape hatch. |
 
-**Not v1 default:** FreePBX time-condition objects (match → A, fail → B chains) or per-call `GotoIfTime`. Those remain a possible **later** advanced layer sharing the same calendar tables.
+**Not v1 default:** Dialplan time-condition objects (match → A, fail → B chains) or per-call `GotoIfTime`. Those remain a possible **later** advanced layer sharing the same calendar tables.
 
-### 4.2 Why not FreePBX-first
+### 4.2 Why not dialplan time-condition chains first
 
-- FreePBX is familiar in Asterisk reseller land, not best-in-class UX.  
+- Match→A / fail→B TC chains are familiar in Asterisk reseller land, not best-in-class UX.  
 - TC chains fight the existing tenant-wide timer + BLF mental model.  
 - Day-parts + profiles **evolve** `oclo` / open-close instead of replacing the authority model.  
-- Cloud / 3CX-style “open / lunch / after hours” matches competitor expectations without dialplan calendar tax.
+- Commercial hosted PBX “open / lunch / after hours” modes match operator expectations without dialplan calendar tax.
 
 ### 4.3 Evaluation locus (locked)
 
@@ -195,7 +195,7 @@ Older holiday models used early absolute-epoch + `routeoverride` subversion; OK 
 - Optional **force dest** when a day must leave profile lookup entirely.  
 - Precedence: under operator hard-force (Q5), above day timers.  
 - Convert of old rows: best-effort (preserve dest where possible); **do not** promise every historical evaluation quirk. Import notes: “review holiday windows after upgrade.”  
-- Recurring national holiday packs / FreePBX-style libraries: not v1 unless scheduled separately.
+- Recurring national holiday packs / shared holiday libraries: not v1 unless scheduled separately.
 
 ### 5.8 Calendar UX — no-match default (Q1 / Q7) — **default open locked**
 
@@ -302,7 +302,7 @@ Those UIs framed windows as **closed periods** (sclose/eclose) on default-open �
 
 - Different jobs: inbound modes answer greeting / queue / IVR; CoS answers dial privilege.  
 - A third dimension on the extension CoS matrix is costly UX for rare need (“stricter CoS at lunch”).  
-- Matches SARK heritage: rules in force during **normal hours** vs **closed hours**.
+- Matches previous PBX heritage: rules in force during **normal hours** vs **closed hours**.
 
 **Operator / BLF:** master or tenant force **CLOSED** still selects the After-hours CoS set; **AUTO** resumes schedule (and thus the binary map above).
 
@@ -316,7 +316,7 @@ Those UIs framed windows as **closed periods** (sclose/eclose) on default-open �
 
 ## 6. Non-goals (v1)
 
-- FreePBX time-condition chain UI / objects.  
+- Dialplan time-condition chain UI / objects.  
 - Evaluating Christmas / hours in `extensions.conf` via `GotoIfTime`.  
 - Dropping custom apps.  
 - Immediate drop of `openroute`/`closeroute` columns (only after convert + lab proven).  
@@ -397,7 +397,7 @@ Do **not** interleave with other dial-locus / GenAst contract changes. **§8 loc
 ## 11. Sequencing vs other work
 
 - **Own track** — not CAGI Phase 4 and not a drive-by on inbound SPA.  
-- **Before** FreePBX TC chains, CAGI Phase 4 domain splits, or a full legacy rewrite (this convert is the schedule piece those should assume).  
+- **Before** dialplan TC chains, CAGI Phase 4 domain splits, or a full legacy rewrite (this convert is the schedule piece those should assume).  
 - Independent of short-dial residual D; do not mix dial-locus contracts.  
 - §8 locked — implement when operator schedules.
 
@@ -435,7 +435,7 @@ Do **not** interleave with other dial-locus / GenAst contract changes. **§8 loc
 |-------|--------|-------------|
 | **Unit / offline** | pbx3 convert; timer pure functions or PHPUnit/script harness; pbx3api feature/PHPUnit; pbx3spa unit (validation) where logic exists | **Every slice, as code lands** |
 | **L0 CAGI** | `pbx3cagi` `make test` / `TEST_RECIPE.md` — fixture SQLite + AstDB mock | Every change to CheckState/CheckTime or profile lookup |
-| **L1 lab SIPp** | sipplab — golden/Magrathea | After call path behaviour changes and before package roll that enables new modes in lab |
+| **L1 lab SIPp** | sipplab — golden/SBC | After call path behaviour changes and before package roll that enables new modes in lab |
 | **L3 manual** | Desk BLF, SPA admin flows | Force codes, SPA profile editing smoke — document short recipe |
 | **L2 load** | Not required for this track | Do not block day-parts on soak |
 
@@ -511,7 +511,7 @@ Gate: **`make test` PASS** on every CAGI PR in this track.
 
 | Date | Note |
 |------|------|
-| 2026-07-26 | Initial draft: day-parts + profiles; cron kept; FreePBX deferred; existing-DB convert first-class; Phase 4 cagi parked. |
+| 2026-07-26 | Initial draft: day-parts + profiles; cron kept; dialplan TC chains deferred; existing-DB convert first-class; Phase 4 cagi parked. |
 | 2026-08-04 | Slice **A** lab-gated on golden (packages 0.0.4-7 / cagi 1.0.0-12; convert fix; PSTN DID green). Slice **B** timer multi-mode + unit tests (`pbx3-schedule.php`). |
 | 2026-08-04 | Schedule wall clock = **instance site TZ** (`/etc/timezone` / Network panel); timer must not use bare PHP UTC. |
 | 2026-08-04 | Timespan half-open `[start, end)`. §5.8 expanded: no-match default alternatives (A–D) + preferred tenant setting residual. |

@@ -24,7 +24,7 @@ When UTC had already rolled to **1 Aug** (~02:00 UTC) but local was still **31 J
 
 | Layer | Usual practice |
 |-------|----------------|
-| **Storage** | **UTC** (epoch or UTC wall) — Cisco CUCM, 3CX CDR export, billing/mediation |
+| **Storage** | **UTC** (epoch or UTC wall) — industry CDR export / billing mediation (e.g. CUCM-class) |
 | **Presentation** | Convert at the edge using **site / tenant / operator** IANA TZ (“today”, invoices, office-hours reports) |
 | **Asterisk default** | Host **local** unless `usegmtime` / `cdrzone=UTC` (backend-dependent) |
 

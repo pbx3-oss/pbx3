@@ -363,11 +363,11 @@ The SPA must not hold SSH, cloud root, registrar Mac IAM, or long-lived break-gl
 
 **One author of record per fact** (not “lock the whole SBC”):
 
-- If the directory owns it (tenant domain setid, fleet DID delivery, fleet-provisioned node dispatcher / linked Asterisk Peer, …), the product path is **catalog → project**. **Hop 1** (SBC DID/block → tenant home) under fleet is **Fleet-only** — Magrathea Number routes must **not** offer retarget/edit/delete for `fleet=did` rows (**`FLEET_DID_HOP1_LOCK.md`**, 2026-08-11). **Tenant domain → setid** under fleet is the same class — Magrathea Domain Routes must **not** offer rename/setid/delete for `fleet=domain` rows (**`FLEET_DOMAIN_SETID_LOCK.md`**, 2026-08-11). Hop 2 (tenant `inroutes` → endpoint) stays on the home PBX.
+- If the directory owns it (tenant domain setid, fleet DID delivery, fleet-provisioned node dispatcher / linked Asterisk Peer, …), the product path is **catalog → project**. **Hop 1** (SBC DID/block → tenant home) under fleet is **Fleet-only** — SBC Number routes must **not** offer retarget/edit/delete for `fleet=did` rows (**`FLEET_DID_HOP1_LOCK.md`**, 2026-08-11). **Tenant domain → setid** under fleet is the same class — SBC Domain Routes must **not** offer rename/setid/delete for `fleet=domain` rows (**`FLEET_DOMAIN_SETID_LOCK.md`**, 2026-08-11). Hop 2 (tenant `inroutes` → endpoint) stays on the home PBX.
 - Facts **not** yet in the directory (typical: carrier Peers, Fail2ban, LE, one-off edge tuning) stay **edge-authored** for everyone until product deliberately moves them into HoR.
 - Prefer tagging fleet-owned rows (e.g. `fleet=did`, `fleet=domain` attrs) so projectors purge/upsert **their** namespace and do **not** clobber hand-authored peers or foreign `dr_rules`.
 
-**Anti-patterns:** Making Filament second-class or read-only for standalone users; co-hosting fleet console inside `pbx3sbc-admin` (Rule 7); inventing a second HoR in OpenSIPS tables; treating “fleet user opened Filament” as equal authorship for catalog-owned rows; Magrathea→catalog sync as product path; **burying edge mutators only in Livewire** so a later HTTP/local-admin surface needs a rewrite — keep shared services; grow `/api/fleet` only for HoR projection / headless ops (**`FLEET_HTTP_COMMS.md`** Direction).
+**Anti-patterns:** Making Filament second-class or read-only for standalone users; co-hosting fleet console inside `pbx3sbc-admin` (Rule 7); inventing a second HoR in OpenSIPS tables; treating “fleet user opened Filament” as equal authorship for catalog-owned rows; SBC→catalog sync as product path; **burying edge mutators only in Livewire** so a later HTTP/local-admin surface needs a rewrite — keep shared services; grow `/api/fleet` only for HoR projection / headless ops (**`FLEET_HTTP_COMMS.md`** Direction).
 
 **Implication:** Move cutover updates HoR and projection in one job (or fails/rolls back). Calls keep using last projection if control plane is down (Rule 11). Ties Rules 7 + 8.
 
@@ -437,7 +437,7 @@ Important, but situational — do not treat as the same bar as Rules 1–14.
 
 ### Backup retention (agreed — option C)
 
-**Legacy Sark:** daily cron + on-demand backups in one pool; **max 9** local copies; new backup deletes the oldest (10th) locally.
+**Legacy previous PBX:** daily cron + on-demand backups in one pool; **max 9** local copies; new backup deletes the oldest (10th) locally.
 
 **PBX3 (option C — implemented):**
 

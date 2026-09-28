@@ -42,7 +42,7 @@ These are the “big” call types operators care about.
 | `maj-in-holiday` | Holiday override | — | planned | yes | **H-setup** + **H** |
 | `maj-in-cfim-local` | CFIM → local ext | **`cfim-local`** **U** | **`in-cfim-local`** recipe | yes | **L0: U** · **L1: H-setup** (set CFIM) + **H** (answer target) |
 | `maj-in-phone-302-local` | Phone **302** → local ext (not AstDB CF*) | — | **`phone-302-local`** (catcher A 302 → B) | yes | **L1: U** with catcher UAS · distinct from CFIM |
-| `maj-in-cfim-external` | CFIM off-box | **`cfim-external`** **U** | **`in-cfim-external`** (pack) | yes | **L0: U** · **L1: U** via SIPP_MAIN→Egress→Magrathea DID/1000 |
+| `maj-in-cfim-external` | CFIM off-box | **`cfim-external`** **U** | **`in-cfim-external`** (pack) | yes | **L0: U** · **L1: U** via SIPP_MAIN→Egress→upstream carrier DID/1000 |
 | `maj-in-cfbs` | Forward busy/noanswer | — | — | yes | **H** |
 | `maj-in-dnd-vm` | DND → VM | — | — | yes | **H** |
 | `maj-in-queue` | Queue → agent | **`dial-queue-predial`** **U** | **`in-queue-answer`**, **`in-queue-cancel-vm`** (pack) | yes | **L0: U** · **L1: U** answer or agent-486→VM |
@@ -144,7 +144,7 @@ Same attendance as the mapped RCS code (**H**). `_*99XXXX` → `*61*` = debt / d
 | L1 with CFIM / CLOSED / queue | Plus **H-setup** of AstDB / day state / agents |
 | Remaining `*NN*` (agents/greetings/UX/`*20*`/open-close), BLF | Dial + hear prompt / confirm; CF/DND/ringdelay/spy now **U** via sipplab feature pack |
 | IVR, page, park, pickup, conf, VM retrieve | Interactive or multi-party |
-| PSTN L3 / Magrathea-Twilio matrix | Carrier + human |
+| PSTN L3 / SBC-Twilio matrix | Carrier + human |
 | Ext↔ext / multi-tenant AoR | Two endpoints (until dual-SIPp / dual auto-answer) |
 
 ### Path to reliable unattended L1

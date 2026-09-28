@@ -13,7 +13,7 @@ Fleet nodes dial PSTN only via the **Egress** trunk to the SBC. Carrier-specific
 | **DNID** (dialled) | Egress / trunk **transformation mask** | pbx3cagi `Mangle` before `Dial` |
 | **CLID** | `outboundClip` (extension / cluster / trunk) | Sent **as stored** — masks do **not** rewrite CLI |
 
-Store CLIDs as `+CC…` for that node’s serving country. Gamma/Magrathea PAID formatting is SBC outbound dialect, not a node mask.
+Store CLIDs as `+CC…` for that node’s serving country. Gamma/SBC PAID formatting is SBC outbound dialect, not a node mask.
 
 ## Seed transform (UK lab today)
 

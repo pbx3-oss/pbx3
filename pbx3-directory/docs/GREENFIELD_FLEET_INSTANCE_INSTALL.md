@@ -159,7 +159,7 @@ If any command fails, stop and fix that prerequisite before launching an instanc
 | Fleet | IAM instance profile attached; `PBX3_ORG_BUCKET` set; **`trunks.pkey=Egress`** present; `pbx3:fleet-preflight` green (incl. **Egress qualify Avail** when SBC answers OPTIONS) |
 | SPA | Instance appears in fleet catalog picker after refresh |
 
-Order matters: **install and prove `/up` before onboard.** Onboard does **not** recreate the DB, but it **does** write fleet `.env`, register the catalog row, and **seed the mandatory Egress trunk** (then genAst + runLinker + Asterisk restart). Magrathea domain/dispatcher cutover is still a separate edge step.
+Order matters: **install and prove `/up` before onboard.** Onboard does **not** recreate the DB, but it **does** write fleet `.env`, register the catalog row, and **seed the mandatory Egress trunk** (then genAst + runLinker + Asterisk restart). SBC domain/dispatcher cutover is still a separate edge step.
 
 ---
 
@@ -525,7 +525,7 @@ Optional: after a local backup exists on the node, add `--smoke-backup`.
 
 Do **not** put `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (even empty) in `.env` — empty strings block instance-role credentials.
 
-Edge note: seed makes the **node** ready to dial toward `sbc.pbx3.com`. Magrathea **domain / dispatcher / setid** for this FQDN remains an SBC-side step.
+Edge note: seed makes the **node** ready to dial toward `sbc.pbx3.com`. SBC **domain / dispatcher / setid** for this FQDN remains an SBC-side step.
 
 ---
 

@@ -11,7 +11,7 @@
 
 ## 1. Why this doc
 
-S8.5–S8.6 proved tenant migration **works** (affcot `08jzwn → bzy54n`, 2026-07). It did **not** produce a procedure a **PBX fleet admin** can run. Target persona: **Windows-style admin — technical but panel-driven, not CLI**. Most SARK-lineage customer admins fit this profile.
+S8.5–S8.6 proved tenant migration **works** (affcot `08jzwn → bzy54n`, 2026-07). It did **not** produce a procedure a **PBX fleet admin** can run. Target persona: **Windows-style admin — technical but panel-driven, not CLI**. Most previous PBX-lineage customer admins fit this profile.
 
 **Product significance:** decoupling **extension number** (what the phone user sees) from **SIP identity** is a core PBX3 pillar. It makes a tenant *portable* across fleet nodes — the answer to Asterisk's chronic load-balancing / re-homing pain. Tenant mobility is therefore a **headline feature**, not an ops footnote, and it deserves a first-class UI.
 
@@ -968,8 +968,7 @@ When implementing, keep these sections aligned:
 - **`LETSENCRYPT_PER_TENANT_FQDN.md`** §4.2 / **`TLS_IMPLEMENTATION_STEPS.md`** §4.2 — cert sync on move.
 - **`IMPLEMENTATION_PLAN.md`** § Phase S8 — fleet lifecycle plan (S8.10 row for this design).
 - **`DESIGN_RULES.md`** — Rule 1 (fail-safe), EC2 fleet model, solo Rule 6, Rules 7–8 (edge + catalog).
-- **`ARCHITECTURE_REVIEW_SCORECARD.md`** — honest positioning vs peers, scenario drills, PR red-team checklist.
-- **`ARCHITECTURE_PEER_REVIEW.md`** — full external architecture challenge (grounding narrative, 2026-07-09).
+- **`ARCHITECTURE_REVIEW_SCORECARD.md`** — scenario drills, dimension scores, PR red-team checklist.
 - **`OPS_S3_RUNBOOK.md`** §7 — node IAM; **must align with §2.6.1** (tightened policy).
 - **`S3_LAYOUT_PROPOSAL.md`** — bucket tree, identifier mapping.
 

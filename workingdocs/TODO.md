@@ -10,14 +10,14 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate (instance-local)** — reopen after **won't-do (2026-08-23)**. **v1:** each home runs its own HTTP provisioner (no fleet edge proxy yet). Still no **sark3pcerts**; no Device templates (#28). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** (status reopened). Ties to desk NAT templates: **`FLEET_DESK_PHONE_NAT.md`**.  
+0k. **Phone provisioning — reinstate (instance-local)** — reopen after **won't-do (2026-08-23)**. **v1:** each home runs its own HTTP provisioner (no fleet edge proxy yet). Still no **third-party certs panel**; no Device templates (#28). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** (status reopened). Ties to desk NAT templates: **`FLEET_DESK_PHONE_NAT.md`**.  
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
 0b. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
 0c. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0d. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
-0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** / **#15**. **Built-tenant fleet ingest V1** shipped: lock **`FLEET_BUILT_TENANT_INGEST_REQUIREMENTS.md`** · `tenant:ingest-built` · MkDocs **`fleet/ingest-compatible-db`** (CLI + enroll + DID hop-1; **§0** rename `pkey=default` before ingest). SPA ingest panel = later (I5). Tip/host: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
+0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`private offline migrate tool`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** / **#15**. **Built-tenant fleet ingest V1** shipped: lock **`FLEET_BUILT_TENANT_INGEST_REQUIREMENTS.md`** · `tenant:ingest-built` · MkDocs **`fleet/ingest-compatible-db`** (CLI + enroll + DID hop-1; **§0** rename `pkey=default` before ingest). SPA ingest panel = later (I5). Tip/host: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
 0g. ~~**UA → model / phone images (23a)**~~ — **lab green `.31` (2026-08-27):** harvest + Handset UI. **Images / slice F shelved** — operator joining OEM partner portals first; no ProVu scrape into product path. Spec §9.0 kept for when ready.  
 0h. **Trunk carrier-face normalization** — describe / transform / normalize inbound+outbound Peer face so homes stay carrier-agnostic (fleet wire `+E.164`). Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. Builds on dialect §5.4 + NUMBER_WIRE Phase 2.  
 0i. ~~**SBC management access (Filament lockdown)**~~ — **done (2026-09-26):** UFW allowlist for **admin HTTPS 443 only**; SSH = ops/SG; SIP out of scope; dedicated panel + lockdown (default off); auth+2FA still apply. Spec: **`pbx3-directory/docs/SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`**. Tips: **pbx3sbc-admin `c772714`** · **pbx3sbc `8690a16`**.  
@@ -28,7 +28,7 @@
 4. ~~**First out triage**~~ — **closed for now (2026-08-19):** **4a–4d** green; **`FIRST_OUT_CHECKLIST.md`** F7–F9 = safety / wipe / ext_len done; F5 anonymize done; F1–F4 = lab rollout + smoke (green with #5). Optional crumbs: F6 device prune, N1–N7 nice. Checklist stays the regression reference.
 4a. ~~**Pre-release safety debt (go/no-go)**~~ — **code + tests + golden go-smoke done** (`PRE_RELEASE_SAFETY_DEBT.md` 1–16). ChanSpy desk + sipplab feature pack **U**; golden dial + SPA login + DID `441924910444` green (2026-08-09). Bzy smoke optional.  
 4b. ~~**Tenant delete data integrity**~~ — **T1–T5 done** (`TENANT_DELETE_DATA_INTEGRITY.md`). Lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1 (2026-08-10). Remaining optional: T6 DID policy, T7 Class B, T8 FK.  
-4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 (2026-08-10). **2026-08-28:** OutRoute min match floor **≥ 3** (SARK; not tied to `ext_len`); short-dial queue/IVR edge cases **§3.8.1**.  
+4c. ~~**Enforce tenant `ext_len`**~~ — **done** (`TENANT_SHORT_DIAL_REQUIREMENTS.md` §3.8 / Q15). Tip-deploy + lab green **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2 (2026-08-10). **2026-08-28:** OutRoute min match floor **≥ 3** (previous PBX; not tied to `ext_len`); short-dial queue/IVR edge cases **§3.8.1**.  
 4d. ~~**Fleet trunk Create vs Edit**~~ — **done** (`FLEET_TRUNK_PEERING_DECISION.md` §4.3.1): hide/403 Create on fleet; **2026-09-03** Egress/EgressFailover narrow edit (transform + dialplan knobs); peer identity / Delete / Active=NO locked.  
 5. ~~**Lab / install automation**~~ — **closed for now (2026-08-19):** 5a–5c / 5e–5k done or superseded; **#5d** parked later out. MkDocs happy path locked. ~~Soak / more lab testing residual~~ — **done (2026-08-20)** local harness (desks + WebRTC Line test + Commit-with-call + reg soak + day-parts timer + short-dial hairpin). ~~Stale cloud **`install-pbx3-pbx3api.md`**~~ — **done (2026-08-20).** Follow-on: make **`aelintra/pbx3` public**. Lab WSS: **`pbx3sbc/scripts/enable-lab-wss.sh`**. Harness: **`LAB_INSTALL_AUTOMATION_HARNESS.md`**.  
 5a. ~~**Toliman vanity shortuid (`kildare`)**~~ — **superseded** (2026-08-15): instance teardown / greenfield replace instead of in-place vanity. Operator: MkDocs **`fleet/decommission-instance`**.  
@@ -60,7 +60,7 @@
 16. **Fleet auth cookie/SSO (blocked)**.  
 17. ~~**TOTP 2FA — Fleet Gatekeeper G5**~~ — **won't-do for now** (2026-08-12): opt-in is enough for single fleet-admin ops; revisit if multi-user fleet logins need “admins must enroll.” Spec: **`FLEET_GATEKEEPER_TOTP_REQUIREMENTS.md`**.  
 18. **S7+** attested PCI — customer ask.  
-19. **SBC Track A lab** — third-party PBX (± FreePBX/SARK) behind SBC — still open. **`SBC_PRODUCT_TRACKS.md`** Track A.  
+19. **SBC Track A lab** — third-party PBX (± FreePBX/previous PBX) behind SBC — still open. **`SBC_PRODUCT_TRACKS.md`** Track A.  
 19a. ~~**STIR Twilio shape A lab**~~ — **observed green** (2026-08-11): after Twilio ID checks, outbound rated attestation **A** (carrier signs as SP). Own-cert shapes B/C not started. Spec: **`SBC_PRODUCT_TRACKS.md`** Track B.  
 19b. **SBC SIP TLS (hardphones)** — **mid-term, not today.** Posture locked **2026-08-25**: TLS :5061 phones ↔ SBC; UDP homes/carriers; reuse `sbc.pbx3.com` LE; mix OK. Spec: **`SBC_PRODUCT_TRACKS.md`** gap **#1** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2.  
 20. **Grafana / door-knock geo** (parked).  
@@ -73,14 +73,14 @@
 26. ~~**Seed outbound US dialplan / wire (O4)**~~ — **lab green** for Toliman call chain (Egress `011:+ 1:+1` + Twilio). Product US globals auto-seed pack still optional. Spec: **`EGRESS_PLUS_E164_WIRE.md`** · **`SEED_OUTBOUND_ON_TENANT_CREATE.md`**.  
 27. **Instance API digest deepen** (optional).  
 28. ~~**Device templates**~~ — **won't-do / removed (2026-08-25):** Device **table** purged. **`ipphone.device`** = type enum only (**WebRTC** \| **MAILBOX** \| **General SIP**) — locked with **23a** (2026-08-27); OUI vendor strings normalized away; brand → `devicevendor`. Existing DBs: `sqlite_device_drop.sql` + device-enum normalize on 23a build.  
-29. **OSS org + repo transfer** — after Apache `LICENSE` + migrate extract/strip (**done**).  
+29. **OSS org + repo transfer** — execution plan private: **`~/GiT/pbx3-ops/devdocs/oss-move/`**. Slug `pbx3`, set A. Prerequisites (**LICENSE** + migrate extract/strip) **done**; execute when scheduled. Parallel previous PBX brand scrub (same ops folder) Tier A before public.  
 30. **Optional SBC media plane / rtpengine** (parked) — selective engage only; load model in **`pbx3-directory/docs/RTPENGINE_SELECTIVE_ENGAGE.md`**. Triggers: LAN-edge / Track A / Peer; see try-it Appendix A.  
-31. **Incident notify (parked)** — tenant callout teams → ConfBridge + optional SMS; SARK `mcstcaller` heritage. Spec: **`INCIDENT_NOTIFY_REQUIREMENTS.md`**. Est. **~5–7 d** v1 (voice MVP **~4–5 d**). Not first-out.  
+31. **Incident notify (parked)** — tenant callout teams → ConfBridge + optional SMS; previous PBX `mcstcaller` heritage. Spec: **`INCIDENT_NOTIFY_REQUIREMENTS.md`**. Est. **~5–7 d** v1 (voice MVP **~4–5 d**). Not first-out.  
 32. ~~**Instance SIP logging**~~ — **done** (A–G on **`main`**; **pbx3 `0.0.5-5`** on golden/bzy/Toliman; API tip; S3 **`sip-text`** ship confirmed). Spec: **`HOME_SIP_LOGGING_REQUIREMENTS.md`**.  
 33. ~~**Fleet hop-1 DID — block assign + reconcile**~~ — **done** (Allocate `delivery` singleton|block; `GET /dids/reconcile` + Apply via project; SPA DIDs drift check). Lock: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**.  
-34. ~~**Fleet domain→setid Magrathea lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). **2026-09-24:** Domain Routes show catalog **label** + instance Name; reconcile `domain_label_mismatch` / `dispatcher_label_mismatch` (projectable). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
+34. ~~**Fleet domain→setid SBC lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). **2026-09-24:** Domain Routes show catalog **label** + instance Name; reconcile `domain_label_mismatch` / `dispatcher_label_mismatch` (projectable). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
 35. ~~**SBC site timezone at install**~~ — **done (2026-08-26):** `pbx3sbc-admin/install.sh` prompt / `--site-timezone` / `PBX3_SBC_SITE_TIMEZONE` → `.env` (Home/CDR day buckets). Default = host `/etc/timezone`. Does not change OS clock. Optional later: Filament change-later.  
-36. **Legacy SARK admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_SARK_PANEL_BACKLOG.md`**. **P1 CoS (sarkcos): done pending lab sign-off (2026-08-23)**. **sarkreport:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** lab green (2026-08-25) — upload/play/delete + `moh reload` (no Commit for file swaps); Custom MOH Active still Save. **Recordings (sarkrecordings):** panel shipped (R1/R1.5/S7); unified list filters + play spinner **done (2026-08-26)**. **Extension named call/pickup groups:** `named_call_group` + `named_pickup_group` — lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**; **pickup manual L3 OK** lab `.31`; sipplab pack pending. **BLF SUBSCRIBE:** tmpl `allow_subscribe=yes` + `subscribe_context=$clst`; **Snom BLF OK** lab `.31`; **Yealink** — phone config under investigation (Asterisk assumed OK). **Parking:** `parkinghints=yes` + **`parkedcallreparking=both`**; fleet timeout FQDN Dial + COS `901`–`903` + `*5` preferred — golden OK (2026-09-26). ETL: **`~/GiT/sark-to-pbx3`**. **PJSIP config wizard:** won't-do. **P2+ parked:** wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **sark3pcerts**.
+36. **Legacy PBX admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_PBX_PANEL_BACKLOG.md`**. **P1 CoS (Class of Service): done pending lab sign-off (2026-08-23)**. **Reports:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** lab green (2026-08-25) — upload/play/delete + `moh reload` (no Commit for file swaps); Custom MOH Active still Save. **Recordings:** panel shipped (R1/R1.5/S7); unified list filters + play spinner **done (2026-08-26)**. **Extension named call/pickup groups:** `named_call_group` + `named_pickup_group` — lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**; **pickup manual L3 OK** lab `.31`; sipplab pack pending. **BLF SUBSCRIBE:** tmpl `allow_subscribe=yes` + `subscribe_context=$clst`; **Snom BLF OK** lab `.31`; **Yealink** — phone config under investigation (Asterisk assumed OK). **Parking:** `parkinghints=yes` + **`parkedcallreparking=both`**; fleet timeout FQDN Dial + COS `901`–`903` + `*5` preferred — golden OK (2026-09-26). ETL: **`~/GiT/private offline migrate tool`**. **PJSIP config wizard:** won't-do. **P2+ parked:** wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **third-party certs panel**.
 37. **Audio transcription (pluggable)** — provider interface; choose backend. Potential first-out: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **0l**.
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
@@ -128,10 +128,10 @@
 
 - [x] **Pre-release safety debt 1–16 (2026-08-09):** Code + tests in product repos. ChanSpy desk + unattended shortcode pack green. Checklist: **`PRE_RELEASE_SAFETY_DEBT.md`**.
 
-- [x] **Pre-release go smoke — golden (2026-08-09):** Dial + SPA login + fleet DID `441924910444` (Peer SIPp → Magrathea → `dhbm8x`/`1000`). Bzy optional.
+- [x] **Pre-release go smoke — golden (2026-08-09):** Dial + SPA login + fleet DID `441924910444` (Peer SIPp → SBC → `dhbm8x`/`1000`). Bzy optional.
 - [x] **Tenant delete data integrity T1–T5 (2026-08-10):** Wipe-preflight; mesh prune; park cleanup; `pbx3:tenant-orphan-audit`; `pbx3:tenant-wipe-list-check`. Spec: **`TENANT_DELETE_DATA_INTEGRITY.md`**. Lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1. Open later: **T6** DID policy, **T7** Class B, **T8** FK.
 
-- [x] **Enforce tenant `ext_len` (2026-08-10 #4c):** Default **3**, max **5**, allowed **3–5** (amended **2026-09-26**; was 2–5). No mixed-length extension pkeys. GenAst PrefixDial fixed remainder; UK seed `_0XXX. _00XX.`. Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 / Q15 / **§3.8.1**. Lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2. **Amended 2026-08-28:** OutRoute min match floor **≥ 3** (SARK), not `> ext_len`.
+- [x] **Enforce tenant `ext_len` (2026-08-10 #4c):** Default **3**, max **5**, allowed **3–5** (amended **2026-09-26**; was 2–5). No mixed-length extension pkeys. GenAst PrefixDial fixed remainder; UK seed `_0XXX. _00XX.`. Spec: **`TENANT_SHORT_DIAL_REQUIREMENTS.md`** §3.8 / Q15 / **§3.8.1**. Lab: **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §2. **Amended 2026-08-28:** OutRoute min match floor **≥ 3** (previous PBX), not `> ext_len`.
 
 - [x] **Fleet trunk Create vs Edit (2026-08-10; Egress surface 2026-09-03):** No Create on fleet (SPA hide + API 403); Egress/EgressFailover narrow edit (transform + Caller ID / In prefix / Device recording / Call progress / cname / description); peer identity + Privileged/Match hidden; Delete + Active=NO blocked. Solo unchanged. Lock: **`FLEET_TRUNK_PEERING_DECISION.md`** §4.3.1.
 
@@ -139,7 +139,7 @@
 
 - [x] **Apache-2.0 `LICENSE` on product repos (suggested #2, done 2026-08-09):** Clean Apache License 2.0 root `LICENSE` on **`pbx3`**, **`pbx3api`**, **`pbx3spa`**, **`pbx3cagi`**, **`pbx3sbc`**, **`pbx3sbc-admin`** (removed mistaken httpd subcomponents appendix). Packaging: `debian/copyright` / composer / `package.json` license fields. Copyright owner **Aelintra Telecom Limited**. See **`OPEN_SOURCE_GITHUB_SETUP.md`**.
 
-- [x] **Customer migrate ETL → separate Aelintra repo (2026-08-08/09):** Private **`aelintra/sark-to-pbx3`**. **v2 offline** (`bin/migrate-offline.py`) is primary; v1 on-host for parity. Fixtures: `~/GiT/nonGitStuff/sark-backups/<site>/`. **Next:** more v2 fixture tests; then product **strip** (#3). Lab/tip detail: **`~/GiT/pbx3-ops/TODO_OPS.md`**.
+- [x] **Customer migrate ETL → separate Aelintra repo (2026-08-08/09):** Private offline-migrate repo. **v2 offline** (`bin/migrate-offline.py`) is primary; v1 on-host for parity. Fixtures: `~/GiT/nonGitStuff/` site backups (ops). **Next:** more v2 fixture tests; then product **strip** (#3). Lab/tip detail: **`~/GiT/pbx3-ops/TODO_OPS.md`**.
 
 - [x] **Strip customer-migrate tooling from pbx3 (suggested #3, done 2026-08-09):** Removed stock migrate entrypoints; kept idempotent **`sqlite_normalize_cluster_to_shortuid.sql`**. Private ETL owns migrate SQL/PHP. Heritage strings scrubbed 2026-08-09.
 
@@ -187,11 +187,11 @@
 
 - [ ] **`ipphone.desc` vs `description` — clarify / rename (parked 2026-07-29):** Schema has both; SPA/GenAst roles misaligned. Proper fix later — do not drive-by.
 
-- [ ] **SBC Track A lab — third-party PBX (± FreePBX) behind SBC (2026-07-28):** Prove REGISTER / calls via Magrathea or scratch pbx3sbc. Capture recipe / gaps — **`SBC_PRODUCT_TRACKS.md`** Track A. Foreign-PBX→pbx3 data migrate is a separate ETL later.
+- [ ] **SBC Track A lab — third-party PBX (± FreePBX) behind SBC (2026-07-28):** Prove REGISTER / calls via the SBC or scratch pbx3sbc. Capture recipe / gaps — **`SBC_PRODUCT_TRACKS.md`** Track A. Foreign-PBX→pbx3 data migrate is a separate ETL later.
 
 - [ ] **pbx3cagi Phase 4 — domain file splits (parked 2026-07-26):** Day-parts / CheckState **merged to `main`** — Phase 4 unblocked when scheduled. Spec: **`REFACTOR_PLAN.md`**.
 
-- [x] **Control plane duplex / HA — won't-do (2026-08-11):** Management layer is binary (up/down). Gatekeeper stays a **single host**; calls continue per Rule 11 while Fleet mutate waits. Do **not** build duplex/active-active Gatekeeper. Ops: rebuild/restore + DNS/EIP discipline. Edge HA (Magrathea) remains a separate call-path track. Lock: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.1 · **`DESIGN_RULES.md`** Rule 11.
+- [x] **Control plane duplex / HA — won't-do (2026-08-11):** Management layer is binary (up/down). Gatekeeper stays a **single host**; calls continue per Rule 11 while Fleet mutate waits. Do **not** build duplex/active-active Gatekeeper. Ops: rebuild/restore + DNS/EIP discipline. Edge HA (SBC) remains a separate call-path track. Lock: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.1 · **`DESIGN_RULES.md`** Rule 11.
 
 - [ ] **Gatekeeper auth.sqlite backups (#15a — 2026-09-25):** Ops continuity only (not call path). Daily or post-change **`sqlite3 .backup` / file copy** of `GATEKEEPER_AUTH_DB` → org S3 `control/{id}/…` + N-day retention + restore note in **`CONTROL_HOST.md`**. **Not Litestream** (parked elsewhere; overkill for low-churn control DB under single-host rebuild doctrine). Optional local rotate on-box. Not first-out.
 
@@ -216,7 +216,7 @@
 
 - [x] **Number dialect — paid Twilio inbound/outbound (2026-08-11):** Toliman↔Twilio both ways lab green (SBC Route-strip + public From/PAI host; Egress CLIP update without `default` tenant). Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · wire: **`EGRESS_PLUS_E164_WIRE.md`**. CLI stays as-stored (no CLIP mangle). Follow-on: **§5.4** ops-authored profiles (no tip for recombination).
 
-- [ ] **Trunk carrier-face normalization (2026-08-29):** Describe → transform → normalize inbound/outbound Peer face so a trunk/home works **anywhere** relative to fleet wire (`+E.164`), irrespective of carrier national/IDD quirks. Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. Pulls together dialect §5.4, NUMBER_WIRE Phase 2, Egress seeds, SARK DiD #15. Not scheduled.
+- [ ] **Trunk carrier-face normalization (2026-08-29):** Describe → transform → normalize inbound/outbound Peer face so a trunk/home works **anywhere** relative to fleet wire (`+E.164`), irrespective of carrier national/IDD quirks. Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. Pulls together dialect §5.4, NUMBER_WIRE Phase 2, Egress seeds, previous PBX DiD #15. Not scheduled.
 
 - [x] **SBC management access / Filament lockdown (2026-09-26):** UFW **443** allowlist panel shipped (**pbx3sbc-admin `c772714`** · **pbx3sbc `8690a16`**); tip on cloud SBC. Spec: **`pbx3-directory/docs/SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`**.
 
@@ -232,15 +232,15 @@
 
 - [x] **Instance SIP logging (2026-08-11):** Session-armed SIP text (PJSIP-filtered) + JSONL; SPA arm/disarm; S3 **`sip-text` / `sip-pcap`**. Package **`0.0.5-5`** rolled golden/bzy/Toliman; API tip; S3 sip-text ship green. Spec: **`HOME_SIP_LOGGING_REQUIREMENTS.md`**.
 
-- [x] **Fleet hop-1 DID authorship lock (2026-08-11):** Retarget only via Fleet Allocate/reassign → project. Spec: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**. Magrathea deny + Fleet badge/redirect; SPA catalog-intent + **Repair SBC domain**. **#33 done:** block allocate + DID reconcile drift / Apply.
+- [x] **Fleet hop-1 DID authorship lock (2026-08-11):** Retarget only via Fleet Allocate/reassign → project. Spec: **`pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md`**. SBC deny + Fleet badge/redirect; SPA catalog-intent + **Repair SBC domain**. **#33 done:** block allocate + DID reconcile drift / Apply.
 
-- [x] **Fleet domain→setid Magrathea lock (2026-08-11 #34):** `fleet=domain` stamp on register/repoint; DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`. Spec: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.
+- [x] **Fleet domain→setid SBC lock (2026-08-11 #34):** `fleet=domain` stamp on register/repoint; DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`. Spec: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.
 
 - [x] **SBC site timezone at install (2026-08-26):** `pbx3sbc-admin/install.sh` prompt / `--site-timezone` → `PBX3_SBC_SITE_TIMEZONE`. Default host `/etc/timezone`. No OS `timedatectl`. Optional later: Filament change-later.
 
 - [ ] **Fleet auth — cookie sessions / SSO (deferred — settled stance 2026-07-14):** Try-it-out auth is enough. Design: **`FLEET_AUTH_COOKIE_SSO.md`**. **Channel constraints** (SSO must not collapse planes / SPA→SBC): **`pbx3-directory/docs/FLEET_HTTP_COMMS.md`** § Direction — SSO.
 
-- [x] **TOTP 2FA — SBC Filament (2026-08-07):** Lab green Magrathea; **`main`**. Spec: **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`**.
+- [x] **TOTP 2FA — SBC Filament (2026-08-07):** Lab green SBC; **`main`**. Spec: **`pbx3sbc-admin/workingdocs/TOTP_2FA_SBC.md`**.
 
 - [x] **TOTP 2FA — instance SPA / Sanctum (2026-08-07):** Opt-in MFA on **`main`**. Spec: **`TOTP_2FA_REQUIREMENTS.md`**.
 
@@ -270,7 +270,7 @@
 
 - [ ] **S7+ — Attested PCI / scale (deferred):** Do not start without customer ask.
 
-- [ ] **OSS org + repo registry:** Create GitHub org per **`OPEN_SOURCE_GITHUB_SETUP.md`**. **Prerequisites:** hygiene (**done**) → Apache-2.0 `LICENSE` (**done**) → migrate extract (**done**) → strip migrate from pbx3 (**done**). Ready for org transfer when scheduled.
+- [ ] **OSS org + repo registry:** Execute private **`~/GiT/pbx3-ops/devdocs/oss-move/OSS_ORG_TRANSFER_PLAN.md`** (org `pbx3`, product+SBC public; ops/ETL/sipplabs stay Aelintra). Hygiene / LICENSE / migrate strip **done**. Parent checklist: **`OPEN_SOURCE_GITHUB_SETUP.md`**.
 
 - [ ] **pbx3cagi refactor (under Ast config generator + cagi track):** Resume Phase **1.3 → 1.1 → 2.x**; **`make test`**. Contract: **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §5.
 
@@ -294,7 +294,7 @@
 
 - [x] **SPA session timeout (Instance Globals `sessiontimout`) (2026-08-26):** Idle auto-logout honours **`GET sysglobals.sessiontimout`** (seconds; default **600** = 10 min). Build env `VITE_AUTO_LOGOUT_MINUTES` remains fallback before globals load / fleet-only. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`** §6.
 
-- [x] **tt_help_core cleanup — unreferenced rows (final pass, 2026-08-26):** Pruned **233** legacy SARK rows from `sqlite_message.sql` (**190** SPA-wired remain). Audit script `--prune` + `FormTimezoneSelect` / `helpPkeys.js` coverage. Report: **`pbx3spa/workingdocs/HELP_UNREFERENCED_IN_SPA.md`**.
+- [x] **tt_help_core cleanup — unreferenced rows (final pass, 2026-08-26):** Pruned **233** legacy PBX rows from `sqlite_message.sql` (**190** SPA-wired remain). Audit script `--prune` + `FormTimezoneSelect` / `helpPkeys.js` coverage. Report: **`pbx3spa/workingdocs/HELP_UNREFERENCED_IN_SPA.md`**.
 
 - [x] **SPA field help — exposed batch (2026-08-26):** Missing-pkey + empty-htext worklists **0 actionable** (`FIELD_HELP_MISSING_PKEYS_EXPOSED.md`, `FIELD_HELP_EMPTY_HTEXT_EXPOSED.md`). Hide-help on self-explanatory fields; help rows + wiring (`formHelpPkey.js`); day/holiday timer create panels match edit. Optional follow-up: **23** dynamic `help-pkey` wiring noise (IVR, tenant advanced, firewall, route profile lines).
 
@@ -309,7 +309,7 @@
 
 - [ ] **SPA hygiene (deferred — after S8 / R1 / core panels):** Route lazy-loading + shared list/detail patterns later.
 
-- [ ] **Customer migrate routines (revisit, low priority — end of list):** Normalize/repair remains in pbx3; ETL is private under Aelintra. FreePBX migrate separate later.
+- [ ] **Customer migrate routines (revisit, low priority — end of list):** Normalize/repair remains in pbx3; ETL is private under Aelintra. other-PBX migrate separate later.
 
 ---
 

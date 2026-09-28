@@ -590,7 +590,7 @@ class genAsteriskObjects
 
 			/*
 			 * Fleet Egress: Prefer SbcDomainRoute so sip:{ext}@{tenant.fqdn}
-			 * from Magrathea (PrefixDial miss→home) lands in tenant dialplan.
+			 * from the SBC (PrefixDial miss→home) lands in tenant dialplan.
 			 * Carrier DID RURIs (domain ≠ tenant FQDN, or +E164) fall through
 			 * to Ingress. Privileged trunks still use cluster context.
 			 */
@@ -1042,7 +1042,7 @@ class genAsteriskObjects
 					}
 					// Tenant extension → Local/Q{ext} (PrepDial queue path).
 					// Non-extension (PSTN etc.) → Local/{num}@{tenant} so OutRoute matches
-					// (SARK Alias used Local/{n}@internal for the same idea).
+					//  (legacy PBX Alias used Local/{n}@internal for the same idea).
 					if (isset($localExts[$ext])) {
 						$Qbuff .= "member=Local/Q" . $ext . "@" . $cluster . "\n";
 					} else {
@@ -1610,7 +1610,7 @@ HERE;
             }
             $this->OUT .= $OUTstring;
 
-// outcome processing... dialable: numeric endpoint, or *{ext} leave-voicemail (SARK).
+// outcome processing... dialable: numeric endpoint, or *{ext} leave-voicemail (legacy PBX).
             $outcome = isset($qrow['outcome']) ? trim((string) $qrow['outcome']) : '';
             if ($outcome !== '' && strcasecmp($outcome, 'None') !== 0
                 && (is_numeric($outcome) || preg_match('/^\*\S+$/', $outcome))) {
@@ -1913,7 +1913,7 @@ HERE;
 			$this->OUT .= "\texten => _X.,1,NoOp(SBC domain route \${EXTEN})\n";
 			$this->OUT .= "\tsame => n,Set(__PBX3_SITE_DIAL=YES)\n";
 			/*
-			 * Magrathea: X-PBX3-Pres-Num = presentation digits (Site Group:
+			 * SBC: X-PBX3-Pres-Num = presentation digits (Site Group:
 			 * routing_prefix+ext); PAI = return AoR (suid@fqdn).
 			 * Prefer Pres-Num for CALLERID display + digit callback. Do not
 			 * stuff PAI into CALLERID or __PBX3_RETURN_AOR when Pres-Num is

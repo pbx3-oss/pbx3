@@ -51,7 +51,7 @@ Chaos (SBC promote under light load, Asterisk restart) stays **ad-hoc lab recipe
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │  Pack Call-L3  — PSTN smoke (operator)                        │
-│  Magrathea / Twilio matrix — keep manual; checklist only      │
+│  SBC / Twilio matrix — keep manual; checklist only      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -124,7 +124,7 @@ Keep **separate** from L1 pass/fail.
 | `ramp-find-ceiling` | Find break point | Ramp CPS until error rate or CPU pegs (later) |
 | `spike` | Short burst | 2–3× soak rate for 60s (later) |
 
-Provision once: `sipplab/targets/pbx3/provision-soak-phones.sh` (exts 2100–2139 on catcher tenant). Signalling-only is enough for CDR/Home + live demo backdrop. Answerer UAS must echo Magrathea **Record-Route** (`[last_Record-Route:]` in 180/200) or Magrathea leaves state-3 — see **sipplab** `docs/LEANINGS.md` / `docs/NAT_AND_DIALOG.md`.
+Provision once: `sipplab/targets/pbx3/provision-soak-phones.sh` (exts 2100–2139 on catcher tenant). Signalling-only is enough for CDR/Home + live demo backdrop. Answerer UAS must echo SBC **Record-Route** (`[last_Record-Route:]` in 180/200) or SBC leaves state-3 — see **sipplab** `docs/LEANINGS.md` / `docs/NAT_AND_DIALOG.md`.
 
 **Pickup / named groups (L1 gate on soak start):** Before `./run-soak.sh start`, sipplab may run **`./run-pickup-pack.sh`** when `SOAK_PICKUP_VALIDATE=1` (default) and `GOLDEN_SSH` is set. Requirement: **`EXTENSION_NAMED_PICKUP_GROUPS.md`** § Lab acceptance · harness **`sipplab/workingdocs/PICKUP_PACK.md`**. First lab green is pending; do not treat named pickup as release-signed until pack is green twice on target home.
 
@@ -181,7 +181,7 @@ pbx3 keeps strategy docs here; **`workingdocs/call-tests/`** is a redirect stub 
 | 2026-07-26 | Initial strategy: L0–L3, SIPp-only generators, scenario inventory, build order. |
 | 2026-08-01 | Recipes extracted to **aelintra/sipplabs**; `workingdocs/call-tests/` stub only. |
 | 2026-07-27 | Step 1–2 scaffold: `workingdocs/call-tests/` + `in-open-ext` (Mac→VIP); green run still pending lab allow. |
-| 2026-07-27 | `in-open-ext` green: Mac SIPp → Magrathea VIP → DID 01924918076 → golden 1000. Temp Peer gwid 99 (`sipp-lab`). |
+| 2026-07-27 | `in-open-ext` green: Mac SIPp → SBC VIP → DID 01924918076 → golden 1000. Temp Peer gwid 99 (`sipp-lab`). |
 | 2026-07-27 | L1 recipes: `in-cfim-local`, `in-closed-ivr-or-dest`, `feat-master-closed`, `in-queue-answer` + `run-sipp.sh`. |
 | 2026-07-27 | SIPp catcher tenant + `./run-pack.sh` green (open/CFIM/closed/queue via Twilio DID). |
 | 2026-07-27 | `phone-302-local` in pack (catcher A `uas-302` → B answers). |

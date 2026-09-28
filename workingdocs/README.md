@@ -24,12 +24,12 @@ Product stub: **`AGENT_HANDOFF.md`** (behavior + read-order + permanent referenc
 | **Locked product / fleet** | Prefer **`pbx3-directory/docs/`** when fleet-wide | DESIGN_RULES, runbooks, dialect reqs |
 | **Feature plans (instance)** | This folder | TLS, short dial, time-based routing, test packs |
 | **Home firewall UFW** | `UFW_SHOREWALL_MIGRATION.md` | Shorewall EOL → UFW; fleet SIP from SBC only |
-| **Tenant CLID blacklist** | `CLID_BLACKLIST_REQUIREMENTS.md` | Greenfield; auth to mutate; not SARK ETL |
+| **Tenant CLID blacklist** | `CLID_BLACKLIST_REQUIREMENTS.md` | Greenfield; auth to mutate; not previous PBX ETL |
 | **Repos / releases** | **REPOS_AND_RELEASES.md** | Multi-repo policy |
 
 **Do not** re-grow closed TODO checkmarks in **TODO.md** — closed ledger → **archive/TODO_DONE_LOG.md**.
 
-**Repos / releases:** **REPOS_AND_RELEASES.md**.  
+**Repos / releases:** **REPOS_AND_RELEASES.md**. **OSS move exercise (private):** **`~/GiT/pbx3-ops/devdocs/oss-move/`**.  
 **Tests:** **TEST_CADENCE.md** · **CRITICAL_PATH_TEST_PACK.md**.  
 **TLS index:** **TLS_AND_CERTIFICATES.md**.  
 **Fleet auth stance:** **FLEET_AUTH_COOKIE_SSO.md**.

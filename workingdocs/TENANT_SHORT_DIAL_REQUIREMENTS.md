@@ -1,6 +1,6 @@
 # Tenant short dial requirements (per-tenant dial prefixes)
 
-**Status:** Requirements locked 2026-07-27. **A–D + E pack-gate lab green** (2026-08-05) and **merged to `main`**. **D** Path 1 Magrathea + desk matrix; **E** sipplab pack **12/12** ×2. **F** migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**. Local shortcut **rejected** (§15).  
+**Status:** Requirements locked 2026-07-27. **A–D + E pack-gate lab green** (2026-08-05) and **merged to `main`**. **D** Path 1 SBC + desk matrix; **E** sipplab pack **12/12** ×2. **F** migrate recipe shipped — **`DIAL_PREFIX_LEGACY_MIGRATE.md`**. Local shortcut **rejected** (§15).  
 **Wild / release operator model (2026-08-06):** Hand-invented per-sender prefixes are **lab / interim only**. Production = destination **routing prefix** + **dial cohort** (UI Site Group) + Rule 14 materialise — **[`DIAL_COHORT_REQUIREMENTS.md`](DIAL_COHORT_REQUIREMENTS.md)** (**release stopper** until done). Call path here stays; config HoR moves.  
 **Scope:** Allow an extension on tenant A to call an extension on tenant B **when allowed**, using a **dial prefix** that is **local to the calling tenant**, plus the target’s normal extension (`pkey`). Same call recipe whether B is on **this node or another** (fleet).  
 **Not:** Globally unique extension numbers (rejected). Not directory/gatekeeper in the call path (**Rule 1**). Not replacing PSTN OutRoute / Egress.  
@@ -154,14 +154,14 @@ Same-node “hairpin” back to the same Asterisk via dispatcher is **correct** 
 | **Tenant `ext_len`** | **Enforced.** Field already on `cluster`. **Default 3**, **maximum 5**, allowed **3–5** only (SPA selector). **No mixed lengths** within a single tenant — every extension `pkey` is exactly `ext_len` digits. |
 | **Remainder charset** | **Digits only** (`0–9`). Remainder is a target **extension** (`pkey`-shaped). **No** star/hash feature shortcodes through the prefix path (e.g. `81*50*1000` is **deny**). Local feature codes stay on the calling tenant (dial without prefix; always begin `*`). Reopen only on an explicit product ask. |
 | **GenAst** | One dialplan pattern per active prefix; remainder length = **destination** `ext_len` (e.g. `_81XXXX` for prefix `81` + dest `ext_len=4`). **Not** open `_81X.`. CAGI rejects wrong-length / non-digit remainder. |
-| **Length namespaces** | Local exts own length `ext_len` as **exact** dialplan matches. OutRoute patterns use a **SARK floor**: min match **≥ 3** (anything larger than two chars) — not tied to `ext_len`. Exact extension matches always outrank patterns in Asterisk; do not put extensions in `1xx` if you also route `_1XX`. Short-dial still requires prefix+dest **>** caller `ext_len`. |
+| **Length namespaces** | Local exts own length `ext_len` as **exact** dialplan matches. OutRoute patterns use a **previous PBX floor**: min match **≥ 3** (anything larger than two chars) — not tied to `ext_len`. Exact extension matches always outrank patterns in Asterisk; do not put extensions in `1xx` if you also route `_1XX`. Short-dial still requires prefix+dest **>** caller `ext_len`. |
 | **OutRoute / seize** | Min match **&lt; 3** forbidden (e.g. `_9.`, `_XX`). `999`, `_1XX`, `_XXX`, `_00.` all OK. “Dial 9” for longer PSTN = `_9` + enough digits + strip/mangle. |
 | **Fleet gate** | Feature **fleet-gated** in v1. Requires SBC path. |
 | **Singleton** | Multi-tenant singleton **without SBC** cannot inter-tenant prefix dial — accepted. Local shortcut **rejected** (§15). |
 | **Deny** | Missing/inactive prefix, wrong-length remainder, **or non-digit remainder** → **congestion + hangup** (no attendant / custom playback v1). |
 | **CoS** | **Tenant-wide:** active prefix row ⇒ allowed for all CoS classes. Per-class grant later if needed. |
 
-**Deferred implement** ~~(stance locked; code when scheduled)~~ **Implemented 2026-08-10 (#4c):** API/SPA enforce `ext_len` on extension create/update; GenAst length-bounded PrefixDial patterns; OutRoute save validates min match **≥ 3** (SARK floor — **2026-08-28**; not tied to `ext_len`); CAGI rejects wrong-length remainder when dest is local. UK seed dialplan → `_0XXX. _00XX.` (L7a).
+**Deferred implement** ~~(stance locked; code when scheduled)~~ **Implemented 2026-08-10 (#4c):** API/SPA enforce `ext_len` on extension create/update; GenAst length-bounded PrefixDial patterns; OutRoute save validates min match **≥ 3** (previous PBX floor — **2026-08-28**; not tied to `ext_len`); CAGI rejects wrong-length remainder when dest is local. UK seed dialplan → `_0XXX. _00XX.` (L7a).
 
 **Lab procedure (tip-deploy):** [`TENANT_WIPE_AND_EXT_LEN_LAB.md`](TENANT_WIPE_AND_EXT_LEN_LAB.md) §2.
 
@@ -198,13 +198,13 @@ Bob’s phone shows:  name = "1000 Alice"   (or similar)
 Return / redial  →  sip:ab12cd@pb0wsk.pbx3.com  → Alice’s phone (usrloc)
 ```
 
-**Lab implement (2026-08-04 — golden / Magrathea):** Handset **display** started as presentation **extension** (`CALLERID(num)` = pkey). **Network return AoR** in **`P-Asserted-Identity`** (`sip:suid@tenant.fqdn`) via **`SiteRing`** + dialplan gosub; Magrathea miss→hairpin uses `X-PBX3-Pres-Num` + kept PAI + From `sitedial`. SIPp: dialling `suid@fqdn` **usrloc-hits**. See **§3.9.1** for desk matrix outcome.
+**Lab implement (2026-08-04 — golden / SBC):** Handset **display** started as presentation **extension** (`CALLERID(num)` = pkey). **Network return AoR** in **`P-Asserted-Identity`** (`sip:suid@tenant.fqdn`) via **`SiteRing`** + dialplan gosub; SBC miss→hairpin uses `X-PBX3-Pres-Num` + kept PAI + From `sitedial`. SIPp: dialling `suid@fqdn` **usrloc-hits**. See **§3.9.1** for desk matrix outcome.
 
 No reverse dial prefix required for *product* callback (Q10 one-way OK). Prefix dial R-URI stays `ext@fqdn` (miss→dispatcher; **Asterisk-sourced only** today).
 
 #### 3.9.1 Desk return lab (2026-08-05) — findings + recommendation
 
-**Lab path:** affcot (`9wvvnb`) ↔ duns (`dhbm8x`) via Magrathea; prefixes `81` both ways (reverse row added for capture). Phones: Snom D717 / similar; registered Contacts via Magrathea.
+**Lab path:** affcot (`9wvvnb`) ↔ duns (`dhbm8x`) via the SBC; prefixes `81` both ways (reverse row added for capture). Phones: Snom D717 / similar; registered Contacts via the SBC.
 
 | Experiment | Result |
 |------------|--------|
@@ -219,7 +219,7 @@ INVITE sip:hb64kj@9wvvnb.pbx3.com   ← user correct, domain = local identity
 From: "1101" <sip:59507r@9wvvnb.pbx3.com>   ← From correctly local
 ```
 
-→ Magrathea/Asterisk look up `hb64kj` under **affcot** → **404**. Alice never rings.
+→ SBC/Asterisk look up `hb64kj` under **affcot** → **404**. Alice never rings.
 
 **Snom setting check:** No documented toggle to “keep remote party domain on history redial.” Dial-plan `\d` = **this identity’s registrar** (append local domain). `block_url_dialing` is dial-pad letters only. From must stay local identity (else call appears to originate as remote); that does **not** justify rewriting **Request-URI** host — but desks do it anyway.
 
@@ -238,7 +238,7 @@ From: "1101" <sip:59507r@9wvvnb.pbx3.com>   ← From correctly local
 | **A (locked)** | CLID carries **shortuid** (user); **our SBC** repairs phone-originated INVITE: usrloc miss on `user@wrong-domain` → lookup Contact by **username** (globally unique shortuid) and RELAY / fix `$rd`. Guaranteed history return on **pbx3 + our edge**. | **Our SBC only** for *guaranteed* desk callback (forward site dial already SBC-shaped) |
 | **B (rejected for v1)** | No history-return guarantee; coach name/LDAP display; return via reverse prefix / optional DID | Any SBC |
 
-**Implement (A):** Magrathea / template change per **`pbx3sbc/workingdocs/SLICE_D_SHORTUID_USRLOC_REPAIR.md`** (**lab green** on `main`). Generator reject-all-digit shortuids **done** (`idpwgen` + PHP wrappers) on branch `shortuid-reject-all-digit`.
+**Implement (A):** SBC / template change per **`pbx3sbc/workingdocs/SLICE_D_SHORTUID_USRLOC_REPAIR.md`** (**lab green** on `main`). Generator reject-all-digit shortuids **done** (`idpwgen` + PHP wrappers) on branch `shortuid-reject-all-digit`.
 
 **SBC pattern (summary — detail in that file):** Today phone INVITE `user@caller-fqdn` skips usrloc and **`TO_DISPATCHER`** → caller home → 404. Slice B miss→dispatcher is **Asterisk-only** and does not apply. **Path 1 (locked):** before dispatcher, for phone-sourced INVITE where `$rU` looks like shortuid (**charset + letter**, no fixed length), **username-only** `location` query (shortuids globally unique — unlike digit exts); hit → same Contact **`route(RELAY)`** as Asterisk→phone. Gate auth: From user registered on `$fd` and `$si` matches Contact/`received`. **Path 2 (alt, not v1):** rewrite `$rd` to registered domain → dispatcher **callee** home. Keep receive CLID = `suid@fqdn`; CallerID **name** = human. Do not username-only digit R-URIs.
 
@@ -404,7 +404,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 |-------|--------|------------------|
 | **A** — schema + API + SPA dial prefixes (no dial yet) | pbx3, pbx3api, pbx3spa | Admin CRUD |
 | **A′** — target = FQDN (Q14): required `target_fqdn`; fleet-aware FQDN picker (not local cluster shortuid-only); API does not require target ∈ local `cluster` | pbx3, pbx3api, pbx3spa | Admin can aim at remote sister site by FQDN |
-| **B** — OpenSIPS usrloc-miss → dispatcher for `ext@tenant.fqdn` | **pbx3sbc** | None — **lab Magrathea + template** (Pres-Num / PAI / sitedial hairpin) |
+| **B** — OpenSIPS usrloc-miss → dispatcher for `ext@tenant.fqdn` | **pbx3sbc** | None — **lab SBC + template** (Pres-Num / PAI / sitedial hairpin) |
 | **C** — GenAst pattern + CAGI PrefixDial (`ext@fqdn` via SBC) + CLIP | pbx3, pbx3cagi | Dial works fleet lab (presentation ext; see §3.9 lab note) |
 | **D** — Receive-path + return lab | pbx3cagi, sbc (+ lab desks) | Path partial; **open ToDo** → lab + choose **least-ugly guaranteed** return (no bidir prefix assume) — **`TODO.md`** |
 | **E** — L1 recipe `site-dial-a-b` | **sipplab** | Dual-host L1 + **pack gate** lab green 2026-08-05 (**12/12** ×2) — sipplab **`SITE_DIAL_PACK_GATE_PLAN.md`** |
@@ -481,14 +481,14 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | 2026-08-05 | **§15 Local shortcut rejected** — dual-path debt not worth same-node SBC bounce; Path 1 desk return lab green. |
 | 2026-08-10 | **§3.8 / Q2 / Q15:** enforce tenant `ext_len` (default 3, max 5, allowed 2–5, no mixed length); short-dial + OutRoute min match **> `ext_len`**; GenAst length-bounded remainder; drop “operator collision hygiene.” |
 | 2026-08-10 | **#4c implement:** ExtLenPolicy + API/SPA/GenAst/CAGI; UK seed `_0XXX. _00XX.` (L7a). |
-| 2026-08-28 | **§3.8.1:** short-dial edge cases — queues/IVRs only if dial length = `dest.ext_len`; call-centre mesh parked. OutRoute min match floor **≥ 3** (SARK; not tied to `ext_len`). |
+| 2026-08-28 | **§3.8.1:** short-dial edge cases — queues/IVRs only if dial length = `dest.ext_len`; call-centre mesh parked. OutRoute min match floor **≥ 3** (previous PBX; not tied to `ext_len`). |
 | 2026-09-26 | **Q15 / §3.8:** `ext_len` allowed **3–5** only (drop 2); SPA selector; ExtLenPolicy MIN=3. |
 
 ---
 
 ## 15. Co-located Local shortcut — **rejected**
 
-**Not building.** Same-node PrefixDial keeps the SBC/`sip:{ext}@{fqdn}` recipe (hairpin via dispatcher is correct and cheap). A Local/`Goto` branch would be dual-path debt for a short Magrathea bounce; primary use is sister sites on **different** nodes (Q14), where Local never helps. Singleton multi-tenant **without** SBC stays unsupported for prefix dial (Q5) unless that becomes an explicit sales ask — revisit only then.
+**Not building.** Same-node PrefixDial keeps the SBC/`sip:{ext}@{fqdn}` recipe (hairpin via dispatcher is correct and cheap). A Local/`Goto` branch would be dual-path debt for a short SBC bounce; primary use is sister sites on **different** nodes (Q14), where Local never helps. Singleton multi-tenant **without** SBC stays unsupported for prefix dial (Q5) unless that becomes an explicit sales ask — revisit only then.
 
 | Variant | Verdict |
 |---------|---------|
