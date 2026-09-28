@@ -1,3 +1,11 @@
+pbx3 (0.0.6-9) noble; urgency=medium
+
+  * GenAst / vmnotify: key OCLO and VM BLF AstDB/Custom state by shortuid (#0q);
+    Name remains dial/BLF target; dual-write STATE for CoS after-hours force close.
+  * Pair with pbx3cagi 1.0.0-23 (amd64 + arm64 AGI in Architecture: all deb).
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Mon, 28 Sep 2026 17:10:00 -0400
+
 pbx3 (0.0.6-8) noble; urgency=medium
 
   * CoS profiles: schema + junction→profile convert on upgrade; GenAst emits
