@@ -6,7 +6,7 @@
 **Create (empty tenant):** [`FLEET_TENANT_CREATE_REQUIREMENTS.md`](FLEET_TENANT_CREATE_REQUIREMENTS.md).  
 **Move (already-fleet tenant):** [`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`](../pbx3-directory/docs/TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md) · `tenant:export` / `tenant:import`.  
 **Lab:** never leave node-only tenants — [`LAB_FLEET_TENANTS.md`](../pbx3-directory/docs/LAB_FLEET_TENANTS.md).  
-**External DB sources:** sark-to-pbx3 split (**#17**), another fleet’s built tenant sqlite, or any one-`cluster` pbx3 DB — **provenance does not change the enroll runbook**.  
+**External DB sources:** any one-`cluster` compatible pbx3 sqlite (offline migrate/split, another fleet, or elsewhere) — **provenance does not change the enroll runbook**. Operator MkDocs: **`pbx3-docs`** [`fleet/ingest-compatible-db`](../../pbx3-docs/docs/fleet/ingest-compatible-db.md).  
 **DID hop-1:** [`FLEET_DID_HOP1_LOCK.md`](../pbx3-directory/docs/FLEET_DID_HOP1_LOCK.md).  
 **Related rules:** 6 / 10 / 11 / 13 / 14.
 
