@@ -39,11 +39,10 @@
 
 **Rule:** A fleet node is “known good” when **package + API + (optional) SPA build** match a row below. Golden **08jzwn** is the reference node unless noted.
 
-| Label | pbx3 package | pbx3 `main` | pbx3api `main` | pbx3spa `main` | pbx3cagi `main` | Notes |
-|-------|--------------|-------------|----------------|----------------|-----------------|-------|
-| **Golden floor (2026-09-28)** | **0.0.6-9** | `fa6a78d` | tip | tip | **1.0.0-23** (`14fc295`+) | #0q OCLO/BLF shortuid; dual-arch cagi. Install when rolling homes. |
+| Label | pbx3 package | pbx3 | pbx3api | pbx3spa | pbx3cagi | Notes |
+|-------|--------------|------|---------|---------|----------|-------|
+| **PBX3 Lab 2026.09** (first umbrella) | **0.0.6-9** | **`lab-2026.09`** + floor **`pbx3-0.0.6-9`** | **`lab-2026.09`** | **`lab-2026.09`** | **1.0.0-23** + **`lab-2026.09`** + floor **`pbx3cagi-1.0.0-23`** | First named bundle (`pbx3-oss`). Same tag on **pbx3-docs**, **pbx3sbc**, **pbx3sbc-admin**. Operator docs: https://pbx3-oss.github.io/pbx3-docs/ · doctrine § C. |
 | **Golden floor (2026-09-27)** | **0.0.6-8** | (prior) | tip | tip | **1.0.0-22** | CoS profiles. |
-| *Next umbrella (`PBX3 Lab YYYY.MM`)* | pin deb | tag/SHA | tag/SHA | tag/SHA | pin deb | Cut only for Lab/AMI/public story — see **Release doctrine** |
 
 **Update this table** when:
 
@@ -73,7 +72,7 @@ Historical pain: bumping a fat **main** `.deb` for every biggish patch. Forerunn
 | Component | Cadence |
 |-----------|---------|
 | **pbx3cagi** | **Deb-first** — new floor when the binary moves; rare is good. **`Architecture: all`** with **amd64 + arm64** AGI binaries (build: lab `.213` amd64 + `.148`/golden arm64 — see **`pbx3cagi/README.md` § Packaging**). **Git regress window:** keep **last three** release `.deb`s force-added on `main`; drop the oldest when adding a new one. |
-| **pbx3** | **Release / AMI / try-it floors** as `.deb` (pin + Depends). **Between floors:** tip / rsync under `/opt/pbx3` is first-class (lab + hotfix). Do not invent `0.0.x-N` for every patch. Tip SHAs → ops **`TODO_OPS.md`**. **Next UFW floor:** tip Phases 1–4 ship as **`0.0.6-1`** (skip packaging unshipped 0.0.5-7/8 drafts). |
+| **pbx3** | **Release / AMI / try-it floors** as `.deb` (pin + Depends). **Between floors:** tip / rsync under `/opt/pbx3` is first-class (lab + hotfix). Do not invent `0.0.x-N` for every patch. Tip SHAs → private ops tip ledger. |
 | **pbx3api** | Clone-at-tag / tip; optional `.deb` deferred (**TODO #6** / try-it D6). |
 
 Detail: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** § Public GitHub org vs packages.
