@@ -74,7 +74,7 @@ Historical pain: bumping a fat **main** `.deb` for every biggish patch. Forerunn
 
 | Component | Cadence |
 |-----------|---------|
-| **pbx3cagi** | **Deb-first** — new floor when the binary moves; rare is good. |
+| **pbx3cagi** | **Deb-first** — new floor when the binary moves; rare is good. **`Architecture: all`** with **amd64 + arm64** AGI binaries (build: lab `.213` amd64 + `.148`/golden arm64 — see **`pbx3cagi/README.md` § Packaging**). **Git regress window:** keep **last three** release `.deb`s force-added on `main`; drop the oldest when adding a new one. |
 | **pbx3** | **Release / AMI / try-it floors** as `.deb` (pin + Depends). **Between floors:** tip / rsync under `/opt/pbx3` is first-class (lab + hotfix). Do not invent `0.0.x-N` for every patch. Tip SHAs → ops **`TODO_OPS.md`**. **Next UFW floor:** tip Phases 1–4 ship as **`0.0.6-1`** (skip packaging unshipped 0.0.5-7/8 drafts). |
 | **pbx3api** | Clone-at-tag / tip; optional `.deb` deferred (**TODO #6** / try-it D6). |
 
