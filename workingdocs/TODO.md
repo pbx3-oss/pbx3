@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-28 (session — #0q OCLO/BLF shortuid keys)  
+**Last updated:** 2026-09-28 (session end — #0q OCLO/BLF shortuid done)  
 **Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
 
 ### Suggested “what next?” order
