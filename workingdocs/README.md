@@ -26,6 +26,7 @@ Product stub: **`AGENT_HANDOFF.md`** (behavior + read-order + permanent referenc
 | **Home firewall UFW** | `UFW_SHOREWALL_MIGRATION.md` | Shorewall EOL → UFW; fleet SIP from SBC only |
 | **Tenant CLID blacklist** | `CLID_BLACKLIST_REQUIREMENTS.md` | Greenfield; auth to mutate; not previous PBX ETL |
 | **Repos / releases** | **REPOS_AND_RELEASES.md** | Multi-repo policy |
+| **AI-assisted operator (OSS)** | **AI_ASSISTED_OPERATOR_REQUIREMENTS.md** | Agent kickoffs + human gates; MkDocs face |
 
 **Do not** re-grow closed TODO checkmarks in **TODO.md** — closed ledger → **archive/TODO_DONE_LOG.md**.
 

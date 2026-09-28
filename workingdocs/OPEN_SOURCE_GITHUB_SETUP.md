@@ -46,6 +46,12 @@ On the default branch (usually `main`):
 - Enable **Dependabot alerts** + **security updates**
 - Add a minimal `SECURITY.md` (“how to report vulnerabilities privately”)
 
+### AI-assisted operator (OSS face)
+
+- **Lock:** **`workingdocs/AI_ASSISTED_OPERATOR_REQUIREMENTS.md`** — promote AI coding agents for install/ops (not only development); classical CLI remains canonical; human gates for VM/DNS/LE/IAM/destruct.
+- **MkDocs:** Getting started → AI-assisted operations · Installation → AI-assisted install · Fleet → Agent-assisted onboard/rebuild.
+- **Per public repo:** thin root **`AGENTS.md`** (where truth lives + gates). Org README (after transfer): lead with “try with an AI agent” + link MkDocs kickoffs.
+
 ### Contributor-facing files (per repo)
 
 - **Workingdocs (TODO suggested #1 — done; light peel 2026-08-09):** Product/design **locks and active requirements** stay in-repo (agent locality). Agent **session** handoffs + **research/audits/tippy lab** → private **`aelintra/pbx3-ops`** (`~/GiT/pbx3-ops`, including **`devdocs/`**). See **`TODO.md`** · **`workingdocs/README.md`**.
