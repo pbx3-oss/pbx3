@@ -48,9 +48,9 @@ On the default branch (usually `main`):
 
 ### AI-assisted operator (OSS face)
 
-- **Lock:** **`workingdocs/AI_ASSISTED_OPERATOR_REQUIREMENTS.md`** — promote AI coding agents for install/ops (not only development); classical CLI remains canonical; human gates for VM/DNS/LE/IAM/destruct.
-- **MkDocs:** Getting started → AI-assisted operations · Installation → AI-assisted install · Fleet → Agent-assisted onboard/rebuild.
-- **Per public repo:** thin root **`AGENTS.md`** (where truth lives + gates). Org README (after transfer): lead with “try with an AI agent” + link MkDocs kickoffs.
+- **Lock:** **`workingdocs/AI_ASSISTED_OPERATOR_REQUIREMENTS.md`** — **§0:** CLI/MkDocs decks lead; AI is thin optional co-pilot (**not a panacea**). Same installers; human gates; no browser ops IAM; stepwise checks (A11).
+- **MkDocs:** classical Installation nav first; AI-assisted pages are parallel siblings. Fleet → Agent-assisted onboard/rebuild.
+- **Per public repo:** thin root **`AGENTS.md`**. Org/README: classical clone/docs **before** any AI blurb.
 
 ### Contributor-facing files (per repo)
 
