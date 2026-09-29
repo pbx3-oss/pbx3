@@ -38,9 +38,10 @@ Transfer set (all **public** under org **`pbx3-oss`** — done):
 On the default branch (usually `main`):
 
 - Require **pull requests** (no direct pushes)
-- Require **1 approval** (raise later if needed; maintainers may self-merge small PRs once CI is green)
+- Required approvals: **0** while solo maintainer (self-merge OK once CI is green when configured); restore **1** when a second maintainer exists
 - Require **status checks** (tests/lint) to pass when configured
 - Block force-push
+- **`enforce_admins: false`** for now (tighten with dual review later)
 
 **SPA note:** merge to **`pbx3spa` `main`** triggers Pages → **`https://app.pbx3.com`**.
 

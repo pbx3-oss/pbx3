@@ -34,10 +34,10 @@
 | Do | Do not |
 |----|--------|
 | `git checkout -b topic/…` from current `main` | Commit or push straight to **`main`** |
-| Open a PR → review → merge | Use admin **bypass** of branch protection for routine work |
+| Open a PR → merge (self-merge OK while solo; approvals **0** until a second maintainer) | Use admin **bypass** of branch protection for routine work |
 | Delete the branch after merge | Treat “small fix” / docs / agent session as exempt |
 
-**Why:** Integration history stays reviewable; **`pbx3spa` `main` deploys GitHub Pages (`app.pbx3.com`)** — a direct push is a prod SPA release. Same discipline for packages, API, docs, and SBC even when there is no CDN cutover.
+**Why:** Integration history stays reviewable; **`pbx3spa` `main` deploys GitHub Pages (`app.pbx3.com`)** — a direct push is a prod SPA release. Same discipline for packages, API, docs, and SBC even when there is no CDN cutover. GitHub gate detail: **`OPEN_SOURCE_GITHUB_SETUP.md`** § Branch protection.
 
 **Local mess:** use `npm run dev` / uncommitted WIP on the feature branch; only merge when ready for `main`.
 
