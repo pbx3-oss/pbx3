@@ -1,11 +1,12 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-28 (session end — S6.2 shared SPA Pages live)  
-**Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
+**Last updated:** 2026-09-28 (session end — branch-before-change + S6.2)  
+**Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
 
 0r. ~~**S6.2 shared admin SPA on GitHub Pages**~~ — **done (2026-09-28):** **`https://app.pbx3.com`**; catalog CORS on org bucket; runtime fleet catalog switch (not one build per bucket); builders do **not** host their own SPA. Locks: **`DESIGN_RULES.md`** SPA hosting · **`OPEN_SOURCE_GITHUB_SETUP.md`** · MkDocs install/sign-in.  
+0s. ~~**Branch-before-change**~~ — **done (2026-09-28):** no land on **`main`** without feature branch + PR (all `pbx3-oss` repos). Lock: **`REPOS_AND_RELEASES.md`** § Branch policy · **`OPEN_SOURCE_GITHUB_SETUP.md`**. SPA `main` = Pages prod.  
 0q. ~~**GenAst OCLO / BLF AstDB — tenant-scope keys**~~ — **done (2026-09-28):** OCLO AstDB + `Custom:` and VM BLF `Custom:vm-{shortuid}-{ext}` keyed by shortuid; dial/BLF extension stays Name; throw dual-writes `{shortuid}/STATE` for CoS. Offline: `genclass-oclo-blf-shortuid-test.php`. Lock: **`TIME_BASED_ROUTING_REQUIREMENTS.md` §2.3**. Tip GenClass + `vmnotify.sh`; re-toggle OCLO after Commit.  
 0p. ~~**CoS profiles**~~ — **done (2026-09-27):** Slices A–F + Q6 merged to **`main`**; package **pbx3 0.0.6-8** on golden+bzy. Spec: **`COS_PROFILE_REQUIREMENTS.md`**. MkDocs: **`admin/timers-cos`**. SPA Route Profile delete confirm + Dial prefixes removed from instance sidebar (deep-link `/dialaliases` only; HoR Site Groups).  
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
