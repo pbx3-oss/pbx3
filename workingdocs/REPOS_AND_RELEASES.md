@@ -27,11 +27,23 @@
 
 ---
 
-## Branch policy
+## Branch policy (locked 2026-09-28)
+
+**No change lands on `main` without a feature branch + pull request.** Applies to **all** product/SBC repos under **`pbx3-oss`** (and the same habit for private **`aelintra/pbx3-ops`**).
+
+| Do | Do not |
+|----|--------|
+| `git checkout -b topic/…` from current `main` | Commit or push straight to **`main`** |
+| Open a PR → review → merge | Use admin **bypass** of branch protection for routine work |
+| Delete the branch after merge | Treat “small fix” / docs / agent session as exempt |
+
+**Why:** Integration history stays reviewable; **`pbx3spa` `main` deploys GitHub Pages (`app.pbx3.com`)** — a direct push is a prod SPA release. Same discipline for packages, API, docs, and SBC even when there is no CDN cutover.
+
+**Local mess:** use `npm run dev` / uncommitted WIP on the feature branch; only merge when ready for `main`.
 
 | Repo | Default branch | Notes |
 |------|----------------|--------|
-| pbx3, pbx3api, pbx3spa, pbx3cagi | **`main`** | Feature branches merge to `main`; deleted when done |
+| pbx3, pbx3api, pbx3spa, pbx3cagi, pbx3-docs, pbx3sbc, pbx3sbc-admin | **`main`** | Feature branches merge via PR; delete when done |
 
 ---
 
