@@ -14,7 +14,7 @@
 |------|---------------------|------|---------------|-------------|
 | **pbx3** | `github.com/pbx3-oss/pbx3` (**public**) | Node backend: SQLite, Asterisk gen, scripts, `.deb` | **Each PBX instance** (`apt install pbx3`) | `pbx3/workingdocs/` |
 | **pbx3api** | `github.com/pbx3-oss/pbx3api` (**public**) | Laravel API + nginx installer | **Each instance** (`/opt/pbx3api`, `:44300`) | `pbx3api/workingdocs/` |
-| **pbx3spa** | `github.com/pbx3-oss/pbx3spa` (**public**) | Admin SPA (Vue 3 + Vite) | **GitHub Pages** (central; not on node AMIs) | `pbx3spa/workingdocs/` |
+| **pbx3spa** | `github.com/pbx3-oss/pbx3spa` (**public**) | Admin SPA (Vue 3 + Vite) | **GitHub Pages** → **`https://app.pbx3.com`** (staging until CORS green) | `pbx3spa/workingdocs/` |
 | **pbx3cagi** | `github.com/pbx3-oss/pbx3cagi` (**public**) | Asterisk AGI (C) | **Each instance** (with Asterisk) | `pbx3cagi/workingdocs/` |
 | **pbx3-directory** | *inside **pbx3** repo* (`pbx3-directory/`) | Fleet catalog, S3 ops scripts, registrar | **Org S3** + Mac ops; not on call path | `pbx3/pbx3-directory/docs/` |
 | **pbx3-docs** | `github.com/pbx3-oss/pbx3-docs` (**public**) | Operator/installer MkDocs site | **GitHub Pages** `https://pbx3-oss.github.io/pbx3-docs/` (`docs.pbx.com` TBD) | N/A — see **`USER_GUIDES_MKDOCS_CONTENT_MAP.md`** |
