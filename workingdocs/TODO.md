@@ -1,10 +1,11 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-28 (session end — #0q OCLO/BLF shortuid done)  
-**Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. SPA via **`npm run dev`**.  
+**Last updated:** 2026-09-28 (session end — S6.2 shared SPA Pages live)  
+**Branch:** Product **`main`**. Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
 
+0r. ~~**S6.2 shared admin SPA on GitHub Pages**~~ — **done (2026-09-28):** **`https://app.pbx3.com`**; catalog CORS on org bucket; runtime fleet catalog switch (not one build per bucket); builders do **not** host their own SPA. Locks: **`DESIGN_RULES.md`** SPA hosting · **`OPEN_SOURCE_GITHUB_SETUP.md`** · MkDocs install/sign-in.  
 0q. ~~**GenAst OCLO / BLF AstDB — tenant-scope keys**~~ — **done (2026-09-28):** OCLO AstDB + `Custom:` and VM BLF `Custom:vm-{shortuid}-{ext}` keyed by shortuid; dial/BLF extension stays Name; throw dual-writes `{shortuid}/STATE` for CoS. Offline: `genclass-oclo-blf-shortuid-test.php`. Lock: **`TIME_BASED_ROUTING_REQUIREMENTS.md` §2.3**. Tip GenClass + `vmnotify.sh`; re-toggle OCLO after Commit.  
 0p. ~~**CoS profiles**~~ — **done (2026-09-27):** Slices A–F + Q6 merged to **`main`**; package **pbx3 0.0.6-8** on golden+bzy. Spec: **`COS_PROFILE_REQUIREMENTS.md`**. MkDocs: **`admin/timers-cos`**. SPA Route Profile delete confirm + Dial prefixes removed from instance sidebar (deep-link `/dialaliases` only; HoR Site Groups).  
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
@@ -271,6 +272,7 @@
 - [ ] **S7+ — Attested PCI / scale (deferred):** Do not start without customer ask.
 
 - [x] **OSS org + repo registry:** **done (2026-09-28)** — **`pbx3-oss`**; product+SBC public; ops/ETL/sipplabs stay Aelintra. Record: **`~/GiT/pbx3-ops/devdocs/oss-move/OSS_ORG_TRANSFER_PLAN.md`**. Parent: **`OPEN_SOURCE_GITHUB_SETUP.md`** · **`REPOS_AND_RELEASES.md`**.
+- [x] **S6.2 SPA Pages:** **done (2026-09-28)** — **`app.pbx3.com`**; shared SPA; catalog CORS + runtime catalog switch; install guides baked.
 
 - [ ] **pbx3cagi refactor (under Ast config generator + cagi track):** Resume Phase **1.3 → 1.1 → 2.x**; **`make test`**. Contract: **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §5.
 

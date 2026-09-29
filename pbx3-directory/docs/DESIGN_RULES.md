@@ -480,7 +480,7 @@ Chosen deployment shapes — constrained by the rules above, but not themselves 
 
 ## SPA hosting — GitHub Pages (central)
 
-**Decision:** Production **pbx3spa** is hosted **once**, on **GitHub Pages** (custom domain when ready). It is **not** deployed onto PBX **instances** in production.
+**Decision:** Production **pbx3spa** is hosted **once**, on **GitHub Pages** at **`https://app.pbx3.com`**. It is **not** deployed onto PBX **instances** in production. **OSS / fleet builders are not required to build or host their own SPA** — they publish a catalog (+ CORS for this origin) and use the public admin. Self-hosting a SPA fork is optional (branding / air-gap only).
 
 ### Topology
 
@@ -510,9 +510,9 @@ Chosen deployment shapes — constrained by the rules above, but not themselves 
 
 The SPA origin (e.g. `https://yourorg.github.io` or `https://app.example.com`) differs from each `api_base_url` and usually from the catalog bucket host. Plan for:
 
-1. **Catalog bucket CORS** — allow SPA origin on `GET`/`HEAD` for `catalog/*` (see **`OPS_S3_RUNBOOK.md`** § CORS).
+1. **Catalog bucket CORS** — allow SPA origin on `GET`/`HEAD` for `catalog/*` on **each** fleet org bucket (see **`OPS_S3_RUNBOOK.md`** § CORS).
 2. **Each instance API** — allow SPA origin + `Authorization` header for API calls (Bearer token after login; configure per node or via install template).
-3. **Build-time env** — `VITE_INSTANCE_DIRECTORY_URL` is baked at build; use separate builds or CI vars for staging vs production catalog URLs. Local dev may use Vite `/dev-catalog` proxy (no bucket CORS).
+3. **Catalog URL** — `VITE_INSTANCE_DIRECTORY_URL` is the **default** catalog baked at build (lab / primary fleet). **Same SPA origin may point at other fleets** via runtime catalog URL (login “Switch fleet catalog…”, `?catalog=`, localStorage). Not one Pages deploy per bucket. Local dev may use Vite `/dev-catalog` proxy (no bucket CORS).
 
 ### Storage portability (directory / backups) — see **Rule 9**
 

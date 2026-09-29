@@ -84,11 +84,12 @@ Not legal advice. How we **operate** Apache-2.0 so it does not fight git or scar
 ### GitHub Pages for `pbx3spa` (S6.2)
 
 - **Custom domain (locked 2026-09-28):** **`https://app.pbx3.com`** → GitHub Pages (`pbx3-oss/pbx3spa`). DNS: CNAME `app` → `pbx3-oss.github.io`.
-- Treat bare `*.github.io/pbx3spa` as fallback only; operators use **`app.pbx3.com`**.
-- Remember CORS implications before calling this production:
-  - S3 catalog bucket must allow origin `https://app.pbx3.com`
+- **Product path:** one shared SPA. Builders/operators open **`app.pbx3.com`**, point it at **their** catalog (runtime / `?catalog=`). They do **not** need their own Pages host.
+- Treat bare `*.github.io/pbx3spa` as fallback only.
+- CORS for that shared origin:
+  - Each fleet org bucket must allow origin `https://app.pbx3.com`
   - Each PBX node API must allow the same origin
-- Deploy: **`pbx3spa`** Actions workflow **`pages.yml`** (Node 24 → `dist/` → Pages).
+- Deploy (maintainers only): **`pbx3spa`** Actions workflow **`pages.yml`** (Node 24 → `dist/` → Pages).
 
 ### Repo-specific note (this workspace)
 

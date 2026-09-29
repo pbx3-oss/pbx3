@@ -115,7 +115,9 @@ curl -sS -o /dev/null -w "%{http_code}\n" \
   {
     "AllowedOrigins": [
       "http://localhost:5173",
-      "http://127.0.0.1:5173"
+      "http://127.0.0.1:5173",
+      "https://app.pbx3.com",
+      "https://pbx3-oss.github.io"
     ],
     "AllowedMethods": ["GET", "HEAD"],
     "AllowedHeaders": ["*"],
@@ -125,18 +127,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" \
 ]
 ```
 
-**Production (agreed):** central **pbx3spa** on **GitHub Pages** (optional custom domain, e.g. `https://app.example.com`). Add that origin to `AllowedOrigins`, plus `https://<user>.github.io` if you use the default Pages URL before DNS is wired.
-
-Example (adjust hostnames):
-
-```json
-"AllowedOrigins": [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  "https://app.example.com",
-  "https://yourorg.github.io"
-]
-```
+**Production (locked):** central **pbx3spa** on **GitHub Pages** at **`https://app.pbx3.com`** (fallback `https://pbx3-oss.github.io`). Lab org bucket **`08jzwn-pbx3`** CORS updated 2026-09-28 with the origins above.
 
 **Instance API CORS:** Each `pbx3api` must also allow the same SPA origin for `Authorization` Bearer calls to `https://{fqdn}:44300/api` (configure when Pages goes live — not required for local Vite proxy dev).
 
@@ -855,7 +846,7 @@ VITE_INSTANCE_DIRECTORY_URL=https://acme-pbx3.s3.eu-west-1.amazonaws.com/catalog
 # VITE_DEFAULT_API_BASE_URL=https://08jzwn.pbx3.com:44300/api
 ```
 
-Bake a **production** catalog URL in CI before `npm run build`; staging and prod may need separate Pages environments or build args.
+Bake a **default** production catalog URL in CI before `npm run build`. Operators switch fleets at runtime (login catalog override / `?catalog=`); each additional org bucket must CORS-allow the SPA origin — do **not** ship one Pages build per fleets bucket.
 
 ### GitHub Pages checklist (when enabling)
 
