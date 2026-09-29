@@ -31,14 +31,18 @@ Transfer set (all **public** under org **`pbx3-oss`** — done):
 - **core**: write on core repos
 - **triage**: issues/labels only
 
-### Branch protection (per repo)
+### Branch protection (per repo) — locked workflow
+
+**Product lock:** **`REPOS_AND_RELEASES.md` § Branch policy** — **no change without a new branch + PR**. Direct pushes to `main` are not the working style (even when an admin token *can* bypass protection).
 
 On the default branch (usually `main`):
 
 - Require **pull requests** (no direct pushes)
-- Require **1 approval** (raise later if needed)
-- Require **status checks** (tests/lint) to pass
+- Require **1 approval** (raise later if needed; maintainers may self-merge small PRs once CI is green)
+- Require **status checks** (tests/lint) to pass when configured
 - Block force-push
+
+**SPA note:** merge to **`pbx3spa` `main`** triggers Pages → **`https://app.pbx3.com`**.
 
 ### Required baseline security
 
