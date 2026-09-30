@@ -1,0 +1,2 @@
+static.network.ip_address_mode = 2
+static.network.ipv6_internet_port.type = 2

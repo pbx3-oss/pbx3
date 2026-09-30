@@ -1,0 +1,4 @@
+account.1.transport = 0
+account.1.outbound_port = 5060
+account.1.srtp_encryption = 0
+security.trust_certificates = 0

@@ -1,0 +1,6 @@
+#INCLUDE snom.Common
+user_name1$: $ext
+user_pname1$: $ext
+user_pass1$: $password
+user_host1$: $localip:$bindport
+user_idle_text1$: $ext($desc)

@@ -1,0 +1,5 @@
+user_outbound1$:$localip;transport=tcp
+user_srtp1$: off
+user_srtp2$: off
+user_auth_tag1$: off
+user_savp1$: off
