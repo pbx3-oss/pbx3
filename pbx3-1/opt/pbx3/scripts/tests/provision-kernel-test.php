@@ -88,6 +88,21 @@ expect('yealink.Common stream', is_readable($streams . '/yealink.Common'));
 expect('yealink.Extension stream', is_readable($streams . '/yealink.Extension'));
 expect('snom.Common stream', is_readable($streams . '/snom.Common'));
 expect('snom.Extension stream', is_readable($streams . '/snom.Extension'));
+foreach (array('snom.udp', 'snom.tcp', 'snom.tls', 'snom.ipv4', 'snom.ipv6', 'snom',
+	'yealink.udp', 'yealink.tcp', 'yealink.tls', 'yealink.ipv4', 'yealink.ipv6', 'Yealink') as $frag) {
+	expect("stream $frag", is_readable($streams . '/' . $frag));
+}
+$loop = array();
+$etl = pbx3_provision_expand(
+	"#INCLUDE snom\n#INCLUDE snom.Fkey\n#INCLUDE snom.udp\n#INCLUDE snom.ipv4\n",
+	true,
+	$streams,
+	$loop
+);
+expect('ETL snom+udp expands common', strpos($etl, 'setting_server$:') !== false);
+expect('ETL snom.udp clears outbound', preg_match('/^user_outbound1\$:\s*$/m', $etl) === 1);
+expect('ETL snom.ipv4 present', strpos($etl, 'dhcp_v6$: off') !== false);
+expect('ETL snom.Fkey still skipped', strpos($etl, 'fkey') === false);
 
 // --- Fixture SQLite ---
 $dbFile = $tmp . '/test.db';
