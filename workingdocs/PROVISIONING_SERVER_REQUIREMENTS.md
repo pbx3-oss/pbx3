@@ -225,7 +225,7 @@ Phone applies config → SIP REGISTER to SBC / domain from file (solo: instance)
 | Credential gating | **`sndcreds` Always \| Once \| No** — see **§4.3** (ONCE preferred for secrets; industry-common) |
 | Multi-tenant | Resolve tenant from Host / path; only that cluster’s phones |
 | Unknown MAC | **404** |
-| Logging | URI, MAC, UA, success/404; no secrets |
+| Logging | **Dedicated provision audit trail** — see **§4.7** (not Apache-only) |
 | BLF / softkeys | **Out of v1** — see **§4.5**; hand-edit template if rare need |
 
 ### 4.3 Credential stanzas — Always / Once / No (locked)
@@ -294,6 +294,33 @@ Most vendor streams are **line-oriented** (key=value / proprietary text): INCLUD
 
 Engine stays INCLUDE + substitute; **template authoring** absorbs XML closed-stanza pain, not a BLF-scale subsystem.
 
+### 4.7 Provision audit trail (locked 2026-09-30)
+
+Prior PBX mostly relied on **web server access logs** plus light syslog — workable for debugging, weak as an **audit** of who got what.
+
+**Product intent:** a **dedicated provision audit log** on the home (and later a thin edge access/deny log on the SBC vhost). Apache/nginx access logs remain useful for ops; they are **not** the audit HoR.
+
+| Field (home, per request) | Required | Notes |
+|---------------------------|----------|-------|
+| Timestamp (UTC) | Yes | |
+| Outcome | Yes | `200` / `404` / error class |
+| Client IP | Yes | |
+| Request URI (path + query shape) | Yes | Truncate extremes |
+| Normalized MAC | When known | |
+| Extension / tenant id | When resolved | shortuid / cluster — not password |
+| Vendor label / UA (truncated) | Yes | |
+| sndcreds mode applied | Yes | Always / Once / No — **not** whether password value was X |
+| Secrets emitted? | Yes | boolean only (`creds_sent=true/false`) — **never** log password or full config body |
+| Descriptor / stream name | When used | e.g. yealink.Common |
+
+| Stance | |
+|--------|--|
+| **Do** | Structured lines (JSON or key=value) to a dedicated file or syslog tag e.g. `pbx3-provision` |
+| **Do not** | Log `$password`, full rendered body, or LDAP bind secrets |
+| **Retention** | Follow instance log retention / ship-to-S3 class when fleet logging exists; solo = local rotate |
+| **Edge (Phase C)** | Proxy logs Host/MAC route → upstream home + 502/404; still no secrets |
+| **SPA later** | Optional “last provisioned” from audit — not required for A |
+
 ---
 
 ## 5. Inputs (home)
@@ -357,6 +384,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 | **Secrets in body** | Gated by **§4.3** (`Always` / `Once` / `No`); prefer **Once**. Factory reset ⇒ operator resets provision state so ONCE values send again |
 | **Writes from phones** | Ignore PUT / vendor upload (404/no-op) |
 | **Cross-tenant** | Host must select exactly one tenant; never serve another cluster’s MAC |
+| **Audit trail** | **§4.7** — dedicated provision log; Apache alone is insufficient |
 
 **Note:** Vendor client-cert check mitigates “anyone who knows a MAC can GET config.” It does **not** replace `sndcreds`, fail-closed routing, or keeping `SIP_AUTH` off S3.
 

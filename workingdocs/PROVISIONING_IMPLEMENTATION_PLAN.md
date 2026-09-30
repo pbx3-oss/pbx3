@@ -70,6 +70,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 | **A5** | HTTPS listener on dedicated **non-443** port; use instance cert story; document URL for RPS | **pbx3** + installer / shorewall-or-UFW note |
 | **A6** | Lab prove: Yealink (or Snom) RPS or manual URL → golden; register via normal SIP path | ops lab |
 | **A7** | **Automated tests** for parse / INCLUDE / substitute / sndcreds / fail-closed — **required to exit A** (§7) | **pbx3** |
+| **A8** | **Provision audit trail** (§4.7 requirements) — structured log per request; no secrets in log; rotate | **pbx3** |
 
 **A1 stack decision (open #6):** prefer **PHP lift** of the kernel for speed/parity; rewrite only if packaging forces it. Behaviour first.
 
@@ -114,14 +115,15 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 
 ```text
 A1 kernel → A7 tests skeleton (can start as soon as expand exists)
-  → A2 Yealink stream → A4 sndcreds (+ tests) → A5 HTTPS
-  → A6 lab phone  (A7 green required to exit A)
+  → A2 Yealink stream → A4 sndcreds (+ tests) → A8 audit log (+ tests)
+  → A5 HTTPS
+  → A6 lab phone  (A7+A8 green required to exit A)
   → B2 / B1
   → C1 … C5 → C7 map tests
   → D* parallel
 ```
 
-Do **not** start C before A lab-green unless a fleet customer forces stable URL day one (then still need A behind the proxy). **Do not** exit A on lab alone — **A7 automated suite required**.
+Do **not** start C before A lab-green unless a fleet customer forces stable URL day one (then still need A behind the proxy). **Do not** exit A on lab alone — **A7 + A8 required**.
 
 ---
 
@@ -150,6 +152,7 @@ Lab/phone soak remains necessary; it is **not** a substitute for regression test
 | **URI / MAC parse + ignore list** | **A** | Unit / table-driven | `?mac=`, path `/{mac}.cfg`, Yealink `y000000*.cfg` → common, `*_Security.enc` / `.boot` → 404, PUT → 200/no-op |
 | **INCLUDE + substitute** | **A** | Unit + fixtures | Nested INCLUDE, loop detection, `$ext` / `$password` / registrar placeholders from fixture `ipphone` + fragment files |
 | **sndcreds Once / Always / No** | **A** | Unit | Secret lines present/absent; **Once → No flip** after successful render; Reset state restores Once |
+| **Audit trail** | **A** | Unit | Successful/404 requests emit required fields; rendered body / password **never** appear in log sink |
 | **Fail-closed** | **A** | Unit | Unknown MAC → 404; duplicate MAC → 404 |
 | **No BLF path** | **A** | Unit / smoke | Builder does not require fkey tables; no `$fkey` expand |
 | **Map artifact** | **C** | Unit | Catalog (or fixture) → nginx/map file; tenant move changes backend; no secrets in output |
@@ -171,6 +174,7 @@ Document a short **lab recipe** (A6 / C exit) next to the automated suite — so
 | Slice | Work | Gate |
 |-------|------|------|
 | **A7** | Test harness + fixtures for parse / INCLUDE / substitute / sndcreds / 404 | **Required to exit Phase A** (alongside A6 lab) |
+| **A8** | Structured provision audit log (no secrets) | **Required to exit Phase A** |
 | **C7** | Map publisher unit tests + “no secret in map” assertion | **Required to exit Phase C** |
 
 ### 7.4 Effort (additive)
@@ -178,16 +182,17 @@ Document a short **lab recipe** (A6 / C exit) next to the automated suite — so
 | Work | Focused |
 |------|---------|
 | **A7** | **~2–4 days** (budget **~0.5–1 week** with polish/CI wiring) |
+| **A8** | **~1–2 days** (logger + rotate + tests that secrets never land in sink) |
 | **C7** | **~1–2 days** |
 
-Revise Phase A roll-up: lab-useful solo ≈ prior estimate **+ ~1 week** when A7 is in the critical path (correct — do not skip).
+Revise Phase A roll-up: lab-useful solo ≈ prior estimate **+ ~1–1.5 weeks** when **A7 + A8** are on the critical path (correct — do not skip).
 
 ### 7.5 Build order (updated)
 
 ```text
 A1 kernel → A7 tests skeleton (can start as soon as expand exists)
-  → A2 Yealink stream → A4 sndcreds (+ tests) → A5 HTTPS
-  → A6 lab phone
+  → A2 Yealink stream → A4 sndcreds (+ tests) → A8 audit log (+ tests)
+  → A5 HTTPS → A6 lab phone  (A7+A8 green required to exit A)
   → B2 / B1
   → C1 … C5 → C7 map tests
   → D* parallel
@@ -205,6 +210,7 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 - [ ] HTTPS on non-443; RPS or manual URL works in lab  
 - [ ] Commit/PJSIP unchanged by provision GET  
 - [ ] **A7 automated suite green** (parse, INCLUDE, substitute, sndcreds, fail-closed)  
+- [ ] **A8 audit trail** — structured per-request log; **no** passwords/bodies in log; lab can answer “did MAC X get config?” without grepping only Apache  
 
 ### Phase C
 - [ ] RPS → edge URL; map → current home  
@@ -213,6 +219,7 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 - [ ] Existing registrations survive proxy/home provision outage  
 - [ ] mTLS for brands with CA; others documented fallback  
 - [ ] **C7 map publisher tests green** (artifact + no secrets)  
+- [ ] Edge provision access/deny visible in edge logs (Host/MAC → home)  
 
 ### Always
 - [ ] Cloud path does not require DHCP opt66  
