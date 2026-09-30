@@ -78,11 +78,23 @@ Desk-phone HTTP provisioning remains a crowded market (vendor RPS, reseller plat
 
 Almost all major desk-phone vendors support a **redirect / RPS** service. Where the vendor does not, a **reseller** usually provides the same role. On startup the phone **calls home** (HTTP/HTTPS) to that service first; the service redirects (often via a reseller hop) to the **target provision URL**.
 
-Examples (illustrative, not an exclusive list): **Snom SRAPS**, **Yealink RPS**, plus reseller redirect portals.
+### Vendors of interest (redirect / ZTP platforms)
+
+Product interest set for discovery + eventual enrollment docs/APIs. **Not** a promise to automate every portal in v1. Reseller hop may sit between vendor RPS and our URL.
+
+| Vendor | Platform | Notes |
+|--------|----------|-------|
+| **Yealink** | **RPS** (Redirection and Provisioning Service) | Widely used; free for SPs/enterprises; can tie into **YMCS** (Yealink Management Cloud Service) |
+| **Poly** (ex-Polycom) | **Poly Lens** / **ZTP** | Cloud redirection + device health; phones query Poly infrastructure out of the box for assigned deployment server |
+| **Grandstream** | **GDMS** + **GAPS** | GDMS assigns templates or destination URLs by MAC; GAPS = Alignment and Provisioning System |
+| **Snom** | **SRAPS** | Europe-hosted secure redirect; GDPR-oriented; API for SP automation |
+| **Fanvil** | **FDMCS** | Free redirection / ZTP for desk, hotel, and intercom / door units |
+
+Other vendors: treat via **reseller redirect** or secondary path (opt66 / manual) until explicitly added here.
 
 ```text
 Phone power-up
-  → HTTPS to vendor redirect (SRAPS / Yealink RPS / …)
+  → HTTPS to vendor redirect (Yealink RPS / Poly Lens / GDMS / SRAPS / FDMCS / …)
   → often → reseller redirect
   → 3xx / next-URL → our provision base URL
   → home listener (v1) or edge provision proxy (§0) expands config by MAC
@@ -227,7 +239,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 - SIP proxy, RTP, registrar on the provision proxy
 - Browser holding ops IAM
 - Requiring provisioner for **calls** once phones are configured
-- Full vendor matrix day one — Snom / Yealink first
+- Full vendor **config** matrix day one — subset of §0.2 interest list; expand streams iteratively  
 - **Replacing** vendor/reseller **redirect / RPS** with an in-house discovery product
 - DHCP **server** as a product — document opt66 as secondary; optional lab helper later
 - Reviving the purged **Device** template table (#28)
@@ -283,7 +295,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 4. **Primary route key** — Host-only, MAC-only, or Host with MAC cross-check (lean: support both; MAC always available on the wire).  
 5. **Solo** — Skip proxy; RPS (or lab) → instance directly (M3 solo).  
 6. **Stack for home listener** — PHP parity with previous PBX vs rewrite; behaviour first.  
-7. **RPS automation** — Manual portal vs vendor/reseller APIs for enroll/re-point; which vendors first (Snom / Yealink).  
+7. **RPS automation** — Manual portal vs vendor/reseller APIs for enroll/re-point; order among **§0.2 vendors of interest** (Yealink, Poly, Grandstream, Snom, Fanvil).  
 8. **Provision listen port** — Pick stable non-443 default; document for RPS target URLs.
 
 ---
