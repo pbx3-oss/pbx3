@@ -118,7 +118,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 A1 kernel → A7 tests skeleton (can start as soon as expand exists)
   → A2 Yealink stream → A4 sndcreds (+ tests) → A8 audit log (+ tests)
   → A5 HTTPS
-  → A6 lab phone  (A7+A8 green required to exit A)
+  → A6 lab phone  (A7+A8+A9 green required to exit A)
   → B2 / B1
   → C1 … C5 → C7 map tests
   → D* parallel
