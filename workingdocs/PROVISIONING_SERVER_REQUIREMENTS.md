@@ -208,11 +208,12 @@ Phone applies config → SIP REGISTER to SBC / domain from file (solo: instance)
 | Do | Notes |
 |----|-------|
 | HTTP(S) MAC / descriptor → vendor config | Same URL families as previous PBX (`?mac=`, `/{mac}.cfg`, Yealink common, …) |
-| Template expand | **Vendor-grain** stream + extension/handset data (**§4.4**); **not** per-SKU Device table (#28) |
+| Template expand | **INCLUDE + parameter substitution** only (**§4.5**); **vendor-grain** streams (**§4.4**). **No BLF/fkey expand for now** |
 | Credential gating | **`sndcreds` Always \| Once \| No** — see **§4.3** (ONCE preferred for secrets; industry-common) |
 | Multi-tenant | Resolve tenant from Host / path; only that cluster’s phones |
 | Unknown MAC | **404** |
 | Logging | URI, MAC, UA, success/404; no secrets |
+| BLF / softkeys | **Out of v1** — see **§4.5**; hand-edit template if rare need |
 
 ### 4.3 Credential stanzas — Always / Once / No (locked)
 
@@ -244,7 +245,27 @@ Same idea as previous PBX **`sndcreds`** and as many **third-party / vendor clou
 | **Migrate / aliases** | If lifting old DBs, map legacy model names → vendor stream; keep read aliases only if needed for customer data, not as a growth path |
 | **`ipphone.device`** | Vendor (or General SIP / WebRTC) label for expand + UI — not a foreign key into a fat Device catalogue |
 
-Expand still comes from **extension / handset / fkey data** + vendor stream — not a revived multi-hundred-row Device editor.
+Expand still comes from **extension data** + vendor stream — not a revived multi-hundred-row Device editor. **No** BLF/fkey machinery in v1 (**§4.5**).
+
+### 4.5 Stream builder — INCLUDE + substitute; no BLF UI (locked 2026-09-30)
+
+**In principle the expander is trivial:**
+
+1. **`#INCLUDE` (or equivalent)** — pull named fragment (vendor common, transport/tls snippet, …) into the stack; loop-safe.  
+2. **Parameter substitution** — replace placeholders from the extension row / globals (`$ext`, `$password` when sndcreds allows, `$desc`, registrar/proxy host, ports, …).
+
+That is the whole engine for v1. No expression language, no per-model matrix, no Device SPA.
+
+**BLF / softkeys / fkey expand — deferred**
+
+| Stance | |
+|--------|--|
+| **Prior practice** | Fancy BLF-from-DB / UI **rarely used** in the field |
+| **v1** | **Do not** build `IPphone_FKEY` expand, `$fkey` injection, or a softkey SPA |
+| **Escape hatch** | If a site truly needs keys, **hand-code** lines into the vendor template / per-tenant overlay — good enough until a customer asks for UI |
+| **Revisit** | Only when someone explicitly wants managed BLF provisioning |
+
+Asterisk/PJSIP subscribe / named pickup groups remain separate from this HTTP stream builder.
 
 ---
 
@@ -252,8 +273,8 @@ Expand still comes from **extension / handset / fkey data** + vendor stream — 
 
 | Input | Source | Note |
 |-------|--------|------|
-| Extension + MAC + secret + expand inputs | `ipphone` (+ handset/fkey as needed) | Authored on instance; **HoR for secrets**. No Device table |
-| BLF / line keys | fkey tables | As today / previous PBX |
+| Extension + MAC + secret + vendor label | `ipphone` | Authored on instance; **HoR for secrets**. No Device table |
+| BLF / line keys | — | **Not in v1 stream** (§4.5); optional hand-edit in template |
 | SIP host policy | Fleet: embed **SBC** + tenant domain; not home public IP | Matches W1 / fleet desk path |
 | OUI → vendor | `manuf.txt` helper | Create-time UI; not every GET |
 
@@ -287,6 +308,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 - SIP proxy, RTP, registrar on the provision proxy
 - Browser holding ops IAM
 - Requiring provisioner for **calls** once phones are configured
+- BLF / softkey **UI or DB expand** in the provision stream (§4.5) — hand-edit template until demanded  
 - Full vendor **config** matrix day one — subset of §0.2 interest list; expand streams iteratively  
 - **Replacing** vendor/reseller **redirect / RPS** with an in-house discovery product
 - DHCP **server** as a product — document opt66 as secondary; optional lab helper later
@@ -334,7 +356,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 | Edge proxy | **SBC host** — sibling nginx (locked 2026-09-30) | Map from catalog/S3 only; mirror with SBC HA; **not** in SIP/OpenSIPS path |
 | Map refresh | Gatekeeper / move job hook | Publishes map artifact to edge(s); same events as SBC domain repoint |
 | RPS enrollment | Ops docs first; APIs later | MAC → provision URL; re-point on move if no proxy |
-| Expand inputs | Extension / handset / fkey | **No** Device table (#28) |
+| Expand inputs | Extension + vendor stream | INCLUDE + substitute only; **no** fkey/BLF expand (§4.5) |
 | SPA | Later | Show provision URL + RPS enrollment hint |
 | TLS §0 note | **`TLS_AND_CERTIFICATES.md`** | Document provision A→proxy exception |
 
@@ -365,4 +387,5 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 - Proxy or home provision down → existing registrations unaffected.  
 - Instance Commit still owns Asterisk; provisioner does not write PJSIP.  
 - Secret only read from home `ipphone` at render time.  
-- No per-SKU Device matrix; vendor-grain streams only (§4.4).
+- No per-SKU Device matrix; vendor-grain streams only (§4.4).  
+- Stream builder = INCLUDE + substitute; no BLF/fkey expand (§4.5).
