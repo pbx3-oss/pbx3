@@ -90,7 +90,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 
 | Slice | Work | Repo(s) |
 |-------|------|---------|
-| **B1** | SPA: show provision URL + **Last provisioned**; **Reset provision state** (set Once) — also on **password regen** | **pbx3spa** / **pbx3api** |
+| **B1** | SPA: show provision URL + **Last provisioned**; **Reset provision state** (set Once) — also on **password regen** | **pbx3spa** / **pbx3api** — branches **`feat/provision-b1-reset-once`** |
 | **B2** | Docs: RPS enroll (Yealink, Snom); Gigaset MAC+PIN; solo→fleet “change RPS target once” (migrator = **C9**) | **pbx3-docs** |
 | **B3** | M1 coexistence one-pager: “reseller delivers full config” supported without our HTTP | **pbx3-docs** |
 
