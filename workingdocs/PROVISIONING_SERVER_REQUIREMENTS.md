@@ -1,7 +1,7 @@
 # Provisioning — requirements (sketch)
 
 **Status:** **Reopened 2026-09-08** (supersedes won't-do 2026-08-23).  
-**v1 direction:** **instance-local** HTTPS phone provisioner on each home (non-443) — independently, at least for now. **Not** building the fleet edge nginx provision proxy / shared provision host yet (that shape remains in §0 as a later option). Still **no** third-party certs panel.  
+**v1 direction:** **instance-local** HTTPS phone provisioner on each home (non-443) — independently, at least for now. Fleet edge provision proxy = **SBC-colocated** nginx later (§0); map from catalog/S3 only (no secrets). Still **no** third-party certs panel.  
 **Discovery (locked 2026-09-29):** **Vendor / reseller redirect (RPS)** is the **primary** way phones find the provision URL in cloud deployments. DHCP opt66/114 and PnP multicast are **secondary** (on-prem / lab). See **§0.2**.  
 **2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a type label only. Revival must **not** reintroduce Device templates — retrofit previous PBX 6.5-style expand from extension/handset data.  
 **Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — deferred past instance-local v1.  
@@ -17,14 +17,14 @@
 
 | Layer | Role |
 |-------|------|
-| **Edge provision proxy** | nginx (or equivalent). Has a **stable public A/AAAA**. Terminates HTTPS (wildcard / edge LE — detail TBD). Routes to the instance that currently homes the phone’s tenant — by **Host / SNI = tenant FQDN** and/or by **MAC** (always present on GET or POST). |
+| **Edge provision proxy** | **Colocated with the SBC** (locked 2026-09-30) — nginx (or equivalent) on the **same edge entity / VIP** as SIP. Stable public A/AAAA (often the SBC VIP). Terminates HTTPS (wildcard / edge LE — detail TBD). Routes to the instance that currently homes the phone’s tenant — by **Host / SNI = tenant FQDN** and/or by **MAC**. **No secrets, no expand** — map context from **catalog / S3 only**. |
 | **Home listener** | Co-located on the instance (tenant-aware). Reads **`ipphone`** (same secret HoR as Asterisk). Lift and polish existing **previous PBX / prior co-located** provision routines (`device.php`-class: MAC → template expand → body). |
-| **Phone** | Provision URL uses the **tenant FQDN** (same string as SIP domain) *or* a stable provision hostname; request carries **MAC** in query/path/body. DNS for the phone-facing name points at the **proxy**, not at the home. SIP REGISTER / media still follow the normal fleet path (**SBC** + tenant domain string) — provision A ≠ SIP next hop. |
+| **Phone** | Provision URL uses the **tenant FQDN** (same string as SIP domain) *or* a stable provision hostname; request carries **MAC** in query/path/body. DNS for the phone-facing name points at the **edge** (SBC VIP / provision vhost), not at the home. SIP REGISTER / media still follow the normal fleet path (**SBC** + tenant domain string) — provision port/vhost ≠ SIP next hop, same host OK. |
 
 ```text
 Phone GET/POST https://{tenant-or-provision-host}/…  (MAC in query, path, or body)
-  → DNS A/AAAA → provision proxy (stable; does not change on tenant move)
-  → nginx routes by Host/SNI and/or MAC → current home backend
+  → DNS A/AAAA → SBC edge (provision vhost; stable; does not change on tenant move)
+  → nginx routes by Host/SNI and/or MAC → current home backend  (map from catalog/S3)
   → home listener expands vendor config from local SQLite (previous PBX lift)
   → phone applies config → SIP REGISTER via SBC (unchanged)
 ```
@@ -32,21 +32,33 @@ Phone GET/POST https://{tenant-or-provision-host}/…  (MAC in query, path, or b
 **Routing keys (either or both):**
 
 | Key | Source | Notes |
-|-----|--------|--------|
+|-----|--------|-------|
 | **Tenant Host / SNI** | URL hostname = tenant FQDN | SBC-analogue; simple when phones are provisioned per-tenant URL |
 | **MAC** | Always on the request (GET query/path or POST body — vendor-dependent) | Lookup MAC → tenant → home (catalog or home-published index). Useful when Host is a shared provision name, or as a cross-check |
 
 Prefer **fail closed**: unknown Host and unknown MAC → 404/502; never guess across tenants. If both present and disagree, reject.
 
-**Tenant move:** update the proxy’s **backend map** (and any MAC→home index) from catalog — same mobility events as SBC `setid` projection. **No** DNS change on move; **no** phone re-key of provision host; **no** vendor/reseller RPS re-point if the redirect target is the stable proxy URL. Secrets never leave the home row for render.
+**Tenant move:** update the proxy’s **backend map** (and any MAC→home index) from catalog — same mobility events as SBC `setid` projection. **No** DNS change on move; **no** phone re-key of provision host; **no** vendor/reseller RPS re-point if the redirect target is the stable edge provision URL. Secrets never leave the home row for render.
 
-**Why this works (operator stance):** Routing is the hard fleet bit; once Host and/or MAC → home is correct, the provision **application** is mostly already written in previous-PBX routines — lift, harden, and polish rather than invent a second inventory. **Discovery** (how the phone learns that URL) is almost always **vendor/reseller RPS** (§0.2), not DHCP.
+**Why this works (operator stance):** One **edge entity** for phones (SIP + provision HTTP). Routing is the hard fleet bit; once Host and/or MAC → home is correct, the provision **application** stays on the home. **Discovery** is almost always **vendor/reseller RPS** (§0.2), not DHCP. **Solo / singleton:** no proxy — RPS points at the instance directly (Rule 6).
+
+### Edge placement (locked 2026-09-30)
+
+| Concern | Stance |
+|---------|--------|
+| **Where it runs** | **On the SBC host(s)** — sibling nginx (or equivalent), not OpenSIPS, not gatekeeper phone-facing |
+| **Why SBC** | One edge for desks; stable VIP already; functionally “phone finds the edge” for both SIP and config HTTP |
+| **Map context** | **Catalog / S3 only** (tenant→home, optional MAC→tenant/home). **No** `ipphone` passwords, no home DB, no gatekeeper live calls on the request path |
+| **HA / mirror** | Because the proxy is **stateless aside from the published map**, it **mirrors with the SBC** without drama — same map artifact on each edge node (or shared VIP backend). Refresh map on both when catalog changes |
+| **Gatekeeper / control** | **Publishes** / refreshes the map from catalog (move/onboard jobs). Does **not** terminate phone provision GETs |
+| **Rule 7** | Keep provision as a **separate unit** from OpenSIPS so an SBC software swap does not rewrite HTTP; still same *machine/VIP* is fine |
+| **Rule 1** | Provision down ≠ calls down; don’t put expand/secrets on the edge |
 
 ### Relationship to `TLS_AND_CERTIFICATES.md` §0
 
 §0 says tenant names are **SIP domain strings** and must **not** be public A records **aimed at homes** (SPA/API stay on instance DNS; SIP via SBC).
 
-**Deliberate provision exception:** tenant FQDN (or `*.apex`) **may** have A/AAAA that resolve to the **provision proxy only**. That is not “tenant → home” and must not be used as the SIP next hop. Document in TLS §0 when this ships (cross-link; do not silently contradict).
+**Deliberate provision exception:** tenant FQDN (or `*.apex`) **may** have A/AAAA that resolve to the **SBC edge provision vhost** (same VIP as SIP edge is OK). That is not “tenant → home” and must not be used as the SIP next hop. Document in TLS §0 when this ships (cross-link; do not silently contradict).
 
 ---
 
@@ -278,8 +290,8 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 | Slice | Likely home | Notes |
 |-------|-------------|--------|
 | Home listener | **pbx3** / **pbx3api** (or small co-located PHP) | Lift previous PBX `device.php` behaviour; multi-tenant Host; HTTPS non-443 |
-| Edge proxy | Small edge host or co-located with control/SBC ops box | nginx + map from catalog; **not** in SIP path |
-| Map refresh | Gatekeeper / move job hook | Same events as SBC domain repoint |
+| Edge proxy | **SBC host** — sibling nginx (locked 2026-09-30) | Map from catalog/S3 only; mirror with SBC HA; **not** in SIP/OpenSIPS path |
+| Map refresh | Gatekeeper / move job hook | Publishes map artifact to edge(s); same events as SBC domain repoint |
 | RPS enrollment | Ops docs first; APIs later | MAC → provision URL; re-point on move if no proxy |
 | Expand inputs | Extension / handset / fkey | **No** Device table (#28) |
 | SPA | Later | Show provision URL + RPS enrollment hint |
@@ -291,8 +303,8 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 
 0. **Schedule build?** — Direction preferred; priority TBD (TODO #23 / 0k).  
 1. **Cert on proxy** — Wildcard `*.apex` vs per-tenant SAN vs name `provision.{apex}` with path-based tenant (path would change phone URL shape — Host-based preferred).  
-2. **Where proxy runs** — Shared fleet box vs next to the SBC vs control plane; must stay off call-path critical path (Rule 1 / 5).  
-3. **Map transport** — Regenerated nginx conf vs lua (MAC extract from URI/body) vs auth_request to Gatekeeper (cache carefully).  
+2. ~~**Where proxy runs**~~ — **Locked 2026-09-30:** **SBC-colocated** nginx (or equivalent); map from catalog/S3 only; gatekeeper publishes map; mirrors with SBC HA. Not phone-facing on gatekeeper.  
+3. **Map transport** — Regenerated nginx conf vs lua (MAC extract from URI/body) vs pull of static map object from S3 (prefer no live gatekeeper on GET path).  
 4. **Primary route key** — Host-only, MAC-only, or Host with MAC cross-check (lean: support both; MAC always available on the wire).  
 5. **Solo** — Skip proxy; RPS (or lab) → instance directly (M3 solo).  
 6. **Stack for home listener** — PHP parity with previous PBX vs rewrite; behaviour first.  
