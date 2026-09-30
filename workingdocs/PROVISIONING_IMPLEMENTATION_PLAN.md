@@ -69,6 +69,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 | **A4** | `sndcreds` Always/Once/No + **restore Once→No flip** after successful send; secret-line list **without** treating `$ext` as password | **pbx3** |
 | **A5** | HTTPS listener on dedicated **non-443** port; use instance cert story; document URL for RPS | **pbx3** + installer / shorewall-or-UFW note |
 | **A6** | Lab prove: Yealink (or Snom) RPS or manual URL → golden; register via normal SIP path | ops lab |
+| **A7** | **Automated tests** for parse / INCLUDE / substitute / sndcreds / fail-closed — **required to exit A** (§7) | **pbx3** |
 
 **A1 stack decision (open #6):** prefer **PHP lift** of the kernel for speed/parity; rewrite only if packaging forces it. Behaviour first.
 
@@ -94,6 +95,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 | **C4** | Mirror map on SBC HA pair; version/health optional | **pbx3sbc** |
 | **C5** | Vendor client-cert verify on edge vhost when CA present (Snom/Yealink first) | **pbx3sbc** + ops CA bundle |
 | **C6** | TLS §0 cross-link: provision A→edge exception documented | **TLS_AND_CERTIFICATES.md** |
+| **C7** | **Automated tests** for map publisher — **required to exit C** (§7) | gatekeeper / edge tooling |
 
 **Exit C:** Move Aelintra Golden→Kildare → SIP via SBC OK; next provision GET hits Kildare without RPS edit.
 
@@ -111,15 +113,15 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 ## 5. Suggested build order (summary)
 
 ```text
-A1 kernel → A2 Yealink stream → A4 sndcreds → A5 HTTPS port
-  → A6 lab phone
-  → B2 RPS docs (can overlap A6)
-  → B1 reset-state UX
-  → C1 hostname freeze → C2–C5 proxy
-  → D1–D4 anytime in parallel
+A1 kernel → A7 tests skeleton (can start as soon as expand exists)
+  → A2 Yealink stream → A4 sndcreds (+ tests) → A5 HTTPS
+  → A6 lab phone  (A7 green required to exit A)
+  → B2 / B1
+  → C1 … C5 → C7 map tests
+  → D* parallel
 ```
 
-Do **not** start C before A lab-green unless a fleet customer forces stable URL day one (then still need A behind the proxy).
+Do **not** start C before A lab-green unless a fleet customer forces stable URL day one (then still need A behind the proxy). **Do not** exit A on lab alone — **A7 automated suite required**.
 
 ---
 
@@ -137,7 +139,63 @@ Do **not** start C before A lab-green unless a fleet customer forces stable URL 
 
 ---
 
-## 7. Acceptance (program)
+## 7. Automated testing (**required**)
+
+Lab/phone soak remains necessary; it is **not** a substitute for regression tests on the expander and map publisher. **Phase A does not exit without automated coverage of the stream kernel.**
+
+### 7.1 What must be automated
+
+| Area | Phase | Kind | Examples |
+|------|-------|------|----------|
+| **URI / MAC parse + ignore list** | **A** | Unit / table-driven | `?mac=`, path `/{mac}.cfg`, Yealink `y000000*.cfg` → common, `*_Security.enc` / `.boot` → 404, PUT → 200/no-op |
+| **INCLUDE + substitute** | **A** | Unit + fixtures | Nested INCLUDE, loop detection, `$ext` / `$password` / registrar placeholders from fixture `ipphone` + fragment files |
+| **sndcreds Once / Always / No** | **A** | Unit | Secret lines present/absent; **Once → No flip** after successful render; Reset state restores Once |
+| **Fail-closed** | **A** | Unit | Unknown MAC → 404; duplicate MAC → 404 |
+| **No BLF path** | **A** | Unit / smoke | Builder does not require fkey tables; no `$fkey` expand |
+| **Map artifact** | **C** | Unit | Catalog (or fixture) → nginx/map file; tenant move changes backend; no secrets in output |
+| **Map + setid coupling** | **C** | Integration or contract test | Move-job hook publishes map when setid updates (fixture/harness; full EC2 optional) |
+
+Prefer **fixture SQLite + file fragments** over live Asterisk. Run in **pbx3** package test path (PHPUnit or project norm); map tests beside gatekeeper/move tooling.
+
+### 7.2 What stays manual / soak (not CI)
+
+- Real handset + vendor **RPS** enroll  
+- Vendor **client-cert** against hardware  
+- Full fleet **tenant move** on lab (SIP + next provision GET)  
+- LE / firewall / VIP behaviour on golden or SBC  
+
+Document a short **lab recipe** (A6 / C exit) next to the automated suite — soak proves vendors; CI proves we didn’t break INCLUDE/Once.
+
+### 7.3 Slices (add to build)
+
+| Slice | Work | Gate |
+|-------|------|------|
+| **A7** | Test harness + fixtures for parse / INCLUDE / substitute / sndcreds / 404 | **Required to exit Phase A** (alongside A6 lab) |
+| **C7** | Map publisher unit tests + “no secret in map” assertion | **Required to exit Phase C** |
+
+### 7.4 Effort (additive)
+
+| Work | Focused |
+|------|---------|
+| **A7** | **~2–4 days** (budget **~0.5–1 week** with polish/CI wiring) |
+| **C7** | **~1–2 days** |
+
+Revise Phase A roll-up: lab-useful solo ≈ prior estimate **+ ~1 week** when A7 is in the critical path (correct — do not skip).
+
+### 7.5 Build order (updated)
+
+```text
+A1 kernel → A7 tests skeleton (can start as soon as expand exists)
+  → A2 Yealink stream → A4 sndcreds (+ tests) → A5 HTTPS
+  → A6 lab phone
+  → B2 / B1
+  → C1 … C5 → C7 map tests
+  → D* parallel
+```
+
+---
+
+## 8. Acceptance (program)
 
 ### Phase A
 - [ ] Known MAC → vendor config body; unknown → 404  
@@ -146,6 +204,7 @@ Do **not** start C before A lab-green unless a fleet customer forces stable URL 
 - [ ] No Device table; no BLF expand  
 - [ ] HTTPS on non-443; RPS or manual URL works in lab  
 - [ ] Commit/PJSIP unchanged by provision GET  
+- [ ] **A7 automated suite green** (parse, INCLUDE, substitute, sndcreds, fail-closed)  
 
 ### Phase C
 - [ ] RPS → edge URL; map → current home  
@@ -153,13 +212,14 @@ Do **not** start C before A lab-green unless a fleet customer forces stable URL 
 - [ ] Proxy has no passwords  
 - [ ] Existing registrations survive proxy/home provision outage  
 - [ ] mTLS for brands with CA; others documented fallback  
+- [ ] **C7 map publisher tests green** (artifact + no secrets)  
 
 ### Always
 - [ ] Cloud path does not require DHCP opt66  
 
 ---
 
-## 8. Open decisions to freeze before/during build
+## 9. Open decisions to freeze before/during build
 
 | # | Decision | Freeze by |
 |---|----------|-----------|
@@ -168,12 +228,13 @@ Do **not** start C before A lab-green unless a fleet customer forces stable URL 
 | 6 | PHP lift vs rewrite | A1 spike (≤1 day) |
 | 3 | Map transport (static object from S3 preferred) | C3 |
 | 10 | CA inventory results | Before claiming mTLS per brand |
+| 11 | Test runner / layout in **pbx3** (PHPUnit vs existing project norm) | A7 start |
 
 Track live list in requirements **§11**.
 
 ---
 
-## 9. Risk register (severity with phone behaviour)
+## 10. Risk register (severity with phone behaviour)
 
 | Risk | Severity | Note |
 |------|----------|------|
@@ -182,11 +243,13 @@ Track live list in requirements **§11**.
 | Missing vendor CA | Per-brand | D1; Once + network controls |
 | Closed XML (Poly / future Snom) | Template authoring | §4.6; not engine scope |
 | Solo→fleet RPS retarget | Ops once | B2 |
+| Regress Once/INCLUDE without CI | High over time | **A7 required** |
 
 ---
 
-## 10. First concrete next step
+## 11. First concrete next step
 
-1. Merge requirements PR (architecture snapshot).  
+1. Merge requirements + plan PR (architecture snapshot).  
 2. Open build branch: **Phase A1** — skeleton listener + INCLUDE/substitute against golden `ipphone` (Yealink fragment stub).  
-3. Parallel: kick **D1** CA inventory in ops `devdocs` (no product code).
+3. **A7 in parallel** as soon as expand is callable — fixtures before relying on handset-only feedback.  
+4. Parallel: kick **D1** CA inventory in ops `devdocs` (no product code).
