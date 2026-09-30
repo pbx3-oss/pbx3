@@ -106,6 +106,18 @@ Product interest set for discovery + eventual enrollment docs/APIs. **Not** a pr
 
 Other vendors: treat via **reseller redirect** or secondary path (opt66 / manual) until explicitly added here. **Poly** stays interest-only until the post-HP path is confirmed.
 
+### Vendor provisioning docs (authoring aid)
+
+Manufacturers publish **provisioning guides** online — use them when writing/lifting vendor-grain streams (§4.4–§4.6).
+
+| Reality | |
+|---------|--|
+| **Most (§0.2)** | Downloadable / text manuals (PDF or similar) — last checked: usable offline reference |
+| **Snom** | Guide is largely an **online UI only** (no clean text manual in the same sense) — awkward for agents and for diffable authoring; budget extra friction when doing Snom streams |
+| **Hygiene** | Links rot; pin versions/dates in working notes when a stream is frozen; do not assume the UI tour is citable in git |
+
+This is documentation ergonomics, not a product feature — but it affects how fast Yealink vs Snom templates get done.
+
 ```text
 Phone power-up
   → HTTPS to vendor redirect (Yealink RPS / Poly Lens / GDMS / SRAPS / FDMCS / …)
