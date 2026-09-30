@@ -176,6 +176,15 @@ define('GENAST',                        SCRIPTS . '/genAst.sh');		//loc. of the 
 define('HTTPOWNER',                     'www-data:www-data');		//HTTP server user/group (Apache/nginx + PHP-FPM for API)
 
 /**
+ * Phone provisioning (Phase A — home listener)
+ * Streams: vendor-grain file fragments (#INCLUDE), not Device table.
+ */
+define('PROVISION',                     SYSPATH . '/provisioning');
+define('PROVISION_STREAMS',             PROVISION . '/streams');
+define('PROVISION_KERNEL',              CLASSES . '/ProvisionKernel.php');
+define('PROVISION_PORT',                41363);
+
+/**
  * Site wall clock = Network panel OS timezone (/etc/timezone).
  * Day timers / holidays / other CLI utilities must not evaluate in bare PHP UTC.
  * Same source as pbx3api SiteTimezone (CDR presentation).

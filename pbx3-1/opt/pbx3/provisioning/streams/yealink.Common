@@ -1,0 +1,15 @@
+#!version:1.0.0.1
+## Yealink common fragment (A1 stub — expand in A2)
+##File header "#!version:1.0.0.1" can not be edited or deleted, and must be placed in the first line.##
+
+security.user_password = admin:$padminpass
+security.user_password = user:$puserpass
+
+features.direct_ip_call_enable = 0
+auto_provision.pnp_enable = 1
+auto_provision.power_on = 1
+
+account.1.enable = 1
+account.1.outbound_proxy_enable = 1
+account.1.subscribe_register = 1
+account.1.subscribe_mwi = 1
