@@ -190,20 +190,21 @@ Phone applies config → SIP REGISTER to SBC / domain from file (solo: instance)
 
 ## 4. Responsibilities
 
-### 4.1 Edge proxy
+### 4.1 Edge proxy (SBC-colocated)
 
 | Do | Notes |
-|----|--------|
-| HTTPS terminate (or passthrough — prefer terminate + wildcard) | Own LE / wildcard story on the proxy |
-| Route by Host / SNI and/or MAC → home | Host map and/or MAC→tenant→home index from catalog; refresh on move/onboard |
+|----|-------|
+| HTTPS terminate on SBC edge VIP / provision vhost | Own LE / wildcard story on the edge (detail TBD) |
+| Route by Host / SNI and/or MAC → home | Map from **catalog/S3 only**; refresh on move/onboard |
 | Extract MAC from request | Vendor forms: query `mac=`, path `/{mac}.cfg`, POST body — normalize 12-hex |
 | Health / 502 when home unknown | Unknown tenant Host or unknown MAC → 404/502; no cross-tenant leak |
 | No secret render | Proxy does not read `ipphone` passwords |
+| Mirror with SBC HA | Same published map on each edge node; no local secret state |
 
 ### 4.2 Home listener
 
 | Do | Notes |
-|----|--------|
+|----|-------|
 | HTTP(S) MAC / descriptor → vendor config | Same URL families as previous PBX (`?mac=`, `/{mac}.cfg`, Yealink common, …) |
 | Template expand | From extension/handset data (previous PBX-style); **not** revived Device table (#28) |
 | Credential gating | `sndcreds` Always \| Once \| No |
