@@ -312,16 +312,17 @@ Prior PBX mostly relied on **web server access logs** plus light syslog — work
 | sndcreds mode applied | Yes | Always / Once / No |
 | Secrets emitted? | Yes | boolean (`creds_sent=true/false`) |
 | Descriptor / stream name | When used | e.g. yealink.Common |
-| **Rendered stream (body sent)** | **Yes on success** | The **exact config bytes/text returned to the phone** — including secret stanzas when Once/Always sent them. Primary investigation artifact (“what did we actually give this MAC?”). Omit or empty on 404 |
+| **Rendered stream (body sent)** | **Yes on success** | Config text as returned to the phone, **with password / secret values obfuscated** in the audit copy (e.g. replace SIP password, phone admin/user pass, LDAP bind secrets with a fixed mask like `********`). Structure and non-secret fields stay intact for investigation (“what did we send?” without retaining cleartext creds). Omit or empty on 404 |
 
 | Stance | |
 |--------|--|
-| **Do** | Structured record per request (JSON object per line, or metadata line + body artifact). Prefer one audit store operators can grep by MAC |
-| **Treat as secret-bearing** | Because the stored stream **may contain SIP passwords**, the audit file/dir is **sensitive**: mode **0600** / owner www-data (or provision user); not world-readable; do **not** ship raw to a loosely permissioned org bucket without the same controls as backups |
-| **Pragmatic threat** | Until desk SIP is widely **TLS**, SIP passwords are often recoverable from **UDP signalling** anyway — audit retention of the provision stream is not a *new* class of exposure relative to the wire. Still harden the file (above); don’t pretend UDP-SIP orgs have password secrecy. Prefer Once so daily re-polls don’t re-emit; SIP-TLS / SRTP remain the real long-term fix (`SBC_PRODUCT_TRACKS` / TLS tracks) |
-| **Retention** | Follow instance log retention; rotate; align with fleet log-ship class only if encryption/ACL match secret logs |
-| **Edge (Phase C)** | Proxy logs Host/MAC → upstream + status; **does not** store home-rendered bodies (bodies stay on home audit) |
-| **SPA** | **Last provisioned** timestamp on extension (§ below); optional later “view last stream” from audit — care with who can see passwords |
+| **Do** | Structured record per request (JSON object per line, or metadata + body artifact). Prefer one audit store operators can grep by MAC |
+| **Obfuscate in audit copy** | Apply the same secret-line awareness as **§4.3** (`sndcreds` patterns): mask values for `$password` and vendor secret keys in the **logged** stream. The **wire response to the phone** is unchanged (cleartext when Once/Always). Never store cleartext SIP/phone passwords in the audit artifact |
+| **Treat as still sensitive** | Obfuscated streams can still reveal extension ids, MAC, topology — mode **0600**; don’t world-publish |
+| **Pragmatic threat** | Until desk SIP is widely **TLS**, cleartext passwords remain visible on **UDP signalling** — that does not excuse keeping cleartext in our audit files. Prefer Once; SIP-TLS remains the long-term wire fix |
+| **Retention** | Follow instance log retention; rotate; fleet log-ship OK once obfuscated (still ACL like other instance logs) |
+| **Edge (Phase C)** | Proxy logs Host/MAC → upstream + status; **does not** store home-rendered bodies (bodies stay on home audit, obfuscated) |
+| **SPA** | **Last provisioned** timestamp on extension (§ below); optional later “view last stream” shows **obfuscated** audit copy only |
 
 **last-seen / last-provisioned (investigation first stop)**
 
@@ -399,7 +400,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 | **Secrets in body** | Gated by **§4.3** (`Always` / `Once` / `No`); prefer **Once**. Factory reset ⇒ operator resets provision state so ONCE values send again |
 | **Writes from phones** | Ignore PUT / vendor upload (404/no-op) |
 | **Cross-tenant** | Host must select exactly one tenant; never serve another cluster’s MAC |
-| **Audit trail** | **§4.7** — dedicated provision log **including rendered stream**; Apache alone is insufficient; treat log as secret-bearing |
+| **Audit trail** | **§4.7** — dedicated provision log including **obfuscated** rendered stream; Apache alone is insufficient |
 
 **Note:** Vendor client-cert check mitigates “anyone who knows a MAC can GET config.” It does **not** replace `sndcreds`, fail-closed routing, or keeping `SIP_AUTH` off S3.
 
