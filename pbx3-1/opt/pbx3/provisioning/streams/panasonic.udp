@@ -1,0 +1,2 @@
+# panasonic.udp — sail65 Device row had no provision body (UDP defaults live in Panasonic main).
+# Kept so ETL `#INCLUDE panasonic.udp` resolves.

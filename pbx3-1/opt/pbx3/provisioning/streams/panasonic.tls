@@ -1,0 +1,7 @@
+SIP_RGSTR_PORT_1="$tlsport"
+SIP_PRXY_PORT_1="$tlsport"
+SIP_PRSNC_PORT_1="$tlsport"
+SIP_SRC_PORT_1="$tlsport"
+SIP_TRANSPORT_1="2"
+SIP_TLS_MODE_1="1"
+SRTP_CONNECT_MODE_1="0"
