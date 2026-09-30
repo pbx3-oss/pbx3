@@ -71,6 +71,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 | **A6** | Lab prove: Yealink (or Snom) RPS or manual URL → golden; register via normal SIP path | ops lab |
 | **A7** | **Automated tests** for parse / INCLUDE / substitute / sndcreds / fail-closed — **required to exit A** (§7) | **pbx3** |
 | **A8** | **Provision audit trail** (§4.7 requirements) — structured log per request; no secrets in log; rotate | **pbx3** |
+| **A9** | Persist **`last_provisioned_at`** (optional `first_provisioned_at`) on successful send; schema + update path | **pbx3** |
 
 **A1 stack decision (open #6):** prefer **PHP lift** of the kernel for speed/parity; rewrite only if packaging forces it. Behaviour first.
 
@@ -80,7 +81,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 
 | Slice | Work | Repo(s) |
 |-------|------|---------|
-| **B1** | SPA or API: show provision URL; **Reset provision state** (set Once) on factory-reset / password regen | **pbx3spa** / **pbx3api** |
+| **B1** | SPA: show provision URL + **Last provisioned**; **Reset provision state** (set Once) on factory-reset / password regen | **pbx3spa** / **pbx3api** |
 | **B2** | Docs: RPS enroll (Yealink, Snom); Gigaset MAC+PIN; solo→fleet “change RPS target once” | **pbx3-docs** |
 | **B3** | M1 coexistence one-pager: “reseller delivers full config” supported without our HTTP | **pbx3-docs** |
 
@@ -153,6 +154,7 @@ Lab/phone soak remains necessary; it is **not** a substitute for regression test
 | **INCLUDE + substitute** | **A** | Unit + fixtures | Nested INCLUDE, loop detection, `$ext` / `$password` / registrar placeholders from fixture `ipphone` + fragment files |
 | **sndcreds Once / Always / No** | **A** | Unit | Secret lines present/absent; **Once → No flip** after successful render; Reset state restores Once |
 | **Audit trail** | **A** | Unit | Successful/404 requests emit required fields; rendered body / password **never** appear in log sink |
+| **last_provisioned_at** | **A** | Unit | Success bumps timestamp; 404 does not |
 | **Fail-closed** | **A** | Unit | Unknown MAC → 404; duplicate MAC → 404 |
 | **No BLF path** | **A** | Unit / smoke | Builder does not require fkey tables; no `$fkey` expand |
 | **Map artifact** | **C** | Unit | Catalog (or fixture) → nginx/map file; tenant move changes backend; no secrets in output |
@@ -175,6 +177,7 @@ Document a short **lab recipe** (A6 / C exit) next to the automated suite — so
 |-------|------|------|
 | **A7** | Test harness + fixtures for parse / INCLUDE / substitute / sndcreds / 404 | **Required to exit Phase A** (alongside A6 lab) |
 | **A8** | Structured provision audit log (no secrets) | **Required to exit Phase A** |
+| **A9** | `last_provisioned_at` on successful send | **Required to exit Phase A** |
 | **C7** | Map publisher unit tests + “no secret in map” assertion | **Required to exit Phase C** |
 
 ### 7.4 Effort (additive)
@@ -183,6 +186,7 @@ Document a short **lab recipe** (A6 / C exit) next to the automated suite — so
 |------|---------|
 | **A7** | **~2–4 days** (budget **~0.5–1 week** with polish/CI wiring) |
 | **A8** | **~1–2 days** (logger + rotate + tests that secrets never land in sink) |
+| **A9** | **~0.5–1 day** (column + update + test) |
 | **C7** | **~1–2 days** |
 
 Revise Phase A roll-up: lab-useful solo ≈ prior estimate **+ ~1–1.5 weeks** when **A7 + A8** are on the critical path (correct — do not skip).
@@ -191,8 +195,8 @@ Revise Phase A roll-up: lab-useful solo ≈ prior estimate **+ ~1–1.5 weeks** 
 
 ```text
 A1 kernel → A7 tests skeleton (can start as soon as expand exists)
-  → A2 Yealink stream → A4 sndcreds (+ tests) → A8 audit log (+ tests)
-  → A5 HTTPS → A6 lab phone  (A7+A8 green required to exit A)
+  → A2 Yealink stream → A4 sndcreds (+ tests) → A8 audit log (+ tests) → A9 last_provisioned_at
+  → A5 HTTPS → A6 lab phone  (A7+A8+A9 green required to exit A)
   → B2 / B1
   → C1 … C5 → C7 map tests
   → D* parallel
@@ -211,8 +215,10 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 - [ ] Commit/PJSIP unchanged by provision GET  
 - [ ] **A7 automated suite green** (parse, INCLUDE, substitute, sndcreds, fail-closed)  
 - [ ] **A8 audit trail** — structured per-request log; **no** passwords/bodies in log; lab can answer “did MAC X get config?” without grepping only Apache  
+- [ ] **A9** — `last_provisioned_at` set on success; visible via DB/API; 404 does not update  
 
-### Phase C
+### Phase B
+- [ ] Extension UI shows **Last provisioned** (+ provision URL + Reset Once)
 - [ ] RPS → edge URL; map → current home  
 - [ ] Move updates **setid + provision map** together  
 - [ ] Proxy has no passwords  

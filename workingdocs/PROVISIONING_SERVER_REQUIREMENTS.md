@@ -321,6 +321,18 @@ Prior PBX mostly relied on **web server access logs** plus light syslog — work
 | **Edge (Phase C)** | Proxy logs Host/MAC route → upstream home + 502/404; still no secrets |
 | **SPA later** | Optional “last provisioned” from audit — not required for A |
 
+**last-seen / last-provisioned (investigation first stop)**
+
+Often the **first** question in a desk-phone incident: “did this MAC ever get config, and when?”
+
+| Stance | |
+|--------|--|
+| **HoR** | Persist on the **extension row** (`ipphone`) — e.g. `last_provisioned_at` (and optional `first_provisioned_at`) updated on **successful** config send (200 with body). Prior PBX had `firstseen`/`lastseen`; lift the idea, don’t leave it commented out |
+| **Not a substitute for audit** | Row timestamp = fast UI/SQL check; **§4.7** log = who/what/outcome detail |
+| **404 / deny** | Do **not** bump last-provisioned on fail-closed (unknown MAC, etc.) |
+| **SPA** | Show **Last provisioned** on extension detail early (Phase **B** lean — high value for support). Sort/filter later |
+| **Timezone** | Store UTC; display per site TZ policy |
+
 ---
 
 ## 5. Inputs (home)
@@ -328,6 +340,7 @@ Prior PBX mostly relied on **web server access logs** plus light syslog — work
 | Input | Source | Note |
 |-------|--------|------|
 | Extension + MAC + secret + vendor label | `ipphone` | Authored on instance; **HoR for secrets**. No Device table |
+| last_provisioned_at (first optional) | `ipphone` | Updated on successful provision GET (§4.7); investigation first stop |
 | BLF / line keys | — | **Not in v1 stream** (§4.5); optional hand-edit in template |
 | SIP host policy | Fleet: embed **SBC** + tenant domain; not home public IP | Matches W1 / fleet desk path |
 | OUI → vendor | `manuf.txt` helper | Create-time UI; not every GET |
