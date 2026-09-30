@@ -12,7 +12,7 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate (instance-local)** — reopen after **won't-do (2026-08-23)**. **v1:** each home runs its own HTTP provisioner (no fleet edge proxy yet). Still no **third-party certs panel**; no Device templates (#28). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** (status reopened). Ties to desk NAT templates: **`FLEET_DESK_PHONE_NAT.md`**.  
+0k. **Phone provisioning — reinstate (instance-local)** — architecture locked; **plan:** **`PROVISIONING_IMPLEMENTATION_PLAN.md`**. **v1:** home HTTPS provisioner (Phase A). Fleet SBC nginx proxy = Phase C. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Desk NAT: **`FLEET_DESK_PHONE_NAT.md`**.  
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
@@ -68,7 +68,7 @@
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
-23. **Provisioning — reinstate (instance-local)** — **reopened 2026-09-08** (supersedes won't-do 2026-08-23). **v1:** provisioner per home/instance only; fleet edge proxy / shared provision host **later if needed**. Still **no** 3pcerts panel; still **no** Device templates (#28). Manufacturer RPS remains an option alongside. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** · desk NAT: **`FLEET_DESK_PHONE_NAT.md`**.  
+23. **Provisioning — reinstate (instance-local)** — **plan 2026-09-30:** **`PROVISIONING_IMPLEMENTATION_PLAN.md`** (Phase A home listener → B docs/UX → C SBC proxy). Spec locks: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. No 3pcerts SPA; no Device matrix (#28). Desk NAT: **`FLEET_DESK_PHONE_NAT.md`**.  
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked) — companion **0h** trunk carrier-face stub.  
@@ -113,7 +113,7 @@
 
 - [ ] **Fleet desk phone NAT / STUN (provisioning — 2026-09-03):** SBC + cloud-anchored media ⇒ handsets need explicit NAT (Yealink **Auto**, or **STUN**+server if no Auto). Direct-cloud Asterisk Contact-rewrite does not apply the same way. Checklist by manufacturer: **`pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md`**. Customer RPS templates must be updated.
 
-- [ ] **Phone provisioning — reinstate, instance-local (#23 / 0k — 2026-09-08):** Reopen after won't-do. Each instance runs its own HTTP provisioner **for now** (no fleet edge proxy / shared host yet). No 3pcerts; no Device templates. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
+- [ ] **Phone provisioning — reinstate (#23 / 0k):** Plan **`PROVISIONING_IMPLEMENTATION_PLAN.md`**; locks **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Next: Phase **A1** listener kernel.
 
 - [ ] **Singleton local install (#0m — 2026-09-08):** Local solo home (no fleet/SBC). Harness for solo S3/STT and existing-singleton first step. Rule 6 · try-it / lab home install docs.
 

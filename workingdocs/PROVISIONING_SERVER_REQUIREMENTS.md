@@ -1,14 +1,15 @@
-# Provisioning — requirements (sketch)
+# Provisioning — requirements
 
-**Status:** **Reopened 2026-09-08** (supersedes won't-do 2026-08-23).  
-**v1 direction:** **instance-local** HTTPS phone provisioner on each home (non-443) — independently, at least for now. Fleet edge provision proxy = **SBC-colocated** nginx later (§0); map from catalog/S3 only (no secrets). Still **no** third-party certs panel.  
+**Status:** Architecture **locked 2026-09-30** (discovery, solo/fleet shape, builder, security).  
+**Implementation plan:** **`PROVISIONING_IMPLEMENTATION_PLAN.md`** (phases A–D).  
+**v1 direction:** **instance-local** HTTPS phone provisioner on each home (non-443) first. Fleet edge = **SBC-colocated** nginx later (§0); map from catalog/S3 only (no secrets). Still **no** third-party certs SPA panel.  
 **Discovery (locked 2026-09-29):** **Vendor / reseller redirect (RPS)** is the **primary** way phones find the provision URL in cloud deployments. DHCP opt66/114 and PnP multicast are **secondary** (on-prem / lab). See **§0.2**.  
 **2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a **vendor label** (e.g. Snom / Yealink), not a per-SKU catalogue. See **§4.4** — do **not** revive a per-model Device matrix.  
 **2026-09-30:** Prior-PBX lesson locked — vendors share one provision stream per manufacturer (rare exceptions); old per-model names were kept only as legacy aliases for existing customers.  
 **Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — deferred past instance-local v1.  
 **Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard.  
 **Reference notes:** private prior co-located provisioner / previous PBX archives (operator only — not in product tree).  
-**Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** (extension SIP fields / Commit) · **`TLS_AND_CERTIFICATES.md` §0** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23 / #28 / **0k**.
+**Related:** **`PROVISIONING_IMPLEMENTATION_PLAN.md`** · **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23 / #28 / **0k**.
 
 ---
 
@@ -390,7 +391,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 
 ## 11. Open decisions (narrow)
 
-0. **Schedule build?** — Direction preferred; priority TBD (TODO #23 / 0k).  
+0. **Schedule build?** — Plan exists (**`PROVISIONING_IMPLEMENTATION_PLAN.md`**); start at Phase **A1** when scheduled.  
 1. **Cert on proxy** — Wildcard `*.apex` vs per-tenant SAN vs name `provision.{apex}` with path-based tenant (path would change phone URL shape — Host-based preferred).  
 2. ~~**Where proxy runs**~~ — **Locked 2026-09-30:** **SBC-colocated** nginx (or equivalent); map from catalog/S3 only; gatekeeper publishes map; mirrors with SBC HA. Not phone-facing on gatekeeper.  
 3. **Map transport** — Regenerated nginx conf vs lua (MAC extract from URI/body) vs pull of static map object from S3 (prefer no live gatekeeper on GET path).  
