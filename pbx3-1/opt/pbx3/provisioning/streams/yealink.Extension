@@ -7,3 +7,4 @@ account.1.sip_server_host = $registrar
 account.1.sip_server_port = $bindport
 account.1.outbound_host = $registrar
 account.1.outbound_port = $bindport
+account.1.outbound_proxy_enable = 1

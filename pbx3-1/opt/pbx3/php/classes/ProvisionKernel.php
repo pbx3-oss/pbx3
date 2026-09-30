@@ -6,7 +6,7 @@
  *  - #INCLUDE resolves vendor-grain **files** under PROVISION_STREAMS (no Device table).
  *  - No BLF / Fkey / Lkey expand ($fkey ignored; *.Fkey includes skipped).
  *  - Secret-line filter does **not** treat $ext as a password token.
- *  - Once→No flip / audit / last_provisioned_at are later slices (A4/A8/A9).
+ *  - Once→No flip + audit (obfuscated) + last/first_provisioned_at on success path.
  *
  * Pure helpers are callable without Apache; entry is provisioning/device.php.
  */
@@ -318,6 +318,7 @@ function pbx3_provision_vars_from_phone($phone, $globals = array(), $extra = arr
 		'ldaptenant' => isset($p['cluster']) ? $p['cluster'] : '',
 		'ldaprouser' => '',
 		'ldapropwd' => '',
+		'provurl' => isset($extra['provurl']) ? $extra['provurl'] : '',
 	);
 	foreach ($extra as $k => $v) {
 		$vars[$k] = $v;
@@ -396,4 +397,233 @@ function pbx3_provision_render(PDO $db, $parsed, $streamsDir = null, $globals = 
 	$body = pbx3_provision_substitute($expanded, $vars);
 
 	return array('ok' => true, 'status' => 200, 'body' => $body, 'reason' => 'mac', 'phone' => $phone);
+}
+
+/**
+ * A3 — resolve $registrar / $localip / $provurl for solo vs fleet.
+ *
+ * Fleet: registrar = PBX3_SBC_EGRESS_HOST (default sbc.pbx3.com).
+ * Solo: registrar = globals.fqdn when provisionwith=FQDN, else local IPv4 hint.
+ *
+ * @param PDO|null $db
+ * @param array $globals
+ * @param array $overrides optional forced keys
+ * @return array{fleet:bool,registrar:string,localip:string,provurl:string}
+ */
+function pbx3_provision_resolve_hosts($db = null, $globals = array(), $overrides = array()) {
+	$fleet = pbx3_provision_is_fleet_mode($db);
+	$fqdn = '';
+	if (isset($globals['fqdn'])) {
+		$fqdn = trim((string) $globals['fqdn']);
+	} elseif (isset($globals['FQDN'])) {
+		$fqdn = trim((string) $globals['FQDN']);
+	}
+
+	$sbc = getenv('PBX3_SBC_EGRESS_HOST');
+	if ($sbc === false || trim((string) $sbc) === '') {
+		$sbc = 'sbc.pbx3.com';
+	} else {
+		$sbc = trim((string) $sbc);
+	}
+
+	$localip = isset($overrides['localip']) ? (string) $overrides['localip'] : '127.0.0.1';
+	if ($fleet) {
+		$registrar = isset($overrides['registrar']) ? (string) $overrides['registrar'] : $sbc;
+	} else {
+		if (isset($overrides['registrar'])) {
+			$registrar = (string) $overrides['registrar'];
+		} elseif ($fqdn !== '') {
+			$registrar = $fqdn;
+		} else {
+			$registrar = $localip;
+		}
+	}
+
+	$port = defined('PROVISION_PORT') ? PROVISION_PORT : 41363;
+	if (isset($overrides['provurl'])) {
+		$provurl = (string) $overrides['provurl'];
+	} elseif ($fleet) {
+		$apex = '';
+		if (isset($globals['domain'])) {
+			$apex = trim((string) $globals['domain']);
+		} elseif (isset($globals['DOMAIN'])) {
+			$apex = trim((string) $globals['DOMAIN']);
+		}
+		if ($apex === '' && $fqdn !== '' && strpos($fqdn, '.') !== false) {
+			$apex = preg_replace('/^[^.]+\\./', '', $fqdn);
+		}
+		if ($apex === '') {
+			$apex = 'pbx3.com';
+		}
+		$provurl = 'https://provision.' . $apex . ':' . $port . '/provisioning';
+	} else {
+		$host = $fqdn !== '' ? $fqdn : $localip;
+		$provurl = 'https://' . $host . ':' . $port . '/provisioning';
+	}
+
+	return array(
+		'fleet' => $fleet,
+		'registrar' => $registrar,
+		'localip' => $localip,
+		'provurl' => $provurl,
+	);
+}
+
+/**
+ * Same idea as GenClass::isFleetMode — env first, else active trunks.pkey=Egress.
+ */
+function pbx3_provision_is_fleet_mode($db = null) {
+	$env = getenv('PBX3_FLEET_MODE');
+	if ($env !== false && $env !== '') {
+		$v = strtolower(trim($env));
+		if (in_array($v, array('1', 'true', 'yes'), true)) {
+			return true;
+		}
+		if (in_array($v, array('0', 'false', 'no'), true)) {
+			return false;
+		}
+	}
+	if (!$db instanceof PDO) {
+		return false;
+	}
+	try {
+		$q = $db->query("SELECT active FROM trunks WHERE pkey='Egress' LIMIT 1");
+		$row = $q ? $q->fetch(PDO::FETCH_ASSOC) : false;
+		return $row && (($row['active'] ?? '') === 'YES');
+	} catch (Exception $e) {
+		return false;
+	}
+}
+
+/**
+ * A4 — After successful MAC send with sndcreds=Once, flip to No (prepared; == semantics).
+ * Returns true if a row was updated.
+ */
+function pbx3_provision_flip_sndcreds_once(PDO $db, $phone) {
+	if (!$phone || !isset($phone->pkey)) {
+		return false;
+	}
+	$mode = isset($phone->sndcreds) ? (string) $phone->sndcreds : '';
+	if (strcasecmp($mode, 'Once') !== 0) {
+		return false;
+	}
+	$cluster = isset($phone->cluster) ? (string) $phone->cluster : 'default';
+	try {
+		$stmt = $db->prepare("UPDATE ipphone SET sndcreds = 'No' WHERE pkey = ? AND cluster = ? AND sndcreds = 'Once'");
+		$stmt->execute(array($phone->pkey, $cluster));
+		$n = $stmt->rowCount();
+		$stmt = null;
+		return $n > 0;
+	} catch (Exception $e) {
+		return false;
+	}
+}
+
+/**
+ * A9 — bump last_provisioned_at (and first if empty) on successful MAC send.
+ */
+function pbx3_provision_touch_timestamps(PDO $db, $phone, $whenIso = null) {
+	if (!$phone || !isset($phone->pkey)) {
+		return false;
+	}
+	if ($whenIso === null) {
+		$whenIso = gmdate('Y-m-d\\TH:i:s\\Z');
+	}
+	$cluster = isset($phone->cluster) ? (string) $phone->cluster : 'default';
+	try {
+		$stmt = $db->prepare(
+			"UPDATE ipphone SET last_provisioned_at = ?,
+			 first_provisioned_at = COALESCE(NULLIF(first_provisioned_at, ''), ?)
+			 WHERE pkey = ? AND cluster = ?"
+		);
+		$stmt->execute(array($whenIso, $whenIso, $phone->pkey, $cluster));
+		$stmt = null;
+		return true;
+	} catch (Exception $e) {
+		return false;
+	}
+}
+
+/**
+ * A8 — obfuscate secret values in a rendered stream copy for audit storage.
+ * Wire response to the phone stays cleartext.
+ */
+function pbx3_provision_obfuscate_for_audit($body) {
+	$lines = explode("\n", (string) $body);
+	$out = array();
+	$secretKeys = pbx3_provision_secret_tokens();
+	foreach ($lines as $line) {
+		$masked = $line;
+		$hit = false;
+		foreach ($secretKeys as $tok) {
+			if (strpos($line, $tok) !== false) {
+				$hit = true;
+				break;
+			}
+		}
+		// Also mask lines that look like assigned passwords after substitute.
+		if (!$hit && preg_match('/(password|passwd|user_pass|http_pass|ADMIN_PASS|USER_PASS|ldap\.password|ldap_password)\\s*[:=]/i', $line)) {
+			$hit = true;
+		}
+		if ($hit) {
+			// Keep key / left-hand side; mask value.
+			if (preg_match('/^(\\s*[^:=]+\\s*[:=]\\s*)(.*)$/', $line, $m)) {
+				$masked = $m[1] . '********';
+			} else {
+				$masked = '********';
+			}
+		}
+		$out[] = $masked;
+	}
+	return implode("\n", $out);
+}
+
+/**
+ * Append one JSON audit record (0600 file). Returns true on write.
+ */
+function pbx3_provision_audit_write($path, $record) {
+	$dir = dirname($path);
+	if (!is_dir($dir)) {
+		@mkdir($dir, 0700, true);
+	}
+	$line = json_encode($record, JSON_UNESCAPED_SLASHES) . "\n";
+	$existed = file_exists($path);
+	$ok = (@file_put_contents($path, $line, FILE_APPEND | LOCK_EX) !== false);
+	if ($ok && !$existed) {
+		@chmod($path, 0600);
+	}
+	return $ok;
+}
+
+/**
+ * Side effects after a successful MAC provision send (not common/404/PUT).
+ *
+ * @param array $result from pbx3_provision_render
+ * @param array $meta mac, remote_addr, reason, sndcreds_applied
+ */
+function pbx3_provision_after_success(PDO $db, $result, $meta = array(), $auditPath = null) {
+	if (empty($result['ok']) || (int) $result['status'] !== 200 || $result['reason'] !== 'mac') {
+		return array('flipped' => false, 'stamped' => false, 'audited' => false);
+	}
+	$phone = $result['phone'];
+	$flipped = pbx3_provision_flip_sndcreds_once($db, $phone);
+	$stamped = pbx3_provision_touch_timestamps($db, $phone);
+
+	if ($auditPath === null) {
+		$auditPath = defined('PROVISION_AUDIT_LOG') ? PROVISION_AUDIT_LOG : '/opt/pbx3/var/log/provision-audit.log';
+	}
+	$snd = isset($phone->sndcreds) ? (string) $phone->sndcreds : '';
+	$record = array(
+		'ts' => gmdate('Y-m-d\\TH:i:s\\Z'),
+		'mac' => isset($meta['mac']) ? $meta['mac'] : null,
+		'ext' => isset($phone->pkey) ? $phone->pkey : null,
+		'cluster' => isset($phone->cluster) ? $phone->cluster : null,
+		'sndcreds' => $snd,
+		'flipped_once' => $flipped,
+		'remote' => isset($meta['remote_addr']) ? $meta['remote_addr'] : null,
+		'body' => pbx3_provision_obfuscate_for_audit($result['body']),
+	);
+	$audited = pbx3_provision_audit_write($auditPath, $record);
+
+	return array('flipped' => $flipped, 'stamped' => $stamped, 'audited' => $audited);
 }

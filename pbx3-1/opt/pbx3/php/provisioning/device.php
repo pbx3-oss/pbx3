@@ -1,12 +1,11 @@
 #!/usr/bin/env php
 <?php
 /**
- * Home provision entry (Phase A1).
+ * Home provision entry (Phase A).
  *
  * CLI:  php device.php <mac>
- * HTTP: later wired to :41363 (A5). For now callable under php-cli / php-fpm once routed.
- *
- * Uses instance sqlite + PROVISION_STREAMS. Fail-closed: unknown / duplicate MAC → 404.
+ *       php device.php --uri /provisioning/<mac>.cfg
+ * HTTP: later wired to :41363 (A5).
  */
 
 $optRoot = getenv('PBX3_ROOT');
@@ -41,6 +40,11 @@ if (getenv('PBX_SQLITE')) {
 $streamsDir = defined('PROVISION_STREAMS') ? PROVISION_STREAMS : ($optRoot . '/provisioning/streams');
 if (getenv('PBX3_PROVISION_STREAMS')) {
 	$streamsDir = getenv('PBX3_PROVISION_STREAMS');
+}
+
+$auditPath = defined('PROVISION_AUDIT_LOG') ? PROVISION_AUDIT_LOG : ($optRoot . '/var/log/provision-audit.log');
+if (getenv('PBX3_PROVISION_AUDIT')) {
+	$auditPath = getenv('PBX3_PROVISION_AUDIT');
 }
 
 $cli = (PHP_SAPI === 'cli');
@@ -82,16 +86,24 @@ try {
 		$globals = $row;
 	}
 } catch (Exception $e) {
-	// leave empty — substitute uses defaults
+	// leave empty
 }
 
+$hosts = pbx3_provision_resolve_hosts($db, $globals);
 $extra = array(
-	'localip' => '127.0.0.1',
-	'registrar' => '127.0.0.1',
+	'localip' => $hosts['localip'],
+	'registrar' => $hosts['registrar'],
+	'provurl' => $hosts['provurl'],
 );
-// A3 will set fleet vs solo registrar; A1 leaves placeholder host.
 
 $result = pbx3_provision_render($db, $parsed, $streamsDir, $globals, $extra);
+
+if (!empty($result['ok']) && (int) $result['status'] === 200 && $result['reason'] === 'mac') {
+	pbx3_provision_after_success($db, $result, array(
+		'mac' => isset($parsed['mac']) ? $parsed['mac'] : null,
+		'remote_addr' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : ($cli ? 'cli' : null),
+	), $auditPath);
+}
 
 if ($cli) {
 	if (!$result['ok'] && $result['status'] === 404) {

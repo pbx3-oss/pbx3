@@ -183,6 +183,7 @@ define('PROVISION',                     SYSPATH . '/provisioning');
 define('PROVISION_STREAMS',             PROVISION . '/streams');
 define('PROVISION_KERNEL',              CLASSES . '/ProvisionKernel.php');
 define('PROVISION_PORT',                41363);
+define('PROVISION_AUDIT_LOG',           SYSPATH . '/var/log/provision-audit.log');
 
 /**
  * Site wall clock = Network panel OS timezone (/etc/timezone).

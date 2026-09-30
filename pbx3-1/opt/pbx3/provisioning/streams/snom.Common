@@ -1,0 +1,98 @@
+setting_server$: $provurl?mac={mac}
+update_policy$: 
+
+;set TLS initially off
+user_outbound1$:
+user_srtp1$: off
+user_srtp2$: off
+user_auth_tag1$: off
+user_savp1$: off
+
+edit_alpha_mode&: 123
+
+ldap_server$: $ldaphost
+ldap_port$: 
+ldap_base$: ou=$ldaptenant,ou=$ldapou,$ldapbase
+ldap_username$: $ldaprouser
+ldap_password$: $ldapropwd
+ldap_max_hits$: 50
+ldap_sort_mode$: server
+ldap_search_filter$: (|(sn=%)(cn=%)(o=%))
+ldap_number_filter$: (|(telephoneNumber=%)(mobile=%)(homePhone=%))
+ldap_name_attributes$: cn o
+ldap_number_attributes$: mobile telephoneNumber homePhone
+ldap_search_filter_during_call$: (|(cn=%))
+ldap_number_filter_during_call$: (|(telephoneNumber=%)(mobile=%)(homePhone=%))
+ldap_display_name$: %cn,%o
+; Turn this on if your directory supports TLS. Snom only supports LDAPS (SSL/TLS over port 686)
+ldap_over_tls$: off
+
+dkey_directory!: keyevent F_DIRECTORY_SEARCH
+
+ignore_asserted_in_gui$: on
+
+; leave dnd codes blank
+dnd_on_code!:
+dnd_off_code!:
+
+; ntp server - in case it doesnt come from dhcp
+ntp_server$: 0.pool.ntp.org
+
+; locale settings
+timezone!: GBR-0
+language!: English(UK)
+tone_scheme!: GBR
+date_us_format&: off
+time_24_format&: on
+
+; change ringers as no one likes the normal one!
+alert_internal_ring_sound!: Ringer6
+alert_external_ring_sound!: Ringer2
+user_ringer1!: Ringer6
+user_ringer2!: Ringer6
+
+; load firmware automatically with no user input if we send it
+update_policy&: auto_update
+
+
+; turn off long contact sip headers
+user_descr_contact1$: off
+user_descr_contact2$: off
+
+; "support broken registrar" not sure this is needed any more for *
+user_sipusername_as_line1$: on
+user_sipusername_as_line2$: on
+
+; shows name & number on inbound call
+display_method!: display_name_number
+
+; resync settings daily, only on v7 firmware
+;settings_refresh_timer$: 14400
+
+; settings for easier transfers
+; call_join needs to be off for receptionists though!!!
+transfer_on_hangup!: on
+call_join_xfer!: on
+
+; turns off stupid flash plugin in web gui
+with_flash$: off
+
+; stops LED lighting for missed calls
+message_led_other!: off
+;flash on call waiting
+call_waiting$: visual
+
+; Voicemail
+dkey_retrieve!: speed *50*
+
+;Dont keep asking for a password
+challenge_response$: off
+
+;turn off the logon wizard
+logon_wizard$: skip welcome
+
+;set an http UID & password
+http_user!: user
+http_pass!: $puserpass
+
+admin_mode_password!: $padminpass

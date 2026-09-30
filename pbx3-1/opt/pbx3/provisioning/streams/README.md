@@ -3,4 +3,9 @@
 # Resolved by #INCLUDE <name> from ipphone.provision (and nested includes).
 # No Device table. No per-SKU matrix. BLF templates (*.Fkey / *.Lkey) are skipped.
 #
-# Start set: Yealink (A1 stub). Snom and fuller Yealink polish → A2.
+# Seeded: Yealink + Snom (A2). Typical extension.provision:
+#   #INCLUDE yealink.Extension
+#   #INCLUDE snom.Extension
+#
+# Placeholders: $ext $password $desc $registrar $localip $bindport $tlsport
+#   $provurl $padminpass $puserpass + LDAP tokens (see ProvisionKernel).

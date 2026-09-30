@@ -1,15 +1,150 @@
 #!version:1.0.0.1
-## Yealink common fragment (A1 stub — expand in A2)
+
 ##File header "#!version:1.0.0.1" can not be edited or deleted, and must be placed in the first line.##
 
+# # phone browser access - change for your site
 security.user_password = admin:$padminpass
 security.user_password = user:$puserpass
 
 features.direct_ip_call_enable = 0
+
+# Auto provisioning
 auto_provision.pnp_enable = 1
 auto_provision.power_on = 1
+auto_provision.repeat.enable = 1
+auto_provision.repeat.minutes = 1440
+auto_provision.server.url = $provurl
 
+# set TLS initially off
+account.1.outbound_port = 5060
+account.1.transport = 0
+account.1.srtp_encryption = 0
+security.trust_certificates = 0
+
+# Time Zone - set for your TZ
+local_time.time_zone = 0
+local_time.time_zone_name = United Kingdom(London) 
+local_time.ntp_server1 = pool.ntp.org
+local_time.ntp_server2 = $localip
+
+features.pickup.direct_pickup_enable = 1
+features.pickup.direct_pickup_code = *8
+
+#######################################################################################
+##         	              LDAP Settings                                              ##
+#######################################################################################
+#Configure the search criteria for name and number lookups.
+ldap.name_filter = (|(cn=%)(sn=%)(o=%))
+ldap.number_filter = (|(telephoneNumber=%)(mobile=%)(homePhone=%))
+
+ldap.host = $ldaphost
+ldap.port = 389
+
+ldap.base = ou=$ldaptenant,ou=$ldapou,$ldapbase
+ldap.user=$ldaprouser
+ldap.password=$ldapropwd 
+
+#Specify the maximum of the displayed search results. It ranges from 1 to 32000, the default value is 50.
+ldap.max_hits = 50
+
+ldap.name_attr = cn o
+ldap.numb_attr =  mobile telephoneNumber homePhone
+ldap.display_name = %cn,%o
+
+#Configure the LDAP version. The valid value is 2 or 3 (default).
+ldap.version = 
+
+#Conifugre the search delay time. It ranges from 0 (default) to 2000.
+ldap.search_delay = 
+
+#Enable or disable the phone to query the contact name from the LDAP server when receiving an incoming call; 0-Disabled (default), 1-Enabled;
+ldap.call_in_lookup = 1
+
+#Enable or disable the phone to sort the search results in alphabetical order; 0-Disabled (default), 1-Enabled; 
+ldap.ldap_sort =  1
+
+#Enable or disable the phone to query the LDAP server when in the pre-dialing or the dialing state; 0-Disabled (default), 1-Enabled;
+ldap.dial_lookup =  1
+
+# TLS mode - 0 = LDAP;1 = LDAP TLS start (port 389);2 = LDAPs(port 686)
+# LDAPS is likely the most secure due to startTLS being "TOFU"
+ldap.tls_mode=0
+
+
+#######################################################################################
+##         	              Account Settings                                              ##
+#######################################################################################
 account.1.enable = 1
 account.1.outbound_proxy_enable = 1
 account.1.subscribe_register = 1
 account.1.subscribe_mwi = 1
+account.1.subscribe_mwi_to_vm = 1
+account.1.sip_trust_ctrl = 1
+voice_mail.number.1 = *50*
+
+# Enable/Disable the codecs you want to use - default is law, G729, G722
+
+account.1.codec.1.enable = 1
+account.1.codec.1.payload_type = PCMU
+account.1.codec.1.priority = 1
+account.1.codec.1.rtpmap = 0
+
+account.1.codec.2.enable = 1
+account.1.codec.2.payload_type = PCMA
+account.1.codec.2.priority = 2 
+account.1.codec.2.rtpmap = 8
+
+account.1.codec.3.enable = 0 
+account.1.codec.3.payload_type = G723_53
+account.1.codec.3.priority =0
+account.1.codec.3.rtpmap = 4
+
+account.1.codec.4.enable = 0
+account.1.codec.4.payload_type = G723_63
+account.1.codec.4.priority = 0
+account.1.codec.4.rtpmap = 4
+
+account.1.codec.5.enable = 1
+account.1.codec.5.payload_type = G729
+account.1.codec.5.priority = 3
+account.1.codec.5.rtpmap = 18
+
+account.1.codec.6.enable = 1
+account.1.codec.6.payload_type = G722
+account.1.codec.6.priority = 4
+account.1.codec.6.rtpmap = 9
+
+account.1.codec.7.enable = 0
+account.1.codec.7.payload_type = iLBC
+account.1.codec.7.priority =  0
+account.1.codec.7.rtpmap = 102
+
+account.1.codec.8.enable = 0
+account.1.codec.8.payload_type = G726-16
+account.1.codec.8.priority = 0
+account.1.codec.8.rtpmap = 112
+
+account.1.codec.9.enable = 0
+account.1.codec.9.payload_type = G726-24
+account.1.codec.9.priority = 0
+account.1.codec.9.rtpmap = 102
+
+account.1.codec.10.enable = 0
+account.1.codec.10.payload_type = G726-32 
+account.1.codec.10.priority = 0 
+account.1.codec.10.rtpmap = 99
+
+account.1.codec.11.enable = 0
+account.1.codec.11.payload_type = G726-40
+account.1.codec.11.priority = 0
+account.1.codec.11.rtpmap = 104
+
+account.1.codec.12.enable = 0
+account.1.codec.12.payload_type = iLBC_13_3
+account.1.codec.12.priority = 0 
+account.1.codec.12.rtpmap = 97
+
+account.1.codec.13.enable = 0
+account.1.codec.13.payload_type = iLBC_15_2
+account.1.codec.13.priority = 0 
+account.1.codec.13.rtpmap = 97 

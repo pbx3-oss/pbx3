@@ -265,6 +265,9 @@ CREATE TABLE IF NOT EXISTS ipphone (
     "protocol" TEXT DEFAULT 'IPV4',			 -- IPV4/IPV6
     "provision" TEXT,                        -- provisioning string with #INCLUDE directives
     "provisionwith" TEXT DEFAULT 'IP',       -- how to provision: IP or FQDN
+    "sndcreds" TEXT DEFAULT 'Once',          -- Always|Once|No — secret lines in provision body (§4.3)
+    "last_provisioned_at" TEXT,              -- UTC ISO: last successful provision GET
+    "first_provisioned_at" TEXT,             -- UTC ISO: first successful provision GET
     "pjsipuser" TEXT,						 -- DEPRECATED 2026-08-23: was Device.sipiaxfriend copy; GenAst uses pjsip_overlay. Keep until schema drop.
     "stealtime" INTEGER,                     -- epoch time this extension was stolen by HD
     "stolen" TEXT,                           -- HD thief 
