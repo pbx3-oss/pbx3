@@ -45,10 +45,10 @@ Replace **EOL Shorewall / Shorewall6** on the home (instance) with **UFW**, matc
 | **F6** | LE temporary **:80** open/close via UFW managed allow/delete (cert scripts), not a permanent open port. |
 | **F7** | Do **not** run Shorewall and UFW together. |
 | **F8** | EC2/security groups remain a **second layer**; UFW is host policy. |
-| **F10** | **Sources are literal only** (`any`, IP, CIDR). No `$LAN` / `$SBC` shorthand. **Fleet SIP:** concrete SBC address(es). **Solo / singleton baseline:** **22, 44300, 5060/5061, and RTP 10000:20000** all default to the **detected LAN CIDR** from setip (typically `192.168.x.0/24`). Operator may widen in the Firewall panel (e.g. remote ops CIDR). Drop Shorewall **connrate** for now. |
+| **F10** | **Sources are literal only** (`any`, IP, CIDR). No `$LAN` / `$SBC` shorthand. **Fleet SIP + provision:** concrete SBC address(es) for **5060/5061** and **41363**. **Solo / singleton baseline:** **22, 44300, 5060/5061, 41363, and RTP 10000:20000** all default to the **detected LAN CIDR** from setip (typically `192.168.x.0/24`). Operator may widen in the Firewall panel (e.g. remote ops CIDR; cloud solo RPS may need `any` on **41363**). Drop Shorewall **connrate** for now. |
 | **F11** | **Fleet only:** **SSH :22 and API :44300** stay **`from=any` after install** (bootstrap must not lock the operator out over the public net). **Warn** in the package installer summary, lab `install-home-host` summary, and Firewall SPA while those Sources are still `any`. Do not auto-tighten fleet at install. **Solo** uses LAN CIDR for those ports (F10) — no “wide open” warn unless the operator widens to `any`. Cloud SG is a second layer (F8). |
 
-### Fleet home — standard allow set (locked 2026-08-25)
+### Fleet home — standard allow set (locked 2026-08-25; **41363** added 2026-09-30)
 
 | Port | Proto | Source | Notes |
 |------|-------|--------|-------|
@@ -56,11 +56,14 @@ Replace **EOL Shorewall / Shorewall6** on the home (instance) with **UFW**, matc
 | **44300** | tcp | anywhere | API / SPA — **same: open after install; narrow when safe** |
 | **5060** | udp + tcp | **SBC IP(s) only** | SIP signalling |
 | **5061** | tcp | **SBC IP(s) only** | SIP TLS (same restriction) |
+| **41363** | tcp | **SBC IP(s) only** | Phone **provision HTTP** (edge→home). Same SBC IP list as SIP (`PBX3_UFW_SBC_IPS` / `PBX3_SBC_EGRESS_HOST`). **Do not** leave open to phones/internet on fleet — phones hit `provision.{apex}` on the edge. Law: **`PROVISIONING_SERVER_REQUIREMENTS.md` §0.3 / §6 / §8** |
 | **10000:20000** | udp | anywhere | RTP |
 | **80** | tcp | anywhere while LE needs it | Opened/closed by Let’s Encrypt scripts only |
 | **Everything else** | — | — | **Closed** (default deny) — including **:443** (no public webserver; API is **:44300** only) |
 
-No permanent :80. No :443. No fleet :8089 on the home (WSS at edge). No LAN SIP, LDAP, IAX, or STRING/`fqdninspect` in the fleet baseline.
+No permanent :80. No :443. No fleet :8089 on the home (WSS at edge). No LAN SIP, LDAP, IAX, or STRING/`fqdninspect` in the fleet baseline. **Provision :41363 is not phone-facing on fleet** — it is an internal hop from the SBC provision proxy, locked like SIP.
+
+**Install / baseline:** `ufw-apply-baseline.sh` profile **`fleet`** must emit **41363/tcp from each SBC IP** in the same bootstrap as 5060/5061 (idempotent `# pbx3-managed` rewrite). Onboard / Provision edge that sets SBC IPs for SIP must keep provision in sync (same env vars). SBC EIP change → re-apply baseline (same parked auto-refresh story as SIP).
 
 ---
 
@@ -68,13 +71,13 @@ No permanent :80. No :443. No fleet :8089 on the home (WSS at edge). No LAN SIP,
 
 ### 4.1 Fleet home (primary)
 
-Apply **§3 standard allow set** at install (`ufw-apply-baseline.sh` profile `fleet`). SBC address(es) from env / onboard / provision artifact (pick one at implement and document).
+Apply **§3 standard allow set** at install (`ufw-apply-baseline.sh` profile `fleet`), including **41363/tcp from SBC IP(s)**. SBC address(es) from env / onboard / provision artifact (`PBX3_UFW_SBC_IPS` / literal `PBX3_SBC_EGRESS_HOST`).
 
 Prefer **idempotent rewrite** of a `# pbx3-managed` block so Provision edge IP changes do not stack duplicate allows.
 
 ### 4.2 Solo / direct (no SBC) — singleton
 
-Bootstrap (`ufw-apply-baseline.sh solo`): **22, 44300, 5060/5061, and RTP 10000:20000** all from the **detected LAN CIDR** (setip / `/etc/pbx3/lan.cidr`, typically `192.168.x.0/24`). Optional `:8089` WSS (if enabled) same LAN Source. LE `:80` still ephemeral via cert scripts. Panel can widen `from` later (e.g. add ops CIDR). Default deny everything else.
+Bootstrap (`ufw-apply-baseline.sh solo`): **22, 44300, 5060/5061, 41363, and RTP 10000:20000** all from the **detected LAN CIDR** (setip / `/etc/pbx3/lan.cidr`, typically `192.168.x.0/24`). Optional `:8089` WSS (if enabled) same LAN Source. LE `:80` still ephemeral via cert scripts. Panel can widen `from` later (e.g. add ops CIDR, or `any` for cloud solo RPS to home `:41363`). Default deny everything else.
 
 ---
 
