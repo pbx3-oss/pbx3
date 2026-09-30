@@ -214,7 +214,7 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 - [ ] HTTPS on non-443; RPS or manual URL works in lab  
 - [ ] Commit/PJSIP unchanged by provision GET  
 - [ ] **A7 automated suite green** (parse, INCLUDE, substitute, sndcreds, fail-closed)  
-- [ ] **A8 audit trail** — structured per-request log; **no** passwords/bodies in log; lab can answer “did MAC X get config?” without grepping only Apache  
+- [ ] **A8 audit trail** — success stores **exact stream sent**; metadata fields present; file treated as secret-bearing; lab can answer “what did MAC X get?”  
 - [ ] **A9** — `last_provisioned_at` set on success; visible via DB/API; 404 does not update  
 
 ### Phase B
