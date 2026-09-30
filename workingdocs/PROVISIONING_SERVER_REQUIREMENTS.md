@@ -208,10 +208,26 @@ Phone applies config → SIP REGISTER to SBC / domain from file (solo: instance)
 |----|-------|
 | HTTP(S) MAC / descriptor → vendor config | Same URL families as previous PBX (`?mac=`, `/{mac}.cfg`, Yealink common, …) |
 | Template expand | From extension/handset data (previous PBX-style); **not** revived Device table (#28) |
-| Credential gating | `sndcreds` Always \| Once \| No |
+| Credential gating | **`sndcreds` Always \| Once \| No** — see **§4.3** (ONCE preferred for secrets; industry-common) |
 | Multi-tenant | Resolve tenant from Host / path; only that cluster’s phones |
 | Unknown MAC | **404** |
 | Logging | URI, MAC, UA, success/404; no secrets |
+
+### 4.3 Credential stanzas — Always / Once / No (locked)
+
+Same idea as previous PBX **`sndcreds`** and as many **third-party / vendor cloud** provision platforms: sensitive lines in the config body (SIP password, phone admin/user passwords, LDAP bind secrets, …) are gated.
+
+| Mode | Behaviour |
+|------|-----------|
+| **Always** | Secret stanzas included on **every** successful provision GET |
+| **Once** | Secret stanzas included on the **next** successful GET only; then provision state flips so later GETs **omit** those stanzas (previous PBX: `Once` → `No` after send) |
+| **No** | Secret stanzas omitted |
+
+**Default lean:** prefer **Once** for SIP password and similar (first boot / enroll gets creds; daily re-poll does not re-emit password). Some vendors require Always — allow per-extension override.
+
+**Factory reset / replace handset:** phone loses local config and needs secrets again. Operator must **reset provision state** for that extension/MAC (e.g. set back to **Once**) so the next GET re-sends ONCE stanzas. Resetting the phone **without** resetting provision state → phone boots, fetches config **without** password → register fails until state is cleared. Document this in SPA/MkDocs when UI exists; third-party RPS platforms use the same pattern.
+
+**HoR:** provision state (`sndcreds` or equivalent) lives on the **home** extension row with the secret — not in S3 / edge map.
 
 ---
 
@@ -270,7 +286,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 | **Where certs live** | Bundle on the **SBC edge** (with the provision nginx). Ops-managed file/artifact for v1 — **no** SPA “third-party certs panel” required to ship (panel remains won't-do / later) |
 | **Lab / LAN** | Open or weaker GET by MAC acceptable on private nets; do not use as the cloud default story |
 | **HTTPS** | Required off-lab; edge terminates for fleet proxy path; home listener HTTPS for solo / direct |
-| **Secrets in body** | Only when `sndcreds` allows; prefer Once for first boot |
+| **Secrets in body** | Gated by **§4.3** (`Always` / `Once` / `No`); prefer **Once**. Factory reset ⇒ operator resets provision state so ONCE values send again |
 | **Writes from phones** | Ignore PUT / vendor upload (404/no-op) |
 | **Cross-tenant** | Host must select exactly one tenant; never serve another cluster’s MAC |
 
