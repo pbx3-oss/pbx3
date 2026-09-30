@@ -300,9 +300,10 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 | Topic | Stance |
 |-------|--------|
 | **MAC as locator** | MAC selects the extension row; it is **not** the sole authZ for remote/fleet |
-| **Vendor client certs (primary remote harden)** | **Locked intent:** edge provision vhost uses **TLS client auth** against a **vendor CA bundle** (SARK `3pcerts` model — `SSLVerifyClient require` + concatenated manufacturer CAs). Request must present a cert chaining to an allowed phone vendor (Snom, Yealink, …). **Not a panacea** (proves vendor/type family, not a specific MAC identity), but blocks casual internet MAC scrape. Prior art: previous PBX `sark-prov-ssl` / port **41363** path for Snom + Yealink |
-| **Where certs live** | Bundle on the **SBC edge** (with the provision nginx). Ops-managed file/artifact for v1 — **no** SPA “third-party certs panel” required to ship (panel remains won't-do / later) |
-| **Lab / LAN** | Open or weaker GET by MAC acceptable on private nets; do not use as the cloud default story |
+| **Vendor client certs (primary remote harden)** | **Locked intent:** edge provision vhost uses **TLS client auth** against a **vendor CA bundle** (SARK `3pcerts` model — `SSLVerifyClient require` + concatenated manufacturer CAs). Request must present a cert chaining to an allowed phone vendor. **Not a panacea** (proves vendor/type family, not a specific MAC identity). Prior art: previous PBX `sark-prov-ssl` / port **41363** |
+| **CA availability (research)** | Vendors often **claim** CAs are freely available; **practice is nuanced** (NDAs, partner portals, regional packs, silent changes). **In hand today:** **Snom** + **Yealink** example material from prior PBX. **Less clear:** Grandstream, Fanvil, Gigaset, Poly, others on §0.2. Treat full-matrix mTLS as **gated on a side exercise** — inventory which CAs we can lawfully obtain, ship, and renew — not as day-1 assumption for every interest vendor |
+| **Where certs live** | Bundle on the **SBC edge** (with the provision nginx). Ops-managed file/artifact for v1 — **no** SPA “third-party certs panel” required to ship (panel remains won't-do / later; may revisit after CA inventory) |
+| **Lab / LAN** | Open or weaker GET by MAC acceptable on private nets; do not use as the cloud default story. Remote without a vendor CA → document fallback (Once + network controls) rather than pretend mTLS for that brand |
 | **HTTPS** | Required off-lab; edge terminates for fleet proxy path; home listener HTTPS for solo / direct |
 | **Secrets in body** | Gated by **§4.3** (`Always` / `Once` / `No`); prefer **Once**. Factory reset ⇒ operator resets provision state so ONCE values send again |
 | **Writes from phones** | Ignore PUT / vendor upload (404/no-op) |
@@ -350,7 +351,8 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 6. **Stack for home listener** — PHP parity with previous PBX vs rewrite; behaviour first.  
 7. **RPS automation** — Manual portal vs vendor/reseller APIs for enroll/re-point; clearer §0.2 vendors first (**Yealink, Snom, Grandstream, Fanvil, Gigaset**). **Poly** deferred until Lens/ZTP post-HP is understood. Gigaset: confirm portal/API + PIN enrollment UX.  
 8. **Provision listen port** — Pick stable non-443 default; document for RPS target URLs.  
-9. **Poly discovery** — Confirm whether desk phones still expose a simple MAC→URL redirect usable by us, or only via Poly Lens / partner SKUs after HP.
+9. **Poly discovery** — Confirm whether desk phones still expose a simple MAC→URL redirect usable by us, or only via Poly Lens / partner SKUs after HP.  
+10. **Vendor CA / 3pcerts inventory (side exercise)** — For each §0.2 interest vendor: can we obtain client-auth CA(s), redistribute in our edge bundle, and keep them current? Start from known **Snom + Yealink**; document gaps for Grandstream / Fanvil / Gigaset / Poly. Outcome gates “mTLS for brand X” vs LAN/Once-only for that brand.
 
 ---
 
