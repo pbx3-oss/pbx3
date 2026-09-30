@@ -1,6 +1,6 @@
 # Phone provision — Phase A lab recipe (A6)
 
-**Branch / code:** pbx3 `feat/provision-a1-home-kernel` (Phase A home listener).  
+**Code:** pbx3 / pbx3api tip on home (Phase A listener + B1 URL / Reset Once).  
 **Law:** `PROVISIONING_SERVER_REQUIREMENTS.md` · plan `PROVISIONING_IMPLEMENTATION_PLAN.md`.
 
 Automated coverage: `php /opt/pbx3/scripts/tests/provision-kernel-test.php` (and package-tree equivalent). This recipe is **handset / curl soak** — not a substitute for A7.
@@ -25,21 +25,32 @@ https://{instance-fqdn}:41363/provisioning?mac={mac}
 
 **Fleet home (Phase A behind future edge):** plain `http://{home}:41363/provisioning/…` from SBC only. Phone-facing RPS stays Phase C (`provision.{apex}`).
 
+### Operator allow (lab eyeball — keep temporary)
+
+Fleet baseline is **SBC-only** on `:41363`. To **view** a provision body from a laptop browser/curl (and later to debug **vendor client-cert / mTLS** failures with a clear diagnostic path):
+
+1. Temporarily allow your public IP: Admin → Firewall, or  
+   `sudo ufw allow from {your-ip}/32 to any port 41363 proto tcp comment 'pbx3-lab-operator-provision'`
+2. Fetch: `curl -s "http://{home-fqdn}:41363/provisioning/{mac}.cfg"` (fleet) or solo HTTPS with `-sk`.
+3. **Remove the rule when done** so production posture stays SBC-only (and later edge-mTLS).
+
+Do not leave operator `:41363` open as the standing fleet policy.
+
 ---
 
 ## 1. Extension row
 
-On a lab extension (SPA or SQL):
+On a lab extension (SPA **Provision stream** or SQL):
 
 | Field | Value |
 |-------|--------|
 | `macaddr` | Phone MAC (any separator OK) |
-| `provision` | `#INCLUDE yealink.Extension` or `#INCLUDE snom.Extension` |
+| `provision` | e.g. `#INCLUDE snom` + `snom.udp` + `snom.ipv4`, or `#INCLUDE snom.Extension` / Yealink / Panasonic |
 | `sndcreds` | `Once` (preferred) |
 | `passwd` | Known SIP secret |
 | `provisionwith` | `FQDN` or `IP` (solo registrar hint) |
 
-Commit/PJSIP as usual — provision GET must **not** require Commit.
+Commit/PJSIP as usual — provision GET must **not** require Commit. MAC alone is not enough if `provision` is empty.
 
 ---
 
@@ -51,6 +62,9 @@ FQDN=xxxxxxxx.pbx3.com
 
 # Solo HTTPS (ignore lab snakeoil verify if needed)
 curl -sk "https://${FQDN}:41363/provisioning/${MAC}.cfg" | head
+
+# Fleet home (HTTP; needs SBC or temporary operator allow — §0)
+curl -s "http://${FQDN}:41363/provisioning/${MAC}.cfg" | head
 
 # Unknown MAC → 404
 curl -sk -o /dev/null -w '%{http_code}\n' "https://${FQDN}:41363/provisioning/ffffffffffff.cfg"
@@ -81,4 +95,4 @@ sqlite3 /opt/pbx3/db/sqlite.db "UPDATE ipphone SET sndcreds='Once' WHERE lower(r
 - [ ] Phone registers after provision (solo or fleet SIP path unchanged)  
 - [ ] A7 suite still green on the tip package  
 
-Then Phase **B** (SPA URL / Reset Once) and **C** (edge proxy + MAC index) as scheduled.
+Then Phase **B** (SPA URL / Reset Once / stream editor) and **C** (edge proxy + MAC index) as scheduled.
