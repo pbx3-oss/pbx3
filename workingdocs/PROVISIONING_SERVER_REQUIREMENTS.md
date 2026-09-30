@@ -200,6 +200,7 @@ Phone applies config → SIP REGISTER to SBC / domain from file (solo: instance)
 | Health / 502 when home unknown | Unknown tenant Host or unknown MAC → 404/502; no cross-tenant leak |
 | No secret render | Proxy does not read `ipphone` passwords |
 | Mirror with SBC HA | Same published map on each edge node; no local secret state |
+| Vendor client cert verify | CA bundle on edge; require client cert for remote/fleet provision vhost (§8) |
 
 ### 4.2 Home listener
 
@@ -264,12 +265,16 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 
 | Topic | Stance |
 |-------|--------|
-| Open GET by MAC | previous PBX LAN default; MAC = weak capability |
-| HTTPS | Required off-lab; proxy owns edge cert |
-| mTLS + vendor CAs | Optional hardened remote |
-| Secrets in body | Only when `sndcreds` allows; prefer Once for first boot |
-| Writes from phones | Ignore PUT / vendor upload (404/no-op) |
-| Cross-tenant | Host must select exactly one tenant; never serve another cluster’s MAC |
+| **MAC as locator** | MAC selects the extension row; it is **not** the sole authZ for remote/fleet |
+| **Vendor client certs (primary remote harden)** | **Locked intent:** edge provision vhost uses **TLS client auth** against a **vendor CA bundle** (SARK `3pcerts` model — `SSLVerifyClient require` + concatenated manufacturer CAs). Request must present a cert chaining to an allowed phone vendor (Snom, Yealink, …). **Not a panacea** (proves vendor/type family, not a specific MAC identity), but blocks casual internet MAC scrape. Prior art: previous PBX `sark-prov-ssl` / port **41363** path for Snom + Yealink |
+| **Where certs live** | Bundle on the **SBC edge** (with the provision nginx). Ops-managed file/artifact for v1 — **no** SPA “third-party certs panel” required to ship (panel remains won't-do / later) |
+| **Lab / LAN** | Open or weaker GET by MAC acceptable on private nets; do not use as the cloud default story |
+| **HTTPS** | Required off-lab; edge terminates for fleet proxy path; home listener HTTPS for solo / direct |
+| **Secrets in body** | Only when `sndcreds` allows; prefer Once for first boot |
+| **Writes from phones** | Ignore PUT / vendor upload (404/no-op) |
+| **Cross-tenant** | Host must select exactly one tenant; never serve another cluster’s MAC |
+
+**Note:** Vendor client-cert check mitigates “anyone who knows a MAC can GET config.” It does **not** replace `sndcreds`, fail-closed routing, or keeping `SIP_AUTH` off S3.
 
 ---
 
