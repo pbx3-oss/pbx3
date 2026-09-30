@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-30 (session end — provisioning architecture + plan on `main`)  
+**Last updated:** 2026-09-30 (session end — provision TLS/MAC/UFW locks on feature branch)  
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -12,7 +12,7 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate** — **locks + plan on `main` (2026-09-30, PR #4).** Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Plan: **`PROVISIONING_IMPLEMENTATION_PLAN.md`**. **Next build:** Phase **A1** (INCLUDE + substitute kernel) + **A7** tests.  
+0k. **Phone provisioning — reinstate** — Plan/locks on **`main`** (PR #4). **2026-09-30 amend (branch `docs/provision-tls-proxy-lock`):** `provision.{apex}:41363` + reverse **proxy** (not redirect; topology-hiding) + HTTP edge→home; **MAC canon** (tenant/instance FKs); **C8** reconcile; **C9** RPS migrator parked; fleet **UFW :41363 SBC-only at install** (same as SIP) — **§0.3**, **§6**, **`UFW_SHOREWALL_MIGRATION.md` §3**. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Plan: **`PROVISIONING_IMPLEMENTATION_PLAN.md`**. **Next build:** Phase **A1** + **A7** (incl. A5 UFW baseline extend).  
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
@@ -113,7 +113,7 @@
 
 - [ ] **Fleet desk phone NAT / STUN (provisioning — 2026-09-03):** SBC + cloud-anchored media ⇒ handsets need explicit NAT (Yealink **Auto**, or **STUN**+server if no Auto). Direct-cloud Asterisk Contact-rewrite does not apply the same way. Checklist by manufacturer: **`pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md`**. Customer RPS templates must be updated.
 
-- [ ] **Phone provisioning — reinstate (#23 / 0k):** Plan **`PROVISIONING_IMPLEMENTATION_PLAN.md`**; locks **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Next: Phase **A1** listener kernel.
+- [ ] **Phone provisioning — reinstate (#23 / 0k):** Plan **`PROVISIONING_IMPLEMENTATION_PLAN.md`**; locks **`PROVISIONING_SERVER_REQUIREMENTS.md`** (§0.3 / §6) + UFW **§3** `:41363`. Next: Phase **A1** (+ A5 UFW baseline).
 
 - [ ] **Singleton local install (#0m — 2026-09-08):** Local solo home (no fleet/SBC). Harness for solo S3/STT and existing-singleton first step. Rule 6 · try-it / lab home install docs.
 
