@@ -52,7 +52,8 @@ assert_from "$FLEET_JSON" "10000:20000" "udp" "any"
 assert_from "$FLEET_JSON" "5060" "udp" "203.0.113.10"
 assert_from "$FLEET_JSON" "5060" "tcp" "203.0.113.10"
 assert_from "$FLEET_JSON" "5061" "tcp" "203.0.113.10"
-ok "fleet SSH/API/RTP any + SIP from SBC"
+assert_from "$FLEET_JSON" "41363" "tcp" "203.0.113.10"
+ok "fleet SSH/API/RTP any + SIP/Provision from SBC"
 
 # hostname-only SBC must fail fleet bootstrap
 if PBX3_UFW_TEST_BOOTSTRAP=1 \
@@ -84,7 +85,8 @@ assert_from "$SOLO_JSON" "10000:20000" "udp" "$LAN"
 assert_from "$SOLO_JSON" "5060" "udp" "$LAN"
 assert_from "$SOLO_JSON" "5060" "tcp" "$LAN"
 assert_from "$SOLO_JSON" "5061" "tcp" "$LAN"
-ok "solo 22/44300/RTP/SIP from LAN"
+assert_from "$SOLO_JSON" "41363" "tcp" "$LAN"
+ok "solo 22/44300/RTP/SIP/Provision from LAN"
 
 # optional WSS
 SOLO_WSS="$WORKDIR/solo-wss.allows.json"

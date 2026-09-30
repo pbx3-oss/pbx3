@@ -130,6 +130,12 @@ if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$DEVICE_HARVEST_APPLY" ]; then
 	sh "$DEVICE_HARVEST_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
 fi
 
+# Phone provision: sndcreds + last/first_provisioned_at (+ provision columns if missing).
+PROVISION_COLS_APPLY="$SYSPATH/scripts/apply-sqlite-add-provision-columns.sh"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$PROVISION_COLS_APPLY" ]; then
+	sh "$PROVISION_COLS_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+fi
+
 # Queue Caller Max Wait (Queue() 5th arg); NULL = unlimited.
 CALLER_TO_APPLY="$SYSPATH/scripts/apply-sqlite-add-queue-caller-timeout.sh"
 if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$CALLER_TO_APPLY" ]; then

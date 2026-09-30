@@ -46,11 +46,11 @@
 | Table / model | Variance | Notes |
 |---------------|----------|--------|
 | **cluster** (Tenant) | Primary key | Schema: `id` PRIMARY KEY, `pkey` NOT NULL (no UNIQUE). API uses `primaryKey = 'pkey'`. If `pkey` is not unique, find-by-pkey could be ambiguous. In practice tenants use unique pkeys. |
-| **ipphone** (Extension) | **provisionwith**, **sndcreds** | Tenant `ipphone` has **no** columns `provisionwith` or `sndcreds`. They exist in **legacy** schema only; treated as **dead fields**—no need to add to tenant. API guards them; safe. |
+| **ipphone** (Extension) | **provision**, **provisionwith**, **sndcreds**, **last_provisioned_at**, **first_provisioned_at** | Tenant schema includes them for **phone provision** (Phase A). Older DBs: **`apply-sqlite-add-provision-columns.sh`** (postinst). |
 | **IPphoneCOSopen** / **IPphoneCOSclosed** | pbx3 uses `ipphone_pkey` / `cos_pkey` | Schema and API both use these names. No variance. |
 | Other tenant tables (agent, appl, cos, route, queue, etc.) | Not fully compared | API models reference same table names; column names in schema are lowercase. Any mismatch would surface at runtime. |
 
-**Conclusion:** Known variance is **ipphone**: tenant schema omits `provisionwith` and `sndcreds` (dead fields; no need to add). API already documents and guards them.
+**Conclusion:** Provision columns on **ipphone** are product HoR for Phase A (not dead). SPA/API may still need to expose **Reset Once** / Last provisioned (Phase B).
 
 ---
 
@@ -58,6 +58,6 @@
 
 - **Laravel / auth:** No variances that affect the API; pbx3 Laravel schema matches or is a superset.
 - **Instance globals:** No blocking variances; case and guarded columns are acceptable.
-- **Tenant ipphone:** Tenant schema lacks `provisionwith` and `sndcreds` (present in legacy); API treats them as optional/guarded. No fix required for current API behaviour.
+- **Tenant ipphone:** `provision` / `provisionwith` / `sndcreds` / `last_provisioned_at` / `first_provisioned_at` are on the tenant schema (apply script for upgrades).
 
 If you add new API endpoints or models that depend on columns not present in the pbx3 schema (instance or tenant), add those columns to the corresponding pbx3 SQL files and document here.

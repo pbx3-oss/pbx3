@@ -1,6 +1,6 @@
 # Phone provisioning — implementation plan
 
-**Status:** Plan drafted **2026-09-30** (architecture locked in requirements). **TLS/edge polish + MAC index + port 41363** — see requirements **§0.3**, **§6**.  
+**Status:** Phase **A** home listener implemented on branch **`feat/provision-a1-home-kernel`** (A1–A5, A7–A9). **A6** lab soak: **`PROVISIONING_LAB_RECIPE.md`**. TLS/edge polish + MAC index + port 41363 — requirements **§0.3**, **§6**.  
 **Requirements (law):** **`PROVISIONING_SERVER_REQUIREMENTS.md`**  
 **TODO:** **#23 / 0k** · related **#28** (Device purge — stands)  
 **Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** (extension MAC / Commit / PJSIP — prerequisite authoring) · **`TLS_AND_CERTIFICATES.md` §0**
@@ -222,16 +222,17 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 ## 8. Acceptance (program)
 
 ### Phase A
-- [ ] Known MAC → vendor config body; unknown → 404  
-- [ ] INCLUDE expands; substitutes ext/password (when Once/Always)/registrar  
-- [ ] Once sends secrets once then omits; Reset state restores Once  
-- [ ] No Device table; no BLF expand  
-- [ ] HTTPS on **41363**; RPS or manual URL works in lab  
-- [ ] **Fleet UFW:** **41363/tcp from SBC IP(s) only** in install baseline (same as SIP); solo LAN default  
-- [ ] Commit/PJSIP unchanged by provision GET  
-- [ ] **A7 automated suite green** (parse, INCLUDE, substitute, sndcreds, fail-closed)  
-- [ ] **A8 audit trail** — success stores stream with **passwords obfuscated**; wire to phone still clear when Once/Always; lab can see structure of what was sent  
-- [ ] **A9** — `last_provisioned_at` set on success; visible via DB/API; 404 does not update  
+- [x] Known MAC → vendor config body; unknown → 404 *(unit + code)*  
+- [x] INCLUDE expands; substitutes ext/password (when Once/Always)/registrar  
+- [x] Once sends secrets once then omits; Reset state = set `sndcreds` Once *(SPA Reset = B1)*  
+- [x] No Device table; no BLF expand  
+- [x] HTTPS on **41363** (solo nginx); fleet home HTTP template; install script  
+- [x] **Fleet UFW:** **41363/tcp from SBC IP(s) only** in install baseline; solo LAN  
+- [ ] Commit/PJSIP unchanged by provision GET *(A6 lab confirm)*  
+- [x] **A7 automated suite green**  
+- [x] **A8 audit trail** (obfuscated)  
+- [x] **A9** — `last_provisioned_at` / `first_provisioned_at`  
+- [ ] **A6** handset/curl lab — **`PROVISIONING_LAB_RECIPE.md`**
 
 ### Phase B
 - [ ] Extension UI shows **Last provisioned** (+ provision URL)  
@@ -288,7 +289,9 @@ Track live list in requirements **§11**.
 
 ## 11. First concrete next step
 
-1. Merge requirements + plan PR (architecture snapshot).  
-2. Open build branch: **Phase A1** — skeleton listener + INCLUDE/substitute against golden `ipphone` (Yealink fragment stub).  
-3. **A7 in parallel** as soon as expand is callable — fixtures before relying on handset-only feedback.  
-4. Parallel: kick **D1** CA inventory in ops `devdocs` (no product code).
+1. ~~Merge requirements + plan PR~~ · ~~Phase A1–A5 / A7–A9 on build branch~~  
+2. **Merge** `feat/provision-a1-home-kernel` → `main`.  
+3. **A6** lab — follow **`PROVISIONING_LAB_RECIPE.md`** (curl then handset).  
+4. Phase **B1** SPA Reset Once / Last provisioned; **B2** MkDocs RPS.  
+5. Parallel: **D1** CA inventory in ops `devdocs`.  
+6. Phase **C** when scheduled (edge proxy + MAC index).

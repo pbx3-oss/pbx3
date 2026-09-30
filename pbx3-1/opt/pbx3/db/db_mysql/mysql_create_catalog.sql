@@ -348,7 +348,7 @@ protocol DEFAULT 'IPV4',			      -- IPV4/IPV6
 pjsipuser TEXT,						      -- Asterisk PJSIP string							
 provision TEXT,                        -- provisioning string 
 provisionwith TEXT DEFAULT 'IP',	      -- how to provision my id - IP address or FQDN   
-sndcreds TEXT DEFAULT 'Always',        -- send creds with provisioning
+sndcreds TEXT DEFAULT 'Once',        -- send creds with provisioning (Always|Once|No)
 stealtime INTEGER,                     -- epoch time this extension was stolen by HD
 stolen TEXT,                           -- HD thief 
 technology TEXT,                       -- SIP/IAX2/DiD/CLiD/Class
