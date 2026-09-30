@@ -307,28 +307,29 @@ Prior PBX mostly relied on **web server access logs** plus light syslog — work
 | Client IP | Yes | |
 | Request URI (path + query shape) | Yes | Truncate extremes |
 | Normalized MAC | When known | |
-| Extension / tenant id | When resolved | shortuid / cluster — not password |
+| Extension / tenant id | When resolved | shortuid / cluster |
 | Vendor label / UA (truncated) | Yes | |
-| sndcreds mode applied | Yes | Always / Once / No — **not** whether password value was X |
-| Secrets emitted? | Yes | boolean only (`creds_sent=true/false`) — **never** log password or full config body |
+| sndcreds mode applied | Yes | Always / Once / No |
+| Secrets emitted? | Yes | boolean (`creds_sent=true/false`) |
 | Descriptor / stream name | When used | e.g. yealink.Common |
+| **Rendered stream (body sent)** | **Yes on success** | The **exact config bytes/text returned to the phone** — including secret stanzas when Once/Always sent them. Primary investigation artifact (“what did we actually give this MAC?”). Omit or empty on 404 |
 
 | Stance | |
 |--------|--|
-| **Do** | Structured lines (JSON or key=value) to a dedicated file or syslog tag e.g. `pbx3-provision` |
-| **Do not** | Log `$password`, full rendered body, or LDAP bind secrets |
-| **Retention** | Follow instance log retention / ship-to-S3 class when fleet logging exists; solo = local rotate |
-| **Edge (Phase C)** | Proxy logs Host/MAC route → upstream home + 502/404; still no secrets |
-| **SPA later** | Optional “last provisioned” from audit — not required for A |
+| **Do** | Structured record per request (JSON object per line, or metadata line + body artifact). Prefer one audit store operators can grep by MAC |
+| **Treat as secret-bearing** | Because the stored stream **may contain SIP passwords**, the audit file/dir is **sensitive**: mode **0600** / owner www-data (or provision user); not world-readable; do **not** ship raw to a loosely permissioned org bucket without the same controls as backups |
+| **Retention** | Follow instance log retention; rotate; align with fleet log-ship class only if encryption/ACL match secret logs |
+| **Edge (Phase C)** | Proxy logs Host/MAC → upstream + status; **does not** store home-rendered bodies (bodies stay on home audit) |
+| **SPA** | **Last provisioned** timestamp on extension (§ below); optional later “view last stream” from audit — care with who can see passwords |
 
 **last-seen / last-provisioned (investigation first stop)**
 
-Often the **first** question in a desk-phone incident: “did this MAC ever get config, and when?”
+Often the **first** question in a desk-phone incident: “did this MAC ever get config, and when?” — then open the audit for **what** was sent.
 
 | Stance | |
 |--------|--|
 | **HoR** | Persist on the **extension row** (`ipphone`) — e.g. `last_provisioned_at` (and optional `first_provisioned_at`) updated on **successful** config send (200 with body). Prior PBX had `firstseen`/`lastseen`; lift the idea, don’t leave it commented out |
-| **Not a substitute for audit** | Row timestamp = fast UI/SQL check; **§4.7** log = who/what/outcome detail |
+| **Not a substitute for audit** | Row timestamp = fast UI/SQL check; **§4.7** log = full stream + request metadata |
 | **404 / deny** | Do **not** bump last-provisioned on fail-closed (unknown MAC, etc.) |
 | **SPA** | Show **Last provisioned** on extension detail early (Phase **B** lean — high value for support). Sort/filter later |
 | **Timezone** | Store UTC; display per site TZ policy |
@@ -397,7 +398,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 | **Secrets in body** | Gated by **§4.3** (`Always` / `Once` / `No`); prefer **Once**. Factory reset ⇒ operator resets provision state so ONCE values send again |
 | **Writes from phones** | Ignore PUT / vendor upload (404/no-op) |
 | **Cross-tenant** | Host must select exactly one tenant; never serve another cluster’s MAC |
-| **Audit trail** | **§4.7** — dedicated provision log; Apache alone is insufficient |
+| **Audit trail** | **§4.7** — dedicated provision log **including rendered stream**; Apache alone is insufficient; treat log as secret-bearing |
 
 **Note:** Vendor client-cert check mitigates “anyone who knows a MAC can GET config.” It does **not** replace `sndcreds`, fail-closed routing, or keeping `SIP_AUTH` off S3.
 

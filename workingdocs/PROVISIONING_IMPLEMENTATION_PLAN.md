@@ -70,7 +70,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 | **A5** | HTTPS listener on dedicated **non-443** port; use instance cert story; document URL for RPS | **pbx3** + installer / shorewall-or-UFW note |
 | **A6** | Lab prove: Yealink (or Snom) RPS or manual URL → golden; register via normal SIP path | ops lab |
 | **A7** | **Automated tests** for parse / INCLUDE / substitute / sndcreds / fail-closed — **required to exit A** (§7) | **pbx3** |
-| **A8** | **Provision audit trail** (§4.7 requirements) — structured log per request; no secrets in log; rotate | **pbx3** |
+| **A8** | **Provision audit trail** (§4.7) — structured log **including rendered stream on success**; secret-bearing file perms; rotate | **pbx3** |
 | **A9** | Persist **`last_provisioned_at`** (optional `first_provisioned_at`) on successful send; schema + update path | **pbx3** |
 
 **A1 stack decision (open #6):** prefer **PHP lift** of the kernel for speed/parity; rewrite only if packaging forces it. Behaviour first.
@@ -153,7 +153,7 @@ Lab/phone soak remains necessary; it is **not** a substitute for regression test
 | **URI / MAC parse + ignore list** | **A** | Unit / table-driven | `?mac=`, path `/{mac}.cfg`, Yealink `y000000*.cfg` → common, `*_Security.enc` / `.boot` → 404, PUT → 200/no-op |
 | **INCLUDE + substitute** | **A** | Unit + fixtures | Nested INCLUDE, loop detection, `$ext` / `$password` / registrar placeholders from fixture `ipphone` + fragment files |
 | **sndcreds Once / Always / No** | **A** | Unit | Secret lines present/absent; **Once → No flip** after successful render; Reset state restores Once |
-| **Audit trail** | **A** | Unit | Successful/404 requests emit required fields; rendered body / password **never** appear in log sink |
+| **Audit trail** | **A** | Unit | Success records include **rendered stream** matching response; 404 has no body artifact; audit path not world-readable in packaging defaults |
 | **last_provisioned_at** | **A** | Unit | Success bumps timestamp; 404 does not |
 | **Fail-closed** | **A** | Unit | Unknown MAC → 404; duplicate MAC → 404 |
 | **No BLF path** | **A** | Unit / smoke | Builder does not require fkey tables; no `$fkey` expand |
@@ -176,7 +176,7 @@ Document a short **lab recipe** (A6 / C exit) next to the automated suite — so
 | Slice | Work | Gate |
 |-------|------|------|
 | **A7** | Test harness + fixtures for parse / INCLUDE / substitute / sndcreds / 404 | **Required to exit Phase A** (alongside A6 lab) |
-| **A8** | Structured provision audit log (no secrets) | **Required to exit Phase A** |
+| **A8** | Structured provision audit log **with full stream on success**; hardened perms | **Required to exit Phase A** |
 | **A9** | `last_provisioned_at` on successful send | **Required to exit Phase A** |
 | **C7** | Map publisher unit tests + “no secret in map” assertion | **Required to exit Phase C** |
 
@@ -185,7 +185,7 @@ Document a short **lab recipe** (A6 / C exit) next to the automated suite — so
 | Work | Focused |
 |------|---------|
 | **A7** | **~2–4 days** (budget **~0.5–1 week** with polish/CI wiring) |
-| **A8** | **~1–2 days** (logger + rotate + tests that secrets never land in sink) |
+| **A8** | **~1–2 days** (logger + body capture + 0600 rotate + tests) |
 | **A9** | **~0.5–1 day** (column + update + test) |
 | **C7** | **~1–2 days** |
 
