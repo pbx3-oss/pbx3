@@ -142,6 +142,7 @@ for ip in ips:
     rules.append({"action": "allow", "proto": "udp", "port": "5060", "from": ip, "comment": "SIP UDP"})
     rules.append({"action": "allow", "proto": "tcp", "port": "5060", "from": ip, "comment": "SIP TCP"})
     rules.append({"action": "allow", "proto": "tcp", "port": "5061", "from": ip, "comment": "SIP TLS"})
+    rules.append({"action": "allow", "proto": "tcp", "port": "41363", "from": ip, "comment": "Provision"})
 with open(path, "w", encoding="utf-8") as f:
     json.dump({"profile": "fleet", "rules": rules}, f, indent=2)
     f.write("\n")
@@ -160,6 +161,7 @@ rules = [
     {"action": "allow", "proto": "udp", "port": "5060", "from": lan, "comment": "SIP UDP"},
     {"action": "allow", "proto": "tcp", "port": "5060", "from": lan, "comment": "SIP TCP"},
     {"action": "allow", "proto": "tcp", "port": "5061", "from": lan, "comment": "SIP TLS"},
+    {"action": "allow", "proto": "tcp", "port": "41363", "from": lan, "comment": "Provision"},
 ]
 if os.environ.get("PBX3_UFW_SOLO_WSS") == "1":
     rules.append({"action": "allow", "proto": "tcp", "port": "8089", "from": lan, "comment": "WSS"})

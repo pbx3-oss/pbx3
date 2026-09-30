@@ -419,6 +419,15 @@ if dpkg -l shorewall 2>/dev/null | grep -q '^ii'; then
     apt-get remove -y shorewall shorewall6 2>/dev/null || true
 fi
 
+# Phone provision listener :41363 (nginx → device.php). Best-effort if nginx not yet installed.
+if [ -x "$SCRIPTS/install-provision-listener.sh" ]; then
+    echo "Installing provision listener (profile=${_ufw_profile} → :41363)"
+    if ! "$SCRIPTS/install-provision-listener.sh" "$_ufw_profile"; then
+        echo "WARNING: install-provision-listener.sh failed — re-run after nginx/php-fpm are up:" >&2
+        echo "  sudo $SCRIPTS/install-provision-listener.sh ${_ufw_profile}" >&2
+    fi
+fi
+
 # MOH/backups upload floor when php-fpm / nginx API site already present (no-op otherwise).
 if [ -x "$SCRIPTS/apply-api-upload-limits.sh" ]; then
     "$SCRIPTS/apply-api-upload-limits.sh" || true
@@ -430,7 +439,9 @@ echo "  Fleet profile: SSH :22 and API :44300 are open from anywhere after"
 echo "  install so you are not locked out. Narrow their Source in Admin →"
 echo "  Firewall to your ops/VPN CIDR(s), then Save and Apply. On cloud,"
 echo "  also tighten the security group for 22 and 44300."
-echo "  Solo profile: those ports (plus SIP/RTP) default to the LAN CIDR."
+echo "  Provision :41363 is SBC-only on fleet (same SBC IPs as SIP)."
+echo "  Solo profile: those ports (plus SIP/RTP/provision) default to the LAN CIDR."
+echo "  Solo provision URL: https://{instance-fqdn}:41363/provisioning/{mac}.cfg"
 echo ""
 
 # call recording 

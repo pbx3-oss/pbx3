@@ -5,7 +5,8 @@
  *
  * CLI:  php device.php <mac>
  *       php device.php --uri /provisioning/<mac>.cfg
- * HTTP: later wired to :41363 (A5).
+ * HTTP: nginx :41363 → this script (install-provision-listener.sh / A5).
+ *       Solo = HTTPS; fleet home = HTTP (edge terminates TLS).
  */
 
 $optRoot = getenv('PBX3_ROOT');
