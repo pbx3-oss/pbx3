@@ -85,12 +85,12 @@ Product interest set for discovery + eventual enrollment docs/APIs. **Not** a pr
 | Vendor | Platform | Notes |
 |--------|----------|-------|
 | **Yealink** | **RPS** (Redirection and Provisioning Service) | Widely used; free for SPs/enterprises; can tie into **YMCS** (Yealink Management Cloud Service) |
-| **Poly** (ex-Polycom) | **Poly Lens** / **ZTP** | Cloud redirection + device health; phones query Poly infrastructure out of the box for assigned deployment server |
+| **Poly** (ex-Polycom) | **Poly Lens** / **ZTP** | **Uncertain (2026-09-29):** HP takeover left redirect / ZTP opaque — Lens vs legacy ZTP vs partner paths not bottomed out. Keep on interest list; **do not** schedule Poly-first automation or docs until verified. Research / lab spike only. |
 | **Grandstream** | **GDMS** + **GAPS** | GDMS assigns templates or destination URLs by MAC; GAPS = Alignment and Provisioning System |
 | **Snom** | **SRAPS** | Europe-hosted secure redirect; GDPR-oriented; API for SP automation |
 | **Fanvil** | **FDMCS** | Free redirection / ZTP for desk, hotel, and intercom / door units |
 
-Other vendors: treat via **reseller redirect** or secondary path (opt66 / manual) until explicitly added here.
+Other vendors: treat via **reseller redirect** or secondary path (opt66 / manual) until explicitly added here. **Poly** stays interest-only until the post-HP path is confirmed.
 
 ```text
 Phone power-up
@@ -295,8 +295,9 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 4. **Primary route key** — Host-only, MAC-only, or Host with MAC cross-check (lean: support both; MAC always available on the wire).  
 5. **Solo** — Skip proxy; RPS (or lab) → instance directly (M3 solo).  
 6. **Stack for home listener** — PHP parity with previous PBX vs rewrite; behaviour first.  
-7. **RPS automation** — Manual portal vs vendor/reseller APIs for enroll/re-point; order among **§0.2 vendors of interest** (Yealink, Poly, Grandstream, Snom, Fanvil).  
-8. **Provision listen port** — Pick stable non-443 default; document for RPS target URLs.
+7. **RPS automation** — Manual portal vs vendor/reseller APIs for enroll/re-point; clearer §0.2 vendors first (**Yealink, Snom, Grandstream, Fanvil**). **Poly** deferred until Lens/ZTP post-HP is understood.  
+8. **Provision listen port** — Pick stable non-443 default; document for RPS target URLs.  
+9. **Poly discovery** — Confirm whether desk phones still expose a simple MAC→URL redirect usable by us, or only via Poly Lens / partner SKUs after HP.
 
 ---
 
