@@ -318,6 +318,7 @@ Prior PBX mostly relied on **web server access logs** plus light syslog — work
 |--------|--|
 | **Do** | Structured record per request (JSON object per line, or metadata line + body artifact). Prefer one audit store operators can grep by MAC |
 | **Treat as secret-bearing** | Because the stored stream **may contain SIP passwords**, the audit file/dir is **sensitive**: mode **0600** / owner www-data (or provision user); not world-readable; do **not** ship raw to a loosely permissioned org bucket without the same controls as backups |
+| **Pragmatic threat** | Until desk SIP is widely **TLS**, SIP passwords are often recoverable from **UDP signalling** anyway — audit retention of the provision stream is not a *new* class of exposure relative to the wire. Still harden the file (above); don’t pretend UDP-SIP orgs have password secrecy. Prefer Once so daily re-polls don’t re-emit; SIP-TLS / SRTP remain the real long-term fix (`SBC_PRODUCT_TRACKS` / TLS tracks) |
 | **Retention** | Follow instance log retention; rotate; align with fleet log-ship class only if encryption/ACL match secret logs |
 | **Edge (Phase C)** | Proxy logs Host/MAC → upstream + status; **does not** store home-rendered bodies (bodies stay on home audit) |
 | **SPA** | **Last provisioned** timestamp on extension (§ below); optional later “view last stream” from audit — care with who can see passwords |
