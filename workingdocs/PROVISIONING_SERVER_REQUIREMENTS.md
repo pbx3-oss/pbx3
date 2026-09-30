@@ -227,6 +227,8 @@ Same idea as previous PBX **`sndcreds`** and as many **third-party / vendor clou
 
 **Default lean:** prefer **Once** for SIP password and similar (first boot / enroll gets creds; daily re-poll does not re-emit password). Some vendors require Always — allow per-extension override.
 
+**Prior PBX note (2026-09-30):** the live tree **dropped** the post-send flip (`Once` → `No`) — that update block was commented out. pbx3 **restores** the flip when implementing §4.3 (do not copy the disabled path). Use proper comparison (`==`), prepared statements.
+
 **Factory reset / replace handset:** phone loses local config and needs secrets again. Operator must **reset provision state** for that extension/MAC (e.g. set back to **Once**) so the next GET re-sends ONCE stanzas. Resetting the phone **without** resetting provision state → phone boots, fetches config **without** password → register fails until state is cleared. Document this in SPA/MkDocs when UI exists; third-party RPS platforms use the same pattern.
 
 **HoR:** provision state (`sndcreds` or equivalent) lives on the **home** extension row with the secret — not in S3 / edge map.
@@ -266,6 +268,18 @@ That is the whole engine for v1. No expression language, no per-model matrix, no
 | **Revisit** | Only when someone explicitly wants managed BLF provisioning |
 
 Asterisk/PJSIP subscribe / named pickup groups remain separate from this HTTP stream builder.
+
+### 4.6 Stream formats — line vs closed XML (note)
+
+Most vendor streams are **line-oriented** (key=value / proprietary text): INCLUDE + substitute fits cleanly.
+
+| Vendor | Format note |
+|--------|-------------|
+| **Yealink, Fanvil, …** | Typical line / flat profiles — straightforward substitute |
+| **Poly** | **Pure XML** with **closing stanzas** — nuisance for naive line-include / partial rewrite; treat as its own stream family when/if Poly is in scope |
+| **Snom** | Historically line-oriented; **moving toward closed XML** as well — watch when authoring/lifting Snom templates; may need XML-aware edit rules later, not a second engine day one |
+
+Engine stays INCLUDE + substitute; **template authoring** absorbs XML closed-stanza pain, not a BLF-scale subsystem.
 
 ---
 
