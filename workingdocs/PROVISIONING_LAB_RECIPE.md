@@ -90,9 +90,10 @@ sqlite3 /opt/pbx3/db/sqlite.db "UPDATE ipphone SET sndcreds='Once' WHERE lower(r
 
 ## 4. Exit A6
 
-- [ ] Known MAC → 200 + vendor body; unknown → 404  
-- [ ] Once flip + audit obfuscation observed on host  
-- [ ] Phone registers after provision (solo or fleet SIP path unchanged)  
-- [ ] A7 suite still green on the tip package  
+- [x] Known MAC → 200 + vendor body; unknown → 404  
+- [x] Once flip + audit obfuscation observed on host  
+- [ ] Phone registers after provision (solo or fleet SIP path unchanged) — optional soak  
+- [x] A7 suite still green on the tip package  
+- [x] **Reset provision state** (SPA / Once) lab-proven  
 
-Then Phase **B** (SPA URL / Reset Once / stream editor) and **C** (edge proxy + MAC index) as scheduled.
+Then Phase **C** (edge proxy + MAC index) and **B2** MkDocs RPS as scheduled.
