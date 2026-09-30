@@ -1,7 +1,8 @@
 # Provisioning — requirements (sketch)
 
 **Status:** **Reopened 2026-09-08** (supersedes won't-do 2026-08-23).  
-**v1 direction:** **instance-local** HTTP phone provisioner on each home — independently, at least for now. **Not** building the fleet edge nginx provision proxy / shared provision host yet (that shape remains in §0 as a later option). Still **no** **third-party certs panel** panel. Manufacturer/reseller RPS (**M1**) remains a valid alternative alongside in-house.  
+**v1 direction:** **instance-local** HTTPS phone provisioner on each home (non-443) — independently, at least for now. **Not** building the fleet edge nginx provision proxy / shared provision host yet (that shape remains in §0 as a later option). Still **no** third-party certs panel.  
+**Discovery (locked 2026-09-29):** **Vendor / reseller redirect (RPS)** is the **primary** way phones find the provision URL in cloud deployments. DHCP opt66/114 and PnP multicast are **secondary** (on-prem / lab). See **§0.2**.  
 **2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a type label only. Revival must **not** reintroduce Device templates — retrofit previous PBX 6.5-style expand from extension/handset data.  
 **Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — deferred past instance-local v1.  
 **Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard.  
@@ -37,9 +38,9 @@ Phone GET/POST https://{tenant-or-provision-host}/…  (MAC in query, path, or b
 
 Prefer **fail closed**: unknown Host and unknown MAC → 404/502; never guess across tenants. If both present and disagree, reject.
 
-**Tenant move:** update the proxy’s **backend map** (and any MAC→home index) from catalog — same mobility events as SBC `setid` projection. **No** DNS change on move; **no** phone re-key of provision host; secrets never leave the home row for render.
+**Tenant move:** update the proxy’s **backend map** (and any MAC→home index) from catalog — same mobility events as SBC `setid` projection. **No** DNS change on move; **no** phone re-key of provision host; **no** vendor/reseller RPS re-point if the redirect target is the stable proxy URL. Secrets never leave the home row for render.
 
-**Why this works (operator stance):** Routing is the hard fleet bit; once Host and/or MAC → home is correct, the provision **application** is mostly already written in previous-PBX routines — lift, harden, and polish rather than invent a second inventory.
+**Why this works (operator stance):** Routing is the hard fleet bit; once Host and/or MAC → home is correct, the provision **application** is mostly already written in previous-PBX routines — lift, harden, and polish rather than invent a second inventory. **Discovery** (how the phone learns that URL) is almost always **vendor/reseller RPS** (§0.2), not DHCP.
 
 ### Relationship to `TLS_AND_CERTIFICATES.md` §0
 
@@ -51,26 +52,73 @@ Prefer **fail closed**: unknown Host and unknown MAC → 404/502; never guess ac
 
 ## 0.1 Build or not? / management options (retained)
 
-Desk-phone HTTP provisioning remains a crowded market (vendor RPS, reseller platforms). In-house is optional — but **if** we host it for fleet, prefer **§0** over inventing S3-as-password-store.
+Desk-phone HTTP provisioning remains a crowded market (vendor RPS, reseller platforms). In-house owns the **final config stream** when we want secrets on the home; we do **not** compete with vendors on the **redirect / discovery** layer.
 
 | # | Path | Idea | Secrets | When |
 |---|------|------|---------|------|
-| **M1** | **Don't own HTTP** | Vendor RPS / reseller delivers config | Stay on instance | Many MSP customers |
-| **M2** | **Thin export** | CSV/JSON for someone else’s RPS | One-shot reveal; not S3 inventory | Follow-on to M1 |
-| **M3 + edge proxy** | **Preferred if we build** | Home listener + nginx Host and/or MAC→home (**§0**) | Single HoR = extension row | Fleet in-house provision |
-| **M3 solo** | Co-located only | No proxy; phone hits instance directly | Same | Solo / lab / air-gap |
+| **M1** | **Don't own final HTTP** | Vendor RPS / reseller **delivers the full config** (or never points at us) | Stay on instance for SIP only | MSP already on reseller RPS end-to-end |
+| **M2** | **Thin export** | CSV/JSON / MAC list for someone else’s RPS enrollment | One-shot reveal; not S3 inventory | Feed reseller portals; follow-on to M3 |
+| **M3 + RPS discovery** | **Default cloud path** | RPS redirects MAC → our provision URL; **home** (or §0 proxy) expands config | Single HoR = extension row | Production desk phones |
+| **M3 + edge proxy** | **Preferred fleet polish** | RPS target = **stable** proxy URL; nginx Host and/or MAC→home (**§0**) | Same | Zero-touch move including re-provision GET |
+| **M3 solo** | Co-located only | Phone hits instance directly (RPS → instance URL, or lab manual/opt66) | Same | Solo / lab / air-gap |
 | **M4** | S3 MAC directory only | Route map in S3; secret fetch from home | Instance | Alternate; heavier |
 | **M5** | Pre-rendered blob in S3 | Dumb file GET | Secret inside blob | Avoid unless explicit SKU |
 
 **Hard rule:** Asterisk and the **first place that embeds the SIP password into a phone config** share **one secret HoR** (the extension row). §0 keeps that. Do **not** re-split secrets into a fleet provision DB without a deliberate S1–S3 choice from the old §6 sketch.
 
+**Do not build:** a discrete fat “provisioning server” product meant to replace vendor/reseller **redirect**. That fights SRAPS / Yealink RPS / reseller platforms on discovery while still needing home secrets for render.
+
 **What we still need either way:** solid **extension + MAC + secret + Commit/PJSIP** (`EXTENSION_PROVISIONING_*`).
+
+---
+
+## 0.2 Discovery — vendor / reseller redirect (locked 2026-09-29)
+
+### Primary path (cloud)
+
+Almost all major desk-phone vendors support a **redirect / RPS** service. Where the vendor does not, a **reseller** usually provides the same role. On startup the phone **calls home** (HTTP/HTTPS) to that service first; the service redirects (often via a reseller hop) to the **target provision URL**.
+
+Examples (illustrative, not an exclusive list): **Snom SRAPS**, **Yealink RPS**, plus reseller redirect portals.
+
+```text
+Phone power-up
+  → HTTPS to vendor redirect (SRAPS / Yealink RPS / …)
+  → often → reseller redirect
+  → 3xx / next-URL → our provision base URL
+  → home listener (v1) or edge provision proxy (§0) expands config by MAC
+  → phone applies config → SIP REGISTER (fleet: SBC; solo: instance)
+```
+
+| Concern | Stance |
+|---------|--------|
+| **How the phone finds us** | **MAC enrolled** in vendor and/or reseller RPS with **target = our provision URL** |
+| **What we own** | Final **HTTPS config stream** on the home (v1) / via proxy (§0 later) — not the redirect product |
+| **DHCP opt66 / 114** | **Secondary** — on-prem LAN, lab, or sites without RPS. Document; do not design the cloud spine around it |
+| **PnP multicast** | **Secondary** — same-LAN only; optional later |
+| **Manual URL** | Lab / break-glass |
+
+### Target URL by deployment
+
+| Deployment | RPS / redirect target should be | On tenant move |
+|------------|----------------------------------|----------------|
+| **Solo / Rule 6** | Instance provision URL (`https://{instance-fqdn}:{prov-port}/…`) | N/A |
+| **Fleet v1 (instance-local only)** | **Current** home provision URL | **Re-point** MAC in vendor/reseller RPS to the new home URL (ops / API later), **or** phones never re-fetch and keep working on already-loaded config until next redirect-driven reprovision |
+| **Fleet + §0 proxy** | **Stable** provision hostname (proxy A/AAAA) | **No** RPS change; update **proxy map** only (same mobility family as SBC `setid`) |
+
+**SIP vs provision:** fleet desk templates still embed **SBC** as registrar/proxy in the config body. Redirect discovers **HTTP config**; it does not replace SBC for REGISTER. Already-applied configs keep calling until the phone re-fetches — a move does not brick mid-day SIP; it affects the **next** provision GET if the redirect still points at an old home and no proxy is in path.
+
+### Product implications
+
+- Ship **home HTTPS listener** first; operators enroll MACs in RPS pointing at that URL (document the URL shape in SPA/MkDocs when UI exists).  
+- Automating RPS enrollment / re-point (vendor APIs, reseller APIs) is a **follow-on** — not a v1 blocker; v1 may be manual portal entry + docs.  
+- Prefer **stable proxy URL in RPS** before advertising “tenant move with zero phone **and** zero RPS touch” for re-provision.  
+- **M1** (reseller delivers full config) remains valid when the customer never points RPS at us.
 
 ---
 
 ## 1. One-line purpose
 
-Serve vendor phone config files keyed by **MAC** (and vendor “common” descriptors), embedding SIP identity and registrar/proxy so a desk phone can register without manual SIP setup — with **fleet mobility** that does not require DNS or phone URL changes on tenant move.
+Serve vendor phone config files keyed by **MAC** (and vendor “common” descriptors), embedding SIP identity and registrar/proxy so a desk phone can register without manual SIP setup — with phones **finding** that URL primarily via **vendor/reseller RPS**, and **fleet mobility** that does not require phone-side URL changes when a **stable** provision host (proxy) or RPS re-point is in place.
 
 ---
 
@@ -78,32 +126,39 @@ Serve vendor phone config files keyed by **MAC** (and vendor “common” descri
 
 | Concern | Stance |
 |---------|--------|
-| **What it is** | Home **HTTP provision listener** + optional **edge reverse-proxy** for fleet Host routing |
-| **What it is not** | Not Asterisk; not Gatekeeper; not SBC call plane; not SPA; **not** required for calls once phones are configured |
-| **previous PBX lift** | Port behaviour from private archives / previous PBX `device.php` (MAC → `#INCLUDE` expand → text). Polish auth, HTTPS, multi-tenant pathing, sndcreds |
+| **What it is** | Home **HTTPS provision listener** + optional **edge reverse-proxy** for fleet Host routing |
+| **What it is not** | Not Asterisk; not Gatekeeper; not SBC call plane; not SPA; **not** a vendor-RPS replacement; **not** required for calls once phones are configured |
+| **previous PBX lift** | Port behaviour from private archives / previous PBX `device.php` (MAC → expand → text). Polish auth, HTTPS, multi-tenant pathing, sndcreds. **No** Device template table revival (#28) |
 | **Call plane** | Phones **register / media** via normal fleet SIP (SBC → instance). Provision is **config HTTP only** |
+| **Discovery** | **RPS primary** (§0.2); opt66 / PnP secondary |
 | **Directory / Rule 1** | Proxy routing may **read** catalog home facts (projection). Provision must not become a call-routing dependency. Proxy/home down → already-provisioned phones keep working |
 | **Rule 7** | Provision proxy is a **replaceable edge** sibling of the SBC (HTTP, not SIP). Prefer dumb nginx + map over a fat app on the edge |
-| **Compete?** | Thin MAC→config; do not out-feature vendor RPS |
+| **Compete?** | Thin MAC→config on the home; **do not** out-feature or replace vendor/reseller **redirect** |
 
 ---
 
 ## 3. Happy path (phone)
 
+**Cloud / production (primary):**
+
 ```text
-Phone discovers provision URL (DHCP opt66/114, PnP, or manual)
-  → GET https://{tenant-fqdn}/provisioning…?mac=…   (or vendor path forms)
-  → DNS → provision proxy A/AAAA
-  → Proxy: Host/SNI → current home
-  → Home: MAC → Device stack → expand → body (previous PBX routines)
-Phone applies config → SIP REGISTER to SBC / domain from file
+Phone power-up → vendor RPS (± reseller redirect)
+  → target URL = our provision base (instance v1, or stable proxy later)
+  → GET https://{provision-host}:{port}/…  (MAC in query, path, or body)
+  → [fleet §0] DNS → provision proxy → current home
+  → [solo / fleet v1] straight to home listener
+  → home: MAC → expand from extension/handset data → body
+Phone applies config → SIP REGISTER to SBC / domain from file (solo: instance)
 ```
+
+**On-prem / lab (secondary):** DHCP opt66/114 or manual URL may set the same provision base without RPS.
 
 | Name | Role |
 |------|------|
-| **Tenant FQDN in URL / Host** | Stable phone-facing name; same string as SIP domain |
-| **Provision proxy A/AAAA** | Stable edge IP(s); **does not move** with tenant |
-| **Home backend** | Instance provision listener (localhost or private); secrets + templates here |
+| **RPS / reseller** | Enrolls MAC → next provision URL (discovery) |
+| **Provision host in URL** | v1: instance FQDN + provision port. Fleet polish: stable proxy hostname |
+| **Provision proxy A/AAAA** | Stable edge IP(s); **does not move** with tenant (§0) |
+| **Home backend** | Instance provision listener; secrets + expand here |
 | **SIP contact in file** | Fleet: **SBC** + tenant domain string. Solo: instance FQDN/IP |
 
 ---
@@ -125,7 +180,7 @@ Phone applies config → SIP REGISTER to SBC / domain from file
 | Do | Notes |
 |----|--------|
 | HTTP(S) MAC / descriptor → vendor config | Same URL families as previous PBX (`?mac=`, `/{mac}.cfg`, Yealink common, …) |
-| Template expand | Device `#INCLUDE`; `$localip` / `$ext` / `$password` / ports; optional BLF |
+| Template expand | From extension/handset data (previous PBX-style); **not** revived Device table (#28) |
 | Credential gating | `sndcreds` Always \| Once \| No |
 | Multi-tenant | Resolve tenant from Host / path; only that cluster’s phones |
 | Unknown MAC | **404** |
@@ -137,7 +192,7 @@ Phone applies config → SIP REGISTER to SBC / domain from file
 
 | Input | Source | Note |
 |-------|--------|------|
-| Extension + MAC + secret + device stack | `ipphone` (+ Device) | Authored on instance; **HoR for secrets** |
+| Extension + MAC + secret + expand inputs | `ipphone` (+ handset/fkey as needed) | Authored on instance; **HoR for secrets**. No Device table |
 | BLF / line keys | fkey tables | As today / previous PBX |
 | SIP host policy | Fleet: embed **SBC** + tenant domain; not home public IP | Matches W1 / fleet desk path |
 | OUI → vendor | `manuf.txt` helper | Create-time UI; not every GET |
@@ -173,7 +228,9 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 - Browser holding ops IAM
 - Requiring provisioner for **calls** once phones are configured
 - Full vendor matrix day one — Snom / Yealink first
-- DHCP server product — document opt66 → tenant provision URL; optional later
+- **Replacing** vendor/reseller **redirect / RPS** with an in-house discovery product
+- DHCP **server** as a product — document opt66 as secondary; optional lab helper later
+- Reviving the purged **Device** template table (#28)
 
 ---
 
@@ -195,10 +252,11 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 | Track | Boundary |
 |-------|----------|
 | **Extension provisioning (SPA/API)** | Authors `ipphone` + Commit → PJSIP on **home** |
-| **This track** | Delivers **phone config HTTP**; proxy routes; home renders |
+| **This track** | Delivers **phone config HTTPS**; RPS points here; optional proxy routes; home renders |
 | **Fleet DNS / LE §0** | SIP: no tenant A→home. Provision: tenant/wildcard A→**proxy** (exception — update TLS §0 when shipping) |
 | **SBC** | Runtime SIP; model for Host/domain → home routing |
-| **Tenant move** | Catalog + SBC setid + **provision proxy map** — one mobility story |
+| **Tenant move** | Catalog + SBC setid + (**proxy map** *or* **RPS re-point** to new home URL) — one mobility story for SIP; discovery follows §0.2 |
+| **Vendor / reseller RPS** | **Discovery** (and optional full M1 config); not our secret HoR |
 
 ---
 
@@ -206,32 +264,37 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 
 | Slice | Likely home | Notes |
 |-------|-------------|--------|
-| Home listener | **pbx3** / **pbx3api** (or small co-located PHP) | Lift previous PBX `device.php` behaviour; multi-tenant Host |
+| Home listener | **pbx3** / **pbx3api** (or small co-located PHP) | Lift previous PBX `device.php` behaviour; multi-tenant Host; HTTPS non-443 |
 | Edge proxy | Small edge host or co-located with control/SBC ops box | nginx + map from catalog; **not** in SIP path |
 | Map refresh | Gatekeeper / move job hook | Same events as SBC domain repoint |
-| Device templates | Seed from archives / Device table | Subset OK |
-| SPA | Later | Show provision URL = `https://{tenant-fqdn}/…` |
+| RPS enrollment | Ops docs first; APIs later | MAC → provision URL; re-point on move if no proxy |
+| Expand inputs | Extension / handset / fkey | **No** Device table (#28) |
+| SPA | Later | Show provision URL + RPS enrollment hint |
 | TLS §0 note | **`TLS_AND_CERTIFICATES.md`** | Document provision A→proxy exception |
 
 ---
 
 ## 11. Open decisions (narrow)
 
-0. **Schedule build?** — Direction preferred; priority TBD (TODO).  
+0. **Schedule build?** — Direction preferred; priority TBD (TODO #23 / 0k).  
 1. **Cert on proxy** — Wildcard `*.apex` vs per-tenant SAN vs name `provision.{apex}` with path-based tenant (path would change phone URL shape — Host-based preferred).  
 2. **Where proxy runs** — Shared fleet box vs next to the SBC vs control plane; must stay off call-path critical path (Rule 1 / 5).  
 3. **Map transport** — Regenerated nginx conf vs lua (MAC extract from URI/body) vs auth_request to Gatekeeper (cache carefully).  
 4. **Primary route key** — Host-only, MAC-only, or Host with MAC cross-check (lean: support both; MAC always available on the wire).  
-5. **Solo** — Skip proxy; phone → instance directly (M3 solo).  
-6. **Stack for home listener** — PHP parity with previous PBX vs rewrite; behaviour first.
+5. **Solo** — Skip proxy; RPS (or lab) → instance directly (M3 solo).  
+6. **Stack for home listener** — PHP parity with previous PBX vs rewrite; behaviour first.  
+7. **RPS automation** — Manual portal vs vendor/reseller APIs for enroll/re-point; which vendors first (Snom / Yealink).  
+8. **Provision listen port** — Pick stable non-443 default; document for RPS target URLs.
 
 ---
 
 ## 12. Verify later (acceptance sketch)
 
-- Phone with known MAC via `https://{tenant-fqdn}/…` receives config; unknown MAC → 404.  
-- DNS for tenant name → **proxy**; SIP REGISTER still via **SBC** (not provision IP).  
-- Move tenant home → update proxy map only → same phone URL still works; **no** DNS change.  
+- Phone with known MAC (via RPS → our URL, or lab direct) receives config; unknown MAC → 404.  
+- Cloud happy path does **not** require DHCP opt66.  
+- Fleet: SIP REGISTER still via **SBC** (not provision IP).  
+- Move tenant home → either proxy map update (**no** RPS change) **or** documented RPS re-point to new home URL.  
 - Proxy or home provision down → existing registrations unaffected.  
 - Instance Commit still owns Asterisk; provisioner does not write PJSIP.  
-- Secret only read from home `ipphone` at render time.
+- Secret only read from home `ipphone` at render time.  
+- No Device template table reintroduced.
