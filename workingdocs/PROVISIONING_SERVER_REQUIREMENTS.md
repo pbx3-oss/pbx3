@@ -3,7 +3,8 @@
 **Status:** **Reopened 2026-09-08** (supersedes won't-do 2026-08-23).  
 **v1 direction:** **instance-local** HTTPS phone provisioner on each home (non-443) — independently, at least for now. Fleet edge provision proxy = **SBC-colocated** nginx later (§0); map from catalog/S3 only (no secrets). Still **no** third-party certs panel.  
 **Discovery (locked 2026-09-29):** **Vendor / reseller redirect (RPS)** is the **primary** way phones find the provision URL in cloud deployments. DHCP opt66/114 and PnP multicast are **secondary** (on-prem / lab). See **§0.2**.  
-**2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a type label only. Revival must **not** reintroduce Device templates — retrofit previous PBX 6.5-style expand from extension/handset data.  
+**2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a **vendor label** (e.g. Snom / Yealink), not a per-SKU catalogue. See **§4.4** — do **not** revive a per-model Device matrix.  
+**2026-09-30:** Prior-PBX lesson locked — vendors share one provision stream per manufacturer (rare exceptions); old per-model names were kept only as legacy aliases for existing customers.  
 **Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — deferred past instance-local v1.  
 **Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard.  
 **Reference notes:** private prior co-located provisioner / previous PBX archives (operator only — not in product tree).  
@@ -207,7 +208,7 @@ Phone applies config → SIP REGISTER to SBC / domain from file (solo: instance)
 | Do | Notes |
 |----|-------|
 | HTTP(S) MAC / descriptor → vendor config | Same URL families as previous PBX (`?mac=`, `/{mac}.cfg`, Yealink common, …) |
-| Template expand | From extension/handset data (previous PBX-style); **not** revived Device table (#28) |
+| Template expand | **Vendor-grain** stream + extension/handset data (**§4.4**); **not** per-SKU Device table (#28) |
 | Credential gating | **`sndcreds` Always \| Once \| No** — see **§4.3** (ONCE preferred for secrets; industry-common) |
 | Multi-tenant | Resolve tenant from Host / path; only that cluster’s phones |
 | Unknown MAC | **404** |
@@ -228,6 +229,22 @@ Same idea as previous PBX **`sndcreds`** and as many **third-party / vendor clou
 **Factory reset / replace handset:** phone loses local config and needs secrets again. Operator must **reset provision state** for that extension/MAC (e.g. set back to **Once**) so the next GET re-sends ONCE stanzas. Resetting the phone **without** resetting provision state → phone boots, fetches config **without** password → register fails until state is cleared. Document this in SPA/MkDocs when UI exists; third-party RPS platforms use the same pattern.
 
 **HoR:** provision state (`sndcreds` or equivalent) lives on the **home** extension row with the secret — not in S3 / edge map.
+
+### 4.4 Template grain — vendor, not per-SKU (locked 2026-09-30)
+
+**Early assumption (previous PBX):** device **type/model** would drive different provision streams (e.g. snom300, snom500, snom700).
+
+**What actually happened:** manufacturers used **the same config stream** across models within a vendor (one or two exceptions). The library collapsed to **vendor grain** — e.g. **`snom`**, **`yealink`**, … — which **vastly** reduced the Device table. Older per-model keys were retained only as **legacy aliases** for existing customers already pointing at them.
+
+| Stance for pbx3 | |
+|-----------------|--|
+| **Do** | Author **one primary stream per vendor** of interest (§0.2); OUI / create-time label picks vendor |
+| **Do not** | Rebuild a Device SPA/table of per-SKU templates (snom300 vs snomD785 vs …) as the product model — **#28 purge stands** |
+| **Exceptions** | Rare model-specific overlays only when a vendor truly diverges — explicit, not a matrix by default |
+| **Migrate / aliases** | If lifting old DBs, map legacy model names → vendor stream; keep read aliases only if needed for customer data, not as a growth path |
+| **`ipphone.device`** | Vendor (or General SIP / WebRTC) label for expand + UI — not a foreign key into a fat Device catalogue |
+
+Expand still comes from **extension / handset / fkey data** + vendor stream — not a revived multi-hundred-row Device editor.
 
 ---
 
@@ -273,7 +290,8 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 - Full vendor **config** matrix day one — subset of §0.2 interest list; expand streams iteratively  
 - **Replacing** vendor/reseller **redirect / RPS** with an in-house discovery product
 - DHCP **server** as a product — document opt66 as secondary; optional lab helper later
-- Reviving the purged **Device** template table (#28)
+- Reviving a **per-model Device catalogue** (#28 / §4.4) — vendor-grain streams only  
+- No Device template table reintroduced as an operator-edited matrix
 
 ---
 
@@ -345,4 +363,4 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener. That p
 - Proxy or home provision down → existing registrations unaffected.  
 - Instance Commit still owns Asterisk; provisioner does not write PJSIP.  
 - Secret only read from home `ipphone` at render time.  
-- No Device template table reintroduced.
+- No per-SKU Device matrix; vendor-grain streams only (§4.4).
