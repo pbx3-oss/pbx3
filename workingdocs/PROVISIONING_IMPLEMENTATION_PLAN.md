@@ -1,9 +1,9 @@
 # Phone provisioning — implementation plan
 
-**Status:** Phase **A** home listener implemented on branch **`feat/provision-a1-home-kernel`** (A1–A5, A7–A9). **A6** lab soak: **`PROVISIONING_LAB_RECIPE.md`**. TLS/edge polish + MAC index + port 41363 — requirements **§0.3**, **§6**.  
+**Status:** Phase **A** + **B1** lab-proven on golden (2026-09-30). **A6** curl/handset path + Once/Reset green (Snom **401**, Yealink **402**). Streams: Snom/Yealink/Panasonic (+ transport grains). **Next:** Phase **C** fleet edge (`provision.{apex}`) — start **C3** MAC index then **C2** nginx proxy; **B2** docs can parallel.  
 **Requirements (law):** **`PROVISIONING_SERVER_REQUIREMENTS.md`**  
 **TODO:** **#23 / 0k** · related **#28** (Device purge — stands)  
-**Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** (extension MAC / Commit / PJSIP — prerequisite authoring) · **`TLS_AND_CERTIFICATES.md` §0**
+**Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · lab **`PROVISIONING_LAB_RECIPE.md`**
 
 ---
 
@@ -77,7 +77,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 | **A3** | Placeholder policy: fleet-ready `$registrar` / proxy → SBC when fleet; solo → instance | **pbx3** |
 | **A4** | `sndcreds` Always/Once/No + **restore Once→No flip** after successful send; secret-line list **without** treating `$ext` as password | **pbx3** |
 | **A5** | HTTPS listener on **41363**; instance cert; **UFW:** extend `ufw-apply-baseline.sh` — fleet **41363/tcp from SBC IP(s)** (same list as SIP); solo **41363 from LAN**; installer already applies baseline — do not leave as ops folklore. Document URL for RPS | **pbx3** + **`UFW_SHOREWALL_MIGRATION.md` §3** |
-| **A6** | Lab prove: Yealink (or Snom) RPS or manual URL → golden; register via normal SIP path | ops lab |
+| **A6** | Lab prove: Yealink (or Snom) RPS or manual URL → golden; register via normal SIP path | ops lab — **curl + Once + Reset green on golden 2026-09-30** (401 Snom, 402 Yealink) |
 | **A7** | **Automated tests** for parse / INCLUDE / substitute / sndcreds / fail-closed — **required to exit A** (§7) | **pbx3** |
 | **A8** | **Provision audit trail** (§4.7) — log rendered stream with **passwords obfuscated**; 0600; rotate | **pbx3** |
 | **A9** | Persist **`last_provisioned_at`** (optional `first_provisioned_at`) on successful send; schema + update path | **pbx3** |
@@ -90,13 +90,24 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 
 | Slice | Work | Repo(s) |
 |-------|------|---------|
-| **B1** | SPA: show provision URL + **Last provisioned**; **Reset provision state** (set Once) — also on **password regen** | **pbx3spa** / **pbx3api** — branches **`feat/provision-b1-reset-once`** |
+| **B1** | SPA: show provision URL + **Last provisioned**; **Reset provision state** (set Once) — also on **password regen**; **Provision stream** textarea | **pbx3spa** / **pbx3api** — **on `main`** (lab-proven) |
 | **B2** | Docs: RPS enroll (Yealink, Snom); Gigaset MAC+PIN; solo→fleet “change RPS target once” (migrator = **C9**) | **pbx3-docs** |
 | **B3** | M1 coexistence one-pager: “reseller delivers full config” supported without our HTTP | **pbx3-docs** |
 
 ### Phase C — Fleet edge proxy
 
 **Outcome:** RPS points at stable **`provision.{apex}:41363`**; MAC index drives map; phones never see home URLs; drift swept; solo→fleet migrator parked.
+
+**Entry (2026-09-30):** Home listener + Once/Reset proven on golden. Operator may use temporary `:41363` allow for eyeballing (**`PROVISIONING_LAB_RECIPE.md`** §0). Standing fleet policy remains SBC-only.
+
+**Suggested first slices:**
+1. **C3** — Catalog MAC index schema + upsert on MAC assign/clear (gatekeeper) — unblocks map publish.  
+2. **C2** — SBC nginx vhost + `proxy_pass` HTTP → home (freeze open **#11** common/no-MAC GETs with it).  
+3. **C7** tests + **C8** reconcile early enough to catch drift.  
+4. **C5** mTLS after **D1** CA inventory for Snom/Yealink.  
+5. **B2** MkDocs RPS can parallel (not on critical path for C code).
+
+Freeze before coding C2/C3: open **#3** map transport (prefer static object from S3); **#11** vendor common GETs.
 
 | Slice | Work | Repo(s) |
 |-------|------|---------|
@@ -228,15 +239,17 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 - [x] No Device table; no BLF expand  
 - [x] HTTPS on **41363** (solo nginx); fleet home HTTP template; install script  
 - [x] **Fleet UFW:** **41363/tcp from SBC IP(s) only** in install baseline; solo LAN  
-- [ ] Commit/PJSIP unchanged by provision GET *(A6 lab confirm)*  
+- [x] Commit/PJSIP unchanged by provision GET *(design + lab curl without Commit)*  
 - [x] **A7 automated suite green**  
 - [x] **A8 audit trail** (obfuscated)  
 - [x] **A9** — `last_provisioned_at` / `first_provisioned_at`  
-- [ ] **A6** handset/curl lab — **`PROVISIONING_LAB_RECIPE.md`**
+- [x] **A6** handset/curl lab — **`PROVISIONING_LAB_RECIPE.md`** *(golden 401/402 2026-09-30)*  
 
 ### Phase B
-- [ ] Extension UI shows **Last provisioned** (+ provision URL)  
-- [ ] **Reset Once** works; **password regen** resets to Once  
+- [x] Extension UI shows **Last provisioned** (+ provision URL) + **Provision stream** editor  
+- [x] **Reset Once** works; **password regen** resets to Once  
+- [ ] **B2** RPS / solo→fleet docs  
+- [ ] **B3** M1 coexistence one-pager  
 
 ### Phase C
 - [ ] RPS → **`provision.{apex}:41363`**; MAC index → map → current home  
@@ -289,9 +302,9 @@ Track live list in requirements **§11**.
 
 ## 11. First concrete next step
 
-1. ~~Merge requirements + plan PR~~ · ~~Phase A1–A5 / A7–A9 on build branch~~  
-2. **Merge** `feat/provision-a1-home-kernel` → `main`.  
-3. **A6** lab — follow **`PROVISIONING_LAB_RECIPE.md`** (curl then handset).  
-4. Phase **B1** SPA Reset Once / Last provisioned; **B2** MkDocs RPS.  
+1. ~~Merge requirements + plan PR~~ · ~~Phase A1–A9 + A6 lab~~ · ~~B1 SPA/API~~  
+2. **Phase C entry:** freeze **#3** (map transport) + **#11** (common/no-MAC GETs) → implement **C3** MAC index → **C2** SBC nginx proxy.  
+3. Parallel: **B2** MkDocs RPS; **D1** CA inventory before claiming **C5** mTLS.  
+4. Lab recipe + operator `:41363` allow notes: **`PROVISIONING_LAB_RECIPE.md`**.
 5. Parallel: **D1** CA inventory in ops `devdocs`.  
 6. Phase **C** when scheduled (edge proxy + MAC index).
