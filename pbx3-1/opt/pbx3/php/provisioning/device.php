@@ -1,7 +1,8 @@
-#!/usr/bin/env php
 <?php
 /**
  * Home provision entry (Phase A).
+ *
+ * No shebang — under php-fpm anything before <?php is emitted to the phone body.
  *
  * CLI:  php device.php <mac>
  *       php device.php --uri /provisioning/<mac>.cfg
