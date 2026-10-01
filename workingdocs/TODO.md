@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-30 (session end — provision C2/C3 lab-proven)  
+**Last updated:** 2026-09-30 (provision C2/C3 merged + Yealink SIP identity lab green)  
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -12,7 +12,7 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate** — **A+B1+C2/C3 lab-proven** (`provision.pbx3.com` LE; MAC index; Yealink handset via SBC proxy). Spec / plan / recipe / **`pbx3sbc/…/PROVISION_EDGE_PROXY.md`**. **Next:** merge PRs; tip **pbx3api** MAC claim hook; **B2** MkDocs RPS; **C7/C8**. Legacy vendor grains use `$registrar` + outbound proxy.  
+0k. **Phone provisioning — reinstate** — **A+B1+C2/C3 on `main`** + Yealink lab green (tenant `$sipdomain` + SBC `$outbound` + `$sipuser`). Spec / plan / recipe / **`pbx3sbc/…/PROVISION_EDGE_PROXY.md`**. **Next:** **B2** MkDocs RPS; **C7/C8**; Snom soak. PRs merged 2026-09-30; api MAC claim tipped golden.  
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
@@ -68,7 +68,7 @@
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
-23. **Provisioning — reinstate (instance-local)** — **A+B1+C2/C3 lab-proven** (edge LE + MAC index + Yealink). **Next:** merge PRs; tip api claim; **B2**; **C7/C8**. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Plan / recipe: **`PROVISIONING_*`**. Edge: **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`**.
+23. **Provisioning — reinstate (instance-local)** — **A+B1+C2/C3 on `main`**; Yealink REGISTER/calls green. **Next:** **B2**; **C7/C8**; Snom soak. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Plan / recipe: **`PROVISIONING_*`**. Edge: **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`**.
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked) — companion **0h** trunk carrier-face stub.  
@@ -113,7 +113,7 @@
 
 - [ ] **Fleet desk phone NAT / STUN (provisioning — 2026-09-03):** SBC + cloud-anchored media ⇒ handsets need explicit NAT (Yealink **Auto**, or **STUN**+server if no Auto). Direct-cloud Asterisk Contact-rewrite does not apply the same way. Checklist by manufacturer: **`pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md`**. Customer RPS templates must be updated.
 
-- [ ] **Phone provisioning — reinstate (#23 / 0k):** A+B1 lab green. **Next:** Phase **C** (MAC index + edge proxy); **B2** docs. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
+- [ ] **Phone provisioning — reinstate (#23 / 0k):** C2/C3 merged; Yealink green. **Next:** **B2** docs; **C7/C8**; Snom soak. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
 
 - [ ] **Singleton local install (#0m — 2026-09-08):** Local solo home (no fleet/SBC). Harness for solo S3/STT and existing-singleton first step. Rule 6 · try-it / lab home install docs.
 
