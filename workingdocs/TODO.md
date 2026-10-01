@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-01 (provision B2/C7/C8; next = rehome soak + D1→C5 Snom/Yealink CAs)  
+**Last updated:** 2026-09-30 (provision B2/C7/C8 + D1 ProVu/Poly; next = rehome soak + D1→C5; GS/Gigaset = operator)  
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -115,7 +115,7 @@
 
 - [ ] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 landed; Yealink+Snom lab green. **Next:** tenant rehome soak; **D1→C5** mTLS (Snom+Yealink CAs in hand). Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
 
-- [ ] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-01):** **Snom + Yealink** CAs in hand; **Poly** public PKI available. GS/Gigaset = helpdesk; Fanvil/Panasonic = no public device CA. Research: **`~/GiT/pbx3-ops/devdocs/provisioning/VENDOR_CLIENT_CA_INVENTORY.md`**. Install ops bundle on edge; prove verify for brands with CA. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** §0.2 · plan **C5/D1**.
+- [ ] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-01):** Tip C5 from ProVu **`3pcerts.pem`** + Poly PKI (Yealink/Snom/Panasonic/Fanvil/Poly). **Operator:** obtain **Grandstream + Gigaset** client CAs from vendor (public edge without mTLS is weak). Research: **`~/GiT/pbx3-ops/devdocs/provisioning/VENDOR_CLIENT_CA_INVENTORY.md`**. Spec §8 · plan **C5/D1**.
 
 - [ ] **Singleton local install (#0m — 2026-09-08):** Local solo home (no fleet/SBC). Harness for solo S3/STT and existing-singleton first step. Rule 6 · try-it / lab home install docs.
 
