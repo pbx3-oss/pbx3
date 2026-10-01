@@ -23,12 +23,21 @@ final class CatalogReconcile
     /** @return array<string, mixed> */
     public function report(): array
     {
-        return self::compare(
+        $report = self::compare(
             $this->registrar->getCatalog(),
             $this->registrar->listTenants(),
             $this->sbc->listDomains(),
             $this->sbc->listDispatcherSets()
         );
+
+        // C8 — MAC index ≡ provision-mac.map (same catalog HoR family as setid)
+        $provisionMap = (new MacIndexStore($this->registrar))->reconcileMap();
+        $report['provision_map'] = $provisionMap;
+        if (empty($provisionMap['ok'])) {
+            $report['ok'] = false;
+        }
+
+        return $report;
     }
 
     /**
@@ -55,12 +64,19 @@ final class CatalogReconcile
         $plan = self::planProject($before, $domainFilter);
 
         if ($dryRun) {
-            return [
+            $out = [
                 'dry_run' => true,
                 'actions' => $plan['actions'],
                 'skipped' => $plan['skipped'],
                 'before' => $before,
             ];
+            if (! empty($before['provision_map']['drifts'])) {
+                $out['provision_map_actions'] = [
+                    ['kind' => 'project_mac_map', 'detail' => 'Rebuild catalog/provision-mac.map from MAC index'],
+                ];
+            }
+
+            return $out;
         }
 
         $projected = [];
@@ -125,16 +141,30 @@ final class CatalogReconcile
             }
         }
 
+        $provisionMapProjected = null;
+        if (! empty($before['provision_map']['drifts'])) {
+            try {
+                $provisionMapProjected = (new MacIndexStore($this->registrar))->projectMap();
+            } catch (\Throwable $e) {
+                $provisionMapProjected = [
+                    'ok' => false,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
         $after = $this->report();
 
         return [
             'dry_run' => false,
             'projected' => $projected,
             'skipped' => $plan['skipped'],
+            'provision_map_projected' => $provisionMapProjected,
             'before' => [
                 'ok' => $before['ok'],
                 'summary' => $before['summary'],
                 'checked_at' => $before['checked_at'],
+                'provision_map' => $before['provision_map'] ?? null,
             ],
             'after' => $after,
         ];
