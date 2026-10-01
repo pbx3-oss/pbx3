@@ -65,7 +65,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
 
 Body must show **`sip_server_host` = tenant FQDN** (e.g. `{shortuid}.pbx3.com`) and **`outbound_host` = `sbc.pbx3.com`** with **outbound proxy enabled** — not SBC in the SIP-server field, not `127.0.0.1` / proxy off.
 
-**Handset:** RPS or manual URL → `https://provision.pbx3.com:41363/provisioning/{mac}.cfg`. Prefer path form (`/{mac}.cfg`); edge `?mac=` still 404 until polished.
+**Handset:** RPS or manual URL → `https://provision.pbx3.com:41363/provisioning/{mac}.cfg` (Yealink) or `…/provisioning?mac={mac}` (Snom). Both forms route on the edge when the MAC is in the map.
 
 After claim from Gatekeeper (until api tip-hot): re-run **`sync-provision-mac-map.sh`** on SBC if map lag.
 

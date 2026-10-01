@@ -64,8 +64,21 @@ Check off when **lab or customer fleet** proven: **register · two-way audio · 
 
 ### Snom
 
-- [x] **D-series / office Snom** (lab **401** / `3cg94b`) — often OK with NAT left default/off; public-ish Contact / ephemeral ports; soak audio OK (**2026-09-03**). Still verify BYE on each new model.
+- [x] **D-series / office Snom** (lab **401** / `3cg94b`) — audio often OK with outbound+rport only; **BYE from far end** failed when Contact was LAN (`x-ast-orig-host=192.168.x.x`). Same class as Yealink T31P. Product stream sets **`stun_server1`** + binding interval; far hangup proven (**2026-10-01**).
 - [ ] Other Snom models — ___
+
+### Snom stream keys (vendor grain)
+
+Shipped in `snom.Common`:
+
+```text
+stun_server1$: stun.l.google.com:3478
+stun_binding_interval1$: 30
+enable_rport_rfc3581$: on
+rtp_keepalive$: on
+```
+
+Plus per-line **`user_outbound1$`** = SBC (`snom.udp` / Extension).
 
 ### Fanvil
 
@@ -108,3 +121,4 @@ Line test report: **Bytes in/out** both &gt; 0 after answer; hangup clears both 
 | Date | Note |
 |------|------|
 | 2026-09-03 | Line test play() race fixed (SPA). Yealink **403** zero inbound RTP until NAT Auto/STUN; **T31P** BYE until STUN; **Snom 401** / **Yealink 402** comparatively forgiving. Doc created. |
+| 2026-10-01 | Snom **401** post-fleet-provision: Contact LAN (`192.168.1.138`) vs Yealink public; far-end hangup leaves Snom up. Added STUN to `snom.Common`; Contact → public; far BYE clears (**lab soak**). |
