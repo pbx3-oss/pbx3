@@ -372,7 +372,7 @@ Often the **first** question in a desk-phone incident: “did this MAC ever get 
 | Extension + MAC + secret + vendor label | `ipphone` | Authored on instance; **HoR for secrets**. No Device table |
 | last_provisioned_at (first optional) | `ipphone` | Updated on successful provision GET (§4.7); investigation first stop |
 | BLF / line keys | — | **Not in v1 stream** (§4.5); optional hand-edit in template |
-| SIP host policy | Fleet: embed **SBC** + tenant domain; not home public IP | Matches W1 / fleet desk path |
+| SIP host policy | Fleet: **`$sipdomain` = tenant FQDN**, **`$outbound` = SBC**; solo: domain/IP, proxy off. Not home public IP as phone next-hop in fleet | Matches W1 / desk REGISTER |
 | OUI → vendor | `manuf.txt` helper | Create-time UI; not every GET |
 
 ---

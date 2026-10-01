@@ -1,8 +1,7 @@
 setting_server$: $provurl?mac={mac}
 update_policy$: 
 
-;set TLS initially off
-user_outbound1$:
+; SRTP off by default; outbound set by snom / snom.Extension / snom.{udp,tcp,tls}
 user_srtp1$: off
 user_srtp2$: off
 user_auth_tag1$: off

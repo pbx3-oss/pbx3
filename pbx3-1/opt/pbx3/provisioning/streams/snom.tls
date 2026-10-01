@@ -1,4 +1,4 @@
-user_outbound1$: $localip:$tlsport;transport=tls
+user_outbound1$: $outbound:$tlsport;transport=tls
 user_srtp1$: on
 user_auth_tag1$: off
 user_savp1$: mandatory

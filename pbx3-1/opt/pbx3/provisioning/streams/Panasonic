@@ -15,10 +15,10 @@ SIP_DETECT_SSAF_1="Y"
 # Suffix "_1" indicates this parameter is for "line 1". #
 ############################################################
 # IP Address or FQDN of SIP registrar server, proxy server
-SIP_RGSTR_ADDR_1="$registrar"
-SIP_PRXY_ADDR_1="$registrar"
+SIP_RGSTR_ADDR_1="$sipdomain"
+SIP_PRXY_ADDR_1="$proxy"
 # IP Address or FQDN of SIP presence server
-SIP_PRSNC_ADDR_1="$registrar"
+SIP_PRSNC_ADDR_1="$sipdomain"
 # Enables DNS SRV lookup
 SIP_DNSSRV_ENA_1="Y"
 
@@ -96,6 +96,6 @@ LDAP_CLIENT_CERT_PATH=""
 LDAP_PKEY_PATH=""
 
 # ID, password for SIP authentication
-PHONE_NUMBER_1="$ext"
-SIP_AUTHID_1="$ext"
+PHONE_NUMBER_1="$sipuser"
+SIP_AUTHID_1="$sipuser"
 SIP_PASS_1="$password"

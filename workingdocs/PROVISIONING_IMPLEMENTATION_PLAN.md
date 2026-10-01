@@ -74,7 +74,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 |-------|------|---------|
 | **A1** | Port kernel of prior `device.php` + `cleanConfig`: URI/MAC parse, Yealink ignore list, INCLUDE + substitute, fail-closed | **pbx3** (and/or thin **pbx3api** route — decide in A1 spike) |
 | **A2** | Vendor-grain **file** fragments (not Device table): start **Yealink**, then **Snom** | **pbx3** package paths |
-| **A3** | Placeholder policy: fleet-ready `$registrar` / proxy → SBC when fleet; solo → instance | **pbx3** |
+| **A3** | Placeholder policy: **`$sipdomain`** = tenant FQDN; **`$outbound`** = SBC when fleet (proxy on); solo = domain/IP, proxy off | **pbx3** |
 | **A4** | `sndcreds` Always/Once/No + **restore Once→No flip** after successful send; secret-line list **without** treating `$ext` as password | **pbx3** |
 | **A5** | HTTPS listener on **41363**; instance cert; **UFW:** extend `ufw-apply-baseline.sh` — fleet **41363/tcp from SBC IP(s)** (same list as SIP); solo **41363 from LAN**; installer already applies baseline — do not leave as ops folklore. Document URL for RPS | **pbx3** + **`UFW_SHOREWALL_MIGRATION.md` §3** |
 | **A6** | Lab prove: Yealink (or Snom) RPS or manual URL → golden; register via normal SIP path | ops lab — **curl + Once + Reset green on golden 2026-09-30** (401 Snom, 402 Yealink) |

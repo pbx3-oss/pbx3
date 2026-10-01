@@ -102,7 +102,7 @@ $etl = pbx3_provision_expand(
 	$loop
 );
 expect('ETL snom+udp expands common', strpos($etl, 'setting_server$:') !== false);
-expect('ETL snom.udp clears outbound', preg_match('/^user_outbound1\$:\s*$/m', $etl) === 1);
+expect('ETL snom.udp keeps outbound_hostport', preg_match('/^user_outbound1\$:\s*\$outbound_hostport\s*$/m', $etl) === 1);
 expect('ETL snom.ipv4 present', strpos($etl, 'dhcp_v6$: off') !== false);
 expect('ETL snom.Fkey still skipped', strpos($etl, 'fkey') === false);
 $loop = array();
@@ -120,23 +120,29 @@ expect('ETL panasonic.ipv4', strpos($pana, 'IP_ADDR_MODE="0"') !== false);
 $dbFile = $tmp . '/test.db';
 $db = new PDO('sqlite:' . $dbFile);
 $db->exec('CREATE TABLE ipphone (
-  pkey TEXT, macaddr TEXT, passwd TEXT, provision TEXT, provisionwith TEXT,
+  pkey TEXT, shortuid TEXT, macaddr TEXT, passwd TEXT, provision TEXT, provisionwith TEXT,
   desc TEXT, cluster TEXT, sndcreds TEXT,
   last_provisioned_at TEXT, first_provisioned_at TEXT
 )');
 $db->exec('CREATE TABLE trunks (pkey TEXT, active TEXT)');
-$db->exec("INSERT INTO ipphone VALUES ('1001','aabbccddeeff','pw','#INCLUDE yealink.Extension','FQDN','Desk','t1','Once',NULL,NULL)");
+$db->exec("INSERT INTO ipphone VALUES ('1001','su1001','aabbccddeeff','pw','#INCLUDE yealink.Extension','FQDN','Desk','t1','Once',NULL,NULL)");
 
 $parsed = pbx3_provision_parse_request('GET', '/aabbccddeeff.cfg', array());
-$r = pbx3_provision_render($db, $parsed, $streams, array('PADMINPASS' => 'adm', 'PUSERPASS' => 'usr', 'fqdn' => 'node.example.com'), array(
+$r = pbx3_provision_render($db, $parsed, $streams, array('PADMINPASS' => 'adm', 'PUSERPASS' => 'usr', 'fqdn' => 'node.example.com', 'domain' => 'example.com'), array(
 	'localip' => '10.0.0.1',
-	'registrar' => 'sbc.example',
+	'sipdomain' => 't1.example.com',
+	'outbound' => 'sbc.example',
+	'outbound_enable' => '1',
+	'outbound_hostport' => 'sbc.example:5060',
 	'provurl' => 'https://provision.example.com:41363/provisioning',
 ));
 expect('known mac renders', $r['ok'] && $r['status'] === 200);
-expect('body has ext', strpos($r['body'], 'account.1.auth_name = 1001') !== false);
+expect('body has sipuser', strpos($r['body'], 'account.1.auth_name = su1001') !== false);
+expect('body has label ext', strpos($r['body'], 'account.1.label = 1001') !== false);
 expect('body has password when Once', strpos($r['body'], 'account.1.password = pw') !== false);
-expect('body has registrar', strpos($r['body'], 'sbc.example') !== false);
+expect('body has sipdomain', strpos($r['body'], 'account.1.sip_server_host = t1.example.com') !== false);
+expect('body has outbound SBC', strpos($r['body'], 'account.1.outbound_host = sbc.example') !== false);
+expect('body has outbound enable', strpos($r['body'], 'account.1.outbound_proxy_enable = 1') !== false);
 expect('yealink common nested', strpos($r['body'], '#!version:1.0.0.1') !== false);
 
 // A4/A8/A9 success path
@@ -154,9 +160,14 @@ expect('audit obfuscates password', strpos($alog, 'account.1.password = pw') ===
 
 // Second render with No — password omitted; no flip; stamp still updates
 $parsed = pbx3_provision_parse_request('GET', '/aabbccddeeff.cfg', array());
-$r2 = pbx3_provision_render($db, $parsed, $streams, array(), array('registrar' => 'sbc.example'));
+$r2 = pbx3_provision_render($db, $parsed, $streams, array('domain' => 'example.com'), array(
+	'sipdomain' => 't1.example.com',
+	'outbound' => 'sbc.example',
+	'outbound_enable' => '1',
+	'outbound_hostport' => 'sbc.example:5060',
+));
 expect('No omits password line', $r2['ok'] && strpos($r2['body'], 'account.1.password') === false);
-expect('No keeps ext', strpos($r2['body'], 'account.1.auth_name = 1001') !== false);
+expect('No keeps sipuser', strpos($r2['body'], 'account.1.auth_name = su1001') !== false);
 $side2 = pbx3_provision_after_success($db, $r2, array('mac' => 'aabbccddeeff'), $audit);
 expect('No does not flip', $side2['flipped'] === false);
 $row2 = $db->query("SELECT last_provisioned_at, first_provisioned_at FROM ipphone WHERE pkey='1001'")->fetch(PDO::FETCH_ASSOC);
@@ -165,7 +176,11 @@ expect('last bumped on second send', $row2['last_provisioned_at'] >= $row['last_
 
 // Reset Once and Always
 $db->exec("UPDATE ipphone SET sndcreds='Always' WHERE pkey='1001'");
-$rA = pbx3_provision_render($db, $parsed, $streams, array(), array('registrar' => 'sbc.example'));
+$rA = pbx3_provision_render($db, $parsed, $streams, array('domain' => 'example.com'), array(
+	'sipdomain' => 't1.example.com',
+	'outbound' => 'sbc.example',
+	'outbound_enable' => '1',
+));
 expect('Always includes password', strpos($rA['body'], 'account.1.password = pw') !== false);
 $sideA = pbx3_provision_after_success($db, $rA, array('mac' => 'aabbccddeeff'), $audit);
 expect('Always does not flip', $sideA['flipped'] === false);
@@ -173,9 +188,16 @@ expect('Always does not flip', $sideA['flipped'] === false);
 // Snom stream render
 $db->exec("UPDATE ipphone SET provision='#INCLUDE snom.Extension', sndcreds='Always', macaddr='001122334455' WHERE pkey='1001'");
 $parsedS = pbx3_provision_parse_request('GET', '/001122334455.cfg', array());
-$rS = pbx3_provision_render($db, $parsedS, $streams, array('PADMINPASS' => 'adm', 'PUSERPASS' => 'usr'), array('registrar' => 'edge.example', 'provurl' => 'https://p.example/p'));
-expect('snom renders', $rS['ok'] && strpos($rS['body'], 'user_name1$: 1001') !== false);
-expect('snom registrar', strpos($rS['body'], 'user_host1$: edge.example') !== false);
+$rS = pbx3_provision_render($db, $parsedS, $streams, array('PADMINPASS' => 'adm', 'PUSERPASS' => 'usr', 'domain' => 'example.com'), array(
+	'sipdomain' => 't1.example.com',
+	'outbound' => 'edge.example',
+	'outbound_enable' => '1',
+	'outbound_hostport' => 'edge.example:5060',
+	'provurl' => 'https://p.example/p',
+));
+expect('snom renders', $rS['ok'] && strpos($rS['body'], 'user_name1$: su1001') !== false);
+expect('snom sipdomain', strpos($rS['body'], 'user_host1$: t1.example.com') !== false);
+expect('snom outbound', strpos($rS['body'], 'user_outbound1$: edge.example:5060') !== false);
 
 // Fail-closed
 $parsed = pbx3_provision_parse_request('GET', '/ffffffffffff.cfg', array());
@@ -184,7 +206,7 @@ expect('unknown mac 404', !$r['ok'] && $r['status'] === 404);
 $side404 = pbx3_provision_after_success($db, $r, array('mac' => 'ffffffffffff'), $audit);
 expect('404 skips side effects', $side404['flipped'] === false && $side404['stamped'] === false);
 
-$db->exec("INSERT INTO ipphone VALUES ('1002','001122334455','pw2','#INCLUDE yealink.Extension','IP','Other','t1','Once',NULL,NULL)");
+$db->exec("INSERT INTO ipphone VALUES ('1002','su1002','001122334455','pw2','#INCLUDE yealink.Extension','IP','Other','t1','Once',NULL,NULL)");
 $parsed = pbx3_provision_parse_request('GET', '/001122334455.cfg', array());
 $r = pbx3_provision_render($db, $parsed, $streams);
 expect('duplicate mac 404', !$r['ok'] && $r['status'] === 404 && $r['reason'] === 'mac_not_found');
@@ -193,11 +215,15 @@ expect('duplicate mac 404', !$r['ok'] && $r['status'] === 404 && $r['reason'] ==
 putenv('PBX3_FLEET_MODE=true');
 putenv('PBX3_SBC_EGRESS_HOST=sbc.lab');
 $h = pbx3_provision_resolve_hosts($db, array('domain' => 'pbx3.com', 'fqdn' => 'node.pbx3.com'), array('localip' => '10.1.1.1'));
-expect('fleet registrar is SBC', $h['fleet'] === true && $h['registrar'] === 'sbc.lab');
+expect('fleet outbound is SBC', $h['fleet'] === true && $h['outbound'] === 'sbc.lab' && $h['outbound_enable'] === '1');
 expect('fleet provurl', strpos($h['provurl'], 'https://provision.pbx3.com:') === 0);
+$db->exec('CREATE TABLE cluster (pkey TEXT, shortuid TEXT, fqdn TEXT)');
+$db->exec("INSERT INTO cluster VALUES ('t1','t1','t1.example.com')");
+$sip = pbx3_provision_sipdomain_for_phone($db, array('cluster' => 't1'), array('domain' => 'example.com'), array('localip' => '10.1.1.1'));
+expect('sipdomain from cluster.fqdn', $sip === 't1.example.com');
 putenv('PBX3_FLEET_MODE=false');
 $h2 = pbx3_provision_resolve_hosts($db, array('fqdn' => 'solo.example.com'), array('localip' => '10.1.1.1'));
-expect('solo registrar is fqdn', $h2['fleet'] === false && $h2['registrar'] === 'solo.example.com');
+expect('solo outbound empty', $h2['fleet'] === false && $h2['outbound'] === '' && $h2['outbound_enable'] === '0');
 putenv('PBX3_FLEET_MODE');
 putenv('PBX3_SBC_EGRESS_HOST');
 

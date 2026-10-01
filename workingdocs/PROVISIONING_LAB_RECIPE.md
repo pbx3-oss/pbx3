@@ -30,7 +30,7 @@ Fleet baseline is **SBC-only** on home `:41363`. Temporary laptop allow: UFW/SG 
 | Field | Value |
 |-------|--------|
 | `macaddr` | Phone MAC |
-| `provision` | Prefer `#INCLUDE yealink.Extension` / `snom.Extension` (+ transport). Legacy `#INCLUDE Yealink` / `snom` / `Panasonic` now also use **`$registrar` + outbound proxy** (fleet = SBC). |
+| `provision` | Prefer `#INCLUDE yealink.Extension` / `snom.Extension` (+ transport). **SIP host = tenant FQDN** (`$sipdomain`); **outbound proxy = SBC** (`$outbound`) when fleet. |
 | `sndcreds` | `Once` (preferred) |
 | `passwd` | Known SIP secret |
 
@@ -63,7 +63,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
   "https://provision.pbx3.com:41363/provisioning/${MAC}.cfg"
 ```
 
-Body must show **`sip_server_host` / outbound = `sbc.pbx3.com`** (or site SBC) and **outbound proxy enabled** — not `127.0.0.1` / proxy off.
+Body must show **`sip_server_host` = tenant FQDN** (e.g. `{shortuid}.pbx3.com`) and **`outbound_host` = `sbc.pbx3.com`** with **outbound proxy enabled** — not SBC in the SIP-server field, not `127.0.0.1` / proxy off.
 
 **Handset:** RPS or manual URL → `https://provision.pbx3.com:41363/provisioning/{mac}.cfg`. Prefer path form (`/{mac}.cfg`); edge `?mac=` still 404 until polished.
 

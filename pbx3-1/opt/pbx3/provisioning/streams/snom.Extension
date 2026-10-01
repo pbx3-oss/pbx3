@@ -1,6 +1,6 @@
 #INCLUDE snom.Common
-user_name1$: $ext
-user_pname1$: $ext
+user_name1$: $sipuser
+user_pname1$: $sipuser
 user_pass1$: $password
-user_host1$: $registrar
-user_outbound1$: $registrar:$bindport
+user_host1$: $sipdomain
+user_outbound1$: $outbound_hostport

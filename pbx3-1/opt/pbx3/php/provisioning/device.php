@@ -94,7 +94,9 @@ try {
 $hosts = pbx3_provision_resolve_hosts($db, $globals);
 $extra = array(
 	'localip' => $hosts['localip'],
-	'registrar' => $hosts['registrar'],
+	'outbound' => $hosts['outbound'],
+	'outbound_enable' => $hosts['outbound_enable'],
+	'outbound_hostport' => $hosts['outbound_hostport'],
 	'provurl' => $hosts['provurl'],
 );
 
