@@ -1,9 +1,9 @@
 # Phone provisioning — implementation plan
 
-**Status:** Phase **A** + **B1** + **C2/C3 on `main`** (2026-09-30). **#3/#11 frozen**. Edge **`provision.pbx3.com:41363`** (LE) + MAC index; Yealink REGISTER/calls with `$sipdomain`/`$outbound`/`$sipuser`. Api MAC claim tipped golden. **Next:** **B2** MkDocs RPS; **C7/C8**; Snom soak.  
+**Status:** Phase **A** + **B1** + **B2** + **C2/C3** on `main`; **C7/C8** MacIndex tests + map reconcile (**2026-10-01**). **#3/#11 frozen**. Lab: Yealink + Snom fleet provision / STUN / far BYE green. **Next big soak:** tenant **rehome** (MAC rewrite + next provision GET, no RPS edit).  
 **Requirements (law):** **`PROVISIONING_SERVER_REQUIREMENTS.md`**  
 **TODO:** **#23 / 0k** · related **#28** (Device purge — stands)  
-**Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · lab **`PROVISIONING_LAB_RECIPE.md`** · edge **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`**
+**Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · lab **`PROVISIONING_LAB_RECIPE.md`** · edge **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`** · MkDocs **`pbx3-docs/docs/admin/phone-provisioning-rps.md`**
 
 ---
 
@@ -248,21 +248,21 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 ### Phase B
 - [x] Extension UI shows **Last provisioned** (+ provision URL) + **Provision stream** editor  
 - [x] **Reset Once** works; **password regen** resets to Once  
-- [ ] **B2** RPS / solo→fleet docs  
+- [x] **B2** RPS / solo→fleet docs — **`pbx3-docs/docs/admin/phone-provisioning-rps.md`**  
 - [ ] **B3** M1 coexistence one-pager  
 
 ### Phase C
-- [x] RPS → **`provision.{apex}:41363`**; MAC index → map → current home *(lab: provision.pbx3.com LE; Yealink 402)*  
-- [x] MAC assign/clear updates index + map; tenant move rewrites FKs **with** setid *(claim/clear/project + move hook; api hook on branch)*  
-- [x] Duplicate MAC claim **rejected** until clear *(409 lab)*  
+- [x] RPS → **`provision.{apex}:41363`**; MAC index → map → current home *(lab: provision.pbx3.com LE; Yealink 402 + Snom 401)*  
+- [x] MAC assign/clear updates index + map; tenant move rewrites FKs **with** setid *(claim/clear/project + move hook; api tip)*  
+- [x] Duplicate MAC claim **rejected** until clear *(409 lab + unit)*  
 - [x] Proxy has no passwords; edge→home is **HTTP** (SBC-only)  
 - [x] **No** HTTP redirect exposing home URLs  
 - [ ] Existing registrations survive proxy/home provision outage  
 - [ ] mTLS for brands with CA; others documented fallback  
-- [ ] **C7** map publisher tests green (artifact + no secrets + conflict) *(unit tests on MacIndexStore; expand)*  
-- [ ] **C8** reconcile — MAC index ≡ map; drift flagged; re-project clears  
+- [x] **C7** map publisher tests green (artifact + no secrets + conflict)  
+- [x] **C8** reconcile — MAC index ≡ map; drift flagged; re-project clears (`GET /mac-index/reconcile`; folded into `GET /reconcile`)  
 - [x] Edge provision access/deny visible in edge logs (MAC → home)  
-- [ ] **C9** migrator parked or shipped later; B2 docs cover rare manual solo→fleet flip  
+- [x] **C9** migrator parked; **B2** docs cover rare manual solo→fleet flip  
 
 ### Always
 - [ ] Cloud path does not require DHCP opt66  
@@ -302,9 +302,7 @@ Track live list in requirements **§11**.
 
 ## 11. First concrete next step
 
-1. ~~Merge requirements + plan PR~~ · ~~Phase A1–A9 + A6 lab~~ · ~~B1 SPA/API~~  
-2. **Phase C:** **#3/#11 frozen**; **C3+C2 lab-proven** on golden/SBC. Merge PRs → **B2** docs; **C7/C8**; tip api MAC claim hook.  
-3. Parallel: **B2** MkDocs RPS; **D1** CA inventory before claiming **C5** mTLS.  
-4. Lab recipe + edge: **`PROVISIONING_LAB_RECIPE.md`** · **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`**.
-5. Parallel: **D1** CA inventory in ops `devdocs`.  
-6. Exit C when **C7+C8** green + move+next-provision soak.
+1. ~~Merge requirements + plan PR~~ · ~~Phase A–B1~~ · ~~C2/C3~~ · ~~B2~~ · ~~C7/C8~~ · Yealink+Snom lab  
+2. **Next soak:** **tenant rehome** — MAC rewrite with setid; edge map → dest; next provision GET (no RPS edit); REGISTER/BYE.  
+3. Later: **B3**; **D1**→**C5** mTLS; **D3** second-wave vendors; optional **C4** HA map mirror.  
+4. Exit C when rehome soak green.

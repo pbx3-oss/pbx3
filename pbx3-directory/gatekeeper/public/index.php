@@ -660,6 +660,11 @@ try {
         JsonResponse::send(200, (new MacIndexStore($registrar))->projectMap());
     }
 
+    if ($method === 'GET' && $path === '/api/v1/mac-index/reconcile') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        JsonResponse::send(200, (new MacIndexStore($registrar))->reconcileMap());
+    }
+
     if ($method === 'POST' && preg_match('#^/api/v1/tenants/([a-z0-9]+)/register-domain$#', $path, $m)) {
         Auth::requireAbility(FleetAbilities::EDGE);
         JsonResponse::send(200, (new DidInventory($registrar))->registerTenantDomain(

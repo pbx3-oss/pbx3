@@ -9,7 +9,7 @@ use Aws\S3\S3Client;
 /**
  * Ports pbx3-directory/tools registrar shell logic to S3 API (Phase B′).
  */
-final class S3Registrar
+final class S3Registrar implements MacIndexPersistence
 {
     private S3Client $s3;
 
@@ -699,6 +699,21 @@ final class S3Registrar
             'Body' => $mapBody,
             'ContentType' => 'text/plain',
         ]);
+    }
+
+    /** C8 — read map artifact; empty if missing. */
+    public function getProvisionMacMap(): string
+    {
+        try {
+            $result = $this->s3->getObject([
+                'Bucket' => $this->bucket,
+                'Key' => MacIndexStore::MAP_KEY,
+            ]);
+
+            return (string) $result['Body'];
+        } catch (\Throwable) {
+            return '';
+        }
     }
 
     /**

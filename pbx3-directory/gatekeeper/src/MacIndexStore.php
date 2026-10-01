@@ -22,7 +22,7 @@ final class MacIndexStore
     public const PROVISION_PORT = 41363;
 
     public function __construct(
-        private readonly S3Registrar $registrar,
+        private readonly MacIndexPersistence $registrar,
     ) {
     }
 
@@ -198,6 +198,7 @@ final class MacIndexStore
     {
         $index = $this->getIndex();
         $map = self::buildNginxMap($index, $this->instanceLookup());
+        self::assertMapHasNoSecrets($map);
         $this->registrar->putProvisionMacMap($map);
 
         return [
@@ -205,6 +206,135 @@ final class MacIndexStore
             'entries' => count($index['entries'] ?? []),
             'map_bytes' => strlen($map),
         ];
+    }
+
+    /**
+     * C8 — compare MAC index (HoR) to provision-mac.map body.
+     *
+     * @param  array{version?: int, updated_at?: string, entries?: list<array<string, mixed>>}  $index
+     * @param  array<string, array<string, mixed>>  $instancesById
+     * @return array{
+     *   ok: bool,
+     *   summary: array{matched: int, drifts: int},
+     *   drifts: list<array<string, mixed>>,
+     *   matched: list<array<string, mixed>>
+     * }
+     */
+    public static function compareIndexToMap(array $index, string $mapBody, array $instancesById): array
+    {
+        $expected = [];
+        foreach ($index['entries'] ?? [] as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $mac = (string) ($row['mac'] ?? '');
+            $instanceId = (string) ($row['instance_id'] ?? '');
+            if ($mac === '' || $instanceId === '') {
+                continue;
+            }
+            $upstream = self::homeProvisionBaseUrl($instancesById[$instanceId] ?? []);
+            if ($upstream === null) {
+                continue;
+            }
+            $expected[$mac] = $upstream;
+        }
+
+        $actual = self::parseNginxMapUpstreams($mapBody);
+
+        $drifts = [];
+        $matched = [];
+
+        try {
+            self::assertMapHasNoSecrets($mapBody);
+        } catch (\RuntimeException $e) {
+            $drifts[] = [
+                'kind' => 'map_secret_leak',
+                'severity' => 'error',
+                'detail' => $e->getMessage(),
+            ];
+        }
+
+        foreach ($expected as $mac => $upstream) {
+            if (! isset($actual[$mac])) {
+                $drifts[] = [
+                    'kind' => 'map_missing_mac',
+                    'severity' => 'error',
+                    'mac' => $mac,
+                    'expected_upstream' => $upstream,
+                ];
+                continue;
+            }
+            if ($actual[$mac] !== $upstream) {
+                $drifts[] = [
+                    'kind' => 'map_upstream_mismatch',
+                    'severity' => 'error',
+                    'mac' => $mac,
+                    'expected_upstream' => $upstream,
+                    'actual_upstream' => $actual[$mac],
+                ];
+                continue;
+            }
+            $matched[] = [
+                'mac' => $mac,
+                'upstream' => $upstream,
+            ];
+        }
+
+        foreach ($actual as $mac => $upstream) {
+            if (! isset($expected[$mac])) {
+                $drifts[] = [
+                    'kind' => 'map_extra_mac',
+                    'severity' => 'warning',
+                    'mac' => $mac,
+                    'actual_upstream' => $upstream,
+                ];
+            }
+        }
+
+        return [
+            'ok' => $drifts === [],
+            'summary' => [
+                'matched' => count($matched),
+                'drifts' => count($drifts),
+            ],
+            'drifts' => $drifts,
+            'matched' => $matched,
+        ];
+    }
+
+    /**
+     * @return array<string, string> mac => upstream URL
+     */
+    public static function parseNginxMapUpstreams(string $mapBody): array
+    {
+        $out = [];
+        if (preg_match_all('/~\*\^([0-9a-fA-F]{12})\$\s+"([^"]+)";/', $mapBody, $m, PREG_SET_ORDER) === false) {
+            return $out;
+        }
+        foreach ($m as $row) {
+            $out[strtolower($row[1])] = $row[2];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Live reconcile: index HoR vs current map artifact.
+     *
+     * @return array{
+     *   ok: bool,
+     *   summary: array{matched: int, drifts: int},
+     *   drifts: list<array<string, mixed>>,
+     *   matched: list<array<string, mixed>>
+     * }
+     */
+    public function reconcileMap(): array
+    {
+        return self::compareIndexToMap(
+            $this->getIndex(),
+            $this->registrar->getProvisionMacMap(),
+            $this->instanceLookup()
+        );
     }
 
     /**
