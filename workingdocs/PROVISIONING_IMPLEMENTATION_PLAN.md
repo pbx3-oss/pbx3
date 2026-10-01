@@ -1,6 +1,6 @@
 # Phone provisioning — implementation plan
 
-**Status:** Phase **A** + **B1** + **C2/C3 lab-proven** (2026-09-30). **#3/#11 frozen**. Edge **`provision.pbx3.com:41363`** (LE) + MAC index + Yealink handset green (SBC registrar/proxy). **Next:** merge PRs → tip api MAC claim hook fleet-wide; **B2** MkDocs RPS; **C7/C8** before exit C.  
+**Status:** Phase **A** + **B1** + **C2/C3 on `main`** (2026-09-30). **#3/#11 frozen**. Edge **`provision.pbx3.com:41363`** (LE) + MAC index; Yealink REGISTER/calls with `$sipdomain`/`$outbound`/`$sipuser`. Api MAC claim tipped golden. **Next:** **B2** MkDocs RPS; **C7/C8**; Snom soak.  
 **Requirements (law):** **`PROVISIONING_SERVER_REQUIREMENTS.md`**  
 **TODO:** **#23 / 0k** · related **#28** (Device purge — stands)  
 **Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · lab **`PROVISIONING_LAB_RECIPE.md`** · edge **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`**
