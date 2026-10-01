@@ -1,9 +1,9 @@
-# Phone provision — Phase A lab recipe (A6)
+# Phone provision — lab recipe (A6 + C edge)
 
-**Code:** pbx3 / pbx3api tip on home (Phase A listener + B1 URL / Reset Once).  
-**Law:** `PROVISIONING_SERVER_REQUIREMENTS.md` · plan `PROVISIONING_IMPLEMENTATION_PLAN.md`.
+**Law:** `PROVISIONING_SERVER_REQUIREMENTS.md` · plan `PROVISIONING_IMPLEMENTATION_PLAN.md`.  
+**Edge ops:** `pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`.
 
-Automated coverage: `php /opt/pbx3/scripts/tests/provision-kernel-test.php` (and package-tree equivalent). This recipe is **handset / curl soak** — not a substitute for A7.
+Automated coverage: `php /opt/pbx3/scripts/tests/provision-kernel-test.php` (and package-tree equivalent). This recipe is **handset / curl soak**.
 
 ---
 
@@ -13,87 +13,77 @@ Automated coverage: `php /opt/pbx3/scripts/tests/provision-kernel-test.php` (and
 2. Schema: `sudo /opt/pbx3/scripts/apply-sqlite-add-provision-columns.sh`
 3. Listener + firewall:
    - After nginx/php-fpm: `sudo /opt/pbx3/scripts/install-provision-listener.sh solo` **or** `fleet`
-   - UFW: new installs get `:41363` in baseline. Existing `/etc/pbx3/firewall.allows.json` — delete and re-run `ufw-apply-baseline.sh fleet|solo`, or add **41363/tcp** in Admin → Firewall (fleet: SBC IP only).
+   - UFW: new installs get `:41363` in baseline. Fleet: **SBC IP(s) only**. Mirror in AWS SG if used.
 4. Solo HTTPS needs `apply-active-cert.sh` (snippet `pbx3-ssl-active.conf`).
 
-**Solo URL shape:**
-
-```text
-https://{instance-fqdn}:41363/provisioning/{mac}.cfg
-https://{instance-fqdn}:41363/provisioning?mac={mac}
-```
-
-**Fleet home (Phase A behind future edge):** plain `http://{home}:41363/provisioning/…` from SBC only. Phone-facing RPS stays Phase C (`provision.{apex}`).
+**Solo URL:** `https://{instance-fqdn}:41363/provisioning/{mac}.cfg`  
+**Fleet phone-facing:** `https://provision.{apex}:41363/provisioning/{mac}.cfg` (edge) → HTTP home.
 
 ### Operator allow (lab eyeball — keep temporary)
 
-Fleet baseline is **SBC-only** on `:41363`. To **view** a provision body from a laptop browser/curl (and later to debug **vendor client-cert / mTLS** failures with a clear diagnostic path):
-
-1. Temporarily allow your public IP: Admin → Firewall, or  
-   `sudo ufw allow from {your-ip}/32 to any port 41363 proto tcp comment 'pbx3-lab-operator-provision'`
-2. Fetch: `curl -s "http://{home-fqdn}:41363/provisioning/{mac}.cfg"` (fleet) or solo HTTPS with `-sk`.
-3. **Remove the rule when done** so production posture stays SBC-only (and later edge-mTLS).
-
-Do not leave operator `:41363` open as the standing fleet policy.
+Fleet baseline is **SBC-only** on home `:41363`. Temporary laptop allow: UFW/SG from your IP; **remove when done**.
 
 ---
 
 ## 1. Extension row
 
-On a lab extension (SPA **Provision stream** or SQL):
-
 | Field | Value |
 |-------|--------|
-| `macaddr` | Phone MAC (any separator OK) |
-| `provision` | e.g. `#INCLUDE snom` + `snom.udp` + `snom.ipv4`, or `#INCLUDE snom.Extension` / Yealink / Panasonic |
+| `macaddr` | Phone MAC |
+| `provision` | Prefer `#INCLUDE yealink.Extension` / `snom.Extension` (+ transport). **SIP host = tenant FQDN** (`$sipdomain`); **outbound proxy = SBC** (`$outbound`) when fleet. |
 | `sndcreds` | `Once` (preferred) |
 | `passwd` | Known SIP secret |
-| `provisionwith` | `FQDN` or `IP` (solo registrar hint) |
 
-Commit/PJSIP as usual — provision GET must **not** require Commit. MAC alone is not enough if `provision` is empty.
+Commit/PJSIP as usual — provision GET does **not** require Commit.
 
 ---
 
-## 2. Curl prove (before / instead of handset)
+## 2. Curl prove — home (Phase A)
 
 ```bash
-MAC=aabbccddeeff   # 12 hex
+MAC=aabbccddeeff
 FQDN=xxxxxxxx.pbx3.com
-
-# Solo HTTPS (ignore lab snakeoil verify if needed)
-curl -sk "https://${FQDN}:41363/provisioning/${MAC}.cfg" | head
-
-# Fleet home (HTTP; needs SBC or temporary operator allow — §0)
-curl -s "http://${FQDN}:41363/provisioning/${MAC}.cfg" | head
-
-# Unknown MAC → 404
-curl -sk -o /dev/null -w '%{http_code}\n' "https://${FQDN}:41363/provisioning/ffffffffffff.cfg"
+curl -sk "https://${FQDN}:41363/provisioning/${MAC}.cfg" | head   # solo
+curl -s "http://${FQDN}:41363/provisioning/${MAC}.cfg" | head    # fleet home (SBC or temp allow)
 ```
 
-Expect: body with `$ext` / registrar substituted; password present on first **Once** send; second GET omits secret lines; `sndcreds` → `No`; `last_provisioned_at` set; audit line in `/opt/pbx3/var/log/provision-audit.log` with `********` (not clear password).
+Expect: substituted body; Once → No after first send; audit obfuscated.
 
-Reset for re-test:
+---
+
+## 3. Fleet edge (Phase C) — lab 2026-09-30 green
+
+**DNS:** `provision.pbx3.com` A → edge VIP (`3.93.26.82`). **LE** on SBC for that name.  
+**Gatekeeper:** claim MAC → tenant + instance; conflict **409**; map at `catalog/provision-mac.map`.  
+**SBC:** `install-provision-edge.sh` + `sync-provision-mac-map.sh` (`PBX3_ORG_BUCKET=…`).
 
 ```bash
-sqlite3 /opt/pbx3/db/sqlite.db "UPDATE ipphone SET sndcreds='Once' WHERE lower(replace(replace(macaddr,':',''),'-',''))='${MAC}';"
+# known MAC → 200; unknown / y000000 → 404
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  "https://provision.pbx3.com:41363/provisioning/${MAC}.cfg"
 ```
 
----
+Body must show **`sip_server_host` = tenant FQDN** (e.g. `{shortuid}.pbx3.com`) and **`outbound_host` = `sbc.pbx3.com`** with **outbound proxy enabled** — not SBC in the SIP-server field, not `127.0.0.1` / proxy off.
 
-## 3. Handset / RPS
+**Handset:** RPS or manual URL → `https://provision.pbx3.com:41363/provisioning/{mac}.cfg`. Prefer path form (`/{mac}.cfg`); edge `?mac=` still 404 until polished.
 
-1. Enroll MAC in vendor RPS (Yealink / Snom) → solo URL above (or manual provision URL on phone).
-2. Factory / reprovision phone; confirm config download and SIP register via normal path (fleet → SBC).
-3. Optional: Yealink `y000000*.cfg` → serves `yealink.Common` (no MAC row required).
+After claim from Gatekeeper (until api tip-hot): re-run **`sync-provision-mac-map.sh`** on SBC if map lag.
 
 ---
 
-## 4. Exit A6
+## 4. Exit checks
 
-- [x] Known MAC → 200 + vendor body; unknown → 404  
-- [x] Once flip + audit obfuscation observed on host  
-- [ ] Phone registers after provision (solo or fleet SIP path unchanged) — optional soak  
-- [x] A7 suite still green on the tip package  
-- [x] **Reset provision state** (SPA / Once) lab-proven  
+### A6
+- [x] Known MAC → 200; unknown → 404  
+- [x] Once flip + audit  
+- [x] A7 suite  
+- [x] Reset Once (SPA)  
 
-Then Phase **C** (edge proxy + MAC index) and **B2** MkDocs RPS as scheduled.
+### C lab
+- [x] Edge LE URL → home via MAC map  
+- [x] #11 no-MAC / y000000 → 404  
+- [x] Yealink handset provision + SIP via SBC  
+- [ ] C7/C8 automated exit  
+- [ ] Tenant move → next provision without RPS edit  
+
+**Next:** merge C2/C3 PRs · **B2** MkDocs RPS · api MAC claim tip on homes.

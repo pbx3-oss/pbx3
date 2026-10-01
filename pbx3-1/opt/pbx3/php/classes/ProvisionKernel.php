@@ -304,12 +304,23 @@ function pbx3_provision_vars_from_phone($phone, $globals = array(), $extra = arr
 	$g = $globals;
 	$vars = array(
 		'ext' => isset($p['pkey']) ? $p['pkey'] : '',
+		'shortuid' => isset($p['shortuid']) ? $p['shortuid'] : (isset($p['pkey']) ? $p['pkey'] : ''),
+		// SIP REGISTER / auth username = endpoint shortuid (PJSIP [$id] / username=$id).
+		'sipuser' => isset($p['shortuid']) && trim((string) $p['shortuid']) !== ''
+			? $p['shortuid']
+			: (isset($p['pkey']) ? $p['pkey'] : ''),
 		'password' => isset($p['passwd']) ? $p['passwd'] : '',
 		'desc' => isset($p['desc']) ? $p['desc'] : (isset($p['cname']) ? $p['cname'] : ''),
 		'bindport' => isset($g['bindport']) ? $g['bindport'] : (isset($g['BINDPORT']) ? $g['BINDPORT'] : '5060'),
 		'tlsport' => isset($g['tlsport']) ? $g['tlsport'] : (isset($g['TLSPORT']) ? $g['TLSPORT'] : '5061'),
 		'localip' => isset($extra['localip']) ? $extra['localip'] : '127.0.0.1',
-		'registrar' => isset($extra['registrar']) ? $extra['registrar'] : (isset($extra['localip']) ? $extra['localip'] : '127.0.0.1'),
+		'sipdomain' => isset($extra['sipdomain']) ? $extra['sipdomain'] : (isset($extra['registrar']) ? $extra['registrar'] : (isset($extra['localip']) ? $extra['localip'] : '127.0.0.1')),
+		'outbound' => isset($extra['outbound']) ? $extra['outbound'] : '',
+		'outbound_enable' => isset($extra['outbound_enable']) ? $extra['outbound_enable'] : '0',
+		'outbound_hostport' => isset($extra['outbound_hostport']) ? $extra['outbound_hostport'] : '',
+		'proxy' => isset($extra['proxy']) ? $extra['proxy'] : (isset($extra['outbound']) && $extra['outbound'] !== '' ? $extra['outbound'] : (isset($extra['sipdomain']) ? $extra['sipdomain'] : '')),
+		// Legacy: $registrar = SIP domain (tenant), not SBC.
+		'registrar' => isset($extra['registrar']) ? $extra['registrar'] : (isset($extra['sipdomain']) ? $extra['sipdomain'] : (isset($extra['localip']) ? $extra['localip'] : '127.0.0.1')),
 		'padminpass' => isset($g['padminpass']) ? $g['padminpass'] : (isset($g['PADMINPASS']) ? $g['PADMINPASS'] : ''),
 		'puserpass' => isset($g['puserpass']) ? $g['puserpass'] : (isset($g['PUSERPASS']) ? $g['PUSERPASS'] : ''),
 		'ldapbase' => isset($g['ldapbase']) ? $g['ldapbase'] : '',
@@ -393,6 +404,7 @@ function pbx3_provision_render(PDO $db, $parsed, $streamsDir = null, $globals = 
 	$snd = pbx3_provision_sndcreds_allows($sndcredsCol);
 	$loop = array();
 	$expanded = pbx3_provision_expand($raw . "\n", $snd, $streamsDir, $loop);
+	$extra = pbx3_provision_merge_phone_hosts($db, $phone, $globals, $extra);
 	$vars = pbx3_provision_vars_from_phone($phone, $globals, $extra);
 	$body = pbx3_provision_substitute($expanded, $vars);
 
@@ -400,15 +412,15 @@ function pbx3_provision_render(PDO $db, $parsed, $streamsDir = null, $globals = 
 }
 
 /**
- * A3 — resolve $registrar / $localip / $provurl for solo vs fleet.
+ * A3 — resolve SIP next-hop / provision URL for solo vs fleet.
  *
- * Fleet: registrar = PBX3_SBC_EGRESS_HOST (default sbc.pbx3.com).
- * Solo: registrar = globals.fqdn when provisionwith=FQDN, else local IPv4 hint.
+ * Fleet: $outbound = SBC (PBX3_SBC_EGRESS_HOST, default sbc.pbx3.com); $sipdomain = tenant FQDN (per phone).
+ * Solo: $outbound empty / proxy off; $sipdomain = tenant or instance FQDN / local IP.
  *
  * @param PDO|null $db
  * @param array $globals
  * @param array $overrides optional forced keys
- * @return array{fleet:bool,registrar:string,localip:string,provurl:string}
+ * @return array{fleet:bool,outbound:string,outbound_enable:string,outbound_hostport:string,localip:string,provurl:string,registrar:string}
  */
 function pbx3_provision_resolve_hosts($db = null, $globals = array(), $overrides = array()) {
 	$fleet = pbx3_provision_is_fleet_mode($db);
@@ -427,17 +439,32 @@ function pbx3_provision_resolve_hosts($db = null, $globals = array(), $overrides
 	}
 
 	$localip = isset($overrides['localip']) ? (string) $overrides['localip'] : '127.0.0.1';
-	if ($fleet) {
-		$registrar = isset($overrides['registrar']) ? (string) $overrides['registrar'] : $sbc;
-	} else {
-		if (isset($overrides['registrar'])) {
-			$registrar = (string) $overrides['registrar'];
-		} elseif ($fqdn !== '') {
-			$registrar = $fqdn;
-		} else {
-			$registrar = $localip;
-		}
+	$bindport = '5060';
+	if (isset($globals['bindport']) && trim((string) $globals['bindport']) !== '') {
+		$bindport = trim((string) $globals['bindport']);
+	} elseif (isset($globals['BINDPORT']) && trim((string) $globals['BINDPORT']) !== '') {
+		$bindport = trim((string) $globals['BINDPORT']);
 	}
+
+	if (isset($overrides['outbound'])) {
+		$outbound = (string) $overrides['outbound'];
+	} elseif ($fleet) {
+		$outbound = $sbc;
+	} else {
+		$outbound = '';
+	}
+	$outboundEnable = $fleet ? '1' : '0';
+	if (isset($overrides['outbound_enable'])) {
+		$outboundEnable = (string) $overrides['outbound_enable'];
+	}
+	$outboundHostport = $outbound !== '' ? ($outbound . ':' . $bindport) : '';
+	if (isset($overrides['outbound_hostport'])) {
+		$outboundHostport = (string) $overrides['outbound_hostport'];
+	}
+
+	// Legacy $registrar in streams meant "SIP host". Prefer $sipdomain; keep registrar
+	// as a fill-in for that role only when caller still passes it (tests / overrides).
+	$registrar = isset($overrides['registrar']) ? (string) $overrides['registrar'] : '';
 
 	$port = defined('PROVISION_PORT') ? PROVISION_PORT : 41363;
 	if (isset($overrides['provurl'])) {
@@ -463,10 +490,88 @@ function pbx3_provision_resolve_hosts($db = null, $globals = array(), $overrides
 
 	return array(
 		'fleet' => $fleet,
-		'registrar' => $registrar,
+		'outbound' => $outbound,
+		'outbound_enable' => $outboundEnable,
+		'outbound_hostport' => $outboundHostport,
 		'localip' => $localip,
 		'provurl' => $provurl,
+		'registrar' => $registrar,
 	);
+}
+
+/**
+ * Tenant SIP domain for a phone (cluster.fqdn), with solo/instance fallbacks.
+ *
+ * @param object|array $phone
+ * @param array $globals
+ * @param array $hosts from pbx3_provision_resolve_hosts (localip)
+ */
+function pbx3_provision_sipdomain_for_phone($db, $phone, $globals = array(), $hosts = array()) {
+	$p = is_array($phone) ? $phone : (array) $phone;
+	$clusterKey = isset($p['cluster']) ? trim((string) $p['cluster']) : '';
+	$localip = isset($hosts['localip']) ? (string) $hosts['localip'] : '127.0.0.1';
+
+	$apex = '';
+	if (isset($globals['domain'])) {
+		$apex = trim((string) $globals['domain']);
+	} elseif (isset($globals['DOMAIN'])) {
+		$apex = trim((string) $globals['DOMAIN']);
+	}
+
+	if ($clusterKey !== '' && $db instanceof PDO) {
+		try {
+			$st = $db->prepare('SELECT fqdn FROM cluster WHERE shortuid = ? OR pkey = ? LIMIT 1');
+			$st->execute(array($clusterKey, $clusterKey));
+			$row = $st->fetch(PDO::FETCH_ASSOC);
+			$st = null;
+			if (is_array($row) && isset($row['fqdn']) && trim((string) $row['fqdn']) !== '') {
+				return trim((string) $row['fqdn']);
+			}
+		} catch (Exception $e) {
+			// table missing in unit fixtures — fall through
+		}
+		if ($apex !== '') {
+			return $clusterKey . '.' . $apex;
+		}
+	}
+
+	if (isset($globals['fqdn']) && trim((string) $globals['fqdn']) !== '') {
+		return trim((string) $globals['fqdn']);
+	}
+	if (isset($globals['FQDN']) && trim((string) $globals['FQDN']) !== '') {
+		return trim((string) $globals['FQDN']);
+	}
+	return $localip;
+}
+
+/**
+ * Merge host/proxy placeholders after MAC → phone is known.
+ *
+ * @param object|array $phone
+ * @param array $globals
+ * @param array $extra existing extra (may already include outbound/provurl)
+ */
+function pbx3_provision_merge_phone_hosts($db, $phone, $globals = array(), $extra = array()) {
+	$hosts = pbx3_provision_resolve_hosts($db, $globals, $extra);
+	foreach (array('outbound', 'outbound_enable', 'outbound_hostport', 'localip', 'provurl') as $k) {
+		if (!isset($extra[$k]) || $extra[$k] === '' || $extra[$k] === null) {
+			$extra[$k] = $hosts[$k];
+		}
+	}
+	if (!isset($extra['sipdomain']) || $extra['sipdomain'] === '' || $extra['sipdomain'] === null) {
+		$extra['sipdomain'] = pbx3_provision_sipdomain_for_phone($db, $phone, $globals, $extra);
+	}
+	// Legacy alias: $registrar in vendor streams = SIP domain (not SBC).
+	if (!isset($extra['registrar']) || $extra['registrar'] === '' || $extra['registrar'] === null) {
+		$extra['registrar'] = $extra['sipdomain'];
+	}
+	// Panasonic / vendors that always want a proxy field: outbound if set, else sipdomain.
+	if (!isset($extra['proxy']) || $extra['proxy'] === '' || $extra['proxy'] === null) {
+		$extra['proxy'] = ($extra['outbound'] !== '' && $extra['outbound'] !== null)
+			? $extra['outbound']
+			: $extra['sipdomain'];
+	}
+	return $extra;
 }
 
 /**

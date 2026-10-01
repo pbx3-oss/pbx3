@@ -76,7 +76,7 @@ Bearer **required** on every `/api/v1/*` **except** `/api/v1/auth/login`, `/api/
 | `fleet_read` | `GET` catalog, tenants, tenant-moves; required to enter Fleet mode |
 | `fleet_instances` | `POST` instances, tenants (register) |
 | `fleet_moves` | Move job create/run/advance; catalog move; org migration `s3/presign` |
-| `fleet_edge` | `GET` reconcile + `POST` reconcile/project (S10.4); `POST` dids/assign + release (S10.5) |
+| `fleet_edge` | `GET` reconcile + `POST` reconcile/project (S10.4); `POST` dids/assign + release (S10.5); `POST` mac-index/claim + clear + project (C3) |
 | `fleet_admin` | All of the above + recordings `presign-recordings` + fleet-user manage (S10.6) |
 
 `fleet_admin` grants every `fleet_*`. Existing auth DBs get an `abilities` column defaulting to `["fleet_admin"]` on migrate.
@@ -126,6 +126,10 @@ Gatekeeper → node/SBC still uses **`PBX3_FLEET_SERVICE_TOKEN`** (server-side o
 | `POST` | `/api/v1/dids/assign` | Assign/reassign DID or hop-1 block → tenant (`delivery`: `singleton`\|`block`, optional `sip_prefix`); writes `dids.json` + `did-index`; projects SBC unless `project:false` (`fleet_edge`). **Singleton:** omit `sip_prefix` (digit E.164); clears stale prefix on re-assign. **Block:** digit-E.164 `sip_prefix` (no UK national `0…`) |
 | `POST` | `/api/v1/dids/release` | Soft-release DID in catalog (+ project) (`fleet_edge`) |
 | `POST` | `/api/v1/dids/project` | Force-project catalog DIDs → SBC inbound `dr_rules` — Apply for DID drift (`fleet_edge`) |
+| `GET` | `/api/v1/mac-index` | C3 provision MAC index (routing HoR; no secrets) (`fleet_read`) |
+| `POST` | `/api/v1/mac-index/claim` | Claim/upsert MAC → tenant + instance; conflict 409 until clear (`fleet_edge`) |
+| `POST` | `/api/v1/mac-index/clear` | Clear MAC binding + republish nginx map (`fleet_edge`) |
+| `POST` | `/api/v1/mac-index/project` | Rebuild `catalog/provision-mac.map` from index (`fleet_edge`) |
 | `POST` | `/api/v1/tenants/{shortuid}/register-domain` | Ensure SBC `domain` row for tenant fqdn + catalog setid (`fleet_edge`) |
 | `POST` | `/api/v1/instances/{id}/provision-edge` | S10.5: allocate/update dispatcher set + Asterisk Peer; write catalog `sbc_dispatcher_setid` + `sbc_backend_uri` (`fleet_edge`). Body: optional `backend_uri`, `confirm` (required to update existing setid), `source_ip`, `dry_run` |
 | `GET` | `/api/v1/sbc/dispatcher-sets` | Live SBC dispatcher setids (`fleet_read`) — catalog setid must be one of these |

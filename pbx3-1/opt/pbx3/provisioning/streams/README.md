@@ -8,9 +8,9 @@ No Device table. No per-SKU matrix. BLF templates (`*.Fkey` / `*.Lkey` / `*.Pkey
 | Grain | Role |
 |-------|------|
 | `snom.Common` / `yealink.Common` | Shared site defaults |
-| `snom.Extension` / `yealink.Extension` | Preferred extension entry (uses `$registrar`) |
-| `snom` / `Yealink` / `Panasonic` | Legacy Device-table vendor aliases (ETL often uses these) |
-| `{snom,yealink,panasonic}.{udp,tcp,tls}` | Transport / SRTP override fragments (`panasonic.udp` empty in sail65) |
+| `snom.Extension` / `yealink.Extension` | Preferred extension entry (`$sipdomain` + `$outbound`) |
+| `snom` / `Yealink` / `Panasonic` | Legacy Device-table vendor aliases — same split: SIP domain vs SBC outbound |
+| `{snom,yealink,panasonic}.{udp,tcp,tls}` | Transport / SRTP override fragments. **Snom** outbound uses `$outbound_hostport` / `$outbound` (fleet = SBC). `panasonic.udp` empty in sail65. |
 | `{snom,yealink,panasonic}.{ipv4,ipv6}` | IPv4 vs IPv6 hints |
 | `panasonic.Ldap` | Optional LDAP fragment |
 
@@ -40,5 +40,8 @@ Panasonic (sail65 shape):
 #INCLUDE panasonic.ipv4
 ```
 
-Placeholders: `$ext` `$password` `$desc` `$registrar` `$localip` `$bindport` `$tlsport`
-`$provurl` `$padminpass` `$puserpass` + LDAP tokens (see `ProvisionKernel`).
+Placeholders: `$ext` (dialable) `$sipuser` / `$shortuid` (PJSIP auth) `$password` `$desc`
+`$sipdomain` `$outbound` `$outbound_enable` `$outbound_hostport` `$proxy`
+`$localip` `$bindport` `$tlsport` `$provurl` `$padminpass` `$puserpass` + LDAP tokens (see `ProvisionKernel`).
+Legacy `$registrar` = alias for `$sipdomain` (tenant SIP domain — **not** the SBC).
+REGISTER / auth usernames use **`$sipuser`** (= `ipphone.shortuid`), not dialable `$ext`.

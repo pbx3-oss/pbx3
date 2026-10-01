@@ -1,10 +1,10 @@
 #INCLUDE yealink.Common
 account.1.label = $ext
-account.1.auth_name = $ext
+account.1.auth_name = $sipuser
 account.1.password = $password
-account.1.user_name = $ext
-account.1.sip_server_host = $registrar
+account.1.user_name = $sipuser
+account.1.sip_server_host = $sipdomain
 account.1.sip_server_port = $bindport
-account.1.outbound_host = $registrar
+account.1.outbound_host = $outbound
 account.1.outbound_port = $bindport
-account.1.outbound_proxy_enable = 1
+account.1.outbound_proxy_enable = $outbound_enable

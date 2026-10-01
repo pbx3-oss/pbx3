@@ -488,9 +488,13 @@ final class TenantMoveRunner
      */
     private function phaseCatalog(array $job): array
     {
-        $this->registrar->moveTenant((string) $job['tenant_shortuid'], [
-            'instance_id' => (string) $job['dest_instance_id'],
+        $shortuid = (string) $job['tenant_shortuid'];
+        $destInstanceId = (string) $job['dest_instance_id'];
+        $this->registrar->moveTenant($shortuid, [
+            'instance_id' => $destInstanceId,
         ]);
+        // C3 — rewrite MAC index FKs with setid/catalog cutover; republish provision map
+        (new MacIndexStore($this->registrar))->rewriteTenantInstance($shortuid, $destInstanceId);
         $job = $this->markPhase($job, 'catalog', 'ok');
         $this->jobs->writePublic($job);
 
