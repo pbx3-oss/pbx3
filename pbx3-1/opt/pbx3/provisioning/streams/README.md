@@ -9,7 +9,7 @@ No Device table. No per-SKU matrix. BLF templates (`*.Fkey` / `*.Lkey` / `*.Pkey
 |-------|------|
 | `snom.Common` / `yealink.Common` | Shared site defaults |
 | `snom.Extension` / `yealink.Extension` | Preferred extension entry (uses `$registrar`) |
-| `snom` / `Yealink` / `Panasonic` | Legacy Device-table vendor aliases (ETL often uses these) |
+| `snom` / `Yealink` / `Panasonic` | Legacy Device-table vendor aliases — **aligned to `$registrar` + outbound proxy** (same as `*.Extension`) |
 | `{snom,yealink,panasonic}.{udp,tcp,tls}` | Transport / SRTP override fragments (`panasonic.udp` empty in sail65) |
 | `{snom,yealink,panasonic}.{ipv4,ipv6}` | IPv4 vs IPv6 hints |
 | `panasonic.Ldap` | Optional LDAP fragment |

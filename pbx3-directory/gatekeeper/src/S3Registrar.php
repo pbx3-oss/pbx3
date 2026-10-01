@@ -650,6 +650,58 @@ final class S3Registrar
     }
 
     /**
+     * C3 — provision MAC routing index (HoR). No secrets.
+     *
+     * @return array{version: int, updated_at: string, entries: list<array<string, mixed>>}
+     */
+    public function getMacIndex(): array
+    {
+        $index = $this->readJson(MacIndexStore::INDEX_KEY, []);
+        if ($index === []) {
+            return [
+                'version' => 1,
+                'updated_at' => $this->nowIso(),
+                'entries' => [],
+            ];
+        }
+        if (! isset($index['version'])) {
+            $index['version'] = 1;
+        }
+        if (! isset($index['entries']) || ! is_array($index['entries'])) {
+            $index['entries'] = [];
+        }
+        if (! isset($index['updated_at'])) {
+            $index['updated_at'] = $this->nowIso();
+        }
+
+        return $index;
+    }
+
+    /** @param array{version: int, updated_at: string, entries: list<array<string, mixed>>} $index */
+    public function putMacIndex(array $index): void
+    {
+        $index['version'] = 1;
+        if (! isset($index['updated_at'])) {
+            $index['updated_at'] = $this->nowIso();
+        }
+        if (! isset($index['entries']) || ! is_array($index['entries'])) {
+            $index['entries'] = [];
+        }
+        $this->writeJson(MacIndexStore::INDEX_KEY, $index);
+    }
+
+    /** Static nginx map include artifact (text/plain) for edge pull / HA seed. */
+    public function putProvisionMacMap(string $mapBody): void
+    {
+        $this->s3->putObject([
+            'Bucket' => $this->bucket,
+            'Key' => MacIndexStore::MAP_KEY,
+            'Body' => $mapBody,
+            'ContentType' => 'text/plain',
+        ]);
+    }
+
+    /**
      * Replace tenants/{shortuid}/meta.json (Gatekeeper sole writer).
      *
      * @param  array<string, mixed>  $meta

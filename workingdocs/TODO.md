@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-30 (session end — provision A6/B1 lab-proven; Phase C next)  
+**Last updated:** 2026-09-30 (session end — provision C2/C3 lab-proven)  
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -12,7 +12,7 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate** — Phase **A** + **B1** lab-proven on golden (Once/Reset; Snom/Yealink). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Plan: **`PROVISIONING_IMPLEMENTATION_PLAN.md`** (**Phase C** entry). Recipe: **`PROVISIONING_LAB_RECIPE.md`**. **Next:** **C3** MAC index → **C2** edge proxy; **B2** MkDocs RPS parallel.  
+0k. **Phone provisioning — reinstate** — **A+B1+C2/C3 lab-proven** (`provision.pbx3.com` LE; MAC index; Yealink handset via SBC proxy). Spec / plan / recipe / **`pbx3sbc/…/PROVISION_EDGE_PROXY.md`**. **Next:** merge PRs; tip **pbx3api** MAC claim hook; **B2** MkDocs RPS; **C7/C8**. Legacy vendor grains use `$registrar` + outbound proxy.  
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
@@ -68,7 +68,7 @@
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
-23. **Provisioning — reinstate (instance-local)** — **A+B1 lab-proven** (2026-09-30). **Next:** Phase **C** (**`PROVISIONING_IMPLEMENTATION_PLAN.md`** § Phase C entry). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. No 3pcerts SPA; no Device matrix (#28). Desk NAT: **`FLEET_DESK_PHONE_NAT.md`**.
+23. **Provisioning — reinstate (instance-local)** — **A+B1+C2/C3 lab-proven** (edge LE + MAC index + Yealink). **Next:** merge PRs; tip api claim; **B2**; **C7/C8**. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. Plan / recipe: **`PROVISIONING_*`**. Edge: **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`**.
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked) — companion **0h** trunk carrier-face stub.  

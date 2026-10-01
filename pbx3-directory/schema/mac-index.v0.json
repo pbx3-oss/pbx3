@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aelintra.com/pbx3/directory/mac-index.v0.json",
+  "title": "PBX3 fleet provision MAC index (v0)",
+  "description": "catalog/mac-index.json — routing HoR for provision edge map. MAC canon (12-hex lower); tenant_shortuid + instance_id FKs only. No secrets. Rebuildable from claims; projects to catalog/provision-mac.map (nginx map include).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "updated_at", "entries"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mac", "tenant_shortuid", "instance_id"],
+        "properties": {
+          "mac": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12}$",
+            "description": "Normalized 12-hex lowercase MAC (canon)"
+          },
+          "tenant_shortuid": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+$",
+            "description": "Current tenant FK"
+          },
+          "instance_id": {
+            "type": "string",
+            "description": "Current home instance KSUID (globals.id)"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

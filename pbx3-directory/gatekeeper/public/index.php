@@ -22,6 +22,7 @@ use Pbx3\Gatekeeper\FleetAbilities;
 use Pbx3\Gatekeeper\Http\JsonResponse;
 use Pbx3\Gatekeeper\InstanceEdgeLifecycle;
 use Pbx3\Gatekeeper\InstanceEdgeProvision;
+use Pbx3\Gatekeeper\MacIndexStore;
 use Pbx3\Gatekeeper\NodeFleetDialClient;
 use Pbx3\Gatekeeper\NotifyDispatcher;
 use Pbx3\Gatekeeper\OpsEventThrottle;
@@ -634,6 +635,29 @@ try {
             $filter,
             ! empty($body['dry_run'])
         ));
+    }
+
+    // C3 — provision MAC index (routing HoR) + map project
+    if ($method === 'GET' && $path === '/api/v1/mac-index') {
+        Auth::requireAbility(FleetAbilities::READ);
+        JsonResponse::send(200, (new MacIndexStore($registrar))->getIndex());
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/mac-index/claim') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        JsonResponse::send(200, (new MacIndexStore($registrar))->claim(is_array($body) ? $body : []));
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/mac-index/clear') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        JsonResponse::send(200, (new MacIndexStore($registrar))->clear(is_array($body) ? $body : []));
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/mac-index/project') {
+        Auth::requireAbility(FleetAbilities::EDGE);
+        JsonResponse::send(200, (new MacIndexStore($registrar))->projectMap());
     }
 
     if ($method === 'POST' && preg_match('#^/api/v1/tenants/([a-z0-9]+)/register-domain$#', $path, $m)) {

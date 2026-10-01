@@ -8,6 +8,7 @@
 **2026-09-30:** Prior-PBX lesson locked — vendors share one provision stream per manufacturer (rare exceptions); old per-model names were kept only as legacy aliases for existing customers.  
 **2026-09-30 (TLS / topology):** Rejected fleet **HTTP redirect** edge (phones must not learn home URLs — forward-compat with **topology hiding**). Locked phone-facing name **`provision.{apex}`**; route by **MAC**; edge terminates HTTPS; **edge→home = HTTP** with home firewall locked to **SBC(s)**. See **§0**, **§0.3**, **§8**.  
 **2026-09-30 (MAC index):** **MAC is canon** for handset identity; **tenant** and **instance** are FKs on a fleet catalog MAC index (routing only — no secrets). Solo→fleet RPS flip = rare; migrator parked. Default provision **port 41363** (prior art). See **§6**.  
+**2026-09-30 (#3 / #11 freeze):** Map transport = **static nginx `map` artifact** published from catalog (no live gatekeeper/S3 on GET). Edge **404** when URI has no routable MAC (Yealink `y000000*` etc.); home still serves common for solo; MAC streams `#INCLUDE` common. See **§11**.  
 **Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — deferred past instance-local v1.  
 **Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard.  
 **Reference notes:** private prior co-located provisioner / previous PBX archives (operator only — not in product tree).  
@@ -406,7 +407,7 @@ A physical phone can move between **tenants**, **instances**, or even **customer
 | **Write path** | Extension MAC **assign / clear / reassign** (instance API or Commit hook) → **upsert / delete** catalog MAC row → enqueue or inline **map publish** (same job family as setid when move/onboard). **Tenant move:** bulk rewrite `instance_id` for that tenant’s MAC rows **with** `domain.setid` |
 | **Conflict** | Second home claims same MAC → **reject** until operator clears the existing binding (no silent steal in v1) |
 | **Home clear** | Clearing `ipphone.mac` deletes (or deactivates) the catalog row and republishes map |
-| **Projection** | nginx map / lua / small sidecar from the MAC index — edge is not a second HoR |
+| **Projection** | Regenerated **nginx `map` include** from the MAC index (**§11 #3**); optional S3 copy of the artifact for audit/HA seed; edge GET path uses **local** map file only — edge is not a second HoR |
 | **Synchronicity** | **Not guaranteed.** Same job couples catalog + setid + provision map; brief skew possible |
 | **Reconcile (C8)** | Extend fleet **catalog ≡ SBC** sweeper: **MAC index ≡ provision map** (+ consistency with tenant→node / setid). Spot-check: claimed home still has that MAC on `ipphone`. Flag drift; re-project. **Not** a second sweeper product |
 
@@ -500,7 +501,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener **inclu
 0. **Schedule build?** — Plan exists (**`PROVISIONING_IMPLEMENTATION_PLAN.md`**); start at Phase **A1** when scheduled.  
 1. ~~**Cert / hostname on proxy**~~ — **Locked 2026-09-30 (§0.3):** **`provision.{apex}`**; one cert; MAC routing; **proxy** not redirect; **HTTP** edge→home (SBC-only).  
 2. ~~**Where proxy runs**~~ — **Locked 2026-09-30:** **SBC-colocated** nginx (or equivalent); map from catalog/S3 only; gatekeeper publishes map; mirrors with SBC HA. Not phone-facing on gatekeeper.  
-3. **Map transport** — Regenerated nginx conf vs lua (MAC extract from URI/body) vs pull of static map object from S3 (prefer no live gatekeeper on GET path).  
+3. ~~**Map transport**~~ — **Locked 2026-09-30:** Catalog MAC index = HoR. Gatekeeper publishes a **static nginx `map` include** (MAC → `http://{home}:41363`) on assign/clear/move (same job family as setid). Optional S3 copy of that artifact for audit/HA seed. **Edge GET path:** local map file only — **no** live gatekeeper, **no** per-request S3. **No lua** in v1 unless URI shapes force it later.  
 4. ~~**Primary route key / MAC index**~~ — **Locked 2026-09-30 (§6):** MAC canon; tenant + instance FKs; conflict = reject; no secrets on index.  
 5. **Solo** — Skip proxy; RPS (or lab) → instance directly (M3 solo).  
 6. **Stack for home listener** — PHP parity with previous PBX vs rewrite; behaviour first.  
@@ -508,7 +509,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener **inclu
 8. ~~**Provision listen port**~~ — **Locked 2026-09-30:** default **41363** (prior art); document for RPS (solo HTTPS; fleet edge HTTPS / home HTTP).  
 9. **Poly discovery** — Confirm whether desk phones still expose a simple MAC→URL redirect usable by us, or only via Poly Lens / partner SKUs after HP.  
 10. **Vendor CA / 3pcerts inventory (side exercise)** — For each §0.2 interest vendor: can we obtain client-auth CA(s), redistribute in our edge bundle, and keep them current? Start from known **Snom + Yealink**; document gaps for Grandstream / Fanvil / Gigaset / Poly. Outcome gates “mTLS for brand X” vs LAN/Once-only for that brand.  
-11. **Vendor common / no-MAC GETs at edge** — Yealink `y000000*.cfg` etc.: fixed policy (404 vs shared stub) when URI has no MAC — freeze in C2 with A2 Yealink stream.
+11. ~~**Vendor common / no-MAC GETs at edge**~~ — **Locked 2026-09-30:** Edge **404** when the URI has no routable MAC (`y000000*.cfg`, bare paths, ignore-list). Home still serves Yealink common for **solo/lab**. Fleet phones get common via MAC stream **`#INCLUDE yealink.Common`** (already in the Yealink grain) — do not pick a home for no-MAC GETs.
 
 ---
 

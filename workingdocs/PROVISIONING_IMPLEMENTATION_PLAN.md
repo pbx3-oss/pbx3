@@ -1,9 +1,9 @@
 # Phone provisioning — implementation plan
 
-**Status:** Phase **A** + **B1** lab-proven on golden (2026-09-30). **A6** curl/handset path + Once/Reset green (Snom **401**, Yealink **402**). Streams: Snom/Yealink/Panasonic (+ transport grains). **Next:** Phase **C** fleet edge (`provision.{apex}`) — start **C3** MAC index then **C2** nginx proxy; **B2** docs can parallel.  
+**Status:** Phase **A** + **B1** + **C2/C3 lab-proven** (2026-09-30). **#3/#11 frozen**. Edge **`provision.pbx3.com:41363`** (LE) + MAC index + Yealink handset green (SBC registrar/proxy). **Next:** merge PRs → tip api MAC claim hook fleet-wide; **B2** MkDocs RPS; **C7/C8** before exit C.  
 **Requirements (law):** **`PROVISIONING_SERVER_REQUIREMENTS.md`**  
 **TODO:** **#23 / 0k** · related **#28** (Device purge — stands)  
-**Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · lab **`PROVISIONING_LAB_RECIPE.md`**
+**Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · lab **`PROVISIONING_LAB_RECIPE.md`** · edge **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`**
 
 ---
 
@@ -107,13 +107,13 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 4. **C5** mTLS after **D1** CA inventory for Snom/Yealink.  
 5. **B2** MkDocs RPS can parallel (not on critical path for C code).
 
-Freeze before coding C2/C3: open **#3** map transport (prefer static object from S3); **#11** vendor common GETs.
+**Frozen 2026-09-30:** **#3** static nginx `map` artifact (local GET path; optional S3 seed); **#11** edge 404 no-MAC (home common solo-only; MAC `#INCLUDE`).
 
 | Slice | Work | Repo(s) |
 |-------|------|---------|
 | **C1** | ~~Hostname / port~~ — **locked:** **`provision.{apex}:41363`** + MAC index + HTTP edge→home (**§0.3**, **§6**) | done |
-| **C2** | nginx vhost on **SBC**; HTTPS terminate; MAC extract; **`proxy_pass` HTTP** to home `:41363` (SBC-only — home UFW already from A5/install); fail-closed; **no** 3xx-to-home; policy for vendor **common** GETs without MAC (open #11) | **pbx3sbc** / edge package |
-| **C3** | **Catalog MAC index** (`mac` PK → `tenant_id`, `instance_id` FKs); upsert/delete on MAC assign/clear; bulk FK rewrite on tenant move **with** setid; project → nginx map; conflict = **reject** | **pbx3-directory** gatekeeper + instance hook |
+| **C2** | nginx vhost on **SBC**; HTTPS terminate; MAC extract; **`proxy_pass` HTTP** to home `:41363`; fail-closed; **no** 3xx-to-home; **404** no-MAC (**#11**) — **templates + install/sync scripts** (`pbx3sbc` `PROVISION_EDGE_PROXY.md`); lab DNS/LE/UFW when scheduled | **pbx3sbc** |
+| **C3** | **Catalog MAC index** + upsert/clear/move rewrite + static nginx map (**#3**) + instance claim hook — **code on feature branches** | **pbx3-directory** + **pbx3api** |
 | **C4** | Mirror map on SBC HA pair; version/health optional | **pbx3sbc** |
 | **C5** | Vendor client-cert verify on edge vhost when CA present (Snom/Yealink first) | **pbx3sbc** + ops CA bundle |
 | **C6** | TLS §0 cross-link: **`provision.{apex}`** A→edge VIP (not tenant A) | **`TLS_AND_CERTIFICATES.md`** |
@@ -252,16 +252,16 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 - [ ] **B3** M1 coexistence one-pager  
 
 ### Phase C
-- [ ] RPS → **`provision.{apex}:41363`**; MAC index → map → current home  
-- [ ] MAC assign/clear updates index + map; tenant move rewrites FKs **with** setid  
-- [ ] Duplicate MAC claim **rejected** until clear  
-- [ ] Proxy has no passwords; edge→home is **HTTP** (SBC-only)  
-- [ ] **No** HTTP redirect exposing home URLs  
+- [x] RPS → **`provision.{apex}:41363`**; MAC index → map → current home *(lab: provision.pbx3.com LE; Yealink 402)*  
+- [x] MAC assign/clear updates index + map; tenant move rewrites FKs **with** setid *(claim/clear/project + move hook; api hook on branch)*  
+- [x] Duplicate MAC claim **rejected** until clear *(409 lab)*  
+- [x] Proxy has no passwords; edge→home is **HTTP** (SBC-only)  
+- [x] **No** HTTP redirect exposing home URLs  
 - [ ] Existing registrations survive proxy/home provision outage  
 - [ ] mTLS for brands with CA; others documented fallback  
-- [ ] **C7** map publisher tests green (artifact + no secrets + conflict)  
+- [ ] **C7** map publisher tests green (artifact + no secrets + conflict) *(unit tests on MacIndexStore; expand)*  
 - [ ] **C8** reconcile — MAC index ≡ map; drift flagged; re-project clears  
-- [ ] Edge provision access/deny visible in edge logs (MAC → home)  
+- [x] Edge provision access/deny visible in edge logs (MAC → home)  
 - [ ] **C9** migrator parked or shipped later; B2 docs cover rare manual solo→fleet flip  
 
 ### Always
@@ -275,9 +275,9 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 |---|----------|-----------|
 | 1 / 4 / 8 | ~~Hostname / MAC index / port~~ | **Locked** — `provision.{apex}:41363` + §6 |
 | 6 | PHP lift vs rewrite | A1 spike (≤1 day) |
-| 3 | Map transport (static object from S3 preferred) | C3 |
+| 3 | ~~Map transport~~ | **Locked** — static nginx map artifact (#3) |
 | 10 | CA inventory results | Before claiming mTLS per brand |
-| 11 | Vendor common / no-MAC GETs at edge | C2 with A2 |
+| 11 | ~~Vendor common / no-MAC GETs~~ | **Locked** — edge 404 no-MAC (#11) |
 | Test harness | Test runner / layout in **pbx3** | A7 start |
 
 Track live list in requirements **§11**.
@@ -303,8 +303,8 @@ Track live list in requirements **§11**.
 ## 11. First concrete next step
 
 1. ~~Merge requirements + plan PR~~ · ~~Phase A1–A9 + A6 lab~~ · ~~B1 SPA/API~~  
-2. **Phase C entry:** freeze **#3** (map transport) + **#11** (common/no-MAC GETs) → implement **C3** MAC index → **C2** SBC nginx proxy.  
+2. **Phase C:** **#3/#11 frozen**; **C3+C2 lab-proven** on golden/SBC. Merge PRs → **B2** docs; **C7/C8**; tip api MAC claim hook.  
 3. Parallel: **B2** MkDocs RPS; **D1** CA inventory before claiming **C5** mTLS.  
-4. Lab recipe + operator `:41363` allow notes: **`PROVISIONING_LAB_RECIPE.md`**.
+4. Lab recipe + edge: **`PROVISIONING_LAB_RECIPE.md`** · **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`**.
 5. Parallel: **D1** CA inventory in ops `devdocs`.  
-6. Phase **C** when scheduled (edge proxy + MAC index).
+6. Exit C when **C7+C8** green + move+next-provision soak.
