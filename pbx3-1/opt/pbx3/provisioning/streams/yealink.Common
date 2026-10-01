@@ -21,6 +21,17 @@ account.1.transport = 0
 account.1.srtp_encryption = 0
 security.trust_certificates = 0
 
+# Fleet NAT (FLEET_DESK_PHONE_NAT.md) — Yealink CFG enum is
+# 0=Disabled / 1=STUN / 2=Manual (no Auto in provision grammar).
+# STUN path is the portable grain (covers T31P + T-series).
+static.sip.nat_stun.enable = 1
+static.sip.nat_stun.server = stun.l.google.com
+static.sip.nat_stun.port = 3478
+account.1.nat.nat_traversal = 1
+account.1.nat.rport = 1
+account.1.nat.udp_update_enable = 1
+account.1.nat.udp_update_time = 30
+
 # Time Zone - set for your TZ
 local_time.time_zone = 0
 local_time.time_zone_name = United Kingdom(London) 

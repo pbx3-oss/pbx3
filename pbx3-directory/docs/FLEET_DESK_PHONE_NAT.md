@@ -28,9 +28,23 @@ Customer **provisioning scripts / RPS templates** for fleet must set desk NAT ex
 
 | Handset capability | Set |
 |--------------------|-----|
-| Has **NAT = Auto** | **Auto** (Network STUN panel may stay Off) |
+| Has **NAT = Auto** (some Yealink UI) | Prefer **Auto** in UI when soaking by hand; **CFG has no Auto** — Yealink `account.X.nat.nat_traversal` is **0=Disabled / 1=STUN / 2=Manual** (Admin Guide V86). Product streams use the **STUN** path below. |
 | No Auto (STUN / Manual / Disabled only) | **STUN** + a real STUN server (e.g. `stun.l.google.com` port **3478**) |
 | **Disabled** | **Avoid on fleet** — even if audio sometimes works via RTP learning |
+
+### Yealink stream keys (vendor grain)
+
+Shipped in `yealink.Common`:
+
+```text
+static.sip.nat_stun.enable = 1
+static.sip.nat_stun.server = stun.l.google.com
+static.sip.nat_stun.port = 3478
+account.1.nat.nat_traversal = 1
+account.1.nat.rport = 1
+account.1.nat.udp_update_enable = 1
+account.1.nat.udp_update_time = 30
+```
 
 Softphones: treat each app’s “NAT / STUN / ICE” as the same class of setting; check off below when soaked.
 
