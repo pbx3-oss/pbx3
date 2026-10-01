@@ -127,7 +127,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 
 | ID | Exercise | Exit |
 |----|----------|------|
-| **D1** | **3pcerts / vendor CA inventory** for §0.2 brands | **Snom + Yealink CAs obtained (operator holds files, 2026-10-01)** — enough to unlock **C5** for those brands. Other brands: table obtainable / NDA / gap. No SPA 3pcerts panel yet (ops file bundle on edge). |
+| **D1** | **3pcerts / vendor CA inventory** for §0.2 brands | **Snom + Yealink:** operator holds CAs (2026-10-01). **Poly:** public PKI at [pki.polycom.com/pki](http://pki.polycom.com/pki) (Root + Equipment CAs — lab-fetched). **Grandstream / Gigaset:** device mTLS exists; CA via helpdesk/partner (not public). **Fanvil / Panasonic:** no public device-client CA found — HTTPS + map fallback. Research: **`~/GiT/pbx3-ops/devdocs/provisioning/VENDOR_CLIENT_CA_INVENTORY.md`**. |
 | **D2** | **Poly** Lens/ZTP post-HP path | In or out of interest for redirect |
 | **D3** | Grandstream / Fanvil / Gigaset stream + RPS notes | Second-wave vendors after Yealink/Snom |
 | **D4** | Snom online-UI docs workaround (screenshots / pinned export) | Authoring aid in ops `devdocs` if needed |
