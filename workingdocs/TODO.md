@@ -115,7 +115,7 @@
 
 - [ ] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 landed; Yealink+Snom lab green. **Next:** tenant rehome soak; **D1→C5** mTLS (Snom+Yealink CAs in hand). Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
 
-- [ ] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-01):** Operator holds **Snom + Yealink** vendor client CAs. Install as edge `ssl_client_certificate` bundle (ops path; SPA 3pcerts panel still won't-do until inventory expands). Prove optional/required client-cert on `provision.{apex}:41363` for those brands; document fallback when CA absent. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** §0.2 · plan **C5/D1** · edge **`PROVISION_EDGE_PROXY.md`**.
+- [ ] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-01):** **Snom + Yealink** CAs in hand; **Poly** public PKI available. GS/Gigaset = helpdesk; Fanvil/Panasonic = no public device CA. Research: **`~/GiT/pbx3-ops/devdocs/provisioning/VENDOR_CLIENT_CA_INVENTORY.md`**. Install ops bundle on edge; prove verify for brands with CA. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`** §0.2 · plan **C5/D1**.
 
 - [ ] **Singleton local install (#0m — 2026-09-08):** Local solo home (no fleet/SBC). Harness for solo S3/STT and existing-singleton first step. Rule 6 · try-it / lab home install docs.
 
