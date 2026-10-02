@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-02 (C5 mTLS lab green — Yealink SUCCESS; next = B3/B4/C10; #23b after provision build)  
+**Last updated:** 2026-10-02 (C5 mTLS + rehome green; B4/C10 designs; next = B3 then build B4/C10; #23b after provision build)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -12,7 +12,7 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate** — **A+B1+B2+C2/C3/C5/C7/C8** + **rehome soak** green (2026-10-02: `hf3zzv` golden→bzy; map follow + phones REGISTER/calls; source wipe done). **C5 lab green:** Yealink SUCCESS mTLS; `optional` live on SBC. Spec / plan / recipe / edge / MkDocs **`admin/phone-provisioning-rps`**. **Next:** B3/B4/C10/D3. **After provisioning build:** review **fleet move** docs + more soaks — see **#23b**.  
+0k. **Phone provisioning — reinstate** — **A+B1+B2+C2/C3/C5/C7/C8** + **rehome soak** green (2026-10-02: `hf3zzv` golden→bzy; map follow + phones REGISTER/calls; source wipe done). **C5 lab green:** Yealink SUCCESS mTLS; `optional` live on SBC. **B4** / **C10** designs locked. Spec / plan / recipe / edge / MkDocs **`admin/phone-provisioning-rps`**. **Next:** **B3**; build **B4**/ **C10**; D3. **After provisioning build:** review **fleet move** docs + more soaks — see **#23b**.
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
@@ -68,8 +68,8 @@
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
-23. **Provisioning — reinstate (instance-local)** — **A+B1+B2+C2/C3/C5/C7/C8** + rehome + **C5 mTLS lab green** (2026-10-02). **Next:** B3/B4/C10. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. MkDocs: **`admin/phone-provisioning-rps`**.  
-23b. **Fleet tenant moves — docs review + more soaks** — **after** provisioning build. Review MkDocs / **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** / Jobs wipe UX (dual-copy until **Wipe tenant on source**). Operator: run a few more moves to internalize implications. Not blocking provision.  
+23. **Provisioning — reinstate (instance-local)** — **A+B1+B2+C2/C3/C5/C7/C8** + rehome + **C5 mTLS lab green** (2026-10-02). **B4**/ **C10** designs locked. **Next:** B3; build B4/C10. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. MkDocs: **`admin/phone-provisioning-rps`**.  
+23b. **Fleet tenant moves — docs review + more soaks** — **after** provisioning build. Review MkDocs / **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** / Jobs wipe UX (dual-copy until **Wipe tenant on source**). Operator: run a few more moves to internalize implications. Not blocking provision.
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked) — companion **0h** trunk carrier-face stub.  
@@ -114,7 +114,11 @@
 
 - [x] **Fleet desk phone NAT / STUN (provisioning — 2026-10-01):** Yealink + Snom streams ship STUN; lab BYE green. Checklist: **`pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md`**. Other vendors still open.
 
-- [x] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 + rehome + **C5 mTLS lab green** (2026-10-02 Yealink SUCCESS). Later B3/B4/C10. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
+- [x] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 + rehome + **C5 mTLS lab green** (2026-10-02 Yealink SUCCESS). Later B3; build B4/C10. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
+
+- [ ] **Provision site fragments (B4 — designed 2026-10-01):** System vs Customer; tenant `provision_stream`; additive INCLUDE; loop/refcount/order/secret warns. Spec **§4.8** · **B4a–B4e**.
+
+- [ ] **Provision edge IP allowlist (C10 — accepted 2026-10-02):** Filament **Provision access**; UFW allowlist on `:41363` only (not full FW); default off; complements mTLS. Spec **`pbx3-directory/docs/SBC_PROVISION_ACCESS_REQUIREMENTS.md`**.
 
 - [ ] **Fleet tenant moves — docs review + more soaks (#23b — after provision build):** Not now. Review fleet-move docs (MkDocs + mobility design + Jobs **Wipe tenant on source** / dual-copy gate). Operator will run a few more moves to understand implications once provisioning build is finished.
 

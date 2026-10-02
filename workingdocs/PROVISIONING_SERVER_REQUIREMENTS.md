@@ -5,6 +5,7 @@
 **v1 direction:** **instance-local** HTTPS phone provisioner on each home (**41363**) first. Fleet edge = **SBC-colocated** nginx reverse **proxy** later (§0); map from **catalog MAC index** only (no secrets). Still **no** third-party certs SPA panel.  
 **Discovery (locked 2026-09-29):** **Vendor / reseller redirect (RPS)** is the **primary** way phones find the provision URL in cloud deployments. DHCP opt66/114 and PnP multicast are **secondary** (on-prem / lab). See **§0.2**.  
 **2026-08-25:** Instance **Device** template table / API / SPA **purged** (TODO #28). Extension `ipphone.device` remains a **vendor label** (e.g. Snom / Yealink), not a per-SKU catalogue. See **§4.4** — do **not** revive a per-model Device matrix.  
+**2026-10-01:** Site fragment design locked (**§4.8** / **B4a–B4e**) — **System** (package RO) vs **Customer** (tenant `provision_stream`); additive INCLUDE + last-wins where vendors allow; flexible for XML/oddballs; loop detect; secret `$` + hardcoded warn; refcount/order soft-warns. Not Device revival.  
 **2026-09-30:** Prior-PBX lesson locked — vendors share one provision stream per manufacturer (rare exceptions); old per-model names were kept only as legacy aliases for existing customers.  
 **2026-09-30 (TLS / topology):** Rejected fleet **HTTP redirect** edge (phones must not learn home URLs — forward-compat with **topology hiding**). Locked phone-facing name **`provision.{apex}`**; route by **MAC**; edge terminates HTTPS; **edge→home = HTTP** with home firewall locked to **SBC(s)**. See **§0**, **§0.3**, **§8**.  
 **2026-09-30 (MAC index):** **MAC is canon** for handset identity; **tenant** and **instance** are FKs on a fleet catalog MAC index (routing only — no secrets). Solo→fleet RPS flip = rare; migrator parked. Default provision **port 41363** (prior art). See **§6**.  
@@ -304,8 +305,9 @@ That is the whole engine for v1. No expression language, no per-model matrix, no
 |--------|--|
 | **Prior practice** | Fancy BLF-from-DB / UI **rarely used** in the field |
 | **v1** | **Do not** build `IPphone_FKEY` expand, `$fkey` injection, or a softkey SPA |
-| **Escape hatch** | If a site truly needs keys, **hand-code** lines into the vendor template / per-tenant overlay — good enough until a customer asks for UI |
-| **Revisit** | Only when someone explicitly wants managed BLF provisioning |
+| **Escape hatch (today)** | Hand-code BLF / role lines into the extension **Provision stream**, or drop a shared fragment file and `#INCLUDE` it — do **not** rely on `*.Fkey` names (kernel skips those) |
+| **Customer tool (planned)** | **Site fragments** SPA/API (**§4.8** / **B4**) — tenant-owned; stock then `#INCLUDE site.…` (additive last-wins); no stock-file replacement |
+| **Revisit softkey UI** | Only when someone explicitly wants managed BLF-from-DB / fkey SPA |
 
 Asterisk/PJSIP subscribe / named pickup groups remain separate from this HTTP stream builder.
 
@@ -363,6 +365,140 @@ Often the **first** question in a desk-phone incident: “did this MAC ever get 
 | **SPA** | Show **Last provisioned** on extension detail early (Phase **B** lean — high value for support). Sort/filter later |
 | **Timezone** | Store UTC; display per site TZ policy |
 
+### 4.8 Site fragments — customer CRUD + stock visibility (designed 2026-10-01)
+
+**Problem:** Package streams cover vendor grain. Operators still need **bespoke** bodies (receptionist BLF keys, a few re-asserted parameters, site LDAP lines, …) shared across **several** phones without copy/paste into every extension’s Provision stream. They also need to **see** shipped streams (learning / support) without editing the package tree. Customer work must **survive** `apt` upgrade and reinstall of pbx3.
+
+**SARK naming (product language):** **System** = package-shipped fragments (read-only). **Customer** = tenant DB fragments (CRUD). Same split as prior art “system vs customer supplied” — package may replace System freely; Customer rows persist.
+
+**Customize model (locked):** **Additive `#INCLUDE` + last assertion wins** on vendors that behave that way.
+
+1. Engine **concatenates** fragment bodies in INCLUDE order (same as today).  
+2. **Common case** (Yealink, Snom line profiles, many others): handset keeps the **last** value for a given parameter.  
+3. Authoring: `#INCLUDE` System first, then `#INCLUDE` Customer (`site.…`) with **only** the keys / BLF lines to add or change.  
+4. System files keep receiving package upgrades; Customer lines that re-assert a key still win **after** the System block.  
+
+**Vendor flexibility:** Last-wins is **not** universal. Closed XML (Poly; possibly future Snom) and oddballs (e.g. Fanvil sequencing rules — may be rewritten by the vendor) can require different authoring (whole-stanza blocks, order constraints). The **engine stays dumb concatenate + INCLUDE**; flexibility is in **stock authoring**, MkDocs per-vendor notes, and Customer body content — do **not** bake Yealink last-wins into the kernel. Revisit if a vendor forces engine-level helpers.
+
+This is **not** GenAst/PJSIP key-merge, and **not** replacing a System file under the same name (mutes upgrades — **forbidden**).
+
+**UX analogue:** Asterisk-files style list (System RO + Customer editable) + tenant-scoped HoR like other miniDB rows.
+
+**Not Device (#28):** Thin **name + body** per tenant. No `technology` / `sipiaxfriend` / BLF machinery / create-time Device FK / per-SKU seed.
+
+**Not in scope:** Softkey UI / `$fkey` expand (§4.5). Editing System package files. Same-name **replacement** of System.
+
+#### 4.8.1 Product stance (locked)
+
+| Stance | |
+|--------|--|
+| **Customize** | Additive INCLUDE stack; **last-wins where the vendor does**; stay flexible for XML / sequencing oddballs |
+| **Ownership** | **Tenant-owned Customer** rows — travel with miniDB / export / rehome |
+| **Product surface** | SPA **Provision streams** (tenant context): **System** (RO) + **Customer** (this tenant) |
+| **Who** | Instance admin (tenant-scoped UI); not end-user |
+| **System** | `/opt/pbx3/provisioning/streams/` — visible read-only. Never write from SPA/API. Package upgrade replaces these |
+| **Customer HoR** | Table **`provision_stream`** with **`cluster`** (§4.8.2). Package upgrade must not drop rows |
+| **Survive upgrade / reinstall** | Customer in DB; instance backup + **tenant export**. System comes back from package |
+| **Resolve `#INCLUDE name`** | For the extension’s **cluster**: Customer row `(cluster, name)` → else System file → else **miss** (§4.8.3) |
+| **No System replacement** | Customer `pkey` must **not** equal any System filename |
+| **Copy from System** | Learning aid → new Customer name (default `site.<name>`); trim to needed lines |
+| **INCLUDE order** | Soft-warn if a Customer/`site.*` INCLUDE appears **before** the first System INCLUDE on extension save (operators can still make a mess) |
+| **Loop detect** | Keep kernel loop detector (SARK parity) — already in `ProvisionKernel`; nested INCLUDE must not recurse forever |
+| **Per-extension** | `ipphone.provision` = INCLUDE stack (+ rare one-offs). Shared bodies = Customer fragments |
+| **Naming** | Prefer `site.*`. Reject `*.Fkey` / `*.Lkey` / `*.Pkey`. Reject System-name collision |
+| **Secrets in body** | Prefer **`$…` symbolics** gated by `sndcreds`. Soft-warn on save if a line looks like a hardcoded secret (`secret=` / `password=` / … with a non-`$` value). **No** hard block — this is system software; intentional subversion (like hardcoding a passkey in a script) is not a solvable product problem. Expand-time `sndcreds` filter unchanged for known tokens |
+| **Audit** | Miss / refcount (§4.8.3); change-author later optional |
+
+#### 4.8.2 Schema (tenant table)
+
+Same physical `sqlite.db`; logical **tenant** table; included in **`backupClusters.php` / tenant export**.
+
+```sql
+CREATE TABLE IF NOT EXISTS provision_stream (
+  id TEXT PRIMARY KEY,               -- ksuid
+  shortuid TEXT UNIQUE,
+  pkey TEXT NOT NULL,                -- INCLUDE name, e.g. site.ReceptionBLF
+  cluster TEXT NOT NULL DEFAULT 'default',
+  body TEXT NOT NULL DEFAULT '',
+  notes TEXT,
+  updated_at TEXT,
+  UNIQUE(cluster, pkey)
+);
+```
+
+| Rule | |
+|------|--|
+| **Scope** | Cluster C only when SPA/API is in tenant C |
+| **pkey** | INCLUDE charset; max **128**; **must not** match a System filename |
+| **body** | Max **64 KiB**; empty → SPA confirm |
+| **No seed** | Empty; System = files |
+| **Apply (B4a)** | `sqlite_create_tenant.sql` + **mandatory** apply/postinst for existing DBs (same class as other schema adds). System vs Customer split does not remove the need to create the table once |
+| **Export/move** | Add `provision_stream` to miniDB table list |
+
+#### 4.8.3 Kernel resolve + miss behaviour
+
+1. `*.Fkey` / `*.Lkey` / `*.Pkey` → skip.  
+2. Customer `SELECT … WHERE cluster=? AND pkey=?` → expand (**loop detector** on INCLUDE names — SARK parity).  
+3. Else System file → expand.  
+4. Else **miss**: omit lines + audit `include_miss=<name>`; do **not** 404 whole GET.
+
+**Hardenings (B4):**
+
+| When | Behaviour |
+|------|-----------|
+| **DELETE Customer** | Refcount on `#INCLUDE <name>` in that cluster’s `ipphone.provision` → **409** unless `?force=1` (SPA confirm) |
+| **Extension save** | Warn on unresolved INCLUDE; warn if Customer/`site.*` INCLUDE precedes first System INCLUDE |
+| **Customer save** | Warn on likely hardcoded secret lines (§4.8.1) |
+| **Provision GET miss** | Audit only |
+
+#### 4.8.4 API (pbx3api)
+
+Tenant-scoped. Sanctum instance admin.
+
+| Method | Path | Behaviour |
+|--------|------|-----------|
+| `GET` | `/provision-streams?cluster=` | System files + this cluster’s Customer rows. `source`: `system` \| `customer`; `refcount?`. No bodies in list |
+| `GET` | `/provision-streams/{name}?cluster=` | Body + metadata. System = RO |
+| `POST` | `/provision-streams` | Create Customer. **409** if exists or name collides with System; **422** if `*.Fkey` etc. |
+| `PUT` | `/provision-streams/{name}?cluster=` | Update Customer; secret-line warnings in response |
+| `DELETE` | `/provision-streams/{name}?cluster=` | Refcount guard; `force=1` allowed with confirm |
+| `POST` | `/provision-streams/copy-from-stock` | `{ cluster, from, to }` — System → new Customer name (path name may stay `copy-from-stock` or become `copy-from-system`) |
+
+#### 4.8.5 SPA (pbx3spa)
+
+| View | |
+|------|--|
+| **List** | Name, Source (**System** / **Customer**), Updated, Refcount. **New customer fragment** |
+| **System detail** | RO body; **Copy to customer…** |
+| **Customer detail** | Edit; Save; Delete+refcount; empty confirm; show secret-line warnings |
+| **Nav** | Tenant — **Provision streams** |
+| **Extension** | Help: System INCLUDEs first, then Customer `site.…`; order / miss / secret soft-warns |
+
+#### 4.8.6 Example (receptionist / last-wins)
+
+```text
+#INCLUDE snom.Extension
+#INCLUDE snom.udp
+#INCLUDE site.ReceptionBLF
+```
+
+Customer fragment holds only lines to add/change. Where the vendor is last-wins, later assertions win. Tenant export carries the Customer row; package upgrades refresh System `snom.Extension`.
+
+#### 4.8.7 Acceptance (B4 exit)
+
+- [ ] Customer rows survive package upgrade; System files may change freely  
+- [ ] Tenant miniDB / export includes `provision_stream`  
+- [ ] Resolve: Customer → System → miss; loop detector prevents INCLUDE cycles  
+- [ ] POST/copy rejected when name equals a System filename  
+- [ ] DELETE blocked without force when refcount > 0  
+- [ ] Extension save warns: miss INCLUDE; Customer-before-System order  
+- [ ] Customer save warns on hardcoded secret-looking lines; `$` symbolics preferred  
+- [ ] Empty body confirmed; apply script creates table  
+- [ ] No Device revival; no System same-name replacement  
+- [ ] Docs note vendor flexibility (XML / Fanvil sequencing) — engine stays concatenate  
+
+**Schedule:** **B4a–B4e** after rehome soak / C5 as capacity allows; does **not** block Phase C exit.
+
 ---
 
 ## 5. Inputs (home)
@@ -371,7 +507,7 @@ Often the **first** question in a desk-phone incident: “did this MAC ever get 
 |-------|--------|------|
 | Extension + MAC + secret + vendor label | `ipphone` | Authored on instance; **HoR for secrets**. No Device table |
 | last_provisioned_at (first optional) | `ipphone` | Updated on successful provision GET (§4.7); investigation first stop |
-| BLF / line keys | — | **Not in v1 stream** (§4.5); optional hand-edit in template |
+| BLF / line keys | — | **Not DB-expand in v1** (§4.5); additive site fragment `#INCLUDE` after stock (**§4.8**) or inline one-off in extension stream |
 | SIP host policy | Fleet: **`$sipdomain` = tenant FQDN**, **`$outbound` = SBC**; solo: domain/IP, proxy off. Not home public IP as phone next-hop in fleet | Matches W1 / desk REGISTER |
 | OUI → vendor | `manuf.txt` helper | Create-time UI; not every GET |
 
@@ -438,12 +574,12 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener **inclu
 - SIP proxy, RTP, registrar on the provision proxy
 - Browser holding ops IAM
 - Requiring provisioner for **calls** once phones are configured
-- BLF / softkey **UI or DB expand** in the provision stream (§4.5) — hand-edit template until demanded  
+- BLF / softkey **UI or DB expand** in the provision stream (§4.5) — hand-edit or **site fragment** `#INCLUDE` (§4.8) until softkey SPA demanded  
 - Full vendor **config** matrix day one — subset of §0.2 interest list; expand streams iteratively  
 - **Replacing** vendor/reseller **redirect / RPS** with an in-house discovery product
 - Fleet edge as **HTTP 3xx redirect to home** (phones must not learn home URLs — **§0.3**)
 - DHCP **server** as a product — document opt66 as secondary; optional lab helper later
-- Reviving a **per-model Device catalogue** (#28 / §4.4) — vendor-grain streams only  
+- Reviving a **per-model Device catalogue** (#28 / §4.4) — vendor-grain streams only; **site fragments (§4.8) are not a Device revival**  
 - No Device template table reintroduced as an operator-edited matrix
 - Tenant FQDN / wildcard as the **phone-facing provision Host** (rejected — **§0.3**)
 
@@ -455,7 +591,8 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener **inclu
 |-------|--------|
 | **MAC as locator** | MAC selects the extension row; it is **not** the sole authZ for remote/fleet |
 | **Vendor client certs (primary remote harden)** | **Locked intent:** edge provision vhost uses **TLS client auth** against a **vendor CA bundle** (SARK `3pcerts` model — `SSLVerifyClient require` + concatenated manufacturer CAs). Request must present a cert chaining to an allowed phone vendor. **Not a panacea** (proves vendor/type family, not a specific MAC identity). Prior art: previous PBX `sark-prov-ssl` / port **41363** |
-| **CA availability (research)** | Vendors often **claim** CAs are freely available; **practice is nuanced** (NDAs, partner portals, regional packs, silent changes). **In hand (ops `3pcerts.pem` + Poly public PKI):** Yealink, Snom, Panasonic, Fanvil, Poly. **Near-term mTLS prove:** **Snom + Yealink** only (**D1→C5**). **Grandstream / Gigaset** CAs still open for *public-edge* mTLS later — not a lab blocker. Public-facing provision edge without vendor client-cert verify is a hard sell (MAC-only GETs); mTLS remains the primary remote harden for cloud RPS |
+| **Site IP allowlist (optional perimeter)** | **Designed 2026-10-02:** Filament **System → Provision access** — optional UFW lockdown on edge **`:41363` only** (sibling polish to Management access :443). Default **off**. Complements mTLS; does not replace it. Spec: **`pbx3-directory/docs/SBC_PROVISION_ACCESS_REQUIREMENTS.md`**. v1 = edge-global CIDRs (not per-tenant) |
+| **CA availability (research)** | Vendors often **claim** CAs are freely available; **practice is nuanced** (NDAs, partner portals, regional packs, silent changes). **In hand (ops `3pcerts.pem` + Poly public PKI):** Yealink, Snom, Panasonic, Fanvil, Poly. **Lab mTLS green:** **Snom + Yealink** (**C5**). **Grandstream / Gigaset** CAs still open for *public-edge* mTLS later — not a lab blocker. Public-facing provision edge without vendor client-cert verify is a hard sell (MAC-only GETs); mTLS remains the primary remote harden for cloud RPS |
 | **Where certs live** | Bundle on the **SBC edge** (with the provision nginx). Ops-managed file/artifact for v1 — **no** SPA “third-party certs panel” required to ship (panel remains won't-do / later; may revisit after CA inventory) |
 | **Lab / LAN** | Open or weaker GET by MAC acceptable on private nets; do not use as the cloud default story. **Brands without lab mTLS:** operator may **manually enter** the provision server URL on the phone (fleet `https://provision.{apex}:41363/…` or solo instance URL) to soak streams/REGISTER — does not claim mTLS for that brand. Remote without a vendor CA → Once + network controls rather than pretend mTLS |
 | **HTTPS (phone-facing)** | Required off-lab. **Fleet:** edge terminates HTTPS on **`provision.{apex}`**. **Solo / direct:** home listener HTTPS on instance FQDN |
@@ -465,7 +602,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener **inclu
 | **Cross-tenant** | MAC must select exactly one home/tenant; never serve another cluster’s MAC |
 | **Audit trail** | **§4.7** — dedicated provision log including **obfuscated** rendered stream; Apache alone is insufficient |
 
-**Note:** Vendor client-cert check mitigates “anyone who knows a MAC can GET config.” It does **not** replace `sndcreds`, fail-closed routing, or keeping `SIP_AUTH` off S3.
+**Note:** Vendor client-cert check mitigates “anyone who knows a MAC can GET config.” It does **not** replace `sndcreds`, fail-closed routing, keeping `SIP_AUTH` off S3, or an optional **site IP allowlist** on edge `:41363` (**`SBC_PROVISION_ACCESS_REQUIREMENTS.md`**).
 
 ---
 
@@ -476,7 +613,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener **inclu
 | **Extension provisioning (SPA/API)** | Authors `ipphone` + Commit → PJSIP on **home** |
 | **This track** | Delivers **phone config** over HTTPS to the phone; RPS points here; edge **proxy** routes; home renders |
 | **Fleet DNS / LE §0** | SIP: no tenant A→home. Provision: **`provision.{apex}`** A→**edge VIP** only — **no** tenant A for provision (**§0.3**); update TLS §0 when shipping |
-| **SBC** | Runtime SIP; same VIP family as provision edge |
+| **SBC** | Runtime SIP; same VIP family as provision edge; optional **Provision access** allowlist on `:41363` |
 | **Tenant move** | Catalog + SBC setid + **proxy map** (fleet polish) **or** **RPS re-point** to new home URL (fleet v1 without proxy) |
 | **Vendor / reseller RPS** | **Discovery** (and optional full M1 config); not our secret HoR |
 
@@ -488,10 +625,11 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener **inclu
 |-------|-------------|--------|
 | Home listener | **pbx3** / **pbx3api** (or small co-located PHP) | Lift previous PBX `device.php` behaviour; MAC expand; HTTPS solo / HTTP behind proxy |
 | Edge proxy | **SBC host** — sibling nginx (locked 2026-09-30) | **`provision.{apex}`**; MAC map; HTTP `proxy_pass`; mirror with SBC HA; **not** in SIP/OpenSIPS path |
+| Provision IP allowlist | **pbx3sbc-admin** Filament + UFW | Optional lockdown `:41363` — **`SBC_PROVISION_ACCESS_REQUIREMENTS.md`** (C10) |
 | Map refresh | Gatekeeper / move + MAC assign hooks | Projects **MAC index** → edge map; same events as setid when moving |
 | RPS enrollment | Ops docs first; APIs later | MAC → provision URL; re-point on move if no proxy; migrator parked (**C9**) |
-| Expand inputs | Extension + vendor stream | INCLUDE + substitute only; **no** fkey/BLF expand (§4.5) |
-| SPA | Later | Show provision URL + Last provisioned + **Reset Once** (+ regen → Once) |
+| Expand inputs | Extension + stock files + **tenant `provision_stream` (§4.8)** | Concatenate INCLUDE; site by cluster then stock; additive last-wins on phone; **no** fkey expand |
+| SPA | Later | B1 Last provisioned / Reset; **B4** tenant Provision streams (§4.8.5) |
 | TLS §0 note | **`TLS_AND_CERTIFICATES.md`** | Document **`provision.{apex}`** → edge VIP (not tenant A) |
 
 ---
@@ -510,6 +648,8 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener **inclu
 9. **Poly discovery** — Confirm whether desk phones still expose a simple MAC→URL redirect usable by us, or only via Poly Lens / partner SKUs after HP.  
 10. **Vendor CA / 3pcerts inventory** — **Enough for Snom/Yealink C5 (2026-10-02):** tip ops pack now. Pack/Poly also cover Panasonic/Fanvil/Poly. **GS/Gigaset:** not blocking lab (manual provision URL on phone). Still gates *public-edge* mTLS for those brands vs Once + network controls.  
 11. ~~**Vendor common / no-MAC GETs at edge**~~ — **Locked 2026-09-30:** Edge **404** when the URI has no routable MAC (`y000000*.cfg`, bare paths, ignore-list). Home still serves Yealink common for **solo/lab**. Fleet phones get common via MAC stream **`#INCLUDE yealink.Common`** (already in the Yealink grain) — do not pick a home for no-MAC GETs.
+12. ~~**Site fragment store / design**~~ — **Locked 2026-10-01 (§4.8):** System vs Customer; tenant `provision_stream`; additive INCLUDE; vendor flexibility; loop/refcount/order/secret warns. Not Device revival.
+13. ~~**Provision edge IP allowlist**~~ — **Accepted 2026-10-02:** **`SBC_PROVISION_ACCESS_REQUIREMENTS.md`**. Build as **C10** (allowlist on `:41363` only; sibling to Management access).
 
 ---
 
@@ -526,4 +666,5 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener **inclu
 - Instance Commit still owns Asterisk; provisioner does not write PJSIP.  
 - Secret only read from home `ipphone` at render time.  
 - No per-SKU Device matrix; vendor-grain streams only (§4.4).  
-- Stream builder = INCLUDE + substitute; no BLF/fkey expand (§4.5).
+- Stream builder = INCLUDE + substitute; no BLF/fkey expand (§4.5).  
+- Site fragments (**§4.8** / **B4**): tenant-owned; additive last-wins; stock RO; refcount + miss audit.

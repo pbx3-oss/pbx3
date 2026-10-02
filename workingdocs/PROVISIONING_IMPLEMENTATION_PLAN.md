@@ -1,8 +1,8 @@
 # Phone provisioning — implementation plan
 
-**Status:** Phase **A** + **B1** + **B2** + **C2/C3/C5/C7/C8** on tip/`main` path; **rehome soak** green (**2026-10-02**). **#3/#11 frozen**. **C5 lab green:** edge `PROVISION_MTLS=optional` + Snom/Yealink CA PEM; Yealink T31P **SUCCESS** client-cert + **200**; bare curl **NONE**/200 under optional, **400** under `require`. Snom 401 reboot GET **200** (pre-verify log). **Other brands (lab):** manual provision URL on phone.  
+**Status:** Phase **A** + **B1** + **B2** + **C2/C3/C5/C7/C8** on `main`; **rehome soak** green (**2026-10-02**). **#3/#11 frozen**. **C5 lab green:** edge `PROVISION_MTLS=optional` + Snom/Yealink CA PEM; Yealink T31P **SUCCESS**+**200**; bare curl **NONE**/200 under optional, **400** under `require`. **B4** site-fragment + **C10** Provision access designs locked (spec §4.8 · **`SBC_PROVISION_ACCESS_REQUIREMENTS.md`**). **Next:** **B3**; build **B4** / **C10**. Other brands (lab): manual provision URL.  
 **Requirements (law):** **`PROVISIONING_SERVER_REQUIREMENTS.md`**  
-**TODO:** **#23 / 0k** · related **#28** (Device purge — stands)  
+**TODO:** **#23 / 0k** · related **#28** (Device purge — stands) · **B4** site fragments · **C10**  
 **Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · lab **`PROVISIONING_LAB_RECIPE.md`** · edge **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`** · MkDocs **`pbx3-docs/docs/admin/phone-provisioning-rps.md`**
 
 ---
@@ -29,11 +29,13 @@ Serve vendor desk-phone config over HTTPS from the **home** (secrets stay on `ip
 | Solo→fleet RPS | Rare; docs/manual v1; **C9** migrator parked |
 | Secrets | Home `ipphone` only; never on MAC index / S3 |
 | Builder | **INCLUDE + parameter substitute**; vendor-grain streams; **no BLF/fkey UI/expand** |
-| mTLS | Edge vendor-client CA verify; **near-term prove Snom + Yealink only** (D1→C5). Other brands: lab OK via **manual provision URL** on phone; public mTLS for those brands waits on CAs |
+| Site fragments | **B4** / §4.8 — System vs Customer; additive INCLUDE; tenant miniDB |
+| mTLS | Edge vendor-client CA verify; **lab green Snom + Yealink** (C5). Other brands: lab OK via **manual provision URL**; public mTLS waits on CAs |
+| Provision access | **C10** — optional UFW lockdown on edge `:41363` (Filament sibling to Management access); default off |
 | Once | Prefer Once; restore flip; **Reset Once** server-side (B1) + on password regen |
 | Device table | **No** per-SKU Device matrix (#28) |
 
-Full detail: requirements §§0–0.3, §4.3–4.6, §6, §8.
+Full detail: requirements §§0–0.3, §4.3–4.8, §6, §8.
 
 ---
 
@@ -93,6 +95,12 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 | **B1** | SPA: show provision URL + **Last provisioned**; **Reset provision state** (set Once) — also on **password regen**; **Provision stream** textarea | **pbx3spa** / **pbx3api** — **on `main`** (lab-proven) |
 | **B2** | Docs: RPS enroll (Yealink, Snom); Gigaset MAC+PIN; solo→fleet “change RPS target once” (migrator = **C9**) | **pbx3-docs** |
 | **B3** | M1 coexistence one-pager: “reseller delivers full config” supported without our HTTP | **pbx3-docs** |
+| **B4** | **Site fragment CRUD** — design **§4.8**; sub-slices below | **pbx3** / **pbx3api** / **pbx3spa** |
+| **B4a** | Schema `provision_stream` (tenant, `UNIQUE(cluster,pkey)`) + apply script; add to **`backupClusters.php`** / tenant export list | **pbx3** |
+| **B4b** | Kernel: resolve `(cluster,name)` site → stock; audit `include_miss`; tests | **pbx3** |
+| **B4c** | API tenant-scoped CRUD + copy-from-stock; reject stock-name collision; DELETE refcount | **pbx3api** |
+| **B4d** | SPA Provision streams (tenant); stock RO; empty/delete confirms | **pbx3spa** |
+| **B4e** | Extension help + MkDocs: System/Customer, last-wins + vendor flexibility, `$` secrets | **pbx3spa** / **pbx3-docs** |
 
 ### Phase C — Fleet edge proxy
 
@@ -117,6 +125,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 | **C4** | Mirror map on SBC HA pair; version/health optional | **pbx3sbc** |
 | **C5** | ~~Vendor client-cert verify~~ — **lab green 2026-10-02:** ops CA PEM + `PROVISION_MTLS=optional` (lab) / `require`→`on` (harden). Yealink SUCCESS; bare curl NONE vs 400 | **pbx3sbc** + ops CA bundle |
 | **C6** | TLS §0 cross-link: **`provision.{apex}`** A→edge VIP (not tenant A) | **`TLS_AND_CERTIFICATES.md`** — present; amend mTLS note |
+| **C10** | **Provision access** — optional UFW lockdown on edge `:41363` (Filament sibling to Management access). Spec **`SBC_PROVISION_ACCESS_REQUIREMENTS.md`**. Default off; complements mTLS | **pbx3sbc-admin** / **pbx3sbc** |
 | **C7** | **Automated tests** for MAC index → map publisher (+ no secrets) — **required to exit C** (§7) | gatekeeper / edge tooling |
 | **C8** | **Reconcile / sweeper** — extend catalog≡SBC: **MAC index ≡ provision map** (+ setid family; spot-check home `ipphone.mac`). Flag drift; re-project. **Required to exit C** | **pbx3-directory** / existing reconcile job |
 | **C9** | **Parked:** solo→fleet **RPS migrator** (bulk retarget instance URLs → `provision.{apex}`) + checklist — not required to exit C; docs cover rare manual flip (**B2**) | gatekeeper / ops tools later |
@@ -250,6 +259,8 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 - [x] **Reset Once** works; **password regen** resets to Once  
 - [x] **B2** RPS / solo→fleet docs — **`pbx3-docs/docs/admin/phone-provisioning-rps.md`**  
 - [ ] **B3** M1 coexistence one-pager  
+- [ ] **B4** Site fragments (§4.8) — tenant `provision_stream`; additive last-wins; no stock replacement; refcount/miss; miniDB  
+- [ ] **B4a–B4e** per plan table  
 
 ### Phase C
 - [x] RPS → **`provision.{apex}:41363`**; MAC index → map → current home *(lab: provision.pbx3.com LE; Yealink 402 + Snom 401)*  
@@ -260,6 +271,7 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 - [ ] Existing registrations survive proxy/home provision outage  
 - [x] **C5** mTLS — **lab green 2026-10-02:** tip ops Snom+Yealink PEM; `optional` live; Yealink T31P **SUCCESS**+200; bare curl NONE/200 (`optional`) / **400** (`require`). Access log `provision_mtls` (`$ssl_client_verify`). Other brands: manual URL  
 - [x] **C6** TLS §0 note — `provision.{apex}` → edge VIP (see **`TLS_AND_CERTIFICATES.md`**; mTLS on edge)  
+- [ ] **C10** Provision access allowlist (design done — **`SBC_PROVISION_ACCESS_REQUIREMENTS.md`**)
 - [x] **C7** map publisher tests green (artifact + no secrets + conflict)  
 - [x] **C8** reconcile — MAC index ≡ map; drift flagged; re-project clears (`GET /mac-index/reconcile`; folded into `GET /reconcile`)  
 - [x] Edge provision access/deny visible in edge logs (MAC → home)  
@@ -303,7 +315,7 @@ Track live list in requirements **§11**.
 
 ## 11. First concrete next step
 
-1. ~~Merge requirements + plan PR~~ · ~~Phase A–B1~~ · ~~C2/C3~~ · ~~B2~~ · ~~C7/C8~~ · Yealink+Snom lab · ~~rehome soak~~ · ~~C5 mTLS lab~~  
-2. **Merge/PR:** `pbx3sbc` `feat/provision-c5-mtls` + `pbx3` `feat/provision-c5-docs` (ProVu scrub + locks).  
-3. **Other brands (lab):** manual provision URL on phone.  
-4. Later: **B3**; **B4** site fragments / **C10** provision IP allowlist (design on `docs/provision-site-fragment-crud`); **D3**; optional **C4** HA map mirror.
+1. ~~Merge requirements + plan PR~~ · ~~Phase A–B1~~ · ~~C2/C3~~ · ~~B2~~ · ~~C7/C8~~ · Yealink+Snom lab · ~~rehome soak~~ · ~~C5 mTLS lab~~ · ~~C5 PRs~~  
+2. **B3** M1 coexistence one-pager (pbx3-docs).  
+3. **Build:** **B4** site fragments (§4.8) and/or **C10** Provision access allowlist.  
+4. **Other brands (lab):** manual provision URL on phone. Later: **D3**; optional **C4** HA map mirror.
