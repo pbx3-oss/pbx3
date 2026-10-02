@@ -3,7 +3,7 @@
 **Status:** **Parked / as-and-when** (2026-10-02). Seed streams + lab recipe ready; **mule handset pending**. Not on the critical path for provision A–C10.  
 **Owns:** Fanvil stock streams, lab soak, NAT row, optional FDMCS/RPS notes.  
 **Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.4–§4.6 · plan **D3** · recipe **`PROVISIONING_LAB_RECIPE.md` §5**.  
-**Sibling later:** Gigaset (same D3 bucket; separate when started). **Grandstream:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**.
+**Siblings:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Gigaset (same D3 bucket; separate when started).
 
 ---
 

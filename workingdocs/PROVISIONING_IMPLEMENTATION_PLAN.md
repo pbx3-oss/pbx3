@@ -137,8 +137,8 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 | ID | Exercise | Exit |
 |----|----------|------|
 | **D1** | **3pcerts / vendor CA inventory** for §0.2 brands | **Enough for C5 now:** Snom + Yealink in ops-held `3pcerts.pem`. Pack also has Panasonic/Fanvil; Poly = public PKI. **GS/Gigaset CAs:** not blocking lab — use **manual provision URL** on those phones. Public-edge mTLS for GS/Gigaset still needs vendor CAs later. Research: **`~/GiT/pbx3-ops/devdocs/provisioning/VENDOR_CLIENT_CA_INVENTORY.md`**. |
-| **D2** | **Poly** Lens/ZTP post-HP path | In or out of interest for redirect |
-| **D3** | Grandstream / Fanvil / Gigaset stream + RPS notes | **Fanvil** + **Grandstream** = parked sub-projects: **`FANVIL_PROVISION_SUBPROJECT.md`** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. Fanvil seed streams on `main`; GS streams when mule arrives. Gigaset separate when started. Manual URL until RPS/mTLS |
+| **D2** | **Poly** Lens/ZTP post-HP path | **Sub-project (parked):** **`POLY_PROVISION_SUBPROJECT.md`**. Classic UCS CFG dialect assumed stable; discovery (Lens) still uncertain. Manual URL for lab |
+| **D3** | Grandstream / Fanvil / Gigaset / **Poly** stream + RPS notes | **Fanvil** · **Grandstream** · **Poly** parked sub-projects. Fanvil seed streams on `main`; GS/Poly streams when mule. Gigaset separate when started. Manual URL until RPS/mTLS; vendor-cloud-only OK where free |
 | **D4** | Snom online-UI docs workaround (screenshots / pinned export) | Authoring aid in ops `devdocs` if needed |
 
 ---

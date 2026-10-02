@@ -179,3 +179,24 @@ No stock streams yet — author when mule model + firmware template are known **
 - [ ] Provision GET **200** (path convention documented)
 - [ ] REGISTER via SBC; audio + BYE OK
 - [ ] (Later) GDMS enroll — out of scope for first mule
+
+---
+
+## 7. Poly mule soak (D2/D3 — parked)
+
+**Sub-project:** **`POLY_PROVISION_SUBPROJECT.md`**. Classic **UCS** layout assumed (`000000000000.cfg` + `site.cfg` / `sip-interop.cfg` + `{mac}-reg.cfg`). **Lens/ZTP** discovery still uncertain — lab = manual Provisioning Server. Assist-not-core; Lens end-to-end OK if free/easy.
+
+No `poly.*` streams yet — author when mule firmware/export is in hand. **Multi-file fetch** may need extra URL mapping vs Yealink `{mac}.cfg` — settle on first soak.
+
+### Resume (when handset arrives)
+
+1. Export or OEM guide for that UCS build; map `reg.1.*` + outbound/STUN to `$sipdomain` / `$outbound` / `$password`.
+2. Add streams; tip home; set Provisioning Server → our HTTPS base; reboot.
+3. REGISTER + NAT/BYE; fill NAT row; note Lens findings under **D2**.
+
+### Exit checks
+
+- [ ] Streams match export / UCS dialect
+- [ ] File/URL mapping documented
+- [ ] REGISTER via SBC; audio + BYE OK (or Lens-only path documented)
+- [ ] D2 discovery note updated

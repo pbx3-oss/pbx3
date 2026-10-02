@@ -3,7 +3,7 @@
 **Status:** **Parked / as-and-when** (2026-10-02). No stock streams yet; **mule handset pending**. Not on the critical path for provision A–C10.  
 **Owns:** Optional Grandstream stock streams (`gs_provision` / P-values), lab soak when using our listener, NAT row, GDMS posture docs. **Not** a mandate that GS sites use our provision server.  
 **Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.4–§4.6 · plan **D3** · recipe **`PROVISIONING_LAB_RECIPE.md` §6** (when filled).  
-**Siblings:** **`FANVIL_PROVISION_SUBPROJECT.md`** · Gigaset (same D3 bucket; separate when started).
+**Siblings:** **`FANVIL_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Gigaset (same D3 bucket; separate when started).
 
 **OEM guide:** [Grandstream SIP Device Provisioning Guide](https://www.grandstream.com/hubfs/Product_Documentation/gs_provisioning_guide.pdf) · P-value templates: [support/tools](https://www.grandstream.com/support/tools).
 
