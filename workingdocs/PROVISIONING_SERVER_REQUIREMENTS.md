@@ -13,6 +13,7 @@
 **Earlier (2026-08-10):** Preferred fleet shape was home-local listener + edge nginx provision proxy — deferred past instance-local v1.  
 **Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard.  
 **Reference notes:** private prior co-located provisioner / previous PBX archives (operator only — not in product tree).  
+**2026-10-02 (product role):** Provisioning is an **assist**, **not core**. Call plane (REGISTER / media) works without it; vendor clouds (e.g. free **GDMS**) may own CFG end-to-end. Our listener/edge is a convenience for desk enrollment + fleet MAC mobility — never a required product spine. See **§1** / **§2**.  
 **Related:** **`PROVISIONING_IMPLEMENTATION_PLAN.md`** · **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · **`UFW_SHOREWALL_MIGRATION.md` §3** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23 / #28 / **0k**.
 
 ---
@@ -181,7 +182,9 @@ Phone power-up
 
 ## 1. One-line purpose
 
-Serve vendor phone config files keyed by **MAC** (and vendor “common” descriptors), embedding SIP identity and registrar/proxy so a desk phone can register without manual SIP setup — with phones **finding** that URL primarily via **vendor/reseller RPS**, and **fleet mobility** that does not require phone-side URL changes when RPS targets stable **`provision.{apex}`** (edge proxy) or when solo uses the instance URL.
+**Assist** desk phones into SIP identity (config HTTP keyed by MAC) so operators need less manual keypad work — **not** a core dependency of the PBX. Calls do not require our provision path once the phone has SIP credentials (from us, a vendor cloud, or hand entry).
+
+When used: serve vendor phone config files keyed by **MAC** (and vendor “common” descriptors), embedding SIP identity and registrar/proxy; phones **find** that URL primarily via **vendor/reseller RPS**, and **fleet mobility** does not require phone-side URL changes when RPS targets stable **`provision.{apex}`** (edge proxy) or when solo uses the instance URL.
 
 ---
 
@@ -189,14 +192,15 @@ Serve vendor phone config files keyed by **MAC** (and vendor “common” descri
 
 | Concern | Stance |
 |---------|--------|
+| **Role** | **Assist / optional** — key convenience for enrollment and rehome-without-RPS-edit; **not core** product. Do not block releases or fleet topology on provision completeness |
 | **What it is** | Home provision listener (HTTPS solo; HTTP behind fleet proxy) + optional **edge reverse-proxy** for fleet MAC routing |
-| **What it is not** | Not Asterisk; not Gatekeeper; not SBC call plane; not SPA; **not** a vendor-RPS replacement; **not** an HTTP redirect-to-home; **not** required for calls once phones are configured |
+| **What it is not** | Not Asterisk; not Gatekeeper; not SBC call plane; not SPA; **not** a vendor-RPS replacement; **not** an HTTP redirect-to-home; **not** required for calls once phones are configured; **not** mandatory vs free vendor CFG clouds (e.g. GDMS) |
 | **previous PBX lift** | Port behaviour from private archives / previous PBX `device.php` (MAC → expand → text). Polish auth, HTTPS (solo), multi-tenant pathing, sndcreds. **No** Device template table revival (#28) |
 | **Call plane** | Phones **register / media** via normal fleet SIP (SBC → instance). Provision is **config HTTP only** |
-| **Discovery** | **RPS primary** (§0.2); opt66 / PnP secondary |
+| **Discovery** | **RPS primary** (§0.2); opt66 / PnP secondary; vendor-cloud-only CFG OK |
 | **Directory / Rule 1** | Proxy routing may **read** catalog home facts (projection). Provision must not become a call-routing dependency. Proxy/home down → already-provisioned phones keep working |
 | **Rule 7** | Provision proxy is a **replaceable edge** sibling of the SBC (HTTP, not SIP). Prefer dumb nginx + map over a fat app on the edge |
-| **Compete?** | Thin MAC→config on the home; **do not** out-feature or replace vendor/reseller **redirect** |
+| **Compete?** | Thin MAC→config on the home when useful; **do not** out-feature or replace vendor/reseller **redirect** or free vendor management clouds |
 
 ---
 
