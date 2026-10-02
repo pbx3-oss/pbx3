@@ -12,7 +12,7 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate** — **A+B1+B2+C2/C3/C5/C7/C8** + **rehome soak** green (2026-10-02: `hf3zzv` golden→bzy; map follow + phones REGISTER/calls; source wipe done). **C5 lab green:** Yealink SUCCESS mTLS; `optional` live on SBC. **B4** / **C10** designs locked. Spec / plan / recipe / edge / MkDocs **`admin/phone-provisioning-rps`**. **Next:** **B3**; build **B4**/ **C10**; D3. **After provisioning build:** review **fleet move** docs + more soaks — see **#23b**.
+0k. **Phone provisioning — reinstate** — **A+B1+B2+C2/C3/C5/C7/C8** + **rehome soak** green (2026-10-02: `hf3zzv` golden→bzy; map follow + phones REGISTER/calls; source wipe done). **C5 lab green:** Yealink SUCCESS mTLS; `optional` live on SBC. **B4** / **C10** designs locked. Spec / plan / recipe / edge / MkDocs **`admin/phone-provisioning-rps`**. **Next:** build **B4**/ **C10**; D3. **B3** done — MkDocs **`admin/phone-provisioning-m1`**. **After provisioning build:** review **fleet move** docs + more soaks — see **#23b**.
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
@@ -68,7 +68,7 @@
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
-23. **Provisioning — reinstate (instance-local)** — **A+B1+B2+C2/C3/C5/C7/C8** + rehome + **C5 mTLS lab green** (2026-10-02). **B4**/ **C10** designs locked. **Next:** B3; build B4/C10. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. MkDocs: **`admin/phone-provisioning-rps`**.  
+23. **Provisioning — reinstate (instance-local)** — **A+B1+B2+C2/C3/C5/C7/C8** + rehome + **C5 mTLS lab green** (2026-10-02). **B4**/ **C10** designs locked. **Next:** build B4/C10. **B3** done. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. MkDocs: **`admin/phone-provisioning-rps`**.  
 23b. **Fleet tenant moves — docs review + more soaks** — **after** provisioning build. Review MkDocs / **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** / Jobs wipe UX (dual-copy until **Wipe tenant on source**). Operator: run a few more moves to internalize implications. Not blocking provision.
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
@@ -113,6 +113,8 @@
 - [ ] **SBC SIP TLS — hardphones (mid-term, locked 2026-08-25):** Not building today. Phone ↔ SBC **TLS :5061**; SBC ↔ home/carriers **UDP**; reuse edge LE for **`sbc.pbx3.com`** (outbound proxy); mix TLS desks + UDP Peers OK. Effort ~2–4 d lab / ~1 wk productize. Spec: **`SBC_PRODUCT_TRACKS.md`** gap **#1** · **`FLEET_TRUNK_PEERING_DECISION.md`** §6.2. Out of MVP: SDES SRTP, carrier mTLS, rtpengine.
 
 - [x] **Fleet desk phone NAT / STUN (provisioning — 2026-10-01):** Yealink + Snom streams ship STUN; lab BYE green. Checklist: **`pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md`**. Other vendors still open.
+
+- [x] **B3 M1 coexistence one-pager (2026-10-02):** MkDocs **`admin/phone-provisioning-m1`** — reseller/vendor full config without our HTTP.
 
 - [x] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 + rehome + **C5 mTLS lab green** (2026-10-02 Yealink SUCCESS). Later B3; build B4/C10. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
 
