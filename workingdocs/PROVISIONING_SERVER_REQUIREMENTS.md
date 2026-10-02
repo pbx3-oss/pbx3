@@ -105,7 +105,7 @@ Product interest set for discovery + eventual enrollment docs/APIs. **Not** a pr
 | Vendor | Platform | Notes |
 |--------|----------|-------|
 | **Yealink** | **RPS** (Redirection and Provisioning Service) | Widely used; free for SPs/enterprises; can tie into **YMCS** (Yealink Management Cloud Service) |
-| **Poly** (ex-Polycom) | **Poly Lens** / **ZTP** | **Uncertain (2026-09-29):** HP takeover left redirect / ZTP opaque — Lens vs legacy ZTP vs partner paths not bottomed out. Keep on interest list; **do not** schedule Poly-first automation or docs until verified. Research / lab spike only. |
+| **Poly** (ex-Polycom) | **Poly Lens** / **ZTP** | **Uncertain discovery (2026-09-29+):** HP takeover left redirect / ZTP opaque. **CFG dialect:** classic UCS XML still assumed for lab (**`POLY_PROVISION_SUBPROJECT.md`**). Manual Provisioning Server for mule. Do **not** schedule Lens automation until verified. If Lens is free/easy end-to-end, vendor-cloud-only OK (assist-not-core) |
 | **Grandstream** | **GDMS** + **GAPS** | **GDMS is free** — low barrier. Sites may enroll desks in GDMS and use **GDMS templates end-to-end** (never hit our provision listener). That **suits us**: no forced in-house provision for GS. Optional: GDMS/GAPS as **redirect only** → our `provision.{apex}` when we want home-rendered secrets / fleet MAC map. GAPS = Alignment and Provisioning System |
 | **Snom** | **SRAPS** | Europe-hosted secure redirect; GDPR-oriented; API for SP automation |
 | **Fanvil** | **FDMCS** | Free redirection / ZTP for desk, hotel, and intercom / door units |
