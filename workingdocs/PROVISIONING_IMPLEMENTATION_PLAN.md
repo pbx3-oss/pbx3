@@ -1,6 +1,6 @@
 # Phone provisioning — implementation plan
 
-**Status:** Phase **A** + **B1** + **B2** + **C2/C3/C5/C7/C8** on `main`; **rehome soak** green (**2026-10-02**). **#3/#11 frozen**. **C5 lab green:** edge `PROVISION_MTLS=optional` + Snom/Yealink CA PEM; Yealink T31P **SUCCESS**+**200**; bare curl **NONE**/200 under optional, **400** under `require`. **B4** site-fragment + **C10** Provision access designs locked (spec §4.8 · **`SBC_PROVISION_ACCESS_REQUIREMENTS.md`**). **Next:** build **B4** / **C10**. Other brands (lab): manual provision URL.  
+**Status:** Phase **A** + **B1** + **B2** + **C2/C3/C5/C7/C8** on `main`; **rehome soak** green (**2026-10-02**). **#3/#11 frozen**. **C5 lab green:** edge `PROVISION_MTLS=optional` + Snom/Yealink CA PEM; Yealink T31P **SUCCESS**+**200**; bare curl **NONE**/200 under optional, **400** under `require`. **B4** site-fragment + **C10** Provision access designs locked (spec §4.8 · **`SBC_PROVISION_ACCESS_REQUIREMENTS.md`**). **Next:** tip/roll **B4**; build **C10** when scheduled. Other brands (lab): manual provision URL.  
 **Requirements (law):** **`PROVISIONING_SERVER_REQUIREMENTS.md`**  
 **TODO:** **#23 / 0k** · related **#28** (Device purge — stands) · **B4** site fragments · **C10**  
 **Related:** **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · lab **`PROVISIONING_LAB_RECIPE.md`** · edge **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`** · MkDocs **`pbx3-docs/docs/admin/phone-provisioning-rps.md`**
@@ -259,8 +259,8 @@ A1 kernel → A7 tests skeleton (can start as soon as expand exists)
 - [x] **Reset Once** works; **password regen** resets to Once  
 - [x] **B2** RPS / solo→fleet docs — **`pbx3-docs/docs/admin/phone-provisioning-rps.md`**  
 - [x] **B3** M1 coexistence one-pager — MkDocs **`admin/phone-provisioning-m1`**  
-- [ ] **B4** Site fragments (§4.8) — tenant `provision_stream`; additive last-wins; no stock replacement; refcount/miss; miniDB  
-- [ ] **B4a–B4e** per plan table  
+- [x] **B4** Site fragments (§4.8) — tenant `provision_stream`; additive last-wins; no stock replacement; refcount/miss; miniDB  
+- [x] **B4a–B4e** per plan table  
 
 ### Phase C
 - [x] RPS → **`provision.{apex}:41363`**; MAC index → map → current home *(lab: provision.pbx3.com LE; Yealink 402 + Snom 401)*  
@@ -316,5 +316,5 @@ Track live list in requirements **§11**.
 ## 11. First concrete next step
 
 1. ~~Merge requirements + plan PR~~ · ~~Phase A–B1~~ · ~~C2/C3~~ · ~~B2~~ · ~~C7/C8~~ · Yealink+Snom lab · ~~rehome soak~~ · ~~C5 mTLS lab~~ · ~~C5 PRs~~  
-2. **Build:** **B4** site fragments (§4.8) and/or **C10** Provision access allowlist.  
+2. **Tip/roll B4** site fragments; then **C10** Provision access allowlist when scheduled.  
 3. **Other brands (lab):** manual provision URL on phone. Later: **D3**; optional **C4** HA map mirror.

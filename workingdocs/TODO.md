@@ -118,7 +118,7 @@
 
 - [x] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 + rehome + **C5 mTLS lab green** (2026-10-02 Yealink SUCCESS). Later B3; build B4/C10. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
 
-- [ ] **Provision site fragments (B4 — designed 2026-10-01):** System vs Customer; tenant `provision_stream`; additive INCLUDE; loop/refcount/order/secret warns. Spec **§4.8** · **B4a–B4e**.
+- [x] **Provision site fragments (B4 — 2026-10-02):** System vs Customer; tenant `provision_stream`; additive INCLUDE; loop/refcount/order/secret warns. Spec **§4.8** · API `/provision-streams` · SPA **Endpoints → Provision streams** · MkDocs **`admin/phone-provisioning-streams`**.
 
 - [ ] **Provision edge IP allowlist (C10 — accepted 2026-10-02):** Filament **Provision access**; UFW allowlist on `:41363` only (not full FW); default off; complements mTLS. Spec **`pbx3-directory/docs/SBC_PROVISION_ACCESS_REQUIREMENTS.md`**.
 
