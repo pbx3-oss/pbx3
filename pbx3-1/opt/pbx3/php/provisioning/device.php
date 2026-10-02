@@ -27,7 +27,8 @@ if (!is_readable($config)) {
 }
 
 if (!is_readable($config) || !is_readable($kernel)) {
-	fwrite(STDERR, "provision: missing config or ProvisionKernel under $optRoot\n");
+	// STDERR is undefined under php-fpm; php://stderr works in both CLI and FPM.
+	file_put_contents('php://stderr', "provision: missing config or ProvisionKernel under $optRoot\n");
 	exit(1);
 }
 
