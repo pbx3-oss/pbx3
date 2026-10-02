@@ -114,13 +114,7 @@
 
 - [x] **Fleet desk phone NAT / STUN (provisioning — 2026-10-01):** Yealink + Snom streams ship STUN; lab BYE green. Checklist: **`pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md`**. Other vendors still open.
 
-<<<<<<< HEAD
-- [x] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 + rehome + **C5 mTLS lab green** (2026-10-02 Yealink SUCCESS). Merge `feat/provision-c5-*` when ready. Later B3/B4/C10.
-=======
-- [ ] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 + **rehome soak** green (2026-10-02 `hf3zzv`→bzy). **Next:** finish build — **D1→C5** mTLS (Snom+Yealink CAs in hand); later B3/B4/C10. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
-
-- [ ] **Fleet tenant moves — docs review + more soaks (#23b — after provision build):** Not now. Review fleet-move docs (MkDocs + mobility design + Jobs **Wipe tenant on source** / dual-copy gate). Operator will run a few more moves to understand implications once provisioning build is finished.
->>>>>>> origin/main
+- [x] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 + rehome + **C5 mTLS lab green** (2026-10-02 Yealink SUCCESS). Later B3/B4/C10. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
 
 - [ ] **Fleet tenant moves — docs review + more soaks (#23b — after provision build):** Not now. Review fleet-move docs (MkDocs + mobility design + Jobs **Wipe tenant on source** / dual-copy gate). Operator will run a few more moves to understand implications once provisioning build is finished.
 
