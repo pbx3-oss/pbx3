@@ -120,7 +120,7 @@
 
 - [x] **Provision site fragments (B4 — 2026-10-02):** System vs Customer; tenant `provision_stream`; additive INCLUDE; loop/refcount/order/secret warns. Spec **§4.8** · API `/provision-streams` · SPA **Endpoints → Provision streams** · MkDocs **`admin/phone-provisioning-streams`**.
 
-- [ ] **Provision edge IP allowlist (C10 — accepted 2026-10-02):** Filament **Provision access**; UFW allowlist on `:41363` only (not full FW); default off; complements mTLS. Spec **`pbx3-directory/docs/SBC_PROVISION_ACCESS_REQUIREMENTS.md`**.
+- [x] **Provision edge IP allowlist (C10 — 2026-10-02):** Filament **Provision access**; UFW allowlist on `:41363` only; default off; complements mTLS. Spec **`pbx3-directory/docs/SBC_PROVISION_ACCESS_REQUIREMENTS.md`**. MkDocs **`admin/phone-provisioning-access`**.
 
 - [ ] **Fleet tenant moves — docs review + more soaks (#23b — after provision build):** Not now. Review fleet-move docs (MkDocs + mobility design + Jobs **Wipe tenant on source** / dual-copy gate). Operator will run a few more moves to understand implications once provisioning build is finished.
 
