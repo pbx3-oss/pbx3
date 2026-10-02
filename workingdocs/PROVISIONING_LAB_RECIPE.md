@@ -21,7 +21,7 @@ Automated coverage: `php /opt/pbx3/scripts/tests/provision-kernel-test.php` (and
 
 ### Manual URL (non-Snom/Yealink lab)
 
-For brands without near-term mTLS/RPS (e.g. Grandstream, Gigaset, Fanvil soak): enter the fleet or solo provision URL **on the phone UI** (same paths as above). Enough to exercise stream/REGISTER; does **not** prove RPS or vendor client-cert. **Fanvil track:** **`FANVIL_PROVISION_SUBPROJECT.md`**.
+For brands without near-term mTLS/RPS (e.g. Grandstream, Gigaset, Fanvil soak): enter the fleet or solo provision URL **on the phone UI** (same paths as above). Enough to exercise stream/REGISTER; does **not** prove RPS or vendor client-cert. **Fanvil:** **`FANVIL_PROVISION_SUBPROJECT.md`**. **Grandstream:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**.
 
 ### C5 mTLS tip (Snom + Yealink)
 
@@ -153,3 +153,27 @@ Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.p
 - [ ] (Later) FDPS / FDMCS enroll — out of scope for first mule
 
 **Tune on failure:** empty body / phone ignores XML → compare against that model’s Autoprovision guide; STUN/`NAT_Type`; HTTPS protocol enum.
+
+---
+
+## 6. Grandstream mule soak (D3 — parked)
+
+**Sub-project:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. No `grandstream.*` streams yet — author when mule model + firmware template are known.
+
+**OEM:** [SIP Device Provisioning Guide](https://www.grandstream.com/hubfs/Product_Documentation/gs_provisioning_guide.pdf) · P-value templates at [support/tools](https://www.grandstream.com/support/tools).
+
+**Shape:** `<gs_provision>` / `<Pnnn>` XML; phone often requests **`cfg{mac}.xml`** (path may differ from Yealink `{mac}.cfg` — settle on first soak). Lab = Config Server Path → our provision HTTPS. **GDMS/GAPS** later.
+
+### Resume (when handset arrives)
+
+1. Download firmware config template for that model; map SIP/outbound/STUN/admin to real P-values.
+2. Add `grandstream.Common` / `grandstream.Extension`; tip home; extension `#INCLUDE grandstream.Extension`.
+3. Claim MAC; set Config Server Path; reboot; REGISTER + NAT/BYE checklist.
+4. Fill **`FLEET_DESK_PHONE_NAT.md`** Grandstream row.
+
+### Exit checks
+
+- [ ] Streams authored from template (not invented P-numbers)
+- [ ] Provision GET **200** (path convention documented)
+- [ ] REGISTER via SBC; audio + BYE OK
+- [ ] (Later) GDMS enroll — out of scope for first mule
