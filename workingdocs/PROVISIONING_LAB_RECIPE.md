@@ -158,7 +158,9 @@ Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.p
 
 ## 6. Grandstream mule soak (D3 — parked)
 
-**Sub-project:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. No `grandstream.*` streams yet — author when mule model + firmware template are known.
+**Sub-project:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. **GDMS is free** — sites may provision entirely in GDMS and never hit our listener (§0.2 vendor-cloud-only OK). Our `grandstream.*` streams are optional (when home-rendered CFG wanted).
+
+No stock streams yet — author when mule model + firmware template are known **and** posture (2) is chosen.
 
 **OEM:** [SIP Device Provisioning Guide](https://www.grandstream.com/hubfs/Product_Documentation/gs_provisioning_guide.pdf) · P-value templates at [support/tools](https://www.grandstream.com/support/tools).
 
