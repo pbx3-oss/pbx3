@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-09-30 (provision B2/C7/C8 + D1 ProVu/Poly; next = rehome soak + D1→C5; GS/Gigaset = operator)  
+**Last updated:** 2026-10-02 (B4 site fragments + C10 provision access designed; next = rehome soak + D1→C5)  
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -12,7 +12,7 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate** — **A+B1+B2+C2/C3+C7/C8** landed; Yealink+Snom fleet lab green (STUN/BYE). Spec / plan / recipe / edge / MkDocs **`admin/phone-provisioning-rps`**. **Next:** (1) tenant **rehome** soak; (2) **D1→C5** edge mTLS — **Snom + Yealink vendor CAs in hand** (ops bundle on SBC; no SPA panel). Later: B3, C4, D3 vendors.  
+0k. **Phone provisioning — reinstate** — **A+B1+B2+C2/C3+C7/C8** landed; Yealink+Snom fleet lab green (STUN/BYE). Spec / plan / recipe / edge / MkDocs **`admin/phone-provisioning-rps`**. **Next:** (1) tenant **rehome** soak; (2) **D1→C5** edge mTLS. Later: **B3**, **B4** site fragments (§4.8), **C10** provision IP allowlist, C4, D3.  
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
@@ -68,7 +68,7 @@
 20. **Grafana / door-knock geo** (parked).  
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
-23. **Provisioning — reinstate (instance-local)** — **A+B1+B2+C2/C3+C7/C8**; Yealink+Snom lab green. **Next:** rehome soak; **D1→C5** mTLS (Snom+Yealink CAs in hand). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. MkDocs: **`admin/phone-provisioning-rps`**.  
+23. **Provisioning — reinstate (instance-local)** — **A+B1+B2+C2/C3+C7/C8**; Yealink+Snom lab green. **Next:** rehome soak; **D1→C5** mTLS (Snom+Yealink CAs in hand). Later **B4** site fragments. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. MkDocs: **`admin/phone-provisioning-rps`**.  
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked) — companion **0h** trunk carrier-face stub.  
@@ -113,7 +113,11 @@
 
 - [x] **Fleet desk phone NAT / STUN (provisioning — 2026-10-01):** Yealink + Snom streams ship STUN; lab BYE green. Checklist: **`pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md`**. Other vendors still open.
 
-- [ ] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 landed; Yealink+Snom lab green. **Next:** tenant rehome soak; **D1→C5** mTLS (Snom+Yealink CAs in hand). Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
+- [ ] **Phone provisioning — reinstate (#23 / 0k):** B2/C7/C8 landed; Yealink+Snom lab green. **Next:** tenant rehome soak; **D1→C5** mTLS (Snom+Yealink CAs in hand). Later **B4** site-fragment CRUD (§4.8). Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
+
+- [ ] **Provision site fragments (B4 — designed 2026-10-01):** System vs Customer; tenant `provision_stream`; additive INCLUDE; loop/refcount/order/secret warns. Spec **§4.8** · **B4a–B4e**.
+
+- [ ] **Provision edge IP allowlist (C10 — accepted 2026-10-02):** Filament **Provision access**; UFW allowlist on `:41363` only (not full FW); default off; complements mTLS. Spec **`pbx3-directory/docs/SBC_PROVISION_ACCESS_REQUIREMENTS.md`**.
 
 - [ ] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-01):** Tip C5 from ProVu **`3pcerts.pem`** + Poly PKI (Yealink/Snom/Panasonic/Fanvil/Poly). **Operator:** obtain **Grandstream + Gigaset** client CAs from vendor (public edge without mTLS is weak). Research: **`~/GiT/pbx3-ops/devdocs/provisioning/VENDOR_CLIENT_CA_INVENTORY.md`**. Spec §8 · plan **C5/D1**.
 
