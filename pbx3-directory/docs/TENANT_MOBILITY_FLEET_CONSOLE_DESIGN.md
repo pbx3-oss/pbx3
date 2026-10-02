@@ -534,6 +534,8 @@ pending
 - Each node-side step is an **authenticated API call** the orchestrator makes (not SSH). Node exposes export/import/commit/cert-sync; the SBC exposes repoint via `pbx3sbc-admin` API or `add-domain.sh` + `cfg_reload`.
 - **Rollback boundary:** anything before `awaiting_cleanup` is safe to abort. SBC fleet rollback = flip `domain.setid` back (seconds). Direct fleet = revert DNS (TTL wait). After source delete, rollback = re-import from the staging zip (retained N days).
 - **In-flight calls at cutover (SBC):** established dialogs drain on the old node (record-route pinned); new registrations/calls follow the new set. Optionally trigger re-REGISTER to shorten the window (open question).
+- **Dual-copy until wipe:** catalog already points at dest while source tenant rows remain. SPA may show orphan shortuid if wipe is skipped (risk **1b**). Operator gate copy: leave job open via Fleet → Jobs; wipe when phones have drained.
+- **Phone provisioning (post C5/B4/C10):** when desks use `provision.{apex}:41363`, RPS stays fixed; MAC map rewrite follows catalog home. Customer `provision_stream` rides tenant export/import. Edge Provision access (UFW) is edge-global — not per-move. Operator MkDocs: **`tenant-move.md`**.
 
 ### S3 staging path
 
