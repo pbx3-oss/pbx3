@@ -21,7 +21,7 @@ Automated coverage: `php /opt/pbx3/scripts/tests/provision-kernel-test.php` (and
 
 ### Manual URL (non-Snom/Yealink lab)
 
-For brands without near-term mTLS/RPS (e.g. Grandstream, Gigaset, Fanvil soak): enter the fleet or solo provision URL **on the phone UI** (same paths as above). Enough to exercise stream/REGISTER; does **not** prove RPS or vendor client-cert.
+For brands without near-term mTLS/RPS (e.g. Grandstream, Gigaset, Fanvil soak): enter the fleet or solo provision URL **on the phone UI** (same paths as above). Enough to exercise stream/REGISTER; does **not** prove RPS or vendor client-cert. **Fanvil track:** **`FANVIL_PROVISION_SUBPROJECT.md`**.
 
 ### C5 mTLS tip (Snom + Yealink)
 
@@ -109,7 +109,7 @@ After claim from Gatekeeper (until api tip-hot): re-run **`sync-provision-mac-ma
 
 ## 5. Fanvil mule soak (D3 start)
 
-**Goal:** prove module-XML stream → edge GET → REGISTER/calls via SBC (same bar as Yealink/Snom). **Not** FDPS/RPS enrollment yet.
+**Sub-project:** **`FANVIL_PROVISION_SUBPROJECT.md`** (parked until mule). **Goal:** prove module-XML stream → edge GET → REGISTER/calls via SBC (same bar as Yealink/Snom). **Not** FDPS/RPS enrollment yet.
 
 ### Prep (before phone arrives)
 
