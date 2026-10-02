@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-02 (Fanvil + Grandstream + Poly provision sub-projects parked; assist-not-core)
+**Last updated:** 2026-10-02 (session end: assist-not-core; Fanvil/GS/Poly parked; desk mules in lab)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
