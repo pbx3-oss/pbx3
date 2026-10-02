@@ -40,3 +40,5 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+# Obsidian
+**/.obsidian/
