@@ -30,7 +30,7 @@
 | **Node Let’s Encrypt** | **Instance FQDN only** (HTTP-01). Setup/Sync must **not** add tenant SANs on fleet nodes. |
 | **WSS** | Host = **edge or instance** (`wss://sbc…` / instance). SIP domain = tenant FQDN — **separate** names. See **`WEBRTC_WSS_LAB.md`** § SIP domain vs next hop. |
 | **Move cutover** | SBC `domain` setid repoint — **not** tenant DNS. **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §7. |
-| **Phone provision (fleet polish)** | When Phase C ships: phone-facing name **`provision.{apex}`** A/AAAA → **SBC edge VIP** on port **41363**; edge terminates HTTPS and **proxies HTTP** to homes (SBC-only). Routing from catalog **MAC index** (MAC canon; tenant/instance FKs). **Not** tenant A→edge; **not** redirect-to-home. Law: **`PROVISIONING_SERVER_REQUIREMENTS.md` §0.3**, **§6**. |
+| **Phone provision (fleet polish)** | **Shipped (lab):** phone-facing **`provision.{apex}`** A/AAAA → **SBC edge VIP** on **41363**; edge terminates HTTPS, **optional/require vendor client-cert** (C5), **proxies HTTP** to homes (SBC-only). Routing from catalog **MAC index**. **Not** tenant A→edge; **not** redirect-to-home. Law: **`PROVISIONING_SERVER_REQUIREMENTS.md` §0.3**, **§6**, **§8**. |
 
 **Solo / direct-to-node (no SBC):** tenant A records + **Option A** multi-SAN remain valid — **`LETSENCRYPT_PER_TENANT_FQDN.md`**.
 

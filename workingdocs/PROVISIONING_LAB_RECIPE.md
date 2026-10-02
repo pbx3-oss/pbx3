@@ -19,6 +19,23 @@ Automated coverage: `php /opt/pbx3/scripts/tests/provision-kernel-test.php` (and
 **Solo URL:** `https://{instance-fqdn}:41363/provisioning/{mac}.cfg`  
 **Fleet phone-facing:** `https://provision.{apex}:41363/provisioning/{mac}.cfg` (edge) → HTTP home.
 
+### Manual URL (non-Snom/Yealink lab)
+
+For brands without near-term mTLS/RPS (e.g. Grandstream, Gigaset, Fanvil soak): enter the fleet or solo provision URL **on the phone UI** (same paths as above). Enough to exercise stream/REGISTER; does **not** prove RPS or vendor client-cert.
+
+### C5 mTLS tip (Snom + Yealink)
+
+On SBC (after ops builds Snom+Yealink PEM — see `pbx3sbc` **`PROVISION_EDGE_PROXY.md`** § C5):
+
+```bash
+sudo VENDOR_CLIENT_CA_BUNDLE=/path/to/vendor-client-cas-snom-yealink.pem \
+     PROVISION_MTLS=optional \
+     PROVISION_FQDN=provision.pbx3.com \
+     ./scripts/install-provision-edge.sh
+```
+
+`optional` keeps curl + manual-URL brands working. Prove Snom/Yealink phone GET still **200** with vendor client cert presented.
+
 ### Operator allow (lab eyeball — keep temporary)
 
 Fleet baseline is **SBC-only** on home `:41363`. Temporary laptop allow: UFW/SG from your IP; **remove when done**.

@@ -290,24 +290,19 @@ $manufacturer_regex = [
 | P2 | Homes **do not** `git clone` / `git pull` the assets repo. They consume a **release zip** (or equivalent tarball) via existing `getimages.sh` / `PBX3_PHONEIMAGES_URL` into `/opt/pbx3/cache/phoneimages/`. |
 | P3 | Cadence: monthly (or weekly — same as historic getimages cron) when URL is set. Unset → no images; harvest text still works. |
 | P4 | **Fence + takedown:** keep distribution private/controlled. If a rights holder objects, remove the asset from the private repo + cut a new release; homes pick up the omission on next pull. Softphone **logos** optional; missing image = OK (Handset label only). |
-| P5 | Do **not** bake ProVu (or other supplier) URLs into installer / product tree. Ops copy into the private repo; PBX only sees our zip URL. |
+| P5 | Do **not** bake third-party supplier URLs into installer / product tree. Ops copy into the private repo; PBX only sees our zip URL. |
 
 | Item | Value |
 |------|--------|
 | Historic URL | `http://sailpbx.com/phoneimages.zip` (pre-scrub; **dead** / 403 as of 2026-08) |
 | **Authoring copy (interim)** | **`~/GiT/nonGitStuff/phoneimages/`** until the private repo exists — then migrate tree there. |
-| **Ingest source** | **[ProVu](https://www.provu.co.uk/products/)** desk photos (ops copy per §9.1); optional softphone logos (operator judgment). |
+| **Ingest source** | OEM / distributor desk photos (ops copy per §9.1); optional softphone logos (operator judgment). |
 | **Home consume** | `/opt/pbx3/cache/phoneimages/<vendor>/…` via zip URL |
 | Package default | **Unset** |
 
-### 9.1 ProVu copy rules (Grandstream + Gigaset)
+### 9.1 Ops copy rules (Grandstream + Gigaset)
 
-**Base URL:** `https://www.provu.co.uk/products/{grandstream|gigaset}/{ModelFolder}/`
-
-| Prefer | Skip |
-|--------|------|
-| **`{Model}-1-medium.jpg`** (v0) | thumbs, large, square, alt angles, PDFs |
-| else `{Model}-medium.jpg` | |
+Ops selects desk photos from licensed OEM/distributor sources (private authoring only). Prefer a single medium product shot per model; skip thumbs, large, square, alt angles, PDFs.
 
 **Grandstream:** Desk/WP (`GXP*`, `GRP*`, `WP*`). Skip ATAs / EXT.  
 **Gigaset:** Handsets only (`*H`, Maxwell…). Skip bases, multi-packs, marketing dirs.
