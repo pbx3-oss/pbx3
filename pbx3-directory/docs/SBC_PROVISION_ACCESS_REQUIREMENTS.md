@@ -1,6 +1,6 @@
 # SBC provision access (edge :41363 allowlist) — requirements
 
-**Status:** Design **accepted 2026-10-02** — not built. Mirror polish of **Management access** (shipped). Allowlist on **one port** (`:41363`) — not a full firewall GUI.  
+**Status:** Design **accepted 2026-10-02** — **shipped C10** (Filament **Provision access** + `apply-provision-access-ufw.sh`). Mirror polish of **Management access**. Allowlist on **one port** (`:41363`) — not a full firewall GUI.  
 **Audience:** SBC / Filament / ops / security-aware fleet customers.  
 **Related:** **`SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`** (admin :443) · **`PROVISIONING_SERVER_REQUIREMENTS.md` §8** (mTLS primary remote harden) · **`PROVISION_EDGE_PROXY.md`** · **`EDGE_PORTABILITY_SCORECARD.md`** · **`DESIGN_RULES.md`** Rule **7**.
 
@@ -127,13 +127,13 @@ Mirror Management access storage shape (exact paths chosen at build):
 
 ## Acceptance sketch
 
-- [ ] Lockdown off → phone/RPS from arbitrary IP can reach `:41363` (subject to mTLS/MAC as configured)  
-- [ ] Lockdown on + listed site CIDR → GET from that egress succeeds; from other public IP → TCP refused / filtered before nginx  
-- [ ] SIP REGISTER / admin :443 unchanged when provision lockdown toggled  
-- [ ] Empty allow list cannot enable lockdown; cannot delete last CIDR while on  
-- [ ] Apply shows effective UFW rules tagged for provision  
-- [ ] Solo home unaffected (no this panel / no change to instance Firewall contract)  
-- [ ] MkDocs: when to use; WFH warning; complements mTLS  
+- [x] Lockdown off → phone/RPS from arbitrary IP can reach `:41363` (subject to mTLS/MAC as configured)  
+- [x] Lockdown on + listed site CIDR → GET from that egress succeeds; from other public IP → TCP refused / filtered before nginx *(unit + UFW script; lab tip when scheduled)*  
+- [x] SIP REGISTER / admin :443 unchanged when provision lockdown toggled *(port-scoped UFW tags only)*  
+- [x] Empty allow list cannot enable lockdown; cannot delete last CIDR while on *(refuse empty; auto-add client IP on Apply)*  
+- [x] Apply shows effective UFW rules tagged for provision  
+- [x] Solo home unaffected (no this panel / no change to instance Firewall contract)  
+- [x] MkDocs: when to use; WFH warning; complements mTLS  
 
 ---
 
@@ -142,13 +142,13 @@ Mirror Management access storage shape (exact paths chosen at build):
 - [ ] Per-tenant CIDR allowlists (nginx/MAC-aware) — only if fleet-global proves insufficient  
 - [ ] Optional cloud SG sync adapter  
 - [ ] HA pair apply  
-- [ ] Baseline UFW vs SG ownership on current lab images (freeze at implement)  
-- [ ] Exact Filament nav label (**Provision access** vs **Provisioning access**)
+- [x] Baseline UFW vs SG ownership — Apply opens tagged Anywhere `:41363` when lockdown off  
+- [x] Filament nav label = **Provision access**
 
 ---
 
 ## Schedule
 
-Not on critical path for rehome soak / C5. Natural follow-on after **C5 mTLS** (or parallel if a customer blocks on perimeter before certs). Plan slice: provision track **C10** (or SBC admin sibling of Management access).
+**Shipped 2026-10-02 (C10).** Tip SBC: deploy scripts + re-run `setup-admin-panel-sudoers.sh`. Lab prove lockdown on/off when convenient.
 
-*Last updated: 2026-10-02 (design accepted — allowlist, not full FW)*
+*Last updated: 2026-10-02 (C10 shipped)*
