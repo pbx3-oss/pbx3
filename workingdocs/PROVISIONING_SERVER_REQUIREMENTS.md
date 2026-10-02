@@ -105,7 +105,7 @@ Product interest set for discovery + eventual enrollment docs/APIs. **Not** a pr
 |--------|----------|-------|
 | **Yealink** | **RPS** (Redirection and Provisioning Service) | Widely used; free for SPs/enterprises; can tie into **YMCS** (Yealink Management Cloud Service) |
 | **Poly** (ex-Polycom) | **Poly Lens** / **ZTP** | **Uncertain (2026-09-29):** HP takeover left redirect / ZTP opaque — Lens vs legacy ZTP vs partner paths not bottomed out. Keep on interest list; **do not** schedule Poly-first automation or docs until verified. Research / lab spike only. |
-| **Grandstream** | **GDMS** + **GAPS** | GDMS assigns templates or destination URLs by MAC; GAPS = Alignment and Provisioning System |
+| **Grandstream** | **GDMS** + **GAPS** | **GDMS is free** — low barrier. Sites may enroll desks in GDMS and use **GDMS templates end-to-end** (never hit our provision listener). That **suits us**: no forced in-house provision for GS. Optional: GDMS/GAPS as **redirect only** → our `provision.{apex}` when we want home-rendered secrets / fleet MAC map. GAPS = Alignment and Provisioning System |
 | **Snom** | **SRAPS** | Europe-hosted secure redirect; GDPR-oriented; API for SP automation |
 | **Fanvil** | **FDMCS** | Free redirection / ZTP for desk, hotel, and intercom / door units |
 | **Gigaset** | **Gigaset redirection server** | Vendor cloud redirect (same role as RPS/SRAPS). Enrollment needs **MAC + PIN** (PIN on device label). Third-party PBX docs (e.g. [Vodia](https://doc.vodia.com/docs/gigaset-provisioning)) describe using *Gigaset’s* redirect — not a Vodia-owned platform. Also supports LAN PnP / opt66 / manual URL. |
@@ -135,8 +135,9 @@ Phone power-up
 
 | Concern | Stance |
 |---------|--------|
-| **How the phone finds us** | **MAC enrolled** in vendor and/or reseller RPS with **target = our provision URL** |
-| **What we own** | Final **HTTPS config stream** on the home (v1) / via proxy (§0 later) — not the redirect product |
+| **How the phone finds us** | **MAC enrolled** in vendor and/or reseller RPS with **target = our provision URL** — **or** the site stays on the vendor cloud for config entirely (see Grandstream **GDMS** below) |
+| **What we own** | Final **HTTPS config stream** on the home (v1) / via proxy (§0 later) **when** the phone is pointed at us — not the redirect product; **not** a requirement that every brand use our stream |
+| **Vendor-cloud only (OK)** | If a free vendor platform (e.g. **GDMS**) can push SIP identity + registrar/proxy without us, operators **may skip** our provision server for that brand. We still own SIP/REGISTER on the home/SBC. Document as supported posture; do not fight GDMS for “who hosts the CFG” |
 | **DHCP opt66 / 114** | **Secondary** — on-prem LAN, lab, or sites without RPS. Document; do not design the cloud spine around it |
 | **PnP multicast** | **Secondary** — same-LAN only; optional later |
 | **Manual URL** | Lab / break-glass |

@@ -1,7 +1,7 @@
 # Grandstream provision sub-project (D3 slice)
 
 **Status:** **Parked / as-and-when** (2026-10-02). No stock streams yet; **mule handset pending**. Not on the critical path for provision A–C10.  
-**Owns:** Grandstream stock streams (`gs_provision` / P-values), lab soak, NAT row, optional GDMS/GAPS notes.  
+**Owns:** Optional Grandstream stock streams (`gs_provision` / P-values), lab soak when using our listener, NAT row, GDMS posture docs. **Not** a mandate that GS sites use our provision server.  
 **Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.4–§4.6 · plan **D3** · recipe **`PROVISIONING_LAB_RECIPE.md` §6** (when filled).  
 **Siblings:** **`FANVIL_PROVISION_SUBPROJECT.md`** · Gigaset (same D3 bucket; separate when started).
 
@@ -17,8 +17,14 @@
 | Authoring | Opaque `P271`, `P237`, … map to web-UI knobs. **Do not invent P-numbers** — lift from the model’s firmware configuration template (CSV/XML from Grandstream tools). |
 | File names | Phone requests **`cfg{mac}.xml`** (lowercase mac, no colons), then model / generic **`cfg.xml`** fallback. Our edge today serves `…/provisioning/{mac}.cfg` and `?mac=` — mule may need URL/path alignment or phone Config Server Path + filename convention; settle on first soak. |
 | Engine | Dumb `#INCLUDE` + substitute — **no** Grandstream-specific kernel. |
-| Discovery | Lab = manual **Config Server Path** (HTTPS). **GDMS / GAPS** (§0.2) = later. |
-| mTLS | GS client CA still open for public-edge (ops inventory); lab = manual URL + `optional` edge is fine. |
+| Discovery | **GDMS free** → preferred operator path for many GS sites. **Two supported postures:** (1) **GDMS end-to-end** (templates in GDMS; **no** our provision listener) — OK / no barrier; (2) GDMS/GAPS **redirect** → our `provision.{apex}` when home-rendered stream wanted. Lab mule may still use manual Config Server Path. |
+| mTLS | GS client CA still open for public-edge (ops inventory); lab = manual URL + `optional` edge is fine. Need only if phones hit **our** edge. |
+
+---
+
+## 0.1 Product posture (locked 2026-10-02)
+
+**We do not need Grandstream customers to use our provisioning server.** Free GDMS removes the “must build GS streams day one” pressure. Stock `grandstream.*` remains useful for sites that want secrets/home MAC map / same fleet provision URL as Yealink/Snom — optional, not mandatory for GS to work on PBX3.
 
 ---
 
@@ -57,7 +63,9 @@ Kernel: confirm `$mac` (or equivalent) is available in substitute map before rel
 7. Exit: apply → REGISTER via SBC → audio + BYE; fill NAT row.
 8. Export/backup from phone if available → ops `devdocs/provisioning/grandstream/`.
 
-**Out of scope for first pass:** binary `cfg.bin`, AES XML encryption bootstrap, GDMS automation, BLF matrix, Gigaset/Fanvil.
+**Out of scope for first pass:** binary `cfg.bin`, AES XML encryption bootstrap, **GDMS API automation** (manual GDMS enroll is fine), BLF matrix, Gigaset/Fanvil.
+
+**If site uses GDMS end-to-end:** sub-project soak (our streams) is **N/A** — still verify REGISTER/NAT on PBX3; document “GDMS-only” in recipe when proven.
 
 ---
 
