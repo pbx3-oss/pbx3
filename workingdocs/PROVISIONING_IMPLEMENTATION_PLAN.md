@@ -138,7 +138,7 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 |----|----------|------|
 | **D1** | **3pcerts / vendor CA inventory** for §0.2 brands | **Enough for C5 now:** Snom + Yealink in ops-held `3pcerts.pem`. Pack also has Panasonic/Fanvil; Poly = public PKI. **GS/Gigaset CAs:** not blocking lab — use **manual provision URL** on those phones. Public-edge mTLS for GS/Gigaset still needs vendor CAs later. Research: **`~/GiT/pbx3-ops/devdocs/provisioning/VENDOR_CLIENT_CA_INVENTORY.md`**. |
 | **D2** | **Poly** Lens/ZTP post-HP path | In or out of interest for redirect |
-| **D3** | Grandstream / Fanvil / Gigaset stream + RPS notes | **Fanvil mule started (2026-10-02):** `fanvil.Common` / `fanvil.Extension` (module XML) + lab recipe §5. Handset soak when mule arrives. GS/Gigaset still later. Lab soaks via **manual URL** until RPS/mTLS ready |
+| **D3** | Grandstream / Fanvil / Gigaset stream + RPS notes | **Fanvil = sub-project (parked):** **`FANVIL_PROVISION_SUBPROJECT.md`**. Seed `fanvil.*` + recipe §5 on `main` (2026-10-02). Soak when mule arrives. GS/Gigaset separate when started. Manual URL until RPS/mTLS |
 | **D4** | Snom online-UI docs workaround (screenshots / pinned export) | Authoring aid in ops `devdocs` if needed |
 
 ---
