@@ -104,3 +104,52 @@ After claim from Gatekeeper (until api tip-hot): re-run **`sync-provision-mac-ma
 - [ ] Tenant move → next provision without RPS edit  
 
 **Next:** merge C2/C3 PRs · **B2** MkDocs RPS · api MAC claim tip on homes.
+
+---
+
+## 5. Fanvil mule soak (D3 start)
+
+**Goal:** prove module-XML stream → edge GET → REGISTER/calls via SBC (same bar as Yealink/Snom). **Not** FDPS/RPS enrollment yet.
+
+### Prep (before phone arrives)
+
+1. Tip `fanvil.*` streams onto the home that will host the mule (likely **bzy** / tenant hosting Aelintra or a spare).
+2. Create or pick a spare extension on that tenant.
+3. Set `provision` to:
+
+```text
+#INCLUDE fanvil.Extension
+#INCLUDE fanvil.udp
+```
+
+4. Leave `macaddr` blank until you have the MAC; `sndcreds` = **Once**; known SIP `passwd`.
+5. Curl-prove with a **fake** MAC after writing the MAC on the row (or temp-claim):
+
+```bash
+MAC=001565aabbcc   # replace with real Fanvil MAC (12 hex, no colons)
+curl -sS "https://provision.pbx3.com:41363/provisioning/${MAC}.cfg" | head -40
+```
+
+Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.pbx3.com`), not home IP.
+
+### When the mule lands
+
+1. Note MAC (strip colons) → SPA extension **MAC** + **device** label `Fanvil` if you use harvest.
+2. Gatekeeper claim / map sync if fleet (same as Yealink).
+3. Phone UI → **System / Auto Provision → Static Provisioning Server**:
+   - Server: `https://provision.pbx3.com:41363/provisioning`  
+     (or full `…/provisioning/{mac}.cfg` if the UI wants a file name)
+   - Protocol: **HTTPS**
+   - Update mode: **After reboot** (or equivalent)
+4. Reboot. Edge log: GET **200**; home audit Once→No.
+5. SPA/Asterisk: REGISTER; dial in-tenant + hangup (NAT/BYE — fill **`FLEET_DESK_PHONE_NAT.md`** Fanvil row).
+
+### Exit checks
+
+- [ ] Curl body is module XML (`VOIP_CONFIG_FILE` / `SIP_CONFIG_MODULE`)
+- [ ] Handset provision GET **200**
+- [ ] REGISTER via SBC; audio + BYE OK (or note STUN/NAT tweak)
+- [ ] `Download_Protocol` 4 vs 5 settled for this firmware
+- [ ] (Later) FDPS / FDMCS enroll — out of scope for first mule
+
+**Tune on failure:** empty body / phone ignores XML → compare against that model’s Autoprovision guide; STUN/`NAT_Type`; HTTPS protocol enum.

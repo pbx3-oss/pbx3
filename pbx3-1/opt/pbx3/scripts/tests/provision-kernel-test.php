@@ -91,7 +91,8 @@ expect('snom.Extension stream', is_readable($streams . '/snom.Extension'));
 foreach (array('snom.udp', 'snom.tcp', 'snom.tls', 'snom.ipv4', 'snom.ipv6', 'snom',
 	'yealink.udp', 'yealink.tcp', 'yealink.tls', 'yealink.ipv4', 'yealink.ipv6', 'Yealink',
 	'Panasonic', 'panasonic.udp', 'panasonic.tcp', 'panasonic.tls', 'panasonic.ipv4',
-	'panasonic.ipv6', 'panasonic.Ldap') as $frag) {
+	'panasonic.ipv6', 'panasonic.Ldap',
+	'fanvil.Common', 'fanvil.Extension', 'fanvil.udp') as $frag) {
 	expect("stream $frag", is_readable($streams . '/' . $frag));
 }
 $loop = array();
@@ -115,6 +116,17 @@ $pana = pbx3_provision_expand(
 expect('ETL Panasonic expands', strpos($pana, 'Panasonic SIP Phone') !== false);
 expect('ETL panasonic.tcp transport', strpos($pana, 'SIP_TRANSPORT_1="1"') !== false);
 expect('ETL panasonic.ipv4', strpos($pana, 'IP_ADDR_MODE="0"') !== false);
+$loop = array();
+$fanvil = pbx3_provision_expand(
+	"#INCLUDE fanvil.Extension\n#INCLUDE fanvil.udp\n",
+	true,
+	$streams,
+	$loop
+);
+expect('ETL fanvil module XML', strpos($fanvil, '<VOIP_CONFIG_FILE>') !== false && strpos($fanvil, '<SIP_CONFIG_MODULE>') !== false);
+expect('ETL fanvil INCLUDE stripped', strpos($fanvil, '#INCLUDE') === false);
+expect('ETL fanvil Register_Addr placeholder', strpos($fanvil, '<Register_Addr>$sipdomain</Register_Addr>') !== false);
+expect('ETL fanvil Proxy_Addr outbound', strpos($fanvil, '<Proxy_Addr>$outbound</Proxy_Addr>') !== false);
 
 // --- Fixture SQLite ---
 $dbFile = $tmp . '/test.db';
