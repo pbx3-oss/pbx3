@@ -231,10 +231,55 @@ putenv('PBX3_SBC_EGRESS_HOST');
 $ob = pbx3_provision_obfuscate_for_audit("account.1.password = cleartext\nok=1\n");
 expect('obfuscate masks value', strpos($ob, 'cleartext') === false && strpos($ob, '********') !== false && strpos($ob, 'ok=1') !== false);
 
+// --- B4 Customer site fragments ---
+$db->exec('CREATE TABLE provision_stream (
+  id TEXT, shortuid TEXT, pkey TEXT, cluster TEXT, body TEXT, notes TEXT, updated_at TEXT
+)');
+$db->exec("INSERT INTO provision_stream VALUES ('id1','su1','site.ReceptionBLF','t1','linekey.1=blf\nlinekey.1.value=1002\n',NULL,NULL)");
+file_put_contents($tmp . '/snom.Extension', "base=system\n");
+$loop = array();
+$misses = array();
+$expCust = pbx3_provision_expand(
+	"#INCLUDE snom.Extension\n#INCLUDE site.ReceptionBLF\n",
+	true,
+	$tmp,
+	$loop,
+	$db,
+	't1',
+	$misses
+);
+expect('B4 customer after system', strpos($expCust, 'base=system') !== false && strpos($expCust, 'linekey.1=blf') !== false);
+expect('B4 no miss when customer present', count($misses) === 0);
+
+$loop = array();
+$misses = array();
+$expMiss = pbx3_provision_expand("#INCLUDE site.MissingThing\nkeep=1\n", true, $tmp, $loop, $db, 't1', $misses);
+expect('B4 miss omits body', strpos($expMiss, 'keep=1') !== false);
+expect('B4 miss recorded', in_array('site.MissingThing', $misses, true));
+
+$loop = array();
+$misses = array();
+$expCustWins = pbx3_provision_expand(
+	"#INCLUDE site.ReceptionBLF\n",
+	true,
+	$tmp,
+	$loop,
+	$db,
+	't1',
+	$misses
+);
+expect('B4 customer preferred over missing system', strpos($expCustWins, 'linekey.1=blf') !== false);
+
+$rCust = pbx3_provision_resolve_include('site.ReceptionBLF', $tmp, $db, 't1');
+expect('B4 resolve kind customer', $rCust['kind'] === 'customer');
+$rSys = pbx3_provision_resolve_include('snom.Extension', $tmp, $db, 't1');
+expect('B4 resolve kind system', $rSys['kind'] === 'system');
+
 // cleanup
 @unlink($tmp . '/inner');
 @unlink($tmp . '/outer');
 @unlink($tmp . '/yealink.Fkey');
+@unlink($tmp . '/snom.Extension');
 @unlink($dbFile);
 @unlink($audit);
 @rmdir($tmp);

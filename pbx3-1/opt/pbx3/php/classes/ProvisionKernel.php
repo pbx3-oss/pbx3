@@ -181,6 +181,7 @@ function pbx3_provision_sndcreds_allows($sndcreds) {
 
 /**
  * Resolve #INCLUDE name to a stream file path (null if missing / unsafe).
+ * Returns false for BLF/fkey names (skip). Prefer pbx3_provision_resolve_include() when DB/cluster available.
  */
 function pbx3_provision_stream_path($name, $streamsDir = null) {
 	$dir = $streamsDir !== null ? $streamsDir : PROVISION_STREAMS;
@@ -203,17 +204,66 @@ function pbx3_provision_stream_path($name, $streamsDir = null) {
 }
 
 /**
- * Expand #INCLUDE + accumulate lines. No Device table; files only.
+ * B4 — resolve #INCLUDE: Customer (cluster,pkey) → System file → miss.
+ *
+ * @return array{kind:string,body:?string,path:?string} kind = customer|system|skip|miss
+ */
+function pbx3_provision_resolve_include($name, $streamsDir = null, $db = null, $cluster = null) {
+	$name = trim((string) $name);
+	if ($name === '' || preg_match('/\.\.|[\\\\]/', $name)) {
+		return array('kind' => 'miss', 'body' => null, 'path' => null);
+	}
+	if (preg_match('/\.[LFP]key$/i', $name)) {
+		return array('kind' => 'skip', 'body' => null, 'path' => null);
+	}
+
+	$clusterKey = $cluster !== null ? trim((string) $cluster) : '';
+	if ($clusterKey !== '' && $db instanceof PDO) {
+		try {
+			$stmt = $db->prepare('SELECT body FROM provision_stream WHERE cluster = ? AND pkey = ? LIMIT 1');
+			$stmt->execute(array($clusterKey, $name));
+			$row = $stmt->fetch(PDO::FETCH_ASSOC);
+			$stmt = null;
+			if (is_array($row) && array_key_exists('body', $row)) {
+				return array('kind' => 'customer', 'body' => (string) $row['body'], 'path' => null);
+			}
+		} catch (Exception $e) {
+			// table missing in unit fixtures — fall through to System files
+		}
+	}
+
+	$path = pbx3_provision_stream_path($name, $streamsDir);
+	if ($path === false) {
+		return array('kind' => 'skip', 'body' => null, 'path' => null);
+	}
+	if ($path === null) {
+		return array('kind' => 'miss', 'body' => null, 'path' => null);
+	}
+	$raw = @file_get_contents($path);
+	if ($raw === false) {
+		return array('kind' => 'miss', 'body' => null, 'path' => $path);
+	}
+	return array('kind' => 'system', 'body' => $raw, 'path' => $path);
+}
+
+/**
+ * Expand #INCLUDE + accumulate lines. B4: Customer row then System file; miss omits + recorded.
  *
  * @param string $rawConfig
  * @param bool $sndcreds
  * @param string|null $streamsDir
  * @param array $loopCheck
+ * @param PDO|null $db
+ * @param string|null $cluster
+ * @param array|null $includeMisses collected miss names (by ref)
  * @return string
  */
-function pbx3_provision_expand($rawConfig, $sndcreds, $streamsDir = null, &$loopCheck = null) {
+function pbx3_provision_expand($rawConfig, $sndcreds, $streamsDir = null, &$loopCheck = null, $db = null, $cluster = null, &$includeMisses = null) {
 	if ($loopCheck === null) {
 		$loopCheck = array();
+	}
+	if ($includeMisses === null) {
+		$includeMisses = array();
 	}
 	$ret = '';
 	$lines = explode("\n", (string) $rawConfig);
@@ -243,23 +293,20 @@ function pbx3_provision_expand($rawConfig, $sndcreds, $streamsDir = null, &$loop
 
 		if (preg_match('/^[;#]INCLUDE\s*([\w_\-\.\/\(\)\s]*)\s*$/', $line, $match)) {
 			$devpkey = trim($match[1]);
-			$path = pbx3_provision_stream_path($devpkey, $streamsDir);
-			if ($path === false) {
-				// BLF/fkey include — skip silently in v1.
+			$resolved = pbx3_provision_resolve_include($devpkey, $streamsDir, $db, $cluster);
+			if ($resolved['kind'] === 'skip') {
 				continue;
 			}
-			if ($path === null) {
+			if ($resolved['kind'] === 'miss') {
+				$includeMisses[] = $devpkey;
 				continue;
 			}
 			if (isset($loopCheck[$devpkey])) {
 				continue;
 			}
 			$loopCheck[$devpkey] = true;
-			$included = file_get_contents($path);
-			if ($included === false) {
-				continue;
-			}
-			$ret .= pbx3_provision_expand($included, $sndcreds, $streamsDir, $loopCheck);
+			$included = isset($resolved['body']) ? (string) $resolved['body'] : '';
+			$ret .= pbx3_provision_expand($included, $sndcreds, $streamsDir, $loopCheck, $db, $cluster, $includeMisses);
 			continue;
 		}
 
@@ -364,14 +411,14 @@ function pbx3_provision_find_phone_by_mac(PDO $db, $mac) {
 /**
  * Render config for a parsed request.
  *
- * @return array{ok:bool,status:int,body:string,reason:string,phone:?object}
+ * @return array{ok:bool,status:int,body:string,reason:string,phone:?object,include_misses?:array}
  */
 function pbx3_provision_render(PDO $db, $parsed, $streamsDir = null, $globals = array(), $extra = array()) {
 	if ($parsed['status'] === 'ignore') {
-		return array('ok' => true, 'status' => 200, 'body' => "OK\n", 'reason' => $parsed['reason'], 'phone' => null);
+		return array('ok' => true, 'status' => 200, 'body' => "OK\n", 'reason' => $parsed['reason'], 'phone' => null, 'include_misses' => array());
 	}
 	if ($parsed['status'] !== 'ok') {
-		return array('ok' => false, 'status' => 404, 'body' => "Not Found (404)\n", 'reason' => $parsed['reason'], 'phone' => null);
+		return array('ok' => false, 'status' => 404, 'body' => "Not Found (404)\n", 'reason' => $parsed['reason'], 'phone' => null, 'include_misses' => array());
 	}
 
 	$streamsDir = $streamsDir !== null ? $streamsDir : PROVISION_STREAMS;
@@ -379,36 +426,39 @@ function pbx3_provision_render(PDO $db, $parsed, $streamsDir = null, $globals = 
 	if ($parsed['kind'] === 'common') {
 		$path = pbx3_provision_stream_path($parsed['fragment'], $streamsDir);
 		if ($path === null || $path === false) {
-			return array('ok' => false, 'status' => 404, 'body' => "Not Found (404)\n", 'reason' => 'missing_common', 'phone' => null);
+			return array('ok' => false, 'status' => 404, 'body' => "Not Found (404)\n", 'reason' => 'missing_common', 'phone' => null, 'include_misses' => array());
 		}
 		$raw = file_get_contents($path);
 		$loop = array($parsed['fragment'] => true);
+		$misses = array();
 		$snd = true; // common file may include admin passwords — treat as Always for common
-		$expanded = pbx3_provision_expand($raw, $snd, $streamsDir, $loop);
+		$expanded = pbx3_provision_expand($raw, $snd, $streamsDir, $loop, $db, null, $misses);
 		$vars = pbx3_provision_vars_from_phone(array(), $globals, $extra);
 		$body = pbx3_provision_substitute($expanded, $vars);
-		return array('ok' => true, 'status' => 200, 'body' => $body, 'reason' => 'common', 'phone' => null);
+		return array('ok' => true, 'status' => 200, 'body' => $body, 'reason' => 'common', 'phone' => null, 'include_misses' => $misses);
 	}
 
 	$phone = pbx3_provision_find_phone_by_mac($db, $parsed['mac']);
 	if (!$phone) {
-		return array('ok' => false, 'status' => 404, 'body' => "Not Found (404)\n", 'reason' => 'mac_not_found', 'phone' => null);
+		return array('ok' => false, 'status' => 404, 'body' => "Not Found (404)\n", 'reason' => 'mac_not_found', 'phone' => null, 'include_misses' => array());
 	}
 
 	$raw = isset($phone->provision) ? (string) $phone->provision : '';
 	if (trim($raw) === '') {
-		return array('ok' => false, 'status' => 404, 'body' => "Not Found (404)\n", 'reason' => 'empty_provision', 'phone' => $phone);
+		return array('ok' => false, 'status' => 404, 'body' => "Not Found (404)\n", 'reason' => 'empty_provision', 'phone' => $phone, 'include_misses' => array());
 	}
 
 	$sndcredsCol = isset($phone->sndcreds) ? $phone->sndcreds : 'Always';
 	$snd = pbx3_provision_sndcreds_allows($sndcredsCol);
 	$loop = array();
-	$expanded = pbx3_provision_expand($raw . "\n", $snd, $streamsDir, $loop);
+	$misses = array();
+	$cluster = isset($phone->cluster) ? (string) $phone->cluster : 'default';
+	$expanded = pbx3_provision_expand($raw . "\n", $snd, $streamsDir, $loop, $db, $cluster, $misses);
 	$extra = pbx3_provision_merge_phone_hosts($db, $phone, $globals, $extra);
 	$vars = pbx3_provision_vars_from_phone($phone, $globals, $extra);
 	$body = pbx3_provision_substitute($expanded, $vars);
 
-	return array('ok' => true, 'status' => 200, 'body' => $body, 'reason' => 'mac', 'phone' => $phone);
+	return array('ok' => true, 'status' => 200, 'body' => $body, 'reason' => 'mac', 'phone' => $phone, 'include_misses' => $misses);
 }
 
 /**
@@ -718,6 +768,9 @@ function pbx3_provision_after_success(PDO $db, $result, $meta = array(), $auditP
 		$auditPath = defined('PROVISION_AUDIT_LOG') ? PROVISION_AUDIT_LOG : '/opt/pbx3/var/log/provision-audit.log';
 	}
 	$snd = isset($phone->sndcreds) ? (string) $phone->sndcreds : '';
+	$misses = isset($result['include_misses']) && is_array($result['include_misses'])
+		? array_values(array_unique($result['include_misses']))
+		: array();
 	$record = array(
 		'ts' => gmdate('Y-m-d\\TH:i:s\\Z'),
 		'mac' => isset($meta['mac']) ? $meta['mac'] : null,
@@ -726,6 +779,7 @@ function pbx3_provision_after_success(PDO $db, $result, $meta = array(), $auditP
 		'sndcreds' => $snd,
 		'flipped_once' => $flipped,
 		'remote' => isset($meta['remote_addr']) ? $meta['remote_addr'] : null,
+		'include_miss' => $misses,
 		'body' => pbx3_provision_obfuscate_for_audit($result['body']),
 	);
 	$audited = pbx3_provision_audit_write($auditPath, $record);

@@ -486,18 +486,18 @@ Customer fragment holds only lines to add/change. Where the vendor is last-wins,
 
 #### 4.8.7 Acceptance (B4 exit)
 
-- [ ] Customer rows survive package upgrade; System files may change freely  
-- [ ] Tenant miniDB / export includes `provision_stream`  
-- [ ] Resolve: Customer → System → miss; loop detector prevents INCLUDE cycles  
-- [ ] POST/copy rejected when name equals a System filename  
-- [ ] DELETE blocked without force when refcount > 0  
-- [ ] Extension save warns: miss INCLUDE; Customer-before-System order  
-- [ ] Customer save warns on hardcoded secret-looking lines; `$` symbolics preferred  
-- [ ] Empty body confirmed; apply script creates table  
-- [ ] No Device revival; no System same-name replacement  
-- [ ] Docs note vendor flexibility (XML / Fanvil sequencing) — engine stays concatenate  
+- [x] Customer rows survive package upgrade; System files may change freely  
+- [x] Tenant miniDB / export includes `provision_stream`  
+- [x] Resolve: Customer → System → miss; loop detector prevents INCLUDE cycles  
+- [x] POST/copy rejected when name equals a System filename  
+- [x] DELETE blocked without force when refcount > 0  
+- [x] Extension save warns: miss INCLUDE; Customer-before-System order  
+- [x] Customer save warns on hardcoded secret-looking lines; `$` symbolics preferred  
+- [x] Empty body confirmed; apply script creates table  
+- [x] No Device revival; no System same-name replacement  
+- [x] Docs note vendor flexibility (XML / Fanvil sequencing) — engine stays concatenate  
 
-**Schedule:** **B4a–B4e** after rehome soak / C5 as capacity allows; does **not** block Phase C exit.
+**Shipped 2026-10-02** (B4a–B4e). Tip homes: run `apply-sqlite-add-provision-stream.sh` (also postinst).
 
 ---
 
