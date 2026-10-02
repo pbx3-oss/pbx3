@@ -317,7 +317,8 @@ Most vendor streams are **line-oriented** (key=value / proprietary text): INCLUD
 
 | Vendor | Format note |
 |--------|-------------|
-| **Yealink, Fanvil, …** | Typical line / flat profiles — straightforward substitute |
+| **Yealink, Panasonic, …** | Typical line / flat profiles — straightforward substitute |
+| **Fanvil** | **Module XML** under FDPS-era firmwares (`VOIP_CONFIG_FILE` / `SIP_CONFIG_MODULE` / …). Older Fanvil engines also had CFG/TXT line dialects — treat current stock as **XML**. INCLUDE still works as whole-stanza insert; do not assume Yealink last-wins |
 | **Poly** | **Pure XML** with **closing stanzas** — nuisance for naive line-include / partial rewrite; treat as its own stream family when/if Poly is in scope |
 | **Snom** | Historically line-oriented; **moving toward closed XML** as well — watch when authoring/lifting Snom templates; may need XML-aware edit rules later, not a second engine day one |
 

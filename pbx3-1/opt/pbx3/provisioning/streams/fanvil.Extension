@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VOIP_CONFIG_FILE>
+#INCLUDE fanvil.Common
+<SIP_CONFIG_MODULE>
+<SIP_Line_List>
+<SIP_Line_List_Entry>
+ SIP1
+<Phone_Number>$ext</Phone_Number>
+<Display_Name>$desc</Display_Name>
+<Sip_Name>$sipdomain</Sip_Name>
+<Register_Addr>$sipdomain</Register_Addr>
+<Register_Port>$bindport</Register_Port>
+<Register_User>$sipuser</Register_User>
+<Register_Pswd>$password</Register_Pswd>
+<Register_TTL>3600</Register_TTL>
+<Enable_Reg>1</Enable_Reg>
+<Proxy_Addr>$outbound</Proxy_Addr>
+<Proxy_Port>$bindport</Proxy_Port>
+<Proxy_User>$sipuser</Proxy_User>
+<Proxy_Pswd>$password</Proxy_Pswd>
+<Transport>0</Transport>
+<Media_Crypto>0</Media_Crypto>
+<Enable_Rport>1</Enable_Rport>
+<NAT_Type>1</NAT_Type>
+<NAT_UDPUpdate>2</NAT_UDPUpdate>
+<UDPUpdate_TTL>30</UDPUpdate_TTL>
+<DTMF_Mode>3</DTMF_Mode>
+</SIP_Line_List_Entry>
+</SIP_Line_List>
+</SIP_CONFIG_MODULE>
+</VOIP_CONFIG_FILE>
