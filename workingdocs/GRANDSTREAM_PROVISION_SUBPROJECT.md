@@ -19,7 +19,7 @@
 | Engine | Dumb `#INCLUDE` + substitute — **no** Grandstream-specific kernel. |
 | Discovery | **GDMS free** → preferred operator path for many GS sites. **Two supported postures:** (1) **GDMS end-to-end** (templates in GDMS; **no** our provision listener) — OK / no barrier; (2) GDMS/GAPS **redirect** → our `provision.{apex}` when home-rendered stream wanted. Lab mule may still use manual Config Server Path. |
 | mTLS | GS client CA still open for public-edge (ops inventory); lab = manual URL + `optional` edge is fine. Need only if phones hit **our** edge. |
-| **Manual SIP (UI)** | **Locked 2026-10-03:** Straightforward — no Fanvil-style Username≠Auth surprise. **SIP User ID** = shortuid; **Account Name** may be dialable ext (display). |
+| **Manual SIP (UI)** | **Locked 2026-10-03:** Straightforward. **SIP User ID** = shortuid; **Account Name** may be dialable ext (display). UI also offers **Authenticate ID** / Auth UID — **leave unused** when SIP User ID is already shortuid (lab: unused → REGISTER OK). Contrast Fanvil, where both User and Auth User must be shortuid. |
 
 ---
 
@@ -37,9 +37,10 @@ Operator fields that worked (Accounts → Account 1 / SIP Settings — labels as
 | SIP Server | `hf3zzv.pbx3.com` | `$sipdomain` (tenant FQDN) |
 | Outbound Proxy | `sbc.pbx3.com` | `$outbound` (SBC) |
 | SIP User ID | `74y2h3` | `$sipuser` (shortuid) |
+| Authenticate ID (Auth UID) | *(unused)* | Optional; leave blank when SIP User ID = shortuid |
 | SIP Authentication Password | *(secret)* | `$password` |
 
-No separate “Authentication User” dance required on this mule — **SIP User ID** alone carries the PJSIP identity. Contrast Fanvil: **`FANVIL_PROVISION_SUBPROJECT.md` §0.1**.
+**SIP User ID** alone carries the PJSIP identity when Auth UID is blank. Fanvil needs both fields set: **`FANVIL_PROVISION_SUBPROJECT.md` §0.1**.
 
 ---
 
