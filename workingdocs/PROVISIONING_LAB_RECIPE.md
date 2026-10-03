@@ -142,7 +142,8 @@ Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.p
    - Protocol: **HTTPS**
    - Update mode: **After reboot** (or equivalent)
 4. Reboot. Edge log: GET **200**; home audit Once→No.
-5. SPA/Asterisk: REGISTER; dial in-tenant + hangup (NAT/BYE — fill **`FLEET_DESK_PHONE_NAT.md`** Fanvil row).
+5. **Manual SIP account (if not provisioned yet):** set **both** UI **User** and **Authentication User** to the extension **shortuid** (`$sipuser`) — Fanvil Auth User alone does **not** override User (Sirius 412→`27b2mr`: User=`412` → Asterisk **404**). Domain = tenant FQDN; proxy = SBC.
+6. SPA/Asterisk: REGISTER; dial in-tenant + hangup (NAT/BYE — fill **`FLEET_DESK_PHONE_NAT.md`** Fanvil row).
 
 ### Exit checks
 

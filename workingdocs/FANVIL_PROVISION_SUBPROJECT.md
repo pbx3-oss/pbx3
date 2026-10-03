@@ -1,6 +1,6 @@
 # Fanvil provision sub-project (D3 slice)
 
-**Status:** **Parked / as-and-when** (2026-10-02). Seed streams + lab recipe ready; **mule handset pending**. Not on the critical path for provision A–C10.  
+**Status:** **Mule soak in progress** (2026-10-03). Seed streams on `main`; REGISTER auth quirk locked below. Not on the critical path for provision A–C10.  
 **Owns:** Fanvil stock streams, lab soak, NAT row, optional FDMCS/RPS notes.  
 **Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.4–§4.6 · plan **D3** · recipe **`PROVISIONING_LAB_RECIPE.md` §5**.  
 **Siblings:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Gigaset (same D3 bucket; separate when started).
@@ -16,6 +16,7 @@
 | Discovery | Lab = **manual Static Provisioning Server** URL. **FDMCS** / RPS automation = later. |
 | Docs trap | Fanvil **XML Operation Guide** = Push/Browser LCD XML — **not** auto-provision. Chatbot “standard” XML samples are unreliable; prefer phone export / Autoprovision Description / fielded templates. |
 | mTLS | Fanvil CA already in ops `3pcerts.pem` pack; edge prove later if desired. |
+| **SIP auth (UI)** | **Locked 2026-10-03 (Sirius 412 / `27b2mr`):** Fanvil **Authentication User does not override User**. Both **User** and **Authentication User** must be the PJSIP identity (**`$sipuser` / shortuid**). Setting only Auth User to shortuid while User=`412` → home **404** (no endpoint named `412`). Stream: `Phone_Number` + `Register_User` (+ `Proxy_User`) = `$sipuser`; `Display_Name` may show `$ext`. |
 
 ---
 
