@@ -128,7 +128,7 @@
 
 - [ ] **Grandstream provision sub-project (D3 — parked 2026-10-02):** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. P-value XML (`gs_provision`); streams when mule + firmware template in hand. Guide: [gs_provisioning_guide.pdf](https://www.grandstream.com/hubfs/Product_Documentation/gs_provisioning_guide.pdf).
 
-- [ ] **Poly provision sub-project (D2/D3 — parked 2026-10-02):** **`POLY_PROVISION_SUBPROJECT.md`**. Classic UCS master/`-reg.cfg` assumed; Lens discovery still open; streams when mule arrives.
+- [x] **Poly provision sub-project (D2/D3 — lab green 2026-10-03):** **`POLY_PROVISION_SUBPROJECT.md`**. Streams + DHCP 66 / manual URL; **no Lens build-out** unless asked.
 
 - [x] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-02):** Tip Snom+Yealink PEM; `PROVISION_MTLS=optional` live. Yealink **SUCCESS**+200; bare curl NONE/200 vs require **400**. Spec §8 · plan **C5**.
 

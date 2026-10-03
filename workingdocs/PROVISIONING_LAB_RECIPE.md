@@ -195,17 +195,17 @@ Stock streams still optional — author when firmware template known **and** pos
 
 ## 7. Poly mule soak (D2/D3)
 
-**Sub-project:** **`POLY_PROVISION_SUBPROJECT.md`**. **Lab mule:** **VVX 250** · firmware **6.4.3.5059** · Sirius **410** / `g0ntwm` · MAC **482567B0A593**. **Lens/ZTP** still uncertain — lab = manual Provisioning Server. Assist-not-core.
+**Sub-project:** **`POLY_PROVISION_SUBPROJECT.md`**. **Lab mule:** **VVX 250** · firmware **6.4.3.5059** · Sirius **410** / `g0ntwm` · MAC **482567B0A593**. **Lab green 2026-10-03** — **streams** are the product. Discovery: **DHCP 66** / manual URL; Lens capable but no build-out unless asked. Assist-not-core.
 
-**Streams v0:** `poly.Common` / `poly.Extension` / `poly.udp` — single-file UCS XML (STUN + UDPOnly + both ports). Not classic multi-file master/site.
+**Streams v0:** `poly.Master` / `poly.Common` / `poly.Extension` / `poly.udp` — UCS master (`{mac}.cfg`) + settings (`{mac}-reg.cfg`). Edge must MAC-extract `-reg.cfg`.
 
 **Manual SIP UI (2026-10-03):** OOTB timezone = **GMT**; **SIP server port** and **proxy port** both empty (must set); **Transport(s)** defaults to **DNSnaptr** → **UDPOnly**. Field lock: sub-project **§0.1**.
 
-**NAT / far BYE:** OOTB far-end hangup fails; STUN **provisioning-only**. Stream ships STUN — re-soak after tip. **§0.2**.
+**NAT / far BYE:** OOTB far-end hangup fails; STUN **provisioning-only**. **Lab green 2026-10-03** (§0.2).
 
 ### Tip / soak
 
-1. Tip `poly.*` onto Sirius home.
+1. Tip `poly.*` onto Sirius home; edge `mac-from-request.map` must match `{mac}-reg.cfg`.
 2. Extension **410** provision:
 
 ```text
@@ -218,19 +218,19 @@ Stock streams still optional — author when firmware template known **and** pos
 
 ```bash
 MAC=482567b0a593
-curl -sS "https://provision.pbx3.com:41363/provisioning/${MAC}.cfg" | head -40
+curl -sk "https://provision.pbx3.com:41363/provisioning/${MAC}.cfg" | head -20   # APPLICATION master
+curl -sk "https://provision.pbx3.com:41363/provisioning/${MAC}-reg.cfg" | head -40  # polycomConfig
 ```
 
-Expect `<polycomConfig>` with `reg.1.server.1.address` = tenant FQDN and outbound = SBC.
-5. Phone → Provisioning Server → `https://provision.pbx3.com:41363/provisioning` (or full `…/${MAC}.cfg`). Reboot; GET **200**.
-6. REGISTER + audio + **far BYE**; fill NAT row.
+5. Phone factory/OOTB: enter **admin password**, then Provisioning Server → `https://provision.pbx3.com:41363/provisioning`. Reboot/apply; GET **200** on master then `-reg.cfg`.
+6. REGISTER + audio + **far BYE**; NAT keepalive **30**.
 
 ### Exit checks
 
-- [x] Manual SIP UI knobs: TZ, both ports, Transport **UDPOnly** (not DNSnaptr)
+- [x] Manual SIP UI knobs: TZ, both ports, Transport **UDPOnly** (not DNSnaptr) — fallback
 - [x] Far BYE fail OOTB noted; STUN **provisioning-only** (§0.2)
-- [x] Streams v0 authored (single-file UCS)
-- [ ] Curl / handset GET **200**; REGISTER via SBC
-- [ ] Far BYE green with stream STUN
-- [ ] Export-align if phone rejects v0 tags
-- [ ] D2 discovery note updated
+- [x] Streams v0 + master/`-reg.cfg` path
+- [x] Curl / handset GET **200**; REGISTER via SBC
+- [x] Far BYE green with stream STUN (**2026-10-03**)
+- [x] Factory-reset: admin password + provision URL only (**2026-10-03**)
+- [x] Discovery: DHCP **66** / manual URL (Lens exists — no build-out unless asked)

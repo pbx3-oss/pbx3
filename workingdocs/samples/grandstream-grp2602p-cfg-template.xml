@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Canonical shape after grandstream.Extension expands Common (+ optional .udp).
+     Tokens shown as lab literals. Reject chatbot roots (gs_id_c_e) and :// in P48/P76.
+     P2 = cluster.padminpass (Aelintra default 44068). P-tag order is cosmetic; P2 first matches stream. -->
+<gs_provision version="1.0">
+  <config version="1.0">
+    <P2>44068</P2>
+    <P76>stun.l.google.com</P76>
+    <P1119>30</P1119>
+    <P212>2</P212>
+    <P192>provision.pbx3.com:41363/provisioning</P192>
+    <P237>0</P237>
+    <P31>pool.ntp.org</P31>
+    <P64>GMT</P64>
+    <P271>1</P271>
+    <P270>408</P270>
+    <P47>hf3zzv.pbx3.com</P47>
+    <P48>sbc.pbx3.com</P48>
+    <P103>0</P103>
+    <P35>74y2h3</P35>
+    <P34>SECRET</P34>
+    <P3>ael08</P3>
+    <P52>0</P52>
+    <P290>{ x+ | \+x+ | *x+ | *xx*x+ | *xx* | [3469]11 }</P290>
+  </config>
+</gs_provision>
