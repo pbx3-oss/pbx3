@@ -197,7 +197,7 @@ No `poly.*` streams yet — author when mule firmware/export is in hand. **Multi
 
 **Manual SIP UI (2026-10-03):** OOTB timezone = **GMT**; **SIP server port** and **proxy port** both empty (must set, e.g. `5060`); **Transport(s)** defaults to **DNSnaptr** — set **UDPOnly** for fleet SBC. Otherwise straightforward. Field lock: sub-project **§0.1**.
 
-**NAT / far BYE:** OOTB outbound audio OK but **far-end hangup fails**. Browser NAT page has no STUN (IP / signalling / media start / keepalive only). Enable STUN via UCS params (or other Web GUI menu); re-soak. Details: sub-project **§0.2**.
+**NAT / far BYE:** OOTB outbound audio OK but **far-end hangup fails**. **STUN is provisioning-only** (no Web UI — chatbot GUI fields are wrong). Ship UCS STUN params in streams or a config push; re-soak. Details: sub-project **§0.2**.
 
 ### Resume (streams / REGISTER)
 
@@ -208,8 +208,8 @@ No `poly.*` streams yet — author when mule firmware/export is in hand. **Multi
 ### Exit checks
 
 - [x] Manual SIP UI knobs: TZ, both ports, Transport **UDPOnly** (not DNSnaptr)
-- [x] Far BYE fail OOTB noted; STUN path documented (§0.2)
-- [ ] Far BYE green after STUN (manual cfg or stream)
+- [x] Far BYE fail OOTB noted; STUN **provisioning-only** (§0.2)
+- [ ] Far BYE green after STUN (stream / config push — not Web UI)
 - [ ] Streams match export / UCS dialect
 - [ ] File/URL mapping documented
 - [ ] REGISTER via SBC; audio + BYE OK (or Lens-only path documented)

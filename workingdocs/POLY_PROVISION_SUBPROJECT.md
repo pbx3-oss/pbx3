@@ -46,8 +46,10 @@ Auth/address mapping for streams still follows the sketch below (`reg.1.address`
 | Observation | Detail |
 |-------------|--------|
 | Symptom | Outbound call audio OK; **far-end hangup does not clear the Poly** (Contact/NAT class — same as Snom **401** / Yealink **T31P** before STUN). |
-| Browser NAT UI | Shows **IP address**, **Signalling port**, **Media Port Start**, **keepalive interval** only — **no STUN** fields on that page. |
-| Expected fix | Enable **STUN** (fleet: `stun.l.google.com` / **3478**). UCS params (confirm on mule firmware / OEM admin guide — do not trust chatbot spelling blindly): |
+| Browser NAT UI | Shows **IP address**, **Signalling port**, **Media Port Start**, **keepalive interval** only — **no STUN** controls. |
+| STUN path | **Provisioning only.** Chatbot “Web GUI STUN fields” is a hallucination — do not hunt the browser. Lab/manual soak without our streams needs a **config file push / export-edit / Lens template**, not the Web UI. |
+
+**Expected fix** — enable STUN in UCS config (fleet: `stun.l.google.com` / **3478**). Candidate params (confirm spelling on mule firmware / OEM admin guide):
 
 ```text
 feature.nat.stun.enabled="1"
@@ -55,9 +57,7 @@ nat.stun.server="stun.l.google.com"
 nat.stun.port="3478"
 ```
 
-Web GUI may expose STUN under another Network/SIP menu; if not findable, set via provisioning file / export-edit. **Re-soak far BYE** before ticking the NAT checklist green.
-
-**Streams:** `poly.Common` (or sip-interop fragment) **must** ship STUN enabled — do not rely on the NAT UI page.
+**Streams:** `poly.Common` (or sip-interop fragment) **must** ship STUN — this is the product path for far BYE. Re-soak far hangup before ticking the NAT checklist green.
 
 ---
 
@@ -110,7 +110,7 @@ Transport / timezone / **STUN** (§0.2) / site defaults live in `poly.Common` / 
 ## 3. Exit (this sub-project slice)
 
 - [x] Manual SIP UI knobs locked (§0.1): GMT→local TZ; both ports; Transport **UDPOnly** (not DNSnaptr)
-- [x] Far-end BYE fails OOTB; NAT UI has no STUN — STUN-via-config path noted (§0.2); **BYE re-soak open**
+- [x] Far-end BYE fails OOTB; STUN is **provisioning-only** (no Web UI) — §0.2; **BYE re-soak open**
 - [ ] One Poly model lab-green (REGISTER + call + **far BYE** with STUN) **or** documented Lens/GDMS-style cloud-only path
 - [ ] File/URL mapping documented (master + reg vs single stream)
 - [ ] `poly.*` matches firmware / export (include §0.1 + STUN §0.2)
