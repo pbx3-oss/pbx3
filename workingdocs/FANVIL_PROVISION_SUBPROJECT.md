@@ -51,7 +51,7 @@ Line picker showed `412@SIP1` (cosmetic); REGISTER identity is still shortuid in
 | Lab soak | `PROVISIONING_LAB_RECIPE.md` §5 |
 | Stream notes | `provisioning/streams/README.md` |
 | Kernel expand smoke | `provision-kernel-test.php` (Fanvil INCLUDE) |
-| NAT checklist row | `pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md` (Fanvil — blank) |
+| NAT checklist row | `pbx3-directory/docs/FLEET_DESK_PHONE_NAT.md` — **STUN Off** lab-green (Sirius 412) |
 
 Extension entry for mule:
 
@@ -78,9 +78,11 @@ Extension entry for mule:
 
 ## 3. Exit (this sub-project slice)
 
-- [ ] One Fanvil model lab-green (provision + REGISTER + call/BYE)
+- [x] Manual SIP REGISTER + calls OK (Sirius 412 / `27b2mr`, STUN Off default)
+- [ ] Provision path lab-green (`fanvil.*` GET → REGISTER)
 - [ ] `fanvil.*` matches that firmware (export-aligned if possible)
-- [ ] NAT row filled; recipe §5 exit checks ticked
+- [x] NAT row filled (STUN Off works; streams keep STUN)
+- [ ] Recipe §5 provision exit checks ticked
 - [ ] Short MkDocs note under phone-provisioning (optional) or defer to B2-style page later
 
 Then either close Fanvil under D3 or open FDMCS / next brand.
