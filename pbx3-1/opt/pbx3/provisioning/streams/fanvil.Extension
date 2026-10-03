@@ -6,8 +6,8 @@
 <SIP_Line_List_Entry>
  SIP1
 <Phone_Number>$sipuser</Phone_Number>
-<Display_Name>$ext $desc</Display_Name>
-<Sip_Name>$sipdomain</Sip_Name>
+<Display_Name>$ext</Display_Name>
+<Sip_Name></Sip_Name>
 <Register_Addr>$sipdomain</Register_Addr>
 <Register_Port>$bindport</Register_Port>
 <Register_User>$sipuser</Register_User>
@@ -16,8 +16,8 @@
 <Enable_Reg>1</Enable_Reg>
 <Proxy_Addr>$outbound</Proxy_Addr>
 <Proxy_Port>$bindport</Proxy_Port>
-<Proxy_User>$sipuser</Proxy_User>
-<Proxy_Pswd>$password</Proxy_Pswd>
+<Proxy_User></Proxy_User>
+<Proxy_Pswd></Proxy_Pswd>
 <Transport>0</Transport>
 <Media_Crypto>0</Media_Crypto>
 <Enable_Rport>1</Enable_Rport>
