@@ -193,7 +193,7 @@ Stock streams still optional — author when firmware template known **and** pos
 
 ## 7. Poly mule soak (D2/D3)
 
-**Sub-project:** **`POLY_PROVISION_SUBPROJECT.md`**. Classic **UCS** layout assumed (`000000000000.cfg` + `site.cfg` / `sip-interop.cfg` + `{mac}-reg.cfg`). **Lens/ZTP** discovery still uncertain — lab = manual Provisioning Server. Assist-not-core; Lens end-to-end OK if free/easy.
+**Sub-project:** **`POLY_PROVISION_SUBPROJECT.md`**. **Lab mule:** **VVX 250** · firmware **6.4.3.5059**. Classic **UCS** layout assumed (`000000000000.cfg` + `site.cfg` / `sip-interop.cfg` + `{mac}-reg.cfg`). **Lens/ZTP** discovery still uncertain — lab = manual Provisioning Server. Assist-not-core; Lens end-to-end OK if free/easy.
 
 No `poly.*` streams yet — author when mule firmware/export is in hand. **Multi-file fetch** may need extra URL mapping vs Yealink `{mac}.cfg` — settle on first soak.
 

@@ -90,7 +90,7 @@ Plus per-line **`user_outbound1$`** = SBC (`snom.udp` / Extension).
 
 ### Poly
 
-- [ ] **VVX / UCS mule** — OOTB: calls OK but **far-end hangup fails** on outbound (same class as Snom / Yealink T31P). **STUN is provisioning-only** (browser NAT page has no STUN; chatbot Web-GUI STUN is wrong). Ship `feature.nat.stun.*` in `poly.Common`; re-soak BYE. Details: **`POLY_PROVISION_SUBPROJECT.md` §0.2**.
+- [ ] **VVX 250** firmware **6.4.3.5059** — OOTB: calls OK but **far-end hangup fails** on outbound (same class as Snom / Yealink T31P). **STUN is provisioning-only** (browser NAT page has no STUN; chatbot Web-GUI STUN is wrong). Ship `feature.nat.stun.*` in `poly.Common`; re-soak BYE. Details: **`POLY_PROVISION_SUBPROJECT.md` §0.2**.
 
 ### Gigaset
 
@@ -128,4 +128,4 @@ Line test report: **Bytes in/out** both &gt; 0 after answer; hangup clears both 
 | 2026-10-01 | Snom **401** post-fleet-provision: Contact LAN (`192.168.1.138`) vs Yealink public; far-end hangup leaves Snom up. Added STUN to `snom.Common`; Contact → public; far BYE clears (**lab soak**). |
 | 2026-10-03 | Grandstream Sirius **408**: NAT Traversal **Auto** (default) — audio + BYE OK. |
 | 2026-10-03 | Fanvil **X3U Pro 2.12.20** Sirius **412**: STUN **Off** (default) — calls OK; streams keep STUN for fleet. |
-| 2026-10-03 | Poly: far-end BYE fails OOTB; STUN **provisioning-only** (no Web UI); BYE re-soak open. |
+| 2026-10-03 | Poly **VVX 250 / 6.4.3.5059**: far-end BYE fails OOTB; STUN **provisioning-only** (no Web UI); BYE re-soak open. |
