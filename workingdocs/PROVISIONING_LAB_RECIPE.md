@@ -212,7 +212,7 @@ Stock streams still optional — author when firmware template known **and** pos
 #INCLUDE poly.udp
 ```
 
-3. `sndcreds` = **Once**; MAC already on row (`482567B0A593`).
+3. `sndcreds` = **Always** (Poly); MAC already on row (`482567B0A593`).
 4. Curl-prove:
 
 ```bash

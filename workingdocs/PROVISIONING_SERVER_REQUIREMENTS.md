@@ -269,7 +269,7 @@ Same idea as previous PBX **`sndcreds`** and as many **third-party / vendor clou
 | **Once** | Secret stanzas included on the **next** successful GET only; then provision state flips so later GETs **omit** those stanzas (previous PBX: `Once` → `No` after send) |
 | **No** | Secret stanzas omitted |
 
-**Default lean:** prefer **Once** for SIP password and similar (first boot / enroll gets creds; daily re-poll does not re-emit password). Some vendors require Always — allow per-extension override.
+**Default lean:** prefer **Once** for SIP password and similar (first boot / enroll gets creds; daily re-poll does not re-emit password). Some vendors require **Always** (lab: **Poly VVX** often will not keep/register without secrets on subsequent GETs) — SPA **Provision credentials** select is the per-extension override (`Always` \| `Once` \| `No`).
 
 **Prior PBX note (2026-09-30):** the live tree **dropped** the post-send flip (`Once` → `No`) — that update block was commented out. pbx3 **restores** the flip when implementing §4.3 (do not copy the disabled path). Use proper comparison (`==`), prepared statements.
 
