@@ -41,15 +41,33 @@ Ports are required on **both** SIP server and proxy (not address-only). Leaving 
 
 Auth/address mapping for streams still follows the sketch below (`reg.1.address` / `auth.userId` = `$sipuser`, server = `$sipdomain`, outbound = `$outbound`) — confirm shortuid vs display on next REGISTER green tick.
 
+### 0.2 NAT / far-end BYE (lab 2026-10-03)
+
+| Observation | Detail |
+|-------------|--------|
+| Symptom | Outbound call audio OK; **far-end hangup does not clear the Poly** (Contact/NAT class — same as Snom **401** / Yealink **T31P** before STUN). |
+| Browser NAT UI | Shows **IP address**, **Signalling port**, **Media Port Start**, **keepalive interval** only — **no STUN** fields on that page. |
+| Expected fix | Enable **STUN** (fleet: `stun.l.google.com` / **3478**). UCS params (confirm on mule firmware / OEM admin guide — do not trust chatbot spelling blindly): |
+
+```text
+feature.nat.stun.enabled="1"
+nat.stun.server="stun.l.google.com"
+nat.stun.port="3478"
+```
+
+Web GUI may expose STUN under another Network/SIP menu; if not findable, set via provisioning file / export-edit. **Re-soak far BYE** before ticking the NAT checklist green.
+
+**Streams:** `poly.Common` (or sip-interop fragment) **must** ship STUN enabled — do not rely on the NAT UI page.
+
 ---
 
 ## 1. Not on `main` yet
 
 | Artifact | Notes |
 |----------|-------|
-| Streams | e.g. `poly.Master` / `poly.Common` / `poly.Extension` (names TBD); Common must set timezone + **UDPOnly** + both ports |
-| Lab soak | Recipe §7 — UI knobs §0.1 locked |
-| NAT row | `FLEET_DESK_PHONE_NAT.md` — add Poly when soaking |
+| Streams | e.g. `poly.Master` / `poly.Common` / `poly.Extension` (names TBD); Common must set timezone + **UDPOnly** + both ports + **STUN** (§0.2) |
+| Lab soak | Recipe §7 — UI knobs §0.1; NAT/BYE §0.2 open until STUN proven |
+| NAT row | `FLEET_DESK_PHONE_NAT.md` — Poly row open (far BYE fails OOTB) |
 
 Sketch (placeholders — align to mule export):
 
@@ -68,11 +86,11 @@ Sketch (placeholders — align to mule export):
     reg.1.outboundProxy.address="$outbound"
     reg.1.outboundProxy.port="$bindport"
   />
-  <!-- transport: UDPOnly (not DNSnaptr); exact attribute name from mule export -->
+  <!-- transport: UDPOnly (not DNSnaptr); STUN: feature.nat.stun.* — exact names from mule export -->
 </phone>
 ```
 
-Transport / timezone / STUN / site defaults live in `poly.Common` / `sip-interop`-shaped fragment.
+Transport / timezone / **STUN** (§0.2) / site defaults live in `poly.Common` / `sip-interop`-shaped fragment.
 
 ---
 
@@ -82,7 +100,7 @@ Transport / timezone / STUN / site defaults live in `poly.Common` / `sip-interop
 2. Confirm boot fetch order and filenames vs our edge routes.
 3. Author streams; tip home; extension `#INCLUDE poly.Extension` (etc.).
 4. Claim MAC / map if fleet; set **Settings → Provisioning Server** (HTTPS → `provision.{apex}:41363/…`).
-5. Exit: GET(s) **200** → REGISTER via SBC → audio + BYE; fill NAT.
+5. Exit: GET(s) **200** → REGISTER via SBC → audio + **far BYE** (enable STUN §0.2); fill NAT.
 6. Spike **D2**: does Lens/ZTP give a free MAC→URL path we care about, or stay manual / partner-only?
 
 **Out of scope for first pass:** Lens automation API, firmware CDN (`sip.ld` hosting), full softkey/BLF matrix, non-VVX families until needed.
@@ -92,10 +110,11 @@ Transport / timezone / STUN / site defaults live in `poly.Common` / `sip-interop
 ## 3. Exit (this sub-project slice)
 
 - [x] Manual SIP UI knobs locked (§0.1): GMT→local TZ; both ports; Transport **UDPOnly** (not DNSnaptr)
-- [ ] One Poly model lab-green (REGISTER + call/BYE) **or** documented Lens/GDMS-style cloud-only path
+- [x] Far-end BYE fails OOTB; NAT UI has no STUN — STUN-via-config path noted (§0.2); **BYE re-soak open**
+- [ ] One Poly model lab-green (REGISTER + call + **far BYE** with STUN) **or** documented Lens/GDMS-style cloud-only path
 - [ ] File/URL mapping documented (master + reg vs single stream)
-- [ ] `poly.*` matches firmware / export (include §0.1 knobs)
-- [ ] NAT row filled; recipe §7 checks ticked
+- [ ] `poly.*` matches firmware / export (include §0.1 + STUN §0.2)
+- [ ] NAT row green; recipe §7 checks ticked
 - [ ] **D2** discovery note updated (Lens usable? yes/no/partner)
 
 Then close Poly under D2/D3 or open next brand.

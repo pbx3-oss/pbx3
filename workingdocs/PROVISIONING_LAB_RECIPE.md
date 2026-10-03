@@ -197,15 +197,19 @@ No `poly.*` streams yet — author when mule firmware/export is in hand. **Multi
 
 **Manual SIP UI (2026-10-03):** OOTB timezone = **GMT**; **SIP server port** and **proxy port** both empty (must set, e.g. `5060`); **Transport(s)** defaults to **DNSnaptr** — set **UDPOnly** for fleet SBC. Otherwise straightforward. Field lock: sub-project **§0.1**.
 
+**NAT / far BYE:** OOTB outbound audio OK but **far-end hangup fails**. Browser NAT page has no STUN (IP / signalling / media start / keepalive only). Enable STUN via UCS params (or other Web GUI menu); re-soak. Details: sub-project **§0.2**.
+
 ### Resume (streams / REGISTER)
 
-1. Export or OEM guide for that UCS build; map `reg.1.*` + outbound/STUN + **both ports** + **UDPOnly** + timezone to `$sipdomain` / `$outbound` / `$password` / `$bindport`.
+1. Export or OEM guide for that UCS build; map `reg.1.*` + **STUN** + **both ports** + **UDPOnly** + timezone to `$sipdomain` / `$outbound` / `$password` / `$bindport`.
 2. Add streams; tip home; set Provisioning Server → our HTTPS base; reboot.
-3. REGISTER + NAT/BYE; fill NAT row; note Lens findings under **D2**.
+3. REGISTER + audio + **far BYE**; fill NAT row; note Lens findings under **D2**.
 
 ### Exit checks
 
 - [x] Manual SIP UI knobs: TZ, both ports, Transport **UDPOnly** (not DNSnaptr)
+- [x] Far BYE fail OOTB noted; STUN path documented (§0.2)
+- [ ] Far BYE green after STUN (manual cfg or stream)
 - [ ] Streams match export / UCS dialect
 - [ ] File/URL mapping documented
 - [ ] REGISTER via SBC; audio + BYE OK (or Lens-only path documented)
