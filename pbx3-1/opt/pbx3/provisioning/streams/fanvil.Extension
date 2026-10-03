@@ -5,8 +5,8 @@
 <SIP_Line_List>
 <SIP_Line_List_Entry>
  SIP1
-<Phone_Number>$ext</Phone_Number>
-<Display_Name>$desc</Display_Name>
+<Phone_Number>$sipuser</Phone_Number>
+<Display_Name>$ext $desc</Display_Name>
 <Sip_Name>$sipdomain</Sip_Name>
 <Register_Addr>$sipdomain</Register_Addr>
 <Register_Port>$bindport</Register_Port>
