@@ -157,28 +157,31 @@ Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.p
 
 ---
 
-## 6. Grandstream mule soak (D3 — parked)
+## 6. Grandstream mule soak (D3)
 
 **Sub-project:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. **GDMS is free** — sites may provision entirely in GDMS and never hit our listener (§0.2 vendor-cloud-only OK). Our `grandstream.*` streams are optional (when home-rendered CFG wanted).
 
-No stock streams yet — author when mule model + firmware template are known **and** posture (2) is chosen.
+**Manual SIP REGISTER green (2026-10-03, Sirius 408 / `74y2h3`):** Account Name=`408`, SIP Server=`$sipdomain`, Outbound Proxy=`$outbound`, SIP User ID=`$sipuser`, password=`$password`. No Fanvil dual-user quirk. Field table: sub-project **§0.2**.
+
+Stock streams still optional — author when firmware template known **and** posture (2) is chosen.
 
 **OEM:** [SIP Device Provisioning Guide](https://www.grandstream.com/hubfs/Product_Documentation/gs_provisioning_guide.pdf) · P-value templates at [support/tools](https://www.grandstream.com/support/tools).
 
 **Shape:** `<gs_provision>` / `<Pnnn>` XML; phone often requests **`cfg{mac}.xml`** (path may differ from Yealink `{mac}.cfg` — settle on first soak). Lab = Config Server Path → our provision HTTPS. **GDMS/GAPS** later.
 
-### Resume (when handset arrives)
+### Resume (streams / NAT)
 
-1. Download firmware config template for that model; map SIP/outbound/STUN/admin to real P-values.
+1. Download firmware config template for that model; map SIP/outbound/STUN/admin to real P-values (mirror §0.2).
 2. Add `grandstream.Common` / `grandstream.Extension`; tip home; extension `#INCLUDE grandstream.Extension`.
 3. Claim MAC; set Config Server Path; reboot; REGISTER + NAT/BYE checklist.
 4. Fill **`FLEET_DESK_PHONE_NAT.md`** Grandstream row.
 
 ### Exit checks
 
-- [ ] Streams authored from template (not invented P-numbers)
-- [ ] Provision GET **200** (path convention documented)
-- [ ] REGISTER via SBC; audio + BYE OK
+- [x] Manual SIP REGISTER via SBC (Sirius)
+- [ ] Call / BYE + NAT row
+- [ ] Streams authored from template (optional; not invented P-numbers)
+- [ ] Provision GET **200** if using our listener (path convention documented)
 - [ ] (Later) GDMS enroll — out of scope for first mule
 
 ---
