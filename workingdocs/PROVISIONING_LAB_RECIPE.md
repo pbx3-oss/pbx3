@@ -142,7 +142,7 @@ Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.p
    - Protocol: **HTTPS**
    - Update mode: **After reboot** (or equivalent)
 4. Reboot. Edge log: GET **200**; home audit Once→No.
-5. **Manual SIP account (if not provisioned yet):** set **both** UI **User** and **Authentication User** to the extension **shortuid** (`$sipuser`). OEM docs allow Username≠Auth Name when the registrar’s SIP user *is* the extension; **PBX3 endpoint = shortuid only**, so User=`412` + Auth=shortuid → Asterisk **404**. Domain = tenant FQDN; proxy = SBC.
+5. **Manual SIP account (if not provisioned yet):** UI labels **SIP User** + **Authentication User** both = shortuid (`$sipuser`); **Display Name** = dialable ext (`412`); **Server Address** = tenant FQDN; **Proxy Server Address** = SBC; leave **Proxy User** / Realm / Server Name empty. Field map: **`FANVIL_PROVISION_SUBPROJECT.md` §0.1**.
 6. SPA/Asterisk: REGISTER; dial in-tenant + hangup (NAT/BYE — fill **`FLEET_DESK_PHONE_NAT.md`** Fanvil row).
 
 ### Exit checks
