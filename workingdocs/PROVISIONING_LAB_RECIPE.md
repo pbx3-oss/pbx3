@@ -189,20 +189,23 @@ Stock streams still optional — author when firmware template known **and** pos
 
 ---
 
-## 7. Poly mule soak (D2/D3 — parked)
+## 7. Poly mule soak (D2/D3)
 
 **Sub-project:** **`POLY_PROVISION_SUBPROJECT.md`**. Classic **UCS** layout assumed (`000000000000.cfg` + `site.cfg` / `sip-interop.cfg` + `{mac}-reg.cfg`). **Lens/ZTP** discovery still uncertain — lab = manual Provisioning Server. Assist-not-core; Lens end-to-end OK if free/easy.
 
 No `poly.*` streams yet — author when mule firmware/export is in hand. **Multi-file fetch** may need extra URL mapping vs Yealink `{mac}.cfg` — settle on first soak.
 
-### Resume (when handset arrives)
+**Manual SIP UI (2026-10-03):** OOTB timezone = **GMT**; **SIP server port** and **proxy port** both empty (must set, e.g. `5060`); **Transport(s)** defaults to **DNSnaptr** — set **UDPOnly** for fleet SBC. Otherwise straightforward. Field lock: sub-project **§0.1**.
 
-1. Export or OEM guide for that UCS build; map `reg.1.*` + outbound/STUN to `$sipdomain` / `$outbound` / `$password`.
+### Resume (streams / REGISTER)
+
+1. Export or OEM guide for that UCS build; map `reg.1.*` + outbound/STUN + **both ports** + **UDPOnly** + timezone to `$sipdomain` / `$outbound` / `$password` / `$bindport`.
 2. Add streams; tip home; set Provisioning Server → our HTTPS base; reboot.
 3. REGISTER + NAT/BYE; fill NAT row; note Lens findings under **D2**.
 
 ### Exit checks
 
+- [x] Manual SIP UI knobs: TZ, both ports, Transport **UDPOnly** (not DNSnaptr)
 - [ ] Streams match export / UCS dialect
 - [ ] File/URL mapping documented
 - [ ] REGISTER via SBC; audio + BYE OK (or Lens-only path documented)
