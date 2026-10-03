@@ -206,13 +206,14 @@ Stock streams still optional — author when firmware template known **and** pos
 ### Tip / soak
 
 1. Tip `poly.*` onto Sirius home.
-2. Extension **410** provision:
+2. Extension **410** provision (manual or **OUI soft-fill**): saving MAC `482567…` with blank `provision` auto-sets:
 
 ```text
 #INCLUDE poly.Extension
 #INCLUDE poly.udp
 ```
 
+and bumps empty/`Once` → `sndcreds=Always` (API `ProvisionOuiMapper`; does not touch `devicevendor`). **Needs lab E2E** after tip (clear **410** `provision`, Save MAC, confirm auto INCLUDE + Always; then curl GET).
 3. `sndcreds` = **Always** (Poly); MAC already on row (`482567B0A593`).
 4. Curl-prove:
 

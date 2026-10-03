@@ -23,6 +23,7 @@
 | Role | Assist — not required for Poly desks to work on PBX3 |
 | **Manual SIP (UI)** | **Straightforward** once ports + transport set (§0.1). No Fanvil dual-user quirk observed in lab notes. |
 | **sndcreds** | Prefer **Always** for Poly — phone re-polls and often will not stay provisioned/register without secrets on every GET. Kernel already supports Always; SPA select + lab **410** use Always. |
+| **OUI soft-fill** | Saving a Poly/Polycom MAC with blank `provision` auto-sets `#INCLUDE poly.Extension` + `poly.udp` and bumps empty/`Once` → **Always** (`manuf.txt` / `getmaclist.sh`; IEEE bare **Poly** OUIs e.g. `48:25:67`). Does not write `devicevendor` (S12). **Lab E2E still open** after tip. |
 
 ### ChatGPT sample (sanity)
 

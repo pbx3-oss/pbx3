@@ -129,6 +129,7 @@
 - [ ] **Grandstream provision sub-project (D3 — parked 2026-10-02):** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. P-value XML (`gs_provision`); streams when mule + firmware template in hand. Guide: [gs_provisioning_guide.pdf](https://www.grandstream.com/hubfs/Product_Documentation/gs_provisioning_guide.pdf).
 
 - [ ] **Poly provision sub-project (D2/D3 — parked 2026-10-02):** **`POLY_PROVISION_SUBPROJECT.md`**. Classic UCS master/`-reg.cfg` assumed; Lens discovery still open; streams when mule arrives.
+- [ ] **OUI soft-fill `provision` (2026-10-03):** API mapper + `manuf.txt`/`getmaclist` Poly filter shipped; **lab E2E open** — tip home, blank-provision MAC Save (Poly/Yealink/Snom), preserve non-empty, unknown no-op. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.4**.
 
 - [x] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-02):** Tip Snom+Yealink PEM; `PROVISION_MTLS=optional` live. Yealink **SUCCESS**+200; bare curl NONE/200 vs require **400**. Spec §8 · plan **C5**.
 
