@@ -149,11 +149,11 @@ Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.p
 
 - [ ] Curl body is module XML (`VOIP_CONFIG_FILE` / `SIP_CONFIG_MODULE`)
 - [ ] Handset provision GET **200**
-- [ ] REGISTER via SBC; audio + BYE OK (or note STUN/NAT tweak)
+- [x] Manual SIP REGISTER + calls OK with **STUN Off** (default) — NAT row filled; provision path still open
 - [ ] `Download_Protocol` 4 vs 5 settled for this firmware
 - [ ] (Later) FDPS / FDMCS enroll — out of scope for first mule
 
-**Tune on failure:** empty body / phone ignores XML → compare against that model’s Autoprovision guide; STUN/`NAT_Type`; HTTPS protocol enum.
+**Tune on failure:** empty body / phone ignores XML → compare against that model’s Autoprovision guide; STUN/`NAT_Type` (manual soak OK with STUN Off); HTTPS protocol enum.
 
 ---
 
