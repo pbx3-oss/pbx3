@@ -179,7 +179,7 @@ Stock streams still optional — author when firmware template known **and** pos
 ### Exit checks
 
 - [x] Manual SIP REGISTER via SBC (Sirius)
-- [ ] Call / BYE + NAT row
+- [x] Call / BYE + NAT Traversal **Auto** (default) — NAT row filled
 - [ ] Streams authored from template (optional; not invented P-numbers)
 - [ ] Provision GET **200** if using our listener (path convention documented)
 - [ ] (Later) GDMS enroll — out of scope for first mule
