@@ -53,6 +53,9 @@ expect('acrobits sipis', $m && $m[0] === 'Acrobits' && $m[1] === 'SIPIS');
 $m = pbx3_map_ua_to_vendor_model('MicroSIP/3.22.12');
 expect('microsip', $m && $m[0] === 'MicroSIP' && $m[1] === '3.22.12');
 
+$m = pbx3_map_ua_to_vendor_model('Grandstream GRP2602P 1.0.7.11');
+expect('grandstream GRP2602P', $m && $m[0] === 'Grandstream' && $m[1] === 'GRP2602P');
+
 $m = pbx3_map_ua_to_vendor_model('SomeUnknownAgent/1.0');
 expect('unknown unmapped', $m === null);
 
