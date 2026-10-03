@@ -16,7 +16,7 @@
 | Discovery | Lab = **manual Static Provisioning Server** URL. **FDMCS** / RPS automation = later. |
 | Docs trap | Fanvil **XML Operation Guide** = Push/Browser LCD XML — **not** auto-provision. Chatbot “standard” XML samples are unreliable; prefer phone export / Autoprovision Description / fielded templates. |
 | mTLS | Fanvil CA already in ops `3pcerts.pem` pack; edge prove later if desired. |
-| **SIP auth (UI)** | **Locked 2026-10-03 (Sirius 412 / `27b2mr`):** Fanvil **Authentication User does not override User**. Both **User** and **Authentication User** must be the PJSIP identity (**`$sipuser` / shortuid**). Setting only Auth User to shortuid while User=`412` → home **404** (no endpoint named `412`). Stream: `Phone_Number` + `Register_User` (+ `Proxy_User`) = `$sipuser`; `Display_Name` may show `$ext`. |
+| **SIP auth (UI)** | **Locked 2026-10-03 (Sirius 412 / `27b2mr`):** Fanvil/OEM docs often show **Username**=extension and **Authentication Name**=auth id as *different* values (3CX-style). That model assumes the registrar’s SIP user **is** the extension. **PBX3 does not:** PJSIP endpoint / digest identity = **shortuid** only; dialable **Name** (`412`) is not an Asterisk endpoint. Lab: User=`412` + Auth=`27b2mr` → home **404**; both fields = **`$sipuser`** → REGISTER OK. So for PBX3, set **both** UI User / Auth (and stream `Phone_Number` + `Register_User` + `Proxy_User`) to shortuid; put `$ext` in **Display Name** only. |
 
 ---
 
