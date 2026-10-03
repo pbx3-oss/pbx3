@@ -1,6 +1,7 @@
 # Grandstream provision sub-project (D3 slice)
 
 **Status:** **Manual SIP REGISTER green** (2026-10-03, Sirius 408 / `74y2h3`). No stock streams yet (optional). Not on the critical path for provision A–C10.  
+**Lab mule:** **Grandstream GRP2602P** · firmware **1.0.7.3**.  
 **Owns:** Optional Grandstream stock streams (`gs_provision` / P-values), lab soak when using our listener, NAT row, GDMS posture docs. **Not** a mandate that GS sites use our provision server.  
 **Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.4–§4.6 · plan **D3** · recipe **`PROVISIONING_LAB_RECIPE.md` §6**.  
 **Siblings:** **`FANVIL_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Gigaset (same D3 bucket; separate when started).
@@ -27,7 +28,7 @@
 
 **We do not need Grandstream customers to use our provisioning server.** Free GDMS removes the “must build GS streams day one” pressure. Stock `grandstream.*` remains useful for sites that want secrets/home MAC map / same fleet provision URL as Yealink/Snom — optional, not mandatory for GS to work on PBX3.
 
-### 0.2 Working manual SIP account (Sirius Grandstream, REGISTER green)
+### 0.2 Working manual SIP account (GRP2602P 1.0.7.3, REGISTER green)
 
 Operator fields that worked (Accounts → Account 1 / SIP Settings — labels as on phone UI):
 
@@ -42,11 +43,11 @@ Operator fields that worked (Accounts → Account 1 / SIP Settings — labels as
 
 **SIP User ID** alone carries the PJSIP identity when Auth UID is blank. Fanvil needs both fields set: **`FANVIL_PROVISION_SUBPROJECT.md` §0.1**.
 
-### 0.3 Dial plan (feature codes) — locked 2026-10-03
+### 0.3 Dial plan (feature codes) — locked 2026-10-03 (GRP2602P 1.0.7.3)
 
 Grandstream evaluates an **Account dial plan** (one pattern per line) **before** sending INVITE. Stock defaults do **not** pass PBX3 star-codes that end with `*` and have no trailing digits (e.g. `*56*`, `*21*`).
 
-**OOTB patterns (Sirius mule):**
+**OOTB patterns (GRP2602P):**
 
 ```text
 x+
@@ -80,7 +81,7 @@ That matches `*56*`, `*21*`, and the same shape of RCS / CAGI feature codes (`CA
 |----------|-------|
 | Streams | Add `grandstream.Common` / `grandstream.Extension` (+ transport stubs) when mule model is known; **must** include dial plan `*xx*` (§0.3) |
 | Lab soak | Recipe §6 — mirror Fanvil §5 once streams exist |
-| NAT checklist | `FLEET_DESK_PHONE_NAT.md` — **Auto** lab-green (Sirius 408) |
+| NAT checklist | `FLEET_DESK_PHONE_NAT.md` — **Auto** lab-green (GRP2602P / Sirius 408) |
 
 Sketch (placeholders only — P-numbers TBD from template):
 
@@ -117,7 +118,7 @@ Kernel: confirm `$mac` (or equivalent) is available in substitute map before rel
 
 ## 3. Exit (this sub-project slice)
 
-- [x] One Grandstream model **manual SIP** REGISTER green (Sirius 408 / `74y2h3`, 2026-10-03)
+- [x] **GRP2602P 1.0.7.3** **manual SIP** REGISTER green (Sirius 408 / `74y2h3`, 2026-10-03)
 - [x] Call / BYE + **NAT Traversal = Auto** (default) — lab OK; NAT row filled
 - [x] Feature codes: add dial-plan line `*xx*` (defaults alone reject `*56*` / `*21*`) — §0.3
 - [ ] `grandstream.*` P-values lifted from that firmware template (optional — GDMS-only OK)

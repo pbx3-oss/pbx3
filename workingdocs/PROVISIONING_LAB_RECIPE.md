@@ -161,7 +161,7 @@ Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.p
 
 ## 6. Grandstream mule soak (D3)
 
-**Sub-project:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. **GDMS is free** — sites may provision entirely in GDMS and never hit our listener (§0.2 vendor-cloud-only OK). Our `grandstream.*` streams are optional (when home-rendered CFG wanted).
+**Sub-project:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. **Lab mule:** **GRP2602P** · firmware **1.0.7.3** (Sirius 408). **GDMS is free** — sites may provision entirely in GDMS and never hit our listener (§0.2 vendor-cloud-only OK). Our `grandstream.*` streams are optional (when home-rendered CFG wanted).
 
 **Manual SIP REGISTER green (2026-10-03, Sirius 408 / `74y2h3`):** Account Name=`408`, SIP Server=`$sipdomain`, Outbound Proxy=`$outbound`, SIP User ID=`$sipuser`, password=`$password`. No Fanvil dual-user quirk. Field table: sub-project **§0.2**.
 
