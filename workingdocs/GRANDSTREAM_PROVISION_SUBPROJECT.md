@@ -50,7 +50,7 @@ Operator fields that worked (Accounts → Account 1 / SIP Settings — labels as
 |----------|-------|
 | Streams | Add `grandstream.Common` / `grandstream.Extension` (+ transport stubs) when mule model is known |
 | Lab soak | Recipe §6 — mirror Fanvil §5 once streams exist |
-| NAT checklist | `FLEET_DESK_PHONE_NAT.md` Grandstream row — blank |
+| NAT checklist | `FLEET_DESK_PHONE_NAT.md` — **Auto** lab-green (Sirius 408) |
 
 Sketch (placeholders only — P-numbers TBD from template):
 
@@ -88,7 +88,7 @@ Kernel: confirm `$mac` (or equivalent) is available in substitute map before rel
 ## 3. Exit (this sub-project slice)
 
 - [x] One Grandstream model **manual SIP** REGISTER green (Sirius 408 / `74y2h3`, 2026-10-03)
-- [ ] Call / BYE + NAT row (`FLEET_DESK_PHONE_NAT.md`) when soaked
+- [x] Call / BYE + **NAT Traversal = Auto** (default) — lab OK; NAT row filled
 - [ ] `grandstream.*` P-values lifted from that firmware template (optional — GDMS-only OK)
 - [ ] Request path (`cfg{mac}.xml` vs `{mac}.cfg`) documented + working on edge (if using our listener)
 - [ ] Optional MkDocs blurb under phone-provisioning

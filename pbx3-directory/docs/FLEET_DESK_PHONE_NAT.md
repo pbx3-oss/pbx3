@@ -86,7 +86,7 @@ Plus per-line **`user_outbound1$`** = SBC (`snom.udp` / Extension).
 
 ### Grandstream
 
-- [ ] NAT setting + audio + BYE — ___
+- [x] **GRP / desk mule** (lab Sirius **408** / `74y2h3`) — **NAT Traversal = Auto** (UI default); two-way audio + BYE OK via SBC (**2026-10-03**). Prefer Auto in manual setup / future streams unless a model proves otherwise.
 
 ### Gigaset
 
@@ -122,3 +122,4 @@ Line test report: **Bytes in/out** both &gt; 0 after answer; hangup clears both 
 |------|------|
 | 2026-09-03 | Line test play() race fixed (SPA). Yealink **403** zero inbound RTP until NAT Auto/STUN; **T31P** BYE until STUN; **Snom 401** / **Yealink 402** comparatively forgiving. Doc created. |
 | 2026-10-01 | Snom **401** post-fleet-provision: Contact LAN (`192.168.1.138`) vs Yealink public; far-end hangup leaves Snom up. Added STUN to `snom.Common`; Contact → public; far BYE clears (**lab soak**). |
+| 2026-10-03 | Grandstream Sirius **408**: NAT Traversal **Auto** (default) — audio + BYE OK. |
