@@ -1,10 +1,10 @@
 # Extension device model harvest (sidekick utility)
 
-**Status:** **Lab green on `.31` (2026-08-27)** — posture **A** implemented (harvest + API + SPA fields). Package cron still **off by default**; `.31` cron enabled. Images (slice F) not required for this pass.  
-**Prior locks:** 2026-08-09 edge registrations API — **superseded**. 2026-08-26 AstDB-home source. 2026-08-27 design lock.  
+**Status:** **Lab green on `.31` (2026-08-27)** — posture **A** implemented (harvest + API + SPA fields). Package cron **on by default** (2026-10-03). Images (slice F) not required for this pass.  
+**Prior locks:** 2026-08-09 edge registrations API — **superseded**. 2026-08-26 AstDB-home source. 2026-08-27 design lock. 2026-10-03 cron default on.  
 **Name:** `harvest-devicemodel` (script) / “UA model sidekick”.  
 **Problem:** Without HTTP provisioning we no longer learn desk-phone **vendor/model** at config time. Customers liked handset images on the extension panel.  
-**Opportunity:** Asterisk stores each registered contact’s `user_agent` in AstDB under `registrar/contact`. An optional home cron soft-fills harvest columns.  
+**Opportunity:** Asterisk stores each registered contact’s `user_agent` in AstDB under `registrar/contact`. Home cron soft-fills harvest columns.  
 **Related:** `getimages.sh` (`PBX3_PHONEIMAGES_URL`) · `PROVISIONING_SERVER_REQUIREMENTS.md` (won't-do) · pbx3api `Ami`.  
 **Sibling:** **`PHONE_MODEL_DURABLE_VS_EPHEMERAL.md`** — posture **A locked**; optional fleet inventory parked.
 
@@ -14,7 +14,7 @@
 
 | # | Lock |
 |---|------|
-| S1 | **Optional.** Disabled / cron off → no-op exit 0. Solo and fleet use the **same** path. **Do not** require SBC. |
+| S1 | **On by default** (package `/etc/cron.d/pbx3-harvest-devicemodel` every 15 min). Opt-out: comment the cron job or run with `PBX3_HARVEST_DEVICEMODEL=0` / unset → no-op exit 0. Solo and fleet use the **same** path. **Do not** require SBC. |
 | S2 | **Async only.** Never on REGISTER, dial, GenAst, or SPA request path. |
 | S3 | **Soft write** on `devicevendor` + `devicemodel`: empty → fill; current equals this run’s mapped values → bump `lastseen` (set `firstseen` if null); else **skip** (treat as operator-owned). No separate “last auto” column in v1. |
 | S4 | **Key = PJSIP endpoint shortuid.** Look up `ipphone` by shortuid (+ cluster if needed). **Never** by contact IP. |
@@ -117,9 +117,9 @@ Prefer AMI `Action: Command` / `database show registrar/contact`. Parse `key: js
 | Item | Choice |
 |------|--------|
 | Path | `/opt/pbx3/scripts/harvest-devicemodel.sh` (+ PHP helper) |
-| Cron | Optional `/etc/cron.d/pbx3-harvest-devicemodel` — **commented/off by default** |
-| Cadence | **Every 15 minutes** when enabled (AstDB dump is cheap; REGISTER churn is slow) |
-| Enable | `PBX3_HARVEST_DEVICEMODEL=1` (or enabled cron). Unset / `0` → exit 0 |
+| Cron | `/etc/cron.d/pbx3-harvest-devicemodel` — **on by default** |
+| Cadence | **Every 15 minutes** (AstDB dump is cheap; REGISTER churn is slow) |
+| Enable | Cron sets `PBX3_HARVEST_DEVICEMODEL=1`. Unset / `0` → exit 0 (manual disable) |
 
 Exit: `0` success or disabled; `1` AMI/CLI/parse/DB error; never touch call plane.
 
@@ -186,7 +186,7 @@ $manufacturer_regex = [
 |---------------|--------|-------|
 | **Both US + EU** | **Yealink**, **Fanvil** | Seeded |
 | **EU-strong** | **Snom** | Dual UA forms |
-| **US / global SMB** | **Grandstream** | Need SIP UA sample (unit ordered 2026-08-27) |
+| **US / global SMB** | **Grandstream** | Proven Sirius/`74y2h3`: `Grandstream GRP2602P 1.0.7.11` |
 | **EU DECT/IP** | **Gigaset** | Need SIP UA sample (unit ordered 2026-08-27) |
 | **Enterprise** | **Poly**, **Cisco** 3PCC | Seeded common forms |
 | **Legacy EU** | **Panasonic**, **Aastra** | Seeded |
@@ -203,6 +203,12 @@ $manufacturer_regex = [
 | `jxpg8b` | `Yealink SIP-T46U 108.86.0.90` | `Yealink` | `T46U` | `Yealink (T46U)` |
 | `pqjfth` | `snomD717/10.1.198.19` | `Snom` | `D717` | `Snom (D717)` |
 | `pz9vmk` | `Z 5.6.13 v2.10.20.14` | `Zoiper` | `5.6.13` | `Zoiper (5.6.13)` |
+
+**Sirius / bzy54n (2026-10-03):**
+
+| shortuid | User-Agent | `devicevendor` | `devicemodel` | Display |
+|----------|------------|----------------|---------------|---------|
+| `74y2h3` | `Grandstream GRP2602P 1.0.7.11` | `Grandstream` | `GRP2602P` | `Grandstream (GRP2602P)` |
 
 **Earlier samples (still valid):**
 
@@ -259,8 +265,8 @@ $manufacturer_regex = [
 | **A** | Schema: `devicevendor` + `firstseen`/`lastseen`; `device` normalize SQL; drop OUI→device |
 | **B** | Read + parse `registrar/contact` |
 | **C** | UA mapper unit tests (fixtures §4.4) — vendor + model split |
-| **D** | Soft UPDATE + optional cron (off by default) |
-| **E** | Lab enable on `.31` / golden |
+| **D** | Soft UPDATE + cron (**on by default** as of 2026-10-03) |
+| **E** | Lab prove on `.31` / golden / Sirius |
 | **F** | SPA image / “as of” + phoneimages host (§9) — **shelved 2026-08-27** (partner-portal assets first; Handset text OK without images) |
 | **G** | previous PBX ETL #14 + drop `getVendorFromMac` |
 

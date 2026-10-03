@@ -22,7 +22,7 @@ Home columns (repurposed from defunct provisioner; add to SQLite if missing):
 | L1 | Every stored or directory-projected phone hint includes **`lastseen`** (fleet may mirror as `reported_at`) — time of the AstDB observation that produced the values. |
 | L2 | UI always surfaces that time (“as of …”). No bare vendor/model/MAC as “current phone.” |
 | L3 | Stale after a handset swap is **expected**; catch-up on next observe is the fix. Contact expiry → **stop bumping** `lastseen`; **leave** vendor/model (do not clear). |
-| L4 | **Wrong window is short.** `user_agent` in AstDB only changes when the endpoint **REGISTER**s. Incorrect durable/fleet data lasts at most until **next REGISTER → next harvest** (**15 min** cron when enabled). |
+| L4 | **Wrong window is short.** `user_agent` in AstDB only changes when the endpoint **REGISTER**s. Incorrect durable/fleet data lasts at most until **next REGISTER → next harvest** (**15 min** cron; on by default). |
 | L5 | **Change can be a warning signal (later).** New vendor/model vs prior row may mean a desk swap. **Parked:** detect / notify when scheduled; **not** v1. Do **not** auto-block REGISTER or calls. |
 
 Without **L1–L4**, prefer posture **B**. **With L1–L4**, posture **A** (locked) is acceptable.
