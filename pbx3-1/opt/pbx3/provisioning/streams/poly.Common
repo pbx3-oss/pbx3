@@ -1,0 +1,23 @@
+<!-- PBX3 poly.Common — VVX UCS site defaults (mule: VVX 250 / 6.4.3.5059).
+     STUN is provisioning-only on Poly (POLY_PROVISION_SUBPROJECT.md §0.2). -->
+  <feature
+    feature.nat.stun.enabled="1"
+  />
+  <nat
+    nat.stun.server="stun.l.google.com"
+    nat.stun.port="3478"
+  />
+  <voIpProt
+    voIpProt.SIP.rport="1"
+  />
+  <tcpIpApp
+    tcpIpApp.sntp.address="pool.ntp.org"
+    tcpIpApp.sntp.address.overrideDHCP="1"
+    tcpIpApp.sntp.gmtOffset="0"
+    tcpIpApp.sntp.gmtOffset.overrideDHCP="1"
+    tcpIpApp.sntp.daylightSavings.enable="1"
+  />
+  <device
+    device.auth.localAdminPassword.set="1"
+  />
+  <device device.auth.localAdminPassword="$padminpass"/>
