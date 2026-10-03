@@ -43,6 +43,15 @@ Line picker showed `412@SIP1` (cosmetic); REGISTER identity is still shortuid in
 
 **Feature codes:** Fanvil sends PBX3 star-codes (`*56*`, `*21*`, …) **OOTB** — no phone dialplan edit. Grandstream needs an extra `*xx*` pattern: **`GRANDSTREAM_PROVISION_SUBPROJECT.md` §0.3**.
 
+### 0.2 Timezone (lab 2026-10-03)
+
+| Knob | OOTB | Notes |
+|------|------|--------|
+| **Time Sync (SNTP)** | **ON** | Syncs UTC clock from NTP — does **not** set local display zone |
+| **Time zone / region** | **Beijing** (China) | Factory default; phone shows Beijing wall time until changed |
+
+**Sirius lab:** forced **UTC-5** (Eastern) manually. Stock `fanvil.Common` already ships UK London (`Time_Zone` / `Time_Zone_Name` + `Enable_SNTP`) — same class as Yealink/Snom. Site streams must set the zone for that locale; **do not assume SNTP ON alone fixes the clock face**.
+
 ---
 
 ## 1. Already on `main`
@@ -81,6 +90,7 @@ Extension entry for mule:
 ## 3. Exit (this sub-project slice)
 
 - [x] Manual SIP REGISTER + calls OK (Sirius 412 / `27b2mr`, STUN Off default)
+- [x] OOTB timezone **Beijing** despite SNTP ON — set site zone (lab UTC-5); streams ship UK (§0.2)
 - [ ] Provision path lab-green (`fanvil.*` GET → REGISTER)
 - [ ] `fanvil.*` matches that firmware (export-aligned if possible)
 - [x] NAT row filled (STUN Off works; streams keep STUN)
