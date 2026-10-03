@@ -41,6 +41,8 @@ Scraped from phone **Line → SIP → Register Settings** HTML (`lines.htm` form
 
 Line picker showed `412@SIP1` (cosmetic); REGISTER identity is still shortuid in **SIP User** / **Authentication User**.
 
+**Feature codes:** Fanvil sends PBX3 star-codes (`*56*`, `*21*`, …) **OOTB** — no phone dialplan edit. Grandstream needs an extra `*xx*` pattern: **`GRANDSTREAM_PROVISION_SUBPROJECT.md` §0.3**.
+
 ---
 
 ## 1. Already on `main`

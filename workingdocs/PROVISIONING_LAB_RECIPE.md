@@ -163,6 +163,8 @@ Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.p
 
 **Manual SIP REGISTER green (2026-10-03, Sirius 408 / `74y2h3`):** Account Name=`408`, SIP Server=`$sipdomain`, Outbound Proxy=`$outbound`, SIP User ID=`$sipuser`, password=`$password`. No Fanvil dual-user quirk. Field table: sub-project **§0.2**.
 
+**Dial plan (feature codes):** stock patterns reject `*56*` / `*21*`-shaped codes — add one line `*xx*`. Details: sub-project **§0.3**. Fanvil needs no change.
+
 Stock streams still optional — author when firmware template known **and** posture (2) is chosen.
 
 **OEM:** [SIP Device Provisioning Guide](https://www.grandstream.com/hubfs/Product_Documentation/gs_provisioning_guide.pdf) · P-value templates at [support/tools](https://www.grandstream.com/support/tools).
@@ -171,7 +173,7 @@ Stock streams still optional — author when firmware template known **and** pos
 
 ### Resume (streams / NAT)
 
-1. Download firmware config template for that model; map SIP/outbound/STUN/admin to real P-values (mirror §0.2).
+1. Download firmware config template for that model; map SIP/outbound/STUN/admin/**dial plan `*xx*`** to real P-values (mirror §0.2–§0.3).
 2. Add `grandstream.Common` / `grandstream.Extension`; tip home; extension `#INCLUDE grandstream.Extension`.
 3. Claim MAC; set Config Server Path; reboot; REGISTER + NAT/BYE checklist.
 4. Fill **`FLEET_DESK_PHONE_NAT.md`** Grandstream row.
@@ -180,6 +182,7 @@ Stock streams still optional — author when firmware template known **and** pos
 
 - [x] Manual SIP REGISTER via SBC (Sirius)
 - [x] Call / BYE + NAT Traversal **Auto** (default) — NAT row filled
+- [x] Feature codes: dial-plan line `*xx*` added (stock alone fails `*56*` / `*21*`)
 - [ ] Streams authored from template (optional; not invented P-numbers)
 - [ ] Provision GET **200** if using our listener (path convention documented)
 - [ ] (Later) GDMS enroll — out of scope for first mule

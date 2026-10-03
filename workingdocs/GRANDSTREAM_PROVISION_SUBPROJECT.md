@@ -42,13 +42,43 @@ Operator fields that worked (Accounts → Account 1 / SIP Settings — labels as
 
 **SIP User ID** alone carries the PJSIP identity when Auth UID is blank. Fanvil needs both fields set: **`FANVIL_PROVISION_SUBPROJECT.md` §0.1**.
 
+### 0.3 Dial plan (feature codes) — locked 2026-10-03
+
+Grandstream evaluates an **Account dial plan** (one pattern per line) **before** sending INVITE. Stock defaults do **not** pass PBX3 star-codes that end with `*` and have no trailing digits (e.g. `*56*`, `*21*`).
+
+**OOTB patterns (Sirius mule):**
+
+```text
+x+
+\+x+
+*x+
+*xx*x+
+```
+
+| Pattern | Why it fails our codes |
+|---------|------------------------|
+| `*x+` | Digits after `*`, no trailing `*` |
+| `*xx*x+` | Needs more digits **after** the second `*` |
+
+**Required add (lab):** one more line:
+
+```text
+*xx*
+```
+
+That matches `*56*`, `*21*`, and the same shape of RCS / CAGI feature codes (`CALL_TYPE_INVENTORY.md`).
+
+**Fanvil:** no phone dialplan change — feature codes work OOTB.
+
+**Streams / GDMS:** when authoring, set the account dial-plan P-value (or GDMS template) to include `*xx*` alongside the defaults. Do not invent the P-number — lift from the model template.
+
 ---
 
 ## 1. Not on `main` yet
 
 | Artifact | Notes |
 |----------|-------|
-| Streams | Add `grandstream.Common` / `grandstream.Extension` (+ transport stubs) when mule model is known |
+| Streams | Add `grandstream.Common` / `grandstream.Extension` (+ transport stubs) when mule model is known; **must** include dial plan `*xx*` (§0.3) |
 | Lab soak | Recipe §6 — mirror Fanvil §5 once streams exist |
 | NAT checklist | `FLEET_DESK_PHONE_NAT.md` — **Auto** lab-green (Sirius 408) |
 
@@ -71,7 +101,7 @@ Kernel: confirm `$mac` (or equivalent) is available in substitute map before rel
 ## 2. When the mule arrives (resume checklist)
 
 1. Note **exact model + firmware**; download that release’s **configuration template** from Grandstream tools.
-2. Author `grandstream.Common` / `grandstream.Extension` with real P-values for: SIP server = `$sipdomain`, outbound/proxy = `$outbound`, auth = `$sipuser` / `$password`, provision URL, STUN/NAT, admin pass.
+2. Author `grandstream.Common` / `grandstream.Extension` with real P-values for: SIP server = `$sipdomain`, outbound/proxy = `$outbound`, auth = `$sipuser` / `$password`, provision URL, STUN/NAT, **dial plan + `*xx*`** (§0.3), admin pass.
 3. Tip streams; spare extension MAC + `#INCLUDE grandstream.Extension`; `sndcreds=Once`.
 4. Claim MAC / map sync (fleet).
 5. Phone UI → Maintenance / Upgrade & Provisioning → **Config Server Path** = our provision HTTPS base (and filename / prefix-postfix if required).
@@ -89,6 +119,7 @@ Kernel: confirm `$mac` (or equivalent) is available in substitute map before rel
 
 - [x] One Grandstream model **manual SIP** REGISTER green (Sirius 408 / `74y2h3`, 2026-10-03)
 - [x] Call / BYE + **NAT Traversal = Auto** (default) — lab OK; NAT row filled
+- [x] Feature codes: add dial-plan line `*xx*` (defaults alone reject `*56*` / `*21*`) — §0.3
 - [ ] `grandstream.*` P-values lifted from that firmware template (optional — GDMS-only OK)
 - [ ] Request path (`cfg{mac}.xml` vs `{mac}.cfg`) documented + working on edge (if using our listener)
 - [ ] Optional MkDocs blurb under phone-provisioning
