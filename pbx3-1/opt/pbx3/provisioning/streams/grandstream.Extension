@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PBX3 grandstream.Extension — cfg{mac}.xml body for GRP2602P.
+     Entry: #INCLUDE grandstream.Extension (+ optional grandstream.udp).
+     Dial plan P290 must include *xx* (feature codes ending in *). -->
+<gs_provision version="1.0">
+  <config version="1.0">
+#INCLUDE grandstream.Common
+    <P271>1</P271>
+    <P270>$ext</P270>
+    <P47>$sipdomain</P47>
+    <P48>$outbound</P48>
+    <P103>0</P103>
+    <P35>$sipuser</P35>
+    <P34>$password</P34>
+    <P3>$desc</P3>
+    <P52>4</P52>
+    <P290>{ x+ | \+x+ | *x+ | *xx*x+ | *xx* | [3469]11 }</P290>
+  </config>
+</gs_provision>

@@ -93,7 +93,8 @@ foreach (array('snom.udp', 'snom.tcp', 'snom.tls', 'snom.ipv4', 'snom.ipv6', 'sn
 	'Panasonic', 'panasonic.udp', 'panasonic.tcp', 'panasonic.tls', 'panasonic.ipv4',
 	'panasonic.ipv6', 'panasonic.Ldap',
 	'fanvil.Common', 'fanvil.Extension', 'fanvil.udp',
-	'poly.Common', 'poly.Extension', 'poly.udp') as $frag) {
+	'poly.Master', 'poly.Common', 'poly.Extension', 'poly.udp',
+	'grandstream.Common', 'grandstream.Extension', 'grandstream.udp') as $frag) {
 	expect("stream $frag", is_readable($streams . '/' . $frag));
 }
 $loop = array();
@@ -142,7 +143,35 @@ expect('ETL poly UDPOnly + STUN', strpos($poly, 'UDPOnly') !== false && strpos($
 expect('ETL poly outbound proxy', strpos($poly, 'reg.1.outboundProxy.address="$outbound"') !== false);
 
 $p = pbx3_provision_parse_request('GET', '/provisioning/482567b0a593-reg.cfg', array());
-expect('poly mac-reg.cfg path', $p['status'] === 'ok' && $p['kind'] === 'mac' && $p['mac'] === '482567b0a593');
+expect('poly mac-reg.cfg path', $p['status'] === 'ok' && $p['kind'] === 'mac' && $p['mac'] === '482567b0a593' && $p['suffix'] === '-reg.cfg');
+
+$p = pbx3_provision_parse_request('GET', '/provisioning/000000000000.cfg', array());
+expect('poly zero master path', $p['status'] === 'ok' && $p['kind'] === 'poly_master');
+
+$p = pbx3_provision_parse_request('GET', '/provisioning/cfg482567b0a593.xml', array());
+expect('grandstream cfg{mac}.xml', $p['status'] === 'ok' && $p['mac'] === '482567b0a593' && $p['reason'] === 'grandstream_cfg_xml');
+
+$loop = array();
+$gs = pbx3_provision_expand(
+	"#INCLUDE grandstream.Extension\n#INCLUDE grandstream.udp\n",
+	true,
+	$streams,
+	$loop
+);
+expect('ETL grandstream XML', strpos($gs, '<gs_provision') !== false && strpos($gs, '<P47>$sipdomain</P47>') !== false);
+expect('ETL grandstream outbound P48', strpos($gs, '<P48>$outbound</P48>') !== false);
+expect('ETL grandstream dial *xx*', strpos($gs, '*xx*') !== false);
+expect('ETL grandstream P2 admin token', strpos($gs, '<P2>$padminpass</P2>') !== false);
+expect('ETL grandstream no chatbot root', strpos($gs, 'gs_id_c_e') === false);
+
+foreach (array('482567b0a593-web.cfg', '482567b0a593-phone.cfg', '482567b0a593-cloud.cfg', '482567b0a593-directory.xml', '482567b0a593-calls.xml', '482567b0a593-license.cfg') as $opt) {
+	$p = pbx3_provision_parse_request('GET', '/provisioning/' . $opt, array());
+	expect("poly optional $opt → 404", $p['status'] === 'not_found' && $p['reason'] === 'poly_optional');
+}
+
+expect('poly.Master stream', is_readable($streams . '/poly.Master'));
+$masterBody = pbx3_provision_poly_master_body($streams);
+expect('poly master has APPLICATION', strpos($masterBody, '<APPLICATION') !== false && strpos($masterBody, '[PHONE_MAC_ADDRESS]-reg.cfg') !== false);
 
 // --- Fixture SQLite ---
 $dbFile = $tmp . '/test.db';
@@ -154,6 +183,26 @@ $db->exec('CREATE TABLE ipphone (
 )');
 $db->exec('CREATE TABLE trunks (pkey TEXT, active TEXT)');
 $db->exec("INSERT INTO ipphone VALUES ('1001','su1001','aabbccddeeff','pw','#INCLUDE yealink.Extension','FQDN','Desk','t1','Once',NULL,NULL)");
+$db->exec("INSERT INTO ipphone VALUES ('410','g0ntwm','482567b0a593','polypw','#INCLUDE poly.Extension\n#INCLUDE poly.udp','FQDN','ael10','t1','Always',NULL,NULL)");
+
+$parsed = pbx3_provision_parse_request('GET', '/provisioning/482567b0a593.cfg', array());
+$rPolyMaster = pbx3_provision_render($db, $parsed, $streams, array('fqdn' => 'node.example.com'), array(
+	'sipdomain' => 't1.example.com',
+	'outbound' => 'sbc.example',
+));
+expect('poly bare cfg is master', $rPolyMaster['ok'] && $rPolyMaster['reason'] === 'poly_master' && strpos($rPolyMaster['body'], 'APP_FILE_PATH') !== false);
+expect('poly master not settings', strpos($rPolyMaster['body'], '<polycomConfig') === false);
+expect('poly master literal -reg.cfg', strpos($rPolyMaster['body'], '482567b0a593-reg.cfg') !== false);
+
+$parsed = pbx3_provision_parse_request('GET', '/provisioning/482567b0a593-reg.cfg', array());
+$rPolyReg = pbx3_provision_render($db, $parsed, $streams, array('fqdn' => 'node.example.com'), array(
+	'sipdomain' => 't1.example.com',
+	'outbound' => 'sbc.example',
+	'bindport' => '5060',
+));
+expect('poly -reg.cfg is settings', $rPolyReg['ok'] && $rPolyReg['reason'] === 'mac' && strpos($rPolyReg['body'], 'polycomConfig') !== false);
+expect('poly -reg has STUN', strpos($rPolyReg['body'], 'feature.nat.stun.enabled="1"') !== false);
+expect('poly -reg has keepalive', strpos($rPolyReg['body'], 'nat.keepalive.interval="30"') !== false);
 
 $parsed = pbx3_provision_parse_request('GET', '/aabbccddeeff.cfg', array());
 $r = pbx3_provision_render($db, $parsed, $streams, array('PADMINPASS' => 'adm', 'PUSERPASS' => 'usr', 'fqdn' => 'node.example.com', 'domain' => 'example.com'), array(
@@ -245,8 +294,8 @@ putenv('PBX3_SBC_EGRESS_HOST=sbc.lab');
 $h = pbx3_provision_resolve_hosts($db, array('domain' => 'pbx3.com', 'fqdn' => 'node.pbx3.com'), array('localip' => '10.1.1.1'));
 expect('fleet outbound is SBC', $h['fleet'] === true && $h['outbound'] === 'sbc.lab' && $h['outbound_enable'] === '1');
 expect('fleet provurl', strpos($h['provurl'], 'https://provision.pbx3.com:') === 0);
-$db->exec('CREATE TABLE cluster (pkey TEXT, shortuid TEXT, fqdn TEXT)');
-$db->exec("INSERT INTO cluster VALUES ('t1','t1','t1.example.com')");
+$db->exec('CREATE TABLE cluster (pkey TEXT, shortuid TEXT, fqdn TEXT, padminpass TEXT, puserpass TEXT)');
+$db->exec("INSERT INTO cluster VALUES ('t1','t1','t1.example.com','44068','31524')");
 $sip = pbx3_provision_sipdomain_for_phone($db, array('cluster' => 't1'), array('domain' => 'example.com'), array('localip' => '10.1.1.1'));
 expect('sipdomain from cluster.fqdn', $sip === 't1.example.com');
 putenv('PBX3_FLEET_MODE=false');
@@ -254,6 +303,19 @@ $h2 = pbx3_provision_resolve_hosts($db, array('fqdn' => 'solo.example.com'), arr
 expect('solo outbound empty', $h2['fleet'] === false && $h2['outbound'] === '' && $h2['outbound_enable'] === '0');
 putenv('PBX3_FLEET_MODE');
 putenv('PBX3_SBC_EGRESS_HOST');
+
+// Grandstream cfg{mac}.xml — P2 from cluster.padminpass
+$db->exec("UPDATE ipphone SET provision='#INCLUDE grandstream.Extension\n#INCLUDE grandstream.udp', macaddr='c074ad123456', sndcreds='Always' WHERE pkey='1001'");
+$parsedGs = pbx3_provision_parse_request('GET', '/provisioning/cfgc074ad123456.xml', array());
+$rGs = pbx3_provision_render($db, $parsedGs, $streams, array('domain' => 'example.com'), array(
+	'sipdomain' => 't1.example.com',
+	'outbound' => 'sbc.example',
+	'outbound_enable' => '1',
+	'provurl' => 'https://provision.example.com:41363/provisioning',
+));
+expect('grandstream cfg xml renders', $rGs['ok'] && $rGs['reason'] === 'mac');
+expect('grandstream P2 from cluster', strpos($rGs['body'], '<P2>44068</P2>') !== false);
+expect('grandstream P47 sipdomain', strpos($rGs['body'], '<P47>t1.example.com</P47>') !== false);
 
 // Obfuscate unit
 $ob = pbx3_provision_obfuscate_for_audit("account.1.password = cleartext\nok=1\n");
