@@ -92,7 +92,8 @@ foreach (array('snom.udp', 'snom.tcp', 'snom.tls', 'snom.ipv4', 'snom.ipv6', 'sn
 	'yealink.udp', 'yealink.tcp', 'yealink.tls', 'yealink.ipv4', 'yealink.ipv6', 'Yealink',
 	'Panasonic', 'panasonic.udp', 'panasonic.tcp', 'panasonic.tls', 'panasonic.ipv4',
 	'panasonic.ipv6', 'panasonic.Ldap',
-	'fanvil.Common', 'fanvil.Extension', 'fanvil.udp') as $frag) {
+	'fanvil.Common', 'fanvil.Extension', 'fanvil.udp',
+	'poly.Common', 'poly.Extension', 'poly.udp') as $frag) {
 	expect("stream $frag", is_readable($streams . '/' . $frag));
 }
 $loop = array();
@@ -127,6 +128,21 @@ expect('ETL fanvil module XML', strpos($fanvil, '<VOIP_CONFIG_FILE>') !== false 
 expect('ETL fanvil INCLUDE stripped', strpos($fanvil, '#INCLUDE') === false);
 expect('ETL fanvil Register_Addr placeholder', strpos($fanvil, '<Register_Addr>$sipdomain</Register_Addr>') !== false);
 expect('ETL fanvil Proxy_Addr outbound', strpos($fanvil, '<Proxy_Addr>$outbound</Proxy_Addr>') !== false);
+
+$loop = array();
+$poly = pbx3_provision_expand(
+	"#INCLUDE poly.Extension\n#INCLUDE poly.udp\n",
+	true,
+	$streams,
+	$loop
+);
+expect('ETL poly UCS XML', strpos($poly, '<polycomConfig') !== false && strpos($poly, 'reg.1.server.1.address="$sipdomain"') !== false);
+expect('ETL poly INCLUDE stripped', strpos($poly, '#INCLUDE') === false);
+expect('ETL poly UDPOnly + STUN', strpos($poly, 'UDPOnly') !== false && strpos($poly, 'feature.nat.stun.enabled="1"') !== false);
+expect('ETL poly outbound proxy', strpos($poly, 'reg.1.outboundProxy.address="$outbound"') !== false);
+
+$p = pbx3_provision_parse_request('GET', '/provisioning/482567b0a593-reg.cfg', array());
+expect('poly mac-reg.cfg path', $p['status'] === 'ok' && $p['kind'] === 'mac' && $p['mac'] === '482567b0a593');
 
 // --- Fixture SQLite ---
 $dbFile = $tmp . '/test.db';

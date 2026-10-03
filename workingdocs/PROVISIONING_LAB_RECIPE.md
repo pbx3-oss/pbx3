@@ -194,26 +194,42 @@ Stock streams still optional — author when firmware template known **and** pos
 
 ## 7. Poly mule soak (D2/D3)
 
-**Sub-project:** **`POLY_PROVISION_SUBPROJECT.md`**. **Lab mule:** **VVX 250** · firmware **6.4.3.5059**. Classic **UCS** layout assumed (`000000000000.cfg` + `site.cfg` / `sip-interop.cfg` + `{mac}-reg.cfg`). **Lens/ZTP** discovery still uncertain — lab = manual Provisioning Server. Assist-not-core; Lens end-to-end OK if free/easy.
+**Sub-project:** **`POLY_PROVISION_SUBPROJECT.md`**. **Lab mule:** **VVX 250** · firmware **6.4.3.5059** · Sirius **410** / `g0ntwm` · MAC **482567B0A593**. **Lens/ZTP** still uncertain — lab = manual Provisioning Server. Assist-not-core.
 
-No `poly.*` streams yet — author when mule firmware/export is in hand. **Multi-file fetch** may need extra URL mapping vs Yealink `{mac}.cfg` — settle on first soak.
+**Streams v0:** `poly.Common` / `poly.Extension` / `poly.udp` — single-file UCS XML (STUN + UDPOnly + both ports). Not classic multi-file master/site.
 
-**Manual SIP UI (2026-10-03):** OOTB timezone = **GMT**; **SIP server port** and **proxy port** both empty (must set, e.g. `5060`); **Transport(s)** defaults to **DNSnaptr** — set **UDPOnly** for fleet SBC. Otherwise straightforward. Field lock: sub-project **§0.1**.
+**Manual SIP UI (2026-10-03):** OOTB timezone = **GMT**; **SIP server port** and **proxy port** both empty (must set); **Transport(s)** defaults to **DNSnaptr** → **UDPOnly**. Field lock: sub-project **§0.1**.
 
-**NAT / far BYE:** OOTB outbound audio OK but **far-end hangup fails**. **STUN is provisioning-only** (no Web UI — chatbot GUI fields are wrong). Ship UCS STUN params in streams or a config push; re-soak. Details: sub-project **§0.2**.
+**NAT / far BYE:** OOTB far-end hangup fails; STUN **provisioning-only**. Stream ships STUN — re-soak after tip. **§0.2**.
 
-### Resume (streams / REGISTER)
+### Tip / soak
 
-1. Export or OEM guide for that UCS build; map `reg.1.*` + **STUN** + **both ports** + **UDPOnly** + timezone to `$sipdomain` / `$outbound` / `$password` / `$bindport`.
-2. Add streams; tip home; set Provisioning Server → our HTTPS base; reboot.
-3. REGISTER + audio + **far BYE**; fill NAT row; note Lens findings under **D2**.
+1. Tip `poly.*` onto Sirius home.
+2. Extension **410** provision:
+
+```text
+#INCLUDE poly.Extension
+#INCLUDE poly.udp
+```
+
+3. `sndcreds` = **Once**; MAC already on row (`482567B0A593`).
+4. Curl-prove:
+
+```bash
+MAC=482567b0a593
+curl -sS "https://provision.pbx3.com:41363/provisioning/${MAC}.cfg" | head -40
+```
+
+Expect `<polycomConfig>` with `reg.1.server.1.address` = tenant FQDN and outbound = SBC.
+5. Phone → Provisioning Server → `https://provision.pbx3.com:41363/provisioning` (or full `…/${MAC}.cfg`). Reboot; GET **200**.
+6. REGISTER + audio + **far BYE**; fill NAT row.
 
 ### Exit checks
 
 - [x] Manual SIP UI knobs: TZ, both ports, Transport **UDPOnly** (not DNSnaptr)
 - [x] Far BYE fail OOTB noted; STUN **provisioning-only** (§0.2)
-- [ ] Far BYE green after STUN (stream / config push — not Web UI)
-- [ ] Streams match export / UCS dialect
-- [ ] File/URL mapping documented
-- [ ] REGISTER via SBC; audio + BYE OK (or Lens-only path documented)
+- [x] Streams v0 authored (single-file UCS)
+- [ ] Curl / handset GET **200**; REGISTER via SBC
+- [ ] Far BYE green with stream STUN
+- [ ] Export-align if phone rejects v0 tags
 - [ ] D2 discovery note updated

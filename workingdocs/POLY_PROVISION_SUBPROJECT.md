@@ -1,7 +1,7 @@
 # Poly provision sub-project (D2 + D3 slice)
 
-**Status:** **Manual SIP UI soak** (2026-10-03). First-tranche brand; **no stock streams yet**. Assist-not-core (§1).  
-**Lab mule:** **Poly VVX 250** · firmware **6.4.3.5059**.  
+**Status:** **Streams v0 authored** (2026-10-03) — tip + GET/REGISTER/BYE soak next. Manual SIP UI locks done. Assist-not-core (§1).  
+**Lab mule:** **Poly VVX 250** · firmware **6.4.3.5059** · Sirius **410** / `g0ntwm` · MAC **482567B0A593**.  
 **Owns:** Poly/UCS-style stock streams, lab soak, NAT row, discovery note (Lens/ZTP).  
 **Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.6 · plan **D2** (discovery) + **D3** (streams) · recipe **`PROVISIONING_LAB_RECIPE.md` §7**.  
 **Siblings:** **`FANVIL_PROVISION_SUBPROJECT.md`** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**.
@@ -17,7 +17,7 @@
 | Format | **Closed XML** (§4.6) — attribute-heavy (`reg.1.address="…"`) inside elements; whole-stanza INCLUDE, not Yealink last-wins lines |
 | Classic file set | Phone typically fetches: **`000000000000.cfg`** (master / APPLICATION CONFIG_FILES list) → **`site.cfg`** / **`sip-interop.cfg`** (shared) → **`{mac}-reg.cfg`** (per device). Lowercase MAC, no colons |
 | Engine | Dumb `#INCLUDE` + substitute. Phone-side tokens like `[PHONE_MAC_ADDRESS]` in master CONFIG_FILES are **Poly’s** expansion, not ours |
-| URL / edge | Today we serve `{mac}.cfg` / `?mac=`. Poly wants **multiple named files**. Lab may point Config Server at a directory URL and map requests → streams (`poly.Master` / `poly.Common` / `poly.Extension`), or serve a single combined body if firmware accepts it — **settle on mule** |
+| URL / edge | **Lab v0 = single combined UCS body** via `{mac}.cfg` or `{mac}-reg.cfg` (kernel already extracts 12-hex MAC from either). Classic `000000000000.cfg` / `site.cfg` → edge **404** (zero/no MAC) — not required for first mule if phone fetches the MAC file |
 | Discovery | **Lens / ZTP still uncertain** post-HP (§0.2 / plan **D2**). Lab = **manual Provisioning Server** URL. If Lens is free/easy end-to-end (GDMS-like), **vendor-cloud-only OK** — our streams optional |
 | mTLS | Poly client CA in ops public-PKI pack; edge prove later if phones hit us |
 | Role | Assist — not required for Poly desks to work on PBX3 |
@@ -62,47 +62,35 @@ nat.stun.port="3478"
 
 ---
 
-## 1. Not on `main` yet
+## 1. On disk (streams v0)
 
-| Artifact | Notes |
-|----------|-------|
-| Streams | e.g. `poly.Master` / `poly.Common` / `poly.Extension` (names TBD); Common must set timezone + **UDPOnly** + both ports + **STUN** (§0.2) |
-| Lab soak | Recipe §7 — UI knobs §0.1; NAT/BYE §0.2 open until STUN proven |
-| NAT row | `FLEET_DESK_PHONE_NAT.md` — Poly row open (far BYE fails OOTB) |
+| Artifact | Path / notes |
+|----------|--------------|
+| Streams | `pbx3-1/opt/pbx3/provisioning/streams/poly.{Common,Extension,udp}` |
+| Lab soak | Recipe §7 — Sirius **410** / MAC `482567B0A593` |
+| NAT row | Open until far BYE green with stream STUN |
 
-Sketch (placeholders — align to mule export):
+Extension entry:
 
-```xml
-<?xml version="1.0" standalone="yes"?>
-<!-- poly.Extension / *-reg.cfg shape -->
-<phone>
-  <reg
-    reg.1.displayName="$desc"
-    reg.1.address="$sipuser"
-    reg.1.label="$ext"
-    reg.1.auth.userId="$sipuser"
-    reg.1.auth.password="$password"
-    reg.1.server.1.address="$sipdomain"
-    reg.1.server.1.port="$bindport"
-    reg.1.outboundProxy.address="$outbound"
-    reg.1.outboundProxy.port="$bindport"
-  />
-  <!-- transport: UDPOnly (not DNSnaptr); STUN: feature.nat.stun.* — exact names from mule export -->
-</phone>
+```text
+#INCLUDE poly.Extension
+#INCLUDE poly.udp
 ```
 
-Transport / timezone / **STUN** (§0.2) / site defaults live in `poly.Common` / `sip-interop`-shaped fragment.
+`poly.Common`: STUN + rport + UK SNTP (`gmtOffset=0`) + admin pass.  
+`poly.Extension`: shortuid auth, `$sipdomain` / `$outbound`, both ports, **UDPOnly**, `reg.1.nat.traversal.mode=Auto`. Password on its own `<reg/>` line (sndcreds).
 
 ---
 
-## 2. When the mule arrives (resume checklist)
+## 2. Lab tip / soak (resume)
 
-1. Note model + UCS/firmware version; grab OEM provisioning PDF or export from phone web UI.
-2. Confirm boot fetch order and filenames vs our edge routes.
-3. Author streams; tip home; extension `#INCLUDE poly.Extension` (etc.).
-4. Claim MAC / map if fleet; set **Settings → Provisioning Server** (HTTPS → `provision.{apex}:41363/…`).
-5. Exit: GET(s) **200** → REGISTER via SBC → audio + **far BYE** (enable STUN §0.2); fill NAT.
-6. Spike **D2**: does Lens/ZTP give a free MAC→URL path we care about, or stay manual / partner-only?
+1. Tip `poly.*` onto Sirius home; set **410** provision to `#INCLUDE poly.Extension` + `poly.udp`; `sndcreds=Once`.
+2. Claim MAC / map sync (fleet) — MAC **482567B0A593**.
+3. Phone UI → **Settings → Provisioning Server** → HTTPS `https://provision.pbx3.com:41363/provisioning` (or full `…/482567b0a593.cfg` if the UI wants a file).
+4. Reboot; expect GET **200** on `{mac}.cfg` or `{mac}-reg.cfg`.
+5. Exit: REGISTER via SBC → audio + **far BYE**; fill NAT row.
+6. If phone insists on `000000000000.cfg` first and never pulls MAC file — document and decide whether to add a zero-MAC edge path later.
+7. Spike **D2**: Lens/ZTP free path?
 
 **Out of scope for first pass:** Lens automation API, firmware CDN (`sip.ld` hosting), full softkey/BLF matrix, non-VVX families until needed.
 
@@ -112,9 +100,9 @@ Transport / timezone / **STUN** (§0.2) / site defaults live in `poly.Common` / 
 
 - [x] Manual SIP UI knobs locked (§0.1): GMT→local TZ; both ports; Transport **UDPOnly** (not DNSnaptr)
 - [x] Far-end BYE fails OOTB; STUN is **provisioning-only** (no Web UI) — §0.2; **BYE re-soak open**
-- [ ] One Poly model lab-green (REGISTER + call + **far BYE** with STUN) **or** documented Lens/GDMS-style cloud-only path
-- [ ] File/URL mapping documented (master + reg vs single stream)
-- [ ] `poly.*` matches firmware / export (include §0.1 + STUN §0.2)
+- [x] `poly.*` v0 authored (UCS XML + STUN + UDPOnly + ports); single-file URL path documented
+- [ ] One Poly model lab-green (REGISTER + call + **far BYE** with stream STUN) **or** documented Lens/GDMS-style cloud-only path
+- [ ] Export-align / tweak if VVX 250 rejects v0 tags
 - [ ] NAT row green; recipe §7 checks ticked
 - [ ] **D2** discovery note updated (Lens usable? yes/no/partner)
 
