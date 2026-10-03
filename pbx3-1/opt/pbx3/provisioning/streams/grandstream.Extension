@@ -13,7 +13,7 @@
     <P35>$sipuser</P35>
     <P34>$password</P34>
     <P3>$desc</P3>
-    <P52>0</P52>
+    <P52>4</P52>
     <P290>{ x+ | \+x+ | *x+ | *xx*x+ | *xx* | [3469]11 }</P290>
   </config>
 </gs_provision>

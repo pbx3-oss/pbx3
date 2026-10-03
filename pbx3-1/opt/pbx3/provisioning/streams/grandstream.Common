@@ -1,11 +1,13 @@
-<!-- PBX3 grandstream.Common — GRP2602P mule (1.0.7.3). Global NAT/STUN + provision + NTP.
-     Chatbot hygiene: no :// in P76/P48; root is gs_provision (see Extension).
+<!-- PBX3 grandstream.Common — GRP2602P mule (1.0.7.3). Provision + NTP.
+     NAT mode is Account P52=Auto (Extension) — no global STUN (P76) in stream.
+     P192 = Firmware Server Path (omit — do not point at provision).
+     P237 = Config Server Path; P212 = Config Upgrade Via (2=HTTPS); P194 = Automatic Upgrade.
+     Chatbot hygiene: no :// in P48; root is gs_provision (see Extension).
      P-tag order is cosmetic — phone keys by P-code; P2 listed first for readability. -->
     <P2>$padminpass</P2>
-    <P76>stun.l.google.com</P76>
     <P1119>30</P1119>
     <P212>2</P212>
-    <P192>$provpath</P192>
-    <P237>0</P237>
+    <P237>$provpath</P237>
+    <P194>0</P194>
     <P31>pool.ntp.org</P31>
     <P64>GMT</P64>

@@ -177,18 +177,17 @@ Stock streams still optional — author when firmware template known **and** pos
 
 ### Resume (streams / NAT)
 
-1. Download firmware config template for that model; map SIP/outbound/STUN/admin/**dial plan `*xx*`** to real P-values (mirror §0.2–§0.3).
-2. Add `grandstream.Common` / `grandstream.Extension`; tip home; extension `#INCLUDE grandstream.Extension`.
-3. Claim MAC; set Config Server Path; reboot; REGISTER + NAT/BYE checklist.
-4. Fill **`FLEET_DESK_PHONE_NAT.md`** Grandstream row.
+1. ~~Streams + tip~~ — `grandstream.*` on Sirius; **408** `#INCLUDE` + MAC claimed; **`P237`** Config path (not **P192** firmware).
+2. ~~Factory / Config Server Path~~ → GET **200**; **`P52=4` Auto** → far BYE green (**2026-10-03**).
+3. Edge needs GS client CAs in `vendor-client-cas.pem` (mTLS).
 
 ### Exit checks
 
 - [x] Manual SIP REGISTER via SBC (Sirius)
 - [x] Call / BYE + NAT Traversal **Auto** (default) — NAT row filled
 - [x] Feature codes: dial-plan line `*xx*` added (stock alone fails `*56*` / `*21*`)
-- [ ] Streams authored from template (optional; not invented P-numbers)
-- [ ] Provision GET **200** if using our listener (path convention documented)
+- [x] Streams authored from template (P2/P47/P48/P290+`*xx*`/…)
+- [x] Claim MAC + provision GET **200** on `cfg{mac}.xml`; far BYE with **`P52=4` Auto** (2026-10-03)
 - [ ] (Later) GDMS enroll — out of scope for first mule
 
 ---

@@ -71,7 +71,7 @@ Placeholders: `$ext` (dialable) `$sipuser` / `$shortuid` (PJSIP auth) `$password
 Legacy `$registrar` = alias for `$sipdomain` (tenant SIP domain — **not** the SBC).
 REGISTER / auth usernames use **`$sipuser`** (= `ipphone.shortuid`), not dialable `$ext`.
 
-**Grandstream notes:** Phone GET **`cfg{mac}.xml`**. Edge + kernel extract MAC from that name. Auth ID (**P36**) omitted — shortuid in **P35** only. Dial plan **P290** includes `*xx*`. NAT **P52=0** with outbound proxy. Admin web **P2**=`$padminpass` ← **cluster.padminpass**. Recipe **`PROVISIONING_LAB_RECIPE.md` §6** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**.
+**Grandstream notes:** Phone GET **`cfg{mac}.xml`**. Edge + kernel extract MAC from that name. Auth ID (**P36**) omitted — shortuid in **P35** only. Dial plan **P290** includes `*xx*`. NAT **`P52=4` (Auto)**. Config path **`P237`** (not **P192** firmware). Admin web **P2**=`$padminpass` ← **cluster.padminpass**. Recipe **`PROVISIONING_LAB_RECIPE.md` §6** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**.
 
 **Fanvil notes:** stock is **XML** (not Yealink line CFG). `#INCLUDE` lines are stripped by the kernel before the phone sees the body. First boot: set **Static Provisioning Server** on the phone UI (see `PROVISIONING_LAB_RECIPE.md` §5). `Download_Protocol` 4 = HTTPS — some firmwares want 5; tweak on mule if GET fails. `FDPS_Enable=0` for lab static URL.
 

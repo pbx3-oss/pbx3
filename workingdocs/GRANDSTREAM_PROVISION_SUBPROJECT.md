@@ -1,6 +1,6 @@
 # Grandstream provision sub-project (D3 slice)
 
-**Status:** **Streams v0 authored** (2026-10-03) — tip + `cfg{mac}.xml` soak next. Manual SIP + NAT already green (408). Optional vs GDMS.  
+**Status:** **Lab green 2026-10-03** — GRP2602P stream soak (MAC **EC74D7438221** / 408): **`P237` Config Server Path**, **`P52=4` Auto**, far BYE OK. Optional vs GDMS.  
 **Lab mule:** **Grandstream GRP2602P** · firmware **1.0.7.3**.  
 **Streams:** `grandstream.{Common,Extension,udp}` · sample `workingdocs/samples/grandstream-grp2602p-cfg-template.xml`.  
 **Owns:** Optional Grandstream stock streams (`gs_provision` / P-values), lab soak when using our listener, NAT row, GDMS posture docs. **Not** a mandate that GS sites use our provision server.  
@@ -108,23 +108,24 @@ From `workingdocs/samples/grandstream-grp2602p-cfg-template.xml` (`<gs_provision
 | **P36** | Authenticate ID | omit / empty (lab: unused when User ID = shortuid) |
 | **P34** | Auth password | `$password` (sndcreds) |
 | **P3** | Display Name | `$desc` |
-| **P52** | Account NAT Traversal | `0=No, 1=STUN, 2=Keep-Alive, 3=UPnP` (newer template). Lab UI **Auto** + outbound was green — prefer **P52=0 (No)** with SBC proxy unless mule proves otherwise. Ignore older **P102** chatbots unless OEM template shows it for 1.0.7.3. |
-| **P76** | STUN server | `stun.l.google.com` (fleet) — **no `://`**. Port: confirm if embedded or separate P-value on mule template. |
-| **P1119** | NAT keep-alive interval | seconds (template **20**; align with fleet if needed) |
+| **P52** | Account NAT Traversal | **`4` = Auto** — locked (2026-10-03 soak). UI order: `0=No, 1=STUN, 2=Keep-Alive, 3=UPnP, 4=Auto, 5=VPN`. **`0`** → far BYE fail. |
+| **P76** | STUN server | **omit** from stream — Auto + OBP was enough; STUN alone did not fix BYE. |
+| **P1119** | NAT keep-alive interval | `30` (optional with Auto) |
 | **P30** | Local SIP port | leave / `5060` |
-| **P212** | Upgrade via | `2` = HTTPS (fleet) |
-| **P192** | Config Server Path | `provision.pbx3.com:41363/provisioning` (no scheme; GS style) |
-| **P237** | Auto upgrade | `0` for lab |
+| **P212** | Config Upgrade Via | `2` = HTTPS |
+| **P237** | **Config Server Path** | `$provpath` → `provision.pbx3.com:41363/provisioning` (GS guide; **not** P192) |
+| **P192** | Firmware Server Path | **omit** — never point at provision (lab bug: P192←prov caused `grp2600fw.bin` GETs) |
+| **P194** | Automatic Upgrade | `0` = No (lab) |
 | **P2** | Web UI admin password | `$padminpass` ← **cluster.padminpass** (lab default **44068**). Globals `PADMINPASS` override only. User web **P1362** / `$puserpass` optional later. |
 | **P31** / **P64** | NTP / TZ | UK/GMT-friendly for lab |
 
-**Chatbot hygiene:** root must be `<gs_provision>` / `<config>` — ignore `gs_id_c_e`. Never put `://` in **P48** or **P76**.
+**Chatbot hygiene:** root must be `<gs_provision>` / `<config>` — ignore `gs_id_c_e`. Never put `://` in **P48**.
 
 | **P290** | Account 1 dial plan | See §0.3 — **must** include `*xx*` |
 
 **Still optional / confirm on mule export:** Use SBC / outbound-proxy-mode knobs if 1.0.7.3 exposes them beyond **P48**.
 
-**Request path:** GS wants **`cfg{mac}.xml`**. Edge MAC extract today matches `{mac}.cfg` / `{mac}-*.cfg` — **not** `cfg{mac}.xml` yet. Home general MAC regex can mis-parse `cfg…` prefix. Need explicit `cfg{mac}.xml` (and maybe `cfg{mac}`) before stream soak.
+**Request path:** GS wants **`cfg{mac}.xml`**. Kernel + edge extract **`cfg([0-9A-Fa-f]{12})\.xml`** (tipped).
 
 **`<mac>` element:** optional per GS guide; kernel `$mac` substitute not wired yet — omit or add var when authoring.
 
@@ -154,7 +155,7 @@ From `workingdocs/samples/grandstream-grp2602p-cfg-template.xml` (`<gs_provision
 - [x] Feature codes: add dial-plan line `*xx*` (defaults alone reject `*56*` / `*21*`) — §0.3
 - [x] `grandstream.*` v0 authored (P47/P48/P290+`*xx*`/P52/P76/P192…) — reject chatbot `gs_id_c_e` / `://`
 - [x] Request path **`cfg{mac}.xml`** — kernel + edge MAC extract
-- [ ] Lab tip: MAC on **408**, `#INCLUDE grandstream.Extension`, Config Server Path, GET **200**, REGISTER + `*xx*`
+- [x] Lab tip: MAC **EC74D7438221** on **408**, `#INCLUDE grandstream.*`, Config Server Path, GET **200**, REGISTER + `*xx*` + far BYE with **`P52=4` Auto**
 - [ ] Optional MkDocs blurb under phone-provisioning
 
 Then close GS under D3 or open next brand.
