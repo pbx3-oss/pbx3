@@ -99,7 +99,8 @@ After claim from Gatekeeper (until api tip-hot): re-run **`sync-provision-mac-ma
 ### C lab
 - [x] Edge LE URL → home via MAC map  
 - [x] #11 no-MAC / y000000 → 404  
-- [x] Yealink handset provision + SIP via SBC  
+- [x] Yealink handset provision + SIP via SBC — lab: **T46U** fw **108.86.0.90** (Yealink 1); **T31P** fw **124.86.0.40** (Yealink 2)  
+
 - [ ] C7/C8 automated exit  
 - [ ] Tenant move → next provision without RPS edit  
 

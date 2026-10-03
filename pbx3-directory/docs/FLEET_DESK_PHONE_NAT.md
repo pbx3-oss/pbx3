@@ -56,11 +56,13 @@ Check off when **lab or customer fleet** proven: **register · two-way audio · 
 
 ### Yealink
 
-- [x] **T-series with Auto** (lab **403** / `0c9m50`) — Account **NAT = Auto**; Network STUN Off; audio + path OK after Auto (**2026-09-03**).
-- [x] **T-series Auto not required if already well-behaved** (lab **402** / `2qcrrq`) — worked with LAN-ish Contact via RTP learning; still prefer **Auto** in templates for consistency (**2026-09-03**).
-- [x] **T31P** (no Auto) — **NAT = STUN** + STUN server; Disabled → audio often OK but **BYE broken**; STUN fixes hangup (**2026-09-03**).
+Lab inventory (**2026-10-03**): **Yealink 1** = **T46U** fw **108.86.0.90** · **Yealink 2** = **T31P** fw **124.86.0.40**.
+
+- [x] **T46U** fw **108.86.0.90** (Yealink 1; lab **403** / `0c9m50`) — Account **NAT = Auto**; Network STUN Off; audio + path OK after Auto (**2026-09-03**).
+- [x] **T-series Auto not required if already well-behaved** (lab **402** / `2qcrrq`) — worked with LAN-ish Contact via RTP learning; still prefer **Auto** in templates for consistency (**2026-09-03**). Model/fw TBD if still in lab.
+- [x] **T31P** fw **124.86.0.40** (Yealink 2; no Auto) — **NAT = STUN** + STUN server; Disabled → audio often OK but **BYE broken**; STUN fixes hangup (**2026-09-03**).
 - [ ] **BLF / subscribe** on Yealink — still open (separate from NAT; see pickup/BLF notes in TODO).
-- [ ] Other Yealink models (T4x/T5x/CP…) — ___
+- [ ] Other Yealink models (T5x/CP…) — ___
 
 ### Snom
 
@@ -126,6 +128,7 @@ Line test report: **Bytes in/out** both &gt; 0 after answer; hangup clears both 
 |------|------|
 | 2026-09-03 | Line test play() race fixed (SPA). Yealink **403** zero inbound RTP until NAT Auto/STUN; **T31P** BYE until STUN; **Snom 401** / **Yealink 402** comparatively forgiving. Doc created. |
 | 2026-10-01 | Snom **401** post-fleet-provision: Contact LAN (`192.168.1.138`) vs Yealink public; far-end hangup leaves Snom up. Added STUN to `snom.Common`; Contact → public; far BYE clears (**lab soak**). |
+| 2026-10-03 | Yealink lab models: **T46U 108.86.0.90** (Yealink 1 / 403); **T31P 124.86.0.40** (Yealink 2). |
 | 2026-10-03 | Grandstream **GRP2602P 1.0.7.3** Sirius **408**: NAT Traversal **Auto** (default) — audio + BYE OK. |
 | 2026-10-03 | Fanvil **X3U Pro 2.12.20** Sirius **412**: STUN **Off** (default) — calls OK; streams keep STUN for fleet. |
 | 2026-10-03 | Poly **VVX 250 / 6.4.3.5059**: far-end BYE fails OOTB; STUN **provisioning-only** (no Web UI); BYE re-soak open. |
