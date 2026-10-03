@@ -71,11 +71,12 @@ Expect: substituted body; Once → No after first send; audit obfuscated.
 ## 3. Fleet edge (Phase C) — lab 2026-09-30 green
 
 **DNS:** `provision.pbx3.com` A → edge VIP (`3.93.26.82`). **LE** on SBC for that name.  
-**Gatekeeper:** claim MAC → tenant + instance; conflict **409**; map at `catalog/provision-mac.map`.  
-**SBC:** `install-provision-edge.sh` + `sync-provision-mac-map.sh` (`PBX3_ORG_BUCKET=…`).
+**Gatekeeper:** claim MAC → tenant + instance; conflict **409**; map at `catalog/provision-mac.map` (S3).  
+**SBC:** `install-provision-edge.sh` + **`pbx3-provision-mac-map-sync.timer`** (every **1 min** pulls S3 → nginx). Manual force: `sync-provision-mac-map.sh`. Tip-hot push on claim = later polish (not required when the timer runs).
 
 ```bash
 # known MAC → 200; unknown / y000000 → 404
+# After SPA Save, allow up to ~1 min for the edge map timer before expecting 200
 curl -sS -o /dev/null -w '%{http_code}\n' \
   "https://provision.pbx3.com:41363/provisioning/${MAC}.cfg"
 ```
@@ -84,7 +85,7 @@ Body must show **`sip_server_host` = tenant FQDN** (e.g. `{shortuid}.pbx3.com`) 
 
 **Handset:** RPS or manual URL → `https://provision.pbx3.com:41363/provisioning/{mac}.cfg` (Yealink) or `…/provisioning?mac={mac}` (Snom). Both forms route on the edge when the MAC is in the map.
 
-After claim from Gatekeeper (until api tip-hot): re-run **`sync-provision-mac-map.sh`** on SBC if map lag.
+**Normal path:** SPA Save (claim) → wait ≤1 min → curl/phone GET. No Instance→SBC logout hop.
 
 ---
 
