@@ -1,6 +1,7 @@
 # Fanvil provision sub-project (D3 slice)
 
 **Status:** **Mule soak in progress** (2026-10-03). Seed streams on `main`; REGISTER auth quirk locked below. Not on the critical path for provision A–C10.  
+**Lab mule:** **Fanvil X3U Pro** · software **2.12.20** · Sirius **412** / `27b2mr`.  
 **Owns:** Fanvil stock streams, lab soak, NAT row, optional FDMCS/RPS notes.  
 **Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.4–§4.6 · plan **D3** · recipe **`PROVISIONING_LAB_RECIPE.md` §5**.  
 **Siblings:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Gigaset (same D3 bucket; separate when started).
@@ -11,14 +12,14 @@
 
 | Item | Stance |
 |------|--------|
-| Format | **Module XML** under current FDPS-era firmwares (`VOIP_CONFIG_FILE` / `SIP_*` / `AUTOUPDATE_*`). Older CFG/TXT engines may still exist on legacy gear — mule will tell us. |
+| Format | **Module XML** under current FDPS-era firmwares (`VOIP_CONFIG_FILE` / `SIP_*` / `AUTOUPDATE_*`). Lab proven on **X3U Pro 2.12.20**. Older CFG/TXT engines may still exist on legacy gear. |
 | Engine | Dumb `#INCLUDE` + substitute — **no** Fanvil-specific kernel. Authoring absorbs stanza shape (§4.6). |
 | Discovery | Lab = **manual Static Provisioning Server** URL. **FDMCS** / RPS automation = later. |
 | Docs trap | Fanvil **XML Operation Guide** = Push/Browser LCD XML — **not** auto-provision. Chatbot “standard” XML samples are unreliable; prefer phone export / Autoprovision Description / fielded templates. |
 | mTLS | Fanvil CA already in ops `3pcerts.pem` pack; edge prove later if desired. |
-| **SIP auth (UI)** | **Locked 2026-10-03 (Sirius 412 / `27b2mr`):** Fanvil/OEM docs often show **Username**=extension and **Authentication Name**=auth id as *different* values (3CX-style). That model assumes the registrar’s SIP user **is** the extension. **PBX3 does not:** PJSIP endpoint / digest identity = **shortuid** only; dialable **Name** (`412`) is not an Asterisk endpoint. Lab: User=`412` + Auth=`27b2mr` → home **404**; both fields = **`$sipuser`** → REGISTER OK. Put `$ext` in **Display Name** only. **Proxy User** leave blank (working UI). |
+| **SIP auth (UI)** | **Locked 2026-10-03 (X3U Pro 2.12.20, Sirius 412 / `27b2mr`):** Fanvil/OEM docs often show **Username**=extension and **Authentication Name**=auth id as *different* values (3CX-style). That model assumes the registrar’s SIP user **is** the extension. **PBX3 does not:** PJSIP endpoint / digest identity = **shortuid** only; dialable **Name** (`412`) is not an Asterisk endpoint. Lab: User=`412` + Auth=`27b2mr` → home **404**; both fields = **`$sipuser`** → REGISTER OK. Put `$ext` in **Display Name** only. **Proxy User** leave blank (working UI). |
 
-### 0.1 Working UI scrape → stream map (Sirius Fanvil, REGISTER green)
+### 0.1 Working UI scrape → stream map (X3U Pro 2.12.20, REGISTER green)
 
 Scraped from phone **Line → SIP → Register Settings** HTML (`lines.htm` form fields). UI label **SIP User** (not “Username”).
 
@@ -89,7 +90,7 @@ Extension entry for mule:
 
 ## 3. Exit (this sub-project slice)
 
-- [x] Manual SIP REGISTER + calls OK (Sirius 412 / `27b2mr`, STUN Off default)
+- [x] Manual SIP REGISTER + calls OK (**X3U Pro 2.12.20**, Sirius 412 / `27b2mr`, STUN Off default)
 - [x] OOTB timezone **Beijing** despite SNTP ON — set site zone (lab UTC-5); streams ship UK (§0.2)
 - [ ] Provision path lab-green (`fanvil.*` GET → REGISTER)
 - [ ] `fanvil.*` matches that firmware (export-aligned if possible)
