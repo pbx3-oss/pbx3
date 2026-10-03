@@ -1,11 +1,12 @@
 # Poly provision sub-project (D2 + D3 slice)
 
 **Status:** **Manual SIP UI soak** (2026-10-03). First-tranche brand; **no stock streams yet**. Assist-not-core (§1).  
+**Lab mule:** **Poly VVX 250** · firmware **6.4.3.5059**.  
 **Owns:** Poly/UCS-style stock streams, lab soak, NAT row, discovery note (Lens/ZTP).  
 **Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.6 · plan **D2** (discovery) + **D3** (streams) · recipe **`PROVISIONING_LAB_RECIPE.md` §7**.  
 **Siblings:** **`FANVIL_PROVISION_SUBPROJECT.md`** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**.
 
-**Working assumption (operator):** Classic **Polycom UCS / VVX** config dialect has **not** meaningfully changed for lab purposes — master `000000000000.cfg` + `site.cfg` / `sip-interop.cfg` + per-MAC `…-reg.cfg` with `reg.1.*` attributes. Verify on first mule firmware; do not trust chatbot samples blindly.
+**Working assumption (operator):** Classic **Polycom UCS / VVX** config dialect has **not** meaningfully changed for lab purposes — master `000000000000.cfg` + `site.cfg` / `sip-interop.cfg` + per-MAC `…-reg.cfg` with `reg.1.*` attributes. Lab mule is **VVX 250 / 6.4.3.5059**; prefer OEM UCS admin for that build + phone export over chatbot samples.
 
 ---
 
@@ -26,7 +27,7 @@
 
 Roughly matches classic UCS: master APPLICATION → `CONFIG_FILES="…-reg.cfg, site.cfg, sip-interop.cfg"` and a `-reg.cfg` with `reg.1.*`. Usable as a **starting sketch**, not law. Ignore Asterisk `pjsip.conf` paste and “generate a script” fluff. Prefer OEM UCS admin / provisioning guide for the mule model + a phone **config export** if available.
 
-### 0.1 Working manual SIP / site knobs (lab 2026-10-03)
+### 0.1 Working manual SIP / site knobs (VVX 250 / 6.4.3.5059, lab 2026-10-03)
 
 OOTB pitfalls (otherwise straightforward):
 
@@ -41,7 +42,7 @@ Ports are required on **both** SIP server and proxy (not address-only). Leaving 
 
 Auth/address mapping for streams still follows the sketch below (`reg.1.address` / `auth.userId` = `$sipuser`, server = `$sipdomain`, outbound = `$outbound`) — confirm shortuid vs display on next REGISTER green tick.
 
-### 0.2 NAT / far-end BYE (lab 2026-10-03)
+### 0.2 NAT / far-end BYE (VVX 250 / 6.4.3.5059, lab 2026-10-03)
 
 | Observation | Detail |
 |-------------|--------|
