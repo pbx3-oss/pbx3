@@ -109,7 +109,7 @@ After claim from Gatekeeper (until api tip-hot): re-run **`sync-provision-mac-ma
 
 ## 5. Fanvil mule soak (D3 start)
 
-**Sub-project:** **`FANVIL_PROVISION_SUBPROJECT.md`** (parked until mule). **Goal:** prove module-XML stream → edge GET → REGISTER/calls via SBC (same bar as Yealink/Snom). **Not** FDPS/RPS enrollment yet.
+**Sub-project:** **`FANVIL_PROVISION_SUBPROJECT.md`**. **Lab mule:** **X3U Pro** · software **2.12.20** (Sirius 412). **Goal:** prove module-XML stream → edge GET → REGISTER/calls via SBC (same bar as Yealink/Snom). **Not** FDPS/RPS enrollment yet.
 
 ### Prep (before phone arrives)
 
