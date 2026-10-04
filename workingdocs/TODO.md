@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-02 (session end: assist-not-core; Fanvil/GS/Poly parked; desk mules in lab)
+**Last updated:** 2026-10-03 (session end: desk brand mules lab green — Fanvil sysConf / GS / Poly)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -124,9 +124,9 @@
 
 - [x] **Fleet tenant moves — docs review (#23b — 2026-10-02):** MkDocs **`fleet/tenant-move`** expanded (dual-copy until wipe, RPS/`provision.{apex}`, `provision_stream` in export, C10 edge-global). Mobility design note at `awaiting_cleanup`. **More soaks** remain operator (optional).
 
-- [ ] **Fanvil provision sub-project (D3 — parked 2026-10-02):** **`FANVIL_PROVISION_SUBPROJECT.md`**. Seed streams + recipe §5 on `main`; soak when mule arrives (export config if UI allows).
+- [x] **Fanvil provision sub-project (D3 — lab green 2026-10-03):** **`FANVIL_PROVISION_SUBPROJECT.md`**. `sysConf` streams; Sirius 412 provision→REGISTER. Follow-up: tip Fanvil CA + restore Magrathea mTLS **optional**.
 
-- [ ] **Grandstream provision sub-project (D3 — parked 2026-10-02):** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. P-value XML (`gs_provision`); streams when mule + firmware template in hand. Guide: [gs_provisioning_guide.pdf](https://www.grandstream.com/hubfs/Product_Documentation/gs_provisioning_guide.pdf).
+- [x] **Grandstream provision sub-project (D3 — lab green 2026-10-03):** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. P-value XML; P237 Config + P52 Auto; factory-reset soak green (GRP2602P / Sirius 408).
 
 - [x] **Poly provision sub-project (D2/D3 — lab green 2026-10-03):** **`POLY_PROVISION_SUBPROJECT.md`**. Streams + DHCP 66 / manual URL; **no Lens build-out** unless asked.
 
