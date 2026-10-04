@@ -61,7 +61,11 @@ nat.stun.server="stun.l.google.com"
 nat.stun.port="3478"
 nat.keepalive.interval="30"
 reg.1.nat.traversal.mode="Auto"
+voIpProt.SIP.requestValidation.1.request="INVITE"
+voIpProt.SIP.requestValidation.1.method="source"
 ```
+
+**INVITE source filter:** OpenSIP UCS `requestValidation` / `method=source` (reject INVITEs not from registered server). Not BroadWorks Anonymous Call Reject.
 
 **Override trap:** Web/keypad `{mac}-web.cfg` / `{mac}-phone.cfg` beat streams until Reset Web/Local Configuration.
 

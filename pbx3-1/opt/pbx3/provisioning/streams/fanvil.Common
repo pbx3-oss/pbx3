@@ -1,24 +1,21 @@
-<GLOBAL_CONFIG_MODULE>
-<SNTP_Server>pool.ntp.org</SNTP_Server>
-<Second_SNTP_Server>$localip</Second_SNTP_Server>
-<Enable_SNTP>1</Enable_SNTP>
-<Time_Zone>0</Time_Zone>
-<Time_Zone_Name>United Kingdom(London)</Time_Zone_Name>
-<Enable_DST>1</Enable_DST>
-<Menu_Password>$padminpass</Menu_Password>
-<KeyLock_Password>$puserpass</KeyLock_Password>
-<STUN_Server>stun.l.google.com</STUN_Server>
-<STUN_Port>3478</STUN_Port>
-<STUN_Refresh_Time>50</STUN_Refresh_Time>
-</GLOBAL_CONFIG_MODULE>
-<AUTOUPDATE_CONFIG_MODULE>
-<Download_Server_IP>$provurl</Download_Server_IP>
-<Download_Protocol>4</Download_Protocol>
-<Download_Mode>1</Download_Mode>
-<Download_Interval>24</Download_Interval>
-<Config_File_Name></Config_File_Name>
-<FDPS_Enable>0</FDPS_Enable>
-<Trust_Certification>0</Trust_Certification>
-<Download_CommonConf>0</Download_CommonConf>
-<Download_DeviceConf>1</Download_DeviceConf>
-</AUTOUPDATE_CONFIG_MODULE>
+    <phone>
+        <MenuPassword>$padminpass</MenuPassword>
+        <date>
+            <EnableSNTP>1</EnableSNTP>
+            <SNTPServer>pool.ntp.org</SNTPServer>
+            <SecondSNTPServer>$localip</SecondSNTPServer>
+            <TimeZone>0</TimeZone>
+            <TimeZoneName>United Kingdom(London)</TimeZoneName>
+            <SNTPTimeout>60</SNTPTimeout>
+        </date>
+    </phone>
+    <ap>
+        <DownloadCommonConf>0</DownloadCommonConf>
+        <SaveProvisionInfo>0</SaveProvisionInfo>
+        <CheckFailTimes>3</CheckFailTimes>
+        <FlashServerIP>$provurl</FlashServerIP>
+        <FlashFileName></FlashFileName>
+        <FlashProtocol>5</FlashProtocol>
+        <FlashMode>1</FlashMode>
+        <FlashInterval>1</FlashInterval>
+    </ap>

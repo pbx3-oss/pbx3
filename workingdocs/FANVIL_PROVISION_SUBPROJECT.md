@@ -1,6 +1,6 @@
 # Fanvil provision sub-project (D3 slice)
 
-**Status:** **Mule soak in progress** (2026-10-03). Seed streams on `main`; REGISTER auth quirk locked below. Not on the critical path for provision A–C10.  
+**Status:** **Provision path lab green** (2026-10-03) — `sysConf` streams; mTLS CA tip still open. Not on the critical path for provision A–C10.  
 **Lab mule:** **Fanvil X3U Pro** · software **2.12.20** · Sirius **412** / `27b2mr`.  
 **Owns:** Fanvil stock streams, lab soak, NAT row, optional FDMCS/RPS notes.  
 **Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.4–§4.6 · plan **D3** · recipe **`PROVISIONING_LAB_RECIPE.md` §5**.  
@@ -12,11 +12,12 @@
 
 | Item | Stance |
 |------|--------|
-| Format | **Module XML** under current FDPS-era firmwares (`VOIP_CONFIG_FILE` / `SIP_*` / `AUTOUPDATE_*`). Lab proven on **X3U Pro 2.12.20**. Older CFG/TXT engines may still exist on legacy gear. |
+| Format | **X3U / X3U Pro ≥2.2.10:** auto-provision = **`sysConf`** (camelCase; same family as UI Config Export). Older `VOIP_CONFIG_FILE` module XML is ignored on 2.12 — lab 2026-10-03 GET **200** but phone did not apply. `FlashProtocol` **5** = HTTPS. |
 | Engine | Dumb `#INCLUDE` + substitute — **no** Fanvil-specific kernel. Authoring absorbs stanza shape (§4.6). |
 | Discovery | Lab = **manual Static Provisioning Server** URL. **FDMCS** / RPS automation = later. |
 | Docs trap | Fanvil **XML Operation Guide** = Push/Browser LCD XML — **not** auto-provision. Chatbot “standard” XML samples are unreliable; prefer phone export / Autoprovision Description / fielded templates. |
-| mTLS | Fanvil CA already in ops `3pcerts.pem` pack; edge prove later if desired. |
+| Export fixture | **Curate only** — not a stream source. Full redacted: ops `devdocs/provisioning/fanvil/x3u-pro-2.12.20-sysconf-export.xml` · excerpt `workingdocs/samples/fanvil-x3u-pro-sysconf-export.xml`. Use for field names / NAT/timezone checks if soak fails; do not wholesale import. |
+| mTLS | Device presents Fanvil client cert on HTTPS. Edge needs **official Fanvil Root CA** (Partner Portal / Support — not public Mozilla). Ops `3pcerts` #8 may be stale. Lab 2026-10-03: Magrathea **FAILED verify** / 400 until CA tipped. |
 | **SIP auth (UI)** | **Locked 2026-10-03 (X3U Pro 2.12.20, Sirius 412 / `27b2mr`):** Fanvil/OEM docs often show **Username**=extension and **Authentication Name**=auth id as *different* values (3CX-style). That model assumes the registrar’s SIP user **is** the extension. **PBX3 does not:** PJSIP endpoint / digest identity = **shortuid** only; dialable **Name** (`412`) is not an Asterisk endpoint. Lab: User=`412` + Auth=`27b2mr` → home **404**; both fields = **`$sipuser`** → REGISTER OK. Put `$ext` in **Display Name** only. **Proxy User** leave blank (working UI). |
 
 ### 0.1 Working UI scrape → stream map (X3U Pro 2.12.20, REGISTER green)
@@ -43,6 +44,14 @@ Scraped from phone **Line → SIP → Register Settings** HTML (`lines.htm` form
 Line picker showed `412@SIP1` (cosmetic); REGISTER identity is still shortuid in **SIP User** / **Authentication User**.
 
 **Feature codes:** Fanvil sends PBX3 star-codes (`*56*`, `*21*`, …) **OOTB** — no phone dialplan edit. Grandstream needs an extra `*xx*` pattern: **`GRANDSTREAM_PROVISION_SUBPROJECT.md` §0.3**.
+
+**Ghost calls / INVITE source:** X3U has **no** Yealink/GS/Poly-style “accept SIP from proxy only”. Lab 2026-10-03: `BanAnonymous` / `AllowIPCall=0` / per-line **`SignalPort` alone** did **not** stop LAN `:5060` INVITEs (Contact moved to 5160 but global listen stayed 5060). Stream sets **`BanAnonymous=1`**, global **`SIPPort=5160`**, and line **`SignalPort=5160`** (obscurity; REGISTER still to `$bindport` on SBC).
+
+### 0.1a UI export (`sysConf`) ↔ stream tags (2026-10-03)
+
+Same working SIP row as §0.1, from Config Export. Export uses camelCase; streams keep underscore module tags (phone auto-provision accepts that dialect per Fanvil Autoprovision Description).
+
+Streams use the same camelCase tags as export (`PhoneNumber`, `RegisterAddr`, …). `FlashProtocol` **5** = HTTPS. Common ships UK timezone; Sirius lab may still show UTC-5 until site-overridden.
 
 ### 0.2 Timezone (lab 2026-10-03)
 
@@ -92,10 +101,11 @@ Extension entry for mule:
 
 - [x] Manual SIP REGISTER + calls OK (**X3U Pro 2.12.20**, Sirius 412 / `27b2mr`, STUN Off default)
 - [x] OOTB timezone **Beijing** despite SNTP ON — set site zone (lab UTC-5); streams ship UK (§0.2)
-- [ ] Provision path lab-green (`fanvil.*` GET → REGISTER)
-- [ ] `fanvil.*` matches that firmware (export-aligned if possible)
-- [x] NAT row filled (STUN Off works; streams keep STUN)
-- [ ] Recipe §5 provision exit checks ticked
+- [x] Provision path lab-green — `sysConf` GET → REGISTER (**2026-10-03**)
+- [x] `fanvil.*` = sysConf for ≥2.2.10 (legacy module XML ignored)
+- [x] NAT row filled (STUN Off / `NATType=0`)
+- [x] Recipe §5 provision exit checks (mTLS restore still open)
+- [ ] Tip Fanvil Root CA + restore Magrathea `ssl_verify_client optional`
 - [ ] Short MkDocs note under phone-provisioning (optional) or defer to B2-style page later
 
 Then either close Fanvil under D3 or open FDMCS / next brand.

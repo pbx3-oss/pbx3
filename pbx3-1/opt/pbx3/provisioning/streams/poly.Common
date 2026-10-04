@@ -11,6 +11,8 @@
   />
   <voIpProt
     voIpProt.SIP.rport="1"
+    voIpProt.SIP.requestValidation.1.request="INVITE"
+    voIpProt.SIP.requestValidation.1.method="source"
   />
   <tcpIpApp
     tcpIpApp.sntp.address="pool.ntp.org"

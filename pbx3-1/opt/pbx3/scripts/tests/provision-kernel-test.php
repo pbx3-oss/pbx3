@@ -125,10 +125,14 @@ $fanvil = pbx3_provision_expand(
 	$streams,
 	$loop
 );
-expect('ETL fanvil module XML', strpos($fanvil, '<VOIP_CONFIG_FILE>') !== false && strpos($fanvil, '<SIP_CONFIG_MODULE>') !== false);
+expect('ETL fanvil sysConf XML', strpos($fanvil, '<sysConf>') !== false && strpos($fanvil, '<line index="1">') !== false);
 expect('ETL fanvil INCLUDE stripped', strpos($fanvil, '#INCLUDE') === false);
-expect('ETL fanvil Register_Addr placeholder', strpos($fanvil, '<Register_Addr>$sipdomain</Register_Addr>') !== false);
-expect('ETL fanvil Proxy_Addr outbound', strpos($fanvil, '<Proxy_Addr>$outbound</Proxy_Addr>') !== false);
+expect('ETL fanvil RegisterAddr placeholder', strpos($fanvil, '<RegisterAddr>$sipdomain</RegisterAddr>') !== false);
+expect('ETL fanvil ProxyAddr outbound', strpos($fanvil, '<ProxyAddr>$outbound</ProxyAddr>') !== false);
+expect('ETL fanvil FlashProtocol HTTPS', strpos($fanvil, '<FlashProtocol>5</FlashProtocol>') !== false);
+expect('ETL fanvil BanAnonymous on', strpos($fanvil, '<BanAnonymous>1</BanAnonymous>') !== false);
+expect('ETL fanvil SIPPort off 5060', strpos($fanvil, '<SIPPort>5160</SIPPort>') !== false);
+expect('ETL fanvil SignalPort off 5060', strpos($fanvil, '<SignalPort>5160</SignalPort>') !== false);
 
 $loop = array();
 $poly = pbx3_provision_expand(
@@ -141,6 +145,7 @@ expect('ETL poly UCS XML', strpos($poly, '<polycomConfig') !== false && strpos($
 expect('ETL poly INCLUDE stripped', strpos($poly, '#INCLUDE') === false);
 expect('ETL poly UDPOnly + STUN', strpos($poly, 'UDPOnly') !== false && strpos($poly, 'feature.nat.stun.enabled="1"') !== false);
 expect('ETL poly outbound proxy', strpos($poly, 'reg.1.outboundProxy.address="$outbound"') !== false);
+expect('ETL poly INVITE source validation', strpos($poly, 'requestValidation.1.request="INVITE"') !== false && strpos($poly, 'requestValidation.1.method="source"') !== false);
 
 $p = pbx3_provision_parse_request('GET', '/provisioning/482567b0a593-reg.cfg', array());
 expect('poly mac-reg.cfg path', $p['status'] === 'ok' && $p['kind'] === 'mac' && $p['mac'] === '482567b0a593' && $p['suffix'] === '-reg.cfg');
@@ -163,6 +168,7 @@ expect('ETL grandstream outbound P48', strpos($gs, '<P48>$outbound</P48>') !== f
 expect('ETL grandstream dial *xx*', strpos($gs, '*xx*') !== false);
 expect('ETL grandstream P2 admin token', strpos($gs, '<P2>$padminpass</P2>') !== false);
 expect('ETL grandstream no chatbot root', strpos($gs, 'gs_id_c_e') === false);
+expect('ETL grandstream proxy-only INVITE', strpos($gs, '<P2347>1</P2347>') !== false);
 
 foreach (array('482567b0a593-web.cfg', '482567b0a593-phone.cfg', '482567b0a593-cloud.cfg', '482567b0a593-directory.xml', '482567b0a593-calls.xml', '482567b0a593-license.cfg') as $opt) {
 	$p = pbx3_provision_parse_request('GET', '/provisioning/' . $opt, array());
