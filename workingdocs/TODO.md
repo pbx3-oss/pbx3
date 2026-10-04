@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-03 (Snom streams → XML tracked as **#23c**; operator UX pass on create/provision phone)
+**Last updated:** 2026-10-03 (session end: ghost-call **#60** on `main`; **#23c** Snom→XML PR open; operator UX pass create/provision phone)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
