@@ -27,6 +27,7 @@ Product stub: **`AGENT_HANDOFF.md`** (behavior + read-order + permanent referenc
 | **Tenant CLID blacklist** | `CLID_BLACKLIST_REQUIREMENTS.md` | Greenfield; auth to mutate; not previous PBX ETL |
 | **Repos / releases** | **REPOS_AND_RELEASES.md** | Multi-repo policy |
 | **AI-assisted operator (OSS)** | **AI_ASSISTED_OPERATOR_REQUIREMENTS.md** | Agent kickoffs + human gates; MkDocs face |
+| **Instance API security review** | **INSTANCE_API_SECURITY_REVIEW.md** | Sanctum/home `:44300` vs industry; hardening backlog #38 |
 
 **Do not** re-grow closed TODO checkmarks in **TODO.md** — closed ledger → **archive/TODO_DONE_LOG.md**.
 
