@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-03 (session end: desk ghost-call stream knobs lab green; Fanvil SIPPort 5160)
+**Last updated:** 2026-10-04 (session end: **#38** PR open; stakeholder deck in ops `visuals/`)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -84,7 +84,8 @@
 34. ~~**Fleet domain→setid SBC lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). **2026-09-24:** Domain Routes show catalog **label** + instance Name; reconcile `domain_label_mismatch` / `dispatcher_label_mismatch` (projectable). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
 35. ~~**SBC site timezone at install**~~ — **done (2026-08-26):** `pbx3sbc-admin/install.sh` prompt / `--site-timezone` / `PBX3_SBC_SITE_TIMEZONE` → `.env` (Home/CDR day buckets). Default = host `/etc/timezone`. Does not change OS clock. Optional later: Filament change-later.  
 36. **Legacy PBX admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_PBX_PANEL_BACKLOG.md`**. **P1 CoS (Class of Service): done pending lab sign-off (2026-08-23)**. **Reports:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** lab green (2026-08-25) — upload/play/delete + `moh reload` (no Commit for file swaps); Custom MOH Active still Save. **Recordings:** panel shipped (R1/R1.5/S7); unified list filters + play spinner **done (2026-08-26)**. **Extension named call/pickup groups:** `named_call_group` + `named_pickup_group` — lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**; **pickup manual L3 OK** lab `.31`; sipplab pack pending. **BLF SUBSCRIBE:** tmpl `allow_subscribe=yes` + `subscribe_context=$clst`; **Snom BLF OK** lab `.31`; **Yealink** — phone config under investigation (Asterisk assumed OK). **Parking:** `parkinghints=yes` + **`parkedcallreparking=both`**; fleet timeout FQDN Dial + COS `901`–`903` + `*5` preferred — golden OK (2026-09-26). ETL: **`~/GiT/private offline migrate tool`**. **PJSIP config wizard:** won't-do. **P2+ parked:** wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **third-party certs panel**.
-37. **Audio transcription (pluggable)** — provider interface; choose backend. Potential first-out: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **0l**.
+37. **Audio transcription (pluggable)** — provider interface; choose backend. Potential first-out: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **0l**.  
+38. **Instance API security — industry review** — **should-do / not scheduled (2026-10-04):** baseline (Sanctum + abilities + cluster scope + opt-in TOTP + HTTPS + fail2ban badbots) is mid-tier OK; backlog vs best practice: login/2FA rate-limit, token TTL/rotation, MFA-required for admins, optional `:44300` IP allowlist (SPA tradeoff), BFF/cookie later. Spec: **`INSTANCE_API_SECURITY_REVIEW.md`**. Not first-out.
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -215,6 +216,8 @@
 - [x] **Control plane duplex / HA — won't-do (2026-08-11):** Management layer is binary (up/down). Gatekeeper stays a **single host**; calls continue per Rule 11 while Fleet mutate waits. Do **not** build duplex/active-active Gatekeeper. Ops: rebuild/restore + DNS/EIP discipline. Edge HA (SBC) remains a separate call-path track. Lock: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.1 · **`DESIGN_RULES.md`** Rule 11.
 
 - [ ] **Gatekeeper auth.sqlite backups (#15a — 2026-09-25):** Ops continuity only (not call path). Daily or post-change **`sqlite3 .backup` / file copy** of `GATEKEEPER_AUTH_DB` → org S3 `control/{id}/…` + N-day retention + restore note in **`CONTROL_HOST.md`**. **Not Litestream** (parked elsewhere; overkill for low-churn control DB under single-host rebuild doctrine). Optional local rotate on-box. Not first-out.
+
+- [ ] **Instance API security — industry review (#38 — 2026-10-04):** Capture only — not scheduled. Baseline OK for shared SPA→home; candidates **H1–H6** in **`INSTANCE_API_SECURITY_REVIEW.md`** (login throttle, token TTL, MFA policy, optional `:44300` allowlist, BFF, WAF). Lock before implementing anything that breaks **`app.pbx3.com`**.
 
 - [ ] **Fleet instance health includes Asterisk (parked, pre-live 2026-07-27):** Gatekeeper node badge uses HTTP **`/up`** only. Extend probe for call-plane liveness before production. Do not block dial-alias.
 
