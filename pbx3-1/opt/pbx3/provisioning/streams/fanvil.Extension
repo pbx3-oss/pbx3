@@ -1,31 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<VOIP_CONFIG_FILE>
+<sysConf>
+    <Version>2.0000000000</Version>
 #INCLUDE fanvil.Common
-<SIP_CONFIG_MODULE>
-<SIP_Line_List>
-<SIP_Line_List_Entry>
- SIP1
-<Phone_Number>$sipuser</Phone_Number>
-<Display_Name>$ext</Display_Name>
-<Sip_Name></Sip_Name>
-<Register_Addr>$sipdomain</Register_Addr>
-<Register_Port>$bindport</Register_Port>
-<Register_User>$sipuser</Register_User>
-<Register_Pswd>$password</Register_Pswd>
-<Register_TTL>3600</Register_TTL>
-<Enable_Reg>1</Enable_Reg>
-<Proxy_Addr>$outbound</Proxy_Addr>
-<Proxy_Port>$bindport</Proxy_Port>
-<Proxy_User></Proxy_User>
-<Proxy_Pswd></Proxy_Pswd>
-<Transport>0</Transport>
-<Media_Crypto>0</Media_Crypto>
-<Enable_Rport>1</Enable_Rport>
-<NAT_Type>1</NAT_Type>
-<NAT_UDPUpdate>2</NAT_UDPUpdate>
-<UDPUpdate_TTL>30</UDPUpdate_TTL>
-<DTMF_Mode>3</DTMF_Mode>
-</SIP_Line_List_Entry>
-</SIP_Line_List>
-</SIP_CONFIG_MODULE>
-</VOIP_CONFIG_FILE>
+    <sip>
+        <!-- Global local SIP listen (SIP Global / Local SIP Port). Per-line SignalPort alone still leaves :5060 open. -->
+        <SIPPort>5160</SIPPort>
+        <STUNServer></STUNServer>
+        <STUNPort>3478</STUNPort>
+        <STUNRefreshTime>50</STUNRefreshTime>
+        <line index="1">
+            <PhoneNumber>$sipuser</PhoneNumber>
+            <DisplayName>$ext</DisplayName>
+            <SipName></SipName>
+            <RegisterAddr>$sipdomain</RegisterAddr>
+            <RegisterPort>$bindport</RegisterPort>
+            <RegisterUser>$sipuser</RegisterUser>
+            <RegisterPswd>$password</RegisterPswd>
+            <RegisterTTL>3600</RegisterTTL>
+            <EnableReg>1</EnableReg>
+            <ProxyAddr>$outbound</ProxyAddr>
+            <ProxyPort>$bindport</ProxyPort>
+            <ProxyUser></ProxyUser>
+            <ProxyPswd></ProxyPswd>
+            <Transport>0</Transport>
+            <MediaCrypto>0</MediaCrypto>
+            <EnableRport>1</EnableRport>
+            <NATType>0</NATType>
+            <NATUDPUpdate>2</NATUDPUpdate>
+            <UDPUpdateTTL>30</UDPUpdateTTL>
+            <DTMFMode>3</DTMFMode>
+            <StrictProxy>1</StrictProxy>
+            <!-- Ban Anonymous Call (CLI). No Yealink/GS/Poly-style proxy-only INVITE filter on X3U. -->
+            <BanAnonymous>1</BanAnonymous>
+            <!-- Local SIP listen port off 5060 — ghost-call obscurity (scanners hit :5060). Server/proxy ports stay $bindport. -->
+            <SignalPort>5160</SignalPort>
+        </line>
+    </sip>
+</sysConf>

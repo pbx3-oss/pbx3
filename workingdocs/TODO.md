@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-02 (session end: assist-not-core; Fanvil/GS/Poly parked; desk mules in lab)
+**Last updated:** 2026-10-03 (session end: desk ghost-call stream knobs lab green; Fanvil SIPPort 5160)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -12,7 +12,7 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate** — **A–C10** + rehome + **#23b** (2026-10-02). **Assist, not core.** Parked brand tracks: **`FANVIL_PROVISION_SUBPROJECT.md`** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Spec / MkDocs **`admin/phone-provisioning-*`**.
+0k. **Phone provisioning — reinstate** — **A–C10** + rehome + **#23b** + brand mules + **ghost-call knobs** (2026-10-03). **Assist, not core.** Brand tracks: **`FANVIL_PROVISION_SUBPROJECT.md`** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Spec / MkDocs **`admin/phone-provisioning-*`**.
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
@@ -124,11 +124,13 @@
 
 - [x] **Fleet tenant moves — docs review (#23b — 2026-10-02):** MkDocs **`fleet/tenant-move`** expanded (dual-copy until wipe, RPS/`provision.{apex}`, `provision_stream` in export, C10 edge-global). Mobility design note at `awaiting_cleanup`. **More soaks** remain operator (optional).
 
-- [ ] **Fanvil provision sub-project (D3 — parked 2026-10-02):** **`FANVIL_PROVISION_SUBPROJECT.md`**. Seed streams + recipe §5 on `main`; soak when mule arrives (export config if UI allows).
+- [x] **Fanvil provision sub-project (D3 — lab green 2026-10-03):** **`FANVIL_PROVISION_SUBPROJECT.md`**. `sysConf` streams; Sirius 412; ghost-call **`SIPPort`/`SignalPort` 5160** + `BanAnonymous`. Ops: tip Fanvil CA Monday.
 
-- [ ] **Grandstream provision sub-project (D3 — parked 2026-10-02):** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. P-value XML (`gs_provision`); streams when mule + firmware template in hand. Guide: [gs_provisioning_guide.pdf](https://www.grandstream.com/hubfs/Product_Documentation/gs_provisioning_guide.pdf).
+- [x] **Grandstream provision sub-project (D3 — lab green 2026-10-03):** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. P-value XML; P237 Config + P52 Auto; **`P2347=1`** proxy-only INVITE.
 
-- [x] **Poly provision sub-project (D2/D3 — lab green 2026-10-03):** **`POLY_PROVISION_SUBPROJECT.md`**. Streams + DHCP 66 / manual URL; **no Lens build-out** unless asked.
+- [x] **Poly provision sub-project (D2/D3 — lab green 2026-10-03):** **`POLY_PROVISION_SUBPROJECT.md`**. Streams + DHCP 66 / manual URL; **`requestValidation` source** INVITE filter; **no Lens** unless asked.
+
+- [x] **Desk ghost-call / INVITE-source streams (2026-10-03):** YL `sip_trust_ctrl` · Snom `filter_registrar` · GS `P2347` · Poly `requestValidation` · Fanvil `SIPPort` 5160 — LAN reject lab green (Fanvil = port obscurity).
 
 - [x] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-02):** Tip Snom+Yealink PEM; `PROVISION_MTLS=optional` live. Yealink **SUCCESS**+200; bare curl NONE/200 vs require **400**. Spec §8 · plan **C5**.
 

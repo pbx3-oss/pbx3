@@ -109,6 +109,7 @@ From `workingdocs/samples/grandstream-grp2602p-cfg-template.xml` (`<gs_provision
 | **P34** | Auth password | `$password` (sndcreds) |
 | **P3** | Display Name | `$desc` |
 | **P52** | Account NAT Traversal | **`4` = Auto** — locked (2026-10-03 soak). UI order: `0=No, 1=STUN, 2=Keep-Alive, 3=UPnP, 4=Auto, 5=VPN`. **`0`** → far BYE fail. |
+| **P2347** | Accept Incoming SIP from Proxy Only | **`1`** — INVITE source filter (not CLI Anonymous Call Rejection **P129**). |
 | **P76** | STUN server | **omit** from stream — Auto + OBP was enough; STUN alone did not fix BYE. |
 | **P1119** | NAT keep-alive interval | `30` (optional with Auto) |
 | **P30** | Local SIP port | leave / `5060` |
