@@ -150,11 +150,12 @@ Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.p
 
 ### Exit checks
 
-- [ ] Curl body is module XML (`VOIP_CONFIG_FILE` / `SIP_CONFIG_MODULE`)
-- [ ] Handset provision GET **200**
-- [x] Manual SIP REGISTER + calls OK with **STUN Off** (default) — NAT row filled; provision path still open
+- [x] Curl/handset body is **`sysConf`** (X3U Pro 2.12 — not legacy `VOIP_CONFIG_FILE`)
+- [x] Handset provision GET **200** → REGISTER (**2026-10-03**, Sirius 412 / `0c383e7151ef`; edge mTLS temporarily **off** pending Fanvil Root CA tip)
+- [x] Manual SIP REGISTER + calls OK with **STUN Off** (default) — NAT row filled
 - [x] Timezone: OOTB Beijing → set site zone (lab UTC-5); streams have UK
-- [ ] `Download_Protocol` 4 vs 5 settled for this firmware
+- [x] `FlashProtocol` **5** = HTTPS (sysConf)
+- [ ] Restore Magrathea `ssl_verify_client optional` + tip Fanvil CA from ops `3pcerts.pem`
 - [ ] (Later) FDPS / FDMCS enroll — out of scope for first mule
 
 **Tune on failure:** empty body / phone ignores XML → compare against that model’s Autoprovision guide; STUN/`NAT_Type` (manual soak OK with STUN Off); timezone (Beijing OOTB ≠ SNTP); HTTPS protocol enum.

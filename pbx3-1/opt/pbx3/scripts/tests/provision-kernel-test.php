@@ -125,10 +125,11 @@ $fanvil = pbx3_provision_expand(
 	$streams,
 	$loop
 );
-expect('ETL fanvil module XML', strpos($fanvil, '<VOIP_CONFIG_FILE>') !== false && strpos($fanvil, '<SIP_CONFIG_MODULE>') !== false);
+expect('ETL fanvil sysConf XML', strpos($fanvil, '<sysConf>') !== false && strpos($fanvil, '<line index="1">') !== false);
 expect('ETL fanvil INCLUDE stripped', strpos($fanvil, '#INCLUDE') === false);
-expect('ETL fanvil Register_Addr placeholder', strpos($fanvil, '<Register_Addr>$sipdomain</Register_Addr>') !== false);
-expect('ETL fanvil Proxy_Addr outbound', strpos($fanvil, '<Proxy_Addr>$outbound</Proxy_Addr>') !== false);
+expect('ETL fanvil RegisterAddr placeholder', strpos($fanvil, '<RegisterAddr>$sipdomain</RegisterAddr>') !== false);
+expect('ETL fanvil ProxyAddr outbound', strpos($fanvil, '<ProxyAddr>$outbound</ProxyAddr>') !== false);
+expect('ETL fanvil FlashProtocol HTTPS', strpos($fanvil, '<FlashProtocol>5</FlashProtocol>') !== false);
 
 $loop = array();
 $poly = pbx3_provision_expand(

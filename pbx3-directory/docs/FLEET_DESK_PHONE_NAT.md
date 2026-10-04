@@ -86,7 +86,7 @@ Plus per-line **`user_outbound1$`** = SBC (`snom.udp` / Extension).
 
 ### Fanvil
 
-- [x] **X3U Pro** software **2.12.20** (lab Sirius **412** / `27b2mr`) — **STUN Off** (UI default); calls OK via SBC (**2026-10-03**). Forgiving like Yealink **402**; stock `fanvil.Common` still ships STUN for fleet consistency.
+- [x] **X3U Pro** software **2.12.20** (lab Sirius **412** / `27b2mr`) — **STUN Off** / export `NATType=0`; calls OK via SBC (**2026-10-03**). Forgiving like Yealink **402**; stream `NAT_Type=0`; `fanvil.Common` still ships STUN server string for fleet sites that enable NAT STUN.
 
 ### Grandstream
 
