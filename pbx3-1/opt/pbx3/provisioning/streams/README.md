@@ -7,7 +7,7 @@ No Device table. No per-SKU matrix. BLF templates (`*.Fkey` / `*.Lkey` / `*.Pkey
 
 | Grain | Role |
 |-------|------|
-| `snom.Common` / `yealink.Common` | Shared site defaults |
+| `snom.Common` / `yealink.Common` | Shared site defaults. **Snom** stock is still **line** format; **TODO #23c** → OEM XML (`<settings>` / `idx=` — sample **`workingdocs/samples/snom-settings-xml-example.xml`**). |
 | `snom.Extension` / `yealink.Extension` | Preferred extension entry (`$sipdomain` + `$outbound`) |
 | `fanvil.Common` / `fanvil.Extension` | **Mule v0** — FDPS-era **module XML** (`VOIP_CONFIG_FILE`). Lab soak via manual Static Provision URL. Not a full OEM template. |
 | `poly.Master` / `poly.Common` / `poly.Extension` | **Mule v0** — UCS master (`poly.Master` → `{mac}.cfg` / `000000000000.cfg`) + **closed XML** settings (`polycomConfig` on `{mac}-reg.cfg`). STUN + UDPOnly + both ports. See **`POLY_PROVISION_SUBPROJECT.md`**. |
