@@ -28,6 +28,7 @@ Product stub: **`AGENT_HANDOFF.md`** (behavior + read-order + permanent referenc
 | **Repos / releases** | **REPOS_AND_RELEASES.md** | Multi-repo policy |
 | **AI-assisted operator (OSS)** | **AI_ASSISTED_OPERATOR_REQUIREMENTS.md** | Agent kickoffs + human gates; MkDocs face |
 | **Instance API security review** | **INSTANCE_API_SECURITY_REVIEW.md** | Sanctum/home `:44300` vs industry; hardening backlog #38 |
+| **Migrate → provision lab** | **MIGRATE_PROVISION_CONTINUITY_LAB.md** | Stub → private sark-to-pbx3 lab; gate for #23c |
 
 **Do not** re-grow closed TODO checkmarks in **TODO.md** — closed ledger → **archive/TODO_DONE_LOG.md**.
 
