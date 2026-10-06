@@ -11,6 +11,7 @@ use GuzzleHttp\Exception\GuzzleException;
  * Advance a tenant-move job through automated phases until a human gate or failure.
  *
  * Human gates: verifying (operator confirms test call), awaiting_cleanup (full source wipe + cert sync + commit).
+ * Cutover / rollback also project fleet DID hop-1 to the destination (or prior) dispatcher setid.
  */
 final class TenantMoveRunner
 {
@@ -214,6 +215,9 @@ final class TenantMoveRunner
             ]);
             $job = $this->markPhase($job, 'catalog', 'ok', 'rolled back to source_instance_id');
         }
+
+        // Re-project hop-1 to the rolled-back setid (override: meta may lag if catalog never flipped).
+        $this->projectTenantDids((string) $job['tenant_shortuid'], $prev, 'rollback');
 
         $job = $this->markPhase($job, 'cutover', 'ok', 'rolled back to setid '.$prev);
         $job['state'] = 'aborted';
@@ -447,6 +451,10 @@ final class TenantMoveRunner
             $job['previous_sbc_dispatcher_setid'] = (int) $result['previous_setid'];
         }
 
+        // Hop-1 DIDs must follow the new home immediately (phones already use dest setid).
+        // Catalog meta may still name the source until verifying → phaseCatalog — force setid.
+        $this->projectTenantDids((string) $job['tenant_shortuid'], $destSet, 'cutover');
+
         return $job;
     }
 
@@ -495,10 +503,39 @@ final class TenantMoveRunner
         ]);
         // C3 — rewrite MAC index FKs with setid/catalog cutover; republish provision map
         (new MacIndexStore($this->registrar))->rewriteTenantInstance($shortuid, $destInstanceId);
+        // Belt-and-suspenders: hop-1 already forced at cutover; refresh from live catalog home.
+        $destSet = (int) ($job['dest_sbc_dispatcher_setid'] ?? 0);
+        if ($destSet >= 1) {
+            $this->projectTenantDids($shortuid, $destSet, 'catalog');
+        }
         $job = $this->markPhase($job, 'catalog', 'ok');
         $this->jobs->writePublic($job);
 
         return $job;
+    }
+
+    /**
+     * Project this tenant's fleet DIDs to a dispatcher setid on the SBC.
+     *
+     * @throws \RuntimeException when the SBC project fails
+     */
+    private function projectTenantDids(string $shortuid, int $setid, string $phase): void
+    {
+        if ($shortuid === '' || $setid < 1) {
+            return;
+        }
+        $result = (new DidInventory($this->registrar))->projectToSbc(
+            new SbcFleetClient(),
+            [$shortuid],
+            false,
+            $setid
+        );
+        if (! ($result['ok'] ?? false)) {
+            $err = (string) ($result['error'] ?? json_encode($result['errors'] ?? $result));
+            throw new \RuntimeException(
+                "DID hop-1 project failed during {$phase} (setid={$setid}): {$err}"
+            );
+        }
     }
 
     /**

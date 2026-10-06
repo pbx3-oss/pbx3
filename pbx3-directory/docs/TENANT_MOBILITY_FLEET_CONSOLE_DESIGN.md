@@ -165,7 +165,7 @@ Fleet Console orchestrator talks to the edge through a **small adapter interface
 | `registerNode(instanceId, backendSipUri)` | Provision/update dispatcher set for a fleet node |
 | `health()` | Edge pool reachable; DB OK |
 
-Move job **`cutover`** step calls `repointTenant` only; catalog `tenant-meta.instance_id` and SBC routing must **both** succeed in one transaction or the job fails (§4.1).
+Move job **`cutover`** step calls `repointTenant` **and** projects fleet DID hop-1 to the destination dispatcher setid (catalog meta may still name the source until verifying → catalog — setid is forced on the project payload). Catalog `tenant-meta.instance_id` and SBC routing (domain + DIDs) must **both** succeed in one transaction or the job fails (§4.1). Rollback re-projects DIDs to the prior setid.
 
 #### Revisit triggers (when to re-open platform choice)
 
