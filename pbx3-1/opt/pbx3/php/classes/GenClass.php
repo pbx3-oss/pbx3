@@ -1043,10 +1043,13 @@ class genAsteriskObjects
 					// Tenant extension → Local/Q{ext} (PrepDial queue path).
 					// Non-extension (PSTN etc.) → Local/{num}@{tenant} so OutRoute matches
 					//  (legacy PBX Alias used Local/{n}@internal for the same idea).
+					// Trailing /n keeps the Local channel in the Queue bridge so DTMF park
+					// (*5) and transfers from the answered agent leg still work (Asterisk
+					// otherwise optimizes Local away and Queue k/t/T never see the digits).
 					if (isset($localExts[$ext])) {
-						$Qbuff .= "member=Local/Q" . $ext . "@" . $cluster . "\n";
+						$Qbuff .= "member=Local/Q" . $ext . "@" . $cluster . "/n\n";
 					} else {
-						$Qbuff .= "member=Local/" . $ext . "@" . $cluster . "\n";
+						$Qbuff .= "member=Local/" . $ext . "@" . $cluster . "/n\n";
 					}
 				}
 			}
@@ -1676,7 +1679,7 @@ HERE;
             $this->OUT .= "\tsame => n,agi(" . SYSAGI . ",PostDial," . $phone['shortuid'] . "," . $phone['cluster'] . ",,,)\n";
             $this->OUT .= "\tsame => n(" . $phone['shortuid'] . "-done),Hangup()\n";
 /**
- *  Queue members: Local/Q{ext}@tenant for desk extensions; Local/{pstn}@tenant for
+ *  Queue members: Local/Q{ext}@tenant/n for desk extensions; Local/{pstn}@tenant/n for
  *  non-extension tokens (OutRoute). See genQueues.
  */
             $this->OUT .= "\texten => Q" . $phone['pkey'] . ",1,agi(" . SYSAGI . ",Dial," . $phone['shortuid'] . "," . $phone['cluster'] . ",queue,,)\n";
