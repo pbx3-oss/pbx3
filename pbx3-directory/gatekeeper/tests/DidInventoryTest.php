@@ -160,6 +160,32 @@ final class DidInventoryTest extends TestCase
         $this->assertSame(2, $report['summary']['errors']);
     }
 
+    public function test_build_sbc_project_payload_forces_setid_override(): void
+    {
+        $rows = [
+            [
+                'e164' => '+441924918076',
+                'e164_key' => '441924918076',
+                'sip_prefix' => null,
+                'tenant_shortuid' => 'hf3zzv',
+                'status' => 'active',
+                'sbc_dispatcher_setid' => 2,
+            ],
+            [
+                'e164' => '+15555550100',
+                'e164_key' => '15555550100',
+                'sip_prefix' => null,
+                'tenant_shortuid' => 'other',
+                'status' => 'active',
+                'sbc_dispatcher_setid' => 3,
+            ],
+        ];
+        $payload = DidInventory::buildSbcProjectPayload($rows, ['hf3zzv' => true], 3);
+        $this->assertCount(1, $payload);
+        $this->assertSame('hf3zzv', $payload[0]['tenant_shortuid']);
+        $this->assertSame(3, $payload[0]['sbc_dispatcher_setid']);
+    }
+
     public function test_compare_did_projection_orphan_warning(): void
     {
         $report = DidInventory::compareDidProjection([], [

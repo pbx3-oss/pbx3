@@ -69,7 +69,7 @@
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
 23. **Provisioning — reinstate (instance-local)** — **A–C10** + rehome green (2026-10-02). Assist-not-core. Brand tracks: Fanvil / GS / Poly sub-projects (parked). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. 
-23b. **Fleet tenant moves — docs review + more soaks** — **docs review done (2026-10-02):** MkDocs **`fleet/tenant-move`** (dual-copy / wipe / provision MAC map / `provision_stream` / C10 edge-global) + mobility design note. **More soaks** remain operator (not blocking).
+23b. **Fleet tenant moves — docs review + more soaks** — **docs review done (2026-10-02):** MkDocs **`fleet/tenant-move`**. **2026-10-06:** cutover/rollback auto-project DID hop-1 (`TenantMoveRunner` + `DidInventory::projectToSbc` setid override). **More soaks** remain operator.
 23c. **Snom provision streams → XML** — OEM pushing XML harder; stock `snom.*` still **line** (`key$: value`). Convert to closed XML: `<settings>` / `<phone-settings>` + `<param idx="N" perm="">` (line suffix → `idx`; same names). Shape: **`workingdocs/samples/snom-settings-xml-example.xml`**. Exhaustive keys (lab D717 @402): **`workingdocs/archive/snom-d717-settings-exhaustive-lab-402.xml`**. Engine stays INCLUDE + substitute; Content-Type / URL form as needed. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.6**. Not urgent; schedule when Snom lab next open.
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
@@ -124,7 +124,7 @@
 
 - [x] **Provision edge IP allowlist (C10 — 2026-10-02):** Filament **Provision access**; UFW allowlist on `:41363` only; default off; complements mTLS. Spec **`pbx3-directory/docs/SBC_PROVISION_ACCESS_REQUIREMENTS.md`**. MkDocs **`admin/phone-provisioning-access`**.
 
-- [x] **Fleet tenant moves — docs review (#23b — 2026-10-02):** MkDocs **`fleet/tenant-move`** expanded (dual-copy until wipe, RPS/`provision.{apex}`, `provision_stream` in export, C10 edge-global). Mobility design note at `awaiting_cleanup`. **More soaks** remain operator (optional).
+- [x] **Fleet tenant moves — docs review (#23b — 2026-10-02):** MkDocs **`fleet/tenant-move`**. **2026-10-06:** cutover/rollback auto-project DID hop-1. **More soaks** remain operator (optional).
 
 - [x] **Fanvil provision sub-project (D3 — lab green 2026-10-03):** **`FANVIL_PROVISION_SUBPROJECT.md`**. `sysConf` streams; Sirius 412; ghost-call **`SIPPort`/`SignalPort` 5160** + `BanAnonymous`. Ops: tip Fanvil CA Monday.
 
