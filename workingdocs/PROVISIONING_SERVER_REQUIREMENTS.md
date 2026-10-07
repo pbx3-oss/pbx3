@@ -106,7 +106,7 @@ Product interest set for discovery + eventual enrollment docs/APIs. **Not** a pr
 | Vendor | Platform | Notes |
 |--------|----------|-------|
 | **Yealink** | **RPS** (Redirection and Provisioning Service) | Widely used; free for SPs/enterprises; can tie into **YMCS** (Yealink Management Cloud Service) |
-| **Poly** (ex-Polycom) | **Poly Lens** / **ZTP** | **Uncertain discovery (2026-09-29+):** HP takeover left redirect / ZTP opaque. **CFG dialect:** classic UCS XML still assumed for lab (**`POLY_PROVISION_SUBPROJECT.md`**). Manual Provisioning Server for mule. Do **not** schedule Lens automation until verified. If Lens is free/easy end-to-end, vendor-cloud-only OK (assist-not-core) |
+| **Poly** (ex-Polycom) | **DHCP 66** · manual URL · (Lens optional) | **Lab green (2026-10-03):** streams + **DHCP 66** / manual URL → `https://provision.{apex}:41363/provisioning` (**`POLY_PROVISION_SUBPROJECT.md`**). **Poly Lens can** do discovery/CFG but **do not build Lens integration** unless a customer asks — product is the stream. |
 | **Grandstream** | **GDMS** + **GAPS** | **GDMS is free** — low barrier. Sites may enroll desks in GDMS and use **GDMS templates end-to-end** (never hit our provision listener). That **suits us**: no forced in-house provision for GS. Optional: GDMS/GAPS as **redirect only** → our `provision.{apex}` when we want home-rendered secrets / fleet MAC map. GAPS = Alignment and Provisioning System |
 | **Snom** | **SRAPS** | Europe-hosted secure redirect; GDPR-oriented; API for SP automation |
 | **Fanvil** | **FDMCS** | Free redirection / ZTP for desk, hotel, and intercom / door units |
@@ -330,7 +330,7 @@ Most vendor streams are **line-oriented** (key=value / proprietary text): INCLUD
 | **Yealink, Panasonic, …** | Typical line / flat profiles — straightforward substitute |
 | **Fanvil** | **Module XML** under FDPS-era firmwares (`VOIP_CONFIG_FILE` / `SIP_CONFIG_MODULE` / …). Older Fanvil engines also had CFG/TXT line dialects — treat current stock as **XML**. INCLUDE still works as whole-stanza insert; do not assume Yealink last-wins |
 | **Poly** | **Pure XML** with **closing stanzas** — nuisance for naive line-include / partial rewrite; treat as its own stream family when/if Poly is in scope |
-| **Snom** | Historically line-oriented; **moving toward closed XML** as well — watch when authoring/lifting Snom templates; may need XML-aware edit rules later, not a second engine day one |
+| **Snom** | Stock `snom.*` still **line** (`key$: value`). OEM has offered XML for years and is getting **more aggressive** about it. **TODO #23c:** convert stock streams to closed XML — **same parameter names**, wrapped. Shape: root `<settings>` → globals in `<phone-settings e="2">` as `<name perm="">value</name>`; identity lines as siblings with **`idx="N"`** (line `user_name1$` → `<user_name idx="1" perm="">…</user_name>`). Tiny sample: **`workingdocs/samples/snom-settings-xml-example.xml`**. Exhaustive key list (lab D717): **`workingdocs/archive/snom-d717-settings-exhaustive-lab-402.xml`**. Not a second engine; INCLUDE + substitute stays. Schedule when Snom lab next open. |
 
 Engine stays INCLUDE + substitute; **template authoring** absorbs XML closed-stanza pain, not a BLF-scale subsystem.
 
@@ -656,7 +656,7 @@ Earlier lean locked “S3 keyed by MAC” for a dedicated fleet listener **inclu
 6. **Stack for home listener** — PHP parity with previous PBX vs rewrite; behaviour first.  
 7. **RPS automation** — Manual portal vs vendor/reseller APIs for enroll/re-point; clearer §0.2 vendors first (**Yealink, Snom, Grandstream, Fanvil, Gigaset**). **Poly** deferred until Lens/ZTP post-HP is understood. Gigaset: confirm portal/API + PIN enrollment UX. Solo→fleet bulk migrator = parked **C9**.  
 8. ~~**Provision listen port**~~ — **Locked 2026-09-30:** default **41363** (prior art); document for RPS (solo HTTPS; fleet edge HTTPS / home HTTP).  
-9. **Poly discovery** — Confirm whether desk phones still expose a simple MAC→URL redirect usable by us, or only via Poly Lens / partner SKUs after HP.  
+9. **Poly discovery** — **Settled (2026-10-03):** DHCP **66** / manual URL. Lens can do it — **no PBX3 Lens product** unless a customer asks.  
 10. **Vendor CA / 3pcerts inventory** — **Enough for Snom/Yealink C5 (2026-10-02):** tip ops pack now. Pack/Poly also cover Panasonic/Fanvil/Poly. **GS/Gigaset:** not blocking lab (manual provision URL on phone). Still gates *public-edge* mTLS for those brands vs Once + network controls.  
 11. ~~**Vendor common / no-MAC GETs at edge**~~ — **Locked 2026-09-30:** Edge **404** when the URI has no routable MAC (`y000000*.cfg`, bare paths, ignore-list). Home still serves Yealink common for **solo/lab**. Fleet phones get common via MAC stream **`#INCLUDE yealink.Common`** (already in the Yealink grain) — do not pick a home for no-MAC GETs.
 12. ~~**Site fragment store / design**~~ — **Locked 2026-10-01 (§4.8):** System vs Customer; tenant `provision_stream`; additive INCLUDE; vendor flexibility; loop/refcount/order/secret warns. Not Device revival.

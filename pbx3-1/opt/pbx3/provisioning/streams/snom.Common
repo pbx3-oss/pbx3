@@ -9,6 +9,9 @@ stun_binding_interval1$: 30
 enable_rport_rfc3581$: on
 rtp_keepalive$: on
 
+; Filter packets from Registrar — OEM default on; pin so desk ignores INVITEs not from REGISTER peer.
+filter_registrar$: on
+
 ; SRTP off by default; outbound set by snom / snom.Extension / snom.{udp,tcp,tls}
 user_srtp1$: off
 user_srtp2$: off

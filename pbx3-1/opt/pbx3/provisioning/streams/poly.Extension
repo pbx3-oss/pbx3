@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<!-- PBX3 poly.Extension — single-file UCS body for {mac}.cfg / {mac}-reg.cfg.
-     Lab entry: poly.Extension (+ optional poly.udp). Multi-file master/site
-     fetch (000000000000.cfg) not required for this mule path. -->
+<!-- PBX3 poly.Extension — UCS settings body for {mac}-reg.cfg (not master).
+     Master is poly.Master via {mac}.cfg / 000000000000.cfg.
+     Lab entry: poly.Extension (+ optional poly.udp). -->
 <polycomConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="polycomConfig.xsd">
 #INCLUDE poly.Common
   <reg

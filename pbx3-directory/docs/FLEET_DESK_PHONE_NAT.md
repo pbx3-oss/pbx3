@@ -86,15 +86,15 @@ Plus per-line **`user_outbound1$`** = SBC (`snom.udp` / Extension).
 
 ### Fanvil
 
-- [x] **X3U Pro** software **2.12.20** (lab Sirius **412** / `27b2mr`) — **STUN Off** (UI default); calls OK via SBC (**2026-10-03**). Forgiving like Yealink **402**; stock `fanvil.Common` still ships STUN for fleet consistency.
+- [x] **X3U Pro** software **2.12.20** (lab Sirius **412** / `27b2mr`) — **STUN Off** / export `NATType=0`; calls OK via SBC (**2026-10-03**). Forgiving like Yealink **402**; stream `NAT_Type=0`; `fanvil.Common` still ships STUN server string for fleet sites that enable NAT STUN.
 
 ### Grandstream
 
-- [x] **GRP2602P** firmware **1.0.7.3** (lab Sirius **408** / `74y2h3`) — **NAT Traversal = Auto** (UI default); two-way audio + BYE OK via SBC (**2026-10-03**). Prefer Auto in manual setup / future streams unless a model proves otherwise.
+- [x] **GRP2602P** firmware **1.0.7.3** / **1.0.7.11** (lab Sirius **408** / `74y2h3` / MAC **EC74D7438221**) — **NAT Traversal = Auto** (`P52=4`); **No** (`0`) → far BYE fail. Stream: **Auto**, no **P76** STUN (**2026-10-03**).
 
 ### Poly
 
-- [ ] **VVX 250** firmware **6.4.3.5059** — OOTB: calls OK but **far-end hangup fails** on outbound (same class as Snom / Yealink T31P). **STUN is provisioning-only** (browser NAT page has no STUN; chatbot Web-GUI STUN is wrong). Ship `feature.nat.stun.*` in `poly.Common`; re-soak BYE. Details: **`POLY_PROVISION_SUBPROJECT.md` §0.2**.
+- [x] **VVX 250** firmware **6.4.3.5059** (lab Sirius **410** / `g0ntwm`) — OOTB far BYE fails; **STUN provisioning-only** (`poly.Common` + master/`-reg.cfg`); keepalive **30**; Contact public; **far BYE OK**; factory-reset path = admin password + Provisioning Server URL (**2026-10-03**). Details: **`POLY_PROVISION_SUBPROJECT.md` §0.2**.
 
 ### Gigaset
 
@@ -132,6 +132,6 @@ Line test report: **Bytes in/out** both &gt; 0 after answer; hangup clears both 
 | 2026-10-01 | Snom **401** post-fleet-provision: Contact LAN (`192.168.1.138`) vs Yealink public; far-end hangup leaves Snom up. Added STUN to `snom.Common`; Contact → public; far BYE clears (**lab soak**). |
 | 2026-10-03 | Yealink lab models: **T46U 108.86.0.90** (Yealink 1 / 403); **T31P 124.86.0.40** (Yealink 2). |
 | 2026-10-03 | Snom lab model: **D717** fw **snomD717-SIP 10.1.198.19** (401). |
-| 2026-10-03 | Grandstream **GRP2602P 1.0.7.3** Sirius **408**: NAT Traversal **Auto** (default) — audio + BYE OK. |
+| 2026-10-03 | Grandstream **GRP2602P** Sirius **408**: **`P52=4` Auto** far BYE green; Config path is **`P237`** (not **P192** firmware). Locked. |
 | 2026-10-03 | Fanvil **X3U Pro 2.12.20** Sirius **412**: STUN **Off** (default) — calls OK; streams keep STUN for fleet. |
-| 2026-10-03 | Poly **VVX 250 / 6.4.3.5059**: far-end BYE fails OOTB; STUN **provisioning-only** (no Web UI); BYE re-soak open. |
+| 2026-10-03 | Poly **VVX 250 / 6.4.3.5059** Sirius **410**: far BYE fails OOTB; stream STUN + keepalive; master/`-reg.cfg` + edge MAC-suffix; Contact public; **far BYE green**. |

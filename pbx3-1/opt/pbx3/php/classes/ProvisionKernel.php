@@ -114,10 +114,46 @@ function pbx3_provision_parse_request($method, $requestUri, $query = array()) {
 			'mac' => null,
 			'fragment' => 'yealink.Common',
 			'reason' => 'yealink_common',
+			'suffix' => null,
 		);
 	}
 
-	if (preg_match('/([0-9A-Fa-f]{12})(.*)$/', $frequest, $matches)) {
+	// Grandstream cfg{mac}.xml (must run before generic 12-hex extract — "cfg" prefix is hex-ish).
+	if (preg_match('/^cfg([0-9A-Fa-f]{12})\.xml$/i', $frequest, $gs)) {
+		$mac = pbx3_provision_normalize_mac($gs[1]);
+		if ($mac === null || $mac === '000000000000') {
+			return array(
+				'status' => 'not_found',
+				'kind' => null,
+				'mac' => null,
+				'fragment' => null,
+				'reason' => 'bad_or_zero_mac',
+				'suffix' => null,
+			);
+		}
+		return array(
+			'status' => 'ok',
+			'kind' => 'mac',
+			'mac' => $mac,
+			'fragment' => null,
+			'reason' => 'grandstream_cfg_xml',
+			'suffix' => '.xml',
+		);
+	}
+
+	// Poly UCS zero-MAC master (classic fallback when per-MAC master missing/wrong).
+	if (preg_match('/^000000000000\.cfg$/i', $frequest)) {
+		return array(
+			'status' => 'ok',
+			'kind' => 'poly_master',
+			'mac' => null,
+			'fragment' => 'poly.Master',
+			'reason' => 'poly_master_zero',
+			'suffix' => '.cfg',
+		);
+	}
+
+	if (preg_match('/([0-9A-Fa-f]{12})(.*)$/i', $frequest, $matches)) {
 		$mac = pbx3_provision_normalize_mac($matches[1]);
 		if ($mac === null || $mac === '000000000000') {
 			return array(
@@ -126,6 +162,22 @@ function pbx3_provision_parse_request($method, $requestUri, $query = array()) {
 				'mac' => null,
 				'fragment' => null,
 				'reason' => 'bad_or_zero_mac',
+				'suffix' => null,
+			);
+		}
+		// Poly reserved / optional names must 404 — never serve the MAC body as an
+		// override or directory/license file (would poison {mac}-web.cfg precedence).
+		$suffix = isset($matches[2]) ? strtolower((string) $matches[2]) : '';
+		if (preg_match('/^-(web|phone|cloud)\.cfg$/', $suffix)
+			|| preg_match('/^-(directory|calls)\.xml$/', $suffix)
+			|| preg_match('/^-license\.cfg$/', $suffix)) {
+			return array(
+				'status' => 'not_found',
+				'kind' => null,
+				'mac' => null,
+				'fragment' => null,
+				'reason' => 'poly_optional',
+				'suffix' => $suffix,
 			);
 		}
 		return array(
@@ -134,6 +186,7 @@ function pbx3_provision_parse_request($method, $requestUri, $query = array()) {
 			'mac' => $mac,
 			'fragment' => null,
 			'reason' => 'mac_path',
+			'suffix' => $suffix,
 		);
 	}
 
@@ -377,11 +430,65 @@ function pbx3_provision_vars_from_phone($phone, $globals = array(), $extra = arr
 		'ldaprouser' => '',
 		'ldapropwd' => '',
 		'provurl' => isset($extra['provurl']) ? $extra['provurl'] : '',
+		'mac' => '',
 	);
+	if (isset($p['macaddr']) && trim((string) $p['macaddr']) !== '') {
+		$nm = pbx3_provision_normalize_mac($p['macaddr']);
+		if ($nm !== null) {
+			$vars['mac'] = $nm;
+		}
+	}
 	foreach ($extra as $k => $v) {
 		$vars[$k] = $v;
 	}
+	// Grandstream P192 wants host:port/path without scheme.
+	$vars['provpath'] = preg_replace('#^https?://#i', '', (string) $vars['provurl']);
 	return $vars;
+}
+
+/**
+ * True when the phone row is Poly/UCS (stream or vendor).
+ *
+ * @param object|array $phone
+ */
+function pbx3_provision_is_poly_phone($phone) {
+	$prov = '';
+	$vendor = '';
+	if (is_object($phone)) {
+		$prov = isset($phone->provision) ? (string) $phone->provision : '';
+		$vendor = isset($phone->devicevendor) ? (string) $phone->devicevendor : '';
+	} elseif (is_array($phone)) {
+		$prov = isset($phone['provision']) ? (string) $phone['provision'] : '';
+		$vendor = isset($phone['devicevendor']) ? (string) $phone['devicevendor'] : '';
+	}
+	if (stripos($prov, 'poly.') !== false || stripos($prov, 'polycom') !== false) {
+		return true;
+	}
+	return (bool) preg_match('/poly/i', $vendor);
+}
+
+/**
+ * UCS master APPLICATION body (CONFIG_FILES → {mac}-reg.cfg).
+ *
+ * @param string|null $mac 12-hex MAC; when set, CONFIG_FILES uses a literal
+ *        "{mac}-reg.cfg" (more reliable than the phone token on some builds).
+ */
+function pbx3_provision_poly_master_body($streamsDir = null, $mac = null) {
+	$streamsDir = $streamsDir !== null ? $streamsDir : PROVISION_STREAMS;
+	$path = pbx3_provision_stream_path('poly.Master', $streamsDir);
+	if ($path === null || $path === false) {
+		$body = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+			. "<APPLICATION APP_FILE_PATH=\"sip.ld\" CONFIG_FILES=\"[PHONE_MAC_ADDRESS]-reg.cfg\" MISC_FILES=\"\" LOG_FILE_DIRECTORY=\"\" OVERRIDES_DIRECTORY=\"\" CONTACTS_DIRECTORY=\"\" LICENSE_DIRECTORY=\"\" USER_PROFILES_DIRECTORY=\"\" CALL_LISTS_DIRECTORY=\"\">\n"
+			. "  <APPLICATION_INFO SERVICE_APP_FILE_PATH=\"\"/>\n"
+			. "</APPLICATION>\n";
+	} else {
+		$body = (string) file_get_contents($path);
+	}
+	$mac = pbx3_provision_normalize_mac($mac);
+	if ($mac !== null) {
+		$body = str_replace('[PHONE_MAC_ADDRESS]-reg.cfg', $mac . '-reg.cfg', $body);
+	}
+	return $body;
 }
 
 /**
@@ -423,6 +530,11 @@ function pbx3_provision_render(PDO $db, $parsed, $streamsDir = null, $globals = 
 
 	$streamsDir = $streamsDir !== null ? $streamsDir : PROVISION_STREAMS;
 
+	if ($parsed['kind'] === 'poly_master') {
+		$body = pbx3_provision_poly_master_body($streamsDir, null);
+		return array('ok' => true, 'status' => 200, 'body' => $body, 'reason' => 'poly_master', 'phone' => null, 'include_misses' => array());
+	}
+
 	if ($parsed['kind'] === 'common') {
 		$path = pbx3_provision_stream_path($parsed['fragment'], $streamsDir);
 		if ($path === null || $path === false) {
@@ -448,6 +560,13 @@ function pbx3_provision_render(PDO $db, $parsed, $streamsDir = null, $globals = 
 		return array('ok' => false, 'status' => 404, 'body' => "Not Found (404)\n", 'reason' => 'empty_provision', 'phone' => $phone, 'include_misses' => array());
 	}
 
+	// Poly: bare {mac}.cfg is the UCS master; settings live in {mac}-reg.cfg.
+	$suffix = isset($parsed['suffix']) ? (string) $parsed['suffix'] : '';
+	if (pbx3_provision_is_poly_phone($phone) && ($suffix === '.cfg' || $suffix === '')) {
+		$body = pbx3_provision_poly_master_body($streamsDir, $parsed['mac']);
+		return array('ok' => true, 'status' => 200, 'body' => $body, 'reason' => 'poly_master', 'phone' => $phone, 'include_misses' => array());
+	}
+
 	$sndcredsCol = isset($phone->sndcreds) ? $phone->sndcreds : 'Always';
 	$snd = pbx3_provision_sndcreds_allows($sndcredsCol);
 	$loop = array();
@@ -455,6 +574,7 @@ function pbx3_provision_render(PDO $db, $parsed, $streamsDir = null, $globals = 
 	$cluster = isset($phone->cluster) ? (string) $phone->cluster : 'default';
 	$expanded = pbx3_provision_expand($raw . "\n", $snd, $streamsDir, $loop, $db, $cluster, $misses);
 	$extra = pbx3_provision_merge_phone_hosts($db, $phone, $globals, $extra);
+	$globals = pbx3_provision_merge_cluster_device_passwords($db, $phone, $globals);
 	$vars = pbx3_provision_vars_from_phone($phone, $globals, $extra);
 	$body = pbx3_provision_substitute($expanded, $vars);
 
@@ -547,6 +667,47 @@ function pbx3_provision_resolve_hosts($db = null, $globals = array(), $overrides
 		'provurl' => $provurl,
 		'registrar' => $registrar,
 	);
+}
+
+/**
+ * Device web admin/user passwords live on cluster (padminpass / puserpass), not globals.
+ * Globals / PADMINPASS overrides win when already set (unit tests, rare ops override).
+ *
+ * @param object|array $phone
+ * @param array $globals
+ * @return array
+ */
+function pbx3_provision_merge_cluster_device_passwords($db, $phone, $globals = array()) {
+	$hasAdmin = (isset($globals['padminpass']) && (string) $globals['padminpass'] !== '')
+		|| (isset($globals['PADMINPASS']) && (string) $globals['PADMINPASS'] !== '');
+	$hasUser = (isset($globals['puserpass']) && (string) $globals['puserpass'] !== '')
+		|| (isset($globals['PUSERPASS']) && (string) $globals['PUSERPASS'] !== '');
+	if ($hasAdmin && $hasUser) {
+		return $globals;
+	}
+	$p = is_array($phone) ? $phone : (array) $phone;
+	$clusterKey = isset($p['cluster']) ? trim((string) $p['cluster']) : '';
+	if ($clusterKey === '' || !($db instanceof PDO)) {
+		return $globals;
+	}
+	try {
+		$st = $db->prepare('SELECT padminpass, puserpass FROM cluster WHERE shortuid = ? OR pkey = ? LIMIT 1');
+		$st->execute(array($clusterKey, $clusterKey));
+		$row = $st->fetch(PDO::FETCH_ASSOC);
+		$st = null;
+		if (!is_array($row)) {
+			return $globals;
+		}
+		if (!$hasAdmin && isset($row['padminpass']) && (string) $row['padminpass'] !== '') {
+			$globals['padminpass'] = (string) $row['padminpass'];
+		}
+		if (!$hasUser && isset($row['puserpass']) && (string) $row['puserpass'] !== '') {
+			$globals['puserpass'] = (string) $row['puserpass'];
+		}
+	} catch (Exception $e) {
+		// table/columns missing in unit fixtures — leave empty
+	}
+	return $globals;
 }
 
 /**

@@ -1,6 +1,6 @@
 # Poly provision sub-project (D2 + D3 slice)
 
-**Status:** **Streams v0 authored** (2026-10-03) — tip + GET/REGISTER/BYE soak next. Manual SIP UI locks done. Assist-not-core (§1).  
+**Status:** **Lab green 2026-10-03** — VVX 250 + correct **streams** (master/`-reg.cfg`, STUN, far BYE). Discovery = DHCP 66 / manual URL; **no Lens build-out** unless asked. Assist-not-core (§1).  
 **Lab mule:** **Poly VVX 250** · firmware **6.4.3.5059** · Sirius **410** / `g0ntwm` · MAC **482567B0A593**.  
 **Owns:** Poly/UCS-style stock streams, lab soak, NAT row, discovery note (Lens/ZTP).  
 **Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.6 · plan **D2** (discovery) + **D3** (streams) · recipe **`PROVISIONING_LAB_RECIPE.md` §7**.  
@@ -17,14 +17,15 @@
 | Format | **Closed XML** (§4.6) — attribute-heavy (`reg.1.address="…"`) inside elements; whole-stanza INCLUDE, not Yealink last-wins lines |
 | Classic file set | Phone typically fetches: **`000000000000.cfg`** (master / APPLICATION CONFIG_FILES list) → **`site.cfg`** / **`sip-interop.cfg`** (shared) → **`{mac}-reg.cfg`** (per device). Lowercase MAC, no colons |
 | Engine | Dumb `#INCLUDE` + substitute. Phone-side tokens like `[PHONE_MAC_ADDRESS]` in master CONFIG_FILES are **Poly’s** expansion, not ours |
-| URL / edge | **Lab v0 = single combined UCS body** via `{mac}.cfg` or `{mac}-reg.cfg` (kernel already extracts 12-hex MAC from either). Classic `000000000000.cfg` / `site.cfg` → edge **404** (zero/no MAC) — not required for first mule if phone fetches the MAC file |
-| Discovery | **Lens / ZTP still uncertain** post-HP (§0.2 / plan **D2**). Lab = **manual Provisioning Server** URL. If Lens is free/easy end-to-end (GDMS-like), **vendor-cloud-only OK** — our streams optional |
-| mTLS | Poly client CA in ops public-PKI pack; edge prove later if phones hit us |
+| URL / edge | **UCS master + settings (lab 2026-10-03):** Phone fetches `{mac}.cfg` as **APPLICATION master** (not settings). Kernel serves `poly.Master` (`APP_FILE_PATH=sip.ld`, `CONFIG_FILES={mac}-reg.cfg`) for Poly `{mac}.cfg` / `000000000000.cfg`; **`{mac}-reg.cfg`** is the `polycomConfig` settings body. Serving settings as `{mac}.cfg` → “Could not get application name”. **Edge must extract MAC from `{mac}-reg.cfg`** (not only `{mac}.cfg`) or home never sees settings → phone “reverting to previous config”. |
+| Discovery | **Primary assist:** customer **DHCP 66** and/or **manual Provisioning Server URL** → `https://provision.{apex}:41363/provisioning`. **Poly Lens can** point phones at us (or own CFG end-to-end) but **do not build Lens integration** unless a customer asks — streams are the product. |
+| **First boot (lab green)** | Factory / OOTB: **admin password**, then provision URL via **UI** and/or **DHCP 66**. No manual SIP knobs when streams apply. Reboot/apply → master + `-reg.cfg`. |
+| mTLS | Poly client CA in ops public-PKI pack; edge optional |
 | Role | Assist — not required for Poly desks to work on PBX3 |
-| **Manual SIP (UI)** | **Straightforward** once ports + transport set (§0.1). No Fanvil dual-user quirk observed in lab notes. |
+| **Manual SIP (UI)** | Fallback only (§0.1). Stream path preferred. |
 | **sndcreds** | Prefer **Always** for Poly — phone re-polls and often will not stay provisioned/register without secrets on every GET. Kernel already supports Always; SPA select + lab **410** use Always. |
 | **OUI soft-fill** | Saving a Poly/Polycom MAC with blank `provision` auto-sets `#INCLUDE poly.Extension` + `poly.udp` and bumps empty/`Once` → **Always** (`manuf.txt` / `getmaclist.sh`; IEEE bare **Poly** OUIs e.g. `48:25:67`). Does not write `devicevendor` (S12). **Lab E2E still open** after tip. |
-| **Edge TLS** | Poly ClientHello often has **no ECDSA** suites → ECDSA-only LE cert = nginx **Handshake Failure**. Lab tip: **RSA dual-cert** on provision edge (`provision.{apex}-rsa` lineage) — **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`**. |
+| **Edge TLS** | Poly ClientHello often has **no ECDSA** suites → ECDSA-only LE cert = nginx **Handshake Failure**. Provision edge needs an RSA sibling cert (`provision.{apex}-rsa`). SBC install for that is not on `main` yet. |
 
 ### ChatGPT sample (sanity)
 
@@ -49,19 +50,28 @@ Auth/address mapping for streams still follows the sketch below (`reg.1.address`
 
 | Observation | Detail |
 |-------------|--------|
-| Symptom | Outbound call audio OK; **far-end hangup does not clear the Poly** (Contact/NAT class — same as Snom **401** / Yealink **T31P** before STUN). |
-| Browser NAT UI | Shows **IP address**, **Signalling port**, **Media Port Start**, **keepalive interval** only — **no STUN** controls. |
-| STUN path | **Provisioning only.** Chatbot “Web GUI STUN fields” is a hallucination — do not hunt the browser. Lab/manual soak without our streams needs a **config file push / export-edit / Lens template**, not the Web UI. |
+| OOTB | Outbound audio OK; **far-end hangup stuck** (LAN Contact) — same class as Snom **401** / Yealink **T31P** before STUN. |
+| Browser NAT UI | **IP / ports / keepalive** only — **no STUN**. Empty `nat.ip` correct; keepalive **30** after apply. |
+| STUN path | **Provisioning only** (`poly.Common`). Verify via REGISTER Contact (public `x-ast-orig-host`) + far BYE — not the NAT page. |
+| Lab green | **2026-10-03** Sirius **410** — master `{mac}.cfg` + `{mac}-reg.cfg` **200**; keepalive **30**; Contact public; **far BYE clears**. |
 
-**Expected fix** — enable STUN in UCS config (fleet: `stun.l.google.com` / **3478**). Candidate params (confirm spelling on mule firmware / OEM admin guide):
+**Stream params (locked on mule):**
 
 ```text
 feature.nat.stun.enabled="1"
 nat.stun.server="stun.l.google.com"
 nat.stun.port="3478"
+nat.keepalive.interval="30"
+reg.1.nat.traversal.mode="Auto"
+voIpProt.SIP.requestValidation.1.request="INVITE"
+voIpProt.SIP.requestValidation.1.method="source"
 ```
 
-**Streams:** `poly.Common` (or sip-interop fragment) **must** ship STUN — this is the product path for far BYE. Re-soak far hangup before ticking the NAT checklist green.
+**INVITE source filter:** OpenSIP UCS `requestValidation` / `method=source` (reject INVITEs not from registered server). Not BroadWorks Anonymous Call Reject.
+
+**Override trap:** Web/keypad `{mac}-web.cfg` / `{mac}-phone.cfg` beat streams until Reset Web/Local Configuration.
+
+**Apply path:** `{mac}.cfg` = UCS **APPLICATION** master (`poly.Master`); settings = `{mac}-reg.cfg`. Edge must MAC-extract `-reg.cfg`. Optional-file 404s are normal; `sip.ld` 404 OK (we don’t host firmware). STUN apply may force a second reboot.
 
 ---
 
@@ -69,9 +79,9 @@ nat.stun.port="3478"
 
 | Artifact | Path / notes |
 |----------|--------------|
-| Streams | `pbx3-1/opt/pbx3/provisioning/streams/poly.{Common,Extension,udp}` |
+| Streams | `pbx3-1/…/streams/poly.{Master,Common,Extension,udp}` |
 | Lab soak | Recipe §7 — Sirius **410** / MAC `482567B0A593` |
-| NAT row | Open until far BYE green with stream STUN |
+| NAT row | **Green** 2026-10-03 (stream STUN + far BYE) |
 
 Extension entry:
 
@@ -80,20 +90,20 @@ Extension entry:
 #INCLUDE poly.udp
 ```
 
-`poly.Common`: STUN + rport + UK SNTP (`gmtOffset=0`) + admin pass.  
+`poly.Master`: APPLICATION → `CONFIG_FILES={mac}-reg.cfg`.  
+`poly.Common`: STUN + keepalive + rport + UK SNTP (`gmtOffset=0`).  
 `poly.Extension`: shortuid auth, `$sipdomain` / `$outbound`, both ports, **UDPOnly**, `reg.1.nat.traversal.mode=Auto`. Password on its own `<reg/>` line (sndcreds).
 
 ---
 
 ## 2. Lab tip / soak (resume)
 
-1. Tip `poly.*` onto Sirius home; set **410** provision to `#INCLUDE poly.Extension` + `poly.udp`; `sndcreds=Once`.
+1. Tip `poly.*` onto Sirius home; set **410** provision to `#INCLUDE poly.Extension` + `poly.udp`; `sndcreds=Always`.
 2. Claim MAC / map sync (fleet) — MAC **482567B0A593**.
-3. Phone UI → **Settings → Provisioning Server** → HTTPS `https://provision.pbx3.com:41363/provisioning` (or full `…/482567b0a593.cfg` if the UI wants a file).
-4. Reboot; expect GET **200** on `{mac}.cfg` or `{mac}-reg.cfg`.
-5. Exit: REGISTER via SBC → audio + **far BYE**; fill NAT row.
-6. If phone insists on `000000000000.cfg` first and never pulls MAC file — document and decide whether to add a zero-MAC edge path later.
-7. Spike **D2**: Lens/ZTP free path?
+3. Phone (factory/OOTB): **admin password** → **Settings → Provisioning Server** → `https://provision.pbx3.com:41363/provisioning` (directory base).
+4. Reboot/apply; expect GET **200** on `{mac}.cfg` then `{mac}-reg.cfg` (optional-file 404s OK).
+5. Exit: REGISTER via SBC → audio + **far BYE**; NAT keepalive **30**. **Done 2026-10-03** (incl. factory-reset re-soak).
+6. **D2:** DHCP **66** / manual URL. Lens capable but **out of scope** unless a customer asks.
 
 **Out of scope for first pass:** Lens automation API, firmware CDN (`sip.ld` hosting), full softkey/BLF matrix, non-VVX families until needed.
 
@@ -102,11 +112,12 @@ Extension entry:
 ## 3. Exit (this sub-project slice)
 
 - [x] Manual SIP UI knobs locked (§0.1): GMT→local TZ; both ports; Transport **UDPOnly** (not DNSnaptr)
-- [x] Far-end BYE fails OOTB; STUN is **provisioning-only** (no Web UI) — §0.2; **BYE re-soak open**
-- [x] `poly.*` v0 authored (UCS XML + STUN + UDPOnly + ports); single-file URL path documented
-- [ ] One Poly model lab-green (REGISTER + call + **far BYE** with stream STUN) **or** documented Lens/GDMS-style cloud-only path
-- [ ] Export-align / tweak if VVX 250 rejects v0 tags
-- [ ] NAT row green; recipe §7 checks ticked
-- [ ] **D2** discovery note updated (Lens usable? yes/no/partner)
+- [x] Far-end BYE fails OOTB; STUN is **provisioning-only** (no Web UI) — §0.2
+- [x] `poly.*` v0 + master/`-reg.cfg` path + edge MAC suffix extract
+- [x] One Poly model lab-green (REGISTER + call + **far BYE** with stream STUN) — VVX 250 / **410**
+- [x] NAT row green; keepalive **30** + public Contact
+- [x] Factory-reset path: admin password + Provisioning Server URL only (no manual SIP)
+- [x] **D2** discovery: **DHCP 66** / manual URL (Lens exists — **do not build** unless asked)
+- [x] Product focus = **correct streams** (not Lens)
 
-Then close Poly under D2/D3 or open next brand.
+Poly D2/D3 slice closed for assist; open next brand when ready.

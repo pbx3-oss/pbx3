@@ -314,37 +314,38 @@ final class DidInventory
      * Project catalog DID rows to SBC (one or more tenants, or all).
      *
      * @param  list<string>|null  $tenantFilter  null = all tenants with dids.json
+     * @param  int|null  $setidOverride  Force hop-1 dispatcher setid (tenant-move cutover:
+     *                                   catalog meta may still point at the old home)
      * @return array<string, mixed>
      */
-    public function projectToSbc(SbcFleetClient $sbc, ?array $tenantFilter = null, bool $dryRun = false): array
-    {
+    public function projectToSbc(
+        SbcFleetClient $sbc,
+        ?array $tenantFilter = null,
+        bool $dryRun = false,
+        ?int $setidOverride = null
+    ): array {
         $list = $this->listAll();
-        $payload = [];
         $filter = $tenantFilter === null
             ? null
             : array_fill_keys(array_map('strval', $tenantFilter), true);
+        $payload = self::buildSbcProjectPayload($list['dids'], $filter, $setidOverride);
+        $ensure = $filter !== null ? array_keys($filter) : [];
 
-        foreach ($list['dids'] as $row) {
-            $tenant = (string) ($row['tenant_shortuid'] ?? '');
-            if ($filter !== null && ! isset($filter[$tenant])) {
-                continue;
-            }
-            $payload[] = [
-                'e164' => $row['e164'],
-                'e164_key' => $row['e164_key'],
-                'sip_prefix' => $row['sip_prefix'] ?? null,
-                'tenant_shortuid' => $tenant,
-                'status' => $row['status'],
-                'sbc_dispatcher_setid' => $row['sbc_dispatcher_setid'] !== null
-                    ? (int) $row['sbc_dispatcher_setid']
-                    : null,
+        if ($payload === [] && $filter !== null) {
+            return [
+                'ok' => true,
+                'skipped' => 'no_dids',
+                'upserted' => [],
+                'removed' => [],
+                'errors' => [],
             ];
         }
 
-        $ensure = $filter !== null ? array_keys($filter) : [];
-
         try {
             $result = $sbc->projectDids($payload, $dryRun, $ensure);
+            if (! $dryRun && ($result['ok'] ?? false)) {
+                $this->compileAndWriteIndex();
+            }
 
             return array_merge(['ok' => (bool) ($result['ok'] ?? false)], $result);
         } catch (\Throwable $e) {
@@ -356,6 +357,43 @@ final class DidInventory
                 'errors' => [$e->getMessage()],
             ];
         }
+    }
+
+    /**
+     * Build SBC project-dids body rows from {@see listAll()} output.
+     *
+     * @param  list<array<string, mixed>>  $listRows
+     * @param  array<string, true>|null  $tenantFilter  null = all tenants
+     * @return list<array<string, mixed>>
+     */
+    public static function buildSbcProjectPayload(
+        array $listRows,
+        ?array $tenantFilter = null,
+        ?int $setidOverride = null
+    ): array {
+        $payload = [];
+        foreach ($listRows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $tenant = (string) ($row['tenant_shortuid'] ?? '');
+            if ($tenantFilter !== null && ! isset($tenantFilter[$tenant])) {
+                continue;
+            }
+            $fromCatalog = $row['sbc_dispatcher_setid'] ?? null;
+            $payload[] = [
+                'e164' => $row['e164'],
+                'e164_key' => $row['e164_key'],
+                'sip_prefix' => $row['sip_prefix'] ?? null,
+                'tenant_shortuid' => $tenant,
+                'status' => $row['status'],
+                'sbc_dispatcher_setid' => $setidOverride !== null
+                    ? $setidOverride
+                    : ($fromCatalog !== null ? (int) $fromCatalog : null),
+            ];
+        }
+
+        return $payload;
     }
 
     /**

@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-02 (session end: assist-not-core; Fanvil/GS/Poly parked; desk mules in lab)
+**Last updated:** 2026-10-07 (queue missed-call Dial `c` + SBC pass-reason-hdr merged to `main`)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -12,7 +12,7 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate** — **A–C10** + rehome + **#23b** (2026-10-02). **Assist, not core.** Parked brand tracks: **`FANVIL_PROVISION_SUBPROJECT.md`** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Spec / MkDocs **`admin/phone-provisioning-*`**.
+0k. **Phone provisioning — reinstate** — **A–C10** + rehome + **#23b** + brand mules + **ghost-call knobs** (2026-10-03). **Assist, not core.** Open: **#23c** Snom stock streams → OEM XML (same keys, wrapped). Brand tracks: **`FANVIL_PROVISION_SUBPROJECT.md`** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Spec / MkDocs **`admin/phone-provisioning-*`**.
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
@@ -69,7 +69,8 @@
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
 23. **Provisioning — reinstate (instance-local)** — **A–C10** + rehome green (2026-10-02). Assist-not-core. Brand tracks: Fanvil / GS / Poly sub-projects (parked). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. 
-23b. **Fleet tenant moves — docs review + more soaks** — **docs review done (2026-10-02):** MkDocs **`fleet/tenant-move`** (dual-copy / wipe / provision MAC map / `provision_stream` / C10 edge-global) + mobility design note. **More soaks** remain operator (not blocking).
+23b. **Fleet tenant moves — docs review + more soaks** — **docs review done (2026-10-02):** MkDocs **`fleet/tenant-move`**. **2026-10-06:** cutover/rollback auto-project DID hop-1 (`TenantMoveRunner` + `DidInventory::projectToSbc` setid override). **More soaks** remain operator.
+23c. **Snom provision streams → XML** — OEM pushing XML harder; stock `snom.*` still **line** (`key$: value`). Convert to closed XML: `<settings>` / `<phone-settings>` + `<param idx="N" perm="">` (line suffix → `idx`; same names). Shape: **`workingdocs/samples/snom-settings-xml-example.xml`**. Exhaustive keys (lab D717 @402): **`workingdocs/archive/snom-d717-settings-exhaustive-lab-402.xml`**. Engine stays INCLUDE + substitute; Content-Type / URL form as needed. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.6**. Not urgent; schedule when Snom lab next open.
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
 25. **Number wire Phase 2 / D2–D4** (parked) — companion **0h** trunk carrier-face stub.  
@@ -84,7 +85,8 @@
 34. ~~**Fleet domain→setid SBC lock**~~ — **done** (`fleet=domain` tag + DomainPolicy + Domain Routes no-offer; reconcile `missing_fleet_tag`). **2026-09-24:** Domain Routes show catalog **label** + instance Name; reconcile `domain_label_mismatch` / `dispatcher_label_mismatch` (projectable). Lock: **`pbx3-directory/docs/FLEET_DOMAIN_SETID_LOCK.md`**.  
 35. ~~**SBC site timezone at install**~~ — **done (2026-08-26):** `pbx3sbc-admin/install.sh` prompt / `--site-timezone` / `PBX3_SBC_SITE_TIMEZONE` → `.env` (Home/CDR day buckets). Default = host `/etc/timezone`. Does not change OS clock. Optional later: Filament change-later.  
 36. **Legacy PBX admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_PBX_PANEL_BACKLOG.md`**. **P1 CoS (Class of Service): done pending lab sign-off (2026-08-23)**. **Reports:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** lab green (2026-08-25) — upload/play/delete + `moh reload` (no Commit for file swaps); Custom MOH Active still Save. **Recordings:** panel shipped (R1/R1.5/S7); unified list filters + play spinner **done (2026-08-26)**. **Extension named call/pickup groups:** `named_call_group` + `named_pickup_group` — lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**; **pickup manual L3 OK** lab `.31`; sipplab pack pending. **BLF SUBSCRIBE:** tmpl `allow_subscribe=yes` + `subscribe_context=$clst`; **Snom BLF OK** lab `.31`; **Yealink** — phone config under investigation (Asterisk assumed OK). **Parking:** `parkinghints=yes` + **`parkedcallreparking=both`**; fleet timeout FQDN Dial + COS `901`–`903` + `*5` preferred — golden OK (2026-09-26). ETL: **`~/GiT/private offline migrate tool`**. **PJSIP config wizard:** won't-do. **P2+ parked:** wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **third-party certs panel**.
-37. **Audio transcription (pluggable)** — provider interface; choose backend. Potential first-out: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **0l**.
+37. **Audio transcription (pluggable)** — provider interface; choose backend. Potential first-out: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **0l**.  
+38. **Instance API security — industry review** — **should-do / not scheduled (2026-10-04):** baseline (Sanctum + abilities + cluster scope + opt-in TOTP + HTTPS + fail2ban badbots) is mid-tier OK; backlog vs best practice: login/2FA rate-limit, token TTL/rotation, MFA-required for admins, optional `:44300` IP allowlist (SPA tradeoff), BFF/cookie later. Spec: **`INSTANCE_API_SECURITY_REVIEW.md`**. Not first-out.
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -122,14 +124,19 @@
 
 - [x] **Provision edge IP allowlist (C10 — 2026-10-02):** Filament **Provision access**; UFW allowlist on `:41363` only; default off; complements mTLS. Spec **`pbx3-directory/docs/SBC_PROVISION_ACCESS_REQUIREMENTS.md`**. MkDocs **`admin/phone-provisioning-access`**.
 
-- [x] **Fleet tenant moves — docs review (#23b — 2026-10-02):** MkDocs **`fleet/tenant-move`** expanded (dual-copy until wipe, RPS/`provision.{apex}`, `provision_stream` in export, C10 edge-global). Mobility design note at `awaiting_cleanup`. **More soaks** remain operator (optional).
+- [x] **Fleet tenant moves — docs review (#23b — 2026-10-02):** MkDocs **`fleet/tenant-move`**. **2026-10-06:** cutover/rollback auto-project DID hop-1. **More soaks** remain operator (optional).
 
-- [ ] **Fanvil provision sub-project (D3 — parked 2026-10-02):** **`FANVIL_PROVISION_SUBPROJECT.md`**. Seed streams + recipe §5 on `main`; soak when mule arrives (export config if UI allows).
+- [x] **Fanvil provision sub-project (D3 — lab green 2026-10-03):** **`FANVIL_PROVISION_SUBPROJECT.md`**. `sysConf` streams; Sirius 412; ghost-call **`SIPPort`/`SignalPort` 5160** + `BanAnonymous`. Ops: tip Fanvil CA Monday.
 
-- [ ] **Grandstream provision sub-project (D3 — parked 2026-10-02):** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. P-value XML (`gs_provision`); streams when mule + firmware template in hand. Guide: [gs_provisioning_guide.pdf](https://www.grandstream.com/hubfs/Product_Documentation/gs_provisioning_guide.pdf).
+- [x] **Grandstream provision sub-project (D3 — lab green 2026-10-03):** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. P-value XML; P237 Config + P52 Auto; **`P2347=1`** proxy-only INVITE.
 
-- [ ] **Poly provision sub-project (D2/D3 — parked 2026-10-02):** **`POLY_PROVISION_SUBPROJECT.md`**. Classic UCS master/`-reg.cfg` assumed; Lens discovery still open; streams when mule arrives.
-- [ ] **OUI soft-fill `provision` (2026-10-03):** API mapper + `manuf.txt`/`getmaclist` Poly filter shipped; **lab E2E open** — tip home, blank-provision MAC Save (Poly/Yealink/Snom), preserve non-empty, unknown no-op. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.4**.
+- [x] **Poly provision sub-project (D2/D3 — lab green 2026-10-03):** **`POLY_PROVISION_SUBPROJECT.md`**. Streams + DHCP 66 / manual URL; **`requestValidation` source** INVITE filter; **no Lens** unless asked.
+
+- [ ] **OUI soft-fill `provision` (2026-10-03):** API mapper + `manuf.txt`/`getmaclist` Poly filter; **lab E2E open** — tip home, blank-provision MAC Save (Poly/Yealink/Snom), preserve non-empty, unknown no-op. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.4**.
+
+- [x] **Desk ghost-call / INVITE-source streams (2026-10-03):** YL `sip_trust_ctrl` · Snom `filter_registrar` · GS `P2347` · Poly `requestValidation` · Fanvil `SIPPort` 5160 — LAN reject lab green (Fanvil = port obscurity).
+
+- [ ] **Snom provision streams → XML (#23c — 2026-10-03):** Stock `snom.*` still line-oriented; OEM getting more aggressive about XML. Shape: `<settings>` + `<phone-settings>` globals; identity `idx="N"` (not `name1` suffix). Sample **`workingdocs/samples/snom-settings-xml-example.xml`**. Exhaustive lab dump **`workingdocs/archive/snom-d717-settings-exhaustive-lab-402.xml`**. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.6**.
 
 - [x] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-02):** Tip Snom+Yealink PEM; `PROVISION_MTLS=optional` live. Yealink **SUCCESS**+200; bare curl NONE/200 vs require **400**. Spec §8 · plan **C5**.
 
@@ -143,6 +150,8 @@
 
 - [x] **Parking lot BLF + post-timeout `*5` (2026-08-24):** `parkinghints=yes`; Snom `sip:901@{tenant}.pbx3.com` / dialog sub OK when Watchers≥1. Comeback Dial has no feature args — **`parkedcallreparking=both`** on the lot restores DTMF park (lab OK; transfers/hangup lot opts not used).
 - [x] **Fleet park timeout + inband park/retrieve (2026-09-26):** `comebacktoorigin=no` + GenAst `park-timeout-*` FQDN Dial (bare `PJSIP/suid` was CHANUNAVAIL); COS exact `901`–`903`; `parkingtime=60`. Prefer DTMF `*5` (not attended xfer to `*900`). Golden desk green. MkDocs **feature-codes**.
+- [x] **Queue/ring-group park after answer (2026-10-06):** GenAst `member=Local/…/n` + cagi queue Dial `,,ktT` — bare Local was optimized out so `*5`/park never armed. Lab **11001/`nhxxk0`** Sirius green. PRs pbx3 **#65** · pbx3cagi **#3**.
+- [x] **Queue missed-call hygiene (2026-10-07):** CAGI PrepDial queue Dial `ktT` → `cktT` (HANGUPCAUSE answered-elsewhere). **Also required on fleet:** SBC OpenSIPS CANCEL `t_relay("pass-reason-hdr")` — plain relay rewrote Reason to `ORIGINATOR_CANCEL` (Snom showed that; phones logged missed). Lab green Aelintra **11001** / Magrathea. Merged **`main`:** cagi **#4** · pbx3 **#67** · sbc **#11**.
 
 - [x] **AMI console noise + Home pulse churn (2026-08-24):** `manager.conf` `displayconnects=no` (needs **Asterisk restart**, not only manager reload); Home pulse live TTL **45s**; SPA pauses pulse poll when tab hidden; tenant edit no longer sets topbar tenant chip (heading only).
 
@@ -214,6 +223,8 @@
 - [x] **Control plane duplex / HA — won't-do (2026-08-11):** Management layer is binary (up/down). Gatekeeper stays a **single host**; calls continue per Rule 11 while Fleet mutate waits. Do **not** build duplex/active-active Gatekeeper. Ops: rebuild/restore + DNS/EIP discipline. Edge HA (SBC) remains a separate call-path track. Lock: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.1 · **`DESIGN_RULES.md`** Rule 11.
 
 - [ ] **Gatekeeper auth.sqlite backups (#15a — 2026-09-25):** Ops continuity only (not call path). Daily or post-change **`sqlite3 .backup` / file copy** of `GATEKEEPER_AUTH_DB` → org S3 `control/{id}/…` + N-day retention + restore note in **`CONTROL_HOST.md`**. **Not Litestream** (parked elsewhere; overkill for low-churn control DB under single-host rebuild doctrine). Optional local rotate on-box. Not first-out.
+
+- [ ] **Instance API security — industry review (#38 — 2026-10-04):** Capture only — not scheduled. Baseline OK for shared SPA→home; candidates **H1–H6** in **`INSTANCE_API_SECURITY_REVIEW.md`** (login throttle, token TTL, MFA policy, optional `:44300` allowlist, BFF, WAF). Lock before implementing anything that breaks **`app.pbx3.com`**.
 
 - [ ] **Fleet instance health includes Asterisk (parked, pre-live 2026-07-27):** Gatekeeper node badge uses HTTP **`/up`** only. Extend probe for call-plane liveness before production. Do not block dial-alias.
 
