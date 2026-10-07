@@ -25,7 +25,7 @@
 | **Manual SIP (UI)** | Fallback only (§0.1). Stream path preferred. |
 | **sndcreds** | Prefer **Always** for Poly — phone re-polls and often will not stay provisioned/register without secrets on every GET. Kernel already supports Always; SPA select + lab **410** use Always. |
 | **OUI soft-fill** | Saving a Poly/Polycom MAC with blank `provision` auto-sets `#INCLUDE poly.Extension` + `poly.udp` and bumps empty/`Once` → **Always** (`manuf.txt` / `getmaclist.sh`; IEEE bare **Poly** OUIs e.g. `48:25:67`). Does not write `devicevendor` (S12). **Lab E2E still open** after tip. |
-| **Edge TLS** | Poly ClientHello often has **no ECDSA** suites → ECDSA-only LE cert = nginx **Handshake Failure**. Provision edge needs an RSA sibling cert (`provision.{apex}-rsa`). SBC install for that is not on `main` yet. |
+| **Edge TLS** | Poly ClientHello often has **no ECDSA** suites → ECDSA-only LE cert = nginx **Handshake Failure**. Provision edge binds an RSA sibling cert (`provision.{apex}-rsa`) when that lineage exists. **`pbx3sbc/workingdocs/PROVISION_EDGE_PROXY.md`**. Lab SBC already issued and serving it (2026-10-03). |
 
 ### ChatGPT sample (sanity)
 
