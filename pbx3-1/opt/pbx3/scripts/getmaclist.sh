@@ -12,7 +12,8 @@ if test "$ret" != "0"; then
      logger "getmaclist - **** Link fail - Could not fetch new manufacturer MAC DB ****"
      exit 4
 fi
-grep -E -i -w 'Snom|Panasonic|Yealink|Polycom|Fanvil|Cisco|Gigaset|Aastra|Grandstream|Vtech' /tmp/oui.txt > /tmp/manuf0.txt
+# Poly (HP) registers as bare "Poly"; keep Polycom for legacy OUIs.
+grep -E -i -w 'Snom|Panasonic|Yealink|Polycom|Poly|Fanvil|Cisco|Gigaset|Aastra|Grandstream|Vtech' /tmp/oui.txt > /tmp/manuf0.txt
 
 grep 'base 16' /tmp/manuf0.txt | sed -e 's/(base 16)//' |sed -e "s/\s\{3,\}/ /g" > /tmp/manuf1.txt
 

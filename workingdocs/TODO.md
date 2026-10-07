@@ -132,6 +132,8 @@
 
 - [x] **Poly provision sub-project (D2/D3 — lab green 2026-10-03):** **`POLY_PROVISION_SUBPROJECT.md`**. Streams + DHCP 66 / manual URL; **`requestValidation` source** INVITE filter; **no Lens** unless asked.
 
+- [ ] **OUI soft-fill `provision` (2026-10-03):** API mapper + `manuf.txt`/`getmaclist` Poly filter; **lab E2E open** — tip home, blank-provision MAC Save (Poly/Yealink/Snom), preserve non-empty, unknown no-op. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.4**.
+
 - [x] **Desk ghost-call / INVITE-source streams (2026-10-03):** YL `sip_trust_ctrl` · Snom `filter_registrar` · GS `P2347` · Poly `requestValidation` · Fanvil `SIPPort` 5160 — LAN reject lab green (Fanvil = port obscurity).
 
 - [ ] **Snom provision streams → XML (#23c — 2026-10-03):** Stock `snom.*` still line-oriented; OEM getting more aggressive about XML. Shape: `<settings>` + `<phone-settings>` globals; identity `idx="N"` (not `name1` suffix). Sample **`workingdocs/samples/snom-settings-xml-example.xml`**. Exhaustive lab dump **`workingdocs/archive/snom-d717-settings-exhaustive-lab-402.xml`**. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.6**.

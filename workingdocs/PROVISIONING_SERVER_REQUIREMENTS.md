@@ -14,6 +14,7 @@
 **Earlier (2026-08-06):** Explored fleet S3 MAC inventory + dedicated provision host; secrets/HoR split made that path hard.  
 **Reference notes:** private prior co-located provisioner / previous PBX archives (operator only — not in product tree).  
 **2026-10-02 (product role):** Provisioning is an **assist**, **not core**. Call plane (REGISTER / media) works without it; vendor clouds (e.g. free **GDMS**) may own CFG end-to-end. Our listener/edge is a convenience for desk enrollment + fleet MAC mobility — never a required product spine. See **§1** / **§2**.  
+**2026-10-03 (OUI soft-fill):** On MAC assign/change, home API may **soft-fill empty `ipphone.provision`** from `/opt/pbx3/cache/manuf.txt` OUI → vendor-grain `#INCLUDE` (Poly also bumps empty/`Once` → `sndcreds=Always`). Does **not** write `device` / `devicevendor` (**S12**). See **§4.4** / **§5**.  
 **Related:** **`PROVISIONING_IMPLEMENTATION_PLAN.md`** · **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · **`UFW_SHOREWALL_MIGRATION.md` §3** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23 / #28 / **0k**.
 
 ---
@@ -287,11 +288,15 @@ Same idea as previous PBX **`sndcreds`** and as many **third-party / vendor clou
 
 | Stance for pbx3 | |
 |-----------------|--|
-| **Do** | Author **one primary stream per vendor** of interest (§0.2); OUI / create-time label picks vendor |
+| **Do** | Author **one primary stream per vendor** of interest (§0.2); OUI / create-time picks vendor **stream** |
 | **Do not** | Rebuild a Device SPA/table of per-SKU templates (snom300 vs snomD785 vs …) as the product model — **#28 purge stands** |
 | **Exceptions** | Rare model-specific overlays only when a vendor truly diverges — explicit, not a matrix by default |
 | **Migrate / aliases** | If lifting old DBs, map legacy model names → vendor stream; keep read aliases only if needed for customer data, not as a growth path |
 | **`ipphone.device`** | Vendor (or General SIP / WebRTC) label for expand + UI — not a foreign key into a fat Device catalogue |
+| **OUI → `provision` (soft-fill)** | On extension **create** / **update** when MAC is **added or changed**: if `provision` is null/blank, home API looks up OUI in **`/opt/pbx3/cache/manuf.txt`** (weekly `getmaclist.sh` from IEEE) and sets vendor-grain `#INCLUDE` (yealink / snom / fanvil / poly / Panasonic). **Never** overwrite a non-empty operator/Customer stream. MAC clear does **not** clear `provision`. **Poly:** soft-fill also bumps empty/`Once` → **`sndcreds=Always`** (leave explicit `No` alone). |
+| **OUI does not own handset label** | Soft-fill writes **`provision` (+ Poly `sndcreds`) only** — not `device` / `devicevendor` (**`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md` S12**; UA harvest owns handset columns). |
+| **No auto Grandstream (v1)** | Grandstream / Gigaset / unknown OUI → leave `provision` unchanged until stock streams exist. |
+| **E2E still required** | Unit tests cover mapper only. **Lab end-to-end not done:** tip API + `manuf.txt`/`getmaclist` Poly filter → SPA Save blank-provision MAC (Poly `482567…`, Yealink, Snom) → confirm `provision` INCLUDE + Poly `sndcreds=Always` → curl/handset GET; also prove non-empty `provision` is preserved and unknown OUI is a no-op. |
 
 Expand still comes from **extension data** + vendor stream — not a revived multi-hundred-row Device editor. **No** BLF/fkey machinery in v1 (**§4.5**).
 
@@ -515,7 +520,7 @@ Customer fragment holds only lines to add/change. Where the vendor is last-wins,
 | last_provisioned_at (first optional) | `ipphone` | Updated on successful provision GET (§4.7); investigation first stop |
 | BLF / line keys | — | **Not DB-expand in v1** (§4.5); additive site fragment `#INCLUDE` after stock (**§4.8**) or inline one-off in extension stream |
 | SIP host policy | Fleet: **`$sipdomain` = tenant FQDN**, **`$outbound` = SBC**; solo: domain/IP, proxy off. Not home public IP as phone next-hop in fleet | Matches W1 / desk REGISTER |
-| OUI → vendor | `manuf.txt` helper | Create-time UI; not every GET |
+| OUI → vendor stream | `manuf.txt` + API soft-fill | On MAC assign/change when `provision` empty (§4.4); not every GET; not `devicevendor` |
 
 ---
 
