@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-07 (queue missed-call Dial `c` + SBC pass-reason-hdr merged to `main`)
+**Last updated:** 2026-10-07 (OUI soft-fill + provision-edge RSA on `main`; branch hygiene)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -132,7 +132,7 @@
 
 - [x] **Poly provision sub-project (D2/D3 — lab green 2026-10-03):** **`POLY_PROVISION_SUBPROJECT.md`**. Streams + DHCP 66 / manual URL; **`requestValidation` source** INVITE filter; **no Lens** unless asked.
 
-- [ ] **OUI soft-fill `provision` (2026-10-03):** API mapper + `manuf.txt`/`getmaclist` Poly filter; **lab E2E open** — tip home, blank-provision MAC Save (Poly/Yealink/Snom), preserve non-empty, unknown no-op. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.4**.
+- [ ] **OUI soft-fill `provision` (code on `main` 2026-10-07):** API mapper + `manuf.txt`/`getmaclist` Poly filter merged (pbx3 **#69** · pbx3api **#10**). **Lab E2E open** — tip home, blank-provision MAC Save (Poly/Yealink/Snom), preserve non-empty, unknown no-op. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.4**. Edge RSA dual-cert also on **`main`** (pbx3sbc **#12**).
 
 - [x] **Desk ghost-call / INVITE-source streams (2026-10-03):** YL `sip_trust_ctrl` · Snom `filter_registrar` · GS `P2347` · Poly `requestValidation` · Fanvil `SIPPort` 5160 — LAN reject lab green (Fanvil = port obscurity).
 
