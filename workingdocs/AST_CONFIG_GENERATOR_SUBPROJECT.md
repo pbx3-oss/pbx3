@@ -256,7 +256,7 @@ CAGI also receives dials/AGI from queue/recording paths (e.g. `SetRecord`, PrepD
 
 - Fleet dial string (authority = CAGI PrepDial): `PJSIP/{shortuid}/sip:{shortuid}@{tenant.fqdn}`.
 - Singleton: `PJSIP/{shortuid}`.
-- **Phase E `Q*`:** GenAst emits `agi(…,Dial,{shortuid},{cluster},queue,,)` then `Dial(${PBX3_DIAL})`. PrepDial(`type=queue`) sets `PBX3_DIAL` with an empty timeout and hardcoded Dial options `cktT` (`,,cktT`) and returns. Queue owns ring time. Dial `c` = answered-elsewhere on cancel (missed-call hygiene when Queue cancels sibling rings); `k`/`t`/`T` = park + transfers (needs GenAst `member=Local/…/n`).
+- **Phase E `Q*`:** GenAst emits `agi(…,Dial,{shortuid},{cluster},queue,,)` then `Dial(${PBX3_DIAL})`. PrepDial(`type=queue`) sets `PBX3_DIAL` with an empty timeout and hardcoded Dial options `cktT` (`,,cktT`) and returns. Queue owns ring time. Dial `c` = answered-elsewhere on cancel; `k`/`t`/`T` = park + transfers (needs GenAst `member=Local/…/n`). **Fleet:** home CANCEL already carries `Reason: SIP;cause=200` / `Q.850;cause=26`; SBC must `t_relay("pass-reason-hdr")` on CANCEL or OpenSIPS rewrites to `ORIGINATOR_CANCEL` and desks log missed calls (lab 2026-10-07).
 - **Phase G LepDial:** GenAst emits LepDial → gate empty `PBX3_DIAL` → `Dial(${PBX3_DIAL})` → gate ANSWER/CANCEL → `PostDial`. PrepDial (non-queue) sets `PBX3_DIAL` and returns (no `EXEC Dial`). PostDial owns CFBS/VM/bounce.
 - Phone endpoint `$outbound_proxy` → SBC only in fleet mode; host from **`PBX3_SBC_EGRESS_HOST`** (Phase F).
 - **`$clstkey`** → `park-{tenant shortuid}` (parking lot); must not be expanded via bare `$clst`.
