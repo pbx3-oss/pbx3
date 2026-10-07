@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-06 (tenant-move DID hop-1 project; queue Local/`/n` park; SPA Members placeholder)
+**Last updated:** 2026-10-06 (tenant-move DID hop-1; queue Local/`/n` park; member Dial options parked)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -149,6 +149,7 @@
 - [x] **Parking lot BLF + post-timeout `*5` (2026-08-24):** `parkinghints=yes`; Snom `sip:901@{tenant}.pbx3.com` / dialog sub OK when Watchers≥1. Comeback Dial has no feature args — **`parkedcallreparking=both`** on the lot restores DTMF park (lab OK; transfers/hangup lot opts not used).
 - [x] **Fleet park timeout + inband park/retrieve (2026-09-26):** `comebacktoorigin=no` + GenAst `park-timeout-*` FQDN Dial (bare `PJSIP/suid` was CHANUNAVAIL); COS exact `901`–`903`; `parkingtime=60`. Prefer DTMF `*5` (not attended xfer to `*900`). Golden desk green. MkDocs **feature-codes**.
 - [x] **Queue/ring-group park after answer (2026-10-06):** GenAst `member=Local/…/n` + cagi queue Dial `,,ktT` — bare Local was optimized out so `*5`/park never armed. Lab **11001/`nhxxk0`** Sirius green. PRs pbx3 **#65** · pbx3cagi **#3**.
+- [ ] **Queue member Dial options — per queue (parked 2026-10-06):** Leave CAGI `,,ktT` hardcoded. Not scheduled. A phone’s `Q{ext}` leg is shared, so per-queue options need the queue shortuid on that leg (`Set(_PBX3_QUEUE_SUID=…)` before `Queue()`; Asterisk 20 inherit). `QUEUENAME` is too late. SPA **Options** is Queue() flags, a different layer. Do not build a field until some queue needs a Dial letter other than `k`/`t`/`T` — otherwise this is work for no gain, and a free-text string can break `Dial()` or fight Agent Ring Timeout. Note: **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.2.1**.
 
 - [x] **AMI console noise + Home pulse churn (2026-08-24):** `manager.conf` `displayconnects=no` (needs **Asterisk restart**, not only manager reload); Home pulse live TTL **45s**; SPA pauses pulse poll when tab hidden; tenant edit no longer sets topbar tenant chip (heading only).
 

@@ -256,10 +256,37 @@ CAGI also receives dials/AGI from queue/recording paths (e.g. `SetRecord`, PrepD
 
 - Fleet dial string (authority = CAGI PrepDial): `PJSIP/{shortuid}/sip:{shortuid}@{tenant.fqdn}`.
 - Singleton: `PJSIP/{shortuid}`.
-- **Phase E `Q*`:** GenAst emits `agi(…,Dial,{shortuid},{cluster},queue,,)` then `Dial(${PBX3_DIAL})`. PrepDial(`type=queue`) sets `PBX3_DIAL` (includes trailing `,,` for queue-owned timeout) and returns — no GenAst-hardcoded Dial.
+- **Phase E `Q*`:** GenAst emits `agi(…,Dial,{shortuid},{cluster},queue,,)` then `Dial(${PBX3_DIAL})`. PrepDial(`type=queue`) sets `PBX3_DIAL` with an empty timeout and hardcoded Dial options `ktT` (`,,ktT`) and returns. Queue owns ring time. Per-queue options are parked in **§5.2.1**.
 - **Phase G LepDial:** GenAst emits LepDial → gate empty `PBX3_DIAL` → `Dial(${PBX3_DIAL})` → gate ANSWER/CANCEL → `PostDial`. PrepDial (non-queue) sets `PBX3_DIAL` and returns (no `EXEC Dial`). PostDial owns CFBS/VM/bounce.
 - Phone endpoint `$outbound_proxy` → SBC only in fleet mode; host from **`PBX3_SBC_EGRESS_HOST`** (Phase F).
 - **`$clstkey`** → `park-{tenant shortuid}` (parking lot); must not be expanded via bare `$clst`.
+
+### 5.2.1 Parked — per-queue member Dial options (2026-10-06)
+
+**Parked. Not scheduled.** Leave PrepDial’s queue branch as hardcoded `,,ktT` until a real queue needs a Dial letter other than `k`, `t`, or `T`. Building a SPA field before that is likely work for no gain, and a free-text option string can break `Dial()` or fight Agent Ring Timeout.
+
+**What is already exposed.** SPA **Options** is `queue.options` (default `CiIknrtT`). GenAst writes that into `Queue(name,options,...)`. Those are Queue() flags. The agent-leg Dial options are a second layer, hardcoded in `PrepDial` when `type` is `queue`:
+
+- Timeout slot stays empty. Agent Ring Timeout (`queue.timeout` → `queues.conf` `timeout`) owns how long the member rings.
+- Options slot is the literal `ktT` (park, blind transfer, attended transfer). Lab park-after-answer needed this **and** `member=Local/…/n`. Queue() `k`/`t`/`T` alone never saw the DTMF while Local was optimized out of the bridge.
+
+`Q{ext}` is one extension per phone. A phone in two queues cannot take per-queue Dial options unless that leg knows which queue placed the call.
+
+**Identity, if this is ever built (Asterisk 20).** `setqueuevar` / `QUEUENAME` is too late: those variables are written at bridge time, after PrepDial has returned. The member leg can see the queue if the caller sets it before `Queue()`:
+
+1. GenAst, on the queue extension, immediately before `Queue()`: `Set(_PBX3_QUEUE_SUID={queue shortuid})`.
+2. `app_queue` `ring_entry` copies `_`-prefixed variables from the caller onto `Local;1` before `ast_call`.
+3. Local copies every `Local;1` variable onto the dialplan half before `Q{ext}` runs.
+4. PrepDial reads `PBX3_QUEUE_SUID` and loads that queue’s member dial options. A phone in two queues gets the options of the queue that rang it.
+5. Missing variable → keep `ktT`.
+
+**Think through before any schema or SPA work:**
+
+- Name one Dial letter beyond `k`/`t`/`T` that a queue member leg needs, and why the existing Queue() Options field cannot do that job.
+- Timeout stays out of this string. Digits or a comma would either override Agent Ring Timeout or split `Dial()`.
+- Recording letters on the member leg were left off on purpose (queue dial-legs were starting ghost recordings).
+- Blank versus default: blank must not silently drop park on existing queues.
+- PSTN queue members (`Local/{num}@tenant/n`) do not run PrepDial `type=queue`. They are a separate path.
 
 ### 5.3 Duplicate fleet gate
 
