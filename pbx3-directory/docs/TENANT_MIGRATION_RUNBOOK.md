@@ -118,7 +118,7 @@ sudo -u www-data php artisan tenant:export {tenant}
 sudo -u www-data php artisan tenant:export {tenant} --include-recordings
 ```
 
-Output: `/opt/pbx3/bkup/pbx3tenant.{shortuid}.{epoch}.zip` (manifest + `tenant.sqlite.db` + greeting media).
+Output: `/opt/pbx3/bkup/pbx3tenant.{shortuid}.{epoch}.zip` (manifest + `tenant.sqlite.db` + greeting media + custom MOH `moh-{shortuid}/`). Instance system `/usr/share/asterisk/moh` is **not** packed.
 
 Copy zip to Mac or straight to destination:
 
