@@ -534,6 +534,7 @@ pending
 - Each node-side step is an **authenticated API call** the orchestrator makes (not SSH). Node exposes export/import/commit/cert-sync; the SBC exposes repoint via `pbx3sbc-admin` API or `add-domain.sh` + `cfg_reload`.
 - **Rollback boundary:** anything before `awaiting_cleanup` is safe to abort. SBC fleet rollback = flip `domain.setid` back (seconds). Direct fleet = revert DNS (TTL wait). After source delete, rollback = re-import from the staging zip (retained N days).
 - **In-flight calls at cutover (SBC):** established dialogs drain on the old node (record-route pinned); new registrations/calls follow the new set. Optionally trigger re-REGISTER to shorten the window (open question).
+- **CDR / call accounting at cutover (gap → future slice):** instance Asterisk CDR (`master.db`) is **canonical** and **home-local** — not in `tenant:export`. Legs that complete on the source after cutover never appear on dest CDR / Home / velocity. **Not** solved by a fleet CDR warehouse (explicit non-goal — **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**). **Future (#23d):** wipe-time **tail + `uniqueid` diff** — merge missing source rows for that tenant into dest `master.db`, then wipe. See **§9.1**.
 - **Dual-copy until wipe:** catalog already points at dest while source tenant rows remain. SPA may show orphan shortuid if wipe is skipped (risk **1b**). Operator gate copy: leave job open via Fleet → Jobs; wipe when phones have drained.
 - **Phone provisioning (post C5/B4/C10):** when desks use `provision.{apex}:41363`, RPS stays fixed; MAC map rewrite follows catalog home. Customer `provision_stream` rides tenant export/import. Edge Provision access (UFW) is edge-global — not per-move. Operator MkDocs: **`tenant-move.md`**.
 
@@ -545,6 +546,17 @@ tenants/{shortuid}/migration/{job_id}/job.json          (state, for resume/audit
 ```
 
 Recordings under `tenants/{shortuid}/recordings/` are **unchanged** by a move (catalog pointer only). On-node wav bundling stays opt-in (`--include-recordings`).
+
+**Tenant media in the export zip (always, unless `--skip-media` on import):**
+
+| Media | Packed? | Path on node |
+|-------|---------|--------------|
+| Greetings | **Yes** | `{sounds}/{shortuid}/` |
+| Custom MOH | **Yes** (locked 2026-10-08) | `{moh_root}/moh-{shortuid}/` — **not** instance system `moh/` |
+| Recordings | Opt-in `--include-recordings` | on-node recordings tree |
+| CDR `master.db` | **No** — home-local (#23d harvest later) | — |
+
+`cluster.usemohcustom` travels in the mini-DB; MOH **files** must travel too or Custom MOH Active points at an empty class after Commit.
 
 ---
 
@@ -607,6 +619,23 @@ If a single implementer must sequence: **Phase A first** (also improves daily ou
 - Copying S3 recordings prefix on move (unchanged by design).
 - Tenant-owned (BYOC) trunks — later `owner = HOST|TENANT` phase.
 - Terraform / multi-cloud fleet provisioning.
+- Fleet-central CDR warehouse (settled non-goal — local SQLite HoR + CSV→S3 cold).
+
+### 9.1 Future slice — wipe-time CDR harvest (#23d) — locked intent 2026-10-07
+
+**Must do something** — post-cutover CDR that lands only on source is still **canonical call accounting** for that tenant. Accepting permanent loss on dest is not an end state.
+
+| Item | Choice |
+|------|--------|
+| **When** | Immediately **before** source wipe (`awaiting_cleanup` → wipe), after drain |
+| **What** | Tenant-scoped extract on source → deliver → **merge into dest `master.db` by `uniqueid`** (skip existing) → then wipe |
+| **Transport** | **`rsync` / scp is enough** (ops or job-shell). No fleet CDR bus. Prefer a small dump file (SQL/`uniqueid` CSV of scoped rows), **not** whole-file rsync of `master.db` (would clobber other tenants + post-cutover dest rows). |
+| **Window (v1 lean)** | Cutover timestamp → now (captures in-flight completions). Optional later: full hot-window history for that accountcode |
+| **Identity** | `uniqueid` only (indexed). Scope by tenant **`accountcode`** (confirm GenAst always sets it; else channel/shortuid heuristic) |
+| **Fail closed** | Merge failure → **do not** wipe (or hard block with retry) |
+| **Non-goals** | Fleet CDR warehouse; Gatekeeper scoring; CSV/S3 cold rewrite in v1; SBC `acc` merge |
+
+Companion nice-to-have (already parked): AMI tenant “up calls” + wipe-when-drained — reduces how often harvest finds rows; does not replace harvest.
 
 ---
 
