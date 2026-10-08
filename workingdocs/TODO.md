@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-07 (OUI soft-fill + provision-edge RSA on `main`; branch hygiene)
+**Last updated:** 2026-10-08 (tenant-move custom MOH media; earlier: #23d CDR harvest intent)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -69,7 +69,8 @@
 21. **Pre-first-release — SPA bundle diet** (parked — **N1**).  
 22. ~~**Lab / demo DB anonymize**~~ — **done** (2026-08-12): Sirius `ipphone.desc` given-names only; golden **duns** / **affcot** same (**F5**).  
 23. **Provisioning — reinstate (instance-local)** — **A–C10** + rehome green (2026-10-02). Assist-not-core. Brand tracks: Fanvil / GS / Poly sub-projects (parked). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. 
-23b. **Fleet tenant moves — docs review + more soaks** — **docs review done (2026-10-02):** MkDocs **`fleet/tenant-move`**. **2026-10-06:** cutover/rollback auto-project DID hop-1 (`TenantMoveRunner` + `DidInventory::projectToSbc` setid override). **More soaks** remain operator.
+23b. **Fleet tenant moves — docs review + more soaks** — **docs review done (2026-10-02):** MkDocs **`fleet/tenant-move`**. **2026-10-06:** cutover/rollback auto-project DID hop-1 (`TenantMoveRunner` + `DidInventory::projectToSbc` setid override). **More soaks** remain operator. **2026-10-08:** custom MOH files pack with `tenant:export` (branch **`feat/tenant-move-moh-media`**).  
+23d. **Tenant move — wipe-time CDR harvest (future)** — in-flight legs finish on source; CDR is canonical and home-local. Intent locked: before wipe, scoped dump + **`rsync`/scp** + `uniqueid` merge into dest `master.db` (fail closed; no whole-`master.db` rsync). **Not** a fleet CDR warehouse. Spec: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §9.1** · MkDocs **`fleet/tenant-move`**.
 23c. **Snom provision streams → XML** — OEM pushing XML harder; stock `snom.*` still **line** (`key$: value`). Convert to closed XML: `<settings>` / `<phone-settings>` + `<param idx="N" perm="">` (line suffix → `idx`; same names). Shape: **`workingdocs/samples/snom-settings-xml-example.xml`**. Exhaustive keys (lab D717 @402): **`workingdocs/archive/snom-d717-settings-exhaustive-lab-402.xml`**. Engine stays INCLUDE + substitute; Content-Type / URL form as needed. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.6**. Not urgent; schedule when Snom lab next open.
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
@@ -233,6 +234,10 @@
 - [ ] **Line test — Asterisk-leg RTCP twin (parked 2026-08-26):** Browser `getStats` is enough for now. Future: AMI/RTCP (or hangup QoS) section beside the SPA report; multi-channel correlation is the hard part. Spec: **`pbx3spa/workingdocs/WSS_LINE_TEST_REQUIREMENTS.md`** §11.
 
 - [ ] **Drain affordance — tenant-scoped “up calls” + wipe-when-drained (nice-to-have, parked 2026-07-23):** Not built. Best-effort AMI overlay on move jobs.
+
+- [ ] **Tenant move — wipe-time CDR harvest (#23d — locked intent 2026-10-07):** Future slice. Before source wipe: tenant-scoped source `master.db` → dest by **`uniqueid`** diff; fail closed. Canonical accounting — must ship eventually; not a warehouse. Spec: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §9.1**.
+
+- [x] **Tenant move — custom MOH media in export (2026-10-08):** `tenant:export` packs `{moh_root}/moh-{shortuid}/` (not system `moh/`); import restores + `moh reload`. Spec: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** media table · MkDocs **`fleet/tenant-move`**. Branch **`feat/tenant-move-moh-media`** (pbx3api + docs).
 
 - [x] **Toll fraud / velocity — IRSF product close + CDR pack (2026-08-11):** SPA inactive hint + list title when `z_updater=velocity`; reactivate clears stamp; **`VelocityCdrPack`** / `pbx3:cdr-velocity-pack` (6 cases). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** · **`VELOCITY_CDR_PACK.md`**.
 
