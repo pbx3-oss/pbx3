@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-07 (OUI soft-fill + provision-edge RSA on `main`; branch hygiene)
+**Last updated:** 2026-10-13 (Fanvil C5 park / FDMCS lean; earlier: OUI soft-fill + branch hygiene)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -126,7 +126,7 @@
 
 - [x] **Fleet tenant moves — docs review (#23b — 2026-10-02):** MkDocs **`fleet/tenant-move`**. **2026-10-06:** cutover/rollback auto-project DID hop-1. **More soaks** remain operator (optional).
 
-- [x] **Fanvil provision sub-project (D3 — lab green 2026-10-03):** **`FANVIL_PROVISION_SUBPROJECT.md`**. `sysConf` streams; Sirius 412; ghost-call **`SIPPort`/`SignalPort` 5160** + `BanAnonymous`. Ops: tip Fanvil CA Monday.
+- [x] **Fanvil provision sub-project (D3 — lab green 2026-10-03):** **`FANVIL_PROVISION_SUBPROJECT.md`**. `sysConf` streams; Sirius 412; ghost-call **`SIPPort`/`SignalPort` 5160** + `BanAnonymous`. **2026-10-13:** edge C5 parked (no public Root CA; certs→phone docs); lean **FDMCS** for remote discovery.
 
 - [x] **Grandstream provision sub-project (D3 — lab green 2026-10-03):** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. P-value XML; P237 Config + P52 Auto; **`P2347=1`** proxy-only INVITE.
 

@@ -151,12 +151,12 @@ Expect XML with `<Register_Addr>` = tenant FQDN and `<Proxy_Addr>` = SBC (`sbc.p
 ### Exit checks
 
 - [x] Curl/handset body is **`sysConf`** (X3U Pro 2.12 — not legacy `VOIP_CONFIG_FILE`)
-- [x] Handset provision GET **200** → REGISTER (**2026-10-03**, Sirius 412 / `0c383e7151ef`; edge mTLS temporarily **off** pending Fanvil Root CA tip)
+- [x] Handset provision GET **200** → REGISTER (**2026-10-03**, Sirius 412 / `0c383e7151ef`; edge mTLS was **off** for this soak)
 - [x] Manual SIP REGISTER + calls OK with **STUN Off** (default) — NAT row filled
 - [x] Timezone: OOTB Beijing → set site zone (lab UTC-5); streams have UK
 - [x] `FlashProtocol` **5** = HTTPS (sysConf)
-- [ ] Restore Magrathea `ssl_verify_client optional` + tip Fanvil CA from ops `3pcerts.pem`
-- [ ] (Later) FDPS / FDMCS enroll — out of scope for first mule
+- [x] **Fanvil edge C5 parked (2026-10-13):** no public Root CA; lean **FDMCS** for remote discovery — **`FANVIL_PROVISION_SUBPROJECT.md`** §0 · ops CA inventory. Lab = manual URL + Once (+ C10). Do **not** tip `3pcerts` #8 as C5 without a confirmed partner CA.
+- [ ] (Optional later) FDMCS enroll notes / customer ask — not a PBX3 build unless scheduled
 
 **Tune on failure:** empty body / phone ignores XML → compare against that model’s Autoprovision guide; STUN/`NAT_Type` (manual soak OK with STUN Off); timezone (Beijing OOTB ≠ SNTP); HTTPS protocol enum.
 

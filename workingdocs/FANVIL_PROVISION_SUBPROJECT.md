@@ -1,10 +1,11 @@
 # Fanvil provision sub-project (D3 slice)
 
-**Status:** **Provision path lab green** (2026-10-03) — `sysConf` streams; mTLS CA tip still open. Not on the critical path for provision A–C10.  
+**Status:** **Provision path lab green** (2026-10-03) — `sysConf` streams. **Edge C5 mTLS for Fanvil parked** (2026-10-13) — lean **FDMCS** for discovery; keep stock streams for lab / assist. Not on the critical path for provision A–C10.  
 **Lab mule:** **Fanvil X3U Pro** · software **2.12.20** · Sirius **412** / `27b2mr`.  
-**Owns:** Fanvil stock streams, lab soak, NAT row, optional FDMCS/RPS notes.  
-**Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.4–§4.6 · plan **D3** · recipe **`PROVISIONING_LAB_RECIPE.md` §5**.  
-**Siblings:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Gigaset (same D3 bucket; separate when started).
+**Owns:** Fanvil stock streams, lab soak, NAT row, FDMCS posture notes.  
+**Parent:** `PROVISIONING_SERVER_REQUIREMENTS.md` §0.2 / §4.4–§4.6 / §8 · plan **D3** · recipe **`PROVISIONING_LAB_RECIPE.md` §5**.  
+**Siblings:** **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Gigaset (same D3 bucket; separate when started).  
+**CA research:** ops **`~/GiT/pbx3-ops/devdocs/provisioning/VENDOR_CLIENT_CA_INVENTORY.md`** § Fanvil.
 
 ---
 
@@ -14,10 +15,10 @@
 |------|--------|
 | Format | **X3U / X3U Pro ≥2.2.10:** auto-provision = **`sysConf`** (camelCase; same family as UI Config Export). Older `VOIP_CONFIG_FILE` module XML is ignored on 2.12 — lab 2026-10-03 GET **200** but phone did not apply. `FlashProtocol` **5** = HTTPS. |
 | Engine | Dumb `#INCLUDE` + substitute — **no** Fanvil-specific kernel. Authoring absorbs stanza shape (§4.6). |
-| Discovery | Lab = **manual Static Provisioning Server** URL. **FDMCS** / RPS automation = later. |
+| Discovery | Lab = **manual Static Provisioning Server** URL. **Remote / cloud lean (2026-10-13):** prefer Fanvil **FDMCS** (vendor redirect / ZTP) rather than inventing PBX3 edge mTLS for this brand. Stock `fanvil.*` stays for lab soak and assist-not-core. |
 | Docs trap | Fanvil **XML Operation Guide** = Push/Browser LCD XML — **not** auto-provision. Chatbot “standard” XML samples are unreliable; prefer phone export / Autoprovision Description / fielded templates. |
 | Export fixture | **Curate only** — not a stream source. Full redacted: ops `devdocs/provisioning/fanvil/x3u-pro-2.12.20-sysconf-export.xml` · excerpt `workingdocs/samples/fanvil-x3u-pro-sysconf-export.xml`. Use for field names / NAT/timezone checks if soak fails; do not wholesale import. |
-| mTLS | Device presents Fanvil client cert on HTTPS. Edge needs **official Fanvil Root CA** (Partner Portal / Support — not public Mozilla). Ops `3pcerts` #8 may be stale. Lab 2026-10-03: Magrathea **FAILED verify** / 400 until CA tipped. |
+| mTLS / certs | **Not Yealink-shaped in public docs (2026-10-13).** Fanvil documents uploading **Trust** / **Device** / **`Auto_Etc_Url` (`etc.tar.gz`)** certs **onto** the phone (phone trusts your server; optional custom client identity; also OpenVPN / 802.1X). **No public Fanvil Root CA** for server-side client-cert verify (unlike Poly `pki.polycom.com`). Lab still saw a **factory** client cert (`CN=0C383E7151EF,O=Fanvil…`) when Magrathea asked — edge **`FAILED:unable to verify`**. Ops `3pcerts` #8 (Fanvil Equipment Issuing) is unverified/likely stale. **Do not tip C5 for Fanvil** without a confirmed partner/support CA. Default harden for this brand: Once + network controls (C10); discovery via **FDMCS**. |
 | **SIP auth (UI)** | **Locked 2026-10-03 (X3U Pro 2.12.20, Sirius 412 / `27b2mr`):** Fanvil/OEM docs often show **Username**=extension and **Authentication Name**=auth id as *different* values (3CX-style). That model assumes the registrar’s SIP user **is** the extension. **PBX3 does not:** PJSIP endpoint / digest identity = **shortuid** only; dialable **Name** (`412`) is not an Asterisk endpoint. Lab: User=`412` + Auth=`27b2mr` → home **404**; both fields = **`$sipuser`** → REGISTER OK. Put `$ext` in **Display Name** only. **Proxy User** leave blank (working UI). |
 
 ### 0.1 Working UI scrape → stream map (X3U Pro 2.12.20, REGISTER green)
@@ -93,7 +94,7 @@ Extension entry for mule:
 6. If UI offers **config export/download** (Snom/Yealink-style): save under ops `devdocs/provisioning/fanvil/` and reshape `fanvil.*` to match firmware dialect.
 7. Tune as needed: `Download_Protocol` 4 vs 5; STUN/`NAT_Type`; tag names vs export.
 
-**Out of scope for first pass:** BLF/DSS keys, FDMCS enroll automation, full OEM parameter dump, GS/Gigaset.
+**Out of scope for first pass:** BLF/DSS keys, full OEM parameter dump, GS/Gigaset. **FDMCS:** preferred remote discovery lean — not a PBX3 automation build unless scheduled.
 
 ---
 
@@ -104,8 +105,9 @@ Extension entry for mule:
 - [x] Provision path lab-green — `sysConf` GET → REGISTER (**2026-10-03**)
 - [x] `fanvil.*` = sysConf for ≥2.2.10 (legacy module XML ignored)
 - [x] NAT row filled (STUN Off / `NATType=0`)
-- [x] Recipe §5 provision exit checks (mTLS restore still open)
-- [ ] Tip Fanvil Root CA + restore Magrathea `ssl_verify_client optional`
-- [ ] Short MkDocs note under phone-provisioning (optional) or defer to B2-style page later
+- [x] Recipe §5 provision exit (lab path; edge mTLS **not** claimed for Fanvil)
+- [x] **C5 Fanvil parked (2026-10-13):** no public Root CA; documented model is certs→phone; lean **FDMCS** for remote discovery — see §0 mTLS row + ops CA inventory
+- [ ] Short MkDocs note under phone-provisioning (optional) — mention FDMCS lean + lab manual URL
+- [ ] (Optional later) Partner/support Fanvil Root CA only if we reclaim edge C5 for this brand
 
-Then either close Fanvil under D3 or open FDMCS / next brand.
+**Close under D3** for stream/lab soak. Revisit only if a customer needs PBX3-edge Fanvil mTLS or FDMCS automation.
