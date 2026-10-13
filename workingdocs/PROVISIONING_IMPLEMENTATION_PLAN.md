@@ -136,9 +136,9 @@ Do **not** block HTTP listener on “perfect” SPA enrollment UX.
 
 | ID | Exercise | Exit |
 |----|----------|------|
-| **D1** | **3pcerts / vendor CA inventory** for §0.2 brands | **Enough for C5 now:** Snom + Yealink in ops-held `3pcerts.pem`. Pack also has Panasonic/Fanvil; Poly = public PKI. **GS/Gigaset CAs:** not blocking lab — use **manual provision URL** on those phones. Public-edge mTLS for GS/Gigaset still needs vendor CAs later. Research: **`~/GiT/pbx3-ops/devdocs/provisioning/VENDOR_CLIENT_CA_INVENTORY.md`**. |
+| **D1** | **3pcerts / vendor CA inventory** for §0.2 brands | **Enough for C5 now:** Snom + Yealink in ops-held `3pcerts.pem`. Poly = public PKI; GS tipped lab. **Fanvil (2026-10-13):** edge C5 **parked** — no public Root CA; lean **FDMCS** (do not tip pack #8). **Gigaset:** partner / Once + network. Research: **`~/GiT/pbx3-ops/devdocs/provisioning/VENDOR_CLIENT_CA_INVENTORY.md`**. |
 | **D2** | **Poly** discovery | **Done for assist:** DHCP **66** / manual URL (**`POLY_PROVISION_SUBPROJECT.md`**). Lens capable — **no build-out** unless a customer asks; focus = streams |
-| **D3** | Grandstream / Fanvil / Gigaset / **Poly** stream + RPS notes | **Fanvil** · **Grandstream** · **Poly** parked sub-projects. Fanvil seed streams on `main`; GS/Poly streams when mule. Gigaset separate when started. Manual URL until RPS/mTLS; vendor-cloud-only OK where free |
+| **D3** | Grandstream / Fanvil / Gigaset / **Poly** stream + RPS notes | **Fanvil** stream/lab green; edge C5 parked → lean **FDMCS**. **Grandstream** · **Poly** sub-projects. Gigaset separate when started. Manual URL / vendor-cloud OK where free |
 | **D4** | Snom online-UI docs workaround (screenshots / pinned export) | Authoring aid in ops `devdocs` if needed |
 
 ---
