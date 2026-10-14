@@ -153,8 +153,8 @@ Same-node “hairpin” back to the same Asterisk via dispatcher is **correct** 
 | **Digit plan** | **Fixed-width prefix** (2–4 digits) + **fixed-width extension remainder** = destination tenant’s `ext_len`. No delimiter. Dial = `{prefix}{ext}` (e.g. prefix `81` + `1000` with `ext_len=4` → `811000`). |
 | **Tenant `ext_len`** | **Enforced.** Field already on `cluster`. **Default 3**, **maximum 5**, allowed **3–5** only (SPA selector). **No mixed lengths** within a single tenant — every extension `pkey` is exactly `ext_len` digits. |
 | **Remainder charset** | **Digits only** (`0–9`). Remainder is a target **extension** (`pkey`-shaped). **No** star/hash feature shortcodes through the prefix path (e.g. `81*50*1000` is **deny**). Local feature codes stay on the calling tenant (dial without prefix; always begin `*`). Reopen only on an explicit product ask. |
-| **GenAst** | One dialplan pattern per active prefix; remainder length = **destination** `ext_len` (e.g. `_81XXXX` for prefix `81` + dest `ext_len=4`). **Not** open `_81X.`. CAGI rejects wrong-length / non-digit remainder. |
-| **Length namespaces** | Local exts own length `ext_len` as **exact** dialplan matches. OutRoute patterns use a **previous PBX floor**: min match **≥ 3** (anything larger than two chars) — not tied to `ext_len`. Exact extension matches always outrank patterns in Asterisk; do not put extensions in `1xx` if you also route `_1XX`. Short-dial still requires prefix+dest **>** caller `ext_len`. |
+| **GenAst** | One dialplan pattern per active prefix; remainder length = **destination** `ext_len` (e.g. `_81XXXX!` for prefix `81` + dest `ext_len=4`). Trailing **`!`** (Asterisk early-match) so OutRoute `_XXXXX.` cannot steal `{prefix}{ext}`. **Not** open `_81X.`. CAGI rejects wrong-length / non-digit remainder. |
+| **Length namespaces** | Local exts own length `ext_len` as **exact** dialplan matches. OutRoute patterns use a **previous PBX floor**: min match **≥ 3** (anything larger than two chars) — not tied to `ext_len`. Exact extension matches always outrank patterns in Asterisk; PrefixDial patterns use **`!`** so they outrank OutRoute when both match. Do not put extensions in `1xx` if you also route `_1XX`. Short-dial still requires prefix+dest **>** caller `ext_len`. |
 | **OutRoute / seize** | Min match **&lt; 3** forbidden (e.g. `_9.`, `_XX`). `999`, `_1XX`, `_XXX`, `_00.` all OK. “Dial 9” for longer PSTN = `_9` + enough digits + strip/mangle. |
 | **Fleet gate** | Feature **fleet-gated** in v1. Requires SBC path. |
 | **Singleton** | Multi-tenant singleton **without SBC** cannot inter-tenant prefix dial — accepted. Local shortcut **rejected** (§15). |
@@ -173,7 +173,7 @@ Short dial carries **`{routing_prefix}` + exactly `dest.ext_len` digits** → IN
 |---------------------------|-----|
 | Far-side **phone** whose `pkey` length = `dest.ext_len` | Intended path |
 | Far-side **queue / IVR / conference** whose dial number length = `dest.ext_len` | Same INVITE shape; exact match on far dialplan — works |
-| Far-side queue / IVR with a **different** length (e.g. 5-digit IVR when `dest.ext_len` is 3 or 4) | Prefix pattern (`_81XXX` / `_81XXXX`) never matches; call never leaves the caller |
+| Far-side queue / IVR with a **different** length (e.g. 5-digit IVR when `dest.ext_len` is 3 or 4) | Prefix pattern (`_81XXX!` / `_81XXXX!`) never matches; call never leaves the caller |
 
 **Operator guidance (v1):** give cross-site service numbers (queues/IVRs you want dialled from sister sites) a dial number in the **destination tenant’s `ext_len`**. Longer local-only service numbers stay fine on that tenant; they are just not short-dial targets.
 
@@ -483,6 +483,7 @@ Own track — do not interleave with day-parts CheckState rewrite or CAGI Phase 
 | 2026-08-10 | **#4c implement:** ExtLenPolicy + API/SPA/GenAst/CAGI; UK seed `_0XXX. _00XX.` (L7a). |
 | 2026-08-28 | **§3.8.1:** short-dial edge cases — queues/IVRs only if dial length = `dest.ext_len`; call-centre mesh parked. OutRoute min match floor **≥ 3** (previous PBX; not tied to `ext_len`). |
 | 2026-09-26 | **Q15 / §3.8:** `ext_len` allowed **3–5** only (drop 2); SPA selector; ExtLenPolicy MIN=3. |
+| 2026-10-14 | **§3.8 GenAst:** PrefixDial patterns emit trailing **`!`** (Asterisk early-match) so OutRoute `_XXXXX.` cannot steal `{prefix}{ext}` (lab: site-dial → Egress). |
 
 ---
 

@@ -1530,7 +1530,9 @@ HERE;
         }
         /*
          * Tenant short dial (fleet): fixed-width dial prefix + fixed remainder = dest ext_len → PrefixDial.
-         * Pattern _81XXXX (not open _81X.). Skip if prefix+dest_len ≤ caller ext_len (length namespace).
+         * Pattern _81XXXX! (not open _81X.). Trailing ! = Asterisk early-match so OutRoute
+         * _XXXXX. (min match ≥ 3) cannot steal site-dial digits (lab: 841003 → Egress).
+         * Skip if prefix+dest_len ≤ caller ext_len (length namespace).
          * Dest ext_len from local cluster (target_cluster / target_fqdn); else caller ext_len.
          */
         if ($this->isFleetMode()) {
@@ -1562,7 +1564,7 @@ HERE;
                         continue;
                     }
                     $mask = str_repeat('X', $destExtLen);
-                    $this->OUT .= "\texten => _" . $prefix . $mask . ",1,agi(" . SYSAGI . ",PrefixDial," . $prefix . "," . $row['shortuid'] . ",,,)\n";
+                    $this->OUT .= "\texten => _" . $prefix . $mask . "!,1,agi(" . SYSAGI . ",PrefixDial," . $prefix . "," . $row['shortuid'] . ",,,)\n";
                 }
             } catch (PDOException $e) {
                 if (stripos($e->getMessage(), 'no such table') === false) {
