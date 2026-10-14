@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-14 (SBC Fail2ban Blacklist + auto-promote)
+**Last updated:** 2026-10-14 (Home exclusive Start/Stop PBX)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -159,6 +159,7 @@
 - [x] **Queue missed-call hygiene (2026-10-07):** CAGI PrepDial queue Dial `ktT` → `cktT` (HANGUPCAUSE answered-elsewhere). **Also required on fleet:** SBC OpenSIPS CANCEL `t_relay("pass-reason-hdr")` — plain relay rewrote Reason to `ORIGINATOR_CANCEL` (Snom showed that; phones logged missed). Lab green Aelintra **11001** / Magrathea. Merged **`main`:** cagi **#4** · pbx3 **#67** · sbc **#11**.
 - [ ] **Queue member Dial options — per queue (parked 2026-10-06; amend 2026-10-13):** Leave CAGI `,,cktT` hardcoded. Not scheduled. Shared `Q{ext}` needs `_PBX3_QUEUE_SUID` inherit if ever per-queue. SPA **Options** is Queue() flags (different layer). If later: **curated toggles**, not free-text Dial options. Note: **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.2.1**.
 
+- [x] **Home Start/Stop PBX exclusive + pulse invalidate (2026-10-14):** SPA shows only Start or Stop from `pbx_runstate` (optimistic after command); api forgets `home_pulse:system` on start/stop so status is not stale for the 45s TTL. Merged spa **#25** · api **#23**.
 - [x] **AMI console noise + Home pulse churn (2026-08-24):** `manager.conf` `displayconnects=no` (needs **Asterisk restart**, not only manager reload); Home pulse live TTL **45s**; SPA pauses pulse poll when tab hidden; tenant edit no longer sets topbar tenant chip (heading only).
 
 - [x] **Pre-release safety debt 1–16 (2026-08-09):** Code + tests in product repos. ChanSpy desk + unattended shortcode pack green. Checklist: **`PRE_RELEASE_SAFETY_DEBT.md`**.
