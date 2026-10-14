@@ -156,7 +156,7 @@ grep -n 'PrefixDial' /etc/asterisk/extensions_pbx3*.conf
 
 | Expect |
 |--------|
-| Pattern like `_81XXX` for dest `ext_len=3` — **not** `_81X.` |
+| Pattern like `_81XXX!` for dest `ext_len=3` — **not** `_81X.` (trailing `!` = early-match vs OutRoute) |
 | No emit if prefix+dest_len ≤ caller `ext_len` |
 
 ### 2.6 CAGI / dial (optional, after tip + Commit)
