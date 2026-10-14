@@ -118,10 +118,15 @@ fi
 # idempotent: add source line only if not already present
 grep -q 'source /etc/network/interfaces.d' /etc/network/interfaces 2>/dev/null || echo "source /etc/network/interfaces.d/*" >> /etc/network/interfaces
     
-# set correct Asterisk dateformat in logger.conf (idempotent: only when present)
-if [ -f $ASTPATH/logger.conf ]; then
+# Asterisk logger: dateformat + split security out of messages (idempotent)
+if [ -x "$SYSPATH/scripts/ensure-asterisk-logger-channels.sh" ]; then
+    "$SYSPATH/scripts/ensure-asterisk-logger-channels.sh" || true
+elif [ -f $ASTPATH/logger.conf ]; then
+    # Fallback if script missing (older tree)
     sed -i 's/^;dateformat=%F %T /dateformat=%F %T/' $ASTPATH/logger.conf
-    sed -i '/^messages/c \messages => security,notice,warning,error' $ASTPATH/logger.conf
+    sed -i -E 's/^[[:space:]]*messages[[:space:]]*=>.*/messages => notice,warning,error,verbose/' $ASTPATH/logger.conf
+    grep -qE '^[[:space:]]*security[[:space:]]*=>' $ASTPATH/logger.conf || \
+        sed -i '/^[[:space:]]*messages[[:space:]]*=>/a security => security' $ASTPATH/logger.conf
     /usr/sbin/asterisk -rx 'logger reload' 2>/dev/null || true
 fi
 

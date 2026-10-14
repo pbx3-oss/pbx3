@@ -51,6 +51,11 @@ if [ -x "$SYSPATH/scripts/link-asterisk-configs.sh" ]; then
 	"$SYSPATH/scripts/link-asterisk-configs.sh" || true
 fi
 
+# Split Asterisk security events into /var/log/asterisk/security (messages stays readable).
+if [ -x "$SYSPATH/scripts/ensure-asterisk-logger-channels.sh" ] && [ -f /etc/asterisk/logger.conf ]; then
+	"$SYSPATH/scripts/ensure-asterisk-logger-channels.sh" || true
+fi
+
 # Phase R1.5: ensure the recordings catalog table exists on an already-provisioned
 # instance DB (CREATE TABLE IF NOT EXISTS — safe to re-run; new installs get it
 # from sqlite_create_tenant.sql via the installer).

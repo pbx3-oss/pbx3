@@ -48,7 +48,8 @@ flowchart LR
 | Stream | Path / source | Notes |
 |--------|---------------|--------|
 | **syslog family** | `/var/log/syslog`, and typically `auth.log`, `mail.log`, `fail2ban.log` unless split out | Per-instance local/S3 days configurable |
-| **Asterisk messages** | `/var/log/asterisk/messages` | Ops notify REGISTER scanner reads this; keep local readable |
+| **Asterisk messages** | `/var/log/asterisk/messages` | notice/warning/error/verbose (no `security`); verbose stays so console `core set verbose N` still writes here |
+| **Asterisk security** | `/var/log/asterisk/security` | `SecurityEvent=…` channel; Fail2ban `[asterisk]` watches **security + messages** (jail off on fleet; enable for solo); ops REGISTER scanner reads security |
 | **Asterisk CDR CSV** | `/var/log/asterisk/cdr-csv/Master.csv` | Archive / S3; must **rotate by day/size** before “7 days” is meaningful |
 | **Asterisk CDR SQLite** | `/var/log/asterisk/master.db` via **`cdr_sqlite3_custom`** | Searchable HoR (`GET /cdr`, SPA `/cdr`); CSV still archive/S3 |
 | **queue_log** (optional sibling) | `/var/log/asterisk/queue_log` | Call-center tenants; same local/S3 pattern when prioritized |
