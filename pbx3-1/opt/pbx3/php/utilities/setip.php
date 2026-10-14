@@ -79,9 +79,18 @@ else {
 	}
 		
 	if ( file_exists( "/etc/asterisk")) {
-		# set correct Asterisk dateformat in logger.conf
-		`sed -i 's/^;dateformat=%F %T /dateformat=%F %T/' /etc/asterisk/logger.conf`;
-		`sed -i '/^messages/c \messages => security,notice,warning,error' /etc/asterisk/logger.conf`;
+		# dateformat + security channel split (messages stays human-readable)
+		$ensureLogger = SYSPATH . '/scripts/ensure-asterisk-logger-channels.sh';
+		if ( is_executable( $ensureLogger ) ) {
+			// setip already reloads Asterisk below — skip nested logger reload
+			putenv( 'PBX3_LOGGER_RELOAD=0' );
+			`$ensureLogger`;
+			putenv( 'PBX3_LOGGER_RELOAD' );
+		} else {
+			`sed -i 's/^;dateformat=%F %T /dateformat=%F %T/' /etc/asterisk/logger.conf`;
+			`sed -i -E 's/^[[:space:]]*messages[[:space:]]*=>.*/messages => notice,warning,error,verbose/' /etc/asterisk/logger.conf`;
+			`grep -qE '^[[:space:]]*security[[:space:]]*=>' /etc/asterisk/logger.conf || sed -i '/^[[:space:]]*messages[[:space:]]*=>/a security => security' /etc/asterisk/logger.conf`;
+		}
 		# set localnet values for Asterisk
 		`[ -e /etc/asterisk/CODENAME_sip_localnet.conf ] && /usr/bin/dos2unix /etc/asterisk/CODENAME_sip_localnet.conf`;
 		`echo localnet=$netaddress/$msk >> /etc/asterisk/CODENAME_sip_localnet.conf`;

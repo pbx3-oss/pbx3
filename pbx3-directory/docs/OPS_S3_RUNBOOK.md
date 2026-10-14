@@ -1110,7 +1110,7 @@ Smoke: `sudo -u www-data php artisan pbx3:recordings-s3-upload` from `/opt/pbx3a
 
 | Piece | Detail |
 |-------|--------|
-| **Local rotate** | Package file **`/etc/logrotate.d/pbx3-asterisk-logs`** (messages + `Master.csv`, rotate 7, copytruncate). Syslog: system **rsyslog** rotation |
+| **Local rotate** | Package file **`/etc/logrotate.d/pbx3-asterisk-logs`** (messages + security + `Master.csv`, rotate 7, copytruncate). Syslog: system **rsyslog** rotation |
 | **Upload** | `php artisan pbx3:logs-s3-upload` — cron **`/etc/cron.d/pbx3-logs`** installed by **`pbx3api/scripts/installer.sh`** and fleet **onboard** (from `scripts/cron.d/pbx3-logs.example`; prefer **root** for `/var/log` read). No-op without `PBX3_ORG_BUCKET` |
 | **Keys** | `instances/{ksuid}/logs/{class}/{stamp}/…` + `policy.json` |
 | **IAM** | Existing node writer `instances/{ksuid}/*` is enough (includes `logs/`) |
