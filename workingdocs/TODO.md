@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-13 (queue member Dial options parked/curated-later; 0e2 stub; Fanvil C5; tenant-move MOH)
+**Last updated:** 2026-10-14 (SBC Fail2ban Blacklist + auto-promote)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -39,6 +39,7 @@
 5c. ~~**Multi-locale / cross-border desk**~~ — **locked (2026-08-19):** **§3.A** — instance nationally homed; cross-border = phone multi-identity across instances. No further #5c engineering this pass. Lock: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md`**.  
 5d. **Outbound drouting group per home** — **parked past first candidate (2026-08-19):** design accepted; most customers do not need multi-country trunks for v1. Later out: **`ORIGIN_OUTBOUND_ROUTING_DESIGN.md`**. Spec: **`MULTI_LOCALE_INSTANCE_REQUIREMENTS.md` §9**. Lab workaround (park Twilio rule) stays lab-only until then.  
 5e. ~~**SBC Fail2ban — fleet home auto-whitelist**~~ — **done (2026-08-19):** Provision edge upserts whitelist DB + unban + sync via `FleetNodeProvisioner`; **Decom** retires fleet-home rows via Gatekeeper → SBC `retire-node-whitelist`; stale IP dropped on re-provision. Spec: **`PEERING-PLAN.md`** §0.1 · **`FLEET_OPS_NOTIFICATION_REQUIREMENTS.md`** § Fail2ban.  
+5e2. ~~**SBC Fail2ban — Blacklist + auto-promote**~~ — **done (2026-10-14):** Filament **Blacklist** + iptables `PBX3SBC-BLACKLIST` DROP; lifetime ban stats; threshold (default 10); Status Ban permanently + Manual Ban Livewire fix. Lock: **`pbx3sbc-admin/workingdocs/FAIL2BAN_PERMANENT_BLACKLIST_REQUIREMENTS.md`**. Merged admin **#3** · sbc **#13**.  
 5f. ~~**Fleet Instances — Remove after Decom (required UX)**~~ — **done (2026-08-19):** Gatekeeper **`POST /api/v1/instances/{id}/remove`** (decommissioned only); Fleet SPA **Remove** on row menu; keeps S3 meta/backups. CLI **`unregister-instance.sh --remove`** unchanged. Docs: MkDocs **`fleet/decommission-instance`**, **`INSTANCE_ONBOARDING.md`**.  
 5g. ~~**Fleet service token — mint once, never re-type**~~ — **done (2026-08-19):** Control mints once; lab + cloud use the **same** path — `grep` / export **`PBX3_FLEET_SERVICE_TOKEN`**, reuse on SBC admin + home (or onboard in cloud). Removed LAN-only bootstrap pull. SBC admin: required token, no Enter-to-skip (`--skip-fleet-token` standalone). MkDocs lab install pages.  
 5h. ~~**Lab home installer — fleet `.env` + Egress seed harden**~~ — **done (2026-08-19):** `home_set_env_kv` newline-safe append; **`seed-fleet-egress-trunk.sh`** in **`pbx3/scripts/`** + deb **`/opt/pbx3/scripts/`**; **`link-asterisk-configs.sh`** + GenAst stubs; fleet token requires **`PBX3_SBC_EGRESS_HOST`**; post-install verify (Egress + symlinks); **`PBX3_CLEAN_INSTALL=1`**; MkDocs **`install-lab-home.md`**.  
@@ -291,6 +292,8 @@
 - [ ] **S10.7 — Orchestrated onboard / rebuild (parked 2026-07-15):** Interim: agent-assisted Mode 4. Design: **`SELF_SERVICE_REBUILD_DESIGN.md`**.
 
 - [x] **SBC Fail2ban — fleet home auto-whitelist (#5e — 2026-08-19):** `FleetNodeProvisioner` upserts on Provision edge; retires fleet-home rows on Decom + stale IP on re-provision; Gatekeeper calls SBC `retire-node-whitelist`.
+
+- [x] **SBC Fail2ban — Blacklist + auto-promote (2026-10-14):** Filament **Blacklist** (nav peer to Whitelist) + iptables `PBX3SBC-BLACKLIST` DROP sync; lifetime ban stats; threshold (default 10; 0=off); Status Ban permanently + Manual Ban Livewire fix. Lock: **`pbx3sbc-admin/workingdocs/FAIL2BAN_PERMANENT_BLACKLIST_REQUIREMENTS.md`**. Merged pbx3sbc-admin **#3** · pbx3sbc **#13**.
 
 - [x] **Fleet Instances — Remove after Decom (#5f, 2026-08-19):** Gatekeeper `POST …/remove` + Fleet SPA **Remove** on decommissioned rows; S3 meta/backups kept.
 
