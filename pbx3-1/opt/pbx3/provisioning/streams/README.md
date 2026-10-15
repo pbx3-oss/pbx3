@@ -29,12 +29,14 @@ Typical ETL / migrated extension:
 
 (`*.Fkey` is ignored; transport + ipv4 fragments apply.)
 
-Preferred new authoring — **Yealink** (line) / **Snom XML** (`snomXml.*`, #23c):
+Preferred new authoring — **Yealink** (line CFG) / **Snom XML** (`snomXml.*`, #23c):
 
 ```text
 #INCLUDE yealink.Extension
 #INCLUDE yealink.udp
 ```
+
+Exhaustive OEM key lists (T7X AutoProvisioning Template — **not** stock soft-fill): **`workingdocs/archive/yealink-t7x-autoprov-template-{common,mac}.cfg`**. Yealink remains line CFG; no XML provision dialect in product (yet).
 
 ```text
 #INCLUDE snomXml.Extension
