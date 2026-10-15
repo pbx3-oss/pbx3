@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- snomXml.Extension — OEM XML twin of snom.Extension (#23c).
-     Soft-fill / new Snom desks: #INCLUDE snomXml.Extension
-     Transport default = snomXml.udp (inside phone-settings). For tcp/tls,
-     copy this stream to Customer and change the transport INCLUDE. -->
+     Soft-fill / new Snom desks: #INCLUDE snomXml.Extension only.
+     Nested inside phone-settings: snomXml.udp + snomXml.ipv4.
+     For tcp/tls/ipv6: Customer copy and change those INCLUDEs — do not
+     append fragments after </settings>. -->
 <settings>
 <phone-settings e="2">
 #INCLUDE snomXml.Common
@@ -11,5 +12,6 @@
 <user_pass idx="1" perm="$">$password</user_pass>
 <user_host idx="1" perm="$">$sipdomain</user_host>
 #INCLUDE snomXml.udp
+#INCLUDE snomXml.ipv4
 </phone-settings>
 </settings>
