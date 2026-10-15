@@ -394,18 +394,17 @@ Often the **first** question in a desk-phone incident: “did this MAC ever get 
 | **SPA** | Show **Last provisioned** on extension detail early (Phase **B** lean — high value for support). Sort/filter later |
 | **Timezone** | Store UTC; display per site TZ policy |
 
-#### 4.7.1 Stream expand preview (SPA) — locked 2026-10-14 · should-do
+#### 4.7.1 Stream expand preview (SPA) — locked 2026-10-14 · shipped 2026-10-14
 
 Legacy admin let operators request an **expanded** view of the provision stream: run INCLUDE + substitute and show the body (modal / panel) so a tech can visually check what the phone would get — without waiting for a GET.
 
 | Stance | |
 |--------|--|
-| **Do** | Home API: dry-run expand for the extension’s current (or draft) `provision` text using the **same** `pbx3_provision_expand` / substitute path as the phone listener. SPA: control on **extension detail** (e.g. **Expand / Preview**) → modal or read-only panel with the rendered body. |
-| **Secrets** | Obfuscate like the audit copy (**§4.7** / sndcreds patterns) — structure visible; SIP/phone/LDAP secrets masked. Do **not** bump `sndcreds` Once→spent or write audit as a real provision. |
+| **Do** | Home API: `POST /api/extensions/{id}/provision-preview` — dry-run expand for saved or draft `provision` via the **same** `pbx3_provision_expand` / substitute path as the phone listener. SPA: **Expand / Preview** on extension detail → modal with rendered body. |
+| **Secrets** | Obfuscate like the audit copy (**§4.7**) — structure visible; SIP/phone/LDAP secrets masked (line + XML tag aware). Do **not** bump `sndcreds` Once→spent or write audit as a real provision. |
 | **Not a phone GET** | Preview ≠ provision. No MAC index hit, no edge proxy, no `last_provisioned_at` update. |
-| **Errors** | Surface expand failures clearly (missing `#INCLUDE`, loop, empty) — aids GIGO authoring (**§4.6** `snom` vs `snomXml`). |
-| **vs audit “view last”** | Preview = **what would go** now. Audit view = **what went** on the last successful GET. Both useful; ship preview first if only one lands early. |
-| **Priority** | **Should-do** with provision UX / **#23c** authoring — high leverage for dual-family XML checks. Not a hard gate on shipping `snomXml.*` stock files. |
+| **Errors** | Surface expand failures clearly (missing `#INCLUDE`, empty) — aids GIGO authoring (**§4.6** `snom` vs `snomXml`). |
+| **vs audit “view last”** | Preview = **what would go** now. Audit view = **what went** on the last successful GET (optional later). |
 
 ### 4.8 Site fragments — customer CRUD + stock visibility (designed 2026-10-01)
 

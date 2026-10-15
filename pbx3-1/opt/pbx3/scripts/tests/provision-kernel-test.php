@@ -363,6 +363,9 @@ expect('grandstream P47 sipdomain', strpos($rGs['body'], '<P47>t1.example.com</P
 // Obfuscate unit
 $ob = pbx3_provision_obfuscate_for_audit("account.1.password = cleartext\nok=1\n");
 expect('obfuscate masks value', strpos($ob, 'cleartext') === false && strpos($ob, '********') !== false && strpos($ob, 'ok=1') !== false);
+$obXml = pbx3_provision_obfuscate_for_audit("<user_pass idx=\"1\" perm=\"$\">SecretPass99</user_pass>\n<user_name idx=\"1\" perm=\"$\">abc</user_name>\n");
+expect('obfuscate XML user_pass', strpos($obXml, 'SecretPass99') === false && strpos($obXml, '********') !== false);
+expect('obfuscate XML keeps user_name', strpos($obXml, '>abc</user_name>') !== false);
 
 // --- B4 Customer site fragments ---
 $db->exec('CREATE TABLE provision_stream (
