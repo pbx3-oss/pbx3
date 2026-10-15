@@ -9,7 +9,7 @@ No Device table. No per-SKU matrix. BLF templates (`*.Fkey` / `*.Lkey` / `*.Pkey
 |-------|------|
 | `snom.Common` / `yealink.Common` | Shared site defaults. **Snom classic** = **line** (`key$: value`) — keep for migrate/SARK. |
 | `snom.Extension` / `yealink.Extension` | Preferred **classic** Snom / Yealink extension entry (`$sipdomain` + `$outbound`) |
-| `snomXml` / `snomXml.Common` / `snomXml.Extension` (+ `{udp,tcp,tls,ipv4,ipv6}`) | **#23c lab green:** OEM closed-XML — same keys as `snom.*`, `idx=` inside `<phone-settings>`. Soft-fill / entry = single `#INCLUDE snomXml.Extension` (nests **udp + ipv4**). Transport/ipv fragments are **element-only**. Do not mix `#INCLUDE` across `snom` ↔ `snomXml`. |
+| `snomXml.Common` / `snomXml.Extension` (+ `{udp,tcp,tls,ipv4,ipv6}`) | **#23c lab green:** OEM closed-XML — same keys as `snom.*`, `idx=` inside `<phone-settings>` (idle text in Extension). Soft-fill / entry = single `#INCLUDE snomXml.Extension` (nests **udp + ipv4**). No bare `snomXml` grain. Transport/ipv fragments are **element-only**. Do not mix `#INCLUDE` across `snom` ↔ `snomXml`. |
 | `fanvil.Common` / `fanvil.Extension` | **Mule v0** — FDPS-era **module XML** (`VOIP_CONFIG_FILE`). Lab soak via manual Static Provision URL. Not a full OEM template. |
 | `poly.Master` / `poly.Common` / `poly.Extension` | **Mule v0** — UCS master (`poly.Master` → `{mac}.cfg` / `000000000000.cfg`) + **closed XML** settings (`polycomConfig` on `{mac}-reg.cfg`). STUN + UDPOnly + both ports. See **`POLY_PROVISION_SUBPROJECT.md`**. |
 | `grandstream.Common` / `grandstream.Extension` | **Mule v0** — `<gs_provision>` P-values for **GRP2602P**; phone GET **`cfg{mac}.xml`**. Dial plan **P290** includes `*xx*`. See **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. |
@@ -29,7 +29,7 @@ Typical ETL / migrated extension:
 
 (`*.Fkey` is ignored; transport + ipv4 fragments apply.)
 
-Preferred new authoring — **Yealink** (line) / **Snom XML** (`snomXml`, #23c):
+Preferred new authoring — **Yealink** (line) / **Snom XML** (`snomXml.*`, #23c):
 
 ```text
 #INCLUDE yealink.Extension
@@ -40,7 +40,7 @@ Preferred new authoring — **Yealink** (line) / **Snom XML** (`snomXml`, #23c):
 #INCLUDE snomXml.Extension
 ```
 
-(`snomXml` / `snomXml.Extension` wrap XML and nest `snomXml.udp` + `snomXml.ipv4` inside `<phone-settings>`. Do **not** append transport/ipv fragments after `</settings>` — they trail outside the document. Loop-guard also skips a second `#INCLUDE snomXml.udp`.)
+(`snomXml.Extension` wraps XML and nests `snomXml.udp` + `snomXml.ipv4` inside `<phone-settings>`. Do **not** append transport/ipv fragments after `</settings>` — they trail outside the document. Loop-guard also skips a second `#INCLUDE snomXml.udp`.)
 
 Classic Snom (migrate / SARK overlays — keep working):
 
