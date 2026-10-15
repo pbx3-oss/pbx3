@@ -89,6 +89,8 @@ expect('yealink.Extension stream', is_readable($streams . '/yealink.Extension'))
 expect('snom.Common stream', is_readable($streams . '/snom.Common'));
 expect('snom.Extension stream', is_readable($streams . '/snom.Extension'));
 foreach (array('snom.udp', 'snom.tcp', 'snom.tls', 'snom.ipv4', 'snom.ipv6', 'snom',
+	'snomXml.Common', 'snomXml.Extension', 'snomXml.udp', 'snomXml.tcp', 'snomXml.tls',
+	'snomXml.ipv4', 'snomXml.ipv6', 'snomXml',
 	'yealink.udp', 'yealink.tcp', 'yealink.tls', 'yealink.ipv4', 'yealink.ipv6', 'Yealink',
 	'Panasonic', 'panasonic.udp', 'panasonic.tcp', 'panasonic.tls', 'panasonic.ipv4',
 	'panasonic.ipv6', 'panasonic.Ldap',
@@ -108,6 +110,15 @@ expect('ETL snom+udp expands common', strpos($etl, 'setting_server$:') !== false
 expect('ETL snom.udp keeps outbound_hostport', preg_match('/^user_outbound1\$:\s*\$outbound_hostport\s*$/m', $etl) === 1);
 expect('ETL snom.ipv4 present', strpos($etl, 'dhcp_v6$: off') !== false);
 expect('ETL snom.Fkey still skipped', strpos($etl, 'fkey') === false);
+$loop = array();
+$snomXml = pbx3_provision_expand("#INCLUDE snomXml.Extension\n", true, $streams, $loop);
+expect('snomXml expands settings root', strpos($snomXml, '<settings>') !== false);
+expect('snomXml expands phone-settings', strpos($snomXml, '<phone-settings') !== false);
+expect('snomXml setting_server element', strpos($snomXml, '<setting_server') !== false);
+expect('snomXml user_name idx', strpos($snomXml, '<user_name idx="1"') !== false);
+expect('snomXml outbound hostport', strpos($snomXml, '$outbound_hostport') !== false);
+expect('snomXml closed document', preg_match('/<\/phone-settings>\s*<\/settings>/s', $snomXml) === 1);
+expect('snomXml no classic line dialect', strpos($snomXml, 'user_name1$:') === false);
 $loop = array();
 $pana = pbx3_provision_expand(
 	"#INCLUDE Panasonic\n#INCLUDE panasonic.Fkey\n#INCLUDE panasonic.tcp\n#INCLUDE panasonic.ipv4\n",
@@ -281,6 +292,22 @@ $rS = pbx3_provision_render($db, $parsedS, $streams, array('PADMINPASS' => 'adm'
 expect('snom renders', $rS['ok'] && strpos($rS['body'], 'user_name1$: su1001') !== false);
 expect('snom sipdomain', strpos($rS['body'], 'user_host1$: t1.example.com') !== false);
 expect('snom outbound', strpos($rS['body'], 'user_outbound1$: edge.example:5060') !== false);
+
+// snomXml stream render (soft-fill family)
+$db->exec("UPDATE ipphone SET provision='#INCLUDE snomXml.Extension', sndcreds='Always', macaddr='001122334455' WHERE pkey='1001'");
+$parsedX = pbx3_provision_parse_request('GET', '/001122334455.cfg', array());
+$rX = pbx3_provision_render($db, $parsedX, $streams, array('PADMINPASS' => 'adm', 'PUSERPASS' => 'usr', 'domain' => 'example.com'), array(
+	'sipdomain' => 't1.example.com',
+	'outbound' => 'edge.example',
+	'outbound_enable' => '1',
+	'outbound_hostport' => 'edge.example:5060',
+	'provurl' => 'https://p.example/p',
+));
+expect('snomXml renders', $rX['ok'] && strpos($rX['body'], '<user_name idx="1"') !== false);
+expect('snomXml sipuser', strpos($rX['body'], '>su1001</user_name>') !== false);
+expect('snomXml sipdomain', strpos($rX['body'], '>t1.example.com</user_host>') !== false);
+expect('snomXml outbound', strpos($rX['body'], '>edge.example:5060</user_outbound>') !== false);
+expect('snomXml filter_registrar', strpos($rX['body'], '<filter_registrar') !== false);
 
 // Fail-closed
 $parsed = pbx3_provision_parse_request('GET', '/ffffffffffff.cfg', array());

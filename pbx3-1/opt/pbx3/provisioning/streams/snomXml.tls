@@ -1,0 +1,5 @@
+<!-- snomXml.tls — element fragment for inside <phone-settings> -->
+<user_outbound idx="1" perm="$">$outbound:$tlsport;transport=tls</user_outbound>
+<user_srtp idx="1" perm="$">on</user_srtp>
+<user_auth_tag idx="1" perm="$">off</user_auth_tag>
+<user_savp idx="1" perm="$">mandatory</user_savp>

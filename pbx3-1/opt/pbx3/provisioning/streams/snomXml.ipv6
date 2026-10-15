@@ -1,0 +1,2 @@
+<!-- snomXml.ipv6 — element fragment for inside <phone-settings> -->
+<dhcp_v6 perm="$">autoconfiguration</dhcp_v6>

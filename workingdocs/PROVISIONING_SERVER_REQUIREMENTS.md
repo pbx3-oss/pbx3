@@ -293,7 +293,7 @@ Same idea as previous PBX **`sndcreds`** and as many **third-party / vendor clou
 | **Exceptions** | Rare model-specific overlays only when a vendor truly diverges — explicit, not a matrix by default |
 | **Migrate / aliases** | If lifting old DBs, map legacy model names → vendor stream; keep read aliases only if needed for customer data, not as a growth path |
 | **`ipphone.device`** | Vendor (or General SIP / WebRTC) label for expand + UI — not a foreign key into a fat Device catalogue |
-| **OUI → `provision` (soft-fill)** | On extension **create** / **update** when MAC is **added or changed**: if `provision` is null/blank, home API looks up OUI in **`/opt/pbx3/cache/manuf.txt`** (weekly `getmaclist.sh` from IEEE) and sets vendor-grain `#INCLUDE` (yealink / snom / fanvil / poly / Panasonic). **Never** overwrite a non-empty operator/Customer stream. MAC clear does **not** clear `provision`. **Poly:** soft-fill also bumps empty/`Once` → **`sndcreds=Always`** (leave explicit `No` alone). |
+| **OUI → `provision` (soft-fill)** | On extension **create** / **update** when MAC is **added or changed**: if `provision` is null/blank, home API looks up OUI in **`/opt/pbx3/cache/manuf.txt`** (weekly `getmaclist.sh` from IEEE) and sets vendor-grain `#INCLUDE` (yealink / **`snomXml`** / fanvil / poly / Panasonic). **Never** overwrite a non-empty operator/Customer stream. MAC clear does **not** clear `provision`. **Snom:** soft-fill targets the **`snomXml.*`** family (**§4.6**), not classic line `snom.*`. **Poly:** soft-fill also bumps empty/`Once` → **`sndcreds=Always`** (leave explicit `No` alone). |
 | **OUI does not own handset label** | Soft-fill writes **`provision` (+ Poly `sndcreds`) only** — not `device` / `devicevendor` (**`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md` S12**; UA harvest owns handset columns). |
 | **No auto Grandstream (v1)** | Grandstream / Gigaset / unknown OUI → leave `provision` unchanged until stock streams exist. |
 | **E2E still required** | Unit tests cover mapper only. **Lab end-to-end not done:** tip API + `manuf.txt`/`getmaclist` Poly filter → SPA Save blank-provision MAC (Poly `482567…`, Yealink, Snom) → confirm `provision` INCLUDE + Poly `sndcreds=Always` → curl/handset GET; also prove non-empty `provision` is preserved and unknown OUI is a no-op. |
@@ -330,7 +330,25 @@ Most vendor streams are **line-oriented** (key=value / proprietary text): INCLUD
 | **Yealink, Panasonic, …** | Typical line / flat profiles — straightforward substitute |
 | **Fanvil** | **Module XML** under FDPS-era firmwares (`VOIP_CONFIG_FILE` / `SIP_CONFIG_MODULE` / …). Older Fanvil engines also had CFG/TXT line dialects — treat current stock as **XML**. INCLUDE still works as whole-stanza insert; do not assume Yealink last-wins |
 | **Poly** | **Pure XML** with **closing stanzas** — nuisance for naive line-include / partial rewrite; treat as its own stream family when/if Poly is in scope |
-| **Snom** | Stock `snom.*` still **line** (`key$: value`). OEM has offered XML for years and is getting **more aggressive** about it. **TODO #23c:** convert stock streams to closed XML — **same parameter names**, wrapped. Shape: root `<settings>` → globals in `<phone-settings e="2">` as `<name perm="">value</name>`; identity lines as siblings with **`idx="N"`** (line `user_name1$` → `<user_name idx="1" perm="">…</user_name>`). Tiny sample: **`workingdocs/samples/snom-settings-xml-example.xml`**. Exhaustive key list (lab D717): **`workingdocs/archive/snom-d717-settings-exhaustive-lab-402.xml`**. Not a second engine; INCLUDE + substitute stays. Schedule when Snom lab next open. |
+| **Snom** | **Dual family (locked 2026-10-14) — #23c.** See below. |
+
+#### Snom dual family — `snom.*` (line) + `snomXml.*` (OEM XML) — locked 2026-10-14
+
+OEM is pushing closed XML harder; classic line still works and is what SARK / migrate streams reference. **Do not** convert or delete stock `snom.*` in place.
+
+| Family | Names | Format | Audience |
+|--------|-------|--------|----------|
+| **Classic line** | `snom`, `snom.Common`, `snom.Extension`, `snom.{udp,tcp,tls}`, `snom.{ipv4,ipv6}` | `key$: value` (identity suffix `user_name1$`) | **Keep forever for migrate / SARK imports** and any existing `#INCLUDE snom…` overlays. Leave migrated `provision` alone. |
+| **OEM XML** | `snomXml`, `snomXml.Common`, `snomXml.Extension`, `snomXml.{udp,tcp,tls}`, `snomXml.{ipv4,ipv6}` | Closed XML — same parameter **names**, wrapped. Root `<settings>` → globals in `<phone-settings e="2">` as `<name perm="">value</name>`; identity siblings with **`idx="N"`** (line `user_name1$` → `<user_name idx="1" perm="">…</user_name>`). | **New phones** — OUI soft-fill / create path (**§4.4**) → `#INCLUDE snomXml.Extension` (+ transport). |
+
+| Stance | |
+|--------|--|
+| **Engine** | Still INCLUDE + substitute only — not a second renderer. Content-Type / URL form as needed when XML family ships. |
+| **Twins are a closed set** | `#INCLUDE` must stay **within** one family. Do **not** nest line `snom.Common` inside `snomXml.Extension` (invalid XML). Transport / ipv stubs for XML must emit elements, not trailing line dialect. |
+| **Authoring / GIGO** | Technicians assemble streams. Wrong cross-family includes or broken XML = phone fails — **GIGO**; no product-grade cross-reference validator. Missing fragment already fails at expand (file not found). Practical check: SPA **expand preview** (**§4.7.1**). |
+| **Shape refs** | Tiny sample: **`workingdocs/samples/snom-settings-xml-example.xml`**. Exhaustive keys (lab D717): **`workingdocs/archive/snom-d717-settings-exhaustive-lab-402.xml`**. |
+| **Implement (#23c)** | Author `snomXml.*` twins from current `snom.*` content; soft-fill → `#INCLUDE snomXml.Extension` (udp nested inside closed XML — do not append transport after `</settings>`). Classic `snom.*` untouched. **Lab prove** D717 (or peer) on XML family. **0e2** still useful for migrate continuity, but is **not** a blocker. |
+| **ETL / legacy XML (closed)** | Operator checked prior-PBX history: OEM-XML Snom Device/stream refs were **dropped long ago**. **No** sark-to-pbx3 scrub/remap for legacy Snom XML — migrate keeps classic line `#INCLUDE snom…` only. Do not re-open without new evidence. |
 
 Engine stays INCLUDE + substitute; **template authoring** absorbs XML closed-stanza pain, not a BLF-scale subsystem.
 
@@ -362,7 +380,7 @@ Prior PBX mostly relied on **web server access logs** plus light syslog — work
 | **Pragmatic threat** | Until desk SIP is widely **TLS**, cleartext passwords remain visible on **UDP signalling** — that does not excuse keeping cleartext in our audit files. Prefer Once; SIP-TLS remains the long-term wire fix |
 | **Retention** | Follow instance log retention; rotate; fleet log-ship OK once obfuscated (still ACL like other instance logs) |
 | **Edge (Phase C)** | Proxy logs Host/MAC → upstream + status; **does not** store home-rendered bodies (bodies stay on home audit, obfuscated) |
-| **SPA** | **Last provisioned** timestamp on extension (§ below); optional later “view last stream” shows **obfuscated** audit copy only |
+| **SPA** | **Last provisioned** timestamp on extension (§ below); optional later “view last stream” shows **obfuscated** audit copy only. **Dry-run expand preview** is separate — **§4.7.1** (should-do). |
 
 **last-seen / last-provisioned (investigation first stop)**
 
@@ -375,6 +393,19 @@ Often the **first** question in a desk-phone incident: “did this MAC ever get 
 | **404 / deny** | Do **not** bump last-provisioned on fail-closed (unknown MAC, etc.) |
 | **SPA** | Show **Last provisioned** on extension detail early (Phase **B** lean — high value for support). Sort/filter later |
 | **Timezone** | Store UTC; display per site TZ policy |
+
+#### 4.7.1 Stream expand preview (SPA) — locked 2026-10-14 · should-do
+
+Legacy admin let operators request an **expanded** view of the provision stream: run INCLUDE + substitute and show the body (modal / panel) so a tech can visually check what the phone would get — without waiting for a GET.
+
+| Stance | |
+|--------|--|
+| **Do** | Home API: dry-run expand for the extension’s current (or draft) `provision` text using the **same** `pbx3_provision_expand` / substitute path as the phone listener. SPA: control on **extension detail** (e.g. **Expand / Preview**) → modal or read-only panel with the rendered body. |
+| **Secrets** | Obfuscate like the audit copy (**§4.7** / sndcreds patterns) — structure visible; SIP/phone/LDAP secrets masked. Do **not** bump `sndcreds` Once→spent or write audit as a real provision. |
+| **Not a phone GET** | Preview ≠ provision. No MAC index hit, no edge proxy, no `last_provisioned_at` update. |
+| **Errors** | Surface expand failures clearly (missing `#INCLUDE`, loop, empty) — aids GIGO authoring (**§4.6** `snom` vs `snomXml`). |
+| **vs audit “view last”** | Preview = **what would go** now. Audit view = **what went** on the last successful GET. Both useful; ship preview first if only one lands early. |
+| **Priority** | **Should-do** with provision UX / **#23c** authoring — high leverage for dual-family XML checks. Not a hard gate on shipping `snomXml.*` stock files. |
 
 ### 4.8 Site fragments — customer CRUD + stock visibility (designed 2026-10-01)
 
