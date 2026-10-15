@@ -339,7 +339,7 @@ OEM is pushing closed XML harder; classic line still works and is what SARK / mi
 | Family | Names | Format | Audience |
 |--------|-------|--------|----------|
 | **Classic line** | `snom`, `snom.Common`, `snom.Extension`, `snom.{udp,tcp,tls}`, `snom.{ipv4,ipv6}` | `key$: value` (identity suffix `user_name1$`) | **Keep forever for migrate / SARK imports** and any existing `#INCLUDE snom…` overlays. Leave migrated `provision` alone. |
-| **OEM XML** | `snomXml`, `snomXml.Common`, `snomXml.Extension`, `snomXml.{udp,tcp,tls}`, `snomXml.{ipv4,ipv6}` | Closed XML — same parameter **names**, wrapped. Root `<settings>` → globals in `<phone-settings e="2">` as `<name perm="">value</name>`; identity siblings with **`idx="N"`** (line `user_name1$` → `<user_name idx="1" perm="">…</user_name>`). | **New phones** — OUI soft-fill / create path (**§4.4**) → `#INCLUDE snomXml.Extension` (+ transport). |
+| **OEM XML** | `snomXml.Common`, `snomXml.Extension`, `snomXml.{udp,tcp,tls}`, `snomXml.{ipv4,ipv6}` | Closed XML — same parameter **names**, wrapped. Root `<settings>` → globals in `<phone-settings e="2">` as `<name perm="">value</name>`; identity siblings with **`idx="N"`** (line `user_name1$` → `<user_name idx="1" perm="">…</user_name>`). Idle text lives on **`snomXml.Extension`** (no bare `snomXml` grain). | **New phones** — OUI soft-fill / create path (**§4.4**) → `#INCLUDE snomXml.Extension` (nests udp+ipv4). |
 
 | Stance | |
 |--------|--|
@@ -347,7 +347,7 @@ OEM is pushing closed XML harder; classic line still works and is what SARK / mi
 | **Twins are a closed set** | `#INCLUDE` must stay **within** one family. Do **not** nest line `snom.Common` inside `snomXml.Extension` (invalid XML). Transport / ipv stubs for XML must emit elements, not trailing line dialect. |
 | **Authoring / GIGO** | Technicians assemble streams. Wrong cross-family includes or broken XML = phone fails — **GIGO**; no product-grade cross-reference validator. Missing fragment already fails at expand (file not found). Practical check: SPA **expand preview** (**§4.7.1**). |
 | **Shape refs** | Tiny sample: **`workingdocs/samples/snom-settings-xml-example.xml`**. Exhaustive keys (lab D717): **`workingdocs/archive/snom-d717-settings-exhaustive-lab-402.xml`**. |
-| **Implement (#23c)** | Author `snomXml.*` twins; soft-fill → `#INCLUDE snomXml.Extension` only. Nest **`snomXml.udp` + `snomXml.ipv4`** inside `<phone-settings>` (do not append fragments after `</settings>`). Classic `snom.*` untouched. **Lab green 2026-10-14** (401/`3cg94b` GET+REGISTER). |
+| **Implement (#23c)** | Author `snomXml.*` twins; soft-fill → `#INCLUDE snomXml.Extension` only (includes **`user_idle_text`**; no bare `snomXml`). Nest **`snomXml.udp` + `snomXml.ipv4`** inside `<phone-settings>` (do not append fragments after `</settings>`). Classic `snom.*` untouched. **Lab green 2026-10-14** (401/`3cg94b` GET+REGISTER). |
 | **ETL / legacy XML (closed)** | Operator checked prior-PBX history: OEM-XML Snom Device/stream refs were **dropped long ago**. **No** sark-to-pbx3 scrub/remap for legacy Snom XML — migrate keeps classic line `#INCLUDE snom…` only. Do not re-open without new evidence. |
 
 Engine stays INCLUDE + substitute; **template authoring** absorbs XML closed-stanza pain, not a BLF-scale subsystem.

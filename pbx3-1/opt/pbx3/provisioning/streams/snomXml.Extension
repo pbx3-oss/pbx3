@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- snomXml.Extension — OEM XML twin of snom.Extension (#23c).
-     Soft-fill / new Snom desks: #INCLUDE snomXml.Extension only.
-     Nested inside phone-settings: snomXml.udp + snomXml.ipv4.
-     For tcp/tls/ipv6: Customer copy and change those INCLUDEs — do not
-     append fragments after </settings>. -->
+<!-- snomXml.Extension — OEM XML twin of snom.Extension (+ idle text). Soft-fill /
+     new Snom desks: #INCLUDE snomXml.Extension only. Nested inside phone-settings:
+     snomXml.udp + snomXml.ipv4. For tcp/tls/ipv6: Customer copy and change those
+     INCLUDEs — do not append fragments after </settings>. -->
 <settings>
 <phone-settings e="2">
 #INCLUDE snomXml.Common
@@ -11,6 +10,7 @@
 <user_realname idx="1" perm="$">$ext</user_realname>
 <user_pass idx="1" perm="$">$password</user_pass>
 <user_host idx="1" perm="$">$sipdomain</user_host>
+<user_idle_text idx="1" perm="$">$ext($desc)</user_idle_text>
 #INCLUDE snomXml.udp
 #INCLUDE snomXml.ipv4
 </phone-settings>

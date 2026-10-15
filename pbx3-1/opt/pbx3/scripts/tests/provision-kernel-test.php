@@ -90,7 +90,7 @@ expect('snom.Common stream', is_readable($streams . '/snom.Common'));
 expect('snom.Extension stream', is_readable($streams . '/snom.Extension'));
 foreach (array('snom.udp', 'snom.tcp', 'snom.tls', 'snom.ipv4', 'snom.ipv6', 'snom',
 	'snomXml.Common', 'snomXml.Extension', 'snomXml.udp', 'snomXml.tcp', 'snomXml.tls',
-	'snomXml.ipv4', 'snomXml.ipv6', 'snomXml',
+	'snomXml.ipv4', 'snomXml.ipv6',
 	'yealink.udp', 'yealink.tcp', 'yealink.tls', 'yealink.ipv4', 'yealink.ipv6', 'Yealink',
 	'Panasonic', 'panasonic.udp', 'panasonic.tcp', 'panasonic.tls', 'panasonic.ipv4',
 	'panasonic.ipv6', 'panasonic.Ldap',
@@ -120,9 +120,10 @@ expect('snomXml outbound hostport', strpos($snomXml, '$outbound_hostport') !== f
 expect('snomXml ipv4 nested', preg_match('/<dhcp_v6[^>]*>off<\/dhcp_v6>\s*<\/phone-settings>/s', $snomXml) === 1);
 expect('snomXml closed document', preg_match('/<\/phone-settings>\s*<\/settings>\s*$/s', $snomXml) === 1);
 expect('snomXml no classic line dialect', strpos($snomXml, 'user_name1$:') === false);
+expect('snomXml idle text', strpos($snomXml, '<user_idle_text idx="1"') !== false);
 $loop = array();
 $trail = pbx3_provision_expand(
-	"#INCLUDE snomXml\n#INCLUDE snomXml.udp\n#INCLUDE snomXml.ipv4\n",
+	"#INCLUDE snomXml.Extension\n#INCLUDE snomXml.udp\n#INCLUDE snomXml.ipv4\n",
 	true,
 	$streams,
 	$loop

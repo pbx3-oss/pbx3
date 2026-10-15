@@ -132,7 +132,7 @@ if ($result['status'] === 200 && $result['reason'] === 'put_noop') {
 }
 
 $body = isset($result['body']) ? (string) $result['body'] : '';
-// Closed XML vendor streams (snomXml, Fanvil, Poly, …) — phones accept text/plain
+// Closed XML vendor streams (snomXml.*, Fanvil, Poly, …) — phones accept text/plain
 // too, but prefer XML Content-Type when the body looks like XML.
 $trim = ltrim($body);
 if ($trim !== '' && ($trim[0] === '<' || strncmp($trim, '<?xml', 5) === 0)) {
