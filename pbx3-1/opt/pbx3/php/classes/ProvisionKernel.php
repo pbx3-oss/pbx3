@@ -393,6 +393,30 @@ function pbx3_provision_substitute($body, $vars) {
 }
 
 /**
+ * Normalize ipphone row to an associative array.
+ * Eloquent models must use getAttributes() — (array) cast yields mangled keys.
+ *
+ * @param object|array $phone
+ * @return array
+ */
+function pbx3_provision_phone_row($phone) {
+	if (is_array($phone)) {
+		return $phone;
+	}
+	if (!is_object($phone)) {
+		return array();
+	}
+	if (method_exists($phone, 'getAttributes')) {
+		$attrs = $phone->getAttributes();
+		if (is_array($attrs)) {
+			return $attrs;
+		}
+	}
+	$vars = get_object_vars($phone);
+	return is_array($vars) ? $vars : array();
+}
+
+/**
  * Build default substitute map from ipphone row + optional globals.
  *
  * @param object|array $phone
@@ -400,7 +424,7 @@ function pbx3_provision_substitute($body, $vars) {
  * @param array $extra
  */
 function pbx3_provision_vars_from_phone($phone, $globals = array(), $extra = array()) {
-	$p = is_array($phone) ? $phone : (array) $phone;
+	$p = pbx3_provision_phone_row($phone);
 	$g = $globals;
 	$vars = array(
 		'ext' => isset($p['pkey']) ? $p['pkey'] : '',
@@ -685,7 +709,7 @@ function pbx3_provision_merge_cluster_device_passwords($db, $phone, $globals = a
 	if ($hasAdmin && $hasUser) {
 		return $globals;
 	}
-	$p = is_array($phone) ? $phone : (array) $phone;
+	$p = pbx3_provision_phone_row($phone);
 	$clusterKey = isset($p['cluster']) ? trim((string) $p['cluster']) : '';
 	if ($clusterKey === '' || !($db instanceof PDO)) {
 		return $globals;
@@ -718,7 +742,7 @@ function pbx3_provision_merge_cluster_device_passwords($db, $phone, $globals = a
  * @param array $hosts from pbx3_provision_resolve_hosts (localip)
  */
 function pbx3_provision_sipdomain_for_phone($db, $phone, $globals = array(), $hosts = array()) {
-	$p = is_array($phone) ? $phone : (array) $phone;
+	$p = pbx3_provision_phone_row($phone);
 	$clusterKey = isset($p['cluster']) ? trim((string) $p['cluster']) : '';
 	$localip = isset($hosts['localip']) ? (string) $hosts['localip'] : '127.0.0.1';
 
