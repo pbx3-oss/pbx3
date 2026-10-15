@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-14 (Snom snomXml + expand-preview locks)
+**Last updated:** 2026-10-14 (snomXml #23c lab green + nest tidy)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -12,7 +12,7 @@
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
 0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
-0k. **Phone provisioning — reinstate** — **A–C10** + rehome + **#23b** + brand mules + **ghost-call knobs** (2026-10-03). **Assist, not core.** Open: **#23c** lab-prove **`snomXml.*`** (stock+soft-fill on branch); **#23e** stream expand preview (SPA). Brand tracks: **`FANVIL_PROVISION_SUBPROJECT.md`** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Spec / MkDocs **`admin/phone-provisioning-*`**.
+0k. **Phone provisioning — reinstate** — **A–C10** + rehome + **#23b** + brand mules + **ghost-call knobs** + **#23c snomXml** lab green (2026-10-14). **Assist, not core.** Open: **#23e** stream expand preview (SPA). Brand tracks: **`FANVIL_PROVISION_SUBPROJECT.md`** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Spec / MkDocs **`admin/phone-provisioning-*`**.
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
 0f. ~~**S7 — install capability + tenant `rec_s3`**~~ — **locked + implemented (2026-08-26):** Install asks (default **Off**); tenant **`rec_s3`** default **NO**; home `.env` plumbing; upload gate on `rec_s3=YES`. Lock: **`RECORDINGS_STORAGE_DESIGN.md`** · MkDocs **`fleet/recordings-s3-offload`**. Fleet Instances read-only plumbing status still optional later.  
 0a. ~~**Home firewall Shorewall → UFW**~~ — **done on `main` (2026-08-25):** Phases 1–4 + ETL + MkDocs + **`pbx3_0.0.6-2`** + offline tests. Phase 5 parked (RTP rate-limit / SBC EIP auto-refresh). Spec: **`UFW_SHOREWALL_MIGRATION.md`**.  
@@ -73,7 +73,7 @@
 23. **Provisioning — reinstate (instance-local)** — **A–C10** + rehome green (2026-10-02). Assist-not-core. Brand tracks: Fanvil / GS / Poly sub-projects (parked). Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md`**. 
 23b. **Fleet tenant moves — docs review + more soaks** — **docs review done (2026-10-02):** MkDocs **`fleet/tenant-move`**. **2026-10-06:** cutover/rollback auto-project DID hop-1 (`TenantMoveRunner` + `DidInventory::projectToSbc` setid override). **More soaks** remain operator. **2026-10-08:** custom MOH files pack with `tenant:export` (branch **`feat/tenant-move-moh-media`**).  
 23d. **Tenant move — wipe-time CDR harvest (future)** — in-flight legs finish on source; CDR is canonical and home-local. Intent locked: before wipe, scoped dump + **`rsync`/scp** + `uniqueid` merge into dest `master.db` (fail closed; no whole-`master.db` rsync). **Not** a fleet CDR warehouse. Spec: **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md` §9.1** · MkDocs **`fleet/tenant-move`**.
-23c. **Snom dual family — `snomXml.*`** — **Locked 2026-10-14:** keep classic line **`snom.*`** for SARK/migrate; add parallel OEM-XML family **`snomXml` / `snomXml.Common` / `snomXml.Extension` / transport+ipv twins**. Same keys, wrapped (`idx=` not `name1` suffix). Soft-fill / new create → `snomXml`; leave migrated `provision` alone. Closed-family INCLUDE only; authoring GIGO (no cross-ref validator). **ETL:** no legacy Snom-XML scrub (prior-PBX dropped those refs ages ago). Shape: **`workingdocs/samples/snom-settings-xml-example.xml`** · exhaustive **`workingdocs/archive/snom-d717-settings-exhaustive-lab-402.xml`**. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.6**. Implement = author twins + soft-fill flip + lab; **0e2** not a blocker.
+23c. ~~**Snom dual family — `snomXml.*`**~~ — **lab green 2026-10-14:** classic **`snom.*`** kept for migrate; **`snomXml.*`** for new desks; soft-fill → `#INCLUDE snomXml.Extension`; udp+ipv4 nested inside wrappers. Golden **401/`3cg94b`** GET+REGISTER. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.6**.
 23e. **Stream expand preview (SPA)** — **Locked 2026-10-14 · should-do:** legacy-style dry-run expand on extension detail (modal/panel) — same INCLUDE+substitute as phone path; secrets obfuscated; no GET / no sndcreds spend / no audit-as-provision. Distinct from §4.7 “view last” audit. Spec: **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.7.1**. Pair with **#23c** authoring.
 23a. ~~**UA → model**~~ — **lab green `.31` (2026-08-27)** (harvest + API + SPA Handset). **Slice F images shelved** (partner-portal assets later). Spec: **`EXTENSION_PHONE_IMAGE_FROM_UA_REQUIREMENTS.md`**.  
 24. **SPA list action icons component** (parked).  
@@ -142,7 +142,7 @@
 
 - [ ] **Migrate → provision continuity lab (#0e2 — 2026-10-04):** Offline inventory (+ optional lab load) for stock vs feature-rich SARK desks after v2 Device-drop. Spec **`MIGRATE_PROVISION_CONTINUITY_LAB.md`** · private **`sark-to-pbx3/docs/MIGRATE_PROVISION_CONTINUITY_LAB.md`**. Still useful; **not** a blocker for **#23c** dual-family (classic `snom.*` stays).
 
-- [ ] **Snom dual family `snomXml.*` (#23c — lock 2026-10-14):** Stock twins + soft-fill wired (code on branch); **lab prove** D717/peer GET accepts OEM XML. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.6**.
+- [x] **Snom dual family `snomXml.*` (#23c — 2026-10-14):** Stock twins + soft-fill; Golden **401/`3cg94b`** XML GET + REGISTER lab green. Nest udp+ipv4 inside wrappers (no trailing fragments). Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.6**.
 
 - [ ] **Stream expand preview (#23e — lock 2026-10-14):** SPA dry-run expand on extension detail (obfuscated secrets). Spec **`PROVISIONING_SERVER_REQUIREMENTS.md` §4.7.1**. Should-do with **#23c**.
 

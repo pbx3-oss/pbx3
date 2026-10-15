@@ -117,8 +117,18 @@ expect('snomXml expands phone-settings', strpos($snomXml, '<phone-settings') !==
 expect('snomXml setting_server element', strpos($snomXml, '<setting_server') !== false);
 expect('snomXml user_name idx', strpos($snomXml, '<user_name idx="1"') !== false);
 expect('snomXml outbound hostport', strpos($snomXml, '$outbound_hostport') !== false);
-expect('snomXml closed document', preg_match('/<\/phone-settings>\s*<\/settings>/s', $snomXml) === 1);
+expect('snomXml ipv4 nested', preg_match('/<dhcp_v6[^>]*>off<\/dhcp_v6>\s*<\/phone-settings>/s', $snomXml) === 1);
+expect('snomXml closed document', preg_match('/<\/phone-settings>\s*<\/settings>\s*$/s', $snomXml) === 1);
 expect('snomXml no classic line dialect', strpos($snomXml, 'user_name1$:') === false);
+$loop = array();
+$trail = pbx3_provision_expand(
+	"#INCLUDE snomXml\n#INCLUDE snomXml.udp\n#INCLUDE snomXml.ipv4\n",
+	true,
+	$streams,
+	$loop
+);
+expect('snomXml multi-INCLUDE no trailing dhcp', preg_match('/<\/settings>\s*<dhcp_v6/s', $trail) !== 1);
+expect('snomXml multi-INCLUDE still nested dhcp', preg_match('/<dhcp_v6[^>]*>off<\/dhcp_v6>\s*<\/phone-settings>/s', $trail) === 1);
 $loop = array();
 $pana = pbx3_provision_expand(
 	"#INCLUDE Panasonic\n#INCLUDE panasonic.Fkey\n#INCLUDE panasonic.tcp\n#INCLUDE panasonic.ipv4\n",
