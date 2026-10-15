@@ -1,0 +1,6 @@
+<!-- snomXml.udp — element fragment for inside <phone-settings> -->
+<user_outbound idx="1" perm="$">$outbound_hostport</user_outbound>
+<user_srtp idx="1" perm="$">off</user_srtp>
+<user_srtp idx="2" perm="$">off</user_srtp>
+<user_auth_tag idx="1" perm="$">off</user_auth_tag>
+<user_savp idx="1" perm="$">off</user_savp>

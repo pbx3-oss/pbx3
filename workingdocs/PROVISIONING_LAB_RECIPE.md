@@ -47,7 +47,7 @@ Fleet baseline is **SBC-only** on home `:41363`. Temporary laptop allow: UFW/SG 
 | Field | Value |
 |-------|--------|
 | `macaddr` | Phone MAC |
-| `provision` | Prefer `#INCLUDE yealink.Extension` / `snom.Extension` (+ transport). **SIP host = tenant FQDN** (`$sipdomain`); **outbound proxy = SBC** (`$outbound`) when fleet. |
+| `provision` | Prefer `#INCLUDE yealink.Extension` (+ transport) / **`#INCLUDE snomXml.Extension`** (udp inside). Classic `#INCLUDE snom.Extension` = migrate/SARK only (**#23c**). **SIP host = tenant FQDN** (`$sipdomain`); **outbound proxy = SBC** (`$outbound`) when fleet. |
 | `sndcreds` | `Once` (preferred) |
 | `passwd` | Known SIP secret |
 

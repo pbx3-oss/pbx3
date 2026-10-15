@@ -1,0 +1,112 @@
+<!-- snomXml.Common — OEM XML twin of snom.Common (#23c).
+     Fragment only: included inside <phone-settings> by snomXml.Extension.
+     Do not #INCLUDE classic snom.* from this family. -->
+
+<setting_server perm="$">$provurl?mac={mac}</setting_server>
+<update_policy perm="$"></update_policy>
+
+<!-- Fleet NAT (FLEET_DESK_PHONE_NAT.md) — Contact must be public-facing for BYE. -->
+<!-- Outbound proxy alone is not enough when Contact stays LAN (audio may still work). -->
+<!-- STUN address is used in Contact for UDP (Identities → NAT → STUN Server). -->
+<stun_server idx="1" perm="$">stun.l.google.com:3478</stun_server>
+<stun_binding_interval idx="1" perm="$">30</stun_binding_interval>
+<enable_rport_rfc3581 perm="$">on</enable_rport_rfc3581>
+<rtp_keepalive perm="$">on</rtp_keepalive>
+
+<!-- Filter packets from Registrar — OEM default on; pin so desk ignores INVITEs not from REGISTER peer. -->
+<filter_registrar perm="$">on</filter_registrar>
+
+<!-- SRTP off by default; outbound set by snom / snom.Extension / snom.{udp,tcp,tls} -->
+<user_srtp idx="1" perm="$">off</user_srtp>
+<user_srtp idx="2" perm="$">off</user_srtp>
+<user_auth_tag idx="1" perm="$">off</user_auth_tag>
+<user_savp idx="1" perm="$">off</user_savp>
+
+<edit_alpha_mode perm="&amp;">123</edit_alpha_mode>
+
+<ldap_server perm="$">$ldaphost</ldap_server>
+<ldap_port perm="$"></ldap_port>
+<ldap_base perm="$">ou=$ldaptenant,ou=$ldapou,$ldapbase</ldap_base>
+<ldap_username perm="$">$ldaprouser</ldap_username>
+<ldap_password perm="$">$ldapropwd</ldap_password>
+<ldap_max_hits perm="$">50</ldap_max_hits>
+<ldap_sort_mode perm="$">server</ldap_sort_mode>
+<ldap_search_filter perm="$">(|(sn=%)(cn=%)(o=%))</ldap_search_filter>
+<ldap_number_filter perm="$">(|(telephoneNumber=%)(mobile=%)(homePhone=%))</ldap_number_filter>
+<ldap_name_attributes perm="$">cn o</ldap_name_attributes>
+<ldap_number_attributes perm="$">mobile telephoneNumber homePhone</ldap_number_attributes>
+<ldap_search_filter_during_call perm="$">(|(cn=%))</ldap_search_filter_during_call>
+<ldap_number_filter_during_call perm="$">(|(telephoneNumber=%)(mobile=%)(homePhone=%))</ldap_number_filter_during_call>
+<ldap_display_name perm="$">%cn,%o</ldap_display_name>
+<!-- Turn this on if your directory supports TLS. Snom only supports LDAPS (SSL/TLS over port 686) -->
+<ldap_over_tls perm="$">off</ldap_over_tls>
+
+<dkey_directory perm="!">keyevent F_DIRECTORY_SEARCH</dkey_directory>
+
+<ignore_asserted_in_gui perm="$">on</ignore_asserted_in_gui>
+
+<!-- leave dnd codes blank -->
+<dnd_on_code perm="!"></dnd_on_code>
+<dnd_off_code perm="!"></dnd_off_code>
+
+<!-- ntp server - in case it doesnt come from dhcp -->
+<ntp_server perm="$">0.pool.ntp.org</ntp_server>
+
+<!-- locale settings -->
+<timezone perm="!">GBR-0</timezone>
+<language perm="!">English(UK)</language>
+<tone_scheme perm="!">GBR</tone_scheme>
+<date_us_format perm="&amp;">off</date_us_format>
+<time_24_format perm="&amp;">on</time_24_format>
+
+<!-- change ringers as no one likes the normal one! -->
+<alert_internal_ring_sound perm="!">Ringer6</alert_internal_ring_sound>
+<alert_external_ring_sound perm="!">Ringer2</alert_external_ring_sound>
+<user_ringer idx="1" perm="!">Ringer6</user_ringer>
+<user_ringer idx="2" perm="!">Ringer6</user_ringer>
+
+<!-- load firmware automatically with no user input if we send it -->
+<update_policy perm="&amp;">auto_update</update_policy>
+
+
+<!-- turn off long contact sip headers -->
+<user_descr_contact idx="1" perm="$">off</user_descr_contact>
+<user_descr_contact idx="2" perm="$">off</user_descr_contact>
+
+<!-- &quot;support broken registrar&quot; not sure this is needed any more for * -->
+<user_sipusername_as_line idx="1" perm="$">on</user_sipusername_as_line>
+<user_sipusername_as_line idx="2" perm="$">on</user_sipusername_as_line>
+
+<!-- shows name &amp; number on inbound call -->
+<display_method perm="!">display_name_number</display_method>
+
+<!-- resync settings daily, only on v7 firmware -->
+<!-- settings_refresh_timer$: 14400 -->
+
+<!-- settings for easier transfers -->
+<!-- call_join needs to be off for receptionists though!!! -->
+<transfer_on_hangup perm="!">on</transfer_on_hangup>
+<call_join_xfer perm="!">on</call_join_xfer>
+
+<!-- turns off stupid flash plugin in web gui -->
+<with_flash perm="$">off</with_flash>
+
+<!-- stops LED lighting for missed calls -->
+<message_led_other perm="!">off</message_led_other>
+<!-- flash on call waiting -->
+<call_waiting perm="$">visual</call_waiting>
+
+<!-- Voicemail -->
+<dkey_retrieve perm="!">speed *50*</dkey_retrieve>
+
+<!-- Dont keep asking for a password -->
+<challenge_response perm="$">off</challenge_response>
+
+<!-- turn off the logon wizard -->
+<logon_wizard perm="$">skip welcome</logon_wizard>
+
+<!-- set an http UID &amp; password -->
+<http_user perm="!">user</http_user>
+<http_pass perm="!">$puserpass</http_pass>
+
+<admin_mode_password perm="!">$padminpass</admin_mode_password>

@@ -1,0 +1,2 @@
+<!-- snomXml.ipv4 — element fragment for inside <phone-settings> -->
+<dhcp_v6 perm="$">off</dhcp_v6>

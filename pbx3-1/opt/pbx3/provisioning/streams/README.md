@@ -7,14 +7,15 @@ No Device table. No per-SKU matrix. BLF templates (`*.Fkey` / `*.Lkey` / `*.Pkey
 
 | Grain | Role |
 |-------|------|
-| `snom.Common` / `yealink.Common` | Shared site defaults. **Snom** stock is still **line** format; **TODO #23c** → OEM XML (`<settings>` / `idx=` — sample **`workingdocs/samples/snom-settings-xml-example.xml`**). |
-| `snom.Extension` / `yealink.Extension` | Preferred extension entry (`$sipdomain` + `$outbound`) |
+| `snom.Common` / `yealink.Common` | Shared site defaults. **Snom classic** = **line** (`key$: value`) — keep for migrate/SARK. |
+| `snom.Extension` / `yealink.Extension` | Preferred **classic** Snom / Yealink extension entry (`$sipdomain` + `$outbound`) |
+| `snomXml` / `snomXml.Common` / `snomXml.Extension` (+ `{udp,tcp,tls,ipv4,ipv6}`) | **#23c:** OEM closed-XML family — same keys as `snom.*`, inside `<settings>` / `<phone-settings>` with `idx=`. Soft-fill → `#INCLUDE snomXml.Extension` (udp included inside). Transport/ipv fragments are **element-only** (must sit inside `phone-settings`). Do not mix `#INCLUDE` across `snom` ↔ `snomXml`. |
 | `fanvil.Common` / `fanvil.Extension` | **Mule v0** — FDPS-era **module XML** (`VOIP_CONFIG_FILE`). Lab soak via manual Static Provision URL. Not a full OEM template. |
 | `poly.Master` / `poly.Common` / `poly.Extension` | **Mule v0** — UCS master (`poly.Master` → `{mac}.cfg` / `000000000000.cfg`) + **closed XML** settings (`polycomConfig` on `{mac}-reg.cfg`). STUN + UDPOnly + both ports. See **`POLY_PROVISION_SUBPROJECT.md`**. |
 | `grandstream.Common` / `grandstream.Extension` | **Mule v0** — `<gs_provision>` P-values for **GRP2602P**; phone GET **`cfg{mac}.xml`**. Dial plan **P290** includes `*xx*`. See **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**. |
 | `snom` / `Yealink` / `Panasonic` | Legacy Device-table vendor aliases — same split: SIP domain vs SBC outbound |
-| `{snom,yealink,panasonic,fanvil}.{udp,tcp,tls}` · `poly.udp` · `grandstream.udp` | Transport stubs. **Snom** outbound uses `$outbound_hostport` / `$outbound` (fleet = SBC). `poly` transport is **UDPOnly** inside Extension. |
-| `{snom,yealink,panasonic}.{ipv4,ipv6}` | IPv4 vs IPv6 hints |
+| `{snom,yealink,panasonic,fanvil}.{udp,tcp,tls}` · `snomXml.{udp,tcp,tls}` · `poly.udp` · `grandstream.udp` | Transport stubs. Classic **Snom** / Yealink = line. **snomXml** = XML elements (inside Extension’s `phone-settings`). `poly` transport is **UDPOnly** inside Extension. |
+| `{snom,yealink,panasonic,snomXml}.{ipv4,ipv6}` | IPv4 vs IPv6 hints |
 | `panasonic.Ldap` | Optional LDAP fragment |
 
 Typical ETL / migrated extension:
@@ -28,7 +29,20 @@ Typical ETL / migrated extension:
 
 (`*.Fkey` is ignored; transport + ipv4 fragments apply.)
 
-Preferred new authoring (Snom/Yealink):
+Preferred new authoring — **Yealink** (line) / **Snom XML** (`snomXml`, #23c):
+
+```text
+#INCLUDE yealink.Extension
+#INCLUDE yealink.udp
+```
+
+```text
+#INCLUDE snomXml.Extension
+```
+
+(`snomXml.Extension` wraps XML and `#INCLUDE`s `snomXml.udp` inside `<phone-settings>`. Do **not** append `#INCLUDE snomXml.udp` after the closed document.)
+
+Classic Snom (migrate / SARK overlays — keep working):
 
 ```text
 #INCLUDE snom.Extension

@@ -11,6 +11,6 @@
 2. How often was the template only on SARK **Device** (empty row `provision`)?
 3. What **features** (BLF / site Common) disappear when Device fat is dropped?
 4. What must an operator **touch per extension** before the next phone GET works?
-5. Should **#23c** (Snom line→XML) wait until this lab’s verdict?
+5. ~~Should **#23c** (Snom line→XML) wait until this lab’s verdict?~~ — **Resolved 2026-10-14:** dual family — keep classic **`snom.*`** for migrate; new stock = **`snomXml.*`**. This lab no longer gates #23c.
 
 Do not expand “provisioning server transplant” without a new REQUIREMENTS lock in sark-to-pbx3.
