@@ -261,9 +261,9 @@ CAGI also receives dials/AGI from queue/recording paths (e.g. `SetRecord`, PrepD
 - Phone endpoint `$outbound_proxy` → SBC only in fleet mode; host from **`PBX3_SBC_EGRESS_HOST`** (Phase F).
 - **`$clstkey`** → `park-{tenant shortuid}` (parking lot); must not be expanded via bare `$clst`.
 
-### 5.2.1 Parked — per-queue member Dial options (2026-10-06; amend 2026-10-13)
+### 5.2.1 Per-queue member Dial options (unparked 2026-10-20)
 
-**Parked. Not scheduled.** Leave PrepDial’s queue branch as hardcoded `,,cktT` until a real queue needs a Dial letter beyond `c` / `k` / `t` / `T`. Do **not** expose a free-text Dial-options string in the SPA — that is a footgun (`Dial()` arity, Agent Ring Timeout fight, ghost recordings). If later needed: **curated toggles** that compose a known-safe letter set (default stays `cktT`), not an operator-typed option field.
+**Locked 2026-10-20:** **`QUEUE_MEMBER_DIAL_OPTIONS_REQUIREMENTS.md`**. Curated SPA/API toggles + allowlist; default `cktT`; CAGI loads per-queue string through a wider character ceiling (future letters often without cagi rebuild). Do **not** expose free-text Dial options.
 
 **What is already exposed.** SPA **Options** is `queue.options` (default `CiIknrtT`). GenAst writes that into `Queue(name,options,...)`. Those are Queue() flags. The agent-leg Dial options are a second layer, hardcoded in `PrepDial` when `type` is `queue`:
 
