@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-15 (Yealink T7X archive templates)
+**Last updated:** 2026-10-20 (DISA/CALLBACK lock #8c)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -50,11 +50,13 @@
 6a. **Home / package versioning** — **should-do before a painful break** (not first-out). Know which home is on which **pbx3 / cagi / api** floor+tip; survive mixed floors; plan for a future breaking change without tribal memory. Open item below · **`REPOS_AND_RELEASES.md`**.  
 7. ~~**New instance / package install — floor roll**~~ — **done (2026-08-27):** cloud homes **pbx3 `0.0.6-4`** / **pbx3cagi `1.0.0-19`** + api tip (UFW cutover). Tips/hosts: **TODO_OPS**.  
 8. **Toll fraud / velocity** — plan **Accepted**; **WP0 + WP3 + WP1** done (2026-08-11). Remainder deferred (V4 / SBC floor / Wangiri). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
-8c. **Inbound DISA vs CALLBACK** — consider dropping **DISA** (too risky for toll fraud); keep **CALLBACK** if it still works; verify CAGI + SPA. Open item below.  
+8c. ~~**Inbound DISA vs CALLBACK**~~ — **locked 2026-10-20:** drop **DISA**; hide **CALLBACK** (future feature); remote dial-tone later = CLID/passcode auth, not classic DISA. Spec: **`DISA_CALLBACK_REQUIREMENTS.md`**. SPA/API hide+reject when shipped.  
+
 8b. ~~**CDR dest pie (Home)**~~ — **done** (pulse `dest_where_today`; SPA doughnut; golden tip). Home CC via `PBX3_CDR_HOME_CC`.  
 8a. ~~**Paid Twilio inbound/outbound**~~ — **lab green** (Toliman↔Twilio both ways; SBC Route-strip + public From/PAI; Egress CLIP). **Next dialect eng:** ops-authored profiles without tip (**`NUMBER_DIALECT_REQUIREMENTS.md` §5.4**) — close v1 gap (hard-coded preset ids in OpenSIPS / Filament enum).  
 9. **Multi-AZ lab** — instances in **different AZs** (WebRTC / RTP proof).  
-10. **pbx3cagi Phase 4** (parked; day-parts merged — unblocked when wanted).  
+10. **pbx3cagi Phase 4** — optional domain file splits / named cmd enums (cosmetic structure; no feature change). Phases **0–3.2** done on `main`. Parked; unblocked when wanted. Spec: **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**.  
+
 11. ~~**Velocity standalone SKU**~~ — **won't-do** (2026-08-11): separate repo/installer not viable enough for the effort; stay in-tree (#8). Lock: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`** § Future.  
 12. **Instance shadowing** / S10.7 / S8.9 (parked).  
 13. **AMI wallboard** (parked).  
@@ -160,7 +162,7 @@
 - [x] **Fleet park timeout + inband park/retrieve (2026-09-26):** `comebacktoorigin=no` + GenAst `park-timeout-*` FQDN Dial (bare `PJSIP/suid` was CHANUNAVAIL); COS exact `901`–`903`; `parkingtime=60`. Prefer DTMF `*5` (not attended xfer to `*900`). Golden desk green. MkDocs **feature-codes**.
 - [x] **Queue/ring-group park after answer (2026-10-06):** GenAst `member=Local/…/n` + cagi queue Dial `,,ktT` — bare Local was optimized out so `*5`/park never armed. Lab **11001/`nhxxk0`** Sirius green. PRs pbx3 **#65** · pbx3cagi **#3**.
 - [x] **Queue missed-call hygiene (2026-10-07):** CAGI PrepDial queue Dial `ktT` → `cktT` (HANGUPCAUSE answered-elsewhere). **Also required on fleet:** SBC OpenSIPS CANCEL `t_relay("pass-reason-hdr")` — plain relay rewrote Reason to `ORIGINATOR_CANCEL` (Snom showed that; phones logged missed). Lab green Aelintra **11001** / Magrathea. Merged **`main`:** cagi **#4** · pbx3 **#67** · sbc **#11**.
-- [ ] **Queue member Dial options — per queue (parked 2026-10-06; amend 2026-10-13):** Leave CAGI `,,cktT` hardcoded. Not scheduled. Shared `Q{ext}` needs `_PBX3_QUEUE_SUID` inherit if ever per-queue. SPA **Options** is Queue() flags (different layer). If later: **curated toggles**, not free-text Dial options. Note: **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.2.1**.
+- [ ] **Queue member Dial options — per queue (locked 2026-10-20):** Curated SPA/API toggles + allowlist (not free text); default `cktT`; operators may drop e.g. **`c`**. CAGI loads per-queue string (ceiling charset). Needs `_PBX3_QUEUE_SUID`. Spec: **`QUEUE_MEMBER_DIAL_OPTIONS_REQUIREMENTS.md`**. Note: **`AST_CONFIG_GENERATOR_SUBPROJECT.md` §5.2.1**.
 
 - [x] **Home Start/Stop PBX exclusive + pulse invalidate (2026-10-14):** SPA shows only Start or Stop from `pbx_runstate` (optimistic after command); api forgets `home_pulse:system` on start/stop so status is not stale for the 45s TTL. Merged spa **#25** · api **#23**.
 - [x] **Asterisk security log split (2026-10-14):** `messages` = notice/warning/error/verbose (verbose for console `core set verbose N`); `security => security` → `/var/log/asterisk/security`. `ensure-asterisk-logger-channels.sh` (installer/setip/postinst); Fail2ban `[asterisk]` dual logpath security+messages (jail off on fleet; enable for solo); ops register-loop + Logs panel. Docs: **`FLEET_LOG_RETENTION_REQUIREMENTS.md`**. Merged pbx3 **#78** · api **#24** · spa **#26**.
@@ -229,7 +231,7 @@
 
 - [ ] **SBC Track A lab — third-party PBX (± FreePBX) behind SBC (2026-07-28):** Prove REGISTER / calls via the SBC or scratch pbx3sbc. Capture recipe / gaps — **`SBC_PRODUCT_TRACKS.md`** Track A. Foreign-PBX→pbx3 data migrate is a separate ETL later.
 
-- [ ] **pbx3cagi Phase 4 — domain file splits (parked 2026-07-26):** Day-parts / CheckState **merged to `main`** — Phase 4 unblocked when scheduled. Spec: **`REFACTOR_PLAN.md`**.
+- [ ] **pbx3cagi Phase 4 — domain file splits (parked; optional):** Split handlers by domain (`agi_cf` / `agi_agents` / `agi_ivr` / …), named `switchdig` enums, small config module. **No intended behaviour change** — structure only; gate `make test`. Phases **0–3.2** already on `main`. Spec: **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`**.
 
 - [x] **Control plane duplex / HA — won't-do (2026-08-11):** Management layer is binary (up/down). Gatekeeper stays a **single host**; calls continue per Rule 11 while Fleet mutate waits. Do **not** build duplex/active-active Gatekeeper. Ops: rebuild/restore + DNS/EIP discipline. Edge HA (SBC) remains a separate call-path track. Lock: **`CONTROL_HOST.md`** · **`TENANT_MOBILITY_FLEET_CONSOLE_DESIGN.md`** §2.5.1 · **`DESIGN_RULES.md`** Rule 11.
 
@@ -256,7 +258,7 @@
 
 - [x] **High-risk dial block posture + CoS seed (2026-08-11):** Prevention = **PBX CoS** (`HR_UK070` / `HR_OFFSHORE`); velocity = detect/act; SBC = optional thin never-route later. Packs: `config/cos/highrisk-*-starter.dialplan`. Artisan **`pbx3:cos-highrisk-seed`**. Lock: **`HIGH_RISK_DIAL_BLOCK_POSTURE.md`**.
 
-- [ ] **Inbound DISA vs CALLBACK (2026-08-27):** SPA Inbound Route edit still offers **None / DISA / CALLBACK**. Lean: **drop or hide DISA** (direct dial-tone after PIN is high toll-fraud risk); **keep CALLBACK** if CAGI path still works — verify on lab/golden, then lock product posture (remove option vs privilege-gate). Related: #8 toll fraud.
+- [ ] **Inbound DISA vs CALLBACK (#8c — locked 2026-10-20):** Drop DISA; hide CALLBACK (future); secure dial-tone later ≠ classic DISA. Spec: **`DISA_CALLBACK_REQUIREMENTS.md`**. SPA/API on branches **`feat/hide-disa-callback`** / **`feat/reject-disa-callback`** (hide controls + clear on save; API reject). Related: #8 toll fraud.
 
 - [x] **Toll fraud / velocity — standalone SKU — won't-do (2026-08-11):** Own repo + Go extract / installer cancelled — effort ≫ return. Fraud velocity stays **in-tree** (finish #8 remainder when designed). Spec § Future: **`FLEET_TOLL_FRAUD_VELOCITY_REQUIREMENTS.md`**.
 
@@ -321,7 +323,7 @@
 - [x] **OSS org + repo registry:** **done (2026-09-28)** — **`pbx3-oss`**; product+SBC public; ops/ETL/sipplabs stay Aelintra. Record: **`~/GiT/pbx3-ops/devdocs/oss-move/OSS_ORG_TRANSFER_PLAN.md`**. Parent: **`OPEN_SOURCE_GITHUB_SETUP.md`** · **`REPOS_AND_RELEASES.md`**.
 - [x] **S6.2 SPA Pages:** **done (2026-09-28)** — **`app.pbx3.com`**; shared SPA; catalog CORS + runtime catalog switch; install guides baked.
 
-- [ ] **pbx3cagi refactor (under Ast config generator + cagi track):** Resume Phase **1.3 → 1.1 → 2.x**; **`make test`**. Contract: **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §5.
+- [x] **pbx3cagi refactor Phases 0–3.2 (2026-07):** Harness, dead code, call-context structs, command table, SQLite extract, init, session pointer, AGI wrapper — on **`main`**. Remaining optional structure = **#10 Phase 4**. Spec: **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`** · contract **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §5.
 
 - [ ] **Golden `pkey='default'` layout (investigate, low priority):** Does SPA tenant-create-only provisioning ever skip creating `default`?
 
@@ -339,7 +341,7 @@
 
 - [x] **Inbound route panels — SWOCLIP create parity (2026-08-26):** Create exposes **SWOCLIP** default **YES** (DB true); edit already had it.
 
-- [ ] **pbx3cagi — `maxin` / `maxout` call counters:** Fix concurrent-call limit enforcement.
+- [ ] **pbx3cagi — `maxin` / `maxout` call counters:** Fix concurrent-call limit enforcement. **Locked 2026-10-20:** **`CALL_CONCURRENCY_LIMITS_REQUIREMENTS.md`** — tenant+instance maxin/maxout only; drop voip_max; chanmax→maxout; GROUP fix; log every hit (`PBX3_CONCUR_LIMIT`). Implement when scheduled.
 
 - [x] **SPA session timeout (Instance Globals `sessiontimout`) (2026-08-26):** Idle auto-logout honours **`GET sysglobals.sessiontimout`** (seconds; default **600** = 10 min). Build env `VITE_AUTO_LOGOUT_MINUTES` remains fallback before globals load / fleet-only. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`** §6.
 
