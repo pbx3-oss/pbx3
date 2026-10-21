@@ -1,9 +1,10 @@
 #!/bin/sh
-# Apply API multipart upload limits (MOH / backups) on an existing home.
+# Apply API PHP-FPM drop-in + nginx body size on an existing home.
 # Idempotent: safe from pbx3 postinst and from tip-upgrade ops.
 #
-# Installs PHP-FPM (+ CLI) 99-pbx3-uploads.ini and ensures nginx
-# client_max_body_size 50M on the pbx3-api site when present.
+# Installs PHP-FPM (+ CLI) 99-pbx3-uploads.ini (upload floors +
+# session.upload_progress Off) and ensures nginx client_max_body_size
+# 50M on the pbx3-api site when present.
 #
 # Usage: sudo /opt/pbx3/scripts/apply-api-upload-limits.sh
 set -eu

@@ -28,6 +28,7 @@ Operators want a **browser-visible allowlist** for Filament reachability. Some f
 8. **Rule 7:** no AWS API hardwiring in Filament for the core feature. Optional SG sync adapter is **parked**.  
 9. **Fail2ban stays** separate (reactive). Management allowlist is pre-connect; Fail2ban whitelist is post-abuse ignoreip.
 10. **php-fpm ProtectSystem=full:** Ubuntu’s php-fpm unit mounts `/etc` read-only for the service **and** `sudo` children. Mutating UFW from Filament requires systemd **`ReadWritePaths=/etc/ufw`** (`pbx3sbc/scripts/setup-php-fpm-ufw-write.sh`). Status (`--status`) stays read-only and must not require write.
+11. **PHP session hygiene (unrelated to UFW):** installer / tip installs **`session.upload_progress.enabled = Off`** (`pbx3sbc-admin` `deploy/php/99-pbx3sbc-session.ini`). See product **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`**.
 
 ### Existential difference vs instance Firewall
 
