@@ -105,7 +105,7 @@ Same rules. Instance globals = house ceiling on multi-tenant homes.
 2. Load tenant **`maxout`** + instance **`globals.maxin` / `maxout`**; stop using **`voip_max` / `chanmax`** for enforcement (optional one-release fallback: if `maxout` null and `chanmax` set, honour `chanmax`).
 3. Busy on hard reject; no silent no-Dial; **emit §2.6 log line** on every reject.
 4. Harness + lab: `maxin=1` / `maxout=1` — assert Busy **and** log line / token present.
-5. SPA follow-on: tenant Max out; hide VoIP max / ChanMax.
+5. SPA follow-on: tenant **Max out** (`maxout`); hide **VoIP max** / **ChanMax** — **SPA shipped 2026-10-20** (list/create/edit + instance Globals).
 6. **pbx3cagi** deb bump when shipping.
 
 ---
