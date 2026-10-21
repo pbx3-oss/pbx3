@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-20 (lab LAN green; #5l/#5m + concurrency SPA UI on `main`)
+**Last updated:** 2026-10-21 (pbx3cagi maxin/maxout 1.0.0-25 merged + lab soak)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -346,7 +346,7 @@
 
 - [x] **Inbound route panels — SWOCLIP create parity (2026-08-26):** Create exposes **SWOCLIP** default **YES** (DB true); edit already had it.
 
-- [ ] **pbx3cagi — `maxin` / `maxout` call counters:** Enforcement on branch **`feat/concur-maxin-maxout`** (source + offline scenarios; deb **1.0.0-25** when dual-arch built). **Locked 2026-10-20:** **`CALL_CONCURRENCY_LIMITS_REQUIREMENTS.md`**. SPA UI/help **done** (spa **#37** · pbx3 **#91**). Close when PR merged + lab Busy soak.
+- [x] **pbx3cagi — `maxin` / `maxout` call counters (2026-10-21):** Merged cagi **#7** → **`main`** / package **1.0.0-25**; tipped lab **`.31`**. Soak: tenant `maxout=1` + held `GROUP(pbx3tout)` → second OutRoute **Busy** + `PBX3_CONCUR_LIMIT`. Lock: **`CALL_CONCURRENCY_LIMITS_REQUIREMENTS.md`**. SPA UI/help **done** (spa **#37** · pbx3 **#91**).
 
 - [x] **SPA session timeout (Instance Globals `sessiontimout`) (2026-08-26):** Idle auto-logout honours **`GET sysglobals.sessiontimout`** (seconds; default **600** = 10 min). Build env `VITE_AUTO_LOGOUT_MINUTES` remains fallback before globals load / fleet-only. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`** §6.
 
