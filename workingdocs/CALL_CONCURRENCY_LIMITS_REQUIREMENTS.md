@@ -1,9 +1,9 @@
 # Call concurrency limits (`maxin` / `maxout`)
 
-**Status:** **Locked 2026-10-20** (operator confirm).  
-**Implements in:** **pbx3cagi** (Asterisk `GROUP` / `GROUP_COUNT`); SPA/API field tidy as follow-on.  
+**Status:** **Locked 2026-10-20** (operator confirm). CAGI enforcement on branch **`feat/concur-maxin-maxout`** (package **1.0.0-25** when built).  
+**Implements in:** **pbx3cagi** (Asterisk `GROUP` / `GROUP_COUNT`); SPA/API field tidy **done** (2026-10-20).  
 **Related TODO:** product **`TODO.md`** — pbx3cagi `maxin` / `maxout` call counters.  
-**Smoke:** **`DBSTRUCT_SMOKE_CHECKLIST.md`** Ingress `maxin` cap.
+**Smoke:** **`DBSTRUCT_SMOKE_CHECKLIST.md`** Ingress `maxin` cap · offline `concur-maxin-*` / `concur-maxout-*`.
 
 ---
 
