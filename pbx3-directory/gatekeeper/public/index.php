@@ -24,6 +24,7 @@ use Pbx3\Gatekeeper\InstanceEdgeLifecycle;
 use Pbx3\Gatekeeper\InstanceEdgeProvision;
 use Pbx3\Gatekeeper\MacIndexStore;
 use Pbx3\Gatekeeper\NodeFleetDialClient;
+use Pbx3\Gatekeeper\NodeIdentityClient;
 use Pbx3\Gatekeeper\NotifyDispatcher;
 use Pbx3\Gatekeeper\OpsEventThrottle;
 use Pbx3\Gatekeeper\S3Presign;
@@ -698,6 +699,24 @@ try {
     if ($method === 'GET' && $path === '/api/v1/sbc/dispatcher-sets') {
         Auth::requireAbility(FleetAbilities::READ);
         JsonResponse::send(200, ['sets' => (new SbcFleetClient())->listDispatcherSets()]);
+    }
+
+    if ($method === 'POST' && $path === '/api/v1/instances/probe-identity') {
+        Auth::requireAbility(FleetAbilities::INSTANCES);
+        $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        $apiBase = is_array($body) ? trim((string) ($body['api_base_url'] ?? '')) : '';
+        if ($apiBase === '') {
+            JsonResponse::send(422, ['error' => 'api_base_url required']);
+        }
+        try {
+            JsonResponse::send(200, (new NodeIdentityClient())->fetch($apiBase));
+        } catch (\InvalidArgumentException $e) {
+            $code = (int) $e->getCode();
+            JsonResponse::send($code >= 400 && $code < 600 ? $code : 422, ['error' => $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            $code = (int) $e->getCode();
+            JsonResponse::send($code >= 400 && $code < 600 ? $code : 502, ['error' => $e->getMessage()]);
+        }
     }
 
     if ($method === 'POST' && $path === '/api/v1/instances') {
