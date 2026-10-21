@@ -19,6 +19,7 @@ What protects someone from poking the instance API directly today:
 | MFA | Opt-in TOTP (instance Sanctum) |
 | Control plane split | Fleet mobility uses `PBX3_FLEET_SERVICE_TOKEN`, not SPA Sanctum |
 | Host | UFW/SG; fail2ban `pbx3-api-badbots` (scanner UAs) |
+| PHP-FPM | `session.upload_progress.enabled = Off` via `99-pbx3-uploads.ini` (hygiene; see **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`**) |
 | Unknown routes | Opaque JSON fallback `Unauthorised/Page Not Found` |
 
 **Assessment (2026-10-04):** Credible **mid-tier** self-hosted admin API — aligned with common good practice for SPA → per-home API. Not bank-grade zero-trust. Deliberately keeps `:44300` reachable so **`app.pbx3.com`** can call homes with a token (unlike optional SBC Filament IP lockdown on `:443`).
