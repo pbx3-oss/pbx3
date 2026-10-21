@@ -346,7 +346,7 @@
 
 - [x] **Inbound route panels — SWOCLIP create parity (2026-08-26):** Create exposes **SWOCLIP** default **YES** (DB true); edit already had it.
 
-- [ ] **pbx3cagi — `maxin` / `maxout` call counters:** Fix concurrent-call limit enforcement. **Locked 2026-10-20:** **`CALL_CONCURRENCY_LIMITS_REQUIREMENTS.md`** — tenant+instance maxin/maxout only; drop voip_max; chanmax→maxout; GROUP fix; log every hit (`PBX3_CONCUR_LIMIT`). SPA UI/help follow-on **done** (spa **#37** · pbx3 **#91**). CAGI implement when scheduled.
+- [ ] **pbx3cagi — `maxin` / `maxout` call counters:** Enforcement on branch **`feat/concur-maxin-maxout`** (source + offline scenarios; deb **1.0.0-25** when dual-arch built). **Locked 2026-10-20:** **`CALL_CONCURRENCY_LIMITS_REQUIREMENTS.md`**. SPA UI/help **done** (spa **#37** · pbx3 **#91**). Close when PR merged + lab Busy soak.
 
 - [x] **SPA session timeout (Instance Globals `sessiontimout`) (2026-08-26):** Idle auto-logout honours **`GET sysglobals.sessiontimout`** (seconds; default **600** = 10 min). Build env `VITE_AUTO_LOGOUT_MINUTES` remains fallback before globals load / fleet-only. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`** §6.
 
