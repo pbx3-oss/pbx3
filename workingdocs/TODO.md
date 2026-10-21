@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-20 (DISA/CALLBACK lock #8c)
+**Last updated:** 2026-10-20 (lab LAN green; #5l/#5m + concurrency SPA UI on `main`)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -46,8 +46,8 @@
 5i. ~~**Fleet Instances — catalog referential integrity (block Decom while active tenants remain)**~~ — **done (2026-08-19):** **`CatalogIntegrityException`** + **`S3Registrar::assertCanDecommissionInstance`** on Decom + PATCH `status=decommissioned`; SPA **Decom** disabled with blocker tooltip; **`blocking_tenants`** on **422**. MkDocs **`fleet/decommission-instance`** Step 1.  
 5j. ~~**Fleet home Commit reload / Egress REGISTER log**~~ — **closed (2026-08-19):** **#5j-b** post-Commit reload **OK** on lab (active call + new ext). **#5j-a** `AOR '' not found for endpoint 'Egress'` = unknown shortuid or pre–first-Commit REGISTER (expected). Wrong password → **`Failed to authenticate`** on correct endpoint. Docs: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · **`install-lab-adopt.md`**. No **`pbx3api`** reload change.  
 5k. ~~**SBC orphan domain rows after lab reinstall**~~ — **done (2026-08-19):** **`CatalogReconcile::pruneOrphans`** + **`POST /reconcile/prune-orphans`**; auto on **Provision edge**; Fleet **Catalog reconcile** UI. Decommissioned instance FQDNs now flagged as orphans. MkDocs **`installation/install-lab-adopt.md`**. Rule 13 catalog-driven prune (fleet-owned only).  
-5l. ~~**pbx3api installer — Artisan / composer scripts**~~ — **done (2026-10-20):** installer `--no-scripts` + `ensure-console-command-loader.php` (`setLaravel`); discover/migrate as www-data. PRs api **#29** · tip lab `.31`.  
-5m. ~~**Fleet Register — probe node for KSUID**~~ — **done (2026-10-20):** Gatekeeper `probe-identity` + home `GET /fleet/identity` + SPA **Probe identity**. PRs api **#29** · pbx3 **#90** · spa **#36**; tip lab `.31`/`.33`.  
+5l. ~~**pbx3api installer — Artisan / composer scripts**~~ — **done (2026-10-20):** installer `--no-scripts` + `ensure-console-command-loader.php` (`setLaravel`); discover/migrate as www-data. Merged api **#29**.  
+5m. ~~**Fleet Register — probe node for KSUID**~~ — **done (2026-10-20):** Gatekeeper `probe-identity` + home `GET /fleet/identity` + SPA **Probe identity**. Merged api **#29** · pbx3 **#90** · spa **#36**.  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
 6a. **Home / package versioning** — **should-do before a painful break** (not first-out). Know which home is on which **pbx3 / cagi / api** floor+tip; survive mixed floors; plan for a future breaking change without tribal memory. Open item below · **`REPOS_AND_RELEASES.md`**.  
 7. ~~**New instance / package install — floor roll**~~ — **done (2026-08-27):** cloud homes **pbx3 `0.0.6-4`** / **pbx3cagi `1.0.0-19`** + api tip (UFW cutover). Tips/hosts: **TODO_OPS**.  
@@ -197,8 +197,9 @@
 - [x] **Fleet service token — mint once, never re-type (#5g, 2026-08-19):** One token from control; same env/paste path lab + cloud; SBC admin Enter-to-skip removed.
 
 - [x] **Lab home installer — fleet `.env` + Egress seed (#5h, 2026-08-19):** **`install-home-host.sh`**: newline-safe **`home_set_env_kv`**; **`seed-fleet-egress-trunk.sh`** in **`pbx3/scripts/`** + deb; **`link-asterisk-configs.sh`** + GenAst stubs; require **`PBX3_SBC_EGRESS_HOST`** when fleet token set; post-install verify; **`PBX3_CLEAN_INSTALL=1`**. MkDocs **`install-lab-home.md`**. Recovery runbook retained for manual fix on pre-fix VMs.
-- [x] **pbx3api installer — Artisan `make()` null / composer scripts (#5l — 2026-10-20):** Clean lab home (Symfony **console 7.4.x**): root `composer install` → lazy `ContainerCommandLoader` never `setLaravel` → `make() on null`. **Fix:** installer `composer install --no-scripts` + `scripts/ensure-console-command-loader.php` (also `post-autoload-dump`); `package:discover`/migrate as **www-data**. Branch **`feat/fix-installer-artisan-identity`**.
-- [x] **Fleet Register — probe node for KSUID (#5m — 2026-10-20):** Paste `api_base_url` → Gatekeeper `POST /api/v1/instances/probe-identity` → home `GET /fleet/identity` (fleet token) → SPA prefills id/fqdn/label. Branches: api **`feat/fix-installer-artisan-identity`** · pbx3 **`feat/gk-probe-instance-identity`** · spa **`feat/register-probe-identity`**.
+- [x] **pbx3api installer — Artisan `make()` null / composer scripts (#5l — 2026-10-20):** Clean lab home (Symfony **console 7.4.x**): root `composer install` → lazy `ContainerCommandLoader` never `setLaravel` → `make() on null`. **Fix:** installer `composer install --no-scripts` + `scripts/ensure-console-command-loader.php` (also `post-autoload-dump`); `package:discover`/migrate as **www-data**. Merged api **#29**.
+- [x] **Fleet Register — probe node for KSUID (#5m — 2026-10-20):** Paste `api_base_url` → Gatekeeper `POST /api/v1/instances/probe-identity` → home `GET /fleet/identity` (fleet token) → SPA prefills id/fqdn/label. Merged api **#29** · pbx3 **#90** · spa **#36**.
+- [x] **Concurrency SPA UI follow-on (2026-10-20):** Hide tenant/instance **VoIP max** / tenant **ChanMax**; tenant **Max in/out**; split `tt_help_core` instance vs `tenant_maxin`/`tenant_maxout`. Merged spa **#37** · pbx3 **#91**. CAGI enforcement still open (item below).
 
 - [x] **#4b/#4c lab procedures on golden (2026-08-10):** **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1–§2 green (same-home prune; ext_len API + GenAst `_81XXX`).
 
@@ -345,7 +346,7 @@
 
 - [x] **Inbound route panels — SWOCLIP create parity (2026-08-26):** Create exposes **SWOCLIP** default **YES** (DB true); edit already had it.
 
-- [ ] **pbx3cagi — `maxin` / `maxout` call counters:** Fix concurrent-call limit enforcement. **Locked 2026-10-20:** **`CALL_CONCURRENCY_LIMITS_REQUIREMENTS.md`** — tenant+instance maxin/maxout only; drop voip_max; chanmax→maxout; GROUP fix; log every hit (`PBX3_CONCUR_LIMIT`). Implement when scheduled.
+- [ ] **pbx3cagi — `maxin` / `maxout` call counters:** Fix concurrent-call limit enforcement. **Locked 2026-10-20:** **`CALL_CONCURRENCY_LIMITS_REQUIREMENTS.md`** — tenant+instance maxin/maxout only; drop voip_max; chanmax→maxout; GROUP fix; log every hit (`PBX3_CONCUR_LIMIT`). SPA UI/help follow-on **done** (spa **#37** · pbx3 **#91**). CAGI implement when scheduled.
 
 - [x] **SPA session timeout (Instance Globals `sessiontimout`) (2026-08-26):** Idle auto-logout honours **`GET sysglobals.sessiontimout`** (seconds; default **600** = 10 min). Build env `VITE_AUTO_LOGOUT_MINUTES` remains fallback before globals load / fleet-only. See **`pbx3spa/workingdocs/AUTH_PATTERNS.md`** §6.
 
