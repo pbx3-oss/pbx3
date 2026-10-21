@@ -1,9 +1,9 @@
 # Call concurrency limits (`maxin` / `maxout`)
 
-**Status:** **Locked 2026-10-20** (operator confirm). CAGI enforcement on branch **`feat/concur-maxin-maxout`** (package **1.0.0-25** when built).  
+**Status:** **Shipped 2026-10-21** — pbx3cagi **#7** / package **1.0.0-25**; lab `.31` Busy soak green. Locked 2026-10-20.  
 **Implements in:** **pbx3cagi** (Asterisk `GROUP` / `GROUP_COUNT`); SPA/API field tidy **done** (2026-10-20).  
-**Related TODO:** product **`TODO.md`** — pbx3cagi `maxin` / `maxout` call counters.  
-**Smoke:** **`DBSTRUCT_SMOKE_CHECKLIST.md`** Ingress `maxin` cap · offline `concur-maxin-*` / `concur-maxout-*`.
+**Related TODO:** product **`TODO.md`** — closed.  
+**Smoke:** offline `concur-maxin-*` / `concur-maxout-*` · lab OutRoute `maxout=1` + `PBX3_CONCUR_LIMIT` · **`DBSTRUCT_SMOKE_CHECKLIST.md`** Ingress `maxin` cap.
 
 ---
 
