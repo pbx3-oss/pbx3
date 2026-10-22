@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-21 (PHP upload_progress Off stopgap; cagi maxin/maxout soaked)
+**Last updated:** 2026-10-21 (PHP CVE-2026-109618/109619 advisory + package roll)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -200,7 +200,7 @@
 - [x] **pbx3api installer — Artisan `make()` null / composer scripts (#5l — 2026-10-20):** Clean lab home (Symfony **console 7.4.x**): root `composer install` → lazy `ContainerCommandLoader` never `setLaravel` → `make() on null`. **Fix:** installer `composer install --no-scripts` + `scripts/ensure-console-command-loader.php` (also `post-autoload-dump`); `package:discover`/migrate as **www-data**. Merged api **#29**.
 - [x] **Fleet Register — probe node for KSUID (#5m — 2026-10-20):** Paste `api_base_url` → Gatekeeper `POST /api/v1/instances/probe-identity` → home `GET /fleet/identity` (fleet token) → SPA prefills id/fqdn/label. Merged api **#29** · pbx3 **#90** · spa **#36**.
 - [x] **Concurrency SPA UI follow-on (2026-10-20):** Hide tenant/instance **VoIP max** / tenant **ChanMax**; tenant **Max in/out**; split `tt_help_core` instance vs `tenant_maxin`/`tenant_maxout`. Merged spa **#37** · pbx3 **#91**. CAGI enforcement **done** (cagi **#7** / **1.0.0-25**).
-- [x] **PHP `session.upload_progress` Off (2026-10-21):** Pre-advisory FPM drop-in (homes + SBC admin). Spec: **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`**. Merged api **#30** · pbx3 **#95** · sbc-admin **#5**.
+- [x] **PHP CVE-2026-109618 / 109619 (2026-10-21):** Official critical RCE (FPM in scope). Stopgap `upload_progress=Off` (api **#30** · pbx3 **#95** · sbc-admin **#5**); package roll Ubuntu **`php8.3 …24.04.13`** / ondrej **8.4.27** — tips **TODO_OPS**. Spec: **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`**.
 
 - [x] **#4b/#4c lab procedures on golden (2026-08-10):** **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1–§2 green (same-home prune; ext_len API + GenAst `_81XXX`).
 
