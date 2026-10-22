@@ -3,8 +3,8 @@
 # Idempotent: safe from pbx3 postinst and from tip-upgrade ops.
 #
 # Installs PHP-FPM (+ CLI) 99-pbx3-uploads.ini (upload floors +
-# session.upload_progress Off) and ensures nginx client_max_body_size
-# 50M on the pbx3-api site when present.
+# session.upload_progress Off, locked permanent) and ensures nginx
+# client_max_body_size 50M on the pbx3-api site when present.
 #
 # Usage: sudo /opt/pbx3/scripts/apply-api-upload-limits.sh
 set -eu

@@ -200,7 +200,7 @@
 - [x] **pbx3api installer — Artisan `make()` null / composer scripts (#5l — 2026-10-20):** Clean lab home (Symfony **console 7.4.x**): root `composer install` → lazy `ContainerCommandLoader` never `setLaravel` → `make() on null`. **Fix:** installer `composer install --no-scripts` + `scripts/ensure-console-command-loader.php` (also `post-autoload-dump`); `package:discover`/migrate as **www-data**. Merged api **#29**.
 - [x] **Fleet Register — probe node for KSUID (#5m — 2026-10-20):** Paste `api_base_url` → Gatekeeper `POST /api/v1/instances/probe-identity` → home `GET /fleet/identity` (fleet token) → SPA prefills id/fqdn/label. Merged api **#29** · pbx3 **#90** · spa **#36**.
 - [x] **Concurrency SPA UI follow-on (2026-10-20):** Hide tenant/instance **VoIP max** / tenant **ChanMax**; tenant **Max in/out**; split `tt_help_core` instance vs `tenant_maxin`/`tenant_maxout`. Merged spa **#37** · pbx3 **#91**. CAGI enforcement **done** (cagi **#7** / **1.0.0-25**).
-- [x] **PHP CVE-2026-109618 / 109619 (2026-10-21):** Official critical RCE (FPM in scope). Stopgap `upload_progress=Off` (api **#30** · pbx3 **#95** · sbc-admin **#5**); package roll Ubuntu **`php8.3 …24.04.13`** / ondrej **8.4.27** — tips **TODO_OPS**. Spec: **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`**.
+- [x] **PHP CVE-2026-109618 / 109619 (2026-10-21):** Official critical RCE (FPM in scope). Package roll Ubuntu **`php8.3 …24.04.13`** / ondrej **8.4.27** — tips **TODO_OPS**. **`upload_progress=Off` locked permanent** (unused). Spec: **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`**.
 
 - [x] **#4b/#4c lab procedures on golden (2026-08-10):** **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1–§2 green (same-home prune; ext_len API + GenAst `_81XXX`).
 
