@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-21 (PHP CVE-2026-109618/109619 advisory + package roll)
+**Last updated:** 2026-10-21 (upload_progress Off permanent; next pbx3 floor checklist)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
 
 ### Suggested “what next?” order
@@ -50,6 +50,7 @@
 5m. ~~**Fleet Register — probe node for KSUID**~~ — **done (2026-10-20):** Gatekeeper `probe-identity` + home `GET /fleet/identity` + SPA **Probe identity**. Merged api **#29** · pbx3 **#90** · spa **#36**.  
 6. **pbx3api `.deb`** — **deferred** (packaging week); clone-at-tag / tip is enough. Cadence lock: **cagi** deb-first; **pbx3** floors + tip between; **`REPOS_AND_RELEASES.md`** § Packaging cadence · try-it packaging posture.  
 6a. **Home / package versioning** — **should-do before a painful break** (not first-out). Know which home is on which **pbx3 / cagi / api** floor+tip; survive mixed floors; plan for a future breaking change without tribal memory. Open item below · **`REPOS_AND_RELEASES.md`**.  
+6b. **Next `pbx3` floor — bake `upload_progress=Off`** — tip already on live homes; floor **`0.0.6-10`** predated the lock. When cutting the **next** deb, confirm package `etc/php/99-pbx3-uploads.ini` + changelog. Spec: **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`** § Next floor.  
 7. ~~**New instance / package install — floor roll**~~ — **done (2026-08-27):** cloud homes **pbx3 `0.0.6-4`** / **pbx3cagi `1.0.0-19`** + api tip (UFW cutover). Tips/hosts: **TODO_OPS**.  
 8. **Toll fraud / velocity** — plan **Accepted**; **WP0 + WP3 + WP1** done (2026-08-11). Remainder deferred (V4 / SBC floor / Wangiri). Spec: **`FLEET_TOLL_FRAUD_VELOCITY_IMPLEMENTATION_PLAN.md`**.  
 8c. ~~**Inbound DISA vs CALLBACK**~~ — **locked 2026-10-20:** drop **DISA**; hide **CALLBACK** (future feature); remote dial-tone later = CLID/passcode auth, not classic DISA. Spec: **`DISA_CALLBACK_REQUIREMENTS.md`**. SPA/API hide+reject when shipped.  
@@ -205,6 +206,7 @@
 - [x] **#4b/#4c lab procedures on golden (2026-08-10):** **`TENANT_WIPE_AND_EXT_LEN_LAB.md`** §1–§2 green (same-home prune; ext_len API + GenAst `_81XXX`).
 
 - [ ] **pbx3api `.deb` (deferred 2026-08-11):** Optional long-haul apt polish — **not** scheduled. Clone-at-tag / tip is enough. Packaging cadence lock: **cagi** deb-first; **pbx3** release floors + tip between (no new main deb for every biggish patch); **api** stays tip. Spec: **`REPOS_AND_RELEASES.md`** § Packaging cadence · **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** packaging posture · D6.
+- [ ] **Next `pbx3` floor — `session.upload_progress=Off` in deb (2026-10-21):** Do **not** rebuild tonight (tip covers live). On next floor cut (`0.0.6-11` or whatever): package `99-pbx3-uploads.ini` already on `main` must ship in the deb + changelog note; verify clean install without tip. Checklist: **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`** § Next floor · suggested **#6b**.
 
 - [x] **Roll API tip — Sanctum TOTP to fleet nodes (2026-08-08):** Done on lab fleet. Tip/host detail: **`~/GiT/pbx3-ops/TODO_OPS.md`**.
 
