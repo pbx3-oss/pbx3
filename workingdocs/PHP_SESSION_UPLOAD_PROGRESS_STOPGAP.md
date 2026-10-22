@@ -1,6 +1,6 @@
 # PHP critical RCE — CVE-2026-109618 / CVE-2026-109619 (2026-10)
 
-**Status:** Official advisory live ([php.net](https://www.php.net/), 21 Oct 2026). Stopgap `upload_progress=Off` shipped earlier same day; **upgrade is the only complete fix**.  
+**Status:** Official advisory ([php.net](https://www.php.net/), 21 Oct 2026). Package roll tipped (see **TODO_OPS**).  
 **Stack posture:** PBX3 HTTP is **nginx + PHP-FPM** (homes, provision, SBC Filament, Gatekeeper). php.net rates **PHP-FPM in scope** (highest risk still mod_php).
 
 ## Advisory (product read)
@@ -18,9 +18,9 @@ Two critical unauthenticated RCEs (CVSS v4.0 **9.2**):
 
 There are **no complete mitigations**; update is the only safe choice (php.net).
 
-## PBX3 stopgap already shipped (keep)
+## Locked: keep `session.upload_progress` Off
 
-Set in PHP-FPM (+ CLI) `conf.d` (blocks the confirmed **109619** session path only):
+PBX3 does **not** use PHP session upload-progress (Laravel/Sanctum / Filament). **Locked 2026-10-21:** leave **`session.upload_progress.enabled = Off`** in FPM (+ CLI) `conf.d` on all product PHP hosts — after upgrade and going forward. Not a temporary stopgap.
 
 ```ini
 session.upload_progress.enabled = Off
@@ -30,9 +30,7 @@ session.upload_progress.enabled = Off
 |---------|---------|--------|
 | Home API | `pbx3api/config/php/99-pbx3-uploads.ini` (also package `pbx3` `/opt/pbx3/etc/php/…`) | `install-nginx-site.sh` / `apply-api-upload-limits.sh` |
 | SBC admin | `pbx3sbc-admin/deploy/php/99-pbx3sbc-session.ini` | `install.sh` / `scripts/apply-php-session-hardening.sh` |
-| Gatekeeper | same Off one-liner in FPM `conf.d` | ops tip (no product drop-in yet) |
-
-Keep Off after upgrade (harmless; Laravel/Filament unused) unless a future reason appears.
+| Gatekeeper | same Off one-liner in FPM `conf.d` | ops tip (`99-pbx3gk-session.ini`; no product drop-in yet) |
 
 **Do not** set fleet-wide `memory_limit=-1` as a substitute for upgrade — conflicts with upload/runaway control on API hosts. Prefer package roll.
 
@@ -44,7 +42,7 @@ Keep Off after upgrade (harmless; Laravel/Filament unused) unless a future reaso
 4. Verify: `php -v` + `systemctl is-active php*-fpm` + SPA/Filament `/up` or login smoke.
 5. Tip inventory: **`~/GiT/pbx3-ops/TODO_OPS.md`**.
 
-## Verify stopgap
+## Verify
 
 ```bash
 php -i | grep session.upload_progress
