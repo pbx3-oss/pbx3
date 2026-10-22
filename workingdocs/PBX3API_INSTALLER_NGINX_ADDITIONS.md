@@ -42,7 +42,7 @@ Ensure the pbx3api package (or its installer) depends on:
    - `systemctl reload nginx` (or `restart` if first time)
    - `systemctl start php*-fpm` if not already running
 
-4. **PHP-FPM drop-in (`99-pbx3-uploads.ini`):** `install-nginx-site.sh` (and pbx3 `apply-api-upload-limits.sh`) install **`config/php/99-pbx3-uploads.ini`** into FPM (+ CLI) `conf.d`: multipart upload floors (**50M/55M**) and **`session.upload_progress.enabled = Off`** (pre-patch stopgap; see **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`**). Reload php-fpm after copy.
+4. **PHP-FPM drop-in (`99-pbx3-uploads.ini`):** `install-nginx-site.sh` (and pbx3 `apply-api-upload-limits.sh`) install **`config/php/99-pbx3-uploads.ini`** into FPM (+ CLI) `conf.d`: multipart upload floors (**50M/55M**) and **`session.upload_progress.enabled = Off`** (**locked permanent**; see **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`**). Reload php-fpm after copy. Next **pbx3** floor must ship the same Off in the package ini (TODO **#6b**).
 
 5. **fail2ban**: pbx3 ships **`jail.d/pbx3-jails.conf`** (sshd, asterisk, recidive) and **`jail.d/pbx3-api.conf`** (`pbx3-api-badbots`, **`apache-badbots`** filter on nginx `access.log`). `installer.sh` symlinks into `/etc/fail2ban/jail.d/` — **not** a full `jail.local` (Ubuntu 24.04 compatibility).
 
