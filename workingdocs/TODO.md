@@ -1,7 +1,7 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-21 (upload_progress Off permanent; next pbx3 floor checklist)
-**Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (Lab LAN still Vite).  
+**Last updated:** 2026-10-23 (#0m lab solo reachable; MkDocs LAN/snakeoil sign-in)
+**Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (prefer Pages over Vite for multi-PBX hop).  
 
 ### Suggested “what next?” order
 
@@ -10,7 +10,7 @@
 0q. ~~**GenAst OCLO / BLF AstDB — tenant-scope keys**~~ — **done (2026-09-28):** OCLO AstDB + `Custom:` and VM BLF `Custom:vm-{shortuid}-{ext}` keyed by shortuid; dial/BLF extension stays Name; throw dual-writes `{shortuid}/STATE` for CoS. Offline: `genclass-oclo-blf-shortuid-test.php`. Lock: **`TIME_BASED_ROUTING_REQUIREMENTS.md` §2.3**. Tip GenClass + `vmnotify.sh`; re-toggle OCLO after Commit.  
 0p. ~~**CoS profiles**~~ — **done (2026-09-27):** Slices A–F + Q6 merged to **`main`**; package **pbx3 0.0.6-8** on golden+bzy. Spec: **`COS_PROFILE_REQUIREMENTS.md`**. MkDocs: **`admin/timers-cos`**. SPA Route Profile delete confirm + Dial prefixes removed from instance sidebar (deep-link `/dialaliases` only; HoR Site Groups).  
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
-0m. **Singleton local install** — local home as **solo** (no fleet/SBC required). Needed for solo S3 + STT path and as a normal first-step for existing singleton sites. Rule 6 / try-it docs. Operator building local box next.  
+0m. **Singleton local install** — local home as **solo** (no fleet/SBC). Lab box up for operator soak (Rule 6). MkDocs: **Sign in** / **Solo trial** / **Cannot log in** (Manage instance → manual API URL; one-time snakeoil `/up` trust; Pages preferred over Vite for multi-PBX). Still open: first-tenant / desk harness · solo S3/STT path.  
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
 0k. **Phone provisioning — reinstate** — **A–C10** + rehome + **#23b** + brand mules + **ghost-call knobs** + ~~**#23c snomXml**~~ + ~~**#23e expand preview**~~ (both **2026-10-14**). **Assist, not core.** Brand tracks: **`FANVIL_PROVISION_SUBPROJECT.md`** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`** · **`POLY_PROVISION_SUBPROJECT.md`**. Spec / MkDocs **`admin/phone-provisioning-*`**.
 0l. **Audio transcription (pluggable)** — provider interface for VM + recordings; choose backend; solo vs fleet S3 plumbing. Potential first-out driver: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.  
@@ -153,7 +153,7 @@
 
 - [x] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-02):** Tip Snom+Yealink PEM; `PROVISION_MTLS=optional` live. Yealink **SUCCESS**+200; bare curl NONE/200 vs require **400**. Spec §8 · plan **C5**.
 
-- [ ] **Singleton local install (#0m — 2026-09-08):** Local solo home (no fleet/SBC). Harness for solo S3/STT and existing-singleton first step. Rule 6 · try-it / lab home install docs.
+- [ ] **Singleton local install (#0m — 2026-09-08):** Lab solo reachable (operator soak). MkDocs LAN/snakeoil sign-in on **`main`** (docs **#15**). Remaining: first-tenant / desk harness · solo S3/STT. Rule 6 · try-it.
 
 - [x] **ChanSpy / ChanWhisper — multi-tenant deny (#0n — 2026-09-26):** Resolve spy target pkey only in calling tenant (**1.0.0-22**); golden desk Aelintra→Duns `*67*`/`*68*` → `pbx-invalid`. Offline `spy-cross-tenant-denied`. **`CHANSPY_LAB.md`**.
 
