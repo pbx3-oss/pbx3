@@ -1,6 +1,6 @@
 # Audio transcription — requirements (stub)
 
-**Status:** Direction **2026-09-08** (TODO **#37** / **0l**). Keep it simple.  
+**Status:** Direction **2026-09-08** (TODO **#37** / **0l**). **Parked / downgraded 2026-10-29** — Pharma/PV driver evaporated; not first-out. Keep it simple when reopened.  
 **Related:** **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **`RECORDINGS_STORAGE_DESIGN.md`** · **`TODO.md`**.
 
 ---
@@ -13,7 +13,7 @@
 - **Transcripts:** when audio is archived to S3, store the transcript **alongside it**; SQLite indexes (and may cache text for the UI).
 - **Fleet vs solo:** STT does not require fleet. Solo may use a **home-owned** S3 bucket; fleet keeps gatekeeper/org bucket. Isolate that behind storage plumbing — **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **`RECORDINGS_STORAGE_DESIGN.md`**. Do **not** force SBC/fleet-of-one just for archive/STT.
 - **Adapters:** ship behind the interface as needed (hosted APIs and/or self-hosted engines). Prefer adding a provider over forking the product per deployment.
-- **First-out:** **Pharma / PV** is a potential early requirement driver.
+- **First-out:** ~~**Pharma / PV**~~ — **dropped 2026-10-29** (customer used answer-message + URL). No current schedule driver.
 
 ---
 

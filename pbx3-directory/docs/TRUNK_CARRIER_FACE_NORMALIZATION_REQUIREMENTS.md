@@ -1,6 +1,6 @@
 # Trunk carrier-face normalization — requirements stub
 
-**Status:** Open work (not scheduled). Seeded **2026-08-29**.  
+**Status:** Open work (not scheduled). Seeded **2026-08-29**. **Solo inbound gap called loud 2026-10-29** (see below).  
 **Audience:** Product / SBC / node implementers.  
 **Related:** [`NUMBER_WIRE_POLICY.md`](NUMBER_WIRE_POLICY.md) · [`NUMBER_DIALECT_REQUIREMENTS.md`](NUMBER_DIALECT_REQUIREMENTS.md) · [`EGRESS_PLUS_E164_WIRE.md`](../../workingdocs/EGRESS_PLUS_E164_WIRE.md) · MkDocs [DIDs](https://pbx3-oss.github.io/pbx3-docs/fleet/dids/) · [Number dialects](https://pbx3-oss.github.io/pbx3-docs/fleet/number-dialect/)
 
@@ -48,11 +48,27 @@ Swapping upstream carrier ↔ Gamma ↔ Twilio (or UK ↔ US Peer set) should be
 
 ---
 
+## Solo inbound — loud gap (2026-10-29)
+
+Fleet already normalizes at the SBC before the home. **Singleton does not.**
+
+| Leg | Fleet | Solo today |
+|-----|-------|------------|
+| Outbound habit / carrier render | Home Mangle → SBC dialect | Trunk **`transform` + Mangle** (exists) |
+| Inbound carrier face → `+E.164` before route | SBC Peer dialect | **Missing** — INVITE as-sent → Ingress |
+
+**Customer reality:** existing sites (and SARK backups) **inbound-route on NSN**. ETL **#15** correctly stores DiD pkeys as `+E.164`. First **migrate → singleton + national ITSP** will fail Ingress match until a home-side inbound normalize exists (peer of dialect inbound emit). Expect it to emerge in the first ETL lab load — do not weaken #15 or store NSN inroutes as a “fix.”
+
+**Should-do when that lab proves it:** implement solo trunk inbound normalize (serving-CC / transform family) **before** Ingress; keep outbound Mangle; stay aligned with fleet wire law (`NUMBER_WIRE_POLICY.md` Rule 7 + Solo gap §).
+
+---
+
 ## Non-goals (this stub)
 
 - Baking SBC/Twilio-specific dialplans into GenAst.  
 - Auto Fleet DID Allocate from ETL.  
-- Changing hop-1 digit-E.164 inventory keys (catalog / `dr_rules.prefix` stay digit form).
+- Changing hop-1 digit-E.164 inventory keys (catalog / `dr_rules.prefix` stay digit form).  
+- Reverting ETL #15 or keeping NSN `inroutes.pkey` for solo comfort.
 
 ---
 
@@ -61,7 +77,8 @@ Swapping upstream carrier ↔ Gamma ↔ Twilio (or UK ↔ US Peer set) should be
 - [ ] Spec lists inbound emit + outbound render contracts with examples for ≥2 Peer families (UK ITSP + Twilio-class).  
 - [ ] Lab: same tenant inroutes (`+E.164`) answer when carrier face changes (national vs `+`) on one Peer dialect.  
 - [ ] Lab: outbound to two Peers with different CLI face without changing node CLIP storage.  
-- [ ] Ops can add a recipe from primitives without shipping a new OpenSIPS tip (§5.4).
+- [ ] Ops can add a recipe from primitives without shipping a new OpenSIPS tip (§5.4).  
+- [ ] **Solo:** national ITSP DID INVITE → Ingress match on `+E.164` inroute without storing NSN keys (ETL #15 + home inbound normalize).
 
 ---
 

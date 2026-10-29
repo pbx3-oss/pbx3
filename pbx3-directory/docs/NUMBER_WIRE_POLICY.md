@@ -48,7 +48,20 @@ Phase 2 (gated, optional):
 3. **Never both** node habit-Mangle and SBC habit-normalize on the same call.  
 4. **Never neither** — do not empty Egress transform while SBC habit-accept is off.  
 5. **DID prefixes** on the SBC = digit E.164; **inroutes** on the node = `+E.164`.  
-6. **Panel display** may show national; storage / match keys follow the table above.
+6. **Panel display** may show national; storage / match keys follow the table above.  
+7. **Solo = same internal law** — inroutes / dialled handoff are E.164 (`+` on node keys); national habit is dial/display only. No “solo may keep NSN inroutes.”
+
+---
+
+## Solo / direct trunk — inbound gap (loud, 2026-10-29)
+
+**Fleet:** SBC Peer dialect normalizes carrier face → home always sees `+E.164` before Ingress. ETL **#15** rewrites imported DiD pkeys to `+E.164` so hop-2 matches.
+
+**Solo:** Trunk **`transform` + CAGI `Mangle`** covers **outbound** (habit / render toward the ITSP). There is **no** home-side peer of dialect **inbound** normalize today. Carrier INVITE userpart arrives as-sent; Ingress matches `inroutes.pkey`.
+
+**Why loud:** Existing customer bases (and SARK migrate sources) **route inbound on NSN**. After ETL #15, DB keys are `+…` but a national ITSP still delivers NSN → **no match** unless something normalizes **before** Ingress. First singleton ETL + real trunk will surface this.
+
+**Should-do (not scheduled as a big program):** Solo trunk **inbound** NSN (etc.) → `+E.164` before route — same contract as SBC dialect inbound emit. Companion: **`TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`** · TODO **0h** / open item. Do not “fix” by storing NSN inroutes.
 
 ---
 
@@ -63,6 +76,7 @@ Phase 2 (gated, optional):
 | Wondering if the PBX should “speak Brindley” | **No.** Lab adapters (if any) are SBC Peer presets. |
 | Stripping node Mangle because “the SBC should do it” | **Not the default.** Phase 2 only after `serving_cc` + habit-accept advertise — and that path is internationally hard. |
 | Seeing **400 E.164 required** on outbound | Home sent habit (`0…` / `00…`), not fleet wire. Fix Egress transform. |
+| Migrating a **solo** site whose ITSP sends **NSN** DIDs | ETL #15 → `+` inroutes is correct; expect inbound miss until solo inbound normalize exists (or temporary lab hack). |
 
 ---
 
