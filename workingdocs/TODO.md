@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-11-14 (provision PRs merged; solo mTLS left as-is — operator owns vendor CAs; MkDocs provision-security discussion)
+**Last updated:** 2026-11-14 (floor 0.0.6-11 / #101: SbcDomainRoute fixed-width + upload_progress Off; solo mTLS leave-as-is)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (prefer Pages over Vite for multi-PBX hop).  
 
 ### Suggested “what next?” order
