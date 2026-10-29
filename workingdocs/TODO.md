@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-23 (#0m lab solo reachable; MkDocs LAN/snakeoil sign-in)
+**Last updated:** 2026-10-29 (SbcDomainRoute fixed-width digits + floor 0.0.6-11 / #6b)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (prefer Pages over Vite for multi-PBX hop).  
 
 ### Suggested “what next?” order
