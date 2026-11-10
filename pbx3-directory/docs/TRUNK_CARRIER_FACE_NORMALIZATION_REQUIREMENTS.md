@@ -1,6 +1,6 @@
 # Trunk carrier-face normalization — requirements stub
 
-**Status:** Open work (not scheduled). Seeded **2026-08-29**.  
+**Status:** Solo inbound slice shipped **2026-11-10** (`trunks.inbound_transform` + CAGI `InNormalize`). Fleet Peer dialect / §5.4 compose remain open. Seeded **2026-08-29**.  
 **Audience:** Product / SBC / node implementers.  
 **Related:** [`NUMBER_WIRE_POLICY.md`](NUMBER_WIRE_POLICY.md) · [`NUMBER_DIALECT_REQUIREMENTS.md`](NUMBER_DIALECT_REQUIREMENTS.md) · [`EGRESS_PLUS_E164_WIRE.md`](../../workingdocs/EGRESS_PLUS_E164_WIRE.md) · MkDocs [DIDs](https://pbx3-oss.github.io/pbx3-docs/fleet/dids/) · [Number dialects](https://pbx3-oss.github.io/pbx3-docs/fleet/number-dialect/)
 
@@ -13,6 +13,17 @@
 ITSPs disagree on **inbound** and **outbound** number shape (national `0…`, digit E.164, `+E.164`, IDD `00…` / `011…`, CLI/PAID headers, strip/prefix quirks). Today operators stitch that with Peer **dialect** recipes, optional strip/pri_prefix, and node Egress **Mangle**. The **home PBX** must stay peer-unaware (wire policy); the **edge** must absorb carrier locality so the same tenant/trunk story works when a Peer is swapped or a site moves country.
 
 **Goal:** Describe and (over time) implement a **carrier-face contract** so inbound and outbound PSTN work **anywhere** relative to the fleet wire — irrespective of the carrier’s local face — by **normalize / render** at the trunk (Peer) boundary, not by baking carrier habits into Asterisk dialplan.
+
+---
+
+## Solo inbound — shipped
+
+| Leg | Fleet | Solo |
+|-----|-------|------|
+| Outbound habit / carrier render | Home Mangle → SBC dialect | Trunk **`transform`** + Mangle |
+| Inbound carrier face → `+E.164` before route | SBC Peer dialect | Trunk **`inbound_transform`** + GenAst `in-<pkey>` → CAGI **`InNormalize`** → Ingress |
+
+Keep inroutes as `+E.164` (ETL #15). Example Brindley: `inbound_transform=0:+44`. Empty on fleet Egress.
 
 ---
 
@@ -52,12 +63,15 @@ Swapping upstream carrier ↔ Gamma ↔ Twilio (or UK ↔ US Peer set) should be
 
 - Baking SBC/Twilio-specific dialplans into GenAst.  
 - Auto Fleet DID Allocate from ETL.  
-- Changing hop-1 digit-E.164 inventory keys (catalog / `dr_rules.prefix` stay digit form).
+- Changing hop-1 digit-E.164 inventory keys (catalog / `dr_rules.prefix` stay digit form).  
+- Reverting ETL #15 or keeping NSN `inroutes.pkey` for solo comfort.  
+- Inbound CLI (From/PAI) normalize on the home (separate later).
 
 ---
 
-## Acceptance sketch (later)
+## Acceptance sketch
 
+- [x] **Solo:** national ITSP DID INVITE → Ingress match on `+E.164` inroute via `inbound_transform` (mastersuk / Brindley lab).  
 - [ ] Spec lists inbound emit + outbound render contracts with examples for ≥2 Peer families (UK ITSP + Twilio-class).  
 - [ ] Lab: same tenant inroutes (`+E.164`) answer when carrier face changes (national vs `+`) on one Peer dialect.  
 - [ ] Lab: outbound to two Peers with different CLI face without changing node CLIP storage.  

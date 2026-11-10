@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-10-23 (#0m lab solo reachable; MkDocs LAN/snakeoil sign-in)
+**Last updated:** 2026-11-10 (solo inbound_transform / 0h slice; mastersuk ETL on .148)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (prefer Pages over Vite for multi-PBX hop).  
 
 ### Suggested “what next?” order
@@ -22,7 +22,7 @@
 0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** / **#15**. **Built-tenant fleet ingest V1** shipped: lock **`FLEET_BUILT_TENANT_INGEST_REQUIREMENTS.md`** · `tenant:ingest-built` · MkDocs **`fleet/ingest-compatible-db`** (CLI + enroll + DID hop-1; **§0** rename `pkey=default` before ingest). SPA ingest panel = later (I5). Tip/host: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
 0e2. **Migrate → provision continuity lab** — assess Device-drop / empty `provision` / operator touch before expanding ETL (**#23c** dual-family shipped — classic `snom.*` stays for migrate). Spec: **`MIGRATE_PROVISION_CONTINUITY_LAB.md`** (product stub) · private **`sark-to-pbx3/docs/MIGRATE_PROVISION_CONTINUITY_LAB.md`**.
 0g. ~~**UA → model / phone images (23a)**~~ — **lab green `.31` (2026-08-27):** harvest + Handset UI. **Images / slice F shelved** — operator joining OEM partner portals first; no third-party supplier scrape into product path. Spec §9.0 kept for when ready.  
-0h. **Trunk carrier-face normalization** — describe / transform / normalize inbound+outbound Peer face so homes stay carrier-agnostic (fleet wire `+E.164`). Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. Builds on dialect §5.4 + NUMBER_WIRE Phase 2.  
+0h. **Trunk carrier-face normalization** — describe / transform / normalize inbound+outbound Peer face so homes stay carrier-agnostic (fleet wire `+E.164`). Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. **Solo inbound shipped (2026-11-10):** `trunks.inbound_transform` + CAGI `InNormalize` + GenAst `in-<pkey>` (`feat/inbound-transform`). Fleet Peer dialect / §5.4 remain.  
 0i. ~~**SBC management access (Filament lockdown)**~~ — **done (2026-09-26):** UFW allowlist for **admin HTTPS 443 only**; SSH = ops/SG; SIP out of scope; dedicated panel + lockdown (default off); auth+2FA still apply. Spec: **`pbx3-directory/docs/SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`**. Tips: **pbx3sbc-admin `c772714`** · **pbx3sbc `8690a16`**.  
 0j. **Docs / info tidy (after office build-out)** — parked **2026-08-30**. Operator continues building the office system and files issues as found; then one tidy pass: (1) **`tt_help_core` quality** — each exposed `?` should cover *what it is*, *what it is for*, *format* when non-obvious (start high-friction: Fleet DIDs, Inbound/Class, Trunks/transform, Tenants); SoT stays SPA help, not a hand-maintained field encyclopedia. (2) **MkDocs SPA map** — Tenant / Instance System / Fleet “where do I start / how panels fit” (+ screenshots); thin workflow pages, optional short formats cheat sheet; no duplicate per-field digest. Prior coverage work: **`FIELD_HELP_*_EXPOSED.md`** (wiring done).  
 1. ~~**Workingdocs hygiene**~~ — **done** (session handoffs in **`aelintra/pbx3-ops`**; product stubs remain).  
@@ -272,7 +272,7 @@
 
 - [x] **Number dialect — paid Twilio inbound/outbound (2026-08-11):** Toliman↔Twilio both ways lab green (SBC Route-strip + public From/PAI host; Egress CLIP update without `default` tenant). Spec: **`NUMBER_DIALECT_REQUIREMENTS.md`** · wire: **`EGRESS_PLUS_E164_WIRE.md`**. CLI stays as-stored (no CLIP mangle). Follow-on: **§5.4** ops-authored profiles (no tip for recombination).
 
-- [ ] **Trunk carrier-face normalization (2026-08-29):** Describe → transform → normalize inbound/outbound Peer face so a trunk/home works **anywhere** relative to fleet wire (`+E.164`), irrespective of carrier national/IDD quirks. Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. Pulls together dialect §5.4, NUMBER_WIRE Phase 2, Egress seeds, previous PBX DiD #15. Not scheduled.
+- [x] **Solo inbound trunk transform (#0h slice — 2026-11-10):** `trunks.inbound_transform` + overlay; CAGI `InNormalize`; GenAst `in-<pkey>`; API/SPA (solo; locked off fleet Egress). Policy/stub updated. Lab: mastersuk on `.148` + Brindley when activated. Remaining 0h: fleet Peer dialect / §5.4.
 
 - [x] **SBC management access / Filament lockdown (2026-09-26):** UFW **443** allowlist panel shipped (**pbx3sbc-admin `c772714`** · **pbx3sbc `8690a16`**); tip on cloud SBC. Spec: **`pbx3-directory/docs/SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`**.
 

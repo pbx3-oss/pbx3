@@ -102,7 +102,8 @@ CREATE TABLE IF NOT EXISTS trunks (
     "swoclip" TEXT DEFAULT 'YES',	-- Switch On CLIP
     "tag" TEXT,					-- Alpha tag
     "technology" TEXT,           -- SIP/IAX2/DiD/CLiD/Class
-    "transform" TEXT,				-- Transformation mask
+    "transform" TEXT,				-- Outbound transformation mask (habit → wire / carrier face)
+    "inbound_transform" TEXT,			-- Solo inbound DID normalize before Ingress (carrier face → +E.164)
     "transport" TEXT DEFAULT 'udp',
     "trunkname" TEXT,				-- freeform trunkname
     "username" TEXT,				-- far end username
