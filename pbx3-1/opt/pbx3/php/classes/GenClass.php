@@ -1914,9 +1914,16 @@ HERE;
 			$this->OUT .= "\n[SbcDomainRoute]\n";
 			$this->OUT .= "; Carrier +E164 → DID pool (do not treat as site-dial extension)\n";
 			$this->OUT .= "\texten => _+X.,1,Goto(Ingress,\${EXTEN},1)\n";
-			$this->OUT .= "; Digit R-URI: route by Request-URI host when it is a known tenant FQDN\n";
-			$this->OUT .= "\texten => _X.,1,NoOp(SBC domain route \${EXTEN})\n";
-			$this->OUT .= "\tsame => n,Set(__PBX3_SITE_DIAL=YES)\n";
+			/*
+			 * Digit R-URI only (site-dial / miss→home): exact lengths = allowed
+			 * tenant ext_len (3–5). Same stance as PrefixDial §3.8 — fixed-width
+			 * digits, not open _X. (which also matches digit-leading shortuids
+			 * like 2b9f5s). Shortuid FQDN hairpins therefore never enter SITE_DIAL
+			 * / LepDial / PostDial VM (Queue member Answer-steal, lab 2026-10-29).
+			 * Feature * / # stay on tenant CoS contexts, not here (Q13).
+			 */
+			$sbrBody = '';
+			$sbrBody .= "\tsame => n,Set(__PBX3_SITE_DIAL=YES)\n";
 			/*
 			 * SBC: X-PBX3-Pres-Num = presentation digits (Site Group:
 			 * routing_prefix+ext); PAI = return AoR (suid@fqdn).
@@ -1925,19 +1932,19 @@ HERE;
 			 * present — SiteRing would re-add PAI and desks show suid@domain.
 			 * No Pres-Num: fall back to PAI in CLID + RETURN_AOR (Path 1).
 			 */
-			$this->OUT .= "\tsame => n,Set(PBX3_PRES=\${PJSIP_HEADER(read,X-PBX3-Pres-Num)})\n";
-			$this->OUT .= "\tsame => n,Set(PBX3_PAI=\${PJSIP_HEADER(read,P-Asserted-Identity)})\n";
-			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_PRES}\"=\"\"]?sbr_no_pres)\n";
-			$this->OUT .= "\tsame => n,Set(CALLERID(num)=\${PBX3_PRES})\n";
-			$this->OUT .= "\tsame => n,Goto(sbr_pres_done)\n";
-			$this->OUT .= "\tsame => n(sbr_no_pres),GotoIf(\$[\"\${PBX3_PAI}\"=\"\"]?sbr_no_pai)\n";
-			$this->OUT .= "\tsame => n,Set(PBX3_PAI_USER=\${PJSIP_PARSE_URI(\${PBX3_PAI},user)})\n";
-			$this->OUT .= "\tsame => n,Set(PBX3_PAI_HOST=\${PJSIP_PARSE_URI(\${PBX3_PAI},host)})\n";
-			$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_PAI_USER}\"=\"\" | \"\${PBX3_PAI_HOST}\"=\"\"]?sbr_no_pai)\n";
-			$this->OUT .= "\tsame => n,Set(__PBX3_RETURN_AOR=\${PBX3_PAI_USER}@\${PBX3_PAI_HOST})\n";
-			$this->OUT .= "\tsame => n,Set(CALLERID(num)=\${PBX3_PAI_USER}@\${PBX3_PAI_HOST})\n";
-			$this->OUT .= "\tsame => n(sbr_pres_done),NoOp(site-dial CLID \${CALLERID(num)})\n";
-			$this->OUT .= "\tsame => n(sbr_no_pai),Set(PBX3_RURI_HOST=\${PJSIP_PARSE_URI(\${CHANNEL(pjsip,request_uri)},host)})\n";
+			$sbrBody .= "\tsame => n,Set(PBX3_PRES=\${PJSIP_HEADER(read,X-PBX3-Pres-Num)})\n";
+			$sbrBody .= "\tsame => n,Set(PBX3_PAI=\${PJSIP_HEADER(read,P-Asserted-Identity)})\n";
+			$sbrBody .= "\tsame => n,GotoIf(\$[\"\${PBX3_PRES}\"=\"\"]?sbr_no_pres)\n";
+			$sbrBody .= "\tsame => n,Set(CALLERID(num)=\${PBX3_PRES})\n";
+			$sbrBody .= "\tsame => n,Goto(sbr_pres_done)\n";
+			$sbrBody .= "\tsame => n(sbr_no_pres),GotoIf(\$[\"\${PBX3_PAI}\"=\"\"]?sbr_no_pai)\n";
+			$sbrBody .= "\tsame => n,Set(PBX3_PAI_USER=\${PJSIP_PARSE_URI(\${PBX3_PAI},user)})\n";
+			$sbrBody .= "\tsame => n,Set(PBX3_PAI_HOST=\${PJSIP_PARSE_URI(\${PBX3_PAI},host)})\n";
+			$sbrBody .= "\tsame => n,GotoIf(\$[\"\${PBX3_PAI_USER}\"=\"\" | \"\${PBX3_PAI_HOST}\"=\"\"]?sbr_no_pai)\n";
+			$sbrBody .= "\tsame => n,Set(__PBX3_RETURN_AOR=\${PBX3_PAI_USER}@\${PBX3_PAI_HOST})\n";
+			$sbrBody .= "\tsame => n,Set(CALLERID(num)=\${PBX3_PAI_USER}@\${PBX3_PAI_HOST})\n";
+			$sbrBody .= "\tsame => n(sbr_pres_done),NoOp(site-dial CLID \${CALLERID(num)})\n";
+			$sbrBody .= "\tsame => n(sbr_no_pai),Set(PBX3_RURI_HOST=\${PJSIP_PARSE_URI(\${CHANNEL(pjsip,request_uri)},host)})\n";
 			try {
 				$sql = "SELECT shortuid, fqdn FROM cluster WHERE fqdn IS NOT NULL AND TRIM(fqdn) != '' ORDER BY shortuid";
 				$qRes = $this->dbh->query($sql);
@@ -1959,12 +1966,19 @@ HERE;
 						continue;
 					}
 					// Escape dots for literal dialplan string compare
-					$this->OUT .= "\tsame => n,GotoIf(\$[\"\${PBX3_RURI_HOST}\"=\"" . $fqdn . "\"]?" . $suid . ",\${EXTEN},1)\n";
+					$sbrBody .= "\tsame => n,GotoIf(\$[\"\${PBX3_RURI_HOST}\"=\"" . $fqdn . "\"]?" . $suid . ",\${EXTEN},1)\n";
 				}
 			} catch (PDOException $e) {
 				// Keep route; fall through to Ingress on empty map
 			}
-			$this->OUT .= "\tsame => n,Goto(Ingress,\${EXTEN},1)\n";
+			$sbrBody .= "\tsame => n,Goto(Ingress,\${EXTEN},1)\n";
+
+			// Fixed-width digit patterns only (ext_len 3–5). Duplicate body — Asterisk
+			// labels are per-extension, so a shared Goto/Gosub would lose EXTEN or labels.
+			foreach (array('XXX', 'XXXX', 'XXXXX') as $pat) {
+				$this->OUT .= "\texten => _" . $pat . ",1,NoOp(SBC domain route \${EXTEN})\n";
+				$this->OUT .= $sbrBody;
+			}
 			$this->OUT .= "\n";
 		}
 

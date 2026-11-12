@@ -84,7 +84,7 @@ Historical pain: bumping a fat **main** `.deb` for every biggish patch. Forerunn
 | Component | Cadence |
 |-----------|---------|
 | **pbx3cagi** | **Deb-first** — new floor when the binary moves; rare is good. **`Architecture: all`** with **amd64 + arm64** AGI binaries (build: lab **`.213` amd64** + **`.78` arm64** — see **`pbx3cagi/README.md` § Packaging**; golden = fallback). **Git regress window:** keep **last three** release `.deb`s force-added on `main`; drop the oldest when adding a new one. |
-| **pbx3** | **Release / AMI / try-it floors** as `.deb` (pin + Depends). **Between floors:** tip / rsync under `/opt/pbx3` is first-class (lab + hotfix). Do not invent `0.0.x-N` for every patch. Tip SHAs → private ops tip ledger. **Next floor checklist:** bake **`session.upload_progress.enabled=Off`** into package `etc/php/99-pbx3-uploads.ini` (tip already live; floor **`0.0.6-10`** predated) — **`PHP_SESSION_UPLOAD_PROGRESS_STOPGAP.md`** § Next floor · TODO **#6b**. |
+| **pbx3** | **Release / AMI / try-it floors** as `.deb` (pin + Depends). **Between floors:** tip / rsync under `/opt/pbx3` is first-class (lab + hotfix). Do not invent `0.0.x-N` for every patch. Tip SHAs → private ops tip ledger. **`0.0.6-11`:** `upload_progress=Off` baked (**#6b**) + SbcDomainRoute fixed-width digit R-URI. |
 | **pbx3api** | Clone-at-tag / tip; optional `.deb` deferred (**TODO #6** / try-it D6). |
 
 Detail: **`FLEET_TRYIT_DEPLOYMENT_REQUIREMENTS.md`** § Public GitHub org vs packages.
