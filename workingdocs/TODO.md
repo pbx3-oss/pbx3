@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-11-10 (solo inbound_transform / 0h slice; mastersuk ETL on .148)
+**Last updated:** 2026-11-12 (solo inbound_transform merged; ETL MkDocs CLI/run-sequences)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (prefer Pages over Vite for multi-PBX hop).  
 
 ### Suggested “what next?” order
@@ -19,7 +19,8 @@
 0b. ~~**#5i Instance Decom — block while active tenants**~~ — **done (2026-08-19):** Gatekeeper **422** + `blocking_tenants`; SPA disables **Decom** + lists blockers; PATCH `status=decommissioned` guarded too. MkDocs **`fleet/decommission-instance`** Step 1.
 0c. ~~**#5g Fleet service token — mint once**~~ — **done (2026-08-19):** one token from control; **same copy/paste path lab + cloud** (`grep` / `PBX3_FLEET_SERVICE_TOKEN` env); SBC admin no Enter-to-skip (`--skip-fleet-token` for standalone). MkDocs lab install pages + **`install-lab-worksheet.md`**.  
 0d. ~~**#5j Fleet Commit reload**~~ — **closed 2026-08-19:** post-Commit reload **OK** (calls + regs on lab **`.31`**); **Egress** REGISTER log = **unknown username / pre–first-Commit** (**#5j-a**), not reload defect. Lock: **`FLEET_COMMIT_RELOAD_REQUIREMENTS.md`** · adopt doc ordering.  
-0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **Also:** REQUIREMENTS **#11** named pickup; **#14** / **#15**. **Built-tenant fleet ingest V1** shipped: lock **`FLEET_BUILT_TENANT_INGEST_REQUIREMENTS.md`** · `tenant:ingest-built` · MkDocs **`fleet/ingest-compatible-db`** (CLI + enroll + DID hop-1; **§0** rename `pkey=default` before ingest). SPA ingest panel = later (I5). Tip/host: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
+0e. **Customer migrate ETL v2 — more fixture tests** — offline migrate + optional lab load; CDR→sipplabs when ready (private **`aelintra/sark-to-pbx3`**). **MkDocs (2026-11-12):** run sequences + full `bin/` command reference (`--serving-cc`, etc.) on ETL **`main`** (**#3**). **Also:** REQUIREMENTS **#11** named pickup; **#14** / **#15**. **Built-tenant fleet ingest V1** shipped: lock **`FLEET_BUILT_TENANT_INGEST_REQUIREMENTS.md`** · `tenant:ingest-built` · MkDocs **`fleet/ingest-compatible-db`** (CLI + enroll + DID hop-1; **§0** rename `pkey=default` before ingest). SPA ingest panel = later (I5). Tip/host: **`~/GiT/pbx3-ops/TODO_OPS.md`**.  
+
 0e2. **Migrate → provision continuity lab** — assess Device-drop / empty `provision` / operator touch before expanding ETL (**#23c** dual-family shipped — classic `snom.*` stays for migrate). Spec: **`MIGRATE_PROVISION_CONTINUITY_LAB.md`** (product stub) · private **`sark-to-pbx3/docs/MIGRATE_PROVISION_CONTINUITY_LAB.md`**.
 0g. ~~**UA → model / phone images (23a)**~~ — **lab green `.31` (2026-08-27):** harvest + Handset UI. **Images / slice F shelved** — operator joining OEM partner portals first; no third-party supplier scrape into product path. Spec §9.0 kept for when ready.  
 0h. **Trunk carrier-face normalization** — describe / transform / normalize inbound+outbound Peer face so homes stay carrier-agnostic (fleet wire `+E.164`). Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. **Solo inbound shipped (2026-11-10):** `trunks.inbound_transform` + CAGI `InNormalize` + GenAst `in-<pkey>` (`feat/inbound-transform`). Fleet Peer dialect / §5.4 remain.  
