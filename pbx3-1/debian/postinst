@@ -152,9 +152,17 @@ CALLER_TO_APPLY="$SYSPATH/scripts/apply-sqlite-add-queue-caller-timeout.sh"
 if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$CALLER_TO_APPLY" ]; then
 	sh "$CALLER_TO_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
 fi
+
+# Solo inbound DID normalize (trunks.inbound_transform).
+INBOUND_XFORM_APPLY="$SYSPATH/scripts/apply-sqlite-add-inbound-transform.sh"
+if [ -f /opt/pbx3/db/sqlite.db ] && [ -f "$INBOUND_XFORM_APPLY" ]; then
+	sh "$INBOUND_XFORM_APPLY" /opt/pbx3/db/sqlite.db >/dev/null 2>&1 || true
+fi
 if [ -f /opt/pbx3/db/sqlite.db ] && command -v sqlite3 >/dev/null 2>&1; then
 	sqlite3 /opt/pbx3/db/sqlite.db <<'EOF' >/dev/null 2>&1 || true
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('caller_timeout','Caller Max Wait','Absolute maximum seconds a caller may wait in this queue (Asterisk Queue() application timeout). When it expires the call leaves the queue and follows Outcome. Leave blank (or 0) for unlimited wait — typical for true ACD. Ring-group style queues usually set this and an Outcome for unanswered calls. Separate from Agent Ring Timeout, which only controls how long each member rings per attempt.');
+INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('inbound_transform','Inbound transform','Solo / direct trunks only: rewrite the inbound DID (R-URI userpart) before Ingress match so inroutes can stay +E.164. Same left:right grammar as outbound transform. Example Brindley UK national → +E.164: 0:+44. Leave empty on fleet Egress — the SBC already emits +. Idempotent when the number already matches inroute keys.');
+UPDATE tt_help_core SET displayname = 'Outbound transform', htext = 'Outbound only: rewrite the dialled number before it leaves on this trunk (left:right pairs, space-separated, left-to-right). Example UK habit → +E.164: 00:+ 0:+44. Empty left adds a prefix; empty right strips. Fleet Egress uses this for Phase-1 Mangle toward the SBC.' WHERE pkey = 'transform';
 UPDATE tt_help_core SET displayname = 'Standard Class of Service', htext = 'Rules that apply in Standard hours: schedule mode is anything other than closed (open, lunch, evening, night day-parts, etc.), or when not forced closed. Outbound dial privileges for this extension.' WHERE pkey = 'cosday';
 UPDATE tt_help_core SET displayname = 'After-hours Class of Service', htext = 'Rules that apply in After-hours: schedule mode closed, or tenant/master force CLOSED. Lunch and other non-closed day-parts still use Standard CoS.' WHERE pkey = 'cosnight';
 INSERT OR IGNORE INTO tt_help_core(pkey,displayname,htext) values ('route_profile_extra_modes','Additional schedule modes','Optional destinations for day-parts beyond open/closed (lunch, evening, night, break, or any custom name).

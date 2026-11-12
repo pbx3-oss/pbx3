@@ -349,7 +349,10 @@ class genAsteriskObjects
 					$this->xlatePjsipBuff($iaxTrunkBuff,$row);
 				}
 
-				if ($row['privileged'] == "NO") {
+				$inNormCtx = $this->inboundNormalizeContextName($row);
+				if ($inNormCtx !== null) {
+					$iaxTrunkBuff = preg_replace('/\$context/', $inNormCtx, $iaxTrunkBuff);
+				} elseif ($row['privileged'] == "NO") {
 					$iaxTrunkBuff = preg_replace('/\$context/', 'Ingress', $iaxTrunkBuff);
 				} else {
 					$iaxTrunkBuff = preg_replace('/\$context/', (string)($row['cluster'] ?? ''), $iaxTrunkBuff);
@@ -592,10 +595,14 @@ class genAsteriskObjects
 			 * Fleet Egress: Prefer SbcDomainRoute so sip:{ext}@{tenant.fqdn}
 			 * from the SBC (PrefixDial miss→home) lands in tenant dialplan.
 			 * Carrier DID RURIs (domain ≠ tenant FQDN, or +E164) fall through
-			 * to Ingress. Privileged trunks still use cluster context.
+			 * to Ingress. Solo inbound_transform → in-<pkey> (normalize then Ingress).
+			 * Privileged trunks still use cluster context when no inbound_transform.
 			 */
+			$inNormCtx = $this->inboundNormalizeContextName($row);
 			if (($row['pkey'] ?? '') === 'Egress' && $this->isFleetMode()) {
 				$pjsipTrunkBuff = preg_replace('/\$context/', 'SbcDomainRoute', $pjsipTrunkBuff);
+			} elseif ($inNormCtx !== null) {
+				$pjsipTrunkBuff = preg_replace('/\$context/', $inNormCtx, $pjsipTrunkBuff);
 			} elseif ($row['privileged'] == "NO") {
 				$pjsipTrunkBuff = preg_replace('/\$context/', 'Ingress', $pjsipTrunkBuff);
 			} else {
@@ -722,6 +729,30 @@ class genAsteriskObjects
  * @param  Array $row     The DB tuple for the object
  * @return Bool   
  */
+	/**
+	 * Dialplan context for solo inbound DID normalize, or null to keep legacy routing.
+	 * Requires non-empty trunks.inbound_transform; never used for fleet Egress.
+	 */
+	private function inboundNormalizeContextName(array $row): ?string
+	{
+		$pkey = trim((string)($row['pkey'] ?? ''));
+		if ($pkey === '') {
+			return null;
+		}
+		if ($pkey === 'Egress' && $this->isFleetMode()) {
+			return null;
+		}
+		$xform = trim((string)($row['inbound_transform'] ?? ''));
+		if ($xform === '') {
+			return null;
+		}
+		$safe = preg_replace('/[^A-Za-z0-9_-]/', '_', $pkey);
+		if ($safe === null || $safe === '') {
+			return null;
+		}
+		return 'in-' . $safe;
+	}
+
 	/**
 	 * Fleet edge present (same idea as pbx3cagi pbx3_fleet_mode):
 	 * PBX3_FLEET_MODE env, else active trunks.pkey=Egress.
@@ -2017,6 +2048,37 @@ HERE;
 	exten => i,3,HangUp
 
 HERE;
+
+		/*
+		 * Solo inbound_transform: per-trunk context → InNormalize → Ingress.
+		 * Catches national (_X!) and already-+ (_+X!) R-URIs from the ITSP.
+		 */
+		try {
+			$tq = $this->dbh->query(
+				"SELECT pkey, cluster, inbound_transform, active, technology FROM trunks "
+				. "WHERE active='YES' AND inbound_transform IS NOT NULL AND trim(inbound_transform) != ''"
+			);
+			$normTrunks = $tq ? $tq->fetchAll(PDO::FETCH_ASSOC) : [];
+		} catch (PDOException $e) {
+			$normTrunks = [];
+		}
+		foreach ($normTrunks as $trow) {
+			$ctx = $this->inboundNormalizeContextName($trow);
+			if ($ctx === null) {
+				continue;
+			}
+			$tpkey = (string)($trow['pkey'] ?? '');
+			$tclust = (string)($trow['cluster'] ?? '');
+			$this->OUT .= "\n[" . $ctx . "]\n";
+			$this->OUT .= "; Solo inbound DID normalize (trunks.inbound_transform) then Ingress\n";
+			$this->OUT .= "\texten => _X!,1,agi(" . SYSAGI . ",InNormalize," . $tpkey . "," . $tclust . ",,,)\n";
+			$this->OUT .= "\tsame => n,Goto(Ingress,\${EXTEN},1)\n";
+			$this->OUT .= "\texten => _+X!,1,agi(" . SYSAGI . ",InNormalize," . $tpkey . "," . $tclust . ",,,)\n";
+			$this->OUT .= "\tsame => n,Goto(Ingress,\${EXTEN},1)\n";
+			$this->OUT .= "\texten => i,1,Playtones(congestion)\n";
+			$this->OUT .= "\tsame => n,Wait(5)\n";
+			$this->OUT .= "\tsame => n,Hangup()\n";
+		}
     }
 
     private function genExtensionsFeatures() 

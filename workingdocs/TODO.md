@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-11-12 (ETL MkDocs CLI/run-sequences; inbound PRs still open)
+**Last updated:** 2026-11-12 (solo inbound_transform merged; ETL MkDocs CLI/run-sequences)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (prefer Pages over Vite for multi-PBX hop).  
 
 ### Suggested “what next?” order

@@ -48,7 +48,16 @@ Phase 2 (gated, optional):
 3. **Never both** node habit-Mangle and SBC habit-normalize on the same call.  
 4. **Never neither** — do not empty Egress transform while SBC habit-accept is off.  
 5. **DID prefixes** on the SBC = digit E.164; **inroutes** on the node = `+E.164`.  
-6. **Panel display** may show national; storage / match keys follow the table above.
+6. **Panel display** may show national; storage / match keys follow the table above.  
+7. **Solo = same internal law** — inroutes / dialled handoff are E.164 (`+` on node keys); national habit is dial/display only. No “solo may keep NSN inroutes.”
+
+---
+
+## Solo / direct trunk — inbound normalize
+
+**Fleet:** SBC Peer dialect normalizes carrier face → home always sees `+E.164` before Ingress. ETL **#15** stores DiD pkeys as `+E.164`.
+
+**Solo:** Outbound uses trunk **`transform`** + CAGI `Mangle`. Inbound uses trunk **`inbound_transform`** + CAGI **`InNormalize`** in a per-trunk dialplan context (`in-<pkey>`) **before** exact Ingress match. Same `left:right` grammar (e.g. Brindley UK national → `0:+44`). Leave empty on fleet Egress (SBC already emits `+`). Do not store NSN DiD keys to paper over missing normalize.
 
 ---
 
@@ -60,9 +69,10 @@ Phase 2 (gated, optional):
 | Seeding a **US** fleet node | Use a US/NANP transform — not UK `0:+44`. |
 | Adding a **carrier Peer** | Configure a **format recipe** (dialect) on the Peer — not a node mask and not a new id per ITSP logo. |
 | Creating a **DID** | Catalog / drouting = digit E.164; node inroute = `+E.164`. |
-| Wondering if the PBX should “speak Brindley” | **No.** Lab adapters (if any) are SBC Peer presets. |
+| Wondering if the PBX should “speak Brindley” | **No** on fleet (SBC Peer dialect). **Solo:** set trunk `inbound_transform` (e.g. `0:+44`); keep inroutes as `+E.164`. |
 | Stripping node Mangle because “the SBC should do it” | **Not the default.** Phase 2 only after `serving_cc` + habit-accept advertise — and that path is internationally hard. |
 | Seeing **400 E.164 required** on outbound | Home sent habit (`0…` / `00…`), not fleet wire. Fix Egress transform. |
+| Migrating a **solo** site whose ITSP sends **NSN** DIDs | ETL #15 → `+` inroutes; set `inbound_transform` on the carrier trunk; Commit. |
 
 ---
 
