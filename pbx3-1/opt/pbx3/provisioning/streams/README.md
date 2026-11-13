@@ -85,6 +85,8 @@ Placeholders: `$ext` (dialable) `$sipuser` / `$shortuid` (PJSIP auth) `$password
 `$localip` `$bindport` `$tlsport` `$provurl` `$provpath` `$padminpass` `$puserpass` + LDAP tokens (see `ProvisionKernel`).
 `$provpath` = `$provurl` without `https://` (Grandstream **P192**).
 Legacy `$registrar` = alias for `$sipdomain` (tenant SIP domain — **not** the SBC).
+
+**Solo LAN:** `ipphone.provisionwith=IP` (default) → `$sipdomain` / `$proxy` / `$provurl` host = `globals.localip`. `FQDN` → tenant/instance FQDN. Fleet always tenant FQDN + `$outbound` SBC.
 REGISTER / auth usernames use **`$sipuser`** (= `ipphone.shortuid`), not dialable `$ext`.
 
 **Grandstream notes:** Phone GET **`cfg{mac}.xml`**. Edge + kernel extract MAC from that name. Auth ID (**P36**) omitted — shortuid in **P35** only. Dial plan **P290** includes `*xx*`. NAT **`P52=4` (Auto)**. Config path **`P237`** (not **P192** firmware). Admin web **P2**=`$padminpass` ← **cluster.padminpass**. INVITE source filter: **`P2347=1`** (Accept Incoming SIP from Proxy Only — not CLI **P129**). Recipe **`PROVISIONING_LAB_RECIPE.md` §6** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**.
