@@ -97,9 +97,11 @@ LDAP_CLIENT_CERT_PATH=""
 LDAP_PKEY_PATH=""
 
 # PHONE_NUMBER = SIP REGISTER user ID (must be PJSIP shortuid on PBX3).
-# DISPLAY_NAME = dialable Name. SIP_AUTHID = digest (same shortuid).
-# OEM/3CX-style "number vs auth id" fails here — endpoint is shortuid only (Fanvil same).
+# DISPLAY_NAME = dialable Name (far-end CNIP + idle when IDLE_DISPLAY_TYPE=3).
+# SIP_AUTHID = digest (same shortuid). OEM "number vs auth" fails — Fanvil same.
+# Idle LCD default is type 1 (Phone Number = shortuid); 3 = line Display Name.
 PHONE_NUMBER_1="$sipuser"
 SIP_AUTHID_1="$sipuser"
 DISPLAY_NAME_1="$ext"
+IDLE_DISPLAY_TYPE="3"
 SIP_PASS_1="$password"
