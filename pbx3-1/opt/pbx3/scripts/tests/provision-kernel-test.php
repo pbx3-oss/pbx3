@@ -150,6 +150,7 @@ $panaVars = pbx3_provision_substitute(
 );
 expect('Panasonic PHONE_NUMBER is dialable ext', strpos($panaVars, 'PHONE_NUMBER_1="298"') !== false);
 expect('Panasonic SIP_AUTHID is shortuid', strpos($panaVars, 'SIP_AUTHID_1="08n8xy"') !== false);
+expect('Panasonic CFG keeps phone {mac} token', strpos($panaVars, 'CFG_STANDARD_FILE_PATH="https://') !== false && strpos($panaVars, '?mac={mac}"') !== false);
 expect('$pkey alias substitutes', pbx3_provision_substitute('n=$pkey', array('pkey' => '298', 'ext' => '298')) === 'n=298');
 $loop = array();
 $fanvil = pbx3_provision_expand(

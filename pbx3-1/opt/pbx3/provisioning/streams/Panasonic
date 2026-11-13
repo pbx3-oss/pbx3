@@ -8,7 +8,8 @@ OPTION66_ENABLE="Y"
 OPTION66_REBOOT="Y"
 PROVISION_ENABLE="Y"
 CFG_RESYNC_FROM_SIP="check-sync"
-CFG_STANDARD_FILE_PATH="$provurl"
+# $provurl = https://host:41363/provisioning — phone substitutes {mac} on fetch.
+CFG_STANDARD_FILE_PATH="$provurl?mac={mac}"
 SIP_DETECT_SSAF_1="Y"
 ############################################################
 # SIP Settings #
