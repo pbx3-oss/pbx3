@@ -96,8 +96,10 @@ LDAP_ROOT_CERT_PATH=""
 LDAP_CLIENT_CERT_PATH=""
 LDAP_PKEY_PATH=""
 
-# PHONE_NUMBER = dialable extension ($ext). SIP_AUTHID = PJSIP shortuid ($sipuser).
-# (Legacy SARK: both were the same digit string — not true on PBX3.)
-PHONE_NUMBER_1="$ext"
+# PHONE_NUMBER = SIP REGISTER user ID (must be PJSIP shortuid on PBX3).
+# DISPLAY_NAME = dialable Name. SIP_AUTHID = digest (same shortuid).
+# OEM/3CX-style "number vs auth id" fails here — endpoint is shortuid only (Fanvil same).
+PHONE_NUMBER_1="$sipuser"
 SIP_AUTHID_1="$sipuser"
+DISPLAY_NAME_1="$ext"
 SIP_PASS_1="$password"
