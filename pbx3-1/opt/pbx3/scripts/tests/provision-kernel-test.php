@@ -410,6 +410,9 @@ expect('grandstream P47 sipdomain', strpos($rGs['body'], '<P47>t1.example.com</P
 // Obfuscate unit
 $ob = pbx3_provision_obfuscate_for_audit("account.1.password = cleartext\nok=1\n");
 expect('obfuscate masks value', strpos($ob, 'cleartext') === false && strpos($ob, '********') !== false && strpos($ob, 'ok=1') !== false);
+$obSip = pbx3_provision_obfuscate_for_audit("SIP_PASS_1=\"yncklbmo\"\nPHONE_NUMBER_1=\"08n8xy\"\n");
+expect('obfuscate masks SIP_PASS', strpos($obSip, 'yncklbmo') === false && strpos($obSip, 'SIP_PASS_1=********') !== false);
+expect('obfuscate keeps non-secret Panasonic keys', strpos($obSip, 'PHONE_NUMBER_1="08n8xy"') !== false);
 $obXml = pbx3_provision_obfuscate_for_audit("<user_pass idx=\"1\" perm=\"$\">SecretPass99</user_pass>\n<user_name idx=\"1\" perm=\"$\">abc</user_name>\n");
 expect('obfuscate XML user_pass', strpos($obXml, 'SecretPass99') === false && strpos($obXml, '********') !== false);
 expect('obfuscate XML keeps user_name', strpos($obXml, '>abc</user_name>') !== false);

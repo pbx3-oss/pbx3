@@ -215,6 +215,7 @@ function pbx3_provision_secret_tokens() {
 		'ADMIN_PASS',
 		'USER_ID',
 		'USER_PASS',
+		'SIP_PASS',
 		'LDAP_USERID',
 		'LDAP_PASSWORD',
 		'security.user_password',
@@ -971,7 +972,7 @@ function pbx3_provision_obfuscate_for_audit($body) {
 			}
 		}
 		// Line dialect: key = / key: value
-		if (!$hit && preg_match('/(password|passwd|user_pass|http_pass|http_user|ADMIN_PASS|USER_PASS|ldap\.password|ldap_password|ldap_username|admin_mode_password)\\s*[:=]/i', $line)) {
+		if (!$hit && preg_match('/(password|passwd|user_pass|http_pass|http_user|ADMIN_PASS|USER_PASS|SIP_PASS|ldap\.password|ldap_password|ldap_username|admin_mode_password)\\s*[:=]/i', $line)) {
 			$hit = true;
 		}
 		// OEM XML: <user_pass idx="1" perm="$">secret</user_pass>

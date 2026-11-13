@@ -16,6 +16,7 @@
 **2026-10-02 (product role):** Provisioning is an **assist**, **not core**. Call plane (REGISTER / media) works without it; vendor clouds (e.g. free **GDMS**) may own CFG end-to-end. Our listener/edge is a convenience for desk enrollment + fleet MAC mobility — never a required product spine. See **§1** / **§2**.  
 **2026-10-03 (OUI soft-fill):** On MAC assign/change, home API may **soft-fill empty `ipphone.provision`** from `/opt/pbx3/cache/manuf.txt` OUI → vendor-grain `#INCLUDE` (Poly also bumps empty/`Once` → `sndcreds=Always`). Does **not** write `device` / `devicevendor` (**S12**). See **§4.4** / **§5**.  
 **2026-11-12 (solo IP vs FQDN):** Solo expand honors **`ipphone.provisionwith`**: **`IP`** → `$sipdomain` / `$proxy` / solo `$provurl` host = **`globals.localip`**; **`FQDN`** → tenant/instance FQDN. Fleet unchanged (tenant FQDN + `$outbound`=SBC). **`globals.fqdnprov`** remains create-time default for `provisionwith` only. See **§5** / A3.  
+**2026-11-12 (expand preview secrets):** SPA expand preview shows **cleartext** (privileged admin). Provision **audit** still obfuscates (**§4.7** / **§4.7.1**); include OEM keys such as **`SIP_PASS`**.  
 **Related:** **`PROVISIONING_IMPLEMENTATION_PLAN.md`** · **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · **`UFW_SHOREWALL_MIGRATION.md` §3** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23 / #28 / **0k**.
 
 ---
@@ -402,7 +403,7 @@ Legacy admin let operators request an **expanded** view of the provision stream:
 | Stance | |
 |--------|--|
 | **Do** | Home API: `POST /api/extensions/{id}/provision-preview` — dry-run expand for saved or draft `provision` via the **same** `pbx3_provision_expand` / substitute path as the phone listener. SPA: **Expand / Preview** on extension detail → modal with rendered body. |
-| **Secrets** | Obfuscate like the audit copy (**§4.7**) — structure visible; SIP/phone/LDAP secrets masked (line + XML tag aware). Do **not** bump `sndcreds` Once→spent or write audit as a real provision. |
+| **Secrets** | Preview shows **cleartext** (same privileged admin who can view/regen the SIP password on the extension). **Audit log** still obfuscates (**§4.7**) — do not conflate the two. Do **not** bump `sndcreds` Once→spent or write audit as a real provision. |
 | **Not a phone GET** | Preview ≠ provision. No MAC index hit, no edge proxy, no `last_provisioned_at` update. |
 | **Errors** | Surface expand failures clearly (missing `#INCLUDE`, empty) — aids GIGO authoring (**§4.6** `snom` vs `snomXml`). |
 | **vs audit “view last”** | Preview = **what would go** now. Audit view = **what went** on the last successful GET (optional later). |
