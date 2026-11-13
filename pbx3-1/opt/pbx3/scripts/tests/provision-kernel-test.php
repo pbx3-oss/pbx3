@@ -140,6 +140,17 @@ $pana = pbx3_provision_expand(
 expect('ETL Panasonic expands', strpos($pana, 'Panasonic SIP Phone') !== false);
 expect('ETL panasonic.tcp transport', strpos($pana, 'SIP_TRANSPORT_1="1"') !== false);
 expect('ETL panasonic.ipv4', strpos($pana, 'IP_ADDR_MODE="0"') !== false);
+$panaVars = pbx3_provision_substitute(
+	$pana,
+	pbx3_provision_vars_from_phone(
+		array('pkey' => '298', 'shortuid' => '08n8xy', 'passwd' => 'secret', 'cluster' => 't1', 'provisionwith' => 'IP'),
+		array(),
+		array('localip' => '10.0.0.1', 'sipdomain' => '10.0.0.1', 'proxy' => '10.0.0.1')
+	)
+);
+expect('Panasonic PHONE_NUMBER is dialable ext', strpos($panaVars, 'PHONE_NUMBER_1="298"') !== false);
+expect('Panasonic SIP_AUTHID is shortuid', strpos($panaVars, 'SIP_AUTHID_1="08n8xy"') !== false);
+expect('$pkey alias substitutes', pbx3_provision_substitute('n=$pkey', array('pkey' => '298', 'ext' => '298')) === 'n=298');
 $loop = array();
 $fanvil = pbx3_provision_expand(
 	"#INCLUDE fanvil.Extension\n#INCLUDE fanvil.udp\n",

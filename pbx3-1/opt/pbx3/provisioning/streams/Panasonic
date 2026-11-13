@@ -95,7 +95,8 @@ LDAP_ROOT_CERT_PATH=""
 LDAP_CLIENT_CERT_PATH=""
 LDAP_PKEY_PATH=""
 
-# ID, password for SIP authentication
-PHONE_NUMBER_1="$sipuser"
+# PHONE_NUMBER = dialable extension ($ext). SIP_AUTHID = PJSIP shortuid ($sipuser).
+# (Legacy SARK: both were the same digit string — not true on PBX3.)
+PHONE_NUMBER_1="$ext"
 SIP_AUTHID_1="$sipuser"
 SIP_PASS_1="$password"

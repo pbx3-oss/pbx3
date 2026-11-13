@@ -426,13 +426,16 @@ function pbx3_provision_phone_row($phone) {
 function pbx3_provision_vars_from_phone($phone, $globals = array(), $extra = array()) {
 	$p = pbx3_provision_phone_row($phone);
 	$g = $globals;
+	$ext = isset($p['pkey']) ? $p['pkey'] : '';
 	$vars = array(
-		'ext' => isset($p['pkey']) ? $p['pkey'] : '',
-		'shortuid' => isset($p['shortuid']) ? $p['shortuid'] : (isset($p['pkey']) ? $p['pkey'] : ''),
+		'ext' => $ext,
+		// Alias for operators / migrate streams that still write $pkey (same as $ext).
+		'pkey' => $ext,
+		'shortuid' => isset($p['shortuid']) ? $p['shortuid'] : $ext,
 		// SIP REGISTER / auth username = endpoint shortuid (PJSIP [$id] / username=$id).
 		'sipuser' => isset($p['shortuid']) && trim((string) $p['shortuid']) !== ''
 			? $p['shortuid']
-			: (isset($p['pkey']) ? $p['pkey'] : ''),
+			: $ext,
 		'password' => isset($p['passwd']) ? $p['passwd'] : '',
 		'desc' => isset($p['desc']) ? $p['desc'] : (isset($p['cname']) ? $p['cname'] : ''),
 		'bindport' => isset($g['bindport']) ? $g['bindport'] : (isset($g['BINDPORT']) ? $g['BINDPORT'] : '5060'),
