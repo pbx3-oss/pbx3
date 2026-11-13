@@ -345,6 +345,33 @@ expect('sipdomain from cluster.fqdn', $sip === 't1.example.com');
 putenv('PBX3_FLEET_MODE=false');
 $h2 = pbx3_provision_resolve_hosts($db, array('fqdn' => 'solo.example.com'), array('localip' => '10.1.1.1'));
 expect('solo outbound empty', $h2['fleet'] === false && $h2['outbound'] === '' && $h2['outbound_enable'] === '0');
+$hIp = pbx3_provision_resolve_hosts($db, array('fqdn' => 'solo.example.com', 'localip' => '10.1.1.1'), array('prefer_ip_host' => '1'));
+expect('solo prefer_ip_host uses localip in provurl', strpos($hIp['provurl'], 'https://10.1.1.1:') === 0);
+$mergedIp = pbx3_provision_merge_phone_hosts(
+	$db,
+	array('cluster' => 't1', 'provisionwith' => 'IP'),
+	array('fqdn' => 'solo.example.com', 'localip' => '10.1.1.1', 'domain' => 'example.com'),
+	array('localip' => '10.1.1.1', 'provurl' => 'https://solo.example.com:41363/provisioning')
+);
+expect('solo provisionwith IP → sipdomain localip', $mergedIp['sipdomain'] === '10.1.1.1');
+expect('solo provisionwith IP → proxy localip', $mergedIp['proxy'] === '10.1.1.1');
+expect('solo provisionwith IP rewrites prefilled FQDN provurl', strpos($mergedIp['provurl'], 'https://10.1.1.1:') === 0);
+$mergedFqdn = pbx3_provision_merge_phone_hosts(
+	$db,
+	array('cluster' => 't1', 'provisionwith' => 'FQDN'),
+	array('fqdn' => 'solo.example.com', 'localip' => '10.1.1.1', 'domain' => 'example.com'),
+	array('localip' => '10.1.1.1')
+);
+expect('solo provisionwith FQDN → cluster.fqdn', $mergedFqdn['sipdomain'] === 't1.example.com');
+putenv('PBX3_FLEET_MODE=true');
+$mergedFleet = pbx3_provision_merge_phone_hosts(
+	$db,
+	array('cluster' => 't1', 'provisionwith' => 'IP'),
+	array('fqdn' => 'node.pbx3.com', 'domain' => 'pbx3.com', 'localip' => '10.1.1.1'),
+	array('localip' => '10.1.1.1')
+);
+expect('fleet ignores provisionwith IP for sipdomain', $mergedFleet['sipdomain'] === 't1.example.com');
+expect('fleet outbound still SBC', $mergedFleet['outbound'] === 'sbc.lab');
 putenv('PBX3_FLEET_MODE');
 putenv('PBX3_SBC_EGRESS_HOST');
 

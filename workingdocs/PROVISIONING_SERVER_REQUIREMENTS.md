@@ -15,6 +15,7 @@
 **Reference notes:** private prior co-located provisioner / previous PBX archives (operator only — not in product tree).  
 **2026-10-02 (product role):** Provisioning is an **assist**, **not core**. Call plane (REGISTER / media) works without it; vendor clouds (e.g. free **GDMS**) may own CFG end-to-end. Our listener/edge is a convenience for desk enrollment + fleet MAC mobility — never a required product spine. See **§1** / **§2**.  
 **2026-10-03 (OUI soft-fill):** On MAC assign/change, home API may **soft-fill empty `ipphone.provision`** from `/opt/pbx3/cache/manuf.txt` OUI → vendor-grain `#INCLUDE` (Poly also bumps empty/`Once` → `sndcreds=Always`). Does **not** write `device` / `devicevendor` (**S12**). See **§4.4** / **§5**.  
+**2026-11-12 (solo IP vs FQDN):** Solo expand honors **`ipphone.provisionwith`**: **`IP`** → `$sipdomain` / `$proxy` / solo `$provurl` host = **`globals.localip`**; **`FQDN`** → tenant/instance FQDN. Fleet unchanged (tenant FQDN + `$outbound`=SBC). **`globals.fqdnprov`** remains create-time default for `provisionwith` only. See **§5** / A3.  
 **Related:** **`PROVISIONING_IMPLEMENTATION_PLAN.md`** · **`FLEET_DESK_PHONE_NAT.md`** · **`pbx3spa/workingdocs/EXTENSION_PROVISIONING_*`** · **`TLS_AND_CERTIFICATES.md` §0** · **`UFW_SHOREWALL_MIGRATION.md` §3** · **`DESIGN_RULES.md`** Rule 1 / 7 / 13 · **`TODO.md`** #23 / #28 / **0k**.
 
 ---
@@ -549,7 +550,7 @@ Customer fragment holds only lines to add/change. Where the vendor is last-wins,
 | Extension + MAC + secret + vendor label | `ipphone` | Authored on instance; **HoR for secrets**. No Device table |
 | last_provisioned_at (first optional) | `ipphone` | Updated on successful provision GET (§4.7); investigation first stop |
 | BLF / line keys | — | **Not DB-expand in v1** (§4.5); additive site fragment `#INCLUDE` after stock (**§4.8**) or inline one-off in extension stream |
-| SIP host policy | Fleet: **`$sipdomain` = tenant FQDN**, **`$outbound` = SBC**; solo: domain/IP, proxy off. Not home public IP as phone next-hop in fleet | Matches W1 / desk REGISTER |
+| SIP host policy | Fleet: **`$sipdomain` = tenant FQDN**, **`$outbound` = SBC** (ignore `provisionwith` for next-hop). Solo: proxy off; **`ipphone.provisionwith`** — **`IP`** (default / empty) → `$sipdomain`/`$proxy`/`$provurl` host = **`globals.localip`**; **`FQDN`** → tenant or instance FQDN. **`globals.fqdnprov`** seeds `provisionwith` on create only. Not home public IP as phone next-hop in fleet | Matches W1 / desk REGISTER · Rule 6 LAN |
 | OUI → vendor stream | `manuf.txt` + API soft-fill | On MAC assign/change when `provision` empty (§4.4); not every GET; not `devicevendor` |
 
 ---
