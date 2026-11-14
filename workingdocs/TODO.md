@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-11-14 (floor 0.0.6-11 / #101: SbcDomainRoute fixed-width + upload_progress Off; solo mTLS leave-as-is)
+**Last updated:** 2026-11-14 (session end: provision PRs + #101 + #107 + docs #17; 0h smoke waits on singleton inbound trunk)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (prefer Pages over Vite for multi-PBX hop).  
 
 ### Suggested “what next?” order
@@ -24,7 +24,8 @@
 
 0e2. **Migrate → provision continuity lab** — assess Device-drop / empty `provision` / operator touch before expanding ETL (**#23c** dual-family shipped — classic `snom.*` stays for migrate). Spec: **`MIGRATE_PROVISION_CONTINUITY_LAB.md`** (product stub) · private **`sark-to-pbx3/docs/MIGRATE_PROVISION_CONTINUITY_LAB.md`**.
 0g. ~~**UA → model / phone images (23a)**~~ — **lab green `.31` (2026-08-27):** harvest + Handset UI. **Images / slice F shelved** — operator joining OEM partner portals first; no third-party supplier scrape into product path. Spec §9.0 kept for when ready.  
-0h. **Trunk carrier-face normalization** — describe / transform / normalize inbound+outbound Peer face so homes stay carrier-agnostic (fleet wire `+E.164`). Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. **Solo inbound on `main` (2026-11-12):** `trunks.inbound_transform` + CAGI `InNormalize` + GenAst `in-<pkey>` (pbx3 **#103** · api **#33** · cagi **#9** · spa **#41**). Lab smoke deferred until a **new** lab trunk (do not enable live MastersUK/Brindley). Fleet Peer dialect / §5.4 remain.  
+0h. **Trunk carrier-face normalization** — describe / transform / normalize inbound+outbound Peer face so homes stay carrier-agnostic (fleet wire `+E.164`). Stub: **`pbx3-directory/docs/TRUNK_CARRIER_FACE_NORMALIZATION_REQUIREMENTS.md`**. **Solo inbound on `main` (2026-11-12):** `trunks.inbound_transform` + CAGI `InNormalize` + GenAst `in-<pkey>` (pbx3 **#103** · api **#33** · cagi **#9** · spa **#41**). **Lab smoke (2026-11-14):** waits until operator can set up an **inbound trunk on a singleton** (do **not** enable live MastersUK/Brindley). Fleet Peer dialect / §5.4 remain.  
+
 0i. ~~**SBC management access (Filament lockdown)**~~ — **done (2026-09-26):** UFW allowlist for **admin HTTPS 443 only**; SSH = ops/SG; SIP out of scope; dedicated panel + lockdown (default off); auth+2FA still apply. Spec: **`pbx3-directory/docs/SBC_MANAGEMENT_ACCESS_REQUIREMENTS.md`**. Tips: **pbx3sbc-admin `c772714`** · **pbx3sbc `8690a16`**.  
 0j. **Docs / info tidy (after office build-out)** — parked **2026-08-30**. Operator continues building the office system and files issues as found; then one tidy pass: (1) **`tt_help_core` quality** — each exposed `?` should cover *what it is*, *what it is for*, *format* when non-obvious (start high-friction: Fleet DIDs, Inbound/Class, Trunks/transform, Tenants); SoT stays SPA help, not a hand-maintained field encyclopedia. (2) **MkDocs SPA map** — Tenant / Instance System / Fleet “where do I start / how panels fit” (+ screenshots); thin workflow pages, optional short formats cheat sheet; no duplicate per-field digest. Prior coverage work: **`FIELD_HELP_*_EXPOSED.md`** (wiring done).  
 1. ~~**Workingdocs hygiene**~~ — **done** (session handoffs in **`aelintra/pbx3-ops`**; product stubs remain).  
