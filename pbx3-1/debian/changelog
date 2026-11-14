@@ -1,3 +1,14 @@
+pbx3 (0.0.6-11) noble; urgency=medium
+
+  * GenAst SbcDomainRoute: site-dial digit R-URI uses fixed-width
+    _XXX/_XXXX/_XXXXX (ext_len 3-5) instead of open _X., so digit-leading
+    shortuid FQDN hairpins no longer LepDial/PostDial-VM and steal Queue
+    CONNECT when an offline member is dialled (lab 2026-10-29).
+  * Floor bake: session.upload_progress.enabled=Off in package
+    etc/php/99-pbx3-uploads.ini (TODO #6b / CVE-2026-109619 hygiene).
+
+ -- Aelintra Telecom Limited <support@aelintra.com>  Thu, 29 Oct 2026 15:40:00 -0400
+
 pbx3 (0.0.6-10) noble; urgency=medium
 
   * Provision reinstate (A–C10 + brand mules): home provision kernel, OEM streams

@@ -34,15 +34,9 @@ session.upload_progress.enabled = Off
 
 **Do not** set fleet-wide `memory_limit=-1` as a substitute for upgrade — conflicts with upload/runaway control on API hosts. Prefer package roll.
 
-## Next `pbx3` floor (do not forget)
+## Next `pbx3` floor
 
-Live homes already have Off via **tip**. Floor **`0.0.6-10`** package tree on disk **before** this change did **not**. When cutting the **next** `pbx3_*.deb` (AMI / try-it / greenfield floor — not a tip-only patch):
-
-1. Confirm `pbx3-1/opt/pbx3/etc/php/99-pbx3-uploads.ini` on the release commit includes **`session.upload_progress.enabled = Off`** (already on `main` tip).
-2. Changelog callout: upload floors + **upload_progress Off** (locked permanent).
-3. After install / `apply-api-upload-limits.sh`, verify `php -i | grep session.upload_progress` → Off on a clean floor install (no manual tip).
-
-Cadence: **`REPOS_AND_RELEASES.md`** § Packaging cadence — tip between floors is fine; this item is a **floor checklist**, not a reason to bump tonight.
+**Done in `0.0.6-11` (2026-10-29):** package `etc/php/99-pbx3-uploads.ini` ships **`session.upload_progress.enabled = Off`**; changelog notes the lock. Live homes already had Off via tip before the floor.
 
 ## Roll plan (ops)
 
