@@ -8,7 +8,8 @@ OPTION66_ENABLE="Y"
 OPTION66_REBOOT="Y"
 PROVISION_ENABLE="Y"
 CFG_RESYNC_FROM_SIP="check-sync"
-CFG_STANDARD_FILE_PATH="$provurl"
+# $provurl = https://host:41363/provisioning — phone substitutes {mac} on fetch.
+CFG_STANDARD_FILE_PATH="$provurl?mac={mac}"
 SIP_DETECT_SSAF_1="Y"
 ############################################################
 # SIP Settings #
@@ -95,7 +96,12 @@ LDAP_ROOT_CERT_PATH=""
 LDAP_CLIENT_CERT_PATH=""
 LDAP_PKEY_PATH=""
 
-# ID, password for SIP authentication
+# PHONE_NUMBER = SIP REGISTER user ID (must be PJSIP shortuid on PBX3).
+# DISPLAY_NAME = dialable Name (far-end CNIP + idle when IDLE_DISPLAY_TYPE=3).
+# SIP_AUTHID = digest (same shortuid). OEM "number vs auth" fails — Fanvil same.
+# Idle LCD default is type 1 (Phone Number = shortuid); 3 = line Display Name.
 PHONE_NUMBER_1="$sipuser"
 SIP_AUTHID_1="$sipuser"
+DISPLAY_NAME_1="$ext"
+IDLE_DISPLAY_TYPE="3"
 SIP_PASS_1="$password"

@@ -80,12 +80,15 @@ Panasonic (sail65 shape):
 #INCLUDE panasonic.ipv4
 ```
 
-Placeholders: `$ext` (dialable) `$sipuser` / `$shortuid` (PJSIP auth) `$password` `$desc`
+Placeholders: `$ext` / `$pkey` (dialable Name) `$sipuser` / `$shortuid` (PJSIP auth) `$password` `$desc`
 `$sipdomain` `$outbound` `$outbound_enable` `$outbound_hostport` `$proxy`
 `$localip` `$bindport` `$tlsport` `$provurl` `$provpath` `$padminpass` `$puserpass` + LDAP tokens (see `ProvisionKernel`).
 `$provpath` = `$provurl` without `https://` (Grandstream **P192**).
 Legacy `$registrar` = alias for `$sipdomain` (tenant SIP domain — **not** the SBC).
+
+**Solo LAN:** `ipphone.provisionwith=IP` (default) → `$sipdomain` / `$proxy` / `$provurl` host = `globals.localip`. `FQDN` → tenant/instance FQDN. Fleet always tenant FQDN + `$outbound` SBC.
 REGISTER / auth usernames use **`$sipuser`** (= `ipphone.shortuid`), not dialable `$ext`.
+**Panasonic:** `PHONE_NUMBER_1` + `SIP_AUTHID_1` = `$sipuser` (REGISTER/digest); `DISPLAY_NAME_1=$ext` + `IDLE_DISPLAY_TYPE=3` (idle LCD shows dialable Name, not shortuid). Same shortuid rule as Fanvil.
 
 **Grandstream notes:** Phone GET **`cfg{mac}.xml`**. Edge + kernel extract MAC from that name. Auth ID (**P36**) omitted — shortuid in **P35** only. Dial plan **P290** includes `*xx*`. NAT **`P52=4` (Auto)**. Config path **`P237`** (not **P192** firmware). Admin web **P2**=`$padminpass` ← **cluster.padminpass**. INVITE source filter: **`P2347=1`** (Accept Incoming SIP from Proxy Only — not CLI **P129**). Recipe **`PROVISIONING_LAB_RECIPE.md` §6** · **`GRANDSTREAM_PROVISION_SUBPROJECT.md`**.
 

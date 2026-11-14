@@ -215,6 +215,7 @@ function pbx3_provision_secret_tokens() {
 		'ADMIN_PASS',
 		'USER_ID',
 		'USER_PASS',
+		'SIP_PASS',
 		'LDAP_USERID',
 		'LDAP_PASSWORD',
 		'security.user_password',
@@ -426,13 +427,16 @@ function pbx3_provision_phone_row($phone) {
 function pbx3_provision_vars_from_phone($phone, $globals = array(), $extra = array()) {
 	$p = pbx3_provision_phone_row($phone);
 	$g = $globals;
+	$ext = isset($p['pkey']) ? $p['pkey'] : '';
 	$vars = array(
-		'ext' => isset($p['pkey']) ? $p['pkey'] : '',
-		'shortuid' => isset($p['shortuid']) ? $p['shortuid'] : (isset($p['pkey']) ? $p['pkey'] : ''),
+		'ext' => $ext,
+		// Alias for operators / migrate streams that still write $pkey (same as $ext).
+		'pkey' => $ext,
+		'shortuid' => isset($p['shortuid']) ? $p['shortuid'] : $ext,
 		// SIP REGISTER / auth username = endpoint shortuid (PJSIP [$id] / username=$id).
 		'sipuser' => isset($p['shortuid']) && trim((string) $p['shortuid']) !== ''
 			? $p['shortuid']
-			: (isset($p['pkey']) ? $p['pkey'] : ''),
+			: $ext,
 		'password' => isset($p['passwd']) ? $p['passwd'] : '',
 		'desc' => isset($p['desc']) ? $p['desc'] : (isset($p['cname']) ? $p['cname'] : ''),
 		'bindport' => isset($g['bindport']) ? $g['bindport'] : (isset($g['BINDPORT']) ? $g['BINDPORT'] : '5060'),
@@ -609,7 +613,8 @@ function pbx3_provision_render(PDO $db, $parsed, $streamsDir = null, $globals = 
  * A3 — resolve SIP next-hop / provision URL for solo vs fleet.
  *
  * Fleet: $outbound = SBC (PBX3_SBC_EGRESS_HOST, default sbc.pbx3.com); $sipdomain = tenant FQDN (per phone).
- * Solo: $outbound empty / proxy off; $sipdomain = tenant or instance FQDN / local IP.
+ * Solo: $outbound empty / proxy off; $sipdomain / $provurl host from provisionwith
+ * (IP → localip, FQDN → tenant/instance FQDN) — see pbx3_provision_merge_phone_hosts.
  *
  * @param PDO|null $db
  * @param array $globals
@@ -632,7 +637,14 @@ function pbx3_provision_resolve_hosts($db = null, $globals = array(), $overrides
 		$sbc = trim((string) $sbc);
 	}
 
-	$localip = isset($overrides['localip']) ? (string) $overrides['localip'] : '127.0.0.1';
+	$localip = '127.0.0.1';
+	if (isset($overrides['localip']) && trim((string) $overrides['localip']) !== '') {
+		$localip = trim((string) $overrides['localip']);
+	} elseif (isset($globals['localip']) && trim((string) $globals['localip']) !== '') {
+		$localip = trim((string) $globals['localip']);
+	} elseif (isset($globals['LOCALIP']) && trim((string) $globals['LOCALIP']) !== '') {
+		$localip = trim((string) $globals['LOCALIP']);
+	}
 	$bindport = '5060';
 	if (isset($globals['bindport']) && trim((string) $globals['bindport']) !== '') {
 		$bindport = trim((string) $globals['bindport']);
@@ -661,7 +673,14 @@ function pbx3_provision_resolve_hosts($db = null, $globals = array(), $overrides
 	$registrar = isset($overrides['registrar']) ? (string) $overrides['registrar'] : '';
 
 	$port = defined('PROVISION_PORT') ? PROVISION_PORT : 41363;
-	if (isset($overrides['provurl'])) {
+	$preferIp = false;
+	if (isset($overrides['prefer_ip_host'])) {
+		$v = strtoupper(trim((string) $overrides['prefer_ip_host']));
+		$preferIp = in_array($v, array('1', 'TRUE', 'YES', 'IP'), true);
+	}
+	// Solo + prefer_ip_host rebuilds provurl even if a FQDN URL was pre-filled
+	// (device.php resolves before the phone row / provisionwith is known).
+	if (isset($overrides['provurl']) && !(!$fleet && $preferIp)) {
 		$provurl = (string) $overrides['provurl'];
 	} elseif ($fleet) {
 		$apex = '';
@@ -678,7 +697,11 @@ function pbx3_provision_resolve_hosts($db = null, $globals = array(), $overrides
 		}
 		$provurl = 'https://provision.' . $apex . ':' . $port . '/provisioning';
 	} else {
-		$host = $fqdn !== '' ? $fqdn : $localip;
+		if ($preferIp || $fqdn === '') {
+			$host = $localip;
+		} else {
+			$host = $fqdn;
+		}
 		$provurl = 'https://' . $host . ':' . $port . '/provisioning';
 	}
 
@@ -691,6 +714,28 @@ function pbx3_provision_resolve_hosts($db = null, $globals = array(), $overrides
 		'provurl' => $provurl,
 		'registrar' => $registrar,
 	);
+}
+
+/**
+ * Solo LAN vs DNS: ipphone.provisionwith IP (default/empty) vs FQDN.
+ * Fleet callers must ignore this for next-hop (always tenant FQDN + SBC outbound).
+ *
+ * @param object|array $phone
+ * @return bool true → use globals.localip for $sipdomain / solo $provurl host
+ */
+function pbx3_provision_phone_wants_ip($phone) {
+	$p = pbx3_provision_phone_row($phone);
+	$with = '';
+	if (isset($p['provisionwith'])) {
+		$with = strtoupper(trim((string) $p['provisionwith']));
+	} elseif (isset($p['PROVISIONWITH'])) {
+		$with = strtoupper(trim((string) $p['PROVISIONWITH']));
+	}
+	if ($with === 'FQDN') {
+		return false;
+	}
+	// IP, blank, or unknown → IP (Rule 6 LAN-safe default)
+	return true;
 }
 
 /**
@@ -736,6 +781,8 @@ function pbx3_provision_merge_cluster_device_passwords($db, $phone, $globals = a
 
 /**
  * Tenant SIP domain for a phone (cluster.fqdn), with solo/instance fallbacks.
+ * Solo + provisionwith=IP is applied in pbx3_provision_merge_phone_hosts (not here)
+ * so unit tests can still force $sipdomain via $extra.
  *
  * @param object|array $phone
  * @param array $globals
@@ -787,15 +834,38 @@ function pbx3_provision_sipdomain_for_phone($db, $phone, $globals = array(), $ho
  * @param array $extra existing extra (may already include outbound/provurl)
  */
 function pbx3_provision_merge_phone_hosts($db, $phone, $globals = array(), $extra = array()) {
+	$p = pbx3_provision_phone_row($phone);
+	$fleet = pbx3_provision_is_fleet_mode($db);
+	$wantIp = !$fleet && pbx3_provision_phone_wants_ip($p);
+	if ($wantIp && (!isset($extra['prefer_ip_host']) || $extra['prefer_ip_host'] === '' || $extra['prefer_ip_host'] === null)) {
+		$extra['prefer_ip_host'] = '1';
+	}
+
 	$hosts = pbx3_provision_resolve_hosts($db, $globals, $extra);
-	foreach (array('outbound', 'outbound_enable', 'outbound_hostport', 'localip', 'provurl') as $k) {
+	foreach (array('outbound', 'outbound_enable', 'outbound_hostport', 'localip') as $k) {
 		if (!isset($extra[$k]) || $extra[$k] === '' || $extra[$k] === null) {
 			$extra[$k] = $hosts[$k];
 		}
 	}
-	if (!isset($extra['sipdomain']) || $extra['sipdomain'] === '' || $extra['sipdomain'] === null) {
-		$extra['sipdomain'] = pbx3_provision_sipdomain_for_phone($db, $phone, $globals, $extra);
+
+	$sipdomainSet = isset($extra['sipdomain']) && $extra['sipdomain'] !== '' && $extra['sipdomain'] !== null;
+	if (!$sipdomainSet) {
+		if ($wantIp) {
+			$extra['sipdomain'] = $extra['localip'];
+		} else {
+			$extra['sipdomain'] = pbx3_provision_sipdomain_for_phone($db, $phone, $globals, $extra);
+		}
 	}
+
+	// Solo + provisionwith=IP: rebuild provurl on localip (device.php may have
+	// pre-filled FQDN from the phone-agnostic resolve). Explicit provurl_lock keeps override.
+	$provurlLocked = !empty($extra['provurl_lock']);
+	if ($wantIp && !$provurlLocked) {
+		$extra['provurl'] = $hosts['provurl'];
+	} elseif (!isset($extra['provurl']) || $extra['provurl'] === '' || $extra['provurl'] === null) {
+		$extra['provurl'] = $hosts['provurl'];
+	}
+
 	// Legacy alias: $registrar in vendor streams = SIP domain (not SBC).
 	if (!isset($extra['registrar']) || $extra['registrar'] === '' || $extra['registrar'] === null) {
 		$extra['registrar'] = $extra['sipdomain'];
@@ -902,7 +972,7 @@ function pbx3_provision_obfuscate_for_audit($body) {
 			}
 		}
 		// Line dialect: key = / key: value
-		if (!$hit && preg_match('/(password|passwd|user_pass|http_pass|http_user|ADMIN_PASS|USER_PASS|ldap\.password|ldap_password|ldap_username|admin_mode_password)\\s*[:=]/i', $line)) {
+		if (!$hit && preg_match('/(password|passwd|user_pass|http_pass|http_user|ADMIN_PASS|USER_PASS|SIP_PASS|ldap\.password|ldap_password|ldap_username|admin_mode_password)\\s*[:=]/i', $line)) {
 			$hit = true;
 		}
 		// OEM XML: <user_pass idx="1" perm="$">secret</user_pass>

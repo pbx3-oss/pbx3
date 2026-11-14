@@ -140,6 +140,25 @@ $pana = pbx3_provision_expand(
 expect('ETL Panasonic expands', strpos($pana, 'Panasonic SIP Phone') !== false);
 expect('ETL panasonic.tcp transport', strpos($pana, 'SIP_TRANSPORT_1="1"') !== false);
 expect('ETL panasonic.ipv4', strpos($pana, 'IP_ADDR_MODE="0"') !== false);
+$panaVars = pbx3_provision_substitute(
+	$pana,
+	pbx3_provision_vars_from_phone(
+		array('pkey' => '298', 'shortuid' => '08n8xy', 'passwd' => 'secret', 'cluster' => 't1', 'provisionwith' => 'IP'),
+		array(),
+		array(
+			'localip' => '10.0.0.1',
+			'sipdomain' => '10.0.0.1',
+			'proxy' => '10.0.0.1',
+			'provurl' => 'https://10.0.0.1:41363/provisioning',
+		)
+	)
+);
+expect('Panasonic PHONE_NUMBER is shortuid', strpos($panaVars, 'PHONE_NUMBER_1="08n8xy"') !== false);
+expect('Panasonic SIP_AUTHID is shortuid', strpos($panaVars, 'SIP_AUTHID_1="08n8xy"') !== false);
+expect('Panasonic DISPLAY_NAME is dialable ext', strpos($panaVars, 'DISPLAY_NAME_1="298"') !== false);
+expect('Panasonic idle LCD uses display name', strpos($panaVars, 'IDLE_DISPLAY_TYPE="3"') !== false);
+expect('Panasonic CFG keeps phone {mac} token', strpos($panaVars, 'CFG_STANDARD_FILE_PATH="https://10.0.0.1:41363/provisioning?mac={mac}"') !== false);
+expect('$pkey alias substitutes', pbx3_provision_substitute('n=$pkey', array('pkey' => '298', 'ext' => '298')) === 'n=298');
 $loop = array();
 $fanvil = pbx3_provision_expand(
 	"#INCLUDE fanvil.Extension\n#INCLUDE fanvil.udp\n",
@@ -345,6 +364,33 @@ expect('sipdomain from cluster.fqdn', $sip === 't1.example.com');
 putenv('PBX3_FLEET_MODE=false');
 $h2 = pbx3_provision_resolve_hosts($db, array('fqdn' => 'solo.example.com'), array('localip' => '10.1.1.1'));
 expect('solo outbound empty', $h2['fleet'] === false && $h2['outbound'] === '' && $h2['outbound_enable'] === '0');
+$hIp = pbx3_provision_resolve_hosts($db, array('fqdn' => 'solo.example.com', 'localip' => '10.1.1.1'), array('prefer_ip_host' => '1'));
+expect('solo prefer_ip_host uses localip in provurl', strpos($hIp['provurl'], 'https://10.1.1.1:') === 0);
+$mergedIp = pbx3_provision_merge_phone_hosts(
+	$db,
+	array('cluster' => 't1', 'provisionwith' => 'IP'),
+	array('fqdn' => 'solo.example.com', 'localip' => '10.1.1.1', 'domain' => 'example.com'),
+	array('localip' => '10.1.1.1', 'provurl' => 'https://solo.example.com:41363/provisioning')
+);
+expect('solo provisionwith IP → sipdomain localip', $mergedIp['sipdomain'] === '10.1.1.1');
+expect('solo provisionwith IP → proxy localip', $mergedIp['proxy'] === '10.1.1.1');
+expect('solo provisionwith IP rewrites prefilled FQDN provurl', strpos($mergedIp['provurl'], 'https://10.1.1.1:') === 0);
+$mergedFqdn = pbx3_provision_merge_phone_hosts(
+	$db,
+	array('cluster' => 't1', 'provisionwith' => 'FQDN'),
+	array('fqdn' => 'solo.example.com', 'localip' => '10.1.1.1', 'domain' => 'example.com'),
+	array('localip' => '10.1.1.1')
+);
+expect('solo provisionwith FQDN → cluster.fqdn', $mergedFqdn['sipdomain'] === 't1.example.com');
+putenv('PBX3_FLEET_MODE=true');
+$mergedFleet = pbx3_provision_merge_phone_hosts(
+	$db,
+	array('cluster' => 't1', 'provisionwith' => 'IP'),
+	array('fqdn' => 'node.pbx3.com', 'domain' => 'pbx3.com', 'localip' => '10.1.1.1'),
+	array('localip' => '10.1.1.1')
+);
+expect('fleet ignores provisionwith IP for sipdomain', $mergedFleet['sipdomain'] === 't1.example.com');
+expect('fleet outbound still SBC', $mergedFleet['outbound'] === 'sbc.lab');
 putenv('PBX3_FLEET_MODE');
 putenv('PBX3_SBC_EGRESS_HOST');
 
@@ -364,6 +410,9 @@ expect('grandstream P47 sipdomain', strpos($rGs['body'], '<P47>t1.example.com</P
 // Obfuscate unit
 $ob = pbx3_provision_obfuscate_for_audit("account.1.password = cleartext\nok=1\n");
 expect('obfuscate masks value', strpos($ob, 'cleartext') === false && strpos($ob, '********') !== false && strpos($ob, 'ok=1') !== false);
+$obSip = pbx3_provision_obfuscate_for_audit("SIP_PASS_1=\"yncklbmo\"\nPHONE_NUMBER_1=\"08n8xy\"\n");
+expect('obfuscate masks SIP_PASS', strpos($obSip, 'yncklbmo') === false && strpos($obSip, 'SIP_PASS_1=********') !== false);
+expect('obfuscate keeps non-secret Panasonic keys', strpos($obSip, 'PHONE_NUMBER_1="08n8xy"') !== false);
 $obXml = pbx3_provision_obfuscate_for_audit("<user_pass idx=\"1\" perm=\"$\">SecretPass99</user_pass>\n<user_name idx=\"1\" perm=\"$\">abc</user_name>\n");
 expect('obfuscate XML user_pass', strpos($obXml, 'SecretPass99') === false && strpos($obXml, '********') !== false);
 expect('obfuscate XML keeps user_name', strpos($obXml, '>abc</user_name>') !== false);
