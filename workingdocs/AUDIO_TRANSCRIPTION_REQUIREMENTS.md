@@ -30,3 +30,4 @@
 |------|------|
 | 2026-09-08 | Pluggable STT direction; solo vs fleet S3 accommodation. |
 | 2026-09-08 | Pharma / PV noted as potential first-out driver (no further framing). |
+| 2026-11-14 | Solo home-owned S3 **parked** (see recordings design); STT can still target local spool/archive first. |

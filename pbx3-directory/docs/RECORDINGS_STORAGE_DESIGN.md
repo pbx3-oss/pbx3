@@ -46,14 +46,14 @@ flowchart TD
 
 **S3 is canonical only for opted-in tenants.** Others remain local-first.
 
-**Solo / singleton (locked 2026-09-08):** A solo home **may** use S3 for recordings (+ transcripts) **without** joining fleet or using the SBC. Do **not** force fleet-of-one just for archive/STT. Isolate the difference behind upload/fetch plumbing:
+**Solo / singleton (locked 2026-09-08; parked 2026-11-14):** A solo home **may** use S3 for recordings (+ transcripts) **without** joining fleet or using the SBC — but **do not build or document that path until a real ask**. Most singleton customers want **big disk + age** or **EFS/NFS via `rec_mount`**, not object store. Default solo story = Tier 1 + Tier 2 + `recmaxage` / `recmaxsize` only. No dedicated S3 setup/tailor page. Do **not** force fleet-of-one just for archive/STT.
 
-| Mode | Bucket / auth | Notes |
-|------|----------------|-------|
-| **Fleet** | Org recordings bucket via **gatekeeper** (S7 as today) | Multi-home, catalog prefixes |
-| **Solo** | **Home-owned** bucket (instance IAM / keys on the box) | Same object layout idea (audio + transcript side-by-side); **no** Gatekeeper dependency |
+| Mode | Bucket / auth | Status |
+|------|----------------|--------|
+| **Fleet** | Org recordings bucket via **gatekeeper** (S7 as today) | Shipped |
+| **Solo** | **Home-owned** bucket (instance IAM / keys on the box); **no** Gatekeeper | **Parked** — same catalog shape (`local` / `s3_only`) when revived; transport only |
 
-SPA/API consumers should see the same catalog shape (`local` / `s3_only`); only the offload transport differs. Detail also: **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.
+SPA/API consumers should see the same catalog shape; only the offload transport differs. Detail also: **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`**.
 
 **Home `.env` is plumbing**, not the product switch:
 
@@ -709,4 +709,4 @@ Record these for the next design review — do not block R1.5 kickoff on all ans
 | S7 (fleet) | + dedicated recordings bucket (PCI-shaped baseline) | SQLite + `s3_key`; presigned play when local gone |
 | S7+ | Same keys/layout | KMS/CloudTrail/attestation; PSP strict; optional Athena/manifests |
 
-**Bottom line:** Keep **spool → archive → S3**. Search via **SQLite + `s3_key`**. S7 ships **private dedicated bucket + presigns + SSE-S3** (not attested PCI). Attestation and PSP wait for demand. Upload via **presigns** in `pbx3api` / gatekeeper — not shell rsync, not blanket node `tenants/*` IAM.
+**Bottom line:** Keep **spool → archive → S3**. Search via **SQLite + `s3_key`**. S7 ships **private dedicated bucket + presigns + SSE-S3** (not attested PCI). Attestation and PSP wait for demand. Upload via **presigns** in `pbx3api` / gatekeeper — not shell rsync, not blanket node `tenants/*` IAM. **Solo S3 parked 2026-11-14** — singleton default remains local archive + age/mount.
