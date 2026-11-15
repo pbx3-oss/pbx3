@@ -22,7 +22,7 @@ Same product behaviour; **different plumbing** — isolate so STT/archive code d
 | Objects | Audio + transcript side-by-side | Same |
 | Catalog | SQLite `local` / `s3_only` | Same |
 
-Solo S3 is a normal first step for existing singleton sites that want archive/STT without multi-tenant fleet. Implement as a storage backend choice, not a second product.
+Solo S3 remains a valid backend shape when revived — **not** a second product — but **parked 2026-11-14** with recordings: most singleton sites stay local spool/archive (+ age / `rec_mount`); do not implement home-owned S3 until a customer needs it.
 
 Do not change how Asterisk stores voicemail day-to-day.
 
@@ -43,3 +43,4 @@ Do not change how Asterisk stores voicemail day-to-day.
 | 2026-09-08 | File spool + optional async S3; reject FUSE/ODBC-SQLite-blob paths. |
 | 2026-09-08 | YAGNI: no Litestream / extra capability flags in v1. |
 | 2026-09-08 | Solo home-owned S3 vs fleet gatekeeper — isolate plumbing; no fleet-of-one for archive alone. |
+| 2026-11-14 | Solo S3 **parked** — local archive + age/mount is the singleton default; revive only on customer ask. |

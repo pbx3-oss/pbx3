@@ -1,6 +1,6 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-11-14 (session end: provision PRs + #101 + #107 + docs #17; 0h smoke waits on singleton inbound trunk)
+**Last updated:** 2026-11-14 (singleton S3 parked — local archive + age/mount is the solo story)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (prefer Pages over Vite for multi-PBX hop).  
 
 ### Suggested “what next?” order
@@ -10,7 +10,7 @@
 0q. ~~**GenAst OCLO / BLF AstDB — tenant-scope keys**~~ — **done (2026-09-28):** OCLO AstDB + `Custom:` and VM BLF `Custom:vm-{shortuid}-{ext}` keyed by shortuid; dial/BLF extension stays Name; throw dual-writes `{shortuid}/STATE` for CoS. Offline: `genclass-oclo-blf-shortuid-test.php`. Lock: **`TIME_BASED_ROUTING_REQUIREMENTS.md` §2.3**. Tip GenClass + `vmnotify.sh`; re-toggle OCLO after Commit.  
 0p. ~~**CoS profiles**~~ — **done (2026-09-27):** Slices A–F + Q6 merged to **`main`**; package **pbx3 0.0.6-8** on golden+bzy. Spec: **`COS_PROFILE_REQUIREMENTS.md`**. MkDocs: **`admin/timers-cos`**. SPA Route Profile delete confirm + Dial prefixes removed from instance sidebar (deep-link `/dialaliases` only; HoR Site Groups).  
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
-0m. **Singleton local install** — local home as **solo** (no fleet/SBC). Lab box up for operator soak (Rule 6). MkDocs: **Sign in** / **Solo trial** / **Cannot log in**. **Desk harness (2026-11-14):** Panasonic KX-HDV REGISTER green; `provisionwith` IP/FQDN on **`main`** (#106). ETL schema ALTERs applied. **Provision security (2026-11-14):** solo left as shipped — **no** forced home mTLS; operator sources vendor root/client CAs; discussion **`pbx3-docs` `admin/phone-provisioning-security`**. Still open: solo S3/STT.  
+0m. **Singleton local install** — local home as **solo** (no fleet/SBC). Lab box up for operator soak (Rule 6). MkDocs: **Sign in** / **Solo trial** / **Cannot log in**. **Desk harness (2026-11-14):** Panasonic KX-HDV REGISTER green; `provisionwith` IP/FQDN on **`main`** (#106). ETL schema ALTERs applied. **Provision security (2026-11-14):** solo left as shipped — **no** forced home mTLS; operator sources vendor root/client CAs; discussion **`pbx3-docs` `admin/phone-provisioning-security`**. ~~**Solo S3**~~ — **parked 2026-11-14:** most singleton users want **local archive** (`/opt/pbx3/media/recordings` + `recmaxage` / optional `rec_mount` EFS-class), not object store; no setup page; no home-owned S3 transport until a real customer asks. Fleet S7 unchanged. STT (**0l**) still open if Pharma/PV needs it (local spool first).  
 
 0n. ~~**ChanSpy / ChanWhisper — multi-tenant review**~~ — **done (2026-09-26):** Drop cross-cluster pkey fallback (**pbx3cagi 1.0.0-22**); golden tip + desk deny Aelintra→Duns `*67*`/`*68*`. Offline `spy-cross-tenant-denied`. Lab: **`CHANSPY_LAB.md`**.  
 0k. **Phone provisioning — reinstate** — **A–C10** + rehome + **#23b** + brand mules + **ghost-call knobs** + ~~**#23c snomXml**~~ + ~~**#23e expand preview**~~. **Panasonic** + expand-preview cleartext on **`main`**. **Assist, not core.** ~~Solo/fleet mTLS policy~~ — **locked 2026-11-14:** solo as-is; fleet edge mTLS optional when CAs tipped; operator owns vendor CAs (**§8** + MkDocs security discussion). Brand tracks: **`FANVIL_…`** · **`GRANDSTREAM_…`** · **`POLY_…`**. Spec **`PROVISIONING_SERVER_REQUIREMENTS.md`**.
@@ -157,7 +157,7 @@
 
 - [x] **Provision edge mTLS / 3pcerts (D1→C5 — 2026-10-02):** Tip Snom+Yealink PEM; `PROVISION_MTLS=optional` live. Yealink **SUCCESS**+200; bare curl NONE/200 vs require **400**. Spec §8 · plan **C5**.
 
-- [ ] **Singleton local install (#0m — 2026-09-08):** Lab solo reachable. MkDocs LAN/snakeoil on **`main`** (docs **#15**). **2026-11-14:** Panasonic desk REGISTER + LCD Name green; ETL schema ALTERs; provision PRs merged. **Provision mTLS:** locked leave-as-is + MkDocs **`phone-provisioning-security`**. Remaining: solo S3/STT. Rule 6 · try-it.
+- [ ] **Singleton local install (#0m — 2026-09-08):** Lab solo reachable. MkDocs LAN/snakeoil on **`main`** (docs **#15**). **2026-11-14:** Panasonic desk REGISTER + LCD Name green; ETL schema ALTERs; provision PRs merged. **Provision mTLS:** locked leave-as-is + MkDocs **`phone-provisioning-security`**. **Solo S3 parked 2026-11-14** — local spool/archive + age/mount; home-owned S3 only if/when a customer needs it. Rule 6 · try-it.
 
 - [x] **ChanSpy / ChanWhisper — multi-tenant deny (#0n — 2026-09-26):** Resolve spy target pkey only in calling tenant (**1.0.0-22**); golden desk Aelintra→Duns `*67*`/`*68*` → `pbx-invalid`. Offline `spy-cross-tenant-denied`. **`CHANSPY_LAB.md`**.
 
