@@ -1,12 +1,13 @@
 # PBX3 ToDo list
 
-**Last updated:** 2026-11-14 (singleton S3 parked — local archive + age/mount is the solo story)
+**Last updated:** 2026-11-14 (OSS bug-report email fallback — operator to create address)
 **Branch:** Product **`main`** (feature branch + PR only). Private session state: **`~/GiT/pbx3-ops`**. Cloud SPA: **https://app.pbx3.com** (prefer Pages over Vite for multi-PBX hop).  
 
 ### Suggested “what next?” order
 
 0r. ~~**S6.2 shared admin SPA on GitHub Pages**~~ — **done (2026-09-28):** **`https://app.pbx3.com`**; catalog CORS on org bucket; runtime fleet catalog switch (not one build per bucket); builders do **not** host their own SPA. Locks: **`DESIGN_RULES.md`** SPA hosting · **`OPEN_SOURCE_GITHUB_SETUP.md`** · MkDocs install/sign-in.  
 0s. ~~**Branch-before-change**~~ — **done (2026-09-28):** no land on **`main`** without feature branch + PR (all `pbx3-oss` repos). Lock: **`REPOS_AND_RELEASES.md`** § Branch policy · **`OPEN_SOURCE_GITHUB_SETUP.md`**. SPA `main` = Pages prod.  
+0t. **OSS bug reporting — email fallback** — create a dedicated bug-report mailbox (operator). Default path remains **GitHub Issues** on **`pbx3-oss/*`** (account required); email = side door for people without GitHub / private detail. Then wire into README / CONTRIBUTING / SECURITY as appropriate. See **#39**.  
 0q. ~~**GenAst OCLO / BLF AstDB — tenant-scope keys**~~ — **done (2026-09-28):** OCLO AstDB + `Custom:` and VM BLF `Custom:vm-{shortuid}-{ext}` keyed by shortuid; dial/BLF extension stays Name; throw dual-writes `{shortuid}/STATE` for CoS. Offline: `genclass-oclo-blf-shortuid-test.php`. Lock: **`TIME_BASED_ROUTING_REQUIREMENTS.md` §2.3**. Tip GenClass + `vmnotify.sh`; re-toggle OCLO after Commit.  
 0p. ~~**CoS profiles**~~ — **done (2026-09-27):** Slices A–F + Q6 merged to **`main`**; package **pbx3 0.0.6-8** on golden+bzy. Spec: **`COS_PROFILE_REQUIREMENTS.md`**. MkDocs: **`admin/timers-cos`**. SPA Route Profile delete confirm + Dial prefixes removed from instance sidebar (deep-link `/dialaliases` only; HoR Site Groups).  
 0. ~~**Recordings panel — unified catalog + play spinner**~~ — **done (2026-08-26):** SPA passes From/To/Tenant/Search to `GET /recordings`; play/download spinner + “Fetching from archive…” for S3; one SQLite catalog (local + `s3_only`). Spec: **`RECORDINGS_STORAGE_DESIGN.md`**. Ops: MkDocs **`fleet/recordings-s3-offload`**.  
@@ -99,7 +100,8 @@
 35. ~~**SBC site timezone at install**~~ — **done (2026-08-26):** `pbx3sbc-admin/install.sh` prompt / `--site-timezone` / `PBX3_SBC_SITE_TIMEZONE` → `.env` (Home/CDR day buckets). Default = host `/etc/timezone`. Does not change OS clock. Optional later: Filament change-later.  
 36. **Legacy PBX admin panels — open backlog** — **`pbx3spa/workingdocs/LEGACY_PBX_PANEL_BACKLOG.md`**. **P1 CoS (Class of Service): done pending lab sign-off (2026-08-23)**. **Reports:** inline Export PDF/CSV on Greetings, Day/Holiday timers, Route profiles, CoS only. **Tenant custom MOH:** lab green (2026-08-25) — upload/play/delete + `moh reload` (no Commit for file swaps); Custom MOH Active still Save. **Recordings:** panel shipped (R1/R1.5/S7); unified list filters + play spinner **done (2026-08-26)**. **Extension named call/pickup groups:** `named_call_group` + `named_pickup_group` — lock **`EXTENSION_NAMED_PICKUP_GROUPS.md`**; **pickup manual L3 OK** lab `.31`; sipplab pack pending. **BLF SUBSCRIBE:** tmpl `allow_subscribe=yes` + `subscribe_context=$clst`; **Snom BLF OK** lab `.31`; **Yealink** — phone config under investigation (Asterisk assumed OK). **Parking:** `parkinghints=yes` + **`parkedcallreparking=both`**; fleet timeout FQDN Dial + COS `901`–`903` + `*5` preferred — golden OK (2026-09-26). ETL: **`~/GiT/private offline migrate tool`**. **PJSIP config wizard:** won't-do. **P2+ parked:** wallboard, shell, LDAP, pcap, factory reset. **Not porting:** **third-party certs panel**.
 37. **Audio transcription (pluggable)** — provider interface; choose backend. Potential first-out: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **0l**.  
-38. **Instance API security — industry review** — **should-do / not scheduled (2026-10-04):** baseline (Sanctum + abilities + cluster scope + opt-in TOTP + HTTPS + fail2ban badbots) is mid-tier OK; backlog vs best practice: login/2FA rate-limit, token TTL/rotation, MFA-required for admins, optional `:44300` IP allowlist (SPA tradeoff), BFF/cookie later. Spec: **`INSTANCE_API_SECURITY_REVIEW.md`**. Not first-out.
+38. **Instance API security — industry review** — **should-do / not scheduled (2026-10-04):** baseline (Sanctum + abilities + cluster scope + opt-in TOTP + HTTPS + fail2ban badbots) is mid-tier OK; backlog vs best practice: login/2FA rate-limit, token TTL/rotation, MFA-required for admins, optional `:44300` IP allowlist (SPA tradeoff), BFF/cookie later. Spec: **`INSTANCE_API_SECURITY_REVIEW.md`**. Not first-out.  
+39. **OSS bug reporting — email fallback (#0t)** — operator creates dedicated address; publish as fallback beside GitHub Issues on **`pbx3-oss`**. Not a helpdesk substitute.
 
 **SIPp lab work** (pack teardown, traffic profiles, soak) lives in **[aelintra/sipplabs](https://github.com/aelintra/sipplabs)** `workingdocs/TODO.md` — not here.
 
@@ -333,6 +335,7 @@
 - [ ] **S7+ — Attested PCI / scale (deferred):** Do not start without customer ask.
 
 - [x] **OSS org + repo registry:** **done (2026-09-28)** — **`pbx3-oss`**; product+SBC public; ops/ETL/sipplabs stay Aelintra. Record: **`~/GiT/pbx3-ops/devdocs/oss-move/OSS_ORG_TRANSFER_PLAN.md`**. Parent: **`OPEN_SOURCE_GITHUB_SETUP.md`** · **`REPOS_AND_RELEASES.md`**.
+- [ ] **OSS bug reporting — email fallback (#39 / 0t — 2026-11-14):** Create dedicated bug-report mailbox. Issues on **`pbx3-oss/*`** stay primary; email = no-GitHub / private side door. Then README / CONTRIBUTING / SECURITY pointers.
 - [x] **S6.2 SPA Pages:** **done (2026-09-28)** — **`app.pbx3.com`**; shared SPA; catalog CORS + runtime catalog switch; install guides baked.
 
 - [x] **pbx3cagi refactor Phases 0–3.2 (2026-07):** Harness, dead code, call-context structs, command table, SQLite extract, init, session pointer, AGI wrapper — on **`main`**. Remaining optional structure = **#10 Phase 4**. Spec: **`pbx3cagi/workingdocs/REFACTOR_PLAN.md`** · contract **`AST_CONFIG_GENERATOR_SUBPROJECT.md`** §5.
