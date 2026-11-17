@@ -119,6 +119,18 @@ sudo php artisan pbx3:fleet-preflight'
 - SSH and `pbx3test.pem` require running shell commands **outside a restricted sandbox** (full permissions). Network-only is not enough for key file access.
 - Always pass **absolute path** to `--ssh-key` in onboard scripts.
 - Do **not** assume the agent can SSH without the user’s key at `~/Documents/pemfiles/pbx3test.pem`.
+- **`gh` / GitHub Issues:** default agent sandbox allowlists **`github.com`** (git) but **not** **`api.github.com`**. Without the latter, `gh` fails with a misleading “token in keyring is invalid.” Allow it in **`~/.cursor/sandbox.json`** (or project `.cursor/sandbox.json`):
+
+```json
+{
+  "networkPolicy": {
+    "default": "deny",
+    "allow": ["api.github.com"]
+  }
+}
+```
+
+  Then **Cursor → Settings → Agents → Approvals & Execution** → network **sandbox.json + Defaults** (or **Allow All**). Docs: [sandbox.json](https://cursor.com/docs/reference/sandbox).
 
 ---
 
