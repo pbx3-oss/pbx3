@@ -327,7 +327,7 @@ Client: **`wss://sbc.pbx3.com:8089/ws`** + SIP user = shortuid + **SIP domain = 
 
 **Media strategy for WebRTC-capable homes:** prefer **Asterisk-anchored / bypass SBC**. RTPEngine at edge only if a future requirement forces protocol translation (e.g. older non-WebRTC backend + browser).
 
-**TURN/STUN:** app / MSP concern; not pbx3sbc v1.
+**TURN/STUN:** app / MSP concern; not pbx3sbc v1. **ICE fail observability:** none proactive today (parked referback — **`WEBRTC_WSS_LAB.md`** § Parked — ICE failure observability).
 
 #### Implementation order (historical — phases 1–4 done for SBC lab)
 

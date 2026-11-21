@@ -123,3 +123,12 @@ See also **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (WSS path) and desk proxy-r
 - `http show status` → `/ws` enabled; curl `/httpstatus` may 403 — fine if TLS handshake works.
 - RTP bypass proven on golden; rtpengine not needed for this path.
 - WebRTC PJSIP object id = shortuid; dialable pkey only in dialplan/callerid (PBX3 phone pattern).
+
+## Parked — ICE failure observability (2026-11-20)
+
+**Not an issue now** (operator stance). Referback if customers hit hard NAT / no-audio that SIP still shows as connected.
+
+- **Today:** no proactive product warning when ICE host + srflx both fail. SPA **Line quality test** samples `getStats` (candidate types) into an **on-demand** post-call report only — not fleet/home alerts, not Asterisk→ops notify.
+- **Manual signals:** browser `iceConnectionState` / selected candidate type; `chrome://webrtc-internals`; Asterisk RTP/ICE debug if cranked up.
+- **TURN:** neither pbx3 nor sail65 ships TURN; host-map (pbx3) or Google `stunaddr` (sail65) only. TURN remains later / MSP if needed. Related: **`FLEET_TRUNK_PEERING_DECISION.md`** §6.1 (“TURN/STUN: app / MSP concern”).
+- **Do not build** ICE health alarms unless a real case demands it.

@@ -163,6 +163,8 @@
 
 - [ ] **Singleton WebRTC — ICE host-map audio proof (#39 / 0u — 2026-11-19):** On **`.148`**, test product `rtp.conf` **as shipped** (`icesupport` + `[ice_host_candidates]`, no STUN/ICE config change). Prep: WebRTC extension + solo WSS `:8089` bind (currently `:8088` only). Line quality test → two-way audio. **Green = keep** (no sail65 STUN reinvent). **Red = then** reconsider Asterisk `stunaddr`. **`WEBRTC_WSS_LAB.md`** · ops **`TODO_OPS.md`**.
 
+- [ ] **WebRTC ICE failure observability (parked 2026-11-20 — not now):** No proactive warn/log when host+srflx ICE fails (Line test `getStats` is on-demand only). Revisit if field no-audio cases need it; no TURN product path yet. Note: **`WEBRTC_WSS_LAB.md`** § Parked — ICE failure observability.
+
 - [x] **ChanSpy / ChanWhisper — multi-tenant deny (#0n — 2026-09-26):** Resolve spy target pkey only in calling tenant (**1.0.0-22**); golden desk Aelintra→Duns `*67*`/`*68*` → `pbx-invalid`. Offline `spy-cross-tenant-denied`. **`CHANSPY_LAB.md`**.
 
 - [ ] **Audio transcription — pluggable STT (#37 / 0l — 2026-09-08):** Simple interface + adapter(s); local spool (± S3). Solo vs fleet S3 plumbing isolated. Potential first-out: **Pharma / PV**. **`AUDIO_TRANSCRIPTION_REQUIREMENTS.md`** · **`VOICEMAIL_ARCHIVE_REQUIREMENTS.md`** · **`RECORDINGS_STORAGE_DESIGN.md`**.
